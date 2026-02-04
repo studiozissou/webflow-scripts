@@ -7,7 +7,7 @@
 
   // Configuration - Update these with your JS Deliver URLs
   const CONFIG = {
-    baseUrl: 'https://cdn.jsdelivr.net/gh/YOUR_USERNAME/YOUR_REPO@main/projects/ready-hit-play-prod',
+    baseUrl: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@main/projects/ready-hit-play-prod',
     // Or use raw GitHub URLs:
     // baseUrl: 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/projects/ready-hit-play-prod',
     

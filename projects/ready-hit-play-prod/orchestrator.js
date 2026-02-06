@@ -7,6 +7,11 @@
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
+  // If cursor.js didn't load (missing from init or error), stub so RHP.cursor.version shows 'not-loaded'
+  if (typeof RHP.cursor === 'undefined') {
+    RHP.cursor = { version: 'not-loaded', init: function() {}, destroy: function() {}, refresh: function() {}, setPosition: function() {}, setState: function() {} };
+  }
+
   /* -----------------------------
      DOM ready helper
      ----------------------------- */

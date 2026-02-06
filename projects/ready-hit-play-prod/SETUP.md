@@ -59,4 +59,10 @@ Now you can edit files locally and push to GitHub - changes will be live automat
 ## 🛠 Cache busting & dev mode
 
 - **Production:** init.js loads modules with `?v=<CONFIG.version>`. Bump `version` in init.js on each deploy so the CDN fetches new module files.
-- **Development:** Dev mode (nocache) runs automatically when the page URL contains `webflow.io`, or when init is loaded with `?dev=1` / `?nocache=1`. Init then loads both RHP CSS and all modules with a timestamp (`?t=...`), so you get the latest from the CDN without bumping version or hard-refreshing. Keep your normal CSS `<link>` in Webflow; in dev mode init injects a second load that overrides with the fresh file.
+- **Development:** Dev mode (nocache) runs automatically when the page URL contains `webflow.io`, or when init is loaded with `?dev=1` / `?nocache=1`. In dev mode, init loads modules and RHP CSS from **raw GitHub** (`baseUrlRaw`) so you get the latest code without CDN cache. Keep your normal CSS `<link>` in Webflow; in dev mode init injects a second load that overrides with the fresh file.
+
+**Dev: use raw GitHub for init (optional).** To load init itself from raw so it’s never cached, use:
+```html
+<script src="https://raw.githubusercontent.com/studiozissou/webflow-scripts/main/projects/ready-hit-play-prod/init.js?dev=1"></script>
+```
+Then init will load all modules and RHP CSS from raw GitHub too. If scripts don’t run (raw can serve wrong MIME type in some setups), use jsDelivr with a commit pin instead (e.g. `@075aac0`).

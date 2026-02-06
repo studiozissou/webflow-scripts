@@ -57,4 +57,4 @@ Now you can edit files locally and push to GitHub - changes will be live automat
 ## 🛠 Cache busting & dev mode
 
 - **Production:** init.js loads modules with `?v=<CONFIG.version>`. Bump `version` in init.js on each deploy so the CDN fetches new module files.
-- **Development:** Dev mode (nocache) runs automatically when the page URL contains `webflow.io`, or when init is loaded with `?dev=1` / `?nocache=1`. Every page load then requests modules with a timestamp (`?t=...`), so you get the latest from the CDN without bumping version or hard-refreshing.
+- **Development:** Dev mode (nocache) runs automatically when the page URL contains `webflow.io`, or when init is loaded with `?dev=1` / `?nocache=1`. Init then loads both RHP CSS and all modules with a timestamp (`?t=...`), so you get the latest from the CDN without bumping version or hard-refreshing. Keep your normal CSS `<link>` in Webflow; in dev mode init injects a second load that overrides with the fresh file.

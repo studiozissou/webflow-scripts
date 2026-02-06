@@ -95,6 +95,19 @@
 
       await new Promise(resolve => setTimeout(resolve, 10));
 
+      // GSAP load check (dependencies loaded above)
+      const gsapOk = typeof window.gsap !== 'undefined';
+      const scrollTriggerOk = typeof window.ScrollTrigger !== 'undefined';
+      const splitTextOk = typeof window.SplitText !== 'undefined';
+      console.log('RHP GSAP check:', {
+        gsap: gsapOk ? 'OK (' + (window.gsap?.version || '?') + ')' : 'MISSING',
+        ScrollTrigger: scrollTriggerOk ? 'OK' : 'MISSING',
+        SplitText: splitTextOk ? 'OK' : CONFIG.splitTextUrl ? 'MISSING' : 'not loaded (splitTextUrl null)'
+      });
+      if (!gsapOk) {
+        console.warn('⚠️ RHP: GSAP did not load. Check dependency URLs in init.js.');
+      }
+
       const versionParam = 'v=' + (CONFIG.version || '0');
       for (const module of CONFIG.modules) {
         await loadScript(`${baseUrl}/${module}?${versionParam}`);

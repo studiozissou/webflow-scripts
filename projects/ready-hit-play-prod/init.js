@@ -5,11 +5,11 @@
 (function() {
   'use strict';
 
-  // Configuration - Update these with your JS Deliver URLs
+  // Configuration - Bump version on deploy so module URLs change and cache is busted
   const CONFIG = {
+    version: '2026.2.6.2',
     baseUrl: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@main/projects/ready-hit-play-prod',
-    // Or use raw GitHub URLs:
-    // baseUrl: 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/projects/ready-hit-play-prod',
+    // Or pin a commit: baseUrl: '...@af49ed1/...',
     
     // CSS dependencies (loaded first)
     cssDependencies: [
@@ -70,6 +70,10 @@
     });
   }
 
+  // Dev mode: if init.js was loaded with ?dev=1 or ?nocache=1, add timestamp to module URLs so every load is fresh (no cache)
+  const scriptSrc = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
+  const devMode = /[?&](?:dev|nocache)=1/i.test(scriptSrc);
+
   // Load all dependencies first, then modules
   async function init() {
     try {
@@ -86,9 +90,10 @@
       // Wait a tick to ensure globals are available
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      // Load modules in order
+      // Load modules in order (version param busts cache on deploy; dev mode adds timestamp for fresh load every time)
+      const moduleParam = devMode ? 't=' + Date.now() : 'v=' + (CONFIG.version || '0');
       for (const module of CONFIG.modules) {
-        const url = `${CONFIG.baseUrl}/${module}`;
+        const url = `${CONFIG.baseUrl}/${module}?${moduleParam}`;
         await loadScript(url);
       }
 
@@ -109,6 +114,7 @@
         return c.module + ': ' + (c.ok ? 'OK' : 'MISSING') + (c.detail ? ' (' + c.detail + ')' : '');
       }).join(' | '));
 
+      if (devMode) console.log('RHP: dev mode (nocache) – modules loaded with timestamp');
       console.log('✅ RHP scripts loaded successfully');
     } catch (error) {
       console.error('❌ Error loading RHP scripts:', error);

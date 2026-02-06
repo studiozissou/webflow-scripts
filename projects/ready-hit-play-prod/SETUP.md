@@ -45,10 +45,20 @@ Now you can edit files locally and push to GitHub - changes will be live automat
 ## 🔄 Making Updates
 
 1. Edit files in `ready-hit-play-prod/`
-2. Commit & push:
+2. **Bump `CONFIG.version` in init.js** (e.g. `'2026.2.6.3'`) so module URLs change and the CDN serves fresh files.
+3. Commit & push:
    ```bash
    git add projects/ready-hit-play-prod/
    git commit -m "Your update message"
    git push origin main
    ```
-3. Changes are live! (Force refresh with `?v=timestamp` if needed)
+4. Optionally add the same version to the CSS link in Webflow: `ready-hit-play.css?v=2026.2.6.3`
+
+## 🛠 Cache busting & dev mode
+
+- **Production:** init.js loads modules with `?v=<CONFIG.version>`. Bump `version` in init.js on each deploy so the CDN fetches new module files.
+- **Development:** In Webflow (or your script tag), load init with a query param:
+  ```html
+  <script src="https://cdn.jsdelivr.net/gh/.../init.js?dev=1"></script>
+  ```
+  Every page load will request modules with a timestamp (`?t=...`), so you always get the latest from the CDN without bumping version or hard-refreshing.

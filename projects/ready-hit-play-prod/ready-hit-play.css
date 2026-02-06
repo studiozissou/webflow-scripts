@@ -186,6 +186,21 @@
   pointer-events: none;
 }
 
+/* Wrapper: fixed 96px box, centres .cursor_dot so position anchor never changes (stops flicker) */
+.cursor_target {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6rem;
+  height: 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transform: translate3d(-9999px, -9999px, 0);
+  will-change: transform;
+}
+
 .cursor_dot {
   /* Default: dot state - 1rem x 1rem, solid white, 1px border */
   width: 1rem;
@@ -200,6 +215,11 @@
   transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), height 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   aspect-ratio: 1 / 1;
+}
+
+/* When dot is inside .cursor_target, position comes from target; dot stays centred */
+.cursor_target .cursor_dot {
+  transform: translate3d(0, 0, 0);
 }
 
 .cursor_label {

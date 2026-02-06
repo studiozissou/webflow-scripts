@@ -25,6 +25,7 @@
     let cleanup = [];
     let rafId = 0;
     let cursorDot = null;
+    let cursorTarget = null;
     let cursorLabel = null;
     let cursorArrows = null;
     let currentState = 'dot';
@@ -40,8 +41,14 @@
     }
     function applyPosition(x, y) {
       if (!cursorDot || !document.body.contains(cursorDot)) return;
-      const { w, h } = getCursorSizePx();
-      cursorDot.style.transform = `translate3d(${x - w / 2}px, ${y - h / 2}px, 0)`;
+      const half = LARGE_PX / 2;
+      if (cursorTarget) {
+        cursorTarget.style.transform = `translate3d(${x - half}px, ${y - half}px, 0)`;
+        cursorDot.style.transform = 'translate3d(0,0,0)';
+      } else {
+        const { w, h } = getCursorSizePx();
+        cursorDot.style.transform = `translate3d(${x - w / 2}px, ${y - h / 2}px, 0)`;
+      }
     }
 
     function stop() {
@@ -73,6 +80,7 @@
       const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
       const scope = wrapper;
       cursorDot = scope.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
+      cursorTarget = (cursorDot && cursorDot.closest('.cursor_target')) || scope.querySelector('.cursor_target') || document.querySelector('.cursor_target');
       cursorLabel = scope.querySelector('.cursor_label') || document.querySelector('.cursor_label');
       cursorArrows = scope.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
 
@@ -153,6 +161,7 @@
         lastMouseY = e.clientY;
         if (!cursorDot || !document.body.contains(cursorDot)) {
           cursorDot = document.querySelector('.cursor_dot');
+          cursorTarget = (cursorDot && cursorDot.closest('.cursor_target')) || document.querySelector('.cursor_target');
           cursorLabel = document.querySelector('.cursor_label');
           cursorArrows = document.querySelector('.cursor_arrows');
           if (!cursorDot) return;
@@ -363,10 +372,12 @@
       if (!alive) return;
       const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
       const nextDot = wrapper.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
+      const nextTarget = (nextDot && nextDot.closest('.cursor_target')) || wrapper.querySelector('.cursor_target') || document.querySelector('.cursor_target');
       const nextLabel = wrapper.querySelector('.cursor_label') || document.querySelector('.cursor_label');
       const nextArrows = wrapper.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
       if (!nextDot) return;
       cursorDot = nextDot;
+      cursorTarget = nextTarget;
       cursorLabel = nextLabel;
       cursorArrows = nextArrows;
       setCursorState(currentState, null, false);

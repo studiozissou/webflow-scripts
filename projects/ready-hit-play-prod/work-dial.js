@@ -310,9 +310,8 @@
           applyActive(idx);
         }
 
-        // Desktop cursor morph - use cursor.js API
-        if (!isMobile() && RHP.cursor && RHP.cursor.setPosition) {
-          RHP.cursor.setPosition(e.clientX, e.clientY);
+        // Desktop cursor morph - only set state; position comes from cursor's single mousemove (avoids flicker)
+        if (!isMobile() && RHP.cursor && RHP.cursor.setState) {
           setCursorPlay(state.inInner);
         }
       }

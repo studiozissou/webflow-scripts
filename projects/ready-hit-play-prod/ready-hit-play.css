@@ -212,7 +212,9 @@
   user-select: none;
   white-space: nowrap;
   transition: opacity 0.3s ease, transform 0.3s ease;
+  /* White text (override body/Webflow default) */
   color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
 }
 
 .cursor_arrows {

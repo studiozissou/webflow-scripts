@@ -11,58 +11,34 @@ git push origin main
 ```
 
 ### 2. Update init.js
-Edit `init.js` line 8-9, replace:
-- `YOUR_USERNAME` with your GitHub username
-- `YOUR_REPO` with your repository name
+Edit `init.js` and set `baseUrl` to your repo (and optionally pin a commit, e.g. `@main` or `@cbbef90`).
 
-### 3. Get JS Deliver URL
-Your `init.js` URL will be:
-```
-https://cdn.jsdelivr.net/gh/YOUR_USERNAME/YOUR_REPO@main/projects/ready-hit-play-prod/init.js
-```
-
-### 4. Add to Webflow
+### 3. Add to Webflow (use pinned commit)
 
 **Site Settings → Custom Code → Inside `<head>` tag:**
 
-```html
-<!-- RHP Production Scripts -->
-<script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/YOUR_REPO@main/projects/ready-hit-play-prod/init.js"></script>
+Use the **same commit** in both URLs (e.g. replace `COMMIT` with the latest commit hash like `cbbef90`):
 
+```html
 <!-- RHP Styles -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/YOUR_REPO@main/projects/ready-hit-play-prod/ready-hit-play.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod/ready-hit-play.css">
+
+<!-- RHP Production Scripts -->
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod/init.js"></script>
 ```
 
-### 5. Verify
+### 4. Verify
 - Open your site
 - Check browser console for: `✅ RHP scripts loaded successfully` and `RHP: all 5 scripts present`
 - Test dial interaction and Barba transitions
 
-**Not seeing the latest init/checks?** The browser or CDN may be caching `init.js`. In Webflow, add the same version to the script URL, e.g. `init.js?v=2026.2.6.3` (use the `version` from `init.js` CONFIG). After each deploy, bump the `?v=` value to match.
-
-## ✅ Done!
-
-Now you can edit files locally and push to GitHub - changes will be live automatically (with ~7 day CDN cache).
-
 ## 🔄 Making Updates
 
 1. Edit files in `ready-hit-play-prod/`
-2. **Bump `CONFIG.version` in init.js** (e.g. `'2026.2.6.3'`) so module URLs change and the CDN serves fresh files.
-3. Commit & push:
-   ```bash
-   git add projects/ready-hit-play-prod/
-   git commit -m "Your update message"
-   git push origin main
-   ```
-4. Optionally add the same version to the CSS link in Webflow: `ready-hit-play.css?v=2026.2.6.3`
+2. **Bump `CONFIG.version` in init.js** when you want module cache to refresh.
+3. Commit & push to GitHub.
+4. **Update the commit in Webflow** – replace `COMMIT` in both the script and CSS URLs with the new commit hash (e.g. from `git log -1 --oneline`). That way you always load the exact deploy you want.
 
-## 🛠 Cache busting & dev mode
+## ✅ Done
 
-- **Production:** init.js loads modules with `?v=<CONFIG.version>`. Bump `version` in init.js on each deploy so the CDN fetches new module files.
-- **Development:** Dev mode (nocache) runs automatically when the page URL contains `webflow.io`, or when init is loaded with `?dev=1` / `?nocache=1`. In dev mode, init loads modules and RHP CSS from **raw GitHub** (`baseUrlRaw`) so you get the latest code without CDN cache. Keep your normal CSS `<link>` in Webflow; in dev mode init injects a second load that overrides with the fresh file.
-
-**Dev: use raw GitHub for init (optional).** To load init itself from raw so it’s never cached, use:
-```html
-<script src="https://raw.githubusercontent.com/studiozissou/webflow-scripts/main/projects/ready-hit-play-prod/init.js?dev=1"></script>
-```
-Then init will load all modules and RHP CSS from raw GitHub too. If scripts don’t run (raw can serve wrong MIME type in some setups), use jsDelivr with a commit pin instead (e.g. `@075aac0`).
+Use a pinned commit (`@cbbef90` or whatever the latest is) in your Webflow URLs so the CDN serves that exact version. When you deploy again, update the commit hash in Webflow to the new one.

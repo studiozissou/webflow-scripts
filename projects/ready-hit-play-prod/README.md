@@ -105,14 +105,14 @@ If you need immediate updates, append a version query:
 ### Initialization Order
 
 The `init.js` loader ensures proper order:
-1. Dependencies (Barba, Lenis) load first
+1. Dependencies (GSAP, ScrollTrigger, Barba, Lenis) load first
 2. Modules load in sequence: `lenis-manager` → `work-dial` → `orchestrator` → `utils`
 3. Each module waits for the previous to finish
 
 ### Webflow Requirements
 
 - **Barba.js** and **Lenis** are loaded via CDN (included in `init.js`)
-- **GSAP** must be enabled in Webflow Project Settings → **GSAP & Plugins**
+- **GSAP** and **ScrollTrigger** are loaded by `init.js` (no need to enable in Webflow). **SplitText** (Club plugin) is optional: set `splitTextUrl` in `init.js` to your member CDN or self-hosted URL, or leave `null` to skip.
 - Ensure your pages have `data-barba="container"` and `data-barba-namespace` attributes
 
 ### Namespace Setup
@@ -138,7 +138,7 @@ Namespaces:
 - Ensure file paths in `init.js` match your repo structure
 
 ### Initialization issues
-- Ensure GSAP is enabled in Webflow settings
+- GSAP is loaded automatically by the init script
 - Check that Barba and Lenis CDN links are accessible
 - Verify `window.RHP` exists in console after page load
 

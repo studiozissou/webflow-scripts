@@ -15,11 +15,16 @@
       'https://unpkg.com/lenis@1.3.17/dist/lenis.css'
     ],
 
-    // Dependencies (loaded first)
+    // Dependencies (loaded first): GSAP 3.14.2 + plugins (Webflow CDN), then Barba, Lenis
     dependencies: [
+      'https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js',
+      'https://cdn.prod.website-files.com/gsap/3.14.2/ScrollTrigger.min.js',
       'https://unpkg.com/@barba/core',
       'https://unpkg.com/lenis@1.3.17/dist/lenis.min.js'
     ],
+
+    // SplitText (Club GreenSock) – same CDN, loaded after ScrollTrigger
+    splitTextUrl: 'https://cdn.prod.website-files.com/gsap/3.14.2/SplitText.min.js',
 
     // Module files (loaded in order)
     modules: [
@@ -82,6 +87,10 @@
 
       for (const dep of CONFIG.dependencies) {
         await loadScript(dep);
+      }
+
+      if (CONFIG.splitTextUrl) {
+        await loadScript(CONFIG.splitTextUrl);
       }
 
       await new Promise(resolve => setTimeout(resolve, 10));

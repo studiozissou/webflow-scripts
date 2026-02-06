@@ -70,9 +70,9 @@
     });
   }
 
-  // Dev mode: if init.js was loaded with ?dev=1 or ?nocache=1, add timestamp to module URLs so every load is fresh (no cache)
+  // Dev mode: script ?dev=1/?nocache=1 or page URL contains webflow.io → timestamp on module URLs (no cache)
   const scriptSrc = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
-  const devMode = /[?&](?:dev|nocache)=1/i.test(scriptSrc);
+  const devMode = /[?&](?:dev|nocache)=1/i.test(scriptSrc) || (typeof location !== 'undefined' && /webflow\.io/i.test(location.href));
 
   // Load all dependencies first, then modules
   async function init() {

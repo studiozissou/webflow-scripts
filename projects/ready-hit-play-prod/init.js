@@ -92,6 +92,23 @@
         await loadScript(url);
       }
 
+      // Debug: report which RHP modules are present after load
+      const RHP = window.RHP || {};
+      const checks = [
+        { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: '' },
+        { module: 'cursor.js', ok: typeof RHP.cursor !== 'undefined', detail: RHP.cursor?.version || '(no version)' },
+        { module: 'work-dial.js', ok: typeof RHP.workDial !== 'undefined', detail: '' },
+        { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: '' },
+        { module: 'utils.js', ok: true, detail: '(no RHP export)' }
+      ];
+      const failed = checks.filter(function(c) { return !c.ok; });
+      if (failed.length) {
+        console.warn('RHP load check: some modules may not have run correctly:', failed.map(function(c) { return c.module; }));
+      }
+      console.log('RHP load check:', checks.map(function(c) {
+        return c.module + ': ' + (c.ok ? 'OK' : 'MISSING') + (c.detail ? ' (' + c.detail + ')' : '');
+      }).join(' | '));
+
       console.log('✅ RHP scripts loaded successfully');
     } catch (error) {
       console.error('❌ Error loading RHP scripts:', error);

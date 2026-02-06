@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.2.6.2'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.2.6.4'; // bump when you deploy; check in console: RHP.cursor.version
 
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
@@ -102,21 +102,28 @@
       let pendingX = -9999;
       let pendingY = -9999;
       let lastUnderCursor = null;
+      let lastUnderCursorStableCount = 0;
+      const STABLE_FRAMES = 3;
       let currentHoveredElement = null;
 
       const onPositionRaf = () => {
         positionRaf = 0;
         if (pendingX > -9999) {
           applyPosition(pendingX, pendingY);
-          // Sync state once per frame from element under cursor (2-frame stability to avoid boundary flicker)
-          const under = getElementUnderCursor(pendingX, pendingY);
-          const overDial = externalControl && under?.closest?.('.dial_component');
+          // Over dial = pointer is inside the dial's bounding rect only (so header/links elsewhere on homepage still get cursor state sync)
+          const dialEl = scope.querySelector('.dial_component') || document.querySelector('.dial_component');
+          const overDial = externalControl && dialEl && (function() {
+            const r = dialEl.getBoundingClientRect();
+            return pendingX >= r.left && pendingX <= r.right && pendingY >= r.top && pendingY <= r.bottom;
+          })();
           if (!overDial) {
+            const under = getElementUnderCursor(pendingX, pendingY);
             if (under !== lastUnderCursor) {
               lastUnderCursor = under;
+              lastUnderCursorStableCount = 1;
             } else {
-              // Same element for 2 consecutive frames — commit state
-              if (under !== currentHoveredElement) {
+              lastUnderCursorStableCount = (lastUnderCursorStableCount || 0) + 1;
+              if (lastUnderCursorStableCount >= STABLE_FRAMES && under !== currentHoveredElement) {
                 currentHoveredElement = under;
                 if (under) {
                   const cursorType = under.getAttribute('data-cursor');
@@ -135,6 +142,7 @@
             }
           } else {
             lastUnderCursor = null;
+            lastUnderCursorStableCount = 0;
           }
         }
       };

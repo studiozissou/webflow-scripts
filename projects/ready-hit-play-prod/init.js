@@ -29,7 +29,8 @@
       'work-dial.js',
       'orchestrator.js',
       'utils.js'
-    ]
+    ],
+    rhpCss: 'ready-hit-play.css'
   };
 
   // Load a stylesheet and return a promise
@@ -80,6 +81,9 @@
       // Load CSS dependencies first
       for (const css of CONFIG.cssDependencies) {
         await loadStylesheet(css);
+      }
+      if (devMode && CONFIG.rhpCss) {
+        await loadStylesheet(`${CONFIG.baseUrl}/${CONFIG.rhpCss}?t=${Date.now()}`);
       }
 
       // Load JavaScript dependencies

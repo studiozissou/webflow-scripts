@@ -186,7 +186,7 @@
   pointer-events: none;
 }
 
-/* Wrapper: fixed 96px box, centres .cursor_dot so position anchor never changes (stops flicker) */
+/* Wrapper: fixed 96px box, centres .cursor_dot so position anchor never changes (stops flicker). Initial off-screen set in JS. */
 .cursor_target {
   position: absolute;
   left: 0;
@@ -197,7 +197,6 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  transform: translate3d(-9999px, -9999px, 0);
   will-change: transform;
 }
 

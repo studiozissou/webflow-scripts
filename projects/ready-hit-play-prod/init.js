@@ -101,8 +101,10 @@
         await loadScript(url);
       }
 
-      // Debug: report which RHP modules are present after load
+      // Debug: report which RHP modules are present after load; expose loader version on RHP
       const RHP = window.RHP || {};
+      RHP.version = CONFIG.version || '0';
+      window.RHP = RHP;
       const checks = [
         { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: '' },
         { module: 'cursor.js', ok: typeof RHP.cursor !== 'undefined', detail: RHP.cursor?.version || '(no version)' },
@@ -111,12 +113,19 @@
         { module: 'utils.js', ok: true, detail: '(no RHP export)' }
       ];
       const failed = checks.filter(function(c) { return !c.ok; });
-      if (failed.length) {
-        console.warn('RHP load check: some modules may not have run correctly:', failed.map(function(c) { return c.module; }));
-      }
+      const allOk = failed.length === 0;
+      RHP.scriptsOk = allOk;
+      RHP.scriptsCheck = { total: checks.length, ok: checks.length - failed.length, failed: failed.map(function(c) { return c.module; }) };
+      window.RHP = RHP;
+
       console.log('RHP load check:', checks.map(function(c) {
         return c.module + ': ' + (c.ok ? 'OK' : 'MISSING') + (c.detail ? ' (' + c.detail + ')' : '');
-      }).join(' | '));
+      }).join(' | ') + ' | version: ' + RHP.version);
+      if (allOk) {
+        console.log('✅ RHP: all ' + checks.length + ' scripts present');
+      } else {
+        console.warn('⚠️ RHP: ' + failed.length + ' script(s) missing – ' + failed.map(function(c) { return c.module; }).join(', '));
+      }
 
       if (devMode) console.log('RHP: dev mode (nocache) – modules loaded with timestamp');
       console.log('✅ RHP scripts loaded successfully');

@@ -2,6 +2,7 @@
    RHP — Contact pullout (GSAP open/close)
    - .nav_contact-link opens, outside click or .nav_contact-close closes
    - 0.7s exponential easing each way
+   - Matches initial CSS transform: translate(100%); uses xPercent
    ========================================= */
 (() => {
   const DURATION = 0.7;
@@ -17,11 +18,13 @@
     if (!pullout || !window.gsap) return;
     if (isOpen) return;
     isOpen = true;
+    window.gsap.killTweensOf(pullout);
     window.gsap.to(pullout, {
       xPercent: 0,
       duration: DURATION,
       ease: EASE,
-      overwrite: true
+      overwrite: true,
+      force3D: true
     });
     scheduleOffClickListen();
   }
@@ -30,11 +33,13 @@
     if (!pullout || !window.gsap) return;
     if (!isOpen) return;
     isOpen = false;
+    window.gsap.killTweensOf(pullout);
     window.gsap.to(pullout, {
       xPercent: 100,
       duration: DURATION,
       ease: EASE,
-      overwrite: true
+      overwrite: true,
+      force3D: true
     });
     removeOffClickListen();
   }
@@ -76,6 +81,12 @@
     closeBtn = scope.querySelector('.nav_contact-close');
 
     if (!pullout) return;
+
+    // Take ownership of transform: start closed (matches CSS translate(100%))
+    if (window.gsap) {
+      window.gsap.killTweensOf(pullout);
+      window.gsap.set(pullout, { xPercent: 100, force3D: true });
+    }
 
     if (contactLink) {
       contactLink.addEventListener('click', (e) => {

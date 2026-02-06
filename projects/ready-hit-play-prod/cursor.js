@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.2.6.1'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.2.6.2'; // bump when you deploy; check in console: RHP.cursor.version
 
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
@@ -101,12 +101,45 @@
       let positionRaf = 0;
       let pendingX = -9999;
       let pendingY = -9999;
+      let lastUnderCursor = null;
+      let currentHoveredElement = null;
+
       const onPositionRaf = () => {
         positionRaf = 0;
-        if (pendingX > -9999) applyPosition(pendingX, pendingY);
+        if (pendingX > -9999) {
+          applyPosition(pendingX, pendingY);
+          // Sync state once per frame from element under cursor (2-frame stability to avoid boundary flicker)
+          const under = getElementUnderCursor(pendingX, pendingY);
+          const overDial = externalControl && under?.closest?.('.dial_component');
+          if (!overDial) {
+            if (under !== lastUnderCursor) {
+              lastUnderCursor = under;
+            } else {
+              // Same element for 2 consecutive frames — commit state
+              if (under !== currentHoveredElement) {
+                currentHoveredElement = under;
+                if (under) {
+                  const cursorType = under.getAttribute('data-cursor');
+                  const cursorText = under.getAttribute('data-cursor-text') || null;
+                  const cursorSvgs = under.getAttribute('data-cursor-svgs');
+                  if (cursorType) {
+                    stateStack = [stateStack[0] || 'dot'];
+                    stateStack.push(currentState);
+                    setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
+                  }
+                } else {
+                  stateStack = ['dot'];
+                  setCursorState('dot', null, false);
+                }
+              }
+            }
+          } else {
+            lastUnderCursor = null;
+          }
+        }
       };
 
-      // Single mousemove listener, one position update per frame (stops flicker)
+      // Single mousemove listener; position and state both updated in rAF (one place, once per frame)
       const handleMouseMove = (e) => {
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
@@ -119,34 +152,6 @@
         pendingX = e.clientX;
         pendingY = e.clientY;
         if (!positionRaf) positionRaf = requestAnimationFrame(onPositionRaf);
-
-        // Sync cursor state from element under cursor (only when stable for 2 consecutive updates to avoid boundary flicker)
-        const under = getElementUnderCursor(e.clientX, e.clientY);
-        const overDial = externalControl && under?.closest?.('.dial_component');
-        if (overDial) {
-          lastUnderCursor = null;
-          return;
-        }
-        if (under !== lastUnderCursor) {
-          lastUnderCursor = under;
-          return;
-        }
-        // Same element two updates in a row — commit state change
-        if (under === currentHoveredElement) return;
-        currentHoveredElement = under;
-        if (under) {
-          const cursorType = under.getAttribute('data-cursor');
-          const cursorText = under.getAttribute('data-cursor-text') || null;
-          const cursorSvgs = under.getAttribute('data-cursor-svgs');
-          if (cursorType) {
-            stateStack = [stateStack[0] || 'dot'];
-            stateStack.push(currentState);
-            setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
-          }
-        } else {
-          stateStack = ['dot'];
-          setCursorState('dot', null, false);
-        }
       };
 
       document.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
@@ -157,125 +162,8 @@
 
       if (lastMouseX > -9999 && lastMouseY > -9999) applyPosition(lastMouseX, lastMouseY);
 
-      // Track currently hovered element with data-cursor
-      let currentHoveredElement = null;
-      // Require same element under cursor for 2 consecutive updates before changing state (stops flicker at boundaries)
-      let lastUnderCursor = null;
-
-      // Helper to restore previous state
-      const restorePreviousState = () => {
-        if (stateStack.length > 1) {
-          stateStack.pop();
-          const prevState = stateStack[stateStack.length - 1];
-          setCursorState(prevState, null, false);
-        } else {
-          setCursorState('dot', null, false);
-        }
-      };
-
-      // Mouse over handler for elements with data-cursor
-      const handleMouseOver = (e) => {
-        const element = getElementUnderCursor(e.clientX, e.clientY) || e.target?.closest?.('[data-cursor]');
-        
-        // If no element with data-cursor, restore default if we were hovering one
-        if (!element) {
-          if (currentHoveredElement) {
-            currentHoveredElement = null;
-            restorePreviousState();
-          }
-          return;
-        }
-
-        // If already hovering this exact element, do nothing
-        if (element === currentHoveredElement) return;
-
-        // Check relationship between current and new element
-        const isMovingToChild = currentHoveredElement && 
-                                 currentHoveredElement.contains && 
-                                 currentHoveredElement.contains(element);
-        const isMovingToParent = currentHoveredElement && 
-                                  element.contains && 
-                                  element.contains(currentHoveredElement);
-
-        // If moving from parent to child: save parent state to stack, then apply child state
-        if (isMovingToChild) {
-          stateStack.push(currentState);
-        }
-        // If moving from child to parent: pop child state, restore parent state
-        else if (isMovingToParent) {
-          if (stateStack.length > 1) {
-            stateStack.pop(); // Remove child state
-            const parentState = stateStack[stateStack.length - 1];
-            currentHoveredElement = element;
-            setCursorState(parentState, null, false);
-            return;
-          }
-        }
-        // If moving to a completely different element (sibling or unrelated)
-        else if (currentHoveredElement) {
-          restorePreviousState();
-        }
-
-        // Now enter the new element
-        currentHoveredElement = element;
-        const cursorType = element.getAttribute('data-cursor');
-        const cursorText = element.getAttribute('data-cursor-text') || null;
-        const cursorSvgs = element.getAttribute('data-cursor-svgs');
-
-        if (cursorType) {
-          // Only push to stack if not moving from parent to child (already pushed above)
-          if (!isMovingToChild) {
-            stateStack.push(currentState);
-          }
-          setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
-        }
-      };
-
-      // Mouse out handler
-      const handleMouseOut = (e) => {
-        const elementUnderCursor = getElementUnderCursor(e.clientX, e.clientY);
-        const element = e.target?.closest?.('[data-cursor]') || elementUnderCursor;
-        
-        // If we're not leaving the currently hovered element, ignore
-        if (!element || element !== currentHoveredElement) return;
-
-        // Check where we're moving to
-        const relatedElement = elementUnderCursor || e.relatedTarget?.closest?.('[data-cursor]');
-        
-        if (relatedElement) {
-          // Moving to another element with data-cursor
-          if (relatedElement === element) {
-            // Moving to a child of the same element, don't reset
-            return;
-          } else if (element.contains && element.contains(relatedElement)) {
-            // Moving from parent to child - child will handle its own state in mouseover
-            // Don't reset here, let mouseover handle the transition
-            return;
-          } else if (relatedElement.contains && relatedElement.contains(element)) {
-            // Moving from child to parent - restore parent state
-            currentHoveredElement = null;
-            restorePreviousState();
-            return;
-          }
-        }
-
-        // Actually leaving the element (moving to area without data-cursor)
-        currentHoveredElement = null;
-        restorePreviousState();
-      };
-
-      // Attach to both document and window so hover state works everywhere (nav, dial, content)
-      document.addEventListener('mouseover', handleMouseOver, true);
-      document.addEventListener('mouseout', handleMouseOut, true);
-      window.addEventListener('mouseover', handleMouseOver, true);
-      window.addEventListener('mouseout', handleMouseOut, true);
-      cleanup.push(() => {
-        document.removeEventListener('mouseover', handleMouseOver, true);
-        document.removeEventListener('mouseout', handleMouseOut, true);
-        window.removeEventListener('mouseover', handleMouseOver, true);
-        window.removeEventListener('mouseout', handleMouseOut, true);
-        currentHoveredElement = null;
-      });
+      // State is updated only from mousemove → rAF (elementFromPoint + 2-frame stability). No mouseover/mouseout
+      // so we avoid two competing sources of state that caused flicker when moving slowly.
 
       // Hide default cursor
       document.body.style.cursor = 'none';
@@ -310,7 +198,7 @@
       // Get CSS variable for orange color
       const orangeColor = getComputedStyle(document.documentElement)
         .getPropertyValue('--_primitives---colors--orange')
-        .trim() || '#ff8200';
+        .trim() || '#fe5e00';
 
       switch (type) {
         case 'dot':

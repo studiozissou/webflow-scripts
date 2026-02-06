@@ -27,7 +27,9 @@
     let cursorArrows = null;
     let currentState = 'dot';
     let stateStack = ['dot']; // Stack to track state history
-    let externalControl = false; // When true, external code (like work-dial) controls position
+    let externalControl = false; // When true, work-dial controls cursor state; we still run position
+    let lastMouseX = -9999;
+    let lastMouseY = -9999;
 
     function stop() {
       if (!alive) return;
@@ -54,15 +56,15 @@
       currentState = 'dot';
       externalControl = options.externalControl || false;
 
-      // Get cursor elements — cursor and nav live outside data-barba=container but inside data-barba-wrapper
-      const wrapper = document.querySelector('[data-barba-wrapper]');
-      const scope = wrapper || document;
+      // Cursor and nav are outside [data-barba=container], wrapper is body with data-barba="wrapper"
+      const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+      const scope = wrapper;
       cursorDot = scope.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
       cursorLabel = scope.querySelector('.cursor_label') || document.querySelector('.cursor_label');
       cursorArrows = scope.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
 
       if (!cursorDot) {
-        console.warn('RHP Cursor: .cursor_dot not found (ensure cursor is in DOM, e.g. inside data-barba-wrapper)');
+        console.warn('RHP Cursor: .cursor_dot not found (cursor should be in wrapper, e.g. body or [data-barba="wrapper"])');
         alive = false;
         return;
       }
@@ -70,37 +72,26 @@
       // Reset to default state
       setCursorState('dot', null, false);
 
-      // Mouse move handler (only if not externally controlled)
-      if (!externalControl) {
-        let lastX = -9999;
-        let lastY = -9999;
-        
-        const handleMouseMove = (e) => {
-          if (!cursorDot) return;
-          
-          // Skip if position hasn't changed (performance optimization)
-          if (e.clientX === lastX && e.clientY === lastY) return;
-          lastX = e.clientX;
-          lastY = e.clientY;
-          
-          // Get current size to center the cursor
-          const rect = cursorDot.getBoundingClientRect();
-          const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-          const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-          cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
-        };
+      // Always update cursor position on mousemove (so nav and all areas work; work-dial can still call setPosition on dial)
+      const handleMouseMove = (e) => {
+        if (!cursorDot) return;
+        if (e.clientX === lastMouseX && e.clientY === lastMouseY) return;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        const rect = cursorDot.getBoundingClientRect();
+        const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+        const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+        cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
+      };
 
-        // Use capture phase to ensure we catch all mousemove events
-        document.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
-        cleanup.push(() => document.removeEventListener('mousemove', handleMouseMove, { capture: true }));
-        
-        // Initialize cursor position on first mouse move (in case mouse is already over page)
-        // This ensures cursor is visible even if user doesn't move mouse after page load
-        const initPosition = (e) => {
-          handleMouseMove(e);
-          document.removeEventListener('mousemove', initPosition, { capture: true });
-        };
-        document.addEventListener('mousemove', initPosition, { once: true, capture: true });
+      document.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
+      cleanup.push(() => document.removeEventListener('mousemove', handleMouseMove, { capture: true }));
+
+      // After Barba transition, cursor stays at last position; re-apply so it doesn't appear stuck
+      if (lastMouseX > -9999 && lastMouseY > -9999) {
+        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
       }
 
       // Track currently hovered element with data-cursor
@@ -224,10 +215,11 @@
       });
     }
 
-    // Public API: Set cursor position (for external control like work-dial)
+    // Public API: Set cursor position (for work-dial on homepage)
     function setPosition(x, y) {
       if (!cursorDot || !alive) return;
-      // Center the cursor on the mouse position
+      lastMouseX = x;
+      lastMouseY = y;
       const rect = cursorDot.getBoundingClientRect();
       const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
       const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;

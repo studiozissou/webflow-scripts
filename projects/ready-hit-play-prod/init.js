@@ -5,24 +5,22 @@
 (function() {
   'use strict';
 
-  // Configuration - Bump version on deploy so module URLs change and cache is busted.
-  // If init.js itself is cached, add ?v=<version> to the script URL in Webflow (e.g. init.js?v=2026.2.6.3).
+  // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
     version: '2026.2.6.3',
-    baseUrl: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@main/projects/ready-hit-play-prod',
-    baseUrlRaw: 'https://raw.githubusercontent.com/studiozissou/webflow-scripts/main/projects/ready-hit-play-prod',
-    
+    baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
+
     // CSS dependencies (loaded first)
     cssDependencies: [
       'https://unpkg.com/lenis@1.3.17/dist/lenis.css'
     ],
-    
+
     // Dependencies (loaded first)
     dependencies: [
       'https://unpkg.com/@barba/core',
       'https://unpkg.com/lenis@1.3.17/dist/lenis.min.js'
     ],
-    
+
     // Module files (loaded in order)
     modules: [
       'lenis-manager.js',
@@ -30,20 +28,17 @@
       'work-dial.js',
       'orchestrator.js',
       'utils.js'
-    ],
-    rhpCss: 'ready-hit-play.css'
+    ]
   };
 
   // Load a stylesheet and return a promise
   function loadStylesheet(href) {
     return new Promise((resolve, reject) => {
-      // Check if already loaded
       const existing = document.querySelector(`link[href="${href}"]`);
       if (existing) {
         resolve();
         return;
       }
-
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = href;
@@ -56,55 +51,46 @@
   // Load a script and return a promise
   function loadScript(src) {
     return new Promise((resolve, reject) => {
-      // Check if already loaded
       const existing = document.querySelector(`script[src="${src}"]`);
       if (existing) {
         resolve();
         return;
       }
-
       const script = document.createElement('script');
       script.src = src;
-      script.async = false; // Maintain order
+      script.async = false;
       script.onload = () => resolve();
       script.onerror = () => reject(new Error(`Failed to load: ${src}`));
       document.head.appendChild(script);
     });
   }
 
-  // Dev mode: script ?dev=1/?nocache=1 or page URL contains webflow.io → timestamp on module URLs (no cache)
-  const scriptSrc = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
-  const devMode = /[?&](?:dev|nocache)=1/i.test(scriptSrc) || (typeof location !== 'undefined' && /webflow\.io/i.test(location.href));
+  function getBaseUrl() {
+    var scriptSrc = typeof document !== 'undefined' && document.currentScript && document.currentScript.src ? document.currentScript.src : '';
+    var match = scriptSrc.match(/@([a-f0-9]{7,40})(?:\/|$)/i);
+    var commit = match ? match[1] : 'main';
+    return CONFIG.baseUrlTemplate.replace('COMMIT', commit);
+  }
 
-  // Load all dependencies first, then modules
   async function init() {
     try {
-      // Load CSS dependencies first
+      var baseUrl = getBaseUrl();
+
       for (const css of CONFIG.cssDependencies) {
         await loadStylesheet(css);
       }
-      if (devMode && CONFIG.rhpCss) {
-        const devBase = CONFIG.baseUrlRaw || CONFIG.baseUrl;
-        loadStylesheet(`${devBase}/${CONFIG.rhpCss}?t=${Date.now()}`).catch(function() {});
-      }
 
-      // Load JavaScript dependencies
       for (const dep of CONFIG.dependencies) {
         await loadScript(dep);
       }
 
-      // Wait a tick to ensure globals are available
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      // Load modules in order (version param busts cache on deploy; dev mode uses raw GitHub + timestamp for fresh load)
-      const moduleBase = devMode ? (CONFIG.baseUrlRaw || CONFIG.baseUrl) : CONFIG.baseUrl;
-      const moduleParam = devMode ? 't=' + Date.now() : 'v=' + (CONFIG.version || '0');
+      const versionParam = 'v=' + (CONFIG.version || '0');
       for (const module of CONFIG.modules) {
-        const url = `${moduleBase}/${module}?${moduleParam}`;
-        await loadScript(url);
+        await loadScript(`${baseUrl}/${module}?${versionParam}`);
       }
 
-      // Debug: report which RHP modules are present after load; expose loader version on RHP
       const RHP = window.RHP || {};
       RHP.version = CONFIG.version || '0';
       window.RHP = RHP;
@@ -130,14 +116,12 @@
         console.warn('⚠️ RHP: ' + failed.length + ' script(s) missing – ' + failed.map(function(c) { return c.module; }).join(', '));
       }
 
-      if (devMode) console.log('RHP: dev mode (nocache) – modules loaded with timestamp');
       console.log('✅ RHP scripts loaded successfully');
     } catch (error) {
       console.error('❌ Error loading RHP scripts:', error);
     }
   }
 
-  // Start loading when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

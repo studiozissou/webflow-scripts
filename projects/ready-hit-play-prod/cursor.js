@@ -97,6 +97,10 @@
         return;
       }
 
+      if (cursorTarget) {
+        cursorTarget.style.transform = 'translate3d(-9999px, -9999px, 0)';
+      }
+
       // Reset to default state
       setCursorState('dot', null, false);
 
@@ -111,7 +115,7 @@
       let pendingY = -9999;
       let lastUnderCursor = null;
       let lastUnderCursorStableCount = 0;
-      const STABLE_FRAMES = 3;
+      const STABLE_FRAMES = 5;
       let currentHoveredElement = null;
 
       const onPositionRaf = () => {

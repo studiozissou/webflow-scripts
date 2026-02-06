@@ -33,6 +33,17 @@
     let lastMouseX = -9999;
     let lastMouseY = -9999;
 
+    const DOT_PX = 16;
+    const LARGE_PX = 96;
+    function getCursorSizePx() {
+      return currentState === 'dot' ? { w: DOT_PX, h: DOT_PX } : { w: LARGE_PX, h: LARGE_PX };
+    }
+    function applyPosition(x, y) {
+      if (!cursorDot || !document.body.contains(cursorDot)) return;
+      const { w, h } = getCursorSizePx();
+      cursorDot.style.transform = `translate3d(${x - w / 2}px, ${y - h / 2}px, 0)`;
+    }
+
     function stop() {
       if (!alive) return;
       alive = false;
@@ -81,30 +92,35 @@
       // Reset to default state
       setCursorState('dot', null, false);
 
-      // Resolve element under cursor (used for both move and hover; cursor has pointer-events:none)
+      // Resolve element under cursor (cursor has pointer-events:none)
       const getElementUnderCursor = (clientX, clientY) => {
         const el = document.elementFromPoint(clientX, clientY);
         return el?.closest?.('[data-cursor]') || null;
       };
 
-      // Always update cursor position on mousemove (nav, dial, all areas)
+      let positionRaf = 0;
+      let pendingX = -9999;
+      let pendingY = -9999;
+      const onPositionRaf = () => {
+        positionRaf = 0;
+        if (pendingX > -9999) applyPosition(pendingX, pendingY);
+      };
+
+      // Single mousemove listener, one position update per frame (stops flicker)
       const handleMouseMove = (e) => {
-        if (e.clientX === lastMouseX && e.clientY === lastMouseY) return;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
-        // If cursor node was replaced by Barba, re-query so we update the visible one
         if (!cursorDot || !document.body.contains(cursorDot)) {
           cursorDot = document.querySelector('.cursor_dot');
           cursorLabel = document.querySelector('.cursor_label');
           cursorArrows = document.querySelector('.cursor_arrows');
           if (!cursorDot) return;
         }
-        const rect = cursorDot.getBoundingClientRect();
-        const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-        const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-        cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
+        pendingX = e.clientX;
+        pendingY = e.clientY;
+        if (!positionRaf) positionRaf = requestAnimationFrame(onPositionRaf);
 
-        // Sync cursor state from element under cursor (works even when mouseover doesn't fire)
+        // Sync cursor state from element under cursor
         const under = getElementUnderCursor(e.clientX, e.clientY);
         const overDial = externalControl && under?.closest?.('.dial_component');
         if (!overDial && under !== currentHoveredElement) {
@@ -126,18 +142,12 @@
       };
 
       document.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
-      window.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
       cleanup.push(() => {
         document.removeEventListener('mousemove', handleMouseMove, { capture: true });
-        window.removeEventListener('mousemove', handleMouseMove, { capture: true });
+        if (positionRaf) cancelAnimationFrame(positionRaf);
       });
 
-      // After Barba transition, cursor stays at last position; re-apply so it doesn't appear stuck
-      if (lastMouseX > -9999 && lastMouseY > -9999) {
-        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
-      }
+      if (lastMouseX > -9999 && lastMouseY > -9999) applyPosition(lastMouseX, lastMouseY);
 
       // Track currently hovered element with data-cursor
       let currentHoveredElement = null;
@@ -269,10 +279,7 @@
       if (!cursorDot || !alive) return;
       lastMouseX = x;
       lastMouseY = y;
-      const rect = cursorDot.getBoundingClientRect();
-      const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-      const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-      cursorDot.style.transform = `translate3d(${x - width / 2}px, ${y - height / 2}px, 0)`;
+      applyPosition(x, y);
     }
 
     // Public API: Set cursor state programmatically (for work-dial's play state)
@@ -458,11 +465,7 @@
       cursorLabel = nextLabel;
       cursorArrows = nextArrows;
       setCursorState(currentState, null, false);
-      if (lastMouseX > -9999 && lastMouseY > -9999) {
-        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
-      }
+      if (lastMouseX > -9999 && lastMouseY > -9999) applyPosition(lastMouseX, lastMouseY);
     }
 
     return {

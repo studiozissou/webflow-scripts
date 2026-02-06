@@ -199,6 +199,7 @@
   will-change: transform, width, height, background-color, border-color;
   transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
   position: relative;
+  aspect-ratio: 1 / 1;
 }
 
 .cursor_label {
@@ -211,6 +212,7 @@
   user-select: none;
   white-space: nowrap;
   transition: opacity 0.3s ease, transform 0.3s ease;
+  color: #fff !important;
 }
 
 .cursor_arrows {
@@ -221,6 +223,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 1 / 1;
 }
 
 .cursor_arrows svg {

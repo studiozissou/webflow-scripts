@@ -155,42 +155,80 @@
      - .nav_contact-link click → pullout opacity 1 (linear 0.5s)
      - Click outside pullout or on close button → pullout opacity 0 (linear 0.5s)
      - Add class .nav_contact-close to your close button in Webflow
+     - Uses event delegation so link/pullout can appear after init (e.g. symbols)
      ----------------------------- */
   function initContactPullout() {
-    const pullout = document.querySelector('.nav_contact-pullout');
-    const link = document.querySelector('.nav_contact-link');
-    if (!pullout || !link) return;
     const gsap = window.gsap;
-    if (!gsap) return;
+    if (!gsap) {
+      console.warn('RHP contact pullout: GSAP not found. Enable GSAP in Webflow Project Settings.');
+      return;
+    }
 
     let isOpen = false;
-    gsap.set(pullout, { opacity: 0 });
-    pullout.style.pointerEvents = 'none';
+    let pulloutEl = null;
 
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+    function getPullout() {
+      if (pulloutEl && document.contains(pulloutEl)) return pulloutEl;
+      pulloutEl = document.querySelector('.nav_contact-pullout');
+      return pulloutEl;
+    }
+
+    function openPullout() {
+      const pullout = getPullout();
+      if (!pullout) {
+        console.warn('RHP contact pullout: .nav_contact-pullout not found in DOM. Add this class to your pullout panel in Webflow.');
+        return;
+      }
       isOpen = true;
       pullout.style.pointerEvents = 'auto';
       gsap.to(pullout, { opacity: 1, duration: 0.5, ease: 'none' });
-    });
+    }
 
+    function closePullout() {
+      const pullout = getPullout();
+      if (!pullout) return;
+      isOpen = false;
+      gsap.to(pullout, {
+        opacity: 0,
+        duration: 0.5,
+        ease: 'none',
+        onComplete: () => {
+          pullout.style.pointerEvents = 'none';
+        }
+      });
+    }
+
+    // Init: hide pullout if it exists so first open animates correctly
+    function setInitialState() {
+      const pullout = document.querySelector('.nav_contact-pullout');
+      if (pullout) {
+        gsap.set(pullout, { opacity: 0 });
+        pullout.style.pointerEvents = 'none';
+      }
+    }
+
+    // Open on .nav_contact-link click (delegated – works if link is in symbol or added later)
     document.addEventListener('click', (e) => {
+      const link = e.target.closest('.nav_contact-link');
+      if (!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openPullout();
+    }, true);
+
+    // Close when clicking outside pullout or on .nav_contact-close (don't close when opening via link)
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.nav_contact-link')) return;
       if (!isOpen) return;
+      const pullout = getPullout();
+      if (!pullout) return;
       const inPullout = pullout.contains(e.target);
       const isCloseBtn = e.target.closest('.nav_contact-close');
-      if (!inPullout || isCloseBtn) {
-        isOpen = false;
-        gsap.to(pullout, {
-          opacity: 0,
-          duration: 0.5,
-          ease: 'none',
-          onComplete: () => {
-            pullout.style.pointerEvents = 'none';
-          }
-        });
-      }
-    });
+      if (!inPullout || isCloseBtn) closePullout();
+    }, true);
+
+    // Run after a short delay so Webflow DOM (and symbols) are ready
+    setTimeout(setInitialState, 100);
   }
 
   /* -----------------------------

@@ -151,6 +151,49 @@
   RHP.views.contact = RHP.views.contact || makeScrollPage();
 
   /* -----------------------------
+     Contact pullout (GSAP open/close)
+     - .nav_contact-link click → pullout opacity 1 (linear 0.5s)
+     - Click outside pullout or on close button → pullout opacity 0 (linear 0.5s)
+     - Add class .nav_contact-close to your close button in Webflow
+     ----------------------------- */
+  function initContactPullout() {
+    const pullout = document.querySelector('.nav_contact-pullout');
+    const link = document.querySelector('.nav_contact-link');
+    if (!pullout || !link) return;
+    const gsap = window.gsap;
+    if (!gsap) return;
+
+    let isOpen = false;
+    gsap.set(pullout, { opacity: 0 });
+    pullout.style.pointerEvents = 'none';
+
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isOpen = true;
+      pullout.style.pointerEvents = 'auto';
+      gsap.to(pullout, { opacity: 1, duration: 0.5, ease: 'none' });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!isOpen) return;
+      const inPullout = pullout.contains(e.target);
+      const isCloseBtn = e.target.closest('.nav_contact-close');
+      if (!inPullout || isCloseBtn) {
+        isOpen = false;
+        gsap.to(pullout, {
+          opacity: 0,
+          duration: 0.5,
+          ease: 'none',
+          onComplete: () => {
+            pullout.style.pointerEvents = 'none';
+          }
+        });
+      }
+    });
+  }
+
+  /* -----------------------------
      Initial boot (no Barba nav yet)
      ----------------------------- */
   function bootCurrentView() {
@@ -346,5 +389,8 @@
     });
   }
 
-  ready(initBarba);
+  ready(() => {
+    initBarba();
+    initContactPullout();
+  });
 })();

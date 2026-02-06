@@ -1,8 +1,8 @@
 /* =========================================
    RHP — Contact pullout (GSAP open/close)
    - .nav_contact-link opens, outside click or .nav_contact-close closes
-   - 0.7s exponential easing each way
-   - Matches initial CSS transform: translate(100%); uses xPercent
+   - 0.7s exponential easing. Open = x:0, close = x:100% (width).
+   - No fromTo: we only animate TO the target so we never flash 540px on open.
    ========================================= */
 (() => {
   const DURATION = 0.7;
@@ -14,41 +14,18 @@
   let isOpen = false;
   let offClickBound = false;
 
-  /** Clear Webflow inline transform/translate so only GSAP controls the element */
-  function clearPulloutTransform() {
-    if (!pullout) return;
-    pullout.style.transform = '';
-    pullout.style.translate = '';
-    pullout.style.rotate = '';
-    pullout.style.scale = '';
-  }
-
   function open() {
     if (!pullout || !window.gsap) return;
     if (isOpen) return;
     isOpen = true;
     scheduleOffClickListen();
-    var width = pullout.offsetWidth;
-    // Defer so we run after Webflow interactions on the same click
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        clearPulloutTransform();
-        window.gsap.killTweensOf(pullout);
-        window.gsap.fromTo(pullout,
-          { x: width },
-          {
-            x: 0,
-            duration: DURATION,
-            ease: EASE,
-            overwrite: true,
-            force3D: true,
-            onComplete: function() {
-              window.gsap.set(pullout, { x: 0 });
-              pullout.style.transform = 'translate3d(0px, 0px, 0px)';
-            }
-          }
-        );
-      });
+    window.gsap.killTweensOf(pullout);
+    window.gsap.to(pullout, {
+      x: 0,
+      duration: DURATION,
+      ease: EASE,
+      overwrite: true,
+      force3D: true
     });
   }
 
@@ -56,22 +33,14 @@
     if (!pullout || !window.gsap) return;
     if (!isOpen) return;
     isOpen = false;
-    clearPulloutTransform();
     window.gsap.killTweensOf(pullout);
-    var width = pullout.offsetWidth;
-    window.gsap.fromTo(pullout,
-      { x: 0 },
-      {
-        x: width,
-        duration: DURATION,
-        ease: EASE,
-        overwrite: true,
-        force3D: true,
-        onComplete: function() {
-          window.gsap.set(pullout, { x: width });
-        }
-      }
-    );
+    window.gsap.to(pullout, {
+      x: pullout.offsetWidth,
+      duration: DURATION,
+      ease: EASE,
+      overwrite: true,
+      force3D: true
+    });
     removeOffClickListen();
   }
 
@@ -112,13 +81,6 @@
     closeBtn = scope.querySelector('.nav_contact-close');
 
     if (!pullout) return;
-
-    // Clear Webflow inline transform, then own it with GSAP (closed = off to the right)
-    clearPulloutTransform();
-    if (window.gsap) {
-      window.gsap.killTweensOf(pullout);
-      window.gsap.set(pullout, { x: pullout.offsetWidth, force3D: true });
-    }
 
     if (contactLink) {
       contactLink.addEventListener('click', (e) => {

@@ -54,10 +54,10 @@
       currentState = 'dot';
       externalControl = options.externalControl || false;
 
-      // Get cursor elements
-      cursorDot = container.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
-      cursorLabel = container.querySelector('.cursor_label') || document.querySelector('.cursor_label');
-      cursorArrows = container.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
+      // Get cursor elements (always search document first since cursor component is at root level)
+      cursorDot = document.querySelector('.cursor_dot');
+      cursorLabel = document.querySelector('.cursor_label');
+      cursorArrows = document.querySelector('.cursor_arrows');
 
       if (!cursorDot) {
         console.warn('Cursor dot element not found');
@@ -69,8 +69,17 @@
 
       // Mouse move handler (only if not externally controlled)
       if (!externalControl) {
+        let lastX = -9999;
+        let lastY = -9999;
+        
         const handleMouseMove = (e) => {
           if (!cursorDot) return;
+          
+          // Skip if position hasn't changed (performance optimization)
+          if (e.clientX === lastX && e.clientY === lastY) return;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          
           // Get current size to center the cursor
           const rect = cursorDot.getBoundingClientRect();
           const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
@@ -78,31 +87,24 @@
           cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
         };
 
-        document.addEventListener('mousemove', handleMouseMove);
-        cleanup.push(() => document.removeEventListener('mousemove', handleMouseMove));
+        // Use capture phase to ensure we catch all mousemove events
+        document.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
+        cleanup.push(() => document.removeEventListener('mousemove', handleMouseMove, { capture: true }));
+        
+        // Initialize cursor position on first mouse move (in case mouse is already over page)
+        // This ensures cursor is visible even if user doesn't move mouse after page load
+        const initPosition = (e) => {
+          handleMouseMove(e);
+          document.removeEventListener('mousemove', initPosition, { capture: true });
+        };
+        document.addEventListener('mousemove', initPosition, { once: true, capture: true });
       }
 
-      // Mouse enter handler for elements with data-cursor
-      const handleMouseEnter = (e) => {
-        const element = e.target.closest('[data-cursor]');
-        if (!element) return;
+      // Track currently hovered element with data-cursor
+      let currentHoveredElement = null;
 
-        const cursorType = element.getAttribute('data-cursor');
-        const cursorText = element.getAttribute('data-cursor-text') || null;
-        const cursorSvgs = element.getAttribute('data-cursor-svgs');
-
-        if (cursorType) {
-          stateStack.push(currentState);
-          setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
-        }
-      };
-
-      // Mouse leave handler
-      const handleMouseLeave = (e) => {
-        const element = e.target.closest('[data-cursor]');
-        if (!element) return;
-
-        // Restore previous state from stack
+      // Helper to restore previous state
+      const restorePreviousState = () => {
         if (stateStack.length > 1) {
           stateStack.pop();
           const prevState = stateStack[stateStack.length - 1];
@@ -112,12 +114,104 @@
         }
       };
 
-      // Use event delegation for data-cursor elements
-      container.addEventListener('mouseenter', handleMouseEnter, true);
-      container.addEventListener('mouseleave', handleMouseLeave, true);
+      // Mouse over handler for elements with data-cursor (bubbles, works with delegation)
+      const handleMouseOver = (e) => {
+        const element = e.target.closest('[data-cursor]');
+        
+        // If no element with data-cursor, restore default if we were hovering one
+        if (!element) {
+          if (currentHoveredElement) {
+            currentHoveredElement = null;
+            restorePreviousState();
+          }
+          return;
+        }
+
+        // If already hovering this exact element, do nothing
+        if (element === currentHoveredElement) return;
+
+        // Check relationship between current and new element
+        const isMovingToChild = currentHoveredElement && 
+                                 currentHoveredElement.contains && 
+                                 currentHoveredElement.contains(element);
+        const isMovingToParent = currentHoveredElement && 
+                                  element.contains && 
+                                  element.contains(currentHoveredElement);
+
+        // If moving from parent to child: save parent state to stack, then apply child state
+        if (isMovingToChild) {
+          stateStack.push(currentState);
+        }
+        // If moving from child to parent: pop child state, restore parent state
+        else if (isMovingToParent) {
+          if (stateStack.length > 1) {
+            stateStack.pop(); // Remove child state
+            const parentState = stateStack[stateStack.length - 1];
+            currentHoveredElement = element;
+            setCursorState(parentState, null, false);
+            return;
+          }
+        }
+        // If moving to a completely different element (sibling or unrelated)
+        else if (currentHoveredElement) {
+          restorePreviousState();
+        }
+
+        // Now enter the new element
+        currentHoveredElement = element;
+        const cursorType = element.getAttribute('data-cursor');
+        const cursorText = element.getAttribute('data-cursor-text') || null;
+        const cursorSvgs = element.getAttribute('data-cursor-svgs');
+
+        if (cursorType) {
+          // Only push to stack if not moving from parent to child (already pushed above)
+          if (!isMovingToChild) {
+            stateStack.push(currentState);
+          }
+          setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
+        }
+      };
+
+      // Mouse out handler (bubbles, works with delegation)
+      const handleMouseOut = (e) => {
+        const element = e.target.closest('[data-cursor]');
+        
+        // If we're not leaving the currently hovered element, ignore
+        if (!element || element !== currentHoveredElement) return;
+
+        // Check where we're moving to
+        const relatedElement = e.relatedTarget?.closest?.('[data-cursor]');
+        
+        if (relatedElement) {
+          // Moving to another element with data-cursor
+          if (relatedElement === element) {
+            // Moving to a child of the same element, don't reset
+            return;
+          } else if (element.contains && element.contains(relatedElement)) {
+            // Moving from parent to child - child will handle its own state in mouseover
+            // Don't reset here, let mouseover handle the transition
+            return;
+          } else if (relatedElement.contains && relatedElement.contains(element)) {
+            // Moving from child to parent - restore parent state
+            currentHoveredElement = null;
+            restorePreviousState();
+            return;
+          }
+        }
+
+        // Actually leaving the element (moving to area without data-cursor)
+        currentHoveredElement = null;
+        restorePreviousState();
+      };
+
+      // Use event delegation on document to catch all elements (including navbar outside container)
+      // mouseover/mouseout bubble, unlike mouseenter/mouseleave
+      document.addEventListener('mouseover', handleMouseOver, true);
+      document.addEventListener('mouseout', handleMouseOut, true);
       cleanup.push(() => {
-        container.removeEventListener('mouseenter', handleMouseEnter, true);
-        container.removeEventListener('mouseleave', handleMouseLeave, true);
+        document.removeEventListener('mouseover', handleMouseOver, true);
+        document.removeEventListener('mouseout', handleMouseOut, true);
+        currentHoveredElement = null;
       });
 
       // Hide default cursor

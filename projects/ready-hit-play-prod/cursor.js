@@ -54,13 +54,16 @@
       currentState = 'dot';
       externalControl = options.externalControl || false;
 
-      // Get cursor elements (always search document first since cursor component is at root level)
-      cursorDot = document.querySelector('.cursor_dot');
-      cursorLabel = document.querySelector('.cursor_label');
-      cursorArrows = document.querySelector('.cursor_arrows');
+      // Get cursor elements — cursor and nav live outside data-barba=container but inside data-barba-wrapper
+      const wrapper = document.querySelector('[data-barba-wrapper]');
+      const scope = wrapper || document;
+      cursorDot = scope.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
+      cursorLabel = scope.querySelector('.cursor_label') || document.querySelector('.cursor_label');
+      cursorArrows = scope.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
 
       if (!cursorDot) {
-        console.warn('Cursor dot element not found');
+        console.warn('RHP Cursor: .cursor_dot not found (ensure cursor is in DOM, e.g. inside data-barba-wrapper)');
+        alive = false;
         return;
       }
 
@@ -432,17 +435,13 @@
     RHP.cursor?.init(document, { externalControl: isHome });
   });
 
-  // Re-initialize on Barba transitions
+  // Re-initialize on Barba transitions (cursor/nav are in wrapper, not in container — we always use document for events)
   window.addEventListener('rhp:barba:afterenter', (e) => {
-    if (e.detail && e.detail.container) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        RHP.cursor?.destroy();
-        // Check if we're on homepage (work-dial will control cursor position)
-        const ns = e.detail.namespace;
-        const isHome = ns === 'home';
-        RHP.cursor?.init(e.detail.container, { externalControl: isHome });
-      }, 50);
-    }
+    const ns = e.detail?.namespace;
+    const isHome = ns === 'home';
+    setTimeout(() => {
+      RHP.cursor?.destroy();
+      RHP.cursor?.init(document, { externalControl: isHome });
+    }, 80);
   });
 })();

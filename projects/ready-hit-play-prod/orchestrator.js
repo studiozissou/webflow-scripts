@@ -160,12 +160,13 @@
   function initContactPullout() {
     const gsap = window.gsap;
     if (!gsap) {
-      console.warn('RHP contact pullout: GSAP not found. Enable GSAP in Webflow Project Settings.');
+      console.warn('RHP contact pullout: GSAP not found.');
       return;
     }
 
     let isOpen = false;
     let pulloutEl = null;
+    const DEBUG = true; // set false to silence logs
 
     function getPullout() {
       if (pulloutEl && document.contains(pulloutEl)) return pulloutEl;
@@ -176,12 +177,17 @@
     function openPullout() {
       const pullout = getPullout();
       if (!pullout) {
-        console.warn('RHP contact pullout: .nav_contact-pullout not found in DOM. Add this class to your pullout panel in Webflow.');
+        if (DEBUG) console.warn('RHP contact: .nav_contact-pullout not found. Add this class to your pullout panel in Webflow.');
         return;
       }
       isOpen = true;
       pullout.style.pointerEvents = 'auto';
+      pullout.style.visibility = 'visible';
+      if (window.getComputedStyle(pullout).display === 'none') {
+        pullout.style.display = 'block';
+      }
       gsap.to(pullout, { opacity: 1, duration: 0.5, ease: 'none' });
+      if (DEBUG) console.log('RHP contact: pullout opening');
     }
 
     function closePullout() {
@@ -201,9 +207,18 @@
     // Init: hide pullout if it exists so first open animates correctly
     function setInitialState() {
       const pullout = document.querySelector('.nav_contact-pullout');
+      const link = document.querySelector('.nav_contact-link');
+      if (DEBUG) {
+        console.log('RHP contact pullout: init', {
+          pullout: !!pullout,
+          link: !!link,
+          hint: 'Click .nav_contact-link to open; ensure both classes exist in Webflow.'
+        });
+      }
       if (pullout) {
         gsap.set(pullout, { opacity: 0 });
         pullout.style.pointerEvents = 'none';
+        pullout.style.visibility = 'visible';
       }
     }
 
@@ -213,6 +228,7 @@
       if (!link) return;
       e.preventDefault();
       e.stopPropagation();
+      if (DEBUG) console.log('RHP contact: .nav_contact-link clicked');
       openPullout();
     }, true);
 

@@ -64,28 +64,71 @@
       cursorArrows = scope.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
 
       if (!cursorDot) {
-        console.warn('RHP Cursor: .cursor_dot not found (cursor should be in wrapper, e.g. body or [data-barba="wrapper"])');
         alive = false;
+        // Retry in case cursor is in a symbol or renders after DOMContentLoaded
+        const retry = [50, 150, 350];
+        retry.forEach((ms, i) => {
+          setTimeout(() => {
+            if (alive) return;
+            RHP.cursor?.init(document, options);
+          }, ms);
+        });
         return;
       }
 
       // Reset to default state
       setCursorState('dot', null, false);
 
-      // Always update cursor position on mousemove (so nav and all areas work; work-dial can still call setPosition on dial)
+      // Resolve element under cursor (used for both move and hover; cursor has pointer-events:none)
+      const getElementUnderCursor = (clientX, clientY) => {
+        const el = document.elementFromPoint(clientX, clientY);
+        return el?.closest?.('[data-cursor]') || null;
+      };
+
+      // Always update cursor position on mousemove (nav, dial, all areas)
       const handleMouseMove = (e) => {
-        if (!cursorDot) return;
         if (e.clientX === lastMouseX && e.clientY === lastMouseY) return;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
+        // If cursor node was replaced by Barba, re-query so we update the visible one
+        if (!cursorDot || !document.body.contains(cursorDot)) {
+          cursorDot = document.querySelector('.cursor_dot');
+          cursorLabel = document.querySelector('.cursor_label');
+          cursorArrows = document.querySelector('.cursor_arrows');
+          if (!cursorDot) return;
+        }
         const rect = cursorDot.getBoundingClientRect();
         const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
         const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
         cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
+
+        // Sync cursor state from element under cursor (works even when mouseover doesn't fire)
+        const under = getElementUnderCursor(e.clientX, e.clientY);
+        const overDial = externalControl && under?.closest?.('.dial_component');
+        if (!overDial && under !== currentHoveredElement) {
+          currentHoveredElement = under;
+          if (under) {
+            const cursorType = under.getAttribute('data-cursor');
+            const cursorText = under.getAttribute('data-cursor-text') || null;
+            const cursorSvgs = under.getAttribute('data-cursor-svgs');
+            if (cursorType) {
+              stateStack = [stateStack[0] || 'dot'];
+              stateStack.push(currentState);
+              setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
+            }
+          } else {
+            stateStack = ['dot'];
+            setCursorState('dot', null, false);
+          }
+        }
       };
 
       document.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
-      cleanup.push(() => document.removeEventListener('mousemove', handleMouseMove, { capture: true }));
+      window.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
+      cleanup.push(() => {
+        document.removeEventListener('mousemove', handleMouseMove, { capture: true });
+        window.removeEventListener('mousemove', handleMouseMove, { capture: true });
+      });
 
       // After Barba transition, cursor stays at last position; re-apply so it doesn't appear stuck
       if (lastMouseX > -9999 && lastMouseY > -9999) {
@@ -108,9 +151,9 @@
         }
       };
 
-      // Mouse over handler for elements with data-cursor (bubbles, works with delegation)
+      // Mouse over handler for elements with data-cursor
       const handleMouseOver = (e) => {
-        const element = e.target.closest('[data-cursor]');
+        const element = getElementUnderCursor(e.clientX, e.clientY) || e.target?.closest?.('[data-cursor]');
         
         // If no element with data-cursor, restore default if we were hovering one
         if (!element) {
@@ -166,15 +209,16 @@
         }
       };
 
-      // Mouse out handler (bubbles, works with delegation)
+      // Mouse out handler
       const handleMouseOut = (e) => {
-        const element = e.target.closest('[data-cursor]');
+        const elementUnderCursor = getElementUnderCursor(e.clientX, e.clientY);
+        const element = e.target?.closest?.('[data-cursor]') || elementUnderCursor;
         
         // If we're not leaving the currently hovered element, ignore
         if (!element || element !== currentHoveredElement) return;
 
         // Check where we're moving to
-        const relatedElement = e.relatedTarget?.closest?.('[data-cursor]');
+        const relatedElement = elementUnderCursor || e.relatedTarget?.closest?.('[data-cursor]');
         
         if (relatedElement) {
           // Moving to another element with data-cursor
@@ -198,13 +242,16 @@
         restorePreviousState();
       };
 
-      // Use event delegation on document to catch all elements (including navbar outside container)
-      // mouseover/mouseout bubble, unlike mouseenter/mouseleave
+      // Attach to both document and window so hover state works everywhere (nav, dial, content)
       document.addEventListener('mouseover', handleMouseOver, true);
       document.addEventListener('mouseout', handleMouseOut, true);
+      window.addEventListener('mouseover', handleMouseOver, true);
+      window.addEventListener('mouseout', handleMouseOut, true);
       cleanup.push(() => {
         document.removeEventListener('mouseover', handleMouseOver, true);
         document.removeEventListener('mouseout', handleMouseOut, true);
+        window.removeEventListener('mouseover', handleMouseOver, true);
+        window.removeEventListener('mouseout', handleMouseOut, true);
         currentHoveredElement = null;
       });
 
@@ -397,11 +444,31 @@
       }
     }
 
+    // Refresh cursor element refs after Barba (never remove mousemove — just point at new DOM node)
+    function refresh() {
+      if (!alive) return;
+      const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+      const nextDot = wrapper.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
+      const nextLabel = wrapper.querySelector('.cursor_label') || document.querySelector('.cursor_label');
+      const nextArrows = wrapper.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
+      if (!nextDot) return;
+      cursorDot = nextDot;
+      cursorLabel = nextLabel;
+      cursorArrows = nextArrows;
+      setCursorState(currentState, null, false);
+      if (lastMouseX > -9999 && lastMouseY > -9999) {
+        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
+      }
+    }
+
     return {
       init,
       destroy: stop,
-      setPosition, // Public API for external position control
-      setState,    // Public API for external state control
+      refresh,
+      setPosition,
+      setState,
       getCurrentState: () => currentState
     };
   })();
@@ -427,13 +494,9 @@
     RHP.cursor?.init(document, { externalControl: isHome });
   });
 
-  // Re-initialize on Barba transitions (cursor/nav are in wrapper, not in container — we always use document for events)
-  window.addEventListener('rhp:barba:afterenter', (e) => {
-    const ns = e.detail?.namespace;
-    const isHome = ns === 'home';
-    setTimeout(() => {
-      RHP.cursor?.destroy();
-      RHP.cursor?.init(document, { externalControl: isHome });
-    }, 80);
+  // After Barba: refresh cursor refs so we point at the (possibly new) cursor node; never destroy so mousemove stays
+  window.addEventListener('rhp:barba:afterenter', () => {
+    setTimeout(() => RHP.cursor?.refresh?.(), 0);
+    setTimeout(() => RHP.cursor?.refresh?.(), 100);
   });
 })();

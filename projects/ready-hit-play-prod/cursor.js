@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.2.6.4'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.2.6'; // bump when you deploy; check in console: RHP.cursor.version
 
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
@@ -25,7 +25,6 @@
     let cleanup = [];
     let rafId = 0;
     let cursorDot = null;
-    let cursorTarget = null;
     let cursorLabel = null;
     let cursorArrows = null;
     let currentState = 'dot';
@@ -33,23 +32,6 @@
     let externalControl = false; // When true, work-dial controls cursor state; we still run position
     let lastMouseX = -9999;
     let lastMouseY = -9999;
-
-    const DOT_PX = 16;
-    const LARGE_PX = 96;
-    function getCursorSizePx() {
-      return currentState === 'dot' ? { w: DOT_PX, h: DOT_PX } : { w: LARGE_PX, h: LARGE_PX };
-    }
-    function applyPosition(x, y) {
-      if (!cursorDot || !document.body.contains(cursorDot)) return;
-      const half = LARGE_PX / 2;
-      if (cursorTarget) {
-        cursorTarget.style.transform = `translate3d(${x - half}px, ${y - half}px, 0)`;
-        cursorDot.style.transform = 'translate3d(0,0,0)';
-      } else {
-        const { w, h } = getCursorSizePx();
-        cursorDot.style.transform = `translate3d(${x - w / 2}px, ${y - h / 2}px, 0)`;
-      }
-    }
 
     function stop() {
       if (!alive) return;
@@ -80,7 +62,6 @@
       const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
       const scope = wrapper;
       cursorDot = scope.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
-      cursorTarget = (cursorDot && cursorDot.closest('.cursor_target')) || scope.querySelector('.cursor_target') || document.querySelector('.cursor_target');
       cursorLabel = scope.querySelector('.cursor_label') || document.querySelector('.cursor_label');
       cursorArrows = scope.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
 
@@ -97,94 +78,184 @@
         return;
       }
 
-      if (cursorTarget) {
-        cursorTarget.style.transform = 'translate3d(-9999px, -9999px, 0)';
-      }
-
       // Reset to default state
       setCursorState('dot', null, false);
 
-      // Resolve element under cursor (cursor has pointer-events:none)
+      // Resolve element under cursor (used for both move and hover; cursor has pointer-events:none)
       const getElementUnderCursor = (clientX, clientY) => {
         const el = document.elementFromPoint(clientX, clientY);
         return el?.closest?.('[data-cursor]') || null;
       };
 
-      let positionRaf = 0;
-      let pendingX = -9999;
-      let pendingY = -9999;
-      let lastUnderCursor = null;
-      let lastUnderCursorStableCount = 0;
-      const STABLE_FRAMES = 5;
-      let currentHoveredElement = null;
-
-      const onPositionRaf = () => {
-        positionRaf = 0;
-        if (pendingX > -9999) {
-          applyPosition(pendingX, pendingY);
-          // Over dial = pointer is inside the dial's bounding rect only (so header/links elsewhere on homepage still get cursor state sync)
-          const dialEl = scope.querySelector('.dial_component') || document.querySelector('.dial_component');
-          const overDial = externalControl && dialEl && (function() {
-            const r = dialEl.getBoundingClientRect();
-            return pendingX >= r.left && pendingX <= r.right && pendingY >= r.top && pendingY <= r.bottom;
-          })();
-          if (!overDial) {
-            const under = getElementUnderCursor(pendingX, pendingY);
-            if (under !== lastUnderCursor) {
-              lastUnderCursor = under;
-              lastUnderCursorStableCount = 1;
-            } else {
-              lastUnderCursorStableCount = (lastUnderCursorStableCount || 0) + 1;
-              if (lastUnderCursorStableCount >= STABLE_FRAMES && under !== currentHoveredElement) {
-                currentHoveredElement = under;
-                if (under) {
-                  const cursorType = under.getAttribute('data-cursor');
-                  const cursorText = under.getAttribute('data-cursor-text') || null;
-                  const cursorSvgs = under.getAttribute('data-cursor-svgs');
-                  if (cursorType) {
-                    stateStack = [stateStack[0] || 'dot'];
-                    stateStack.push(currentState);
-                    setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
-                  }
-                } else {
-                  stateStack = ['dot'];
-                  setCursorState('dot', null, false);
-                }
-              }
-            }
-          } else {
-            lastUnderCursor = null;
-            lastUnderCursorStableCount = 0;
-          }
-        }
-      };
-
-      // Single mousemove listener; position and state both updated in rAF (one place, once per frame)
+      // Always update cursor position on mousemove (nav, dial, all areas)
       const handleMouseMove = (e) => {
+        if (e.clientX === lastMouseX && e.clientY === lastMouseY) return;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
+        // If cursor node was replaced by Barba, re-query so we update the visible one
         if (!cursorDot || !document.body.contains(cursorDot)) {
           cursorDot = document.querySelector('.cursor_dot');
-          cursorTarget = (cursorDot && cursorDot.closest('.cursor_target')) || document.querySelector('.cursor_target');
           cursorLabel = document.querySelector('.cursor_label');
           cursorArrows = document.querySelector('.cursor_arrows');
           if (!cursorDot) return;
         }
-        pendingX = e.clientX;
-        pendingY = e.clientY;
-        if (!positionRaf) positionRaf = requestAnimationFrame(onPositionRaf);
+        const rect = cursorDot.getBoundingClientRect();
+        const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+        const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+        cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
+
+        // Sync cursor state from element under cursor (works even when mouseover doesn't fire)
+        const under = getElementUnderCursor(e.clientX, e.clientY);
+        const overDial = externalControl && under?.closest?.('.dial_component');
+        if (!overDial && under !== currentHoveredElement) {
+          currentHoveredElement = under;
+          if (under) {
+            const cursorType = under.getAttribute('data-cursor');
+            const cursorText = under.getAttribute('data-cursor-text') || null;
+            const cursorSvgs = under.getAttribute('data-cursor-svgs');
+            if (cursorType) {
+              stateStack = [stateStack[0] || 'dot'];
+              stateStack.push(currentState);
+              setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
+            }
+          } else {
+            stateStack = ['dot'];
+            setCursorState('dot', null, false);
+          }
+        }
       };
 
       document.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
+      window.addEventListener('mousemove', handleMouseMove, { passive: true, capture: true });
       cleanup.push(() => {
         document.removeEventListener('mousemove', handleMouseMove, { capture: true });
-        if (positionRaf) cancelAnimationFrame(positionRaf);
+        window.removeEventListener('mousemove', handleMouseMove, { capture: true });
       });
 
-      if (lastMouseX > -9999 && lastMouseY > -9999) applyPosition(lastMouseX, lastMouseY);
+      // After Barba transition, cursor stays at last position; re-apply so it doesn't appear stuck
+      if (lastMouseX > -9999 && lastMouseY > -9999) {
+        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
+      }
 
-      // State is updated only from mousemove → rAF (elementFromPoint + 2-frame stability). No mouseover/mouseout
-      // so we avoid two competing sources of state that caused flicker when moving slowly.
+      // Track currently hovered element with data-cursor
+      let currentHoveredElement = null;
+
+      // Helper to restore previous state
+      const restorePreviousState = () => {
+        if (stateStack.length > 1) {
+          stateStack.pop();
+          const prevState = stateStack[stateStack.length - 1];
+          setCursorState(prevState, null, false);
+        } else {
+          setCursorState('dot', null, false);
+        }
+      };
+
+      // Mouse over handler for elements with data-cursor
+      const handleMouseOver = (e) => {
+        const element = getElementUnderCursor(e.clientX, e.clientY) || e.target?.closest?.('[data-cursor]');
+        
+        // If no element with data-cursor, restore default if we were hovering one
+        if (!element) {
+          if (currentHoveredElement) {
+            currentHoveredElement = null;
+            restorePreviousState();
+          }
+          return;
+        }
+
+        // If already hovering this exact element, do nothing
+        if (element === currentHoveredElement) return;
+
+        // Check relationship between current and new element
+        const isMovingToChild = currentHoveredElement && 
+                                 currentHoveredElement.contains && 
+                                 currentHoveredElement.contains(element);
+        const isMovingToParent = currentHoveredElement && 
+                                  element.contains && 
+                                  element.contains(currentHoveredElement);
+
+        // If moving from parent to child: save parent state to stack, then apply child state
+        if (isMovingToChild) {
+          stateStack.push(currentState);
+        }
+        // If moving from child to parent: pop child state, restore parent state
+        else if (isMovingToParent) {
+          if (stateStack.length > 1) {
+            stateStack.pop(); // Remove child state
+            const parentState = stateStack[stateStack.length - 1];
+            currentHoveredElement = element;
+            setCursorState(parentState, null, false);
+            return;
+          }
+        }
+        // If moving to a completely different element (sibling or unrelated)
+        else if (currentHoveredElement) {
+          restorePreviousState();
+        }
+
+        // Now enter the new element
+        currentHoveredElement = element;
+        const cursorType = element.getAttribute('data-cursor');
+        const cursorText = element.getAttribute('data-cursor-text') || null;
+        const cursorSvgs = element.getAttribute('data-cursor-svgs');
+
+        if (cursorType) {
+          // Only push to stack if not moving from parent to child (already pushed above)
+          if (!isMovingToChild) {
+            stateStack.push(currentState);
+          }
+          setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
+        }
+      };
+
+      // Mouse out handler
+      const handleMouseOut = (e) => {
+        const elementUnderCursor = getElementUnderCursor(e.clientX, e.clientY);
+        const element = e.target?.closest?.('[data-cursor]') || elementUnderCursor;
+        
+        // If we're not leaving the currently hovered element, ignore
+        if (!element || element !== currentHoveredElement) return;
+
+        // Check where we're moving to
+        const relatedElement = elementUnderCursor || e.relatedTarget?.closest?.('[data-cursor]');
+        
+        if (relatedElement) {
+          // Moving to another element with data-cursor
+          if (relatedElement === element) {
+            // Moving to a child of the same element, don't reset
+            return;
+          } else if (element.contains && element.contains(relatedElement)) {
+            // Moving from parent to child - child will handle its own state in mouseover
+            // Don't reset here, let mouseover handle the transition
+            return;
+          } else if (relatedElement.contains && relatedElement.contains(element)) {
+            // Moving from child to parent - restore parent state
+            currentHoveredElement = null;
+            restorePreviousState();
+            return;
+          }
+        }
+
+        // Actually leaving the element (moving to area without data-cursor)
+        currentHoveredElement = null;
+        restorePreviousState();
+      };
+
+      // Attach to both document and window so hover state works everywhere (nav, dial, content)
+      document.addEventListener('mouseover', handleMouseOver, true);
+      document.addEventListener('mouseout', handleMouseOut, true);
+      window.addEventListener('mouseover', handleMouseOver, true);
+      window.addEventListener('mouseout', handleMouseOut, true);
+      cleanup.push(() => {
+        document.removeEventListener('mouseover', handleMouseOver, true);
+        document.removeEventListener('mouseout', handleMouseOut, true);
+        window.removeEventListener('mouseover', handleMouseOver, true);
+        window.removeEventListener('mouseout', handleMouseOut, true);
+        currentHoveredElement = null;
+      });
 
       // Hide default cursor
       document.body.style.cursor = 'none';
@@ -193,11 +264,15 @@
       });
     }
 
-    // Public API: Update stored position only (do not apply — single source is mousemove + rAF to avoid flicker)
+    // Public API: Set cursor position (for work-dial on homepage)
     function setPosition(x, y) {
-      if (!alive) return;
+      if (!cursorDot || !alive) return;
       lastMouseX = x;
       lastMouseY = y;
+      const rect = cursorDot.getBoundingClientRect();
+      const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+      const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+      cursorDot.style.transform = `translate3d(${x - width / 2}px, ${y - height / 2}px, 0)`;
     }
 
     // Public API: Set cursor state programmatically (for work-dial's play state)
@@ -213,13 +288,13 @@
       currentState = type;
       const gsap = window.gsap;
       const reduced = prefersReduced();
-      const duration = reduced ? 0 : 0.35;
-      const ease = 'power3.out';
+      const duration = reduced ? 0 : 0.3;
+      const ease = 'power2.out';
 
       // Get CSS variable for orange color
       const orangeColor = getComputedStyle(document.documentElement)
         .getPropertyValue('--_primitives---colors--orange')
-        .trim() || '#fe5e00';
+        .trim() || '#ff8200';
 
       switch (type) {
         case 'dot':
@@ -376,16 +451,18 @@
       if (!alive) return;
       const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
       const nextDot = wrapper.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
-      const nextTarget = (nextDot && nextDot.closest('.cursor_target')) || wrapper.querySelector('.cursor_target') || document.querySelector('.cursor_target');
       const nextLabel = wrapper.querySelector('.cursor_label') || document.querySelector('.cursor_label');
       const nextArrows = wrapper.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
       if (!nextDot) return;
       cursorDot = nextDot;
-      cursorTarget = nextTarget;
       cursorLabel = nextLabel;
       cursorArrows = nextArrows;
       setCursorState(currentState, null, false);
-      if (lastMouseX > -9999 && lastMouseY > -9999) applyPosition(lastMouseX, lastMouseY);
+      if (lastMouseX > -9999 && lastMouseY > -9999) {
+        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
+      }
     }
 
     return {

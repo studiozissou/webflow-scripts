@@ -166,17 +166,12 @@
         startedInInner: false
       };
 
-      // Only commit cursor state when inInner has been stable for 2 consecutive pointermoves (stops boundary flicker)
-      var lastInInnerForCursor = undefined;
       function setCursorPlay(isPlay) {
         if (isMobile()) return;
-        if (lastInInnerForCursor !== isPlay) {
-          lastInInnerForCursor = isPlay;
-          return;
-        }
         if (cursorIsPlay === isPlay) return;
         cursorIsPlay = isPlay;
 
+        // Use cursor.js API - "solid-orange" state matches the old play state
         if (RHP.cursor && RHP.cursor.setState) {
           if (isPlay) {
             RHP.cursor.setState('solid-orange', 'PLAY', false);
@@ -315,8 +310,9 @@
           applyActive(idx);
         }
 
-        // Desktop cursor morph - only set state; position comes from cursor's single mousemove (avoids flicker)
-        if (!isMobile() && RHP.cursor && RHP.cursor.setState) {
+        // Desktop cursor morph - use cursor.js API
+        if (!isMobile() && RHP.cursor && RHP.cursor.setPosition) {
+          RHP.cursor.setPosition(e.clientX, e.clientY);
           setCursorPlay(state.inInner);
         }
       }
@@ -326,10 +322,7 @@
         state.rDist = 1e9;
         state.inInner = false;
         state.inSwitch = false;
-        if (!isMobile()) {
-          lastInInnerForCursor = false;
-          setCursorPlay(false);
-        }
+        if (!isMobile()) setCursorPlay(false);
       }
 
       // Mobile dial: vertical drag rotates ticks only; update index per snap step (Variant B)

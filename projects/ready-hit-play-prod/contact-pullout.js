@@ -27,13 +27,29 @@
     if (!pullout || !window.gsap) return;
     if (isOpen) return;
     isOpen = true;
-    clearPulloutTransform();
-    window.gsap.killTweensOf(pullout);
-    window.gsap.fromTo(pullout,
-      { xPercent: 100 },
-      { xPercent: 0, duration: DURATION, ease: EASE, overwrite: true, force3D: true }
-    );
     scheduleOffClickListen();
+    var width = pullout.offsetWidth;
+    // Defer so we run after Webflow interactions on the same click
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        clearPulloutTransform();
+        window.gsap.killTweensOf(pullout);
+        window.gsap.fromTo(pullout,
+          { x: width },
+          {
+            x: 0,
+            duration: DURATION,
+            ease: EASE,
+            overwrite: true,
+            force3D: true,
+            onComplete: function() {
+              window.gsap.set(pullout, { x: 0 });
+              pullout.style.transform = 'translate3d(0px, 0px, 0px)';
+            }
+          }
+        );
+      });
+    });
   }
 
   function close() {
@@ -42,9 +58,19 @@
     isOpen = false;
     clearPulloutTransform();
     window.gsap.killTweensOf(pullout);
+    var width = pullout.offsetWidth;
     window.gsap.fromTo(pullout,
-      { xPercent: 0 },
-      { xPercent: 100, duration: DURATION, ease: EASE, overwrite: true, force3D: true }
+      { x: 0 },
+      {
+        x: width,
+        duration: DURATION,
+        ease: EASE,
+        overwrite: true,
+        force3D: true,
+        onComplete: function() {
+          window.gsap.set(pullout, { x: width });
+        }
+      }
     );
     removeOffClickListen();
   }
@@ -87,11 +113,11 @@
 
     if (!pullout) return;
 
-    // Clear Webflow inline transform, then own it with GSAP (closed = 100% right)
+    // Clear Webflow inline transform, then own it with GSAP (closed = off to the right)
     clearPulloutTransform();
     if (window.gsap) {
       window.gsap.killTweensOf(pullout);
-      window.gsap.set(pullout, { xPercent: 100, force3D: true });
+      window.gsap.set(pullout, { x: pullout.offsetWidth, force3D: true });
     }
 
     if (contactLink) {

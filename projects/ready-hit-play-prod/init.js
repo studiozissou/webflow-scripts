@@ -7,7 +7,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.6.6',
+    version: '2026.2.6.7',
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)

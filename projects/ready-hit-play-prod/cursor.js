@@ -4,6 +4,8 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
+  const CURSOR_VERSION = '2026.2.6'; // bump when you deploy; check in console: RHP.cursor.version
+
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -464,6 +466,7 @@
     }
 
     return {
+      version: CURSOR_VERSION,
       init,
       destroy: stop,
       refresh,

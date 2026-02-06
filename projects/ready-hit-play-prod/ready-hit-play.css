@@ -177,3 +177,87 @@
   width: 100%;
   object-fit: cover;
 }
+/* ====== Desktop custom cursor ====== */
+.cursor_component {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.cursor_dot {
+  /* Default: dot state - 1rem x 1rem, solid white, 1px border */
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #fff;
+  transform: translate3d(-9999px, -9999px, 0);
+  display: grid;
+  place-items: center;
+  will-change: transform, width, height, background-color, border-color;
+  transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  position: relative;
+}
+
+.cursor_label {
+  position: absolute;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  opacity: 0;
+  transform: scale(0.9);
+  will-change: opacity, transform;
+  user-select: none;
+  white-space: nowrap;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.cursor_arrows {
+  position: absolute;
+  opacity: 0;
+  will-change: opacity;
+  transition: opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cursor_arrows svg {
+  width: 17px;
+  height: 69px;
+  transition: color 0.3s ease;
+}
+
+/* Cursor state: dot (default) */
+[data-cursor="dot"] {
+  cursor: none;
+}
+
+/* Cursor state: solid-orange */
+[data-cursor="solid-orange"] {
+  cursor: none;
+}
+
+/* Cursor state: arrow-orange-outline */
+[data-cursor="arrow-orange-outline"] {
+  cursor: none;
+}
+
+/* Cursor state: arrow-white-outline */
+[data-cursor="arrow-white-outline"] {
+  cursor: none;
+}
+
+/* Disable custom cursor on touch devices */
+@media (hover: none), (pointer: coarse) {
+  .cursor_component {
+    display: none !important;
+  }
+  .dial_component {
+    cursor: auto;
+  }
+  [data-cursor] {
+    cursor: auto !important;
+  }
+}

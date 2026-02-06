@@ -25,6 +25,7 @@
     // Module files (loaded in order)
     modules: [
       'lenis-manager.js',
+      'cursor.js',
       'work-dial.js',
       'orchestrator.js',
       'utils.js'

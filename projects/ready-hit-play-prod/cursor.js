@@ -27,6 +27,7 @@
     let cursorArrows = null;
     let currentState = 'dot';
     let stateStack = ['dot']; // Stack to track state history
+    let externalControl = false; // When true, external code (like work-dial) controls position
 
     function stop() {
       if (!alive) return;
@@ -41,15 +42,17 @@
         try { fn(); } catch (e) { console.error('Cursor cleanup error:', e); }
       });
       cleanup = [];
+      externalControl = false;
     }
 
-    function init(container = document) {
+    function init(container = document, options = {}) {
       if (alive) return;
       if (isMobile()) return;
 
       alive = true;
       stateStack = ['dot'];
       currentState = 'dot';
+      externalControl = options.externalControl || false;
 
       // Get cursor elements
       cursorDot = container.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
@@ -64,15 +67,20 @@
       // Reset to default state
       setCursorState('dot', null, false);
 
-      // Mouse move handler
-      const handleMouseMove = (e) => {
-        if (!cursorDot) return;
-        // Get current size to center the cursor
-        const rect = cursorDot.getBoundingClientRect();
-        const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-        const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-        cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
-      };
+      // Mouse move handler (only if not externally controlled)
+      if (!externalControl) {
+        const handleMouseMove = (e) => {
+          if (!cursorDot) return;
+          // Get current size to center the cursor
+          const rect = cursorDot.getBoundingClientRect();
+          const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+          const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+          cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        cleanup.push(() => document.removeEventListener('mousemove', handleMouseMove));
+      }
 
       // Mouse enter handler for elements with data-cursor
       const handleMouseEnter = (e) => {
@@ -104,10 +112,6 @@
         }
       };
 
-      // Attach event listeners
-      document.addEventListener('mousemove', handleMouseMove);
-      cleanup.push(() => document.removeEventListener('mousemove', handleMouseMove));
-
       // Use event delegation for data-cursor elements
       container.addEventListener('mouseenter', handleMouseEnter, true);
       container.addEventListener('mouseleave', handleMouseLeave, true);
@@ -121,6 +125,22 @@
       cleanup.push(() => {
         document.body.style.cursor = '';
       });
+    }
+
+    // Public API: Set cursor position (for external control like work-dial)
+    function setPosition(x, y) {
+      if (!cursorDot || !alive) return;
+      // Center the cursor on the mouse position
+      const rect = cursorDot.getBoundingClientRect();
+      const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+      const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+      cursorDot.style.transform = `translate3d(${x - width / 2}px, ${y - height / 2}px, 0)`;
+    }
+
+    // Public API: Set cursor state programmatically (for work-dial's play state)
+    function setState(type, text, showArrows) {
+      if (!alive) return;
+      setCursorState(type, text, showArrows);
     }
 
     function setCursorState(type, text, showArrows) {
@@ -290,7 +310,10 @@
 
     return {
       init,
-      destroy: stop
+      destroy: stop,
+      setPosition, // Public API for external position control
+      setState,    // Public API for external state control
+      getCurrentState: () => currentState
     };
   })();
 
@@ -307,7 +330,12 @@
   };
 
   ready(() => {
-    RHP.cursor?.init();
+    // Check if we're on homepage (work-dial will control cursor position)
+    const container = document.querySelector('[data-barba="container"]');
+    const ns = container?.getAttribute('data-barba-namespace');
+    const isHome = ns === 'home';
+    
+    RHP.cursor?.init(document, { externalControl: isHome });
   });
 
   // Re-initialize on Barba transitions
@@ -316,7 +344,10 @@
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         RHP.cursor?.destroy();
-        RHP.cursor?.init(e.detail.container);
+        // Check if we're on homepage (work-dial will control cursor position)
+        const ns = e.detail.namespace;
+        const isHome = ns === 'home';
+        RHP.cursor?.init(e.detail.container, { externalControl: isHome });
       }, 50);
     }
   });

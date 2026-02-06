@@ -83,7 +83,7 @@
         await loadStylesheet(css);
       }
       if (devMode && CONFIG.rhpCss) {
-        await loadStylesheet(`${CONFIG.baseUrl}/${CONFIG.rhpCss}?t=${Date.now()}`);
+        loadStylesheet(`${CONFIG.baseUrl}/${CONFIG.rhpCss}?t=${Date.now()}`).catch(function() {});
       }
 
       // Load JavaScript dependencies

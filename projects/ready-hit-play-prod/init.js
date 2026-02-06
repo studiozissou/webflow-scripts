@@ -7,7 +7,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.6.8',
+    version: '2026.2.6.3',
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -25,7 +25,6 @@
     modules: [
       'lenis-manager.js',
       'cursor.js',
-      'contact-pullout.js',
       'work-dial.js',
       'orchestrator.js',
       'utils.js'
@@ -98,7 +97,6 @@
       const checks = [
         { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: '' },
         { module: 'cursor.js', ok: typeof RHP.cursor !== 'undefined', detail: RHP.cursor?.version || '(no version)' },
-        { module: 'contact-pullout.js', ok: true, detail: '' },
         { module: 'work-dial.js', ok: typeof RHP.workDial !== 'undefined', detail: '' },
         { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: '' },
         { module: 'utils.js', ok: true, detail: '(no RHP export)' }

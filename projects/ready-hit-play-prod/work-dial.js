@@ -123,9 +123,7 @@
       const sectorSize = 360 / N;
       const sectorOffset = sectorSize / 2; // centered wedge
 
-      // Cursor (desktop only)
-      const cursorDot = document.querySelector(SEL.cursorDot);
-      const cursorLabel = document.querySelector(SEL.cursorLabel);
+      // Cursor (desktop only) - use cursor.js API
       let cursorIsPlay = false;
 
       // Tick rendering config
@@ -169,26 +167,17 @@
       };
 
       function setCursorPlay(isPlay) {
-        if (!cursorDot || isMobile()) return;
+        if (isMobile()) return;
         if (cursorIsPlay === isPlay) return;
         cursorIsPlay = isPlay;
 
-        const gsap = window.gsap;
-        const reduced = prefersReduced();
-
-        if (gsap) {
+        // Use cursor.js API - "solid-orange" state matches the old play state
+        if (RHP.cursor && RHP.cursor.setState) {
           if (isPlay) {
-            gsap.to(cursorDot, { duration: reduced ? 0 : 0.22, width: 86, height: 86, backgroundColor:'#ff8200', ease:'expo.out' });
-            if (cursorLabel) gsap.to(cursorLabel, { duration: reduced ? 0 : 0.18, opacity:1, scale:1, ease:'power2.out', delay: reduced ? 0 : 0.03 });
+            RHP.cursor.setState('solid-orange', 'PLAY', false);
           } else {
-            if (cursorLabel) gsap.to(cursorLabel, { duration: reduced ? 0 : 0.12, opacity:0, scale:0.9, ease:'power2.out' });
-            gsap.to(cursorDot, { duration: reduced ? 0 : 0.16, width: 12, height: 12, backgroundColor:'#ffffff', ease:'power2.out' });
+            RHP.cursor.setState('dot', null, false);
           }
-        } else {
-          cursorDot.style.width = isPlay ? '86px' : '12px';
-          cursorDot.style.height = isPlay ? '86px' : '12px';
-          cursorDot.style.background = isPlay ? '#ff8200' : '#fff';
-          if (cursorLabel) cursorLabel.style.opacity = isPlay ? '1' : '0';
         }
       }
 
@@ -321,9 +310,9 @@
           applyActive(idx);
         }
 
-        // Desktop cursor morph
-        if (!isMobile() && cursorDot) {
-          cursorDot.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+        // Desktop cursor morph - use cursor.js API
+        if (!isMobile() && RHP.cursor && RHP.cursor.setPosition) {
+          RHP.cursor.setPosition(e.clientX, e.clientY);
           setCursorPlay(state.inInner);
         }
       }

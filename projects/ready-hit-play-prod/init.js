@@ -95,19 +95,6 @@
 
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      // GSAP load check (dependencies loaded above)
-      const gsapOk = typeof window.gsap !== 'undefined';
-      const scrollTriggerOk = typeof window.ScrollTrigger !== 'undefined';
-      const splitTextOk = typeof window.SplitText !== 'undefined';
-      console.log('RHP GSAP check:', {
-        gsap: gsapOk ? 'OK (' + (window.gsap?.version || '?') + ')' : 'MISSING',
-        ScrollTrigger: scrollTriggerOk ? 'OK' : 'MISSING',
-        SplitText: splitTextOk ? 'OK' : CONFIG.splitTextUrl ? 'MISSING' : 'not loaded (splitTextUrl null)'
-      });
-      if (!gsapOk) {
-        console.warn('⚠️ RHP: GSAP did not load. Check dependency URLs in init.js.');
-      }
-
       const versionParam = 'v=' + (CONFIG.version || '0');
       for (const module of CONFIG.modules) {
         await loadScript(`${baseUrl}/${module}?${versionParam}`);
@@ -132,6 +119,13 @@
       console.log('RHP load check:', checks.map(function(c) {
         return c.module + ': ' + (c.ok ? 'OK' : 'MISSING') + (c.detail ? ' (' + c.detail + ')' : '');
       }).join(' | ') + ' | version: ' + RHP.version);
+      var gsapOk = typeof window.gsap !== 'undefined';
+      var scrollTriggerOk = typeof window.ScrollTrigger !== 'undefined';
+      var splitTextOk = typeof window.SplitText !== 'undefined';
+      console.log('RHP GSAP:', gsapOk ? 'gsap OK ' + (window.gsap && window.gsap.version ? '(' + window.gsap.version + ')' : '') : 'gsap MISSING', '| ScrollTrigger:', scrollTriggerOk ? 'OK' : 'MISSING', '| SplitText:', splitTextOk ? 'OK' : (CONFIG.splitTextUrl ? 'MISSING' : 'off'));
+      if (!gsapOk) {
+        console.warn('⚠️ RHP: GSAP did not load. Check dependency URLs in init.js.');
+      }
       if (allOk) {
         console.log('✅ RHP: all ' + checks.length + ' scripts present');
       } else {

@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.2.6'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.2.6.1'; // bump when you deploy; check in console: RHP.cursor.version
 
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
@@ -120,24 +120,32 @@
         pendingY = e.clientY;
         if (!positionRaf) positionRaf = requestAnimationFrame(onPositionRaf);
 
-        // Sync cursor state from element under cursor
+        // Sync cursor state from element under cursor (only when stable for 2 consecutive updates to avoid boundary flicker)
         const under = getElementUnderCursor(e.clientX, e.clientY);
         const overDial = externalControl && under?.closest?.('.dial_component');
-        if (!overDial && under !== currentHoveredElement) {
-          currentHoveredElement = under;
-          if (under) {
-            const cursorType = under.getAttribute('data-cursor');
-            const cursorText = under.getAttribute('data-cursor-text') || null;
-            const cursorSvgs = under.getAttribute('data-cursor-svgs');
-            if (cursorType) {
-              stateStack = [stateStack[0] || 'dot'];
-              stateStack.push(currentState);
-              setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
-            }
-          } else {
-            stateStack = ['dot'];
-            setCursorState('dot', null, false);
+        if (overDial) {
+          lastUnderCursor = null;
+          return;
+        }
+        if (under !== lastUnderCursor) {
+          lastUnderCursor = under;
+          return;
+        }
+        // Same element two updates in a row — commit state change
+        if (under === currentHoveredElement) return;
+        currentHoveredElement = under;
+        if (under) {
+          const cursorType = under.getAttribute('data-cursor');
+          const cursorText = under.getAttribute('data-cursor-text') || null;
+          const cursorSvgs = under.getAttribute('data-cursor-svgs');
+          if (cursorType) {
+            stateStack = [stateStack[0] || 'dot'];
+            stateStack.push(currentState);
+            setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
           }
+        } else {
+          stateStack = ['dot'];
+          setCursorState('dot', null, false);
         }
       };
 
@@ -151,6 +159,8 @@
 
       // Track currently hovered element with data-cursor
       let currentHoveredElement = null;
+      // Require same element under cursor for 2 consecutive updates before changing state (stops flicker at boundaries)
+      let lastUnderCursor = null;
 
       // Helper to restore previous state
       const restorePreviousState = () => {
@@ -274,12 +284,11 @@
       });
     }
 
-    // Public API: Set cursor position (for work-dial on homepage)
+    // Public API: Update stored position only (do not apply — single source is mousemove + rAF to avoid flicker)
     function setPosition(x, y) {
-      if (!cursorDot || !alive) return;
+      if (!alive) return;
       lastMouseX = x;
       lastMouseY = y;
-      applyPosition(x, y);
     }
 
     // Public API: Set cursor state programmatically (for work-dial's play state)

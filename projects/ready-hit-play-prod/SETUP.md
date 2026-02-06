@@ -35,8 +35,10 @@ https://cdn.jsdelivr.net/gh/YOUR_USERNAME/YOUR_REPO@main/projects/ready-hit-play
 
 ### 5. Verify
 - Open your site
-- Check browser console for: `✅ RHP scripts loaded successfully`
+- Check browser console for: `✅ RHP scripts loaded successfully` and `RHP: all 5 scripts present`
 - Test dial interaction and Barba transitions
+
+**Not seeing the latest init/checks?** The browser or CDN may be caching `init.js`. In Webflow, add the same version to the script URL, e.g. `init.js?v=2026.2.6.3` (use the `version` from `init.js` CONFIG). After each deploy, bump the `?v=` value to match.
 
 ## ✅ Done!
 

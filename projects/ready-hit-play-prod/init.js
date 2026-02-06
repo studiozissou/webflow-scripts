@@ -5,9 +5,10 @@
 (function() {
   'use strict';
 
-  // Configuration - Bump version on deploy so module URLs change and cache is busted
+  // Configuration - Bump version on deploy so module URLs change and cache is busted.
+  // If init.js itself is cached, add ?v=<version> to the script URL in Webflow (e.g. init.js?v=2026.2.6.3).
   const CONFIG = {
-    version: '2026.2.6.2',
+    version: '2026.2.6.3',
     baseUrl: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@main/projects/ready-hit-play-prod',
     // Or pin a commit: baseUrl: '...@af49ed1/...',
     

@@ -14,18 +14,25 @@
   let isOpen = false;
   let offClickBound = false;
 
+  /** Clear Webflow inline transform/translate so only GSAP controls the element */
+  function clearPulloutTransform() {
+    if (!pullout) return;
+    pullout.style.transform = '';
+    pullout.style.translate = '';
+    pullout.style.rotate = '';
+    pullout.style.scale = '';
+  }
+
   function open() {
     if (!pullout || !window.gsap) return;
     if (isOpen) return;
     isOpen = true;
+    clearPulloutTransform();
     window.gsap.killTweensOf(pullout);
-    window.gsap.to(pullout, {
-      xPercent: 0,
-      duration: DURATION,
-      ease: EASE,
-      overwrite: true,
-      force3D: true
-    });
+    window.gsap.fromTo(pullout,
+      { xPercent: 100 },
+      { xPercent: 0, duration: DURATION, ease: EASE, overwrite: true, force3D: true }
+    );
     scheduleOffClickListen();
   }
 
@@ -33,14 +40,12 @@
     if (!pullout || !window.gsap) return;
     if (!isOpen) return;
     isOpen = false;
+    clearPulloutTransform();
     window.gsap.killTweensOf(pullout);
-    window.gsap.to(pullout, {
-      xPercent: 100,
-      duration: DURATION,
-      ease: EASE,
-      overwrite: true,
-      force3D: true
-    });
+    window.gsap.fromTo(pullout,
+      { xPercent: 0 },
+      { xPercent: 100, duration: DURATION, ease: EASE, overwrite: true, force3D: true }
+    );
     removeOffClickListen();
   }
 
@@ -82,7 +87,8 @@
 
     if (!pullout) return;
 
-    // Take ownership of transform: start closed (matches CSS translate(100%))
+    // Clear Webflow inline transform, then own it with GSAP (closed = 100% right)
+    clearPulloutTransform();
     if (window.gsap) {
       window.gsap.killTweensOf(pullout);
       window.gsap.set(pullout, { xPercent: 100, force3D: true });

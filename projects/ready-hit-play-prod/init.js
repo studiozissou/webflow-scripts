@@ -10,7 +10,7 @@
   const CONFIG = {
     version: '2026.2.6.3',
     baseUrl: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@main/projects/ready-hit-play-prod',
-    // Or pin a commit: baseUrl: '...@af49ed1/...',
+    baseUrlRaw: 'https://raw.githubusercontent.com/studiozissou/webflow-scripts/main/projects/ready-hit-play-prod',
     
     // CSS dependencies (loaded first)
     cssDependencies: [
@@ -84,7 +84,8 @@
         await loadStylesheet(css);
       }
       if (devMode && CONFIG.rhpCss) {
-        loadStylesheet(`${CONFIG.baseUrl}/${CONFIG.rhpCss}?t=${Date.now()}`).catch(function() {});
+        const devBase = CONFIG.baseUrlRaw || CONFIG.baseUrl;
+        loadStylesheet(`${devBase}/${CONFIG.rhpCss}?t=${Date.now()}`).catch(function() {});
       }
 
       // Load JavaScript dependencies
@@ -95,10 +96,11 @@
       // Wait a tick to ensure globals are available
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      // Load modules in order (version param busts cache on deploy; dev mode adds timestamp for fresh load every time)
+      // Load modules in order (version param busts cache on deploy; dev mode uses raw GitHub + timestamp for fresh load)
+      const moduleBase = devMode ? (CONFIG.baseUrlRaw || CONFIG.baseUrl) : CONFIG.baseUrl;
       const moduleParam = devMode ? 't=' + Date.now() : 'v=' + (CONFIG.version || '0');
       for (const module of CONFIG.modules) {
-        const url = `${CONFIG.baseUrl}/${module}?${moduleParam}`;
+        const url = `${moduleBase}/${module}?${moduleParam}`;
         await loadScript(url);
       }
 

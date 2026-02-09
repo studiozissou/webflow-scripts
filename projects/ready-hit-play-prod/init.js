@@ -7,7 +7,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.6.7', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.2.6.8', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -104,17 +104,29 @@
       RHP.version = CONFIG.version || '0';
       window.RHP = RHP;
       const checks = [
-        { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: '' },
+        { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: RHP.lenis?.version || '' },
         { module: 'cursor.js', ok: typeof RHP.cursor !== 'undefined', detail: RHP.cursor?.version || '(no version)' },
-        { module: 'work-dial.js', ok: typeof RHP.workDial !== 'undefined', detail: '' },
+        { module: 'work-dial.js', ok: typeof RHP.workDial !== 'undefined', detail: RHP.workDial?.version || '' },
         { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: RHP.orchestratorVersion || '' },
-        { module: 'utils.js', ok: true, detail: '(no RHP export)' }
+        { module: 'utils.js', ok: true, detail: '—' }
       ];
       const failed = checks.filter(function(c) { return !c.ok; });
       const allOk = failed.length === 0;
       RHP.scriptsOk = allOk;
       RHP.scriptsCheck = { total: checks.length, ok: checks.length - failed.length, failed: failed.map(function(c) { return c.module; }) };
       window.RHP = RHP;
+
+      var versionsTable = {
+        'init (loader)': CONFIG.version,
+        'lenis-manager.js': RHP.lenis?.version || '—',
+        'cursor.js': (RHP.cursor?.version || '—') + (typeof RHP.cursor?.transitionDuration === 'number' ? ' (transitionDuration: ' + RHP.cursor.transitionDuration + ')' : ''),
+        'work-dial.js': RHP.workDial?.version || '—',
+        'orchestrator.js': RHP.orchestratorVersion || '—',
+        'utils.js': '—'
+      };
+      RHP.versions = versionsTable;
+      console.log('RHP script versions (loaded):');
+      console.table(versionsTable);
 
       console.log('RHP load check:', checks.map(function(c) {
         return c.module + ': ' + (c.ok ? 'OK' : 'MISSING') + (c.detail ? ' (' + c.detail + ')' : '');

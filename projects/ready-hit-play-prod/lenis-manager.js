@@ -3,6 +3,7 @@
    Uses official Lenis global (window.Lenis)
    ========================================= */
 (() => {
+  const LENIS_MANAGER_VERSION = '2026.2.6.8';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -53,5 +54,5 @@
     lenis?.resize?.();
   }
 
-  RHP.lenis = { start, stop, resize };
+  RHP.lenis = { start, stop, resize, version: LENIS_MANAGER_VERSION };
 })();

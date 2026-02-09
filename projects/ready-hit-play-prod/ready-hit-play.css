@@ -4,6 +4,28 @@
    - Shared dial styles for home + case-studies
    ========================================= */
 
+/* Hide nav completely on About page (not visible, not clickable) */
+[data-barba="wrapper"].rhp-nav-hidden .nav {
+  display: none !important;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* About → Home transition: nav logo end position/size (override per breakpoint) */
+:root {
+  --nav-logo-return-top: 3rem;
+  --nav-logo-return-embed-height: 2rem;
+}
+
+/* Example: override for smaller viewports
+@media (max-width: 767px) {
+  :root {
+    --nav-logo-return-top: 2rem;
+    --nav-logo-return-embed-height: 1.5rem;
+  }
+}
+*/
+
 /* ====== Stage (shared home + case + about) ====== */
 [data-barba-namespace="home"] .dial_component,
 [data-barba-namespace="case"] .dial_component,
@@ -156,7 +178,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: clamp(24px, 6vh, 64px);
+  top: calc(50% + (var(--dial-home-height) / 2) + 8rem);
   z-index: 4;
   display: flex;
   justify-content: center;
@@ -186,6 +208,21 @@
   pointer-events: none;
 }
 
+/* Wrapper is always 6rem × 6rem, centred on mouse; dot inside resizes without affecting position */
+.cursor_dot-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6rem;
+  height: 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate3d(-9999px, -9999px, 0);
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
 .cursor_dot {
   /* Default: dot state - 1rem x 1rem, solid white, 1px border */
   width: 1rem;
@@ -193,12 +230,20 @@
   border-radius: 999px;
   background: #fff;
   border: 1px solid #fff;
-  transform: translate3d(-9999px, -9999px, 0);
   display: grid;
   place-items: center;
-  will-change: transform, width, height, background-color, border-color;
+  will-change: width, height, background-color, border-color;
   transition: width 0.25s ease, height 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
   position: relative;
+}
+
+/* When no wrapper (legacy): dot is positioned directly */
+.cursor_component > .cursor_dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate3d(-9999px, -9999px, 0);
+  transform-origin: 50% 50%;
 }
 
 .cursor_label {

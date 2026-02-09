@@ -105,7 +105,178 @@
     destroy() {}
   });
 
-  RHP.views.about   = RHP.views.about   || makeScrollPage();
+  /* -----------------------------
+     About view: scroll + hero logo hover (desktop)
+     - .nav_logo-embed (not in nav) hover: sibling .heading-style-h3 animate word-by-word
+       (SplitText, mask line, word y 100% → 0 / 0 → 100%), parent .about-hero_ready y -1.5rem / 0
+     ----------------------------- */
+  RHP.views.about = RHP.views.about || (() => {
+    let active = false;
+    let splitInstances = [];
+    let hoverListeners = [];
+    let teamHoverListeners = [];
+
+    const isDesktop = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
+
+    function initAboutTeamHover(container) {
+      const gsap = window.gsap;
+      if (!gsap) return;
+
+      const ryanEl = container.querySelector('[data-team="ryan"]');
+      const guyEl = container.querySelector('[data-team="guy"]');
+      if (!ryanEl || !guyEl) return;
+
+      const ryanBio = ryanEl.querySelector('.about-team_bio');
+      const guyBio = guyEl.querySelector('.about-team_bio');
+      const ryanImage = ryanEl.querySelector('.about-team_image');
+      const guyImage = guyEl.querySelector('.about-team_image');
+      if (!ryanBio || !guyBio || !ryanImage || !guyImage) return;
+
+      // Initial state: both bios collapsed (max-width is set in CSS)
+      gsap.set([ryanBio, guyBio], { width: 0, overflow: 'hidden', opacity: 0 });
+      // Own transform from the start so we don't flip between translate and translate3d (avoids jump on leave)
+      gsap.set([ryanEl, guyEl], { x: 0, force3D: true });
+
+      const slideOpts = { duration: 0.5, ease: 'power3.out', force3D: true };
+      const onRyanEnter = () => {
+        gsap.to(ryanBio, { width: '100%', overflow: 'visible', duration: 0.5, ease: 'power3.out' });
+        gsap.to(ryanBio, { opacity: 1, duration: 0.5, ease: 'linear' });
+        gsap.to(guyEl, { x: '16vw', ...slideOpts });
+      };
+      const onRyanLeave = () => {
+        gsap.to(ryanBio, { width: 0, overflow: 'hidden', duration: 0.5, ease: 'power3.out' });
+        gsap.to(ryanBio, { opacity: 0, duration: 0.5, ease: 'linear' });
+        gsap.to(guyEl, { x: 0, ...slideOpts });
+      };
+
+      const onGuyEnter = () => {
+        gsap.to(guyBio, { width: '100%', overflow: 'visible', duration: 0.5, ease: 'power3.out' });
+        gsap.to(guyBio, { opacity: 1, duration: 0.5, ease: 'linear' });
+        gsap.to(ryanEl, { x: '-16vw', ...slideOpts });
+      };
+      const onGuyLeave = () => {
+        gsap.to(guyBio, { width: 0, overflow: 'hidden', duration: 0.5, ease: 'power3.out' });
+        gsap.to(guyBio, { opacity: 0, duration: 0.5, ease: 'linear' });
+        gsap.to(ryanEl, { x: 0, ...slideOpts });
+      };
+
+      // OPEN on hover of .about-team_image; CLOSE on mouseleave of the whole data-team block
+      ryanImage.addEventListener('mouseenter', onRyanEnter);
+      ryanEl.addEventListener('mouseleave', onRyanLeave);
+      guyImage.addEventListener('mouseenter', onGuyEnter);
+      guyEl.addEventListener('mouseleave', onGuyLeave);
+      teamHoverListeners.push(
+        { el: ryanImage, type: 'enter', fn: onRyanEnter },
+        { el: ryanEl, type: 'leave', fn: onRyanLeave },
+        { el: guyImage, type: 'enter', fn: onGuyEnter },
+        { el: guyEl, type: 'leave', fn: onGuyLeave }
+      );
+    }
+
+    function destroyAboutTeamHover() {
+      teamHoverListeners.forEach(({ el, type, fn }) => {
+        el.removeEventListener(type === 'enter' ? 'mouseenter' : 'mouseleave', fn);
+      });
+      teamHoverListeners = [];
+    }
+
+    function initAboutHeroLogoHover(container) {
+      const gsap = window.gsap;
+      const SplitText = window.SplitText;
+      if (!gsap || !SplitText) return;
+
+      // .nav_logo-embed not in nav = inside main / about hero only
+      const logoEmbeds = container.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
+      if (!logoEmbeds.length) return;
+
+      logoEmbeds.forEach((embed) => {
+        const heroReady = embed.closest('.about-hero_ready');
+        if (!heroReady) return;
+
+        const headings = heroReady.querySelectorAll('.heading-style-h3');
+        if (!headings.length) return;
+
+        const headingSplits = [];
+        headings.forEach((h) => {
+          try {
+            const split = new SplitText(h, { type: 'words,lines', linesClass: 'about-hero-line', wordsClass: 'about-hero-word' });
+            if (split.lines) {
+              split.lines.forEach((line) => {
+                line.style.overflow = 'hidden';
+              });
+            }
+            if (split.words && split.words.length) {
+              gsap.set(split.words, { yPercent: 100, opacity: 0 });
+            }
+            headingSplits.push({ split, headingEl: h });
+          } catch (e) {
+            console.warn('RHP about-hero SplitText:', e);
+          }
+        });
+
+        splitInstances.push(...headingSplits);
+
+        const onEnter = () => {
+          gsap.to(heroReady, { y: '-1.5rem', duration: 0.5, ease: 'power3.out' });
+          headingSplits.forEach(({ split, headingEl }) => {
+            gsap.to(headingEl, { opacity: 1, duration: 0.4, ease: 'power4.out' });
+            if (split.words && split.words.length) {
+              gsap.to(split.words, { yPercent: 0, opacity: 1, duration: 0.4, ease: 'power4.out', stagger: 0.15 });
+            }
+          });
+        };
+
+        const onLeave = () => {
+          gsap.to(heroReady, { y: 0, duration: 0.5, ease: 'power3.out' });
+          headingSplits.forEach(({ split, headingEl }) => {
+            gsap.to(headingEl, { opacity: 0, duration: 0.4, ease: 'power4.out' });
+            if (split.words && split.words.length) {
+              gsap.to(split.words, { yPercent: 100, opacity: 0, duration: 0.4, ease: 'power4.out', stagger: 0.15 });
+            }
+          });
+        };
+
+        embed.addEventListener('mouseenter', onEnter);
+        embed.addEventListener('mouseleave', onLeave);
+        hoverListeners.push({ embed, onEnter, onLeave });
+      });
+    }
+
+    function destroyAboutHeroLogoHover() {
+      hoverListeners.forEach(({ embed, onEnter, onLeave }) => {
+        embed.removeEventListener('mouseenter', onEnter);
+        embed.removeEventListener('mouseleave', onLeave);
+      });
+      hoverListeners = [];
+      splitInstances.forEach((item) => {
+        try {
+          const split = item.split || item;
+          if (split.revert) split.revert();
+        } catch (e) {}
+      });
+      splitInstances = [];
+    }
+
+    return {
+      init(container) {
+        if (active) return;
+        active = true;
+        RHP.scroll.unlock();
+        RHP.lenis?.start();
+        RHP.lenis?.resize();
+        if (isDesktop()) {
+          initAboutHeroLogoHover(container);
+          initAboutTeamHover(container);
+        }
+      },
+      destroy() {
+        if (!active) return;
+        active = false;
+        destroyAboutHeroLogoHover();
+        destroyAboutTeamHover();
+      }
+    };
+  })();
 
   // Case view: Lenis on an inner scrollable wrapper instead of window
   RHP.views.case = RHP.views.case || (() => {
@@ -117,6 +288,11 @@
         active = true;
 
         RHP.scroll.unlock();
+
+        // Format intro text (decode entities, sanitize to BR/STRONG/EM etc. only)
+        if (typeof RHP.formatIntroText === 'function') {
+          RHP.formatIntroText(container);
+        }
 
         const wrapper =
           container.querySelector('[data-case-scroll-wrapper]') ||
@@ -208,12 +384,8 @@
       if (window.getComputedStyle(pullout).display === 'none') {
         pullout.style.display = 'block';
       }
-      var w = pullout.offsetWidth;
-      var pos = window.getComputedStyle(pullout).position;
-      if (pos === 'static') pullout.style.position = 'relative';
-      gsap.set(pullout, { left: -w, opacity: 0 });
       gsap.to(pullout, {
-        left: 0,
+        xPercent: -100,
         opacity: 1,
         duration: 0.7,
         ease: 'expo.out',
@@ -226,16 +398,14 @@
       const pullout = getPullout();
       if (!pullout) return;
       isOpen = false;
-      var w = pullout.offsetWidth;
       gsap.to(pullout, {
-        left: w,
+        xPercent: 0,
         opacity: 0,
         duration: 0.7,
         ease: 'expo.out',
         overwrite: true,
         onComplete: () => {
           pullout.style.pointerEvents = 'none';
-          gsap.set(pullout, { left: -pullout.offsetWidth });
         }
       });
     }
@@ -247,8 +417,7 @@
         console.log('RHP contact pullout (scope: wrapper):', { pullout: !!pullout, link: !!link });
       }
       if (pullout) {
-        if (window.getComputedStyle(pullout).position === 'static') pullout.style.position = 'relative';
-        gsap.set(pullout, { opacity: 0 });
+        gsap.set(pullout, { xPercent: 0, opacity: 0 });
         pullout.style.pointerEvents = 'none';
         pullout.style.visibility = 'visible';
       }
@@ -389,162 +558,274 @@
         .querySelector('[data-barba="container"]')
         ?.getAttribute('data-barba-namespace') || '';
 
-    barba.init({
-      transitions: [{
-        name: 'rhp-core',
+    function runLogoLeaveAnimation() {
+      const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
+      const logoWrapper = scope.querySelector('.nav_logo-wrapper-2');
+      const embeds = logoWrapper ? logoWrapper.querySelectorAll('.nav_logo-embed') : [];
+      if (!logoWrapper || !window.gsap) return Promise.resolve();
 
-        beforeLeave(data) {
-          const ns = data.current?.namespace || currentNs;
-          if (ns && RHP.views[ns]?.destroy) {
-            RHP.views[ns].destroy();
-          }
-        },
+      const rect = logoWrapper.getBoundingClientRect();
+      gsap.set(logoWrapper, {
+        position: 'fixed',
+        left: rect.left,
+        top: rect.top,
+        zIndex: 9999
+      });
 
-        enter() {
-          // Always reset scroll position
-          window.scrollTo(0, 0);
-        },
+      const duration = 0.7;
+      const ease = 'power2.out';
+      const moveTween = gsap.to(logoWrapper, {
+        left: '50%',
+        top: '50%',
+        xPercent: -50,
+        yPercent: -50,
+        duration,
+        ease
+      });
+      const heightTween = embeds.length
+        ? gsap.to(embeds, { height: '10.125rem', duration, ease })
+        : null;
 
-        afterEnter(data) {
-          currentNs = data.next?.namespace || '';
-          const ns = currentNs;
-          
-          // Animate dial_layer-fg with GSAP based on namespace
-          const dialFg = data.next.container.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
-          if (dialFg && window.gsap) {
-            // Helper to read CSS custom properties (responsive values)
-            const getCSSVar = (varName) => {
-              return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-            };
-            
-            // Read responsive values from CSS custom properties
-            const homeWidth = getCSSVar('--dial-home-width') || '37.5rem';
-            const homeHeight = getCSSVar('--dial-home-height') || '37.5rem';
-            const homeBorderRadius = getCSSVar('--dial-home-border-radius') || '1000rem';
-            const homeAspectRatio = getCSSVar('--dial-home-aspect-ratio') || '1';
-            
-            const caseWidth = getCSSVar('--dial-case-width') || '78vw';
-            const caseHeight = getCSSVar('--dial-case-height') || '85dvh';
-            const caseBorderRadius = getCSSVar('--dial-case-border-radius') || '7.5rem';
-            const caseAspectRatio = getCSSVar('--dial-case-aspect-ratio') || 'auto';
-            
-            if (ns === 'case' || ns === 'about') {
-              // Set initial state (home style) - including non-animatable properties
-              gsap.set(dialFg, {
-                width: homeWidth,
-                height: homeHeight,
-                borderRadius: homeBorderRadius,
-                aspectRatio: homeAspectRatio,
-                overflow: 'visible'
-              });
-              dialFg.style.display = 'grid';
-              dialFg.style.flexFlow = 'row';
-              
-              // Add class for CSS fallback
-              dialFg.classList.add('is-case-study');
-              
-              // Set non-animatable properties immediately
-              dialFg.style.display = 'flex';
-              dialFg.style.flexFlow = 'column';
-              
-              // Animate animatable properties using responsive CSS variables
-              gsap.to(dialFg, {
-                width: caseWidth,
-                height: caseHeight,
-                borderRadius: caseBorderRadius,
-                aspectRatio: caseAspectRatio,
-                overflow: 'auto',
-                duration: 0.8,
-                ease: 'power2.inOut'
-              });
-            } else {
-              // Home state
-              const prevNs = data.current?.namespace;
-              
-              // If coming from case-study, animate back (reverse animation)
-              if (prevNs === 'case' || prevNs === 'about') {
-                // Set initial state to case-study (where we're coming from)
-                gsap.set(dialFg, {
-                  width: caseWidth,
-                  height: caseHeight,
-                  borderRadius: caseBorderRadius,
-                  aspectRatio: caseAspectRatio,
-                  overflow: 'auto'
-                });
-                dialFg.style.display = 'flex';
-                dialFg.style.flexFlow = 'column';
-                
-                // Remove class
-                dialFg.classList.remove('is-case-study');
-                
-                // Set non-animatable properties immediately for home state
-                dialFg.style.display = 'grid';
-                dialFg.style.flexFlow = 'row';
-                
-                // Animate back to home state (reverse animation)
-                gsap.to(dialFg, {
-                  width: homeWidth,
-                  height: homeHeight,
-                  borderRadius: homeBorderRadius,
-                  aspectRatio: homeAspectRatio,
-                  overflow: 'visible',
-                  duration: 0.8,
-                  ease: 'power2.inOut'
-                });
-              } else {
-                // Already on home or initial load - just ensure class is removed
-                dialFg.classList.remove('is-case-study');
-              }
-            }
-          } else if (dialFg) {
-            // Fallback: just add/remove class if GSAP not available
-            if (ns === 'case' || ns === 'about') {
-              dialFg.classList.add('is-case-study');
-            } else {
-              dialFg.classList.remove('is-case-study');
-            }
-          }
+      return Promise.all([
+        moveTween.then ? moveTween.then() : new Promise(function(r) { moveTween.eventCallback('onComplete', r); }),
+        heightTween ? (heightTween.then ? heightTween.then() : new Promise(function(r) { heightTween.eventCallback('onComplete', r); })) : Promise.resolve()
+      ]);
+    }
 
-          // 🔁 Scroll mode switch
-          if (ns === 'home') {
-            RHP.lenis?.stop();
-            RHP.scroll.lock();
-          } else {
-            RHP.scroll.unlock();
-            // Let the case view configure its own Lenis instance on its wrapper
-            if (ns !== 'case') {
-              RHP.lenis?.start();
-              RHP.lenis?.resize();
-            }
-          }
+    function runLogoReturnAnimation() {
+      var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+      wrapper.classList.remove('rhp-nav-hidden');
+      var logoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
+      var embeds = logoWrapper ? logoWrapper.querySelectorAll('.nav_logo-embed') : [];
+      if (!logoWrapper || !window.gsap) return Promise.resolve();
 
-          if (ns && RHP.views[ns]?.init) {
-            RHP.views[ns].init(data.next.container);
-          }
+      var getVar = function(name, fallback) {
+        var v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+        return v || fallback;
+      };
+      var topValue = getVar('--nav-logo-return-top', '3rem');
+      var heightValue = getVar('--nav-logo-return-embed-height', '2rem');
 
-          // Re-initialize native Webflow Interactions (GSAP-powered)
-          try {
-            if (window.Webflow && typeof window.Webflow.require === 'function') {
-              const ix2 = window.Webflow.require('ix2');
-              if (ix2 && typeof ix2.init === 'function') {
-                ix2.init();
-              }
-            }
-          } catch (e) {
-            // Safe-guard: if Webflow internals change, don't break the transition.
-          }
+      gsap.set(logoWrapper, {
+        position: 'fixed',
+        left: '50%',
+        top: '50%',
+        xPercent: -50,
+        yPercent: -50,
+        zIndex: 9999
+      });
+      if (embeds.length) gsap.set(embeds, { height: '10.125rem' });
 
-          // Notify any custom page-level scripts so they can re-initialize on Barba transitions.
-          try {
-            const ev = new CustomEvent('rhp:barba:afterenter', {
-              detail: { namespace: ns, container: data.next.container }
-            });
-            window.dispatchEvent(ev);
-          } catch (e) {
-            // CustomEvent might not exist in very old browsers; ignore.
+      var duration = 0.7;
+      var ease = 'power2.out';
+      var moveTween = gsap.to(logoWrapper, {
+        top: topValue,
+        yPercent: 0,
+        duration: duration,
+        ease: ease
+      });
+      var heightTween = embeds.length
+        ? gsap.to(embeds, { height: heightValue, duration: duration, ease: ease })
+        : null;
+
+      return Promise.all([
+        moveTween.then ? moveTween.then() : new Promise(function(r) { moveTween.eventCallback('onComplete', r); }),
+        heightTween ? (heightTween.then ? heightTween.then() : new Promise(function(r) { heightTween.eventCallback('onComplete', r); })) : Promise.resolve()
+      ]);
+    }
+
+    function runAfterEnter(data) {
+      currentNs = data.next ? (data.next.namespace || '') : '';
+      const ns = currentNs;
+
+      var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+      if (ns === 'about') {
+        wrapper.classList.add('rhp-nav-hidden');
+      } else {
+        wrapper.classList.remove('rhp-nav-hidden');
+      }
+
+      if (ns === 'about' && window.gsap) {
+        const navLogoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
+        if (navLogoWrapper) {
+          gsap.set(navLogoWrapper, { clearProps: 'position,left,top,zIndex,xPercent,yPercent' });
+          const navEmbeds = navLogoWrapper.querySelectorAll('.nav_logo-embed');
+          if (navEmbeds.length) gsap.set(navEmbeds, { clearProps: 'height' });
+          navLogoWrapper.style.visibility = 'hidden';
+        }
+      }
+      if (ns === 'home') {
+        var navLogoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
+        if (navLogoWrapper) {
+          navLogoWrapper.style.visibility = '';
+          if (window.gsap) {
+            gsap.set(navLogoWrapper, { clearProps: 'position,left,top,xPercent,yPercent,zIndex' });
+            var navEmbeds = navLogoWrapper.querySelectorAll('.nav_logo-embed');
+            if (navEmbeds.length) gsap.set(navEmbeds, { clearProps: 'height' });
           }
         }
-      }]
+      }
+
+      var dialFg = (data.next && data.next.container) ? data.next.container.querySelector('.dial_layer-fg') : null;
+      if (!dialFg) dialFg = document.querySelector('.dial_layer-fg');
+      if (dialFg && window.gsap) {
+        var getCSSVar = function(varName) {
+          return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        };
+        var homeWidth = getCSSVar('--dial-home-width') || '37.5rem';
+        var homeHeight = getCSSVar('--dial-home-height') || '37.5rem';
+        var homeBorderRadius = getCSSVar('--dial-home-border-radius') || '1000rem';
+        var homeAspectRatio = getCSSVar('--dial-home-aspect-ratio') || '1';
+        var caseWidth = getCSSVar('--dial-case-width') || '78vw';
+        var caseHeight = getCSSVar('--dial-case-height') || '85dvh';
+        var caseBorderRadius = getCSSVar('--dial-case-border-radius') || '7.5rem';
+        var caseAspectRatio = getCSSVar('--dial-case-aspect-ratio') || 'auto';
+
+        if (ns === 'case' || ns === 'about') {
+          gsap.set(dialFg, {
+            width: homeWidth,
+            height: homeHeight,
+            borderRadius: homeBorderRadius,
+            aspectRatio: homeAspectRatio,
+            overflow: 'visible'
+          });
+          dialFg.style.display = 'grid';
+          dialFg.style.flexFlow = 'row';
+          dialFg.classList.add('is-case-study');
+          dialFg.style.display = 'flex';
+          dialFg.style.flexFlow = 'column';
+          gsap.to(dialFg, {
+            width: caseWidth,
+            height: caseHeight,
+            borderRadius: caseBorderRadius,
+            aspectRatio: caseAspectRatio,
+            overflow: 'auto',
+            duration: 0.8,
+            ease: 'power2.inOut'
+          });
+        } else {
+          var prevNs = data.current ? data.current.namespace : undefined;
+          if (prevNs === 'case' || prevNs === 'about') {
+            gsap.set(dialFg, {
+              width: caseWidth,
+              height: caseHeight,
+              borderRadius: caseBorderRadius,
+              aspectRatio: caseAspectRatio,
+              overflow: 'auto'
+            });
+            dialFg.style.display = 'flex';
+            dialFg.style.flexFlow = 'column';
+            dialFg.classList.remove('is-case-study');
+            dialFg.style.display = 'grid';
+            dialFg.style.flexFlow = 'row';
+            gsap.to(dialFg, {
+              width: homeWidth,
+              height: homeHeight,
+              borderRadius: homeBorderRadius,
+              aspectRatio: homeAspectRatio,
+              overflow: 'visible',
+              duration: 0.8,
+              ease: 'power2.inOut'
+            });
+          } else {
+            dialFg.classList.remove('is-case-study');
+          }
+        }
+      } else if (dialFg) {
+        if (ns === 'case' || ns === 'about') dialFg.classList.add('is-case-study');
+        else dialFg.classList.remove('is-case-study');
+      }
+
+      if (ns === 'home') {
+        RHP.lenis && RHP.lenis.stop();
+        RHP.scroll.lock();
+      } else {
+        RHP.scroll.unlock();
+        if (ns !== 'case') {
+          RHP.lenis && RHP.lenis.start && RHP.lenis.start();
+          RHP.lenis && RHP.lenis.resize && RHP.lenis.resize();
+        }
+      }
+
+      if (ns && RHP.views[ns] && RHP.views[ns].init && data.next && data.next.container) {
+        RHP.views[ns].init(data.next.container);
+      }
+
+      try {
+        if (window.Webflow && typeof window.Webflow.require === 'function') {
+          var ix2 = window.Webflow.require('ix2');
+          if (ix2 && typeof ix2.init === 'function') ix2.init();
+        }
+      } catch (e) {}
+
+      try {
+        var ev = new CustomEvent('rhp:barba:afterenter', {
+          detail: { namespace: ns, container: data.next ? data.next.container : null }
+        });
+        window.dispatchEvent(ev);
+      } catch (e) {}
+    }
+
+    barba.init({
+      transitions: [
+        {
+          name: 'home-to-about',
+          from: { namespace: ['home'] },
+          to: { namespace: ['about'] },
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+          },
+          leave() {
+            return runLogoLeaveAnimation();
+          },
+          enter() {
+            window.scrollTo(0, 0);
+          },
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        },
+        {
+          name: 'about-to-home',
+          from: { namespace: ['about'] },
+          to: { namespace: ['home'] },
+          beforeLeave(data) {
+            var ns = data.current ? data.current.namespace : currentNs;
+            if (ns && RHP.views[ns] && RHP.views[ns].destroy) RHP.views[ns].destroy();
+          },
+          leave() {
+            return runLogoReturnAnimation();
+          },
+          enter() {
+            window.scrollTo(0, 0);
+          },
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        },
+        // Default transition (all other routes)
+        {
+          name: 'rhp-core',
+
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+          },
+
+          leave() {},
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        }
+      ]
     });
   }
 

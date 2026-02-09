@@ -32,6 +32,29 @@ Use the **same commit** in both URLs (e.g. replace `COMMIT` with the latest comm
 - Check browser console for: `✅ RHP scripts loaded successfully` and `RHP: all 5 scripts present`
 - Test dial interaction and Barba transitions
 
+## 🖥️ Local development
+
+Serve the project from a local server so scripts load from disk (no deploy or cache).
+
+1. **Start a static server** from the repo root (not inside `ready-hit-play-prod`):
+   ```bash
+   cd /path/to/webflow-scripts
+   npx serve .
+   ```
+   Or with Python: `python3 -m http.server 8080`
+
+2. **Open the dev page** in your browser:
+   - **http://localhost:3000/projects/ready-hit-play-prod/dev.html** (if using `npx serve`, port may be 3000)
+   - Or **http://localhost:8080/projects/ready-hit-play-prod/dev.html** (if using Python on 8080)
+
+3. **Init detects localhost** and loads all modules (cursor, work-dial, orchestrator, etc.) from the same folder. Edit any `.js` or `.css` file, refresh the page, and you get your changes without deploying.
+
+4. **Full page testing**: To test with the real layout (dial, nav, etc.), serve the same way and open a reference page instead:
+   - **http://localhost:3000/projects/ready-hit-play-prod/reference/homepage.html**
+   - In that file, temporarily change the script and link tags to use relative paths: `ready-hit-play.css` and `init.js` (same directory as the reference file is `reference/`, so use `../ready-hit-play.css` and `../init.js`), then init will still load from the parent folder (same origin = local dev).
+
+**Note:** Use a server (localhost). Opening `dev.html` via `file://` may block script loading due to CORS.
+
 ## 🔄 Making Updates
 
 1. Edit files in `ready-hit-play-prod/`

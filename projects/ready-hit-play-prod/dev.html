@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>RHP — Local dev</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <!-- Local: load from same folder when served (e.g. http://localhost:8080/projects/ready-hit-play-prod/dev.html) -->
+  <link rel="stylesheet" href="ready-hit-play.css"/>
+</head>
+<body data-barba="wrapper">
+  <main data-barba-namespace="home" data-barba="container">
+    <p style="padding: 2rem;">RHP scripts — local dev. Open console for version table. Cursor and dial need full DOM from reference pages.</p>
+  </main>
+  <!-- Cursor (minimal so cursor.js can init). In Webflow: add a div with class cursor_dot-wrapper between cursor_component and cursor_dot. -->
+  <div class="cursor_component">
+    <div class="cursor_dot-wrapper">
+      <div class="cursor_dot">
+        <div class="cursor_label">Label</div>
+        <div class="cursor_arrows">
+          <svg width="100%" height="100%" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 73.805L47.8052 81.6102L55.6105 73.8052" stroke="currentColor"/>
+            <path d="M55.6106 22.8053L47.8054 15.0001L40.0001 22.8052" stroke="currentColor"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="init.js"></script>
+</body>
+</html>

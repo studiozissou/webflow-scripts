@@ -25,6 +25,7 @@
     let alive = false;
     let cleanup = [];
     let rafId = 0;
+    let cursorWrapper = null; // when present, we position this (6rem) so dot can resize without jumping
     let cursorDot = null;
     let cursorLabel = null;
     let cursorArrows = null;
@@ -62,6 +63,7 @@
       // Cursor and nav are outside [data-barba=container], wrapper is body with data-barba="wrapper"
       const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
       const scope = wrapper;
+      cursorWrapper = scope.querySelector('.cursor_dot-wrapper') || document.querySelector('.cursor_dot-wrapper');
       cursorDot = scope.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
       cursorLabel = scope.querySelector('.cursor_label') || document.querySelector('.cursor_label');
       cursorArrows = scope.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
@@ -95,15 +97,13 @@
         lastMouseY = e.clientY;
         // If cursor node was replaced by Barba, re-query so we update the visible one
         if (!cursorDot || !document.body.contains(cursorDot)) {
+          cursorWrapper = document.querySelector('.cursor_dot-wrapper');
           cursorDot = document.querySelector('.cursor_dot');
           cursorLabel = document.querySelector('.cursor_label');
           cursorArrows = document.querySelector('.cursor_arrows');
           if (!cursorDot) return;
         }
-        const rect = cursorDot.getBoundingClientRect();
-        const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-        const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-        cursorDot.style.transform = `translate3d(${e.clientX - width / 2}px, ${e.clientY - height / 2}px, 0)`;
+        applyCursorPosition();
 
         // Sync cursor state from element under cursor (works even when mouseover doesn't fire)
         const under = getElementUnderCursor(e.clientX, e.clientY);
@@ -134,11 +134,7 @@
       });
 
       // After Barba transition, cursor stays at last position; re-apply so it doesn't appear stuck
-      if (lastMouseX > -9999 && lastMouseY > -9999) {
-        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
-      }
+      if (lastMouseX > -9999 && lastMouseY > -9999) applyCursorPosition();
 
       // Track currently hovered element with data-cursor
       let currentHoveredElement = null;
@@ -265,15 +261,27 @@
       });
     }
 
+    // Re-apply position so centre stays at (lastMouseX, lastMouseY). When wrapper exists we position it (fixed 6rem) so dot resizing doesn't jump.
+    function applyCursorPosition() {
+      if (cursorWrapper) {
+        const rect = cursorWrapper.getBoundingClientRect();
+        const w = rect.width || parseFloat(getComputedStyle(cursorWrapper).width) || 96;
+        const h = rect.height || parseFloat(getComputedStyle(cursorWrapper).height) || 96;
+        cursorWrapper.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
+      } else if (cursorDot) {
+        const rect = cursorDot.getBoundingClientRect();
+        const w = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
+        const h = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
+        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
+      }
+    }
+
     // Public API: Set cursor position (for work-dial on homepage)
     function setPosition(x, y) {
-      if (!cursorDot || !alive) return;
+      if (!alive || (!cursorWrapper && !cursorDot)) return;
       lastMouseX = x;
       lastMouseY = y;
-      const rect = cursorDot.getBoundingClientRect();
-      const width = rect.width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-      const height = rect.height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-      cursorDot.style.transform = `translate3d(${x - width / 2}px, ${y - height / 2}px, 0)`;
+      applyCursorPosition();
     }
 
     // Public API: Set cursor state programmatically (for work-dial's play state)
@@ -292,10 +300,10 @@
       const duration = reduced ? 0 : CURSOR_TRANSITION_DURATION;
       const ease = 'power3.out';
 
-      // Cursor accent color (blue for test; was orange #ff8200)
-      const cursorAccentColor = getComputedStyle(document.documentElement)
-        .getPropertyValue('--_primitives---colors--blue')
-        .trim() || '#2563eb';
+      // Get CSS variable for orange color
+      const orangeColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--_primitives---colors--orange')
+        .trim() || '#ff8200';
 
       switch (type) {
         case 'dot':
@@ -332,21 +340,21 @@
           break;
 
         case 'solid-orange':
-          // Solid accent dot 6rem x 6rem, show label (data-cursor name unchanged)
+          // Solid orange dot 6rem x 6rem, 1px border solid orange, show label
           if (gsap) {
             gsap.to(cursorDot, {
               duration,
               width: '6rem',
               height: '6rem',
-              backgroundColor: cursorAccentColor,
-              borderColor: cursorAccentColor,
+              backgroundColor: orangeColor,
+              borderColor: orangeColor,
               ease
             });
           } else {
             cursorDot.style.width = '6rem';
             cursorDot.style.height = '6rem';
-            cursorDot.style.backgroundColor = cursorAccentColor;
-            cursorDot.style.borderColor = cursorAccentColor;
+            cursorDot.style.backgroundColor = orangeColor;
+            cursorDot.style.borderColor = orangeColor;
           }
           if (cursorLabel) {
             if (text) cursorLabel.textContent = text;
@@ -366,21 +374,21 @@
           break;
 
         case 'arrow-orange-outline':
-          // Transparent circle 6rem, border + arrows in accent color (data-cursor name unchanged)
+          // Transparent circle 6rem x 6rem, 1px border solid orange, show arrows (orange)
           if (gsap) {
             gsap.to(cursorDot, {
               duration,
               width: '6rem',
               height: '6rem',
               backgroundColor: 'transparent',
-              borderColor: cursorAccentColor,
+              borderColor: orangeColor,
               ease
             });
           } else {
             cursorDot.style.width = '6rem';
             cursorDot.style.height = '6rem';
             cursorDot.style.backgroundColor = 'transparent';
-            cursorDot.style.borderColor = cursorAccentColor;
+            cursorDot.style.borderColor = orangeColor;
           }
           if (cursorLabel) {
             if (gsap) {
@@ -393,7 +401,7 @@
             const svg = cursorArrows.querySelector('svg');
             if (svg) {
               // Set stroke color via currentColor (SVG uses stroke="currentColor")
-              svg.style.color = cursorAccentColor;
+              svg.style.color = orangeColor;
             }
             if (gsap) {
               gsap.to(cursorArrows, { duration, opacity: 1, ease });
@@ -451,6 +459,7 @@
     function refresh() {
       if (!alive) return;
       const wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+      cursorWrapper = wrapper.querySelector('.cursor_dot-wrapper') || document.querySelector('.cursor_dot-wrapper');
       const nextDot = wrapper.querySelector('.cursor_dot') || document.querySelector('.cursor_dot');
       const nextLabel = wrapper.querySelector('.cursor_label') || document.querySelector('.cursor_label');
       const nextArrows = wrapper.querySelector('.cursor_arrows') || document.querySelector('.cursor_arrows');
@@ -459,11 +468,7 @@
       cursorLabel = nextLabel;
       cursorArrows = nextArrows;
       setCursorState(currentState, null, false);
-      if (lastMouseX > -9999 && lastMouseY > -9999) {
-        const w = cursorDot.getBoundingClientRect().width || parseFloat(getComputedStyle(cursorDot).width) || 16;
-        const h = cursorDot.getBoundingClientRect().height || parseFloat(getComputedStyle(cursorDot).height) || 16;
-        cursorDot.style.transform = `translate3d(${lastMouseX - w / 2}px, ${lastMouseY - h / 2}px, 0)`;
-      }
+      if (lastMouseX > -9999 && lastMouseY > -9999) applyCursorPosition();
     }
 
     return {

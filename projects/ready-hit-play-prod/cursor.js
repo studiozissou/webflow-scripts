@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.2.6.9'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.2.6.10'; // bump when you deploy; check in console: RHP.cursor.version
   const CURSOR_TRANSITION_DURATION = 0.25; // seconds for state changes; check in console: RHP.cursor.transitionDuration
 
   window.RHP = window.RHP || {};
@@ -292,10 +292,10 @@
       const duration = reduced ? 0 : CURSOR_TRANSITION_DURATION;
       const ease = 'power3.out';
 
-      // Get CSS variable for orange color
-      const orangeColor = getComputedStyle(document.documentElement)
-        .getPropertyValue('--_primitives---colors--orange')
-        .trim() || '#ff8200';
+      // Cursor accent color (blue for test; was orange #ff8200)
+      const cursorAccentColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--_primitives---colors--blue')
+        .trim() || '#2563eb';
 
       switch (type) {
         case 'dot':
@@ -332,21 +332,21 @@
           break;
 
         case 'solid-orange':
-          // Solid orange dot 6rem x 6rem, 1px border solid orange, show label
+          // Solid accent dot 6rem x 6rem, show label (data-cursor name unchanged)
           if (gsap) {
             gsap.to(cursorDot, {
               duration,
               width: '6rem',
               height: '6rem',
-              backgroundColor: orangeColor,
-              borderColor: orangeColor,
+              backgroundColor: cursorAccentColor,
+              borderColor: cursorAccentColor,
               ease
             });
           } else {
             cursorDot.style.width = '6rem';
             cursorDot.style.height = '6rem';
-            cursorDot.style.backgroundColor = orangeColor;
-            cursorDot.style.borderColor = orangeColor;
+            cursorDot.style.backgroundColor = cursorAccentColor;
+            cursorDot.style.borderColor = cursorAccentColor;
           }
           if (cursorLabel) {
             if (text) cursorLabel.textContent = text;
@@ -366,21 +366,21 @@
           break;
 
         case 'arrow-orange-outline':
-          // Transparent circle 6rem x 6rem, 1px border solid orange, show arrows (orange)
+          // Transparent circle 6rem, border + arrows in accent color (data-cursor name unchanged)
           if (gsap) {
             gsap.to(cursorDot, {
               duration,
               width: '6rem',
               height: '6rem',
               backgroundColor: 'transparent',
-              borderColor: orangeColor,
+              borderColor: cursorAccentColor,
               ease
             });
           } else {
             cursorDot.style.width = '6rem';
             cursorDot.style.height = '6rem';
             cursorDot.style.backgroundColor = 'transparent';
-            cursorDot.style.borderColor = orangeColor;
+            cursorDot.style.borderColor = cursorAccentColor;
           }
           if (cursorLabel) {
             if (gsap) {
@@ -393,7 +393,7 @@
             const svg = cursorArrows.querySelector('svg');
             if (svg) {
               // Set stroke color via currentColor (SVG uses stroke="currentColor")
-              svg.style.color = orangeColor;
+              svg.style.color = cursorAccentColor;
             }
             if (gsap) {
               gsap.to(cursorArrows, { duration, opacity: 1, ease });

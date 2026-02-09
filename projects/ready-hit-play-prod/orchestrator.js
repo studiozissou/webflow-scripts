@@ -190,6 +190,16 @@
         if (DEBUG) console.warn('RHP contact: pullout not found in wrapper. Add class nav_contact-pullout to your panel in Webflow.');
         return;
       }
+      if (DEBUG) {
+        var cs = window.getComputedStyle(pullout);
+        console.log('RHP contact: animating pullout', {
+          display: cs.display,
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          zIndex: cs.zIndex,
+          position: cs.position
+        });
+      }
       isOpen = true;
       pullout.style.pointerEvents = 'auto';
       pullout.style.visibility = 'visible';
@@ -228,6 +238,15 @@
     }
 
     scope.addEventListener('click', (e) => {
+      if (window._rhpContactDebugClicks) {
+        var linkFound = findLink(e.target);
+        console.log('RHP contact click:', {
+          target: e.target.tagName + (e.target.className ? '.' + String(e.target.className).trim().split(/\s+/).slice(0, 2).join('.') : ''),
+          inScope: scope.contains(e.target),
+          linkFound: !!linkFound,
+          wouldOpen: !!linkFound
+        });
+      }
       const link = findLink(e.target);
       if (!link) return;
       e.preventDefault();
@@ -251,7 +270,69 @@
     });
 
     RHP.openContactPullout = openPullout;
-    if (DEBUG) console.log('RHP contact: ready. Test from console: RHP.openContactPullout()');
+    RHP.contactPulloutCheck = function() {
+      var scopeEl = document.querySelector('[data-barba="wrapper"]') || document.body;
+      var pullout = scopeEl.querySelector('.nav_contact-pullout') || scopeEl.querySelector('[class*="nav_contact-pullout"]');
+      var link = scopeEl.querySelector('.nav_contact-link') || scopeEl.querySelector('[class*="nav_contact-link"]');
+      var gsapOk = typeof window.gsap !== 'undefined';
+      var report = {
+        gsap: gsapOk ? 'OK (' + (window.gsap && window.gsap.version) + ')' : 'MISSING',
+        wrapper: !!document.querySelector('[data-barba="wrapper"]'),
+        pullout: !!pullout,
+        link: !!link,
+        pulloutElement: pullout || null,
+        linkElement: link || null
+      };
+      if (pullout) {
+        var cs = window.getComputedStyle(pullout);
+        report.pulloutStyles = {
+          display: cs.display,
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          zIndex: cs.zIndex,
+          position: cs.position,
+          pointerEvents: cs.pointerEvents
+        };
+      }
+      console.log('RHP contact pullout check:', report);
+      var verdict = [];
+      if (!gsapOk) verdict.push('GSAP missing');
+      if (!report.wrapper) verdict.push('No [data-barba="wrapper"]');
+      if (!pullout) verdict.push('Add class nav_contact-pullout to panel (in wrapper)');
+      if (!link) verdict.push('Add class nav_contact-link to trigger (in wrapper)');
+      if (report.pulloutStyles && report.pulloutStyles.display === 'none') verdict.push('Pullout has display:none – we force block on open');
+      if (report.pulloutStyles && parseFloat(report.pulloutStyles.zIndex) < 0) verdict.push('Pullout z-index may be behind other elements');
+      if (verdict.length) console.warn('RHP contact verdict:', verdict.join('; '));
+      else console.log('RHP contact verdict: Setup OK. Try RHP.openContactPullout() or click the trigger.');
+      return report;
+    };
+    RHP.contactPulloutDebugClicks = function(n) {
+      n = n == null ? 5 : n;
+      window._rhpContactDebugClicks = true;
+      console.log('RHP contact: logging next ' + n + ' clicks in wrapper. Click your contact trigger.');
+      var count = 0;
+      var off = function() {
+        scope.removeEventListener('click', handler, true);
+        window._rhpContactDebugClicks = false;
+        console.log('RHP contact: click debug off.');
+      };
+      var handler = function(e) {
+        count++;
+        if (count > n) { off(); return; }
+        var linkFound = findLink(e.target);
+        console.log('RHP contact click ' + count + '/' + n + ':', {
+          target: e.target.tagName + (e.target.className ? '.' + String(e.target.className).trim().split(/\s+/).slice(0, 3).join('.') : ''),
+          inScope: scope.contains(e.target),
+          linkFound: !!linkFound,
+          wouldOpen: !!linkFound
+        });
+      };
+      scope.addEventListener('click', handler, true);
+      setTimeout(function() {
+        if (window._rhpContactDebugClicks) { off(); console.log('RHP contact: click debug timed out after 30s.'); }
+      }, 30000);
+    };
+    if (DEBUG) console.log('RHP contact: ready. Console: RHP.contactPulloutCheck() | RHP.openContactPullout() | RHP.contactPulloutDebugClicks(5)');
   }
 
   /* -----------------------------

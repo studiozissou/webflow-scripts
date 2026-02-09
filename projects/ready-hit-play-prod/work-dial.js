@@ -8,6 +8,7 @@
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
+  const WORK_DIAL_VERSION = '2026.2.6.8';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -504,6 +505,6 @@
       return refs?.getActiveIndex?.() ?? 0;
     }
 
-    return { init, destroy, getActiveIndex };
+    return { init, destroy, getActiveIndex, version: WORK_DIAL_VERSION };
   })();
 })();

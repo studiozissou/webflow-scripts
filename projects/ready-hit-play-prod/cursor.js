@@ -288,8 +288,8 @@
       currentState = type;
       const gsap = window.gsap;
       const reduced = prefersReduced();
-      const duration = reduced ? 0 : 0.3;
-      const ease = 'power2.out';
+      const duration = reduced ? 0 : 0.5;
+      const ease = 'power3.out';
 
       // Get CSS variable for orange color
       const orangeColor = getComputedStyle(document.documentElement)

@@ -152,10 +152,11 @@
 
   /* -----------------------------
      Contact pullout (GSAP open/close)
+     - Nav lives in [data-barba="wrapper"] outside the container; scope all
+       queries and listeners to the wrapper so we only touch the persistent nav.
      - .nav_contact-link click → pullout opacity 1 (linear 0.5s)
      - Click outside pullout or on close button → pullout opacity 0 (linear 0.5s)
      - Add class .nav_contact-close to your close button in Webflow
-     - Uses event delegation so link/pullout can appear after init (e.g. symbols)
      ----------------------------- */
   function initContactPullout() {
     const gsap = window.gsap;
@@ -164,20 +165,29 @@
       return;
     }
 
+    const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
     let isOpen = false;
     let pulloutEl = null;
-    const DEBUG = true; // set false to silence logs
+    const DEBUG = true;
+
+    function findPullout() {
+      return scope.querySelector('.nav_contact-pullout') || scope.querySelector('[class*="nav_contact-pullout"]');
+    }
+    function findLink(el) {
+      if (!el || !scope.contains(el)) return null;
+      return el.closest('.nav_contact-link') || el.closest('[class*="nav_contact-link"]');
+    }
 
     function getPullout() {
-      if (pulloutEl && document.contains(pulloutEl)) return pulloutEl;
-      pulloutEl = document.querySelector('.nav_contact-pullout');
+      if (pulloutEl && scope.contains(pulloutEl)) return pulloutEl;
+      pulloutEl = findPullout();
       return pulloutEl;
     }
 
     function openPullout() {
       const pullout = getPullout();
       if (!pullout) {
-        if (DEBUG) console.warn('RHP contact: .nav_contact-pullout not found. Add this class to your pullout panel in Webflow.');
+        if (DEBUG) console.warn('RHP contact: pullout not found in wrapper. Add class nav_contact-pullout to your panel in Webflow.');
         return;
       }
       isOpen = true;
@@ -204,16 +214,11 @@
       });
     }
 
-    // Init: hide pullout if it exists so first open animates correctly
     function setInitialState() {
-      const pullout = document.querySelector('.nav_contact-pullout');
-      const link = document.querySelector('.nav_contact-link');
+      const pullout = findPullout();
+      const link = scope.querySelector('.nav_contact-link') || scope.querySelector('[class*="nav_contact-link"]');
       if (DEBUG) {
-        console.log('RHP contact pullout: init', {
-          pullout: !!pullout,
-          link: !!link,
-          hint: 'Click .nav_contact-link to open; ensure both classes exist in Webflow.'
-        });
+        console.log('RHP contact pullout (scope: wrapper):', { pullout: !!pullout, link: !!link });
       }
       if (pullout) {
         gsap.set(pullout, { opacity: 0 });
@@ -222,29 +227,31 @@
       }
     }
 
-    // Open on .nav_contact-link click (delegated – works if link is in symbol or added later)
-    document.addEventListener('click', (e) => {
-      const link = e.target.closest('.nav_contact-link');
+    scope.addEventListener('click', (e) => {
+      const link = findLink(e.target);
       if (!link) return;
       e.preventDefault();
       e.stopPropagation();
-      if (DEBUG) console.log('RHP contact: .nav_contact-link clicked');
+      if (DEBUG) console.log('RHP contact: trigger clicked');
       openPullout();
     }, true);
 
-    // Close when clicking outside pullout or on .nav_contact-close (don't close when opening via link)
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('.nav_contact-link')) return;
+    scope.addEventListener('click', (e) => {
+      if (findLink(e.target)) return;
       if (!isOpen) return;
       const pullout = getPullout();
       if (!pullout) return;
       const inPullout = pullout.contains(e.target);
-      const isCloseBtn = e.target.closest('.nav_contact-close');
+      const isCloseBtn = e.target.closest('.nav_contact-close') || e.target.closest('[class*="nav_contact-close"]');
       if (!inPullout || isCloseBtn) closePullout();
     }, true);
 
-    // Run after a short delay so Webflow DOM (and symbols) are ready
-    setTimeout(setInitialState, 100);
+    [100, 400, 800].forEach(function(ms) {
+      setTimeout(setInitialState, ms);
+    });
+
+    RHP.openContactPullout = openPullout;
+    if (DEBUG) console.log('RHP contact: ready. Test from console: RHP.openContactPullout()');
   }
 
   /* -----------------------------

@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.2.6.4'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.2.6.5'; // bump when you deploy; check in console: RHP.cursor.version
 
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
@@ -288,7 +288,7 @@
       currentState = type;
       const gsap = window.gsap;
       const reduced = prefersReduced();
-      const duration = reduced ? 0 : 0.5;
+      const duration = reduced ? 0 : 0.25;
       const ease = 'power3.out';
 
       // Get CSS variable for orange color

@@ -8,7 +8,7 @@
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.2.6.8';
+  const WORK_DIAL_VERSION = '2026.2.6.9';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 

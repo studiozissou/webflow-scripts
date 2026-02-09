@@ -5,9 +5,14 @@
 (function() {
   'use strict';
 
+  // Capture init script URL immediately (currentScript is only set during initial execution; async init() may run after it's cleared)
+  var INIT_SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src)
+    ? document.currentScript.src
+    : '';
+
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.6.8', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.2.6.9', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -71,7 +76,16 @@
   }
 
   function getBaseUrl() {
-    var scriptSrc = typeof document !== 'undefined' && document.currentScript && document.currentScript.src ? document.currentScript.src : '';
+    var scriptSrc = INIT_SCRIPT_SRC;
+    // Local dev: script from localhost or same-origin without CDN @commit
+    var isLocal = scriptSrc && (
+      /^(https?:)?\/\/localhost(:\d+)?(\/|$)/i.test(scriptSrc) ||
+      /^file:\/\//i.test(scriptSrc) ||
+      (!scriptSrc.includes('@') && scriptSrc.indexOf(window.location.origin) === 0)
+    );
+    if (isLocal) {
+      return scriptSrc.replace(/\?.*$/, '').replace(/\/[^/]*$/, '');
+    }
     var match = scriptSrc.match(/@([a-f0-9]{7,40})(?:\/|$)/i);
     var commit = match ? match[1] : 'main';
     return CONFIG.baseUrlTemplate.replace('COMMIT', commit);

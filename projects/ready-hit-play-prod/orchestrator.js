@@ -4,8 +4,10 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
+  const ORCHESTRATOR_VERSION = '2026.2.6.4'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
+  RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
 
   // If cursor.js didn't load (missing from init or error), stub so RHP.cursor.version shows 'not-loaded'
   if (typeof RHP.cursor === 'undefined') {
@@ -207,14 +209,15 @@
         pullout.style.display = 'block';
       }
       var w = pullout.offsetWidth;
-      gsap.set(pullout, { x: -w, opacity: 0, force3D: true });
+      var pos = window.getComputedStyle(pullout).position;
+      if (pos === 'static') pullout.style.position = 'relative';
+      gsap.set(pullout, { left: -w, opacity: 0 });
       gsap.to(pullout, {
-        x: 0,
+        left: 0,
         opacity: 1,
         duration: 0.7,
         ease: 'expo.out',
-        overwrite: true,
-        force3D: true
+        overwrite: true
       });
       if (DEBUG) console.log('RHP contact: pullout opening');
     }
@@ -225,15 +228,14 @@
       isOpen = false;
       var w = pullout.offsetWidth;
       gsap.to(pullout, {
-        x: w,
+        left: w,
         opacity: 0,
         duration: 0.7,
         ease: 'expo.out',
         overwrite: true,
-        force3D: true,
         onComplete: () => {
           pullout.style.pointerEvents = 'none';
-          gsap.set(pullout, { x: -pullout.offsetWidth, force3D: true });
+          gsap.set(pullout, { left: -pullout.offsetWidth });
         }
       });
     }
@@ -245,6 +247,7 @@
         console.log('RHP contact pullout (scope: wrapper):', { pullout: !!pullout, link: !!link });
       }
       if (pullout) {
+        if (window.getComputedStyle(pullout).position === 'static') pullout.style.position = 'relative';
         gsap.set(pullout, { opacity: 0 });
         pullout.style.pointerEvents = 'none';
         pullout.style.visibility = 'visible';

@@ -206,7 +206,12 @@
       if (window.getComputedStyle(pullout).display === 'none') {
         pullout.style.display = 'block';
       }
-      gsap.to(pullout, { opacity: 1, duration: 0.5, ease: 'none' });
+      gsap.to(pullout, {
+        xPercent: 0,
+        opacity: 1,
+        duration: 0.7,
+        ease: 'expo.out'
+      });
       if (DEBUG) console.log('RHP contact: pullout opening');
     }
 
@@ -215,11 +220,13 @@
       if (!pullout) return;
       isOpen = false;
       gsap.to(pullout, {
+        xPercent: 100,
         opacity: 0,
-        duration: 0.5,
-        ease: 'none',
+        duration: 0.7,
+        ease: 'expo.out',
         onComplete: () => {
           pullout.style.pointerEvents = 'none';
+          gsap.set(pullout, { xPercent: -100 });
         }
       });
     }
@@ -231,7 +238,7 @@
         console.log('RHP contact pullout (scope: wrapper):', { pullout: !!pullout, link: !!link });
       }
       if (pullout) {
-        gsap.set(pullout, { opacity: 0 });
+        gsap.set(pullout, { xPercent: -100, opacity: 0 });
         pullout.style.pointerEvents = 'none';
         pullout.style.visibility = 'visible';
       }

@@ -36,6 +36,7 @@
       'lenis-manager.js',
       'cursor.js',
       'work-dial.js',
+      'intro-format.js',
       'orchestrator.js',
       'utils.js'
     ]
@@ -121,6 +122,7 @@
         { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: RHP.lenis?.version || '' },
         { module: 'cursor.js', ok: typeof RHP.cursor !== 'undefined', detail: RHP.cursor?.version || '(no version)' },
         { module: 'work-dial.js', ok: typeof RHP.workDial !== 'undefined', detail: RHP.workDial?.version || '' },
+        { module: 'intro-format.js', ok: typeof RHP.formatIntroText === 'function', detail: '—' },
         { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: RHP.orchestratorVersion || '' },
         { module: 'utils.js', ok: true, detail: '—' }
       ];
@@ -135,6 +137,7 @@
         'lenis-manager.js': RHP.lenis?.version || '—',
         'cursor.js': (RHP.cursor?.version || '—') + (typeof RHP.cursor?.transitionDuration === 'number' ? ' (transitionDuration: ' + RHP.cursor.transitionDuration + ')' : ''),
         'work-dial.js': RHP.workDial?.version || '—',
+        'intro-format.js': '—',
         'orchestrator.js': RHP.orchestratorVersion || '—',
         'utils.js': '—'
       };

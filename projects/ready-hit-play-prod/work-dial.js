@@ -78,6 +78,8 @@
     let cleanup = [];
     let rafId = 0;
     let refs = null;
+    let introMode = false;
+    let introComplete = false;
 
     function on(el, evt, fn, opts) {
       if (!el) return;
@@ -90,10 +92,12 @@
       rafId = 0;
     }
 
-    function init(container = document) {
+    function init(container = document, options = {}) {
       if (alive) return;
       alive = true;
       cleanup = [];
+      introMode = options.introMode === true;
+      introComplete = !introMode;
 
       const comp = container.querySelector(SEL.component) || document.querySelector(SEL.component);
       const canvas = container.querySelector(SEL.canvas) || document.querySelector(SEL.canvas);
@@ -127,23 +131,28 @@
       // Cursor (desktop only) - use cursor.js API
       let cursorIsPlay = false;
 
-      // Tick rendering config
+      // Tick rendering config — ratios from design SVG (506×506, tick ~22.5×1.69px)
+      const REF_R = 253; // SVG radius = 506/2
+      const TICK_INTRO = { bars: 96, tickDur: 0.7, totalDur: 8 };
+      TICK_INTRO.stagger = (TICK_INTRO.totalDur - TICK_INTRO.tickDur) / Math.max(1, TICK_INTRO.bars - 1);
+      const TWELVE_OCLOCK_IDX = Math.floor((3 / 4) * TICK_INTRO.bars);
       const T = {
         bars: 96,
-        barW: 2,
-        baseLen: 32,
-        maxLen: 80,
-        nearPx: 80,
-        radFalloff: 320,
+        barWRatio: 1.686 / REF_R,
+        baseLenRatio: 22.51 / REF_R,
+        maxLenRatio: 64 / REF_R, // longest attracted tick (adjust this number to change length)
+        nearPxRatio: 80 / REF_R,
+        radFalloffRatio: 1,
         angFalloff: 18,
+        gapRatio: 24 / REF_R,
+        switchBufferRatio: 90 / REF_R,
         teal: { r:0, g:240, b:200 },
-        orange: { r:255, g:130, b:0 },
-        gap: 24
+        orange: { r:255, g:130, b:0 }
       };
       const mix = (a,b,t)=>`rgb(${(a.r+(b.r-a.r)*t|0)},${(a.g+(b.g-a.g)*t|0)},${(a.b+(b.b-a.b)*t|0)})`;
 
-      // Geometry derived from rendered circle
-      const geom = { cx:0, cy:0, videoR:0, innerR:0, switchMaxR:0, dpr: window.devicePixelRatio||1 };
+      // Geometry derived from rendered circle (scaled values filled in resize)
+      const geom = { cx:0, cy:0, videoR:0, innerR:0, switchMaxR:0, dpr:1, gap:0, baseLen:0, maxLen:0, barW:1, nearPx:0, radFalloff:0 };
 
       // Runtime state
       const state = {
@@ -272,11 +281,19 @@
         geom.cy = r.height / 2;
 
         const fr = fgWrap.getBoundingClientRect();
-        geom.videoR = (Math.min(fr.width, fr.height) / 2) || 320;
-        geom.innerR = geom.videoR + T.gap;
+        geom.videoR = (Math.min(fr.width, fr.height) / 2) || REF_R;
 
-        const outerBase = geom.innerR + T.baseLen;
-        geom.switchMaxR = outerBase + T.maxLen + 90;
+        // Scale tick dimensions proportionally with circle size
+        geom.gap = geom.videoR * T.gapRatio;
+        geom.baseLen = geom.videoR * T.baseLenRatio;
+        geom.maxLen = geom.videoR * T.maxLenRatio;
+        geom.barW = Math.max(1, geom.videoR * T.barWRatio);
+        geom.nearPx = geom.videoR * T.nearPxRatio;
+        geom.radFalloff = geom.videoR * T.radFalloffRatio;
+
+        geom.innerR = geom.videoR + geom.gap;
+        const outerBase = geom.innerR + geom.baseLen;
+        geom.switchMaxR = outerBase + geom.maxLen + geom.videoR * T.switchBufferRatio;
       }
 
       // Hysteresis thresholds (prevents boundary flicker)
@@ -394,13 +411,21 @@
         if (isMobile()) {
           canvas.style.transform = `rotate(${state.rotationDeg}deg)`;
 
-          // draw neutral ticks (cheap)
+          // draw neutral ticks (cheap) — intro scale when in intro mode
           for (let i = 0; i < T.bars; i++) {
             const a = (i / T.bars) * Math.PI * 2;
-            const len = T.baseLen;
+            let tickScale = 1;
+            if (introMode && !introComplete && RHP._dialIntroProgress) {
+              const t = RHP._dialIntroProgress.time || 0;
+              const clockPos = (i - TWELVE_OCLOCK_IDX + T.bars) % T.bars;
+              const startT = clockPos * TICK_INTRO.stagger;
+              const raw = Math.max(0, Math.min(1, (t - startT) / TICK_INTRO.tickDur));
+              tickScale = prefersReduced() ? raw : 1 - Math.pow(2, -10 * raw);
+            }
+            const len = geom.baseLen * tickScale;
 
             ctx.strokeStyle = mix(T.teal, T.orange, 0);
-            ctx.lineWidth = T.barW;
+            ctx.lineWidth = geom.barW;
             ctx.lineCap = 'round';
 
             const x0 = geom.cx + Math.cos(a) * geom.innerR;
@@ -421,7 +446,7 @@
         const hasPointer = state.x > -1e3;
         const reduced = prefersReduced();
 
-        const OUTER_R_BASE = geom.innerR + T.baseLen;
+        const OUTER_R_BASE = geom.innerR + geom.baseLen;
         const dToInner = Math.abs(state.rDist - geom.innerR);
         const dToOuter = Math.abs(state.rDist - OUTER_R_BASE);
         const dEdge = Math.min(dToInner, dToOuter);
@@ -430,20 +455,29 @@
           const a = (i / T.bars) * Math.PI * 2;
           const deg = (i / T.bars) * 360;
 
+          let tickScale = 1;
+          if (introMode && !introComplete && RHP._dialIntroProgress) {
+            const t = RHP._dialIntroProgress.time || 0;
+            const clockPos = (i - TWELVE_OCLOCK_IDX + T.bars) % T.bars;
+            const startT = clockPos * TICK_INTRO.stagger;
+            const raw = Math.max(0, Math.min(1, (t - startT) / TICK_INTRO.tickDur));
+            tickScale = reduced ? raw : 1 - Math.pow(2, -10 * raw);
+          }
+
           let inf = 0;
           if (hasPointer && !reduced) {
-          	const degTop0 = (deg + 90) % 360;
-    		const dAng = Math.min(Math.abs(degTop0 - state.angDeg), 360 - Math.abs(degTop0 - state.angDeg));
+            const degTop0 = (deg + 90) % 360;
+            const dAng = Math.min(Math.abs(degTop0 - state.angDeg), 360 - Math.abs(degTop0 - state.angDeg));
             const iAng = Math.max(0, 1 - dAng / T.angFalloff);
-            const iRad = Math.max(0, 1 - Math.max(0, dEdge - T.nearPx) / T.radFalloff);
+            const iRad = Math.max(0, 1 - Math.max(0, dEdge - geom.nearPx) / geom.radFalloff);
             inf = iAng * iRad;
           }
 
-          const len = T.baseLen + (T.maxLen - T.baseLen) * inf;
+          const len = (geom.baseLen + (geom.maxLen - geom.baseLen) * inf) * tickScale;
           const warm = state.inInner ? inf : 0;
 
           ctx.strokeStyle = mix(T.teal, T.orange, warm);
-          ctx.lineWidth = T.barW;
+          ctx.lineWidth = geom.barW;
           ctx.lineCap = 'round';
 
           const x0 = geom.cx + Math.cos(a) * geom.innerR;
@@ -474,10 +508,39 @@
 
       // Center dial layer click → go to active case study (Barba transition)
       const dialFg = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
-      if (dialFg) {
+      const bgVideo = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+
+        if (dialFg) {
         dialFg.style.cursor = 'pointer';
         on(dialFg, 'click', (e) => goToActiveCase(e, items, state), { passive: false });
-      }
+
+        // GSAP hover: opacity + blur (desktop only) — only when intro complete
+        function setupDialHover() {
+          if (!introComplete || isMobile() || !window.gsap || !dialFg) return;
+          const gsap = window.gsap;
+          const DIAL_HOVER_DUR = 0.2;
+          const dur = prefersReduced() ? 0 : DIAL_HOVER_DUR;
+          const ease = 'linear';
+
+          const toIdle = () => {
+            gsap.to(dialFg, { opacity: 0, duration: dur, ease });
+            if (bgVideo) gsap.to(bgVideo, { filter: 'blur(0px)', duration: dur, ease });
+          };
+          const toHover = () => {
+            gsap.to(dialFg, { opacity: 1, duration: dur, ease });
+            if (bgVideo) gsap.to(bgVideo, { filter: 'blur(40px)', duration: dur, ease });
+          };
+
+          gsap.set(dialFg, { opacity: 0 });
+          if (bgVideo) gsap.set(bgVideo, { filter: 'blur(0px)' });
+
+          on(dialFg, 'mouseenter', toHover, { passive: true });
+          on(dialFg, 'mouseleave', toIdle, { passive: true });
+        }
+        if (introComplete) setupDialHover();
+        refs = refs || {};
+        refs._setupDialHover = setupDialHover;
+        }
 
       on(document, 'visibilitychange', onVis, { passive: true });
 
@@ -486,9 +549,12 @@
 
       rafId = requestAnimationFrame(draw);
 
-      refs = {
-        getActiveIndex: () => state.activeIndex
-      };
+      refs = Object.assign(refs || {}, { getActiveIndex: () => state.activeIndex });
+    }
+
+    function setIntroComplete() {
+      introComplete = true;
+      refs?._setupDialHover?.();
     }
 
     function destroy() {
@@ -505,6 +571,6 @@
       return refs?.getActiveIndex?.() ?? 0;
     }
 
-    return { init, destroy, getActiveIndex, version: WORK_DIAL_VERSION };
+    return { init, destroy, getActiveIndex, setIntroComplete, version: WORK_DIAL_VERSION };
   })();
 })();

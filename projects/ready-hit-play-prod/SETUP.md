@@ -13,24 +13,27 @@ git push origin main
 ### 2. Update init.js
 Edit `init.js` and set `baseUrl` to your repo (and optionally pin a commit, e.g. `@main` or `@cbbef90`).
 
-### 3. Add to Webflow (use pinned commit)
+### 3. Add to Webflow (use pinned commit + cache buster)
 
 **Site Settings → Custom Code → Inside `<head>` tag:**
 
-Use the **same commit** in both URLs (e.g. replace `COMMIT` with the latest commit hash like `cbbef90`):
+Use the **same commit** in both URLs (e.g. replace `COMMIT` with the latest commit hash). Use the **same `v` number** in both `?v=` params; bump `v` whenever you deploy so browsers and CDNs fetch the new files.
 
 ```html
 <!-- RHP Styles -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod/ready-hit-play.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod/ready-hit-play.css?v=1">
 
 <!-- RHP Production Scripts -->
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod/init.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod/init.js?v=1"></script>
 ```
 
-### 4. Verify
+### 4. Homepage intro (optional)
+For the homepage intro animation, add `data-text="step"` to the step heading element (e.g. the "Step into the circle" text) in Webflow. The intro runs only on fresh load of the homepage, not when navigating from case studies or about.
+
+### 5. Verify
 - Open your site
-- Check browser console for: `✅ RHP scripts loaded successfully` and `RHP: all 5 scripts present`
-- Test dial interaction and Barba transitions
+- Check browser console for: `✅ RHP scripts loaded successfully` and `RHP: all scripts present`
+- Test dial interaction, homepage intro (fresh load only), and Barba transitions
 
 ## 🖥️ Local development
 
@@ -60,8 +63,8 @@ Serve the project from a local server so scripts load from disk (no deploy or ca
 1. Edit files in `ready-hit-play-prod/`
 2. **Bump `CONFIG.version` in init.js** when you want module cache to refresh.
 3. Commit & push to GitHub.
-4. **Update the commit in Webflow** – replace `COMMIT` in both the script and CSS URLs with the new commit hash (e.g. from `git log -1 --oneline`). That way you always load the exact deploy you want.
+4. **In Webflow:** update `COMMIT` in both URLs to the new commit hash (e.g. `git log -1 --format="%h"`), and **bump the `?v=` number** in both the CSS and script URLs (e.g. `?v=1` → `?v=2`). Same `v` in both; any change busts cache.
 
 ## ✅ Done
 
-Use a pinned commit (`@cbbef90` or whatever the latest is) in your Webflow URLs so the CDN serves that exact version. When you deploy again, update the commit hash in Webflow to the new one.
+Use a pinned commit in your Webflow URLs so the CDN serves that exact version. When you deploy again, update the commit and the `?v=` param so browsers and CDNs fetch the new files.

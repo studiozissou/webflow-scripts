@@ -70,7 +70,7 @@
     let active = false;
 
     return {
-      init(container) {
+      init(container, options = {}) {
         if (active) return;
         active = true;
 
@@ -81,8 +81,8 @@
         RHP.scroll.unlock(); // defensive reset
         RHP.scroll.lock();
 
-        // Init dial
-        RHP.workDial?.init?.(container);
+        // Init dial (introMode when fresh load - home intro runs separately)
+        RHP.workDial?.init?.(container, { introMode: options.introMode === true });
       },
 
       destroy() {
@@ -332,8 +332,10 @@
      Contact pullout (GSAP open/close)
      - Nav lives in [data-barba="wrapper"] outside the container; scope all
        queries and listeners to the wrapper so we only touch the persistent nav.
-     - .nav_contact-link click → pullout opacity 1 (linear 0.5s)
-     - Click outside pullout or on close button → pullout opacity 0 (linear 0.5s)
+     - Open: .nav_contact-link click → .section_contact display block, then
+       .contact_overlay opacity 1 (0.2s linear) + pullout translate (same time)
+     - Close: .contact_overlay click → .contact_overlay opacity 0 (0.2s linear) +
+       pullout translate (same time), .section_contact display none when done
      - Add class .nav_contact-close to your close button in Webflow
      ----------------------------- */
   function initContactPullout() {
@@ -350,6 +352,12 @@
 
     function findPullout() {
       return scope.querySelector('.nav_contact-pullout') || scope.querySelector('[class*="nav_contact-pullout"]');
+    }
+    function findSectionContact() {
+      return scope.querySelector('.section_contact') || scope.querySelector('[class*="section_contact"]');
+    }
+    function findContactOverlay() {
+      return scope.querySelector('.contact_overlay') || scope.querySelector('[class*="contact_overlay"]');
     }
     function findLink(el) {
       if (!el || !scope.contains(el)) return null;
@@ -368,6 +376,9 @@
         if (DEBUG) console.warn('RHP contact: pullout not found in wrapper. Add class nav_contact-pullout to your panel in Webflow.');
         return;
       }
+      const sectionContact = findSectionContact();
+      const contactOverlay = findContactOverlay();
+
       if (DEBUG) {
         var cs = window.getComputedStyle(pullout);
         console.log('RHP contact: animating pullout', {
@@ -379,10 +390,21 @@
         });
       }
       isOpen = true;
+
+      // 1. Set .section_contact to display block BEFORE all other animations
+      if (sectionContact) {
+        sectionContact.style.display = 'block';
+      }
+
       pullout.style.pointerEvents = 'auto';
       pullout.style.visibility = 'visible';
       if (window.getComputedStyle(pullout).display === 'none') {
         pullout.style.display = 'block';
+      }
+
+      // 2. .contact_overlay opacity 1 (0.2s linear) + pullout translate — fire at same time
+      if (contactOverlay) {
+        gsap.to(contactOverlay, { opacity: 1, duration: 0.2, ease: 'linear', overwrite: true });
       }
       gsap.to(pullout, {
         xPercent: -100,
@@ -398,6 +420,13 @@
       const pullout = getPullout();
       if (!pullout) return;
       isOpen = false;
+      const sectionContact = findSectionContact();
+      const contactOverlay = findContactOverlay();
+
+      // .contact_overlay opacity 0 (0.2s linear) + pullout translate — fire at same time
+      if (contactOverlay) {
+        gsap.to(contactOverlay, { opacity: 0, duration: 0.2, ease: 'linear', overwrite: true });
+      }
       gsap.to(pullout, {
         xPercent: 0,
         opacity: 0,
@@ -406,15 +435,27 @@
         overwrite: true,
         onComplete: () => {
           pullout.style.pointerEvents = 'none';
+          // .section_contact display none after all animations complete
+          if (sectionContact) {
+            sectionContact.style.display = 'none';
+          }
         }
       });
     }
 
     function setInitialState() {
       const pullout = findPullout();
+      const sectionContact = findSectionContact();
+      const contactOverlay = findContactOverlay();
       const link = scope.querySelector('.nav_contact-link') || scope.querySelector('[class*="nav_contact-link"]');
       if (DEBUG) {
         console.log('RHP contact pullout (scope: wrapper):', { pullout: !!pullout, link: !!link });
+      }
+      if (sectionContact) {
+        sectionContact.style.display = 'none';
+      }
+      if (contactOverlay) {
+        gsap.set(contactOverlay, { opacity: 0 });
       }
       if (pullout) {
         gsap.set(pullout, { xPercent: 0, opacity: 0 });
@@ -441,6 +482,7 @@
       openPullout();
     }, true);
 
+    // Close trigger: .contact_overlay click (and close button / click outside)
     scope.addEventListener('click', (e) => {
       if (findLink(e.target)) return;
       if (!isOpen) return;
@@ -448,7 +490,8 @@
       if (!pullout) return;
       const inPullout = pullout.contains(e.target);
       const isCloseBtn = e.target.closest('.nav_contact-close') || e.target.closest('[class*="nav_contact-close"]');
-      if (!inPullout || isCloseBtn) closePullout();
+      const isOverlayClick = e.target.closest('.contact_overlay') || e.target.closest('[class*="contact_overlay"]');
+      if (isOverlayClick || !inPullout || isCloseBtn) closePullout();
     }, true);
 
     [100, 400, 800].forEach(function(ms) {
@@ -459,12 +502,16 @@
     RHP.contactPulloutCheck = function() {
       var scopeEl = document.querySelector('[data-barba="wrapper"]') || document.body;
       var pullout = scopeEl.querySelector('.nav_contact-pullout') || scopeEl.querySelector('[class*="nav_contact-pullout"]');
+      var sectionContact = scopeEl.querySelector('.section_contact') || scopeEl.querySelector('[class*="section_contact"]');
+      var contactOverlay = scopeEl.querySelector('.contact_overlay') || scopeEl.querySelector('[class*="contact_overlay"]');
       var link = scopeEl.querySelector('.nav_contact-link') || scopeEl.querySelector('[class*="nav_contact-link"]');
       var gsapOk = typeof window.gsap !== 'undefined';
       var report = {
         gsap: gsapOk ? 'OK (' + (window.gsap && window.gsap.version) + ')' : 'MISSING',
         wrapper: !!document.querySelector('[data-barba="wrapper"]'),
         pullout: !!pullout,
+        sectionContact: !!sectionContact,
+        contactOverlay: !!contactOverlay,
         link: !!link,
         pulloutElement: pullout || null,
         linkElement: link || null
@@ -523,6 +570,7 @@
 
   /* -----------------------------
      Initial boot (no Barba nav yet)
+     Only on initial load: if home, run home intro (not when transitioning from case/about)
      ----------------------------- */
   function bootCurrentView() {
     const container = document.querySelector('[data-barba="container"]');
@@ -537,7 +585,11 @@
       }
     }
 
-    if (ns && RHP.views[ns]?.init) {
+    if (ns === 'home') {
+      // Fresh load of homepage: run intro animation
+      RHP.views.home?.init?.(container, { introMode: true });
+      RHP.homeIntro?.run?.(container);
+    } else if (ns && RHP.views[ns]?.init) {
       RHP.views[ns].init(container);
     }
   }
@@ -590,6 +642,32 @@
         moveTween.then ? moveTween.then() : new Promise(function(r) { moveTween.eventCallback('onComplete', r); }),
         heightTween ? (heightTween.then ? heightTween.then() : new Promise(function(r) { heightTween.eventCallback('onComplete', r); })) : Promise.resolve()
       ]);
+    }
+
+    function runCaseDialShrinkAnimation(data) {
+      const dialFg = data.current?.container?.querySelector('.dial_layer-fg');
+      if (!dialFg || !window.gsap) return Promise.resolve();
+
+      const gsap = window.gsap;
+      const getVar = (name, fallback) =>
+        (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim() || fallback;
+
+      const homeWidth = getVar('--dial-home-width', 'clamp(180px, min(50svh, 70vw), min(50svh, 70vw))');
+      const homeHeight = getVar('--dial-home-height', 'clamp(180px, min(50svh, 70vw), min(50svh, 70vw))');
+      const homeBorderRadius = getVar('--dial-home-border-radius', '1000rem');
+      const homeAspectRatio = getVar('--dial-home-aspect-ratio', '1');
+
+      gsap.set(dialFg, { overflow: 'hidden', margin: 'auto' });
+      const tween = gsap.to(dialFg, {
+        width: homeWidth,
+        height: homeHeight,
+        borderRadius: homeBorderRadius,
+        aspectRatio: homeAspectRatio,
+        duration: 0.6,
+        ease: 'power2.inOut',
+        overwrite: true
+      });
+      return tween.then ? tween.then() : new Promise(function(r) { tween.eventCallback('onComplete', r); });
     }
 
     function runLogoReturnAnimation() {
@@ -668,6 +746,8 @@
 
       var dialFg = (data.next && data.next.container) ? data.next.container.querySelector('.dial_layer-fg') : null;
       if (!dialFg) dialFg = document.querySelector('.dial_layer-fg');
+      var bgVideo = (data.next && data.next.container) ? data.next.container.querySelector('.dial_bg-video') : null;
+      if (!bgVideo) bgVideo = document.querySelector('.dial_bg-video');
       if (dialFg && window.gsap) {
         var getCSSVar = function(varName) {
           return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -682,6 +762,10 @@
         var caseAspectRatio = getCSSVar('--dial-case-aspect-ratio') || 'auto';
 
         if (ns === 'case' || ns === 'about') {
+          /* From click-through: keep opacity 1 and blur on bg for entire case-study view until return to home */
+          gsap.set(dialFg, { opacity: 1 });
+          if (bgVideo) gsap.set(bgVideo, { filter: 'blur(40px)' });
+
           gsap.set(dialFg, {
             width: homeWidth,
             height: homeHeight,
@@ -705,7 +789,8 @@
           });
         } else {
           var prevNs = data.current ? data.current.namespace : undefined;
-          if (prevNs === 'case' || prevNs === 'about') {
+          if (prevNs === 'about') {
+            /* about→home: animate dial from case size to home (about uses case-style dial) */
             gsap.set(dialFg, {
               width: caseWidth,
               height: caseHeight,
@@ -727,6 +812,9 @@
               duration: 0.8,
               ease: 'power2.inOut'
             });
+          } else if (prevNs === 'case') {
+            /* case→home: shrink animation runs in leave; home dial is fresh with default CSS */
+            dialFg.classList.remove('is-case-study');
           } else {
             dialFg.classList.remove('is-case-study');
           }
@@ -796,6 +884,24 @@
           },
           leave() {
             return runLogoReturnAnimation();
+          },
+          enter() {
+            window.scrollTo(0, 0);
+          },
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        },
+        {
+          name: 'case-to-home',
+          from: { namespace: ['case'] },
+          to: { namespace: ['home'] },
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+          },
+          leave(data) {
+            return runCaseDialShrinkAnimation(data);
           },
           enter() {
             window.scrollTo(0, 0);

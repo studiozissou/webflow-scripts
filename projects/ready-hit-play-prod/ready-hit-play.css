@@ -4,6 +4,10 @@
    - Shared dial styles for home + case-studies
    ========================================= */
 
+   html { font-size: calc(0.7416576964477932rem + 0.21528525296017226vw); }
+   @media screen and (max-width:1920px) { html { font-size: calc(0.7416576964477933rem + 0.21528525296017226vw); } }
+   @media screen and (max-width:991px) { html { font-size: calc(0.7498737373737374rem + 0.20202020202020202vw); } } 
+
 /* Hide nav completely on About page (not visible, not clickable) */
 [data-barba="wrapper"].rhp-nav-hidden .nav {
   display: none !important;
@@ -68,11 +72,21 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(40px) saturate(120%);
   transform: scale(1.1);
 }
 
-/* Canvas ticks */
+/* Home: blur(0) default; GSAP animates to blur(40px) on .dial_layer-fg hover (desktop) */
+[data-barba-namespace="home"] .dial_bg-video {
+  filter: blur(0px);
+}
+
+/* Case/about: always blurred from click-through until return to home */
+[data-barba-namespace="case"] .dial_bg-video,
+[data-barba-namespace="about"] .dial_bg-video {
+  filter: blur(40px);
+}
+
+/* Canvas ticks — full size; tick radius comes from fgWrap in JS (max 50svh × 70vw via video wrap) */
 [data-barba-namespace="home"] .dial_layer-ticks,
 [data-barba-namespace="case"] .dial_layer-ticks,
 [data-barba-namespace="about"] .dial_layer-ticks {
@@ -86,8 +100,30 @@
   will-change: transform;
 }
 
-/* Foreground circle */
-[data-barba-namespace="home"] .dial_layer-fg,
+/* Foreground circle — home: max 50svh × 70vw, min 180px */
+[data-barba-namespace="home"] .dial_layer-fg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+  height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+  display: grid;
+  place-items: center;
+  z-index: 3;
+}
+
+/* Desktop: home starts at opacity 0; GSAP animates to 1 on .dial_layer-fg hover.
+   Case/about: always opacity 1 from click-through until return to home. */
+@media (hover: hover) {
+  [data-barba-namespace="home"] .dial_layer-fg {
+    opacity: 0;
+  }
+  [data-barba-namespace="case"] .dial_layer-fg,
+  [data-barba-namespace="about"] .dial_layer-fg {
+    opacity: 1;
+  }
+}
+
 [data-barba-namespace="case"] .dial_layer-fg,
 [data-barba-namespace="about"] .dial_layer-fg {
   position: absolute;
@@ -98,9 +134,10 @@
   /* pointer-events are managed in JS / via dial interaction */
 }
 
-/* Default: circular (home) */
+/* Default: circular (home) — fills dial_layer-fg which is clamped to max 50svh × 70vw */
 .dial_video-wrap {
-  width: min(640px, 74vw);
+  width: 100%;
+  height: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   overflow: hidden;
@@ -108,9 +145,9 @@
 
 /* CSS Custom Properties for GSAP animations (responsive) */
 :root {
-  /* Home state values */
-  --dial-home-width: 37.5rem;
-  --dial-home-height: 37.5rem;
+  /* Home state values — max 50svh × 70vw, min 180px (matches .dial_layer-fg on home) */
+  --dial-home-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+  --dial-home-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
   --dial-home-border-radius: 1000rem;
   --dial-home-aspect-ratio: 1;
   
@@ -121,11 +158,9 @@
   --dial-case-aspect-ratio: auto;
 }
 
-/* Responsive breakpoints - override values per screen size */
+/* Responsive breakpoints - case-study only (home uses fluid clamp) */
 @media (max-width: 991px) {
   :root {
-    --dial-home-width: 30rem;
-    --dial-home-height: 30rem;
     --dial-case-width: 90vw;
     --dial-case-height: 80dvh;
   }
@@ -133,8 +168,6 @@
 
 @media (max-width: 767px) {
   :root {
-    --dial-home-width: 25rem;
-    --dial-home-height: 25rem;
     --dial-case-width: 95vw;
     --dial-case-height: 75dvh;
     --dial-case-border-radius: 5rem;
@@ -149,7 +182,8 @@
 
 /* Fallback: namespace-based (for initial load before JS runs) */
 [data-barba-namespace="home"] .dial_video-wrap {
-  width: min(640px, 74vw);
+  width: 100%;
+  height: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   overflow: hidden;
@@ -174,11 +208,12 @@
 }
 
 /* ====== Labels (home only; fixed, never rotate) ====== */
+/* Position below dial: center + half dial height + gap (matches clamp(180px, min(50svh, 70vw))) */
 [data-barba-namespace="home"] .dial_layer-ui {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(50% + (var(--dial-home-height) / 2) + 8rem);
+  top: calc(50% + clamp(90px, min(25svh, 35vw), 9999px) + 8rem);
   z-index: 4;
   display: flex;
   justify-content: center;
@@ -299,6 +334,25 @@
 /* Cursor state: arrow-white-outline */
 [data-cursor="arrow-white-outline"] {
   cursor: none;
+}
+
+/* ====== Contact menu (.section_contact + .contact_overlay) ====== */
+.section_contact {
+  display: none;
+}
+
+.contact_overlay {
+  opacity: 0;
+}
+
+/* Home intro: step text SplitText line masks */
+.home-intro-line {
+  overflow: hidden;
+}
+
+/* Home intro: initial black background (fallback before JS runs) */
+[data-barba-namespace="home"] .dial_layer-bg {
+  background-color: #000;
 }
 
 /* Disable custom cursor on touch devices */

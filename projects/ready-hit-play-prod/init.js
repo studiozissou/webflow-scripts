@@ -36,6 +36,7 @@
       'lenis-manager.js',
       'cursor.js',
       'work-dial.js',
+      'home-intro.js',
       'intro-format.js',
       'orchestrator.js',
       'utils.js'

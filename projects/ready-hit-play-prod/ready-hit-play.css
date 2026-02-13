@@ -8,11 +8,38 @@
    @media screen and (max-width:1920px) { html { font-size: calc(0.7416576964477933rem + 0.21528525296017226vw); } }
    @media screen and (max-width:991px) { html { font-size: calc(0.7498737373737374rem + 0.20202020202020202vw); } } 
 
+/* Hide cursor + disable dial click until video plays on home */
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-cursor-ready) .cursor_component {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-cursor-ready) .dial_layer-fg {
+  pointer-events: none !important;
+}
+
+/* Hide nav + dial_layer-ui + step text on fresh home load until intro runs (avoids flash before scripts).
+   rhp-intro-started is added when intro begins so GSAP can animate; !important would otherwise override. */
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_logo-link,
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_about-link,
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_contact-link,
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_layer-ui,
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) [data-text="step"],
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .heading-style-h7.is-step {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Hide nav completely on About page (not visible, not clickable) */
 [data-barba="wrapper"].rhp-nav-hidden .nav {
   display: none !important;
   pointer-events: none;
   visibility: hidden;
+}
+
+/* About hero: initial opacity 0.4 before JS runs (avoids flash on hard refresh) */
+.section_about-hero .about-hero_ready {
+  opacity: 0.4;
 }
 
 /* About → Home transition: nav logo end position/size (override per breakpoint) */
@@ -87,9 +114,10 @@
 }
 
 /* Canvas ticks — full size; tick radius comes from fgWrap in JS (max 50svh × 70vw via video wrap) */
-[data-barba-namespace="home"] .dial_layer-ticks,
-[data-barba-namespace="case"] .dial_layer-ticks,
-[data-barba-namespace="about"] .dial_layer-ticks {
+/* Scope to dial_component only — about page uses .about_dial-wrapper with different layout */
+[data-barba-namespace="home"] .dial_component .dial_layer-ticks,
+[data-barba-namespace="case"] .dial_component .dial_layer-ticks,
+[data-barba-namespace="about"] .dial_component .dial_layer-ticks {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -353,6 +381,35 @@
 /* Home intro: initial black background (fallback before JS runs) */
 [data-barba-namespace="home"] .dial_layer-bg {
   background-color: #000;
+}
+
+/* ====== About page dial ticks (scaled-down homepage style) ====== */
+/* Fix: wrapper has height:0 from Webflow — ensure it contains the dial */
+.about_dial-wrapper {
+  min-height: 6rem;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.about_dial-wrapper .about_dial-link {
+  display: block;
+  width: 6rem;
+  height: 6rem;
+}
+
+[data-barba-namespace="about"] .about_dial-wrapper .dial_layer-ticks,
+[data-barba-namespace="about"] .about_dial-wrapper #dial_ticks-canvas {
+  position: relative !important;
+  inset: auto !important;
+  width: 6rem !important;
+  height: 6rem !important;
+  min-width: 6rem !important;
+  min-height: 6rem !important;
+  aspect-ratio: 1 !important;
+  pointer-events: none;
+  transform-origin: 50% 50%;
 }
 
 /* Disable custom cursor on touch devices */

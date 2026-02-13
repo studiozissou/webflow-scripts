@@ -54,5 +54,17 @@
     lenis?.resize?.();
   }
 
-  RHP.lenis = { start, stop, resize, version: LENIS_MANAGER_VERSION };
+  function onScroll(callback) {
+    if (lenis && typeof callback === 'function') {
+      lenis.on('scroll', callback);
+    }
+  }
+
+  function offScroll(callback) {
+    if (lenis && typeof callback === 'function') {
+      try { lenis.off('scroll', callback); } catch (e) {}
+    }
+  }
+
+  RHP.lenis = { start, stop, resize, onScroll, offScroll, version: LENIS_MANAGER_VERSION };
 })();

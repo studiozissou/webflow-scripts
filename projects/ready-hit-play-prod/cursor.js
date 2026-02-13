@@ -32,6 +32,7 @@
     let currentState = 'dot';
     let stateStack = ['dot']; // Stack to track state history
     let externalControl = false; // When true, work-dial controls cursor state; we still run position
+    let lockedToDot = false; // When true, cursor stays white dot (until video plays on home intro)
     let lastMouseX = -9999;
     let lastMouseY = -9999;
 
@@ -287,11 +288,44 @@
     // Public API: Set cursor state programmatically (for work-dial's play state)
     function setState(type, text, showArrows) {
       if (!alive) return;
+      if (lockedToDot && type !== 'dot') return;
       setCursorState(type, text, showArrows);
+    }
+
+    // Public API: Lock cursor to white dot (home intro: until video plays)
+    function setLockedToDot(locked) {
+      const wasLocked = lockedToDot;
+      lockedToDot = !!locked;
+      if (lockedToDot && currentState !== 'dot') {
+        setCursorState('dot', null, false);
+      } else if (wasLocked && !lockedToDot && lastMouseX > -9999 && lastMouseY > -9999) {
+        syncStateFromPosition();
+      }
+    }
+
+    function syncStateFromPosition() {
+      if (!alive || !cursorDot) return;
+      const el = document.elementFromPoint(lastMouseX, lastMouseY);
+      const under = el?.closest?.('[data-cursor]') || null;
+      const overDial = externalControl && under?.closest?.('.dial_component');
+      if (overDial) {
+        const target = el || document.body;
+        target.dispatchEvent(new PointerEvent('pointermove', { clientX: lastMouseX, clientY: lastMouseY, bubbles: true }));
+      } else if (under) {
+        const cursorType = under.getAttribute('data-cursor');
+        const cursorText = under.getAttribute('data-cursor-text') || null;
+        const cursorSvgs = under.getAttribute('data-cursor-svgs');
+        if (cursorType) {
+          setCursorState(cursorType, cursorText, cursorSvgs === 'arrows' || cursorSvgs === 'true');
+        }
+      } else {
+        setCursorState('dot', null, false);
+      }
     }
 
     function setCursorState(type, text, showArrows) {
       if (!cursorDot || !alive) return;
+      if (lockedToDot && type !== 'dot') return;
       if (currentState === type && !text && !showArrows) return;
 
       currentState = type;
@@ -479,6 +513,7 @@
       refresh,
       setPosition,
       setState,
+      setLockedToDot,
       getCurrentState: () => currentState
     };
   })();

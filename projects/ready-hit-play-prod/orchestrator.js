@@ -11,7 +11,7 @@
 
   // If cursor.js didn't load (missing from init or error), stub so RHP.cursor.version shows 'not-loaded'
   if (typeof RHP.cursor === 'undefined') {
-    RHP.cursor = { version: 'not-loaded', init: function() {}, destroy: function() {}, refresh: function() {}, setPosition: function() {}, setState: function() {} };
+    RHP.cursor = { version: 'not-loaded', init: function() {}, destroy: function() {}, refresh: function() {}, setPosition: function() {}, setState: function() {}, setLockedToDot: function() {} };
   }
 
   /* -----------------------------
@@ -189,9 +189,11 @@
       const logoEmbeds = container.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
       if (!logoEmbeds.length) return;
 
-      logoEmbeds.forEach((embed) => {
+        logoEmbeds.forEach((embed) => {
         const heroReady = embed.closest('.about-hero_ready');
         if (!heroReady) return;
+
+        gsap.set(heroReady, { opacity: 0.4 });
 
         const headings = heroReady.querySelectorAll('.heading-style-h3');
         if (!headings.length) return;
@@ -200,11 +202,6 @@
         headings.forEach((h) => {
           try {
             const split = new SplitText(h, { type: 'words,lines', linesClass: 'about-hero-line', wordsClass: 'about-hero-word' });
-            if (split.lines) {
-              split.lines.forEach((line) => {
-                line.style.overflow = 'hidden';
-              });
-            }
             if (split.words && split.words.length) {
               gsap.set(split.words, { yPercent: 100, opacity: 0 });
             }
@@ -216,22 +213,35 @@
 
         splitInstances.push(...headingSplits);
 
+        const wordDuration = 0.8;
+        const wordStagger = 0.3;
+        const lineDelay = 0.3;
+        const leaveDuration = wordDuration / 2;
+
         const onEnter = () => {
+          gsap.to(heroReady, { opacity: 1, duration: 0.3, ease: 'linear' });
           gsap.to(heroReady, { y: '-1.5rem', duration: 0.5, ease: 'power3.out' });
-          headingSplits.forEach(({ split, headingEl }) => {
-            gsap.to(headingEl, { opacity: 1, duration: 0.4, ease: 'power4.out' });
+          headingSplits.forEach(({ split, headingEl }, idx) => {
+            const delay = idx * lineDelay;
+            gsap.to(headingEl, { opacity: 1, duration: wordDuration, ease: 'power4.out', delay });
             if (split.words && split.words.length) {
-              gsap.to(split.words, { yPercent: 0, opacity: 1, duration: 0.4, ease: 'power4.out', stagger: 0.15 });
+              gsap.to(split.words, { yPercent: 0, opacity: 1, duration: wordDuration, ease: 'power4.out', stagger: wordStagger, delay });
             }
           });
         };
 
         const onLeave = () => {
+          gsap.killTweensOf(heroReady);
+          headingSplits.forEach(({ split, headingEl }) => {
+            gsap.killTweensOf(headingEl);
+            if (split.words && split.words.length) gsap.killTweensOf(split.words);
+          });
+          gsap.to(heroReady, { opacity: 0.4, duration: 0.3, ease: 'linear' });
           gsap.to(heroReady, { y: 0, duration: 0.5, ease: 'power3.out' });
           headingSplits.forEach(({ split, headingEl }) => {
-            gsap.to(headingEl, { opacity: 0, duration: 0.4, ease: 'power4.out' });
+            gsap.to(headingEl, { opacity: 0, duration: leaveDuration, ease: 'power4.out' });
             if (split.words && split.words.length) {
-              gsap.to(split.words, { yPercent: 100, opacity: 0, duration: 0.4, ease: 'power4.out', stagger: 0.15 });
+              gsap.to(split.words, { yPercent: 100, opacity: 0, duration: leaveDuration, ease: 'power4.out' });
             }
           });
         };
@@ -264,6 +274,8 @@
         RHP.scroll.unlock();
         RHP.lenis?.start();
         RHP.lenis?.resize();
+        RHP.aboutDialTicks?.init?.(container);
+        RHP.aboutTextLines?.init?.(container);
         if (isDesktop()) {
           initAboutHeroLogoHover(container);
           initAboutTeamHover(container);
@@ -272,6 +284,8 @@
       destroy() {
         if (!active) return;
         active = false;
+        RHP.aboutDialTicks?.destroy?.();
+        RHP.aboutTextLines?.destroy?.();
         destroyAboutHeroLogoHover();
         destroyAboutTeamHover();
       }
@@ -717,6 +731,9 @@
       const ns = currentNs;
 
       var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+      if (ns === 'home') {
+        wrapper.classList.add('rhp-home-ready', 'rhp-cursor-ready');
+      }
       if (ns === 'about') {
         wrapper.classList.add('rhp-nav-hidden');
       } else {

@@ -1,7 +1,7 @@
 /* =========================================
    RHP — Homepage Intro Animation
    Only runs on fresh load of homepage (not when transitioning from case studies or about)
-   Sequence: step text → dial ticks → nav + dial_layer-ui → bg video fade in
+   Sequence: step text → dial ticks → bg video fade in → nav + dial_layer-ui
    ========================================= */
 (() => {
   const HOME_INTRO_VERSION = '2026.2.11.1';
@@ -11,7 +11,7 @@
   const T = {
     bars: 96,
     tickDuration: 0.7,
-    dialTotalDuration: 8, // 4x slower than original 2s
+    dialTotalDuration: 3.5,
     tickStagger: 0 // computed
   };
   T.tickStagger = (T.dialTotalDuration - T.tickDuration) / Math.max(1, T.bars - 1);
@@ -85,12 +85,12 @@
           gsap.to(stepEl, { opacity: 1, duration: 0.4, ease: 'power4.out' });
           gsap.to(split.words, {
             yPercent: 0,
-            opacity: 1,
-            duration: 0.4,
-            ease: 'power4.out',
+            duration: 0.8,
+            ease: 'expo.out',
             stagger: 0.15,
             onComplete: resolve
           });
+          gsap.to(split.words, { opacity: 1, duration: 0.8, ease: 'linear', stagger: 0.15 }, '<');
         } catch (e) {
           stepEl.style.opacity = '1';
           resolve();
@@ -136,7 +136,7 @@
       const gsap = window.gsap;
       const reduced = prefersReduced();
       const dur = reduced ? 0 : T.dialTotalDuration;
-      const ease = reduced ? 'linear' : 'expo.out';
+      const ease = reduced ? 'linear' : 'power4.out';
 
       return new Promise((resolve) => {
         gsap.to(RHP._dialIntroProgress, {
@@ -245,16 +245,21 @@
         hasRun = true;
         const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
 
+        RHP.cursor?.setLockedToDot?.(true);
+
         // Ensure work-dial has intro progress for tick scale animation (starts at 0)
         RHP._dialIntroProgress = { time: 0 };
 
         setInitialState(container);
+        scope.classList.add('rhp-intro-started');
 
         // Wait for scripts to be ready (init has already run by the time orchestrator calls us)
         const scriptsReady = () => RHP.scriptsOk === true;
 
         const run = async () => {
           await revealStepText(container, gsap, SplitText);
+
+          await new Promise((r) => setTimeout(r, 500));
 
           // When scripts ready, animate dial ticks
           if (!scriptsReady()) {
@@ -268,10 +273,12 @@
           }
 
           await runDialTickAnimation(container);
-          await runNavAnimation(scope);
-
-          // Video plays once all other animations are done
           await fadeInBgVideo(container);
+          (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-cursor-ready');
+          RHP.cursor?.setLockedToDot?.(false);
+          RHP.workDial?.setAttractionEnabled?.(true);
+          await runNavAnimation(scope);
+          (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-home-ready');
         };
 
         run().catch(console.error);
@@ -279,7 +286,10 @@
 
       skip(container) {
         hasRun = true;
+        const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
+        scope.classList.add('rhp-intro-started', 'rhp-cursor-ready', 'rhp-home-ready');
         resetToVisible(container);
+        RHP.cursor?.setLockedToDot?.(false);
         RHP.workDial?.setIntroComplete?.();
       },
 

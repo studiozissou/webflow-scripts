@@ -3,12 +3,13 @@
    - Client-First naming (matches your HTML)
    - Desktop: sector hover switching + tick attraction (ticks DO NOT rotate)
    - Mobile: dial rotation (ticks rotate ONLY) + Variant B stepping (updates on boundary)
+   - Sector highlight: active sector ticks show orange→teal gradient, 0.1s linear transition
    - CMS order: first 8 items in rendered order
    - Poster support: reads <img class="dial_cms-poster" ...> inside each .dial_cms-item
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.2.6.10';
+  const WORK_DIAL_VERSION = '2026.2.13.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -80,6 +81,7 @@
     let refs = null;
     let introMode = false;
     let introComplete = false;
+    let attractionEnabled = true;
 
     function on(el, evt, fn, opts) {
       if (!el) return;
@@ -98,6 +100,7 @@
       cleanup = [];
       introMode = options.introMode === true;
       introComplete = !introMode;
+      attractionEnabled = !introMode;
 
       const comp = container.querySelector(SEL.component) || document.querySelector(SEL.component);
       const canvas = container.querySelector(SEL.canvas) || document.querySelector(SEL.canvas);
@@ -133,7 +136,7 @@
 
       // Tick rendering config — ratios from design SVG (506×506, tick ~22.5×1.69px)
       const REF_R = 253; // SVG radius = 506/2
-      const TICK_INTRO = { bars: 96, tickDur: 0.7, totalDur: 8 };
+      const TICK_INTRO = { bars: 96, tickDur: 0.7, totalDur: 3.5 };
       TICK_INTRO.stagger = (TICK_INTRO.totalDur - TICK_INTRO.tickDur) / Math.max(1, TICK_INTRO.bars - 1);
       const TWELVE_OCLOCK_IDX = Math.floor((3 / 4) * TICK_INTRO.bars);
       const T = {
@@ -146,8 +149,8 @@
         angFalloff: 18,
         gapRatio: 24 / REF_R,
         switchBufferRatio: 90 / REF_R,
-        teal: { r:0, g:240, b:200 },
-        orange: { r:255, g:130, b:0 }
+        teal: { r:5, g:239, b:191 },   // #05EFBF
+        orange: { r:254, g:94, b:0 }   // #FE5E00
       };
       const mix = (a,b,t)=>`rgb(${(a.r+(b.r-a.r)*t|0)},${(a.g+(b.g-a.g)*t|0)},${(a.b+(b.b-a.b)*t|0)})`;
 
@@ -168,12 +171,19 @@
         activeIndex: 0,
         lastIndex: -1,
 
+        // sector highlight (0.4s linear transition when sector changes)
+        prevActiveIndex: 0,
+        sectorHighlightEase: 1,
+
         // mobile dial
         rotationDeg: 0,
         dragActive: false,
         dragStartY: 0,
         dragStartRot: 0,
-        startedInInner: false
+        startedInInner: false,
+
+        // attraction ease (smooth in/out when pointer enters)
+        attractionEase: 0
       };
 
       function setCursorPlay(isPlay) {
@@ -234,11 +244,45 @@
         }
       }
 
+      // Tick i → sector index (0° at top, 8 sectors)
+      function tickToSector(i) {
+        const tickDeg = (i / T.bars) * 360;
+        const top0 = (tickDeg + 90) % 360;
+        return Math.floor(mod(top0 + sectorOffset, 360) / sectorSize);
+      }
+
+      // Gradient mix (0=teal, 1=orange). Middle 8 ticks fully orange, sharp falloff to teal at sector borders.
+      const TICKS_PER_SECTOR = T.bars / N;
+      const FLAT_TICKS = 8;
+      const flatZoneHalfAngle = (FLAT_TICKS / TICKS_PER_SECTOR) * (sectorSize / 2);
+      const edgeZoneAngle = (sectorSize / 2) - flatZoneHalfAngle;
+      function sectorGradientMix(tickI, sectorIdx) {
+        if (tickToSector(tickI) !== sectorIdx) return 0;
+        const tickDeg = (tickI / T.bars) * 360;
+        const top0 = (tickDeg + 90) % 360;
+        const centerAngle = sectorIdx * sectorSize;
+        const distFromCenter = Math.min(Math.abs(top0 - centerAngle), 360 - Math.abs(top0 - centerAngle));
+        if (distFromCenter <= flatZoneHalfAngle) return 1;
+        if (distFromCenter >= sectorSize / 2) return 0;
+        return 1 - (distFromCenter - flatZoneHalfAngle) / edgeZoneAngle;
+      }
+
       function applyActive(idx) {
         idx = mod(idx, N);
         if (idx === state.lastIndex) return;
+        const isInitial = state.lastIndex === -1;
+        state.prevActiveIndex = state.lastIndex;
         state.lastIndex = idx;
         state.activeIndex = idx;
+
+        // Sector highlight transition: crossfade from prev to current over 0.1s linear (skip on initial load)
+        const dur = (isInitial || prefersReduced()) ? 0 : 0.1;
+        if (window.gsap && dur > 0) {
+          state.sectorHighlightEase = 0;
+          window.gsap.to(state, { sectorHighlightEase: 1, duration: dur, ease: 'linear', overwrite: true });
+        } else {
+          state.sectorHighlightEase = 1;
+        }
 
         const item = items[idx];
         if (!item) return;
@@ -411,20 +455,28 @@
         if (isMobile()) {
           canvas.style.transform = `rotate(${state.rotationDeg}deg)`;
 
-          // draw neutral ticks (cheap) — intro scale when in intro mode
+          // draw ticks — intro scale + opacity when in intro mode; sector highlight gradient
+          const ease = state.sectorHighlightEase ?? 1;
           for (let i = 0; i < T.bars; i++) {
             const a = (i / T.bars) * Math.PI * 2;
             let tickScale = 1;
+            let tickOpacity = 1;
             if (introMode && !introComplete && RHP._dialIntroProgress) {
               const t = RHP._dialIntroProgress.time || 0;
               const clockPos = (i - TWELVE_OCLOCK_IDX + T.bars) % T.bars;
               const startT = clockPos * TICK_INTRO.stagger;
               const raw = Math.max(0, Math.min(1, (t - startT) / TICK_INTRO.tickDur));
-              tickScale = prefersReduced() ? raw : 1 - Math.pow(2, -10 * raw);
+              tickScale = prefersReduced() ? raw : 1 - Math.pow(1 - raw, 4);
+              tickOpacity = raw;
             }
             const len = geom.baseLen * tickScale;
 
-            ctx.strokeStyle = mix(T.teal, T.orange, 0);
+            const prevMix = sectorGradientMix(i, state.prevActiveIndex);
+            const currMix = sectorGradientMix(i, state.activeIndex);
+            const sectorMix = prevMix + (currMix - prevMix) * ease;
+
+            ctx.globalAlpha = tickOpacity;
+            ctx.strokeStyle = mix(T.teal, T.orange, sectorMix);
             ctx.lineWidth = geom.barW;
             ctx.lineCap = 'round';
 
@@ -434,6 +486,7 @@
             const y1 = geom.cy + Math.sin(a) * (geom.innerR + len);
 
             ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+            ctx.globalAlpha = 1;
           }
 
           rafId = requestAnimationFrame(draw);
@@ -451,32 +504,44 @@
         const dToOuter = Math.abs(state.rDist - OUTER_R_BASE);
         const dEdge = Math.min(dToInner, dToOuter);
 
+        const hasAttraction = hasPointer && !reduced && attractionEnabled;
+        state.attractionEase += hasAttraction ? 0.04 : -0.06;
+        state.attractionEase = Math.max(0, Math.min(1, state.attractionEase));
+
         for (let i = 0; i < T.bars; i++) {
           const a = (i / T.bars) * Math.PI * 2;
           const deg = (i / T.bars) * 360;
 
           let tickScale = 1;
+          let tickOpacity = 1;
           if (introMode && !introComplete && RHP._dialIntroProgress) {
             const t = RHP._dialIntroProgress.time || 0;
             const clockPos = (i - TWELVE_OCLOCK_IDX + T.bars) % T.bars;
             const startT = clockPos * TICK_INTRO.stagger;
             const raw = Math.max(0, Math.min(1, (t - startT) / TICK_INTRO.tickDur));
-            tickScale = reduced ? raw : 1 - Math.pow(2, -10 * raw);
+            tickScale = reduced ? raw : 1 - Math.pow(1 - raw, 4);
+            tickOpacity = raw;
           }
 
           let inf = 0;
-          if (hasPointer && !reduced) {
+          if (hasAttraction) {
             const degTop0 = (deg + 90) % 360;
             const dAng = Math.min(Math.abs(degTop0 - state.angDeg), 360 - Math.abs(degTop0 - state.angDeg));
             const iAng = Math.max(0, 1 - dAng / T.angFalloff);
             const iRad = Math.max(0, 1 - Math.max(0, dEdge - geom.nearPx) / geom.radFalloff);
             inf = iAng * iRad;
           }
+          inf *= state.attractionEase;
 
           const len = (geom.baseLen + (geom.maxLen - geom.baseLen) * inf) * tickScale;
           const warm = state.inInner ? inf : 0;
+          const prevMix = sectorGradientMix(i, state.prevActiveIndex);
+          const currMix = sectorGradientMix(i, state.activeIndex);
+          const sectorMix = (prevMix + (currMix - prevMix) * (state.sectorHighlightEase ?? 1));
+          const finalWarm = Math.max(warm, sectorMix);
 
-          ctx.strokeStyle = mix(T.teal, T.orange, warm);
+          ctx.globalAlpha = tickOpacity;
+          ctx.strokeStyle = mix(T.teal, T.orange, finalWarm);
           ctx.lineWidth = geom.barW;
           ctx.lineCap = 'round';
 
@@ -486,6 +551,7 @@
           const y1 = geom.cy + Math.sin(a) * (geom.innerR + len);
 
           ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+          ctx.globalAlpha = 1;
         }
 
         rafId = requestAnimationFrame(draw);
@@ -557,6 +623,10 @@
       refs?._setupDialHover?.();
     }
 
+    function setAttractionEnabled(enabled) {
+      attractionEnabled = !!enabled;
+    }
+
     function destroy() {
       if (!alive) return;
       alive = false;
@@ -571,6 +641,6 @@
       return refs?.getActiveIndex?.() ?? 0;
     }
 
-    return { init, destroy, getActiveIndex, setIntroComplete, version: WORK_DIAL_VERSION };
+    return { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, version: WORK_DIAL_VERSION };
   })();
 })();

@@ -103,6 +103,13 @@
         await loadStylesheet(css);
       }
 
+      // Page-specific: Overland AI case study CSS (fonts + typography)
+      const isOverlandPage = /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname);
+      if (isOverlandPage) {
+        const versionParam = 'v=' + (CONFIG.version || '0');
+        await loadStylesheet(`${baseUrl}/overland-ai.css?${versionParam}`);
+      }
+
       for (const dep of CONFIG.dependencies) {
         await loadScript(dep);
       }
@@ -119,7 +126,6 @@
       }
 
       // Page-specific: Overland AI case study (only on /case-studies/overland-ai)
-      const isOverlandPage = /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname);
       if (isOverlandPage) {
         await loadScript(`${baseUrl}/overland-ai.js?${versionParam}`);
       }

@@ -1,0 +1,111 @@
+/* =========================================
+   Overland AI Case Study — NuberNext Fonts & Typography
+   Loaded only on /case-studies/overland-ai
+   ========================================= */
+
+/* Overland-style color variable (if not defined by Webflow) */
+:root {
+  --base-color-system--tactical: #62746f;
+}
+
+/* ----- @font-face: NuberNext variants ----- */
+@font-face {
+  font-family: "NuberNext DemiBold Condensed";
+  src: url("./fonts/overland-ai/nubernext-demi-bold-condensed.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NuberNext Bold Extended";
+  src: url("./fonts/overland-ai/nubernext-bold-extended.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NuberNext Regular Extended";
+  src: url("./fonts/overland-ai/nubernext-regular-extended.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NuberNext Bold Compressed";
+  src: url("./fonts/overland-ai/nubernext-bold-compressed.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NuberNext Bold Wide";
+  src: url("./fonts/overland-ai/nubernext-bold-wide.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ----- .custom-grid default font ----- */
+.custom-grid {
+  font-family: "NuberNext DemiBold Condensed", sans-serif;
+}
+
+/* ----- Map RHP .text-size-small to Overland .text-size-key-benefits-card styling ----- */
+.custom-grid .key-benefits_text-container .text-size-small,
+.custom-grid .key-benefits_text-container .text-size-key-benefits-card {
+  color: var(--base-color-system--tactical);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: "NuberNext DemiBold Condensed", sans-serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.45455;
+}
+
+/* Combo: .is-distractions */
+.custom-grid .key-benefits_text-container .text-size-small.is-distractions,
+.custom-grid .key-benefits_text-container .text-size-key-benefits-card.is-distractions {
+  margin-left: 2rem;
+  font-family: "NuberNext Regular Extended", sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 136%;
+}
+
+/* Combo: .is-remote-communications */
+.custom-grid .key-benefits_text-container .text-size-small.is-remote-communications,
+.custom-grid .key-benefits_text-container .text-size-key-benefits-card.is-remote-communications {
+  font-family: "NuberNext Bold Compressed", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.9375rem;
+}
+
+/* Combo: .is-remote-communications.is-surface */
+.custom-grid .key-benefits_text-container .text-size-small.is-remote-communications.is-surface,
+.custom-grid .key-benefits_text-container .text-size-key-benefits-card.is-remote-communications.is-surface {
+  text-align: left;
+  margin-left: 1rem;
+}
+
+/* Combo: .is-reliance */
+.custom-grid .key-benefits_text-container .text-size-small.is-reliance,
+.custom-grid .key-benefits_text-container .text-size-key-benefits-card.is-reliance {
+  font-family: "NuberNext DemiBold Condensed", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+/* Combo: .is-austere-environment */
+.custom-grid .key-benefits_text-container .text-size-small.is-austere-environment,
+.custom-grid .key-benefits_text-container .text-size-key-benefits-card.is-austere-environment {
+  font-family: "NuberNext Bold Wide", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}

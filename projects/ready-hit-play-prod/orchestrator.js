@@ -856,16 +856,26 @@
         RHP.views[ns].init(data.next.container);
       }
 
-      // Page-specific: load Overland AI script when navigating to it via Barba (if not loaded on initial page)
-      if (ns === 'case' && /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname) && !RHP.overlandAI) {
+      // Page-specific: load Overland AI CSS + script when navigating to it via Barba (if not loaded on initial page)
+      if (ns === 'case' && /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname)) {
         var baseUrl = RHP.getScriptBaseUrl && RHP.getScriptBaseUrl();
         var v = RHP.configVersion || '0';
-        if (baseUrl && RHP.loadScript) {
-          RHP.loadScript(baseUrl + '/overland-ai.js?v=' + v).then(function() {
-            if (RHP.overlandAI && RHP.overlandAI.init) {
-              RHP.overlandAI.init(data.next && data.next.container ? data.next.container : document);
-            }
-          });
+        if (baseUrl) {
+          /* Inject overland-ai.css if not already present */
+          var cssHref = baseUrl + '/overland-ai.css?v=' + v;
+          if (!document.querySelector('link[href*="overland-ai.css"]')) {
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cssHref;
+            document.head.appendChild(link);
+          }
+          if (!RHP.overlandAI && RHP.loadScript) {
+            RHP.loadScript(baseUrl + '/overland-ai.js?v=' + v).then(function() {
+              if (RHP.overlandAI && RHP.overlandAI.init) {
+                RHP.overlandAI.init(data.next && data.next.container ? data.next.container : document);
+              }
+            });
+          }
         }
       }
 

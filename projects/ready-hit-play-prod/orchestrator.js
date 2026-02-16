@@ -856,6 +856,19 @@
         RHP.views[ns].init(data.next.container);
       }
 
+      // Page-specific: load Overland AI script when navigating to it via Barba (if not loaded on initial page)
+      if (ns === 'case' && /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname) && !RHP.overlandAI) {
+        var baseUrl = RHP.getScriptBaseUrl && RHP.getScriptBaseUrl();
+        var v = RHP.configVersion || '0';
+        if (baseUrl && RHP.loadScript) {
+          RHP.loadScript(baseUrl + '/overland-ai.js?v=' + v).then(function() {
+            if (RHP.overlandAI && RHP.overlandAI.init) {
+              RHP.overlandAI.init(data.next && data.next.container ? data.next.container : document);
+            }
+          });
+        }
+      }
+
       try {
         if (window.Webflow && typeof window.Webflow.require === 'function') {
           var ix2 = window.Webflow.require('ix2');

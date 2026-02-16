@@ -118,8 +118,17 @@
         await loadScript(`${baseUrl}/${module}?${versionParam}`);
       }
 
+      // Page-specific: Overland AI case study (only on /case-studies/overland-ai)
+      const isOverlandPage = /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname);
+      if (isOverlandPage) {
+        await loadScript(`${baseUrl}/overland-ai.js?${versionParam}`);
+      }
+
       const RHP = window.RHP || {};
       RHP.version = CONFIG.version || '0';
+      RHP.loadScript = loadScript;
+      RHP.getScriptBaseUrl = getBaseUrl;
+      RHP.configVersion = CONFIG.version || '0';
       window.RHP = RHP;
       const checks = [
         { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: RHP.lenis?.version || '' },

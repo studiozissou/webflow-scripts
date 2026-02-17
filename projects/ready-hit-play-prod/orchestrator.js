@@ -326,6 +326,7 @@
             content
           });
           RHP.lenis?.resize();
+          RHP.lenis?.setupScrollTriggerProxy?.(wrapper, content);
         } else {
           RHP.lenis?.start();
           RHP.lenis?.resize();
@@ -806,28 +807,20 @@
           });
         } else {
           var prevNs = data.current ? data.current.namespace : undefined;
-          if (prevNs === 'about') {
-            /* about→home: animate dial from case size to home (about uses case-style dial) */
-            gsap.set(dialFg, {
-              width: caseWidth,
-              height: caseHeight,
-              borderRadius: caseBorderRadius,
-              aspectRatio: caseAspectRatio,
-              overflow: 'auto'
-            });
-            dialFg.style.display = 'flex';
-            dialFg.style.flexFlow = 'column';
+          var prevPath = (data.current && data.current.url) ? (data.current.url.path || data.current.url.pathname || '') : '';
+          var fromAbout = prevNs === 'about' || /(^|\/)about(\/|$|\?)/.test(prevPath);
+          if (fromAbout) {
+            /* about→home: ensure dial is at home size — kill tweens, clear inline overrides, set home dimensions */
             dialFg.classList.remove('is-case-study');
-            dialFg.style.display = 'grid';
-            dialFg.style.flexFlow = 'row';
-            gsap.to(dialFg, {
+            gsap.killTweensOf(dialFg);
+            gsap.set(dialFg, {
               width: homeWidth,
               height: homeHeight,
               borderRadius: homeBorderRadius,
               aspectRatio: homeAspectRatio,
               overflow: 'visible',
-              duration: 0.8,
-              ease: 'power2.inOut'
+              display: 'grid',
+              flexFlow: 'row'
             });
           } else if (prevNs === 'case') {
             /* case→home: shrink animation runs in leave; home dial is fresh with default CSS */
@@ -879,10 +872,25 @@
         }
       }
 
+      // Webflow IX2 re-init after Barba DOM swap (destroy clears old bindings, ready+ix2.init rebind to new container)
       try {
-        if (window.Webflow && typeof window.Webflow.require === 'function') {
-          var ix2 = window.Webflow.require('ix2');
+        if (window.Webflow && typeof window.Webflow.destroy === 'function' && typeof window.Webflow.ready === 'function') {
+          window.Webflow.destroy();
+          window.Webflow.ready();
+          var ix2 = window.Webflow.require && window.Webflow.require('ix2');
           if (ix2 && typeof ix2.init === 'function') ix2.init();
+        }
+        if (typeof window.ScrollTrigger !== 'undefined' && typeof window.ScrollTrigger.refresh === 'function') {
+          window.ScrollTrigger.refresh(true);
+        }
+        // Re-apply scrollerProxy for case view: Webflow.destroy() clears it, so IX2's new ScrollTriggers need it after init
+        if (ns === 'case' && data.next && data.next.container) {
+          var caseWrapper = data.next.container.querySelector('[data-case-scroll-wrapper]') || data.next.container.querySelector('.case-scroll-wrapper');
+          var caseContent = caseWrapper?.querySelector('[data-case-scroll-content]') || caseWrapper?.firstElementChild;
+          if (caseWrapper && caseContent) {
+            RHP.lenis?.setupScrollTriggerProxy?.(caseWrapper, caseContent);
+            window.ScrollTrigger?.refresh?.(true);
+          }
         }
       } catch (e) {}
 

@@ -105,7 +105,6 @@
 
       // Page-specific: Overland AI case study CSS (fonts + typography)
       const isOverlandPage = /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname);
-      const isBetweenHereAndMarsPage = /\/case-studies\/between-here-and-mars(\/|$)/.test(window.location.pathname);
       if (isOverlandPage) {
         const versionParam = 'v=' + (CONFIG.version || '0');
         await loadStylesheet(`${baseUrl}/overland-ai.css?${versionParam}`);
@@ -113,11 +112,6 @@
 
       for (const dep of CONFIG.dependencies) {
         await loadScript(dep);
-      }
-
-      // ScrollSmoother (Club GreenSock) – only on /case-studies/between-here-and-mars
-      if (isBetweenHereAndMarsPage) {
-        await loadScript('https://cdn.prod.website-files.com/gsap/3.14.2/ScrollSmoother.min.js');
       }
 
       if (CONFIG.splitTextUrl) {

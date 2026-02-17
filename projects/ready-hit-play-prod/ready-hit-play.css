@@ -262,6 +262,44 @@
   width: 100%;
   object-fit: cover;
 }
+
+/* Case study: first-screen proportions — video fills, title visible above fold (desktop only) */
+@media (min-width: 992px) {
+  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video {
+    min-height: calc(var(--dial-case-height) - 140px);
+    display: flex;
+    flex-direction: column;
+  }
+  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video .dial_video-wrap,
+  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video .video-cover,
+  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video video {
+    flex: 1;
+    min-height: 0;
+    object-fit: cover;
+  }
+
+  /* Override aspect-ratio so video in first section can grow vertically */
+  [data-barba-namespace="case"] .section_case-video .dial_video-wrap,
+  [data-barba-namespace="case"] .section_case-video .video-cover {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+}
+
+/* Case study: video fills wrapper completely (100% width and height) */
+[data-barba-namespace="case"] .dial_video-wrap.is-case-study {
+  position: relative;
+  overflow: hidden;
+}
+[data-barba-namespace="case"] .dial_video-wrap.is-case-study .dial_fg-video,
+[data-barba-namespace="case"] .dial_video-wrap.is-case-study .video-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* ====== Desktop custom cursor ====== */
 .cursor_component {
   position: fixed;

@@ -46,6 +46,11 @@ Serve the project from a local server so scripts load from disk (no deploy or ca
    ```
    Or with Python: `python3 -m http.server 8080`
 
+   **Fonts + Webflow preview:** If you view the Webflow site (rhpcircle.webflow.io) with localhost assets, fonts won't load due to CORS. Use the CORS-enabled server instead:
+   ```bash
+   python3 projects/ready-hit-play-prod/serve-cors.py
+   ```
+
 2. **Open the dev page** in your browser:
    - **http://localhost:3000/projects/ready-hit-play-prod/dev.html** (if using `npx serve`, port may be 3000)
    - Or **http://localhost:8080/projects/ready-hit-play-prod/dev.html** (if using Python on 8080)

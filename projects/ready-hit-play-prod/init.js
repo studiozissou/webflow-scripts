@@ -12,7 +12,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.13.1', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.2.17.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -105,6 +105,7 @@
 
       // Page-specific: Overland AI case study CSS (fonts + typography)
       const isOverlandPage = /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname);
+      const isBetweenHereAndMarsPage = /\/case-studies\/between-here-and-mars(\/|$)/.test(window.location.pathname);
       if (isOverlandPage) {
         const versionParam = 'v=' + (CONFIG.version || '0');
         await loadStylesheet(`${baseUrl}/overland-ai.css?${versionParam}`);
@@ -112,6 +113,11 @@
 
       for (const dep of CONFIG.dependencies) {
         await loadScript(dep);
+      }
+
+      // ScrollSmoother (Club GreenSock) – only on /case-studies/between-here-and-mars
+      if (isBetweenHereAndMarsPage) {
+        await loadScript('https://cdn.prod.website-files.com/gsap/3.14.2/ScrollSmoother.min.js');
       }
 
       if (CONFIG.splitTextUrl) {

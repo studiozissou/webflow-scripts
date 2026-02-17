@@ -263,6 +263,11 @@
   object-fit: cover;
 }
 
+/* Close link (case-homepage-link) — 1px left offset for alignment */
+.dial_component .case-homepage-link {
+  left: 1px;
+}
+
 /* Case study: first-screen proportions — video fills, title visible above fold (desktop only) */
 @media (min-width: 992px) {
   [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video {

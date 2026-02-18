@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.2.6.10'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.2.18.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -83,6 +83,9 @@
 
         // Init dial (introMode when fresh load - home intro runs separately)
         RHP.workDial?.init?.(container, { introMode: options.introMode === true });
+
+        // Transition dial (static teal ticks in .transition-dial for page transitions)
+        RHP.transitionDial?.init?.(container);
       },
 
       destroy() {
@@ -90,6 +93,7 @@
         active = false;
 
         RHP.workDial?.destroy?.();
+        RHP.transitionDial?.destroy?.();
         RHP.scroll.unlock();
       }
     };

@@ -12,7 +12,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.17.2', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.2.18.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -36,6 +36,7 @@
       'lenis-manager.js',
       'cursor.js',
       'work-dial.js',
+      'transition-dial.js',
       'about-dial-ticks.js',
       'about-text-lines.js',
       'home-intro.js',
@@ -140,6 +141,7 @@
         { module: 'lenis-manager.js', ok: typeof RHP.lenis !== 'undefined', detail: RHP.lenis?.version || '' },
         { module: 'cursor.js', ok: typeof RHP.cursor !== 'undefined', detail: RHP.cursor?.version || '(no version)' },
         { module: 'work-dial.js', ok: typeof RHP.workDial !== 'undefined', detail: RHP.workDial?.version || '' },
+        { module: 'transition-dial.js', ok: typeof RHP.transitionDial !== 'undefined', detail: RHP.transitionDial?.version || '' },
         { module: 'about-dial-ticks.js', ok: typeof RHP.aboutDialTicks !== 'undefined', detail: RHP.aboutDialTicks?.version || '' },
         { module: 'about-text-lines.js', ok: typeof RHP.aboutTextLines !== 'undefined', detail: RHP.aboutTextLines?.version || '' },
         { module: 'intro-format.js', ok: typeof RHP.formatIntroText === 'function', detail: '—' },
@@ -157,6 +159,7 @@
         'lenis-manager.js': RHP.lenis?.version || '—',
         'cursor.js': (RHP.cursor?.version || '—') + (typeof RHP.cursor?.transitionDuration === 'number' ? ' (transitionDuration: ' + RHP.cursor.transitionDuration + ')' : ''),
         'work-dial.js': RHP.workDial?.version || '—',
+        'transition-dial.js': RHP.transitionDial?.version || '—',
         'about-dial-ticks.js': RHP.aboutDialTicks?.version || '—',
         'about-text-lines.js': RHP.aboutTextLines?.version || '—',
         'intro-format.js': '—',

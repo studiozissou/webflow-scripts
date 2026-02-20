@@ -42,20 +42,95 @@
   opacity: 0.4;
 }
 
-/* About → Home transition: nav logo end position/size (override per breakpoint) */
+/* About → Home transition: nav logo end position (top of viewport; 2vh default, 3rem at 1920+) */
 :root {
-  --nav-logo-return-top: 3rem;
+  --nav-logo-return-top: 2vh;
   --nav-logo-return-embed-height: 2rem;
+  /* Target size for #transition-logo when animating to match about hero logo (home → about) */
+  --about-hero-logo-width: min(70vw, 37.5rem);
+  --about-hero-logo-height: auto;
 }
 
-/* Example: override for smaller viewports
-@media (max-width: 767px) {
+/* Logo size variables: logo large (about hero) and logo small (nav). Override per breakpoint below. */
+:root {
+  --logo-large-width: 90vw;
+  --logo-large-height: auto;
+  --logo-large-max-width: 93rem;
+  --logo-small-width: 16rem;
+  --logo-small-height: 2rem;
+}
+
+/* Apply logo large to .nav_logo-wrapper-2 (about hero, transition target) */
+.nav_logo-wrapper-2 {
+  width: var(--logo-large-width);
+  height: var(--logo-large-height);
+  max-width: var(--logo-large-max-width);
+}
+
+/* Apply logo small to nav; .is-nav overrides the large defaults */
+.nav_logo-wrapper-2.is-nav {
+  width: var(--logo-small-width);
+  height: var(--logo-small-height);
+  max-width: none;
+}
+
+/* Breakpoint overrides: edit logo sizes per viewport (Webflow breakpoints: 991px, 767px, 479px) */
+@media screen and (max-width: 991px) {
   :root {
-    --nav-logo-return-top: 2rem;
-    --nav-logo-return-embed-height: 1.5rem;
+    --logo-large-width: 90vw;
+    --logo-large-height: auto;
+    --logo-large-max-width: 93rem;
+    --logo-small-width: 16rem;
+    --logo-small-height: 2rem;
   }
 }
-*/
+
+@media screen and (max-width: 767px) {
+  :root {
+    --logo-large-width: 90vw;
+    --logo-large-height: auto;
+    --logo-large-max-width: 93rem;
+    --logo-small-width: 16rem;
+    --logo-small-height: 2rem;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  :root {
+    --logo-large-width: 90vw;
+    --logo-large-height: auto;
+    --logo-large-max-width: 93rem;
+    --logo-small-width: 16rem;
+    --logo-small-height: 2rem;
+  }
+}
+
+/* Transition dial position (home → about): distance from bottom of viewport; x-offset nudges final position (negative = left). Editable by breakpoint. */
+:root {
+  --transition-dial-bottom: 2rem;
+  --transition-dial-x-offset: -4px;
+}
+@media screen and (min-width: 1920px) {
+  :root {
+    --transition-dial-bottom: 4rem;
+    --nav-logo-return-top: 3rem;
+  }
+}
+@media screen and (max-width: 991px) {
+  :root {
+    --transition-dial-bottom: 2rem;
+  }
+}
+@media screen and (max-width: 767px) {
+  :root {
+    --transition-dial-bottom: 2rem;
+  }
+}
+@media screen and (max-width: 479px) {
+  :root {
+    --transition-dial-bottom: 2rem;
+  }
+}
 
 /* ====== Stage (shared home + case + about) ====== */
 [data-barba-namespace="home"] .dial_component,
@@ -128,13 +203,13 @@
   will-change: transform;
 }
 
-/* Foreground circle — home: max 50svh × 70vw, min 180px */
+/* Foreground circle — home: uses dial-large */
 [data-barba-namespace="home"] .dial_layer-fg {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
-  height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+  width: var(--dial-large-width);
+  height: var(--dial-large-height);
   display: grid;
   place-items: center;
   z-index: 3;
@@ -171,11 +246,19 @@
   overflow: hidden;
 }
 
+/* Dial size variables: dial-large (homepage), dial-small (about). Editable by breakpoint. */
+:root {
+  --dial-large-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+  --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+  --dial-small-width: 6rem;
+  --dial-small-height: 6rem;
+}
+
 /* CSS Custom Properties for GSAP animations (responsive) */
 :root {
-  /* Home state values — max 50svh × 70vw, min 180px (matches .dial_layer-fg on home) */
-  --dial-home-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
-  --dial-home-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+  /* Home state values — alias to dial-large so GSAP/orchestrator keep working */
+  --dial-home-width: var(--dial-large-width);
+  --dial-home-height: var(--dial-large-height);
   --dial-home-border-radius: 1000rem;
   --dial-home-aspect-ratio: 1;
   
@@ -186,7 +269,35 @@
   --dial-case-aspect-ratio: auto;
 }
 
-/* Responsive breakpoints - case-study only (home uses fluid clamp) */
+/* Breakpoint overrides: dial-large and dial-small (edit per viewport) */
+@media (max-width: 991px) {
+  :root {
+    --dial-large-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+    --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+    --dial-small-width: 6rem;
+    --dial-small-height: 6rem;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --dial-large-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+    --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+    --dial-small-width: 6rem;
+    --dial-small-height: 6rem;
+  }
+}
+
+@media (max-width: 479px) {
+  :root {
+    --dial-large-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+    --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+    --dial-small-width: 6rem;
+    --dial-small-height: 6rem;
+  }
+}
+
+/* Responsive breakpoints - case-study only (home uses dial-large) */
 @media (max-width: 991px) {
   :root {
     --dial-case-width: 90vw;
@@ -427,15 +538,15 @@
 }
 
 /* ====== Transition dial (static teal ticks for page transitions) ====== */
-/* Scale by TICK_RING_EXPAND (~1.184) so tick ring matches homepage dial size */
+/* Scale by TICK_RING_EXPAND (~1.184) so tick ring matches homepage dial size; uses dial-large */
 .transition-dial {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: calc(clamp(180px, min(50svh, 70vw), min(50svh, 70vw)) * 1.184);
-  height: calc(clamp(180px, min(50svh, 70vw), min(50svh, 70vw)) * 1.184);
-  min-width: 6rem;
-  min-height: 6rem;
+  width: calc(var(--dial-large-width) * 1.184);
+  height: calc(var(--dial-large-height) * 1.184);
+  min-width: var(--dial-small-width);
+  min-height: var(--dial-small-height);
   pointer-events: none;
 }
 
@@ -458,18 +569,18 @@
 
 .about_dial-wrapper .about_dial-link {
   display: block;
-  width: 6rem;
-  height: 6rem;
+  width: var(--dial-small-width);
+  height: var(--dial-small-height);
 }
 
 [data-barba-namespace="about"] .about_dial-wrapper .dial_layer-ticks,
 [data-barba-namespace="about"] .about_dial-wrapper #dial_ticks-canvas {
   position: relative !important;
   inset: auto !important;
-  width: 6rem !important;
-  height: 6rem !important;
-  min-width: 6rem !important;
-  min-height: 6rem !important;
+  width: var(--dial-small-width) !important;
+  height: var(--dial-small-height) !important;
+  min-width: var(--dial-small-width) !important;
+  min-height: var(--dial-small-height) !important;
   aspect-ratio: 1 !important;
   pointer-events: none;
   transform-origin: 50% 50%;

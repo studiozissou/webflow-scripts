@@ -853,6 +853,20 @@
         RHP.views[ns].init(data.next.container);
       }
 
+      // Case study: apply video handoff from home (seek to home currentTime + transition duration, then play)
+      if (ns === 'case' && RHP.videoState && RHP.videoState.caseHandoff && data.next && data.next.container) {
+        var handoff = RHP.videoState.caseHandoff;
+        var seekTime = (handoff.currentTime || 0) + (handoff.transitionDuration || 0.6);
+        if (typeof handoff.index === 'number') RHP.videoState.lastCaseIndex = handoff.index;
+        var caseContainer = data.next.container;
+        var caseVideoEl = caseContainer.querySelector('.section_case-video video') || caseContainer.querySelector('.dial_fg-video') || caseContainer.querySelector('.dial_video-wrap video');
+        if (caseVideoEl) {
+          caseVideoEl.currentTime = seekTime;
+          caseVideoEl.play().catch(function() {});
+        }
+        RHP.videoState.caseHandoff = null;
+      }
+
       // Page-specific: load Overland AI CSS + script when navigating to it via Barba (if not loaded on initial page)
       if (ns === 'case' && /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname)) {
         var baseUrl = RHP.getScriptBaseUrl && RHP.getScriptBaseUrl();
@@ -950,6 +964,18 @@
           to: { namespace: ['home'] },
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
+            // Capture case study video position for handoff back to home dial
+            if (ns === 'case' && RHP.videoState) {
+              const container = data.current?.container || document;
+              const caseVideo = container.querySelector('.section_case-video video') || container.querySelector('.dial_fg-video') || container.querySelector('.dial_video-wrap video');
+              const idx = RHP.videoState.lastCaseIndex;
+              if (caseVideo && typeof idx === 'number') {
+                RHP.videoState.caseHandoff = {
+                  index: idx,
+                  currentTime: caseVideo.currentTime || 0
+                };
+              }
+            }
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
           },
           leave(data) {
@@ -962,12 +988,25 @@
             runAfterEnter(data);
           }
         },
-        // Default transition (all other routes)
+        // Default transition (all other routes, including home → case)
         {
           name: 'rhp-core',
 
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
+            // Home → case: capture dial video position for handoff to case study page
+            if (ns === 'home' && RHP.videoState && RHP.workDial) {
+              const container = data.current?.container || document;
+              const fgVideo = container.querySelector('.dial_fg-video') || document.querySelector('.dial_fg-video');
+              const idx = RHP.workDial.getActiveIndex();
+              if (fgVideo && typeof idx === 'number') {
+                RHP.videoState.caseHandoff = {
+                  index: idx,
+                  currentTime: fgVideo.currentTime || 0,
+                  transitionDuration: 0.6
+                };
+              }
+            }
             if (ns && RHP.views[ns]?.destroy) {
               RHP.views[ns].destroy();
             }

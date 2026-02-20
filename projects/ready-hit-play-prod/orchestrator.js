@@ -629,40 +629,6 @@
         .querySelector('[data-barba="container"]')
         ?.getAttribute('data-barba-namespace') || '';
 
-    function runLogoLeaveAnimation() {
-      const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
-      const logoWrapper = scope.querySelector('.nav_logo-wrapper-2');
-      const embeds = logoWrapper ? logoWrapper.querySelectorAll('.nav_logo-embed') : [];
-      if (!logoWrapper || !window.gsap) return Promise.resolve();
-
-      const rect = logoWrapper.getBoundingClientRect();
-      gsap.set(logoWrapper, {
-        position: 'fixed',
-        left: rect.left,
-        top: rect.top,
-        zIndex: 9999
-      });
-
-      const duration = 0.7;
-      const ease = 'power2.out';
-      const moveTween = gsap.to(logoWrapper, {
-        left: '50%',
-        top: '50%',
-        xPercent: -50,
-        yPercent: -50,
-        duration,
-        ease
-      });
-      const heightTween = embeds.length
-        ? gsap.to(embeds, { height: '10.125rem', duration, ease })
-        : null;
-
-      return Promise.all([
-        moveTween.then ? moveTween.then() : new Promise(function(r) { moveTween.eventCallback('onComplete', r); }),
-        heightTween ? (heightTween.then ? heightTween.then() : new Promise(function(r) { heightTween.eventCallback('onComplete', r); })) : Promise.resolve()
-      ]);
-    }
-
     function runCaseDialShrinkAnimation(data) {
       const dialFg = data.current?.container?.querySelector('.dial_layer-fg');
       if (!dialFg || !window.gsap) return Promise.resolve();
@@ -687,48 +653,6 @@
         overwrite: true
       });
       return tween.then ? tween.then() : new Promise(function(r) { tween.eventCallback('onComplete', r); });
-    }
-
-    function runLogoReturnAnimation() {
-      var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
-      wrapper.classList.remove('rhp-nav-hidden');
-      var logoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
-      var embeds = logoWrapper ? logoWrapper.querySelectorAll('.nav_logo-embed') : [];
-      if (!logoWrapper || !window.gsap) return Promise.resolve();
-
-      var getVar = function(name, fallback) {
-        var v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
-        return v || fallback;
-      };
-      var topValue = getVar('--nav-logo-return-top', '3rem');
-      var heightValue = getVar('--nav-logo-return-embed-height', '2rem');
-
-      gsap.set(logoWrapper, {
-        position: 'fixed',
-        left: '50%',
-        top: '50%',
-        xPercent: -50,
-        yPercent: -50,
-        zIndex: 9999
-      });
-      if (embeds.length) gsap.set(embeds, { height: '10.125rem' });
-
-      var duration = 0.7;
-      var ease = 'power2.out';
-      var moveTween = gsap.to(logoWrapper, {
-        top: topValue,
-        yPercent: 0,
-        duration: duration,
-        ease: ease
-      });
-      var heightTween = embeds.length
-        ? gsap.to(embeds, { height: heightValue, duration: duration, ease: ease })
-        : null;
-
-      return Promise.all([
-        moveTween.then ? moveTween.then() : new Promise(function(r) { moveTween.eventCallback('onComplete', r); }),
-        heightTween ? (heightTween.then ? heightTween.then() : new Promise(function(r) { heightTween.eventCallback('onComplete', r); })) : Promise.resolve()
-      ]);
     }
 
     function runAfterEnter(data) {
@@ -920,6 +844,312 @@
       } catch (e) {}
     }
 
+    /* NOTE: Logo width vs max-width timing — the div can still reach max-width before the end of the tween on some viewports; revisit so width and position both finish in sync. */
+    function runHomeToAboutTransition(data) {
+      const container = data.current?.container || document;
+      const aboutTransition = container.querySelector('.about-transition');
+      if (!aboutTransition || !window.gsap) return Promise.resolve();
+      const gsap = window.gsap;
+
+      const transitionLogo =
+        container.querySelector('#transition-logo') ||
+        container.querySelector('.about-transition_nav-logo-wrapper') ||
+        container.querySelector('.about-transition .nav_logo-wrapper-2.is-about-transition');
+
+      // Account for scrollbar so logo and dial align with about page content (content-centred)
+      var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbarWidth <= 0) {
+        var prevOverflow = document.documentElement.style.overflow;
+        document.documentElement.style.overflow = 'scroll';
+        scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        document.documentElement.style.overflow = prevOverflow;
+      }
+      var scrollbarOffsetPx = Math.round(scrollbarWidth / 2);
+
+      gsap.set(aboutTransition, { display: 'flex', opacity: 0 });
+
+      const overlayTween = gsap.to(aboutTransition, {
+        opacity: 1,
+        duration: 0.3,
+        ease: 'linear'
+      });
+
+      let logoPromise = Promise.resolve();
+      if (transitionLogo) {
+        const getVar = function(name, fallback) {
+          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+          return v || fallback;
+        };
+        const vw = window.innerWidth * 0.01;
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const parseSize = function(str) {
+          if (!str || str === 'auto') return Infinity;
+          var m = str.match(/min\((\d+)vw,\s*([\d.]+)rem\)/);
+          if (m) return Math.min(parseFloat(m[1]) * vw, parseFloat(m[2]) * rem);
+          if (str.includes('vw')) return parseFloat(str) * vw;
+          if (str.includes('rem')) return parseFloat(str) * rem;
+          if (str.includes('px')) return parseFloat(str);
+          return Infinity;
+        };
+        const logoSmallWidth = getVar('--logo-small-width', '16rem');
+        const logoSmallHeight = getVar('--logo-small-height', '2rem');
+        const logoLargeWidth = getVar('--logo-large-width', '90vw');
+        const logoLargeHeight = getVar('--logo-large-height', 'auto');
+        const logoLargeMaxWidth = getVar('--logo-large-max-width', '93rem');
+        const largeWidthPx = parseSize(logoLargeWidth);
+        const maxWidthPx = parseSize(logoLargeMaxWidth);
+        const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
+
+        gsap.set(transitionLogo, {
+          position: 'fixed',
+          left: '50%',
+          top: '2vh',
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          yPercent: 0,
+          width: logoSmallWidth,
+          height: logoSmallHeight,
+          maxWidth: 'none',
+          transformOrigin: '50% 50%',
+          opacity: 1,
+          zIndex: 9998
+        });
+
+        const logoTween = gsap.to(transitionLogo, {
+          left: '50%',
+          top: '50%',
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          yPercent: -50,
+          width: finalWidthPx,
+          height: logoLargeHeight,
+          maxWidth: logoLargeMaxWidth,
+          opacity: 0.4,
+          duration: 1.5,
+          ease: 'linear',
+          overwrite: true
+        });
+        logoPromise = logoTween.then ? logoTween.then() : new Promise(function(r) { logoTween.eventCallback('onComplete', r); });
+      }
+
+      let dialPromise = Promise.resolve();
+      const transitionDial = container.querySelector('.transition-dial');
+      if (transitionDial && window.gsap) {
+        const getVar = function(name, fallback) {
+          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+          return v || fallback;
+        };
+        const rect = transitionDial.getBoundingClientRect();
+        const bottomFromViewport = window.innerHeight - rect.bottom;
+        const dialSmallW = getVar('--dial-small-width', '6rem');
+        const dialSmallH = getVar('--dial-small-height', '6rem');
+        gsap.set(transitionDial, {
+          position: 'fixed',
+          left: '50%',
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          bottom: bottomFromViewport,
+          top: 'auto',
+          right: 'auto',
+          width: 'calc(var(--dial-large-width) * 1.184)',
+          height: 'calc(var(--dial-large-height) * 1.184)',
+          zIndex: 9997
+        });
+        const transitionDialCanvas = transitionDial.querySelector('.transition-dial_canvas');
+        if (transitionDialCanvas) {
+          gsap.set(transitionDialCanvas, { width: '100%', height: '100%' });
+        }
+        const dialTween = gsap.to(transitionDial, {
+          bottom: getVar('--transition-dial-bottom', '2rem'),
+          width: dialSmallW,
+          height: dialSmallH,
+          x: -scrollbarOffsetPx,
+          duration: 1.5,
+          ease: 'power3.out',
+          overwrite: true
+        });
+        dialPromise = dialTween.then ? dialTween.then() : new Promise(function(r) { dialTween.eventCallback('onComplete', r); });
+      }
+
+      return Promise.all([
+        overlayTween.then ? overlayTween.then() : new Promise(function(r) { overlayTween.eventCallback('onComplete', r); }),
+        logoPromise,
+        dialPromise
+      ]).then(function() {});
+    }
+
+    function runAboutToHomeTransition(data) {
+      const container = data.current?.container || document;
+      const homeTransition =
+        container.querySelector('.home-transition') ||
+        container.querySelector('.about-transition');
+      if (!homeTransition || !window.gsap) return Promise.resolve();
+      const gsap = window.gsap;
+
+      const transitionLogo =
+        container.querySelector('#transition-logo') ||
+        container.querySelector('.home-transition_nav-logo-wrapper') ||
+        container.querySelector('.home-transition .nav_logo-wrapper-2') ||
+        container.querySelector('.about-transition_nav-logo-wrapper') ||
+        container.querySelector('.about-transition .nav_logo-wrapper-2');
+
+      // Account for scrollbar (content-centred)
+      var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbarWidth <= 0) {
+        var prevOverflow = document.documentElement.style.overflow;
+        document.documentElement.style.overflow = 'scroll';
+        scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        document.documentElement.style.overflow = prevOverflow;
+      }
+      var scrollbarOffsetPx = Math.round(scrollbarWidth / 2);
+
+      // Draw the dial in .transition-dial (about page doesn't init it by default)
+      RHP.transitionDial?.init?.(container);
+
+      let logoPromise = Promise.resolve();
+      if (transitionLogo) {
+        const getVar = function(name, fallback) {
+          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+          return v || fallback;
+        };
+        const vw = window.innerWidth * 0.01;
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const parseSize = function(str) {
+          if (!str || str === 'auto') return Infinity;
+          var m = str.match(/min\((\d+)vw,\s*([\d.]+)rem\)/);
+          if (m) return Math.min(parseFloat(m[1]) * vw, parseFloat(m[2]) * rem);
+          if (str.includes('vw')) return parseFloat(str) * vw;
+          if (str.includes('rem')) return parseFloat(str) * rem;
+          if (str.includes('px')) return parseFloat(str);
+          return Infinity;
+        };
+        const logoSmallWidth = getVar('--logo-small-width', '16rem');
+        const logoSmallHeight = getVar('--logo-small-height', '2rem');
+        const logoLargeWidth = getVar('--logo-large-width', '90vw');
+        const logoLargeHeight = getVar('--logo-large-height', 'auto');
+        const logoLargeMaxWidth = getVar('--logo-large-max-width', '93rem');
+        const largeWidthPx = parseSize(logoLargeWidth);
+        const maxWidthPx = parseSize(logoLargeMaxWidth);
+        const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
+        const logoReturnTop = getVar('--nav-logo-return-top', '2vh');
+
+        // Set logo to centred (viewport centre) before showing overlay so it doesn’t flash at top
+        gsap.set(transitionLogo, {
+          position: 'fixed',
+          left: '50%',
+          top: '50%',
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          yPercent: -50,
+          width: finalWidthPx,
+          height: logoLargeHeight,
+          maxWidth: logoLargeMaxWidth,
+          transformOrigin: '50% 50%',
+          opacity: 0.4,
+          zIndex: 9998
+        });
+      }
+
+      gsap.set(homeTransition, { display: 'flex', opacity: 0 });
+
+      const overlayTween = gsap.to(homeTransition, {
+        opacity: 1,
+        duration: 0.3,
+        ease: 'linear'
+      });
+
+      if (transitionLogo) {
+        const getVar = function(name, fallback) {
+          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+          return v || fallback;
+        };
+        const logoSmallWidth = getVar('--logo-small-width', '16rem');
+        const logoSmallHeight = getVar('--logo-small-height', '2rem');
+        const logoLargeMaxWidth = getVar('--logo-large-max-width', '93rem');
+        const logoReturnTop = getVar('--nav-logo-return-top', '2vh');
+        const vw = window.innerWidth * 0.01;
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const parseSize = function(str) {
+          if (!str || str === 'auto') return Infinity;
+          var m = str.match(/min\((\d+)vw,\s*([\d.]+)rem\)/);
+          if (m) return Math.min(parseFloat(m[1]) * vw, parseFloat(m[2]) * rem);
+          if (str.includes('vw')) return parseFloat(str) * vw;
+          if (str.includes('rem')) return parseFloat(str) * rem;
+          if (str.includes('px')) return parseFloat(str);
+          return Infinity;
+        };
+        const logoLargeWidth = getVar('--logo-large-width', '90vw');
+        const maxWidthPx = parseSize(logoLargeMaxWidth);
+        const largeWidthPx = parseSize(logoLargeWidth);
+        const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
+
+        const logoTween = gsap.to(transitionLogo, {
+          left: '50%',
+          top: logoReturnTop,
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          yPercent: 0,
+          width: logoSmallWidth,
+          height: logoSmallHeight,
+          maxWidth: 'none',
+          opacity: 1,
+          duration: 1.5,
+          ease: 'linear',
+          overwrite: true
+        });
+        logoPromise = logoTween.then ? logoTween.then() : new Promise(function(r) { logoTween.eventCallback('onComplete', r); });
+      }
+
+      let dialPromise = Promise.resolve();
+      const transitionDial = container.querySelector('.transition-dial');
+      if (transitionDial && window.gsap) {
+        const getVar = function(name, fallback) {
+          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+          return v || fallback;
+        };
+        const dialSmallW = getVar('--dial-small-width', '6rem');
+        const dialSmallH = getVar('--dial-small-height', '6rem');
+        const dialLargeW = 'calc(var(--dial-large-width) * 1.184)';
+        const dialLargeH = 'calc(var(--dial-large-height) * 1.184)';
+
+        gsap.set(transitionDial, {
+          position: 'fixed',
+          left: '50%',
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          bottom: getVar('--transition-dial-bottom', '2rem'),
+          top: 'auto',
+          right: 'auto',
+          width: dialSmallW,
+          height: dialSmallH,
+          zIndex: 9997
+        });
+        const transitionDialCanvas = transitionDial.querySelector('.transition-dial_canvas');
+        if (transitionDialCanvas) {
+          gsap.set(transitionDialCanvas, { width: '100%', height: '100%' });
+        }
+        const dialTween = gsap.to(transitionDial, {
+          top: '50%',
+          yPercent: -50,
+          bottom: 'auto',
+          width: dialLargeW,
+          height: dialLargeH,
+          duration: 1.5,
+          ease: 'power3.out',
+          overwrite: true
+        });
+        dialPromise = dialTween.then ? dialTween.then() : new Promise(function(r) { dialTween.eventCallback('onComplete', r); });
+      }
+
+      return Promise.all([
+        overlayTween.then ? overlayTween.then() : new Promise(function(r) { overlayTween.eventCallback('onComplete', r); }),
+        logoPromise,
+        dialPromise
+      ]).then(function() {
+        RHP.transitionDial?.destroy?.();
+      });
+    }
+
     barba.init({
       transitions: [
         {
@@ -930,8 +1160,8 @@
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
           },
-          leave() {
-            return runLogoLeaveAnimation();
+          leave(data) {
+            return runHomeToAboutTransition(data);
           },
           enter() {
             window.scrollTo(0, 0);
@@ -945,11 +1175,11 @@
           from: { namespace: ['about'] },
           to: { namespace: ['home'] },
           beforeLeave(data) {
-            var ns = data.current ? data.current.namespace : currentNs;
-            if (ns && RHP.views[ns] && RHP.views[ns].destroy) RHP.views[ns].destroy();
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
           },
-          leave() {
-            return runLogoReturnAnimation();
+          leave(data) {
+            return runAboutToHomeTransition(data);
           },
           enter() {
             window.scrollTo(0, 0);

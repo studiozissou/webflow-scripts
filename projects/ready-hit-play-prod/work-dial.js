@@ -9,9 +9,14 @@
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.2.13.1';
+  const WORK_DIAL_VERSION = '2026.2.20.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
+
+  // Global video state: playback position per index + case-study handoff (set by orchestrator)
+  if (typeof RHP.videoState === 'undefined') {
+    RHP.videoState = { byIndex: {}, caseHandoff: null };
+  }
 
   const SEL = {
     component: '.dial_component',
@@ -126,6 +131,21 @@
         alive = false;
         return;
       }
+
+      // Sliding window (active ± 1): two hidden videos preload prev/next for instant switch; save position before overwriting
+      const preloadPrev = document.createElement('video');
+      const preloadNext = document.createElement('video');
+      [preloadPrev, preloadNext].forEach(function (el) {
+        el.setAttribute('aria-hidden', 'true');
+        el.setAttribute('muted', '');
+        el.setAttribute('playsinline', '');
+        el.setAttribute('loop', '');
+        el.setAttribute('preload', 'auto');
+        el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
+        comp.appendChild(el);
+      });
+      cleanup.push(function () { preloadPrev.remove(); preloadNext.remove(); });
+      let loadWindowIndices = { prev: null, next: null };
 
       // Dynamic sector sizing
       const sectorSize = 360 / N;
@@ -267,10 +287,33 @@
         return 1 - (distFromCenter - flatZoneHalfAngle) / edgeZoneAngle;
       }
 
+      // Save playback state for an index (from a video element). Call before unloading or switching away.
+      function saveVideoStateToIndex(videoEl, index) {
+        if (!videoEl || !RHP.videoState) return;
+        try {
+          const ct = videoEl.currentTime;
+          const paused = videoEl.paused;
+          if (typeof index !== 'number') return;
+          RHP.videoState.byIndex[index] = { currentTime: ct, paused: !!paused };
+        } catch (e) {}
+      }
+
+      // Restore playback state for an index onto a video element; returns whether it was restored.
+      function restoreVideoStateFromIndex(videoEl, index) {
+        if (!videoEl || !RHP.videoState || typeof index !== 'number') return false;
+        const s = RHP.videoState.byIndex[index];
+        if (!s || typeof s.currentTime !== 'number') return false;
+        try {
+          videoEl.currentTime = s.currentTime;
+          return true;
+        } catch (e) { return false; }
+      }
+
       function applyActive(idx) {
         idx = mod(idx, N);
         if (idx === state.lastIndex) return;
         const isInitial = state.lastIndex === -1;
+        const prevIndex = state.lastIndex;
         state.prevActiveIndex = state.lastIndex;
         state.lastIndex = idx;
         state.activeIndex = idx;
@@ -298,16 +341,58 @@
         const fgVideo = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
         const bgVideo = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
 
+        // Before switching: save current video playback state and pause
+        if (prevIndex >= 0 && fgVideo) {
+          saveVideoStateToIndex(fgVideo, prevIndex);
+          try { fgVideo.pause(); } catch (e) {}
+        }
+        if (prevIndex >= 0 && bgVideo && bgVideo.tagName === 'VIDEO') {
+          saveVideoStateToIndex(bgVideo, prevIndex);
+          try { bgVideo.pause(); } catch (e) {}
+        }
+
         // Foreground: set poster, then src
         setVideoSourceAndPoster(fgVideo, v, poster);
-
-        // Background: optional; only if it is a <video>
         if (bgVideo && bgVideo.tagName === 'VIDEO') {
           setVideoSourceAndPoster(bgVideo, v, poster);
         }
 
-        // Ensure mute/loop/autoplay after swaps
+        // Restore playback position for this index (e.g. from case handoff or previous sector visit)
+        const hadState = restoreVideoStateFromIndex(fgVideo, idx);
+        if (bgVideo && bgVideo.tagName === 'VIDEO') restoreVideoStateFromIndex(bgVideo, idx);
+
         enforceVideoPolicy(comp);
+
+        // Play (autoplay policy may still require user gesture on some devices)
+        const tryPlay = () => {
+          try {
+            if (!fgVideo.paused) return;
+            fgVideo.play().catch(function() {});
+          } catch (e) {}
+        };
+        if (fgVideo.readyState >= 2) tryPlay();
+        else fgVideo.addEventListener('loadedmetadata', tryPlay, { once: true });
+        if (bgVideo && bgVideo.tagName === 'VIDEO') {
+          if (bgVideo.readyState >= 2) try { bgVideo.play().catch(function() {}); } catch (e) {}
+          else bgVideo.addEventListener('loadedmetadata', function() { try { bgVideo.play().catch(function() {}); } catch (e) {}; }, { once: true });
+        }
+
+        // Sliding window: keep active ± 1 loaded in hidden preload elements; save position before overwriting
+        const newPrev = mod(idx - 1, N);
+        const newNext = mod(idx + 1, N);
+        const inWindow = function (i) { return i === idx || i === newPrev || i === newNext; };
+        if (loadWindowIndices.prev !== null && !inWindow(loadWindowIndices.prev)) {
+          saveVideoStateToIndex(preloadPrev, loadWindowIndices.prev);
+        }
+        if (loadWindowIndices.next !== null && !inWindow(loadWindowIndices.next)) {
+          saveVideoStateToIndex(preloadNext, loadWindowIndices.next);
+        }
+        const urlPrev = (items[newPrev] && items[newPrev].getAttribute('data-video')) || '';
+        const urlNext = (items[newNext] && items[newNext].getAttribute('data-video')) || '';
+        if (urlPrev && preloadPrev.src !== urlPrev) { preloadPrev.src = urlPrev; try { preloadPrev.load(); } catch (e) {} }
+        if (urlNext && preloadNext.src !== urlNext) { preloadNext.src = urlNext; try { preloadNext.load(); } catch (e) {} }
+        loadWindowIndices.prev = newPrev;
+        loadWindowIndices.next = newNext;
       }
 
       function resize() {
@@ -560,6 +645,25 @@
       // Boot
       resize();
       applyActive(0);
+
+      // If returning from case study, restore handoff index and playback position
+      if (RHP.videoState && RHP.videoState.caseHandoff) {
+        const h = RHP.videoState.caseHandoff;
+        if (typeof h.index === 'number' && h.index >= 0 && h.index < N && typeof h.currentTime === 'number') {
+          applyActive(h.index);
+          const fg = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
+          const bg = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+          if (fg) {
+            fg.currentTime = h.currentTime;
+            try { fg.play().catch(function() {}); } catch (e) {}
+          }
+          if (bg && bg.tagName === 'VIDEO') {
+            bg.currentTime = h.currentTime;
+            try { bg.play().catch(function() {}); } catch (e) {}
+          }
+        }
+        RHP.videoState.caseHandoff = null;
+      }
 
       on(window, 'resize', resize, { passive: true });
       on(comp, 'pointermove', onPointerMove, { passive: true });

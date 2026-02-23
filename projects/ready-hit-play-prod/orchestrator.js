@@ -335,11 +335,14 @@
           RHP.lenis?.start();
           RHP.lenis?.resize();
         }
+
+        RHP.earthParallax?.init?.(container);
       },
 
       destroy() {
         if (!active) return;
         active = false;
+        RHP.earthParallax?.destroy?.();
         // Let global logic decide when to stop Lenis; no-op here.
       }
     };
@@ -763,6 +766,29 @@
       }
 
       if (ns === 'home') {
+        // #region agent log
+        (function() {
+          var prevNs = data.current ? data.current.namespace : null;
+          var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+          var nav = wrapper ? wrapper.querySelector('.nav') : null;
+          var cs = nav ? window.getComputedStyle(nav) : {};
+          var payload = { sessionId: '80aedb', location: 'orchestrator.js:runAfterEnter', message: 'entering home', data: { ns: ns, prevNs: prevNs, wrapperHasHomeReady: wrapper ? wrapper.classList.contains('rhp-home-ready') : false, wrapperHasNavHidden: wrapper ? wrapper.classList.contains('rhp-nav-hidden') : false, navFound: !!nav, navStyleVisibility: nav ? nav.style.visibility : '', navStyleOpacity: nav ? nav.style.opacity : '', navComputedDisplay: cs.display || '', navComputedVisibility: cs.visibility || '', navComputedOpacity: cs.opacity || '', homeIntroHasRun: !!(window.RHP && window.RHP.homeIntro && window.RHP.homeIntro.version) }, timestamp: Date.now(), hypothesisId: 'H1', runId: 'post-fix' };
+          fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify(payload) }).catch(function() {});
+        })();
+        // #endregion
+        var prevNs = data.current ? data.current.namespace : null;
+        if (prevNs && prevNs !== 'home' && data.next && data.next.container) {
+          RHP.homeIntro?.skip?.(data.next.container);
+          // #region agent log
+          (function() {
+            var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
+            var nav = wrapper ? wrapper.querySelector('.nav') : null;
+            var cs = nav ? window.getComputedStyle(nav) : {};
+            var payload = { sessionId: '80aedb', location: 'orchestrator.js:runAfterEnter:afterSkip', message: 'after homeIntro.skip', data: { navComputedDisplay: cs.display || '', navStyleDisplay: nav ? nav.style.display : '' }, timestamp: Date.now(), hypothesisId: 'H3', runId: 'post-fix' };
+            fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify(payload) }).catch(function() {});
+          })();
+          // #endregion
+        }
         RHP.lenis && RHP.lenis.stop();
         RHP.scroll.lock();
       } else {
@@ -774,6 +800,15 @@
       }
 
       if (ns && RHP.views[ns] && RHP.views[ns].init && data.next && data.next.container) {
+        // #region agent log
+        if (ns === 'home') {
+          (function() {
+            var prevNs = data.current ? data.current.namespace : null;
+            var payload = { sessionId: '80aedb', location: 'orchestrator.js:runAfterEnter:views.init', message: 'calling views.home.init (no intro run/skip on transition)', data: { ns: ns, prevNs: prevNs, introModePassed: false }, timestamp: Date.now(), hypothesisId: 'H2', runId: 'post-fix' };
+            fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify(payload) }).catch(function() {});
+          })();
+        }
+        // #endregion
         RHP.views[ns].init(data.next.container);
       }
 
@@ -925,7 +960,7 @@
           height: logoLargeHeight,
           maxWidth: logoLargeMaxWidth,
           opacity: 0.4,
-          duration: 1.5,
+          duration: 0.75,
           ease: 'linear',
           overwrite: true
         });
@@ -964,7 +999,7 @@
           width: dialSmallW,
           height: dialSmallH,
           x: -scrollbarOffsetPx,
-          duration: 1.5,
+          duration: 0.75,
           ease: 'power3.out',
           overwrite: true
         });
@@ -985,6 +1020,7 @@
         container.querySelector('.about-transition');
       if (!homeTransition || !window.gsap) return Promise.resolve();
       const gsap = window.gsap;
+      var leaveTransitionStart = Date.now();
 
       const transitionLogo =
         container.querySelector('#transition-logo') ||
@@ -1002,9 +1038,6 @@
         document.documentElement.style.overflow = prevOverflow;
       }
       var scrollbarOffsetPx = Math.round(scrollbarWidth / 2);
-
-      // Draw the dial in .transition-dial (about page doesn't init it by default)
-      RHP.transitionDial?.init?.(container);
 
       let logoPromise = Promise.resolve();
       if (transitionLogo) {
@@ -1041,6 +1074,7 @@
           xPercent: -50,
           x: -scrollbarOffsetPx,
           yPercent: -50,
+          y: 0,
           width: finalWidthPx,
           height: logoLargeHeight,
           maxWidth: logoLargeMaxWidth,
@@ -1065,6 +1099,8 @@
         };
         const logoSmallWidth = getVar('--logo-small-width', '16rem');
         const logoSmallHeight = getVar('--logo-small-height', '2rem');
+        const logoLargeWidth = getVar('--logo-large-width', '90vw');
+        const logoLargeHeight = getVar('--logo-large-height', 'auto');
         const logoLargeMaxWidth = getVar('--logo-large-max-width', '93rem');
         const logoReturnTop = getVar('--nav-logo-return-top', '2vh');
         const vw = window.innerWidth * 0.01;
@@ -1078,74 +1114,150 @@
           if (str.includes('px')) return parseFloat(str);
           return Infinity;
         };
-        const logoLargeWidth = getVar('--logo-large-width', '90vw');
+        // Parse top offset to px: 2vh = 2% of viewport height; 3rem at 1920+ (CSS handles breakpoint)
+        const parseTopToPx = function(str) {
+          if (!str) return window.innerHeight * 0.02;
+          if (str.includes('vh')) return parseFloat(str) * window.innerHeight / 100;
+          if (str.includes('rem')) return parseFloat(str) * rem;
+          if (str.includes('px')) return parseFloat(str);
+          return window.innerHeight * 0.02;
+        };
         const maxWidthPx = parseSize(logoLargeMaxWidth);
         const largeWidthPx = parseSize(logoLargeWidth);
         const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
 
-        const logoTween = gsap.to(transitionLogo, {
-          left: '50%',
-          top: logoReturnTop,
-          xPercent: -50,
-          x: -scrollbarOffsetPx,
-          yPercent: 0,
-          width: logoSmallWidth,
-          height: logoSmallHeight,
-          maxWidth: 'none',
-          opacity: 1,
-          duration: 1.5,
-          ease: 'linear',
-          overwrite: true
-        });
+        // Distance from top of #transition-logo to top of viewport (logo is already centred from gsap.set above)
+        const rect = transitionLogo.getBoundingClientRect();
+        const distanceFromViewportTop = rect.top;
+        const targetTopPx = parseTopToPx(logoReturnTop);
+        const translateY = targetTopPx - distanceFromViewportTop;
+
+        const logoTween = gsap.fromTo(
+          transitionLogo,
+          {
+            left: '50%',
+            top: '50%',
+            xPercent: -50,
+            x: -scrollbarOffsetPx,
+            yPercent: -50,
+            y: 0,
+            width: finalWidthPx,
+            height: logoLargeHeight,
+            maxWidth: logoLargeMaxWidth,
+            opacity: 0.4
+          },
+          {
+            left: '50%',
+            top: '50%',
+            xPercent: -50,
+            x: -scrollbarOffsetPx,
+            yPercent: -50,
+            y: translateY,
+            width: logoSmallWidth,
+            height: logoSmallHeight,
+            maxWidth: 'none',
+            opacity: 1,
+            duration: 0.75,
+            ease: 'linear',
+            overwrite: true
+          }
+        );
         logoPromise = logoTween.then ? logoTween.then() : new Promise(function(r) { logoTween.eventCallback('onComplete', r); });
       }
 
       let dialPromise = Promise.resolve();
-      const transitionDial = container.querySelector('.transition-dial');
-      if (transitionDial && window.gsap) {
+      // About page dial: animate .about_dial-wrapper (contains #dial_ticks-canvas), not .transition-dial
+      const aboutDialWrapper = container.querySelector('.about_dial-wrapper');
+      if (aboutDialWrapper && window.gsap) {
         const getVar = function(name, fallback) {
           const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
           return v || fallback;
         };
-        const dialSmallW = getVar('--dial-small-width', '6rem');
-        const dialSmallH = getVar('--dial-small-height', '6rem');
-        const dialLargeW = 'calc(var(--dial-large-width) * 1.184)';
-        const dialLargeH = 'calc(var(--dial-large-height) * 1.184)';
+        var aboutDialLink = aboutDialWrapper.querySelector('.about_dial-link');
+        var aboutDialCanvas = aboutDialWrapper.querySelector('#dial_ticks-canvas');
+        // Measure the visible dial (link or canvas), not the full-width wrapper, so we don't jump to left: 0
+        const dialEl = aboutDialLink || aboutDialCanvas || aboutDialWrapper;
+        const rect = dialEl.getBoundingClientRect();
 
-        gsap.set(transitionDial, {
+        // Large dial size in px: matches CSS clamp(180px, min(50svh, 70vw), ...) * 1.184
+        var dialLargeBase = Math.max(180, Math.min(window.innerHeight * 0.5, window.innerWidth * 0.7));
+        var largeWidthPx = dialLargeBase * 1.184;
+        var largeHeightPx = dialLargeBase * 1.184;
+
+        // Final position: centre of viewport (use left/top so nothing can clear a transform)
+        var centerLeft = (window.innerWidth / 2) - (largeWidthPx / 2) - scrollbarOffsetPx;
+        var centerTop = (window.innerHeight / 2) - (largeHeightPx / 2);
+
+        gsap.set(aboutDialWrapper, {
           position: 'fixed',
-          left: '50%',
-          xPercent: -50,
-          x: -scrollbarOffsetPx,
-          bottom: getVar('--transition-dial-bottom', '2rem'),
-          top: 'auto',
+          left: rect.left,
+          top: rect.top,
           right: 'auto',
-          width: dialSmallW,
-          height: dialSmallH,
+          bottom: 'auto',
+          width: rect.width,
+          height: rect.height,
+          clearProps: 'transform',
           zIndex: 9997
         });
-        const transitionDialCanvas = transitionDial.querySelector('.transition-dial_canvas');
-        if (transitionDialCanvas) {
-          gsap.set(transitionDialCanvas, { width: '100%', height: '100%' });
+        // Override [data-barba-namespace="about"] .about_dial-wrapper #dial_ticks-canvas (and .dial_layer-ticks) !important rules so they can grow with the wrapper
+        function forceFillWithImportant(el) {
+          if (!el) return;
+          el.style.setProperty('width', '100%', 'important');
+          el.style.setProperty('height', '100%', 'important');
+          el.style.setProperty('min-width', '0', 'important');
+          el.style.setProperty('min-height', '0', 'important');
         }
-        const dialTween = gsap.to(transitionDial, {
-          top: '50%',
-          yPercent: -50,
-          bottom: 'auto',
-          width: dialLargeW,
-          height: dialLargeH,
-          duration: 1.5,
-          ease: 'power3.out',
-          overwrite: true
-        });
+        if (aboutDialLink) { gsap.set(aboutDialLink, { width: '100%', height: '100%' }); forceFillWithImportant(aboutDialLink); }
+        if (aboutDialCanvas) { gsap.set(aboutDialCanvas, { width: '100%', height: '100%' }); forceFillWithImportant(aboutDialCanvas); }
+        var dialLayerTicks = aboutDialWrapper.querySelector('.dial_layer-ticks');
+        forceFillWithImportant(dialLayerTicks);
+
+        const dialTween = gsap.fromTo(
+          aboutDialWrapper,
+          {
+            left: rect.left,
+            top: rect.top,
+            right: 'auto',
+            bottom: 'auto',
+            width: rect.width,
+            height: rect.height
+          },
+          {
+            left: centerLeft,
+            top: centerTop,
+            right: 'auto',
+            bottom: 'auto',
+            width: largeWidthPx,
+            height: largeHeightPx,
+            duration: 0.75,
+            ease: 'power3.out',
+            overwrite: true,
+            onUpdate: function() {
+              RHP.aboutDialTicks?.resize?.();
+            },
+            onComplete: function() {
+              requestAnimationFrame(function() {
+                RHP.aboutDialTicks?.resize?.();
+              });
+            }
+          }
+        );
         dialPromise = dialTween.then ? dialTween.then() : new Promise(function(r) { dialTween.eventCallback('onComplete', r); });
       }
 
+      var LOGO_DIAL_DURATION_MS = 750;
       return Promise.all([
         overlayTween.then ? overlayTween.then() : new Promise(function(r) { overlayTween.eventCallback('onComplete', r); }),
         logoPromise,
         dialPromise
       ]).then(function() {
+        var elapsed = Date.now() - leaveTransitionStart;
+        var wait = Math.max(0, LOGO_DIAL_DURATION_MS - elapsed);
+        if (wait > 0) {
+          return new Promise(function(r) { setTimeout(r, wait); }).then(function() {
+            RHP.transitionDial?.destroy?.();
+          });
+        }
         RHP.transitionDial?.destroy?.();
       });
     }

@@ -33,6 +33,11 @@
         document.querySelector('.heading-style-h7.is-step');
     }
 
+    /** .dial_bg-video may be inside .dial_component or elsewhere in container (e.g. dial_layer-bg moved in HTML) */
+    function getBgVideo(container) {
+      return container?.querySelector('.dial_bg-video') || document.querySelector('.dial_bg-video');
+    }
+
     function setInitialState(container) {
       const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
       const comp = container?.querySelector('.dial_component') || document.querySelector('.dial_component');
@@ -40,7 +45,7 @@
       const nav = scope?.querySelector('.nav');
       const dialTicks = comp?.querySelector('.dial_layer-ticks');
       const dialFg = comp?.querySelector('.dial_layer-fg');
-      const bgVideo = comp?.querySelector('.dial_bg-video');
+      const bgVideo = getBgVideo(container);
       const stepEl = getStepEl(container);
 
       // Dial and nav hidden
@@ -51,8 +56,9 @@
       }
       if (dialTicks) dialTicks.style.opacity = '0';
       if (dialFg) dialFg.style.opacity = '0';
-      if (bgVideo && window.gsap) {
-        window.gsap.set(bgVideo, { opacity: 0, filter: 'blur(0px)' });
+      if (bgVideo) {
+        try { bgVideo.pause(); } catch (e) {}
+        if (window.gsap) window.gsap.set(bgVideo, { opacity: 0, filter: 'blur(0px)' });
       }
 
       // .dial_layer-ui opacity 0
@@ -98,9 +104,9 @@
       });
     }
 
+    /** Called only after circle (tick) animation is complete. Fades in and starts .dial_bg-video. */
     function fadeInBgVideo(container) {
-      const comp = container?.querySelector('.dial_component') || document.querySelector('.dial_component');
-      const bgVideo = comp?.querySelector('.dial_bg-video');
+      const bgVideo = getBgVideo(container);
       if (!bgVideo || !window.gsap) return Promise.resolve();
 
       return new Promise((resolve) => {
@@ -207,18 +213,22 @@
       const nav = scope?.querySelector('.nav');
       const dialUi = comp?.querySelector('.dial_layer-ui');
       const dialTicks = comp?.querySelector('.dial_layer-ticks');
-      const bgVideo = comp?.querySelector('.dial_bg-video');
+      const bgVideo = getBgVideo(container);
       const dialFg = comp?.querySelector('.dial_layer-fg');
       const stepEl = getStepEl(container);
 
       if (nav) {
+        nav.style.display = '';
         nav.style.visibility = '';
         nav.style.opacity = '';
         nav.style.pointerEvents = '';
       }
       if (dialUi) window.gsap?.set(dialUi, { opacity: 1 });
       if (dialTicks) dialTicks.style.opacity = '1';
-      if (bgVideo) window.gsap?.set(bgVideo, { opacity: 1 });
+      if (bgVideo) {
+        window.gsap?.set(bgVideo, { opacity: 1 });
+        try { bgVideo.play(); } catch (e) {}
+      }
       if (dialFg && isMobile()) window.gsap?.set(dialFg, { opacity: 1 });
       if (stepEl) window.gsap?.set(stepEl, { opacity: 1 });
 
@@ -234,6 +244,9 @@
       version: HOME_INTRO_VERSION,
 
       run(container) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify({ sessionId: '80aedb', location: 'home-intro.js:run', message: 'homeIntro.run called', data: { hasRun }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
+        // #endregion
         if (hasRun) return;
         const gsap = window.gsap;
         const SplitText = window.SplitText;
@@ -285,6 +298,9 @@
       },
 
       skip(container) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify({ sessionId: '80aedb', location: 'home-intro.js:skip', message: 'homeIntro.skip called', data: {}, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
+        // #endregion
         hasRun = true;
         const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
         scope.classList.add('rhp-intro-started', 'rhp-cursor-ready', 'rhp-home-ready');

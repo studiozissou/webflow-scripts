@@ -41,6 +41,7 @@
       'about-text-lines.js',
       'home-intro.js',
       'intro-format.js',
+      'earth-parallax.js',
       'orchestrator.js',
       'utils.js'
     ]
@@ -145,6 +146,7 @@
         { module: 'about-dial-ticks.js', ok: typeof RHP.aboutDialTicks !== 'undefined', detail: RHP.aboutDialTicks?.version || '' },
         { module: 'about-text-lines.js', ok: typeof RHP.aboutTextLines !== 'undefined', detail: RHP.aboutTextLines?.version || '' },
         { module: 'intro-format.js', ok: typeof RHP.formatIntroText === 'function', detail: '—' },
+        { module: 'earth-parallax.js', ok: typeof RHP.earthParallax !== 'undefined', detail: RHP.earthParallax?.version || '' },
         { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: RHP.orchestratorVersion || '' },
         { module: 'utils.js', ok: true, detail: '—' }
       ];
@@ -163,6 +165,7 @@
         'about-dial-ticks.js': RHP.aboutDialTicks?.version || '—',
         'about-text-lines.js': RHP.aboutTextLines?.version || '—',
         'intro-format.js': '—',
+        'earth-parallax.js': RHP.earthParallax?.version || '—',
         'orchestrator.js': RHP.orchestratorVersion || '—',
         'utils.js': '—'
       };

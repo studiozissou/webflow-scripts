@@ -255,6 +255,16 @@
   /* pointer-events are managed in JS / via dial interaction */
 }
 
+/* Fix: case study dial renders at home size before JS expansion tween fires.
+   Set correct dimensions at CSS level so initial paint is already right. */
+[data-barba-namespace="case"] .dial_layer-fg {
+  width: var(--dial-case-width);
+  height: var(--dial-case-height);
+  border-radius: var(--dial-case-border-radius);
+  aspect-ratio: var(--dial-case-aspect-ratio);
+  overflow: auto;
+}
+
 /* Default: circular (home) — fills dial_layer-fg which is clamped to max 50svh × 70vw */
 .dial_video-wrap {
   width: 100%;

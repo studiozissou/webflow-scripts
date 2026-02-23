@@ -132,10 +132,10 @@
         return;
       }
 
-      // Sliding window (active ± 1): two hidden videos preload prev/next for instant switch; save position before overwriting
-      const preloadPrev = document.createElement('video');
-      const preloadNext = document.createElement('video');
-      [preloadPrev, preloadNext].forEach(function (el) {
+      // Sliding window (active ± 1): two pool videos preload prev/next; when switching to adjacent and ready, swap into visible slot for instant switch
+      let poolPrev = document.createElement('video');
+      let poolNext = document.createElement('video');
+      [poolPrev, poolNext].forEach(function (el) {
         el.setAttribute('aria-hidden', 'true');
         el.setAttribute('muted', '');
         el.setAttribute('playsinline', '');
@@ -144,8 +144,10 @@
         el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
         comp.appendChild(el);
       });
-      cleanup.push(function () { preloadPrev.remove(); preloadNext.remove(); });
+      cleanup.push(function () { poolPrev.remove(); poolNext.remove(); });
       let loadWindowIndices = { prev: null, next: null };
+      let visibleVideo = null; // set on first applyActive: the video element currently in fgWrap (may be original fg or a swapped-in pool element)
+      let bgVideoRef = null;   // persistent ref to .dial_bg-video for sync
 
       // Dynamic sector sizing
       const sectorSize = 360 / N;
@@ -338,65 +340,127 @@
         if (titleEl) titleEl.textContent = t;
         if (metaEl)  metaEl.textContent  = m;
 
-        const fgVideo = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
+        if (!visibleVideo) visibleVideo = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
         const bgVideo = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+        bgVideoRef = bgVideo;
 
         // Before switching: save current video playback state and pause
-        if (prevIndex >= 0 && fgVideo) {
-          saveVideoStateToIndex(fgVideo, prevIndex);
-          try { fgVideo.pause(); } catch (e) {}
+        if (prevIndex >= 0 && visibleVideo) {
+          saveVideoStateToIndex(visibleVideo, prevIndex);
+          try { visibleVideo.pause(); } catch (e) {}
         }
         if (prevIndex >= 0 && bgVideo && bgVideo.tagName === 'VIDEO') {
           saveVideoStateToIndex(bgVideo, prevIndex);
           try { bgVideo.pause(); } catch (e) {}
         }
 
-        // Foreground: set poster, then src
-        setVideoSourceAndPoster(fgVideo, v, poster);
+        const newPrev = mod(idx - 1, N);
+        const newNext = mod(idx + 1, N);
+        const urlPrev = (items[newPrev] && items[newPrev].getAttribute('data-video')) || '';
+        const urlNext = (items[newNext] && items[newNext].getAttribute('data-video')) || '';
+        const inWindow = function (i) { return i === idx || i === newPrev || i === newNext; };
+        if (loadWindowIndices.prev !== null && !inWindow(loadWindowIndices.prev)) saveVideoStateToIndex(poolPrev, loadWindowIndices.prev);
+        if (loadWindowIndices.next !== null && !inWindow(loadWindowIndices.next)) saveVideoStateToIndex(poolNext, loadWindowIndices.next);
+
+        const poolPrevReady = poolPrev.readyState >= 4;
+        const poolNextReady = poolNext.readyState >= 4;
+        const sameUrl = function (a, b) { return !!(a && b && (a === b || a.slice(-60) === b.slice(-60))); };
+        const poolPrevHasUrl = sameUrl(v, poolPrev.currentSrc || poolPrev.src);
+        const poolNextHasUrl = sameUrl(v, poolNext.currentSrc || poolNext.src);
+        let didSwap = false;
+
+        const poolHiddenStyle = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
+        var startPoolWhenReady = function (el) {
+          if (el.readyState >= 2) try { el.play().catch(function () {}); } catch (e) {}
+          else el.addEventListener('canplay', function () { try { el.play().catch(function () {}); } catch (e) {}; }, { once: true });
+        };
+        if (idx === loadWindowIndices.prev && poolPrevReady && poolPrevHasUrl && fgWrap.contains(visibleVideo)) {
+          restoreVideoStateFromIndex(poolPrev, idx); // seek while still hidden so no flash when visible
+          const oldVisible = visibleVideo;
+          visibleVideo.classList.remove('dial_fg-video');
+          fgWrap.removeChild(visibleVideo);
+          fgWrap.appendChild(poolPrev);
+          poolPrev.classList.add('dial_fg-video');
+          poolPrev.style.cssText = ''; // clear hidden style so video is visible (CSS fills the wrap)
+          poolPrev.removeAttribute('aria-hidden');
+          poolPrev.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
+          visibleVideo = poolPrev;
+          poolPrev = oldVisible;
+          comp.appendChild(poolPrev);
+          poolPrev.style.cssText = poolHiddenStyle;
+          poolPrev.setAttribute('aria-hidden', 'true');
+          if (urlPrev) { poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} startPoolWhenReady(poolPrev); }
+          if (urlNext && poolNext.src !== urlNext) { poolNext.poster = readPosterFromItem(items[newNext]) || ''; poolNext.src = urlNext; try { poolNext.load(); } catch (e) {} startPoolWhenReady(poolNext); }
+          didSwap = true;
+        } else if (idx === loadWindowIndices.next && poolNextReady && poolNextHasUrl && fgWrap.contains(visibleVideo)) {
+          restoreVideoStateFromIndex(poolNext, idx); // seek while still hidden so no flash when visible
+          const oldVisible = visibleVideo;
+          visibleVideo.classList.remove('dial_fg-video');
+          fgWrap.removeChild(visibleVideo);
+          fgWrap.appendChild(poolNext);
+          poolNext.classList.add('dial_fg-video');
+          poolNext.style.cssText = ''; // clear hidden style so video is visible (CSS fills the wrap)
+          poolNext.removeAttribute('aria-hidden');
+          poolNext.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
+          visibleVideo = poolNext;
+          poolNext = oldVisible;
+          comp.appendChild(poolNext);
+          poolNext.style.cssText = poolHiddenStyle;
+          poolNext.setAttribute('aria-hidden', 'true');
+          if (urlNext) { poolNext.poster = readPosterFromItem(items[newNext]) || ''; poolNext.src = urlNext; try { poolNext.load(); } catch (e) {} startPoolWhenReady(poolNext); }
+          if (urlPrev && poolPrev.src !== urlPrev) { poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} startPoolWhenReady(poolPrev); }
+          didSwap = true;
+        }
+
+        if (!didSwap) {
+          setVideoSourceAndPoster(visibleVideo, v, poster);
+        }
+
         if (bgVideo && bgVideo.tagName === 'VIDEO') {
           setVideoSourceAndPoster(bgVideo, v, poster);
         }
 
-        // Restore playback position for this index (e.g. from case handoff or previous sector visit)
-        const hadState = restoreVideoStateFromIndex(fgVideo, idx);
+        restoreVideoStateFromIndex(visibleVideo, idx);
         if (bgVideo && bgVideo.tagName === 'VIDEO') restoreVideoStateFromIndex(bgVideo, idx);
 
         enforceVideoPolicy(comp);
 
-        // Play (autoplay policy may still require user gesture on some devices)
         const tryPlay = () => {
           try {
-            if (!fgVideo.paused) return;
-            fgVideo.play().catch(function() {});
+            if (!visibleVideo.paused) return;
+            visibleVideo.play().catch(function() {});
           } catch (e) {}
         };
-        if (fgVideo.readyState >= 2) tryPlay();
-        else fgVideo.addEventListener('loadedmetadata', tryPlay, { once: true });
+        if (visibleVideo.readyState >= 2) tryPlay();
+        else visibleVideo.addEventListener('loadedmetadata', tryPlay, { once: true });
         if (bgVideo && bgVideo.tagName === 'VIDEO') {
           if (bgVideo.readyState >= 2) try { bgVideo.play().catch(function() {}); } catch (e) {}
           else bgVideo.addEventListener('loadedmetadata', function() { try { bgVideo.play().catch(function() {}); } catch (e) {}; }, { once: true });
         }
 
-        // Sliding window: keep active ± 1 loaded in hidden preload elements; save position before overwriting
-        const newPrev = mod(idx - 1, N);
-        const newNext = mod(idx + 1, N);
-        const inWindow = function (i) { return i === idx || i === newPrev || i === newNext; };
-        if (loadWindowIndices.prev !== null && !inWindow(loadWindowIndices.prev)) {
-          saveVideoStateToIndex(preloadPrev, loadWindowIndices.prev);
+        var prevSrcChanged = !!(urlPrev && poolPrev.src !== urlPrev);
+        var nextSrcChanged = !!(urlNext && poolNext.src !== urlNext);
+        if (urlPrev && poolPrev.src !== urlPrev) {
+          poolPrev.poster = readPosterFromItem(items[newPrev]) || '';
+          poolPrev.src = urlPrev;
+          try { poolPrev.load(); } catch (e) {}
+          startPoolWhenReady(poolPrev);
         }
-        if (loadWindowIndices.next !== null && !inWindow(loadWindowIndices.next)) {
-          saveVideoStateToIndex(preloadNext, loadWindowIndices.next);
+        if (urlNext && poolNext.src !== urlNext) {
+          poolNext.poster = readPosterFromItem(items[newNext]) || '';
+          poolNext.src = urlNext;
+          try { poolNext.load(); } catch (e) {}
+          startPoolWhenReady(poolNext);
         }
-        const urlPrev = (items[newPrev] && items[newPrev].getAttribute('data-video')) || '';
-        const urlNext = (items[newNext] && items[newNext].getAttribute('data-video')) || '';
-        if (urlPrev && preloadPrev.src !== urlPrev) { preloadPrev.src = urlPrev; try { preloadPrev.load(); } catch (e) {} }
-        if (urlNext && preloadNext.src !== urlNext) { preloadNext.src = urlNext; try { preloadNext.load(); } catch (e) {} }
         loadWindowIndices.prev = newPrev;
         loadWindowIndices.next = newNext;
       }
 
+      // Round to half-pixel for crisp 1px strokes (avoids blurry/pixelated lines when scaling)
+      function crisp(x) { return Math.round(x * 2) / 2; }
+
       function resize() {
-        const r = comp.getBoundingClientRect();
+        const r = canvas.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         geom.dpr = dpr;
 
@@ -404,7 +468,7 @@
         canvas.height = r.height * dpr;
         canvas.style.width = r.width + 'px';
         canvas.style.height = r.height + 'px';
-        ctx.setTransform(dpr,0,0,dpr,0,0);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         geom.cx = r.width / 2;
         geom.cy = r.height / 2;
@@ -529,8 +593,20 @@
         }
       }
 
+      // Keep .dial_fg-video in sync with .dial_bg-video (master) so both stay at the same playback position
+      function syncFgToBg() {
+        if (!visibleVideo || !bgVideoRef || bgVideoRef.tagName !== 'VIDEO') return;
+        const fgSrc = visibleVideo.currentSrc || visibleVideo.src;
+        const bgSrc = bgVideoRef.currentSrc || bgVideoRef.src;
+        if (!fgSrc || !bgSrc || fgSrc !== bgSrc) return;
+        const diff = Math.abs(visibleVideo.currentTime - bgVideoRef.currentTime);
+        if (diff > 0.05) try { visibleVideo.currentTime = bgVideoRef.currentTime; } catch (e) {}
+      }
+
       function draw() {
         if (!alive) return;
+
+        syncFgToBg();
 
         const w = canvas.clientWidth;
         const h = canvas.clientHeight;
@@ -565,10 +641,10 @@
             ctx.lineWidth = geom.barW;
             ctx.lineCap = 'round';
 
-            const x0 = geom.cx + Math.cos(a) * geom.innerR;
-            const y0 = geom.cy + Math.sin(a) * geom.innerR;
-            const x1 = geom.cx + Math.cos(a) * (geom.innerR + len);
-            const y1 = geom.cy + Math.sin(a) * (geom.innerR + len);
+            const x0 = crisp(geom.cx + Math.cos(a) * geom.innerR);
+            const y0 = crisp(geom.cy + Math.sin(a) * geom.innerR);
+            const x1 = crisp(geom.cx + Math.cos(a) * (geom.innerR + len));
+            const y1 = crisp(geom.cy + Math.sin(a) * (geom.innerR + len));
 
             ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
             ctx.globalAlpha = 1;
@@ -630,10 +706,10 @@
           ctx.lineWidth = geom.barW;
           ctx.lineCap = 'round';
 
-          const x0 = geom.cx + Math.cos(a) * geom.innerR;
-          const y0 = geom.cy + Math.sin(a) * geom.innerR;
-          const x1 = geom.cx + Math.cos(a) * (geom.innerR + len);
-          const y1 = geom.cy + Math.sin(a) * (geom.innerR + len);
+          const x0 = crisp(geom.cx + Math.cos(a) * geom.innerR);
+          const y0 = crisp(geom.cy + Math.sin(a) * geom.innerR);
+          const x1 = crisp(geom.cx + Math.cos(a) * (geom.innerR + len));
+          const y1 = crisp(geom.cy + Math.sin(a) * (geom.innerR + len));
 
           ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
           ctx.globalAlpha = 1;

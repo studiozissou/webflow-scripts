@@ -26,6 +26,8 @@
   };
   // Scale so tick ring (innerR + baseLen) fits within canvas; outerR = videoR * (1 + gapRatio + baseLenRatio)
   const TICK_RING_EXPAND = 1 + T.gapRatio + T.baseLenRatio;
+  // Inset so the ring and stroke don't get clipped at canvas edges (fixes cut-off at top/left/right)
+  const RING_INSET = 0.96;
 
   RHP.aboutDialTicks = (() => {
     let alive = false;
@@ -48,7 +50,9 @@
 
     function resize() {
       if (!canvas) return;
-      const r = canvas.getBoundingClientRect();
+      // Use parent size so during transition the canvas can stay 100% and we only update internal resolution
+      const parent = canvas.parentElement;
+      const r = parent ? parent.getBoundingClientRect() : canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       geom.dpr = dpr;
 
@@ -56,17 +60,18 @@
       const pxSize = Math.round(size * dpr);
       canvas.width = pxSize;
       canvas.height = pxSize;
-      canvas.style.width = size + 'px';
-      canvas.style.height = size + 'px';
+      canvas.style.setProperty('width', '100%', 'important');
+      canvas.style.setProperty('height', '100%', 'important');
 
       geom.cx = size / 2;
       geom.cy = size / 2;
-      // Scale videoR so tick ring fits within canvas (innerR + baseLen <= size/2)
-      geom.videoR = (size / 2) / TICK_RING_EXPAND;
+      // Scale videoR so tick ring fits with inset (avoids cut-off at edges from stroke/lineCap)
+      geom.videoR = ((size / 2) * RING_INSET) / TICK_RING_EXPAND;
       geom.gap = geom.videoR * T.gapRatio;
       geom.baseLen = geom.videoR * T.baseLenRatio;
       geom.barW = Math.max(1, geom.videoR * T.barWRatio);
       geom.innerR = geom.videoR + geom.gap;
+      if (alive && ctx) draw();
     }
 
     function draw() {
@@ -76,10 +81,12 @@
 
       ctx.resetTransform();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       const strokeStyle = `rgb(${T.teal.r},${T.teal.g},${T.teal.b})`;
       ctx.strokeStyle = strokeStyle;
-      ctx.lineWidth = geom.barW * scale;
+      ctx.lineWidth = Math.max(1.2, geom.barW * scale);
       ctx.lineCap = 'round';
 
       for (let i = 0; i < T.bars; i++) {
@@ -140,6 +147,6 @@
       ctx = null;
     }
 
-    return { init, destroy, version: ABOUT_DIAL_TICKS_VERSION };
+    return { init, destroy, resize, version: ABOUT_DIAL_TICKS_VERSION };
   })();
 })();

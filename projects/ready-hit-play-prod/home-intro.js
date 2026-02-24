@@ -104,9 +104,10 @@
       });
     }
 
-    /** Called only after circle (tick) animation is complete. Fades in and starts .dial_bg-video. */
+    /** Called only after circle (tick) animation is complete. Fades in and starts .dial_bg-video (or generic video in IDLE state). */
     function fadeInBgVideo(container) {
-      const bgVideo = getBgVideo(container);
+      // Use the generic video element during fresh-load intro (IDLE state); fall back to project bg video
+      const bgVideo = RHP.workDial?.getIntroVideoEl?.() || getBgVideo(container);
       if (!bgVideo || !window.gsap) return Promise.resolve();
 
       return new Promise((resolve) => {
@@ -244,9 +245,6 @@
       version: HOME_INTRO_VERSION,
 
       run(container) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify({ sessionId: '80aedb', location: 'home-intro.js:run', message: 'homeIntro.run called', data: { hasRun }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
-        // #endregion
         if (hasRun) return;
         const gsap = window.gsap;
         const SplitText = window.SplitText;
@@ -290,6 +288,7 @@
           (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-cursor-ready');
           RHP.cursor?.setLockedToDot?.(false);
           RHP.workDial?.setAttractionEnabled?.(true);
+          RHP.workDial?.onIntroComplete?.();
           await runNavAnimation(scope);
           (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-home-ready');
         };
@@ -298,9 +297,6 @@
       },
 
       skip(container) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify({ sessionId: '80aedb', location: 'home-intro.js:skip', message: 'homeIntro.skip called', data: {}, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
-        // #endregion
         hasRun = true;
         const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
         scope.classList.add('rhp-intro-started', 'rhp-cursor-ready', 'rhp-home-ready');

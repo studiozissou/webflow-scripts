@@ -7,9 +7,14 @@
    - CMS order: first 8 items in rendered order
    - Poster support: reads <img class="dial_cms-poster" ...> inside each .dial_cms-item
    - Barba-safe: init(container) / destroy()
+   - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.2.20.1';
+  const WORK_DIAL_VERSION = '2026.2.24.1';
+
+  const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
+
+  const DIAL_STATES = { IDLE: 'idle', ACTIVE: 'active', ENGAGED: 'engaged' };
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -87,6 +92,10 @@
     let introMode = false;
     let introComplete = false;
     let attractionEnabled = true;
+    let dialState = DIAL_STATES.IDLE;
+    let interactionUnlocked = false;
+    let genericVideo = null;
+    let genericVideoComp = null; // comp ref for setDialState (set during init)
 
     function on(el, evt, fn, opts) {
       if (!el) return;
@@ -106,6 +115,13 @@
       introMode = options.introMode === true;
       introComplete = !introMode;
       attractionEnabled = !introMode;
+
+      const hasHandoff = !!(RHP.videoState?.caseHandoff);
+      // Fresh load (introMode): stay IDLE until onIntroComplete() called
+      // Barba return with handoff: start ACTIVE but locked until orchestrator unlocks
+      // Barba return without handoff: immediately unlocked (no intro, no lock needed)
+      dialState = hasHandoff ? DIAL_STATES.ACTIVE : DIAL_STATES.IDLE;
+      interactionUnlocked = !introMode && !hasHandoff;
 
       const comp = container.querySelector(SEL.component) || document.querySelector(SEL.component);
       const canvas = container.querySelector(SEL.canvas) || document.querySelector(SEL.canvas);
@@ -145,6 +161,22 @@
         comp.appendChild(el);
       });
       cleanup.push(function () { poolPrev.remove(); poolNext.remove(); });
+
+      // Generic video: dedicated element for IDLE state (never touches project video pool)
+      genericVideo = document.createElement('video');
+      genericVideo.className = 'dial_generic-video';
+      genericVideo.src = GENERIC_VIDEO_URL;
+      genericVideo.muted = true;
+      genericVideo.loop = true;
+      genericVideo.setAttribute('playsinline', '');
+      genericVideo.setAttribute('preload', 'auto');
+      genericVideo.setAttribute('aria-hidden', 'true');
+      // Starts hidden; home-intro fades it in via getIntroVideoEl(), or setDialState shows it instantly
+      genericVideo.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;z-index:0;';
+      comp.appendChild(genericVideo);
+      cleanup.push(() => { genericVideo?.remove(); genericVideo = null; });
+      genericVideoComp = comp;
+      try { genericVideo.play().catch(() => {}); } catch(e) {}
       let loadWindowIndices = { prev: null, next: null };
       let visibleVideo = null; // set on first applyActive: the video element currently in fgWrap (may be original fg or a swapped-in pool element)
       let bgVideoRef = null;   // persistent ref to .dial_bg-video for sync
@@ -220,6 +252,43 @@
           } else {
             RHP.cursor.setState('dot', null, false);
           }
+        }
+      }
+
+      function setDialUiOpacity(targetOpacity) {
+        const dialUi = genericVideoComp?.querySelector('.dial_layer-ui') || document.querySelector('.dial_layer-ui');
+        if (!dialUi) return;
+        if (window.gsap) {
+          window.gsap.to(dialUi, { opacity: targetOpacity, duration: 0.3, ease: 'linear', overwrite: true });
+        } else {
+          dialUi.style.opacity = String(targetOpacity);
+        }
+      }
+
+      function setDialState(newState) {
+        if (dialState === newState) return;
+        dialState = newState;
+
+        const bgVideo = genericVideoComp?.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+
+        if (newState === DIAL_STATES.IDLE) {
+          // Show generic video, hide project bg video, hide dial UI
+          if (genericVideo) genericVideo.style.opacity = '1';
+          if (bgVideo) bgVideo.style.opacity = '0';
+          setDialUiOpacity(0);
+          if (!isMobile()) setCursorPlay(false);
+        } else if (newState === DIAL_STATES.ACTIVE) {
+          // Hide generic video, show project bg video, show dial UI
+          if (genericVideo) genericVideo.style.opacity = '0';
+          if (bgVideo) {
+            bgVideo.style.opacity = '1';
+            if (bgVideo.paused) try { bgVideo.play().catch(() => {}); } catch(e) {}
+          }
+          if (visibleVideo?.paused) try { visibleVideo.play().catch(() => {}); } catch(e) {}
+          setDialUiOpacity(1);
+        } else if (newState === DIAL_STATES.ENGAGED) {
+          // Dial UI remains visible in ENGAGED state
+          setDialUiOpacity(1);
         }
       }
 
@@ -487,6 +556,9 @@
         geom.innerR = geom.videoR + geom.gap;
         const outerBase = geom.innerR + geom.baseLen;
         geom.switchMaxR = outerBase + geom.maxLen + geom.videoR * T.switchBufferRatio;
+
+        // Idle threshold: 200px beyond outer tick ring edge at 3000px viewport, scaled by dial width
+        geom.idleThreshold = (geom.innerR + geom.baseLen) + (200 * (r.width / 3000));
       }
 
       // Hysteresis thresholds (prevents boundary flicker)
@@ -508,6 +580,17 @@
         state.rDist = Math.hypot(dx, dy);
         state.angDeg = angleTop0(dx, dy);
 
+        // IDLE ↔ ACTIVE transitions (only when interaction is unlocked)
+        if (interactionUnlocked) {
+          if (dialState === DIAL_STATES.IDLE && state.rDist <= geom.idleThreshold) {
+            setDialState(DIAL_STATES.ACTIVE);
+          } else if (dialState === DIAL_STATES.ACTIVE && state.rDist > geom.idleThreshold) {
+            setDialState(DIAL_STATES.IDLE);
+          } else if (dialState === DIAL_STATES.ENGAGED && state.rDist > geom.idleThreshold) {
+            setDialState(DIAL_STATES.IDLE);
+          }
+        }
+
         // Zone updates (hysteresis)
         if (!state.inInner && state.rDist <= H.innerEnter()) state.inInner = true;
         else if (state.inInner && state.rDist >= H.innerExit()) state.inInner = false;
@@ -515,8 +598,8 @@
         if (!state.inSwitch && state.rDist <= H.switchEnter() && state.rDist > geom.innerR) state.inSwitch = true;
         else if (state.inSwitch && (state.rDist >= H.switchExit() || state.rDist <= geom.innerR)) state.inSwitch = false;
 
-        // Desktop: switch only when inSwitch and NOT inInner
-        if (!isMobile() && state.inSwitch && !state.inInner) {
+        // Desktop: switch only when ACTIVE, inSwitch, and NOT inInner
+        if (!isMobile() && dialState === DIAL_STATES.ACTIVE && state.inSwitch && !state.inInner) {
           const idx = Math.floor(mod(state.angDeg + sectorOffset, 360) / sectorSize);
           applyActive(idx);
         }
@@ -524,7 +607,7 @@
         // Desktop cursor morph - use cursor.js API
         if (!isMobile() && RHP.cursor && RHP.cursor.setPosition) {
           RHP.cursor.setPosition(e.clientX, e.clientY);
-          setCursorPlay(state.inInner);
+          setCursorPlay(dialState === DIAL_STATES.ACTIVE && state.inInner);
         }
       }
 
@@ -534,6 +617,9 @@
         state.inInner = false;
         state.inSwitch = false;
         if (!isMobile()) setCursorPlay(false);
+        if (interactionUnlocked && dialState !== DIAL_STATES.IDLE) {
+          setDialState(DIAL_STATES.IDLE);
+        }
       }
 
       // Mobile dial: vertical drag rotates ticks only; update index per snap step (Variant B)
@@ -695,9 +781,11 @@
           inf *= state.attractionEase;
 
           const len = (geom.baseLen + (geom.maxLen - geom.baseLen) * inf) * tickScale;
-          const warm = state.inInner ? inf : 0;
-          const prevMix = sectorGradientMix(i, state.prevActiveIndex);
-          const currMix = sectorGradientMix(i, state.activeIndex);
+          // IDLE state: all ticks flat teal — no sector highlight, no orange
+          const isIdle = dialState === DIAL_STATES.IDLE;
+          const warm = (!isIdle && state.inInner) ? inf : 0;
+          const prevMix = isIdle ? 0 : sectorGradientMix(i, state.prevActiveIndex);
+          const currMix = isIdle ? 0 : sectorGradientMix(i, state.activeIndex);
           const sectorMix = (prevMix + (currMix - prevMix) * (state.sectorHighlightEase ?? 1));
           const finalWarm = Math.max(warm, sectorMix);
 
@@ -726,9 +814,12 @@
       if (RHP.videoState && RHP.videoState.caseHandoff) {
         const h = RHP.videoState.caseHandoff;
         if (typeof h.index === 'number' && h.index >= 0 && h.index < N && typeof h.currentTime === 'number') {
+          // dialState is already ACTIVE (set at init) — ensure project video is visible, generic hidden
+          if (genericVideo) genericVideo.style.opacity = '0';
+          const bg = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+          if (bg) bg.style.opacity = '1';
           applyActive(h.index);
           const fg = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
-          const bg = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
           if (fg) {
             fg.currentTime = h.currentTime;
             try { fg.play().catch(function() {}); } catch (e) {}
@@ -769,12 +860,17 @@
           const ease = 'linear';
 
           const toIdle = () => {
+            if (dialState !== DIAL_STATES.ENGAGED) return;
             gsap.to(dialFg, { opacity: 0, duration: dur, ease });
             if (bgVideo) gsap.to(bgVideo, { filter: 'blur(0px)', duration: dur, ease });
+            // Return to ACTIVE; next pointermove will correct to IDLE if mouse left proximity zone
+            setDialState(DIAL_STATES.ACTIVE);
           };
           const toHover = () => {
+            if (dialState !== DIAL_STATES.ACTIVE) return;
             gsap.to(dialFg, { opacity: 1, duration: dur, ease });
             if (bgVideo) gsap.to(bgVideo, { filter: 'blur(40px)', duration: dur, ease });
+            setDialState(DIAL_STATES.ENGAGED);
           };
 
           gsap.set(dialFg, { opacity: 0 });
@@ -803,6 +899,23 @@
       refs?._setupDialHover?.();
     }
 
+    // Called by home-intro after generic video fades in — unlocks state transitions
+    function onIntroComplete() {
+      interactionUnlocked = true;
+      // runNavAnimation showed dial-ui during intro; hide it now since we're in IDLE
+      setDialUiOpacity(0);
+    }
+
+    // Called by orchestrator after Barba return settle
+    function setInteractionUnlocked(enabled) {
+      interactionUnlocked = !!enabled;
+    }
+
+    // Returns the video element home-intro should fade in during the loading sequence
+    function getIntroVideoEl() {
+      return genericVideo;
+    }
+
     function setAttractionEnabled(enabled) {
       attractionEnabled = !!enabled;
     }
@@ -821,6 +934,6 @@
       return refs?.getActiveIndex?.() ?? 0;
     }
 
-    return { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, version: WORK_DIAL_VERSION };
+    return { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, setInteractionUnlocked, getIntroVideoEl, version: WORK_DIAL_VERSION };
   })();
 })();

@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-02-24",
+  "queue": [
+    {
+      "id": "bug-home-intro-inconsistent",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "high",
+      "status": "PENDING_REVIEW",
+      "title": "Homepage intro animation not firing consistently",
+      "created": "2026-02-24"
+    },
+    {
+      "id": "bug-video-sync-homepage",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "high",
+      "status": "PENDING_REVIEW",
+      "title": "Video sync issues on homepage",
+      "created": "2026-02-24"
+    },
+    {
+      "id": "bug-page-transitions-loose",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "medium",
+      "status": "PENDING_REVIEW",
+      "title": "Page transitions feel loose / sometimes fail between homepage and case studies",
+      "created": "2026-02-24"
+    },
+    {
+      "id": "bug-about-videos-not-playing",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "medium",
+      "status": "PENDING_REVIEW",
+      "title": "About page videos not playing",
+      "created": "2026-02-24"
+    },
+    {
+      "id": "bug-mobile-responsiveness",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "medium",
+      "status": "PENDING_REVIEW",
+      "title": "Mobile responsiveness needs work",
+      "created": "2026-02-24"
+    }
+  ]
+}

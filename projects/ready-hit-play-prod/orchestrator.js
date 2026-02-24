@@ -766,28 +766,9 @@
       }
 
       if (ns === 'home') {
-        // #region agent log
-        (function() {
-          var prevNs = data.current ? data.current.namespace : null;
-          var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
-          var nav = wrapper ? wrapper.querySelector('.nav') : null;
-          var cs = nav ? window.getComputedStyle(nav) : {};
-          var payload = { sessionId: '80aedb', location: 'orchestrator.js:runAfterEnter', message: 'entering home', data: { ns: ns, prevNs: prevNs, wrapperHasHomeReady: wrapper ? wrapper.classList.contains('rhp-home-ready') : false, wrapperHasNavHidden: wrapper ? wrapper.classList.contains('rhp-nav-hidden') : false, navFound: !!nav, navStyleVisibility: nav ? nav.style.visibility : '', navStyleOpacity: nav ? nav.style.opacity : '', navComputedDisplay: cs.display || '', navComputedVisibility: cs.visibility || '', navComputedOpacity: cs.opacity || '', homeIntroHasRun: !!(window.RHP && window.RHP.homeIntro && window.RHP.homeIntro.version) }, timestamp: Date.now(), hypothesisId: 'H1', runId: 'post-fix' };
-          fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify(payload) }).catch(function() {});
-        })();
-        // #endregion
         var prevNs = data.current ? data.current.namespace : null;
         if (prevNs && prevNs !== 'home' && data.next && data.next.container) {
           RHP.homeIntro?.skip?.(data.next.container);
-          // #region agent log
-          (function() {
-            var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
-            var nav = wrapper ? wrapper.querySelector('.nav') : null;
-            var cs = nav ? window.getComputedStyle(nav) : {};
-            var payload = { sessionId: '80aedb', location: 'orchestrator.js:runAfterEnter:afterSkip', message: 'after homeIntro.skip', data: { navComputedDisplay: cs.display || '', navStyleDisplay: nav ? nav.style.display : '' }, timestamp: Date.now(), hypothesisId: 'H3', runId: 'post-fix' };
-            fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify(payload) }).catch(function() {});
-          })();
-          // #endregion
         }
         RHP.lenis && RHP.lenis.stop();
         RHP.scroll.lock();
@@ -800,16 +781,15 @@
       }
 
       if (ns && RHP.views[ns] && RHP.views[ns].init && data.next && data.next.container) {
-        // #region agent log
-        if (ns === 'home') {
-          (function() {
-            var prevNs = data.current ? data.current.namespace : null;
-            var payload = { sessionId: '80aedb', location: 'orchestrator.js:runAfterEnter:views.init', message: 'calling views.home.init (no intro run/skip on transition)', data: { ns: ns, prevNs: prevNs, introModePassed: false }, timestamp: Date.now(), hypothesisId: 'H2', runId: 'post-fix' };
-            fetch('http://127.0.0.1:7242/ingest/c7231285-5727-42c8-878a-3343f6da51c0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '80aedb' }, body: JSON.stringify(payload) }).catch(function() {});
-          })();
-        }
-        // #endregion
+        // Read handoff flag BEFORE views.home.init() — work-dial.init() consumes and clears it
+        var hadCaseHandoff = ns === 'home' && !!(RHP.videoState?.caseHandoff);
+
         RHP.views[ns].init(data.next.container);
+
+        // Barba return with case handoff: interaction is locked in work-dial; unlock after settle
+        if (hadCaseHandoff) {
+          setTimeout(function() { RHP.workDial?.setInteractionUnlocked?.(true); }, 300);
+        }
       }
 
       // Case study: apply video handoff from home (seek to home currentTime + transition duration, then play)
@@ -1292,6 +1272,24 @@
           },
           leave(data) {
             return runAboutToHomeTransition(data);
+          },
+          enter() {
+            window.scrollTo(0, 0);
+          },
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        },
+        {
+          name: 'case-to-about',
+          from: { namespace: ['case'] },
+          to: { namespace: ['about'] },
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+          },
+          leave(data) {
+            return runHomeToAboutTransition(data);
           },
           enter() {
             window.scrollTo(0, 0);

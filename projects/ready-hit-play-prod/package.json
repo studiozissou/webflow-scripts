@@ -1,0 +1,20 @@
+{
+  "name": "ready-hit-play-prod",
+  "version": "1.0.0",
+  "description": "This folder contains the production-ready, modular version of the Ready Hit Play scripts, designed to be loaded via JS Deliver and GitHub for easy maintenance.",
+  "main": "about-dial-ticks.js",
+  "scripts": {
+    "test": "playwright test --config=tests/playwright.config.js",
+    "test:smoke": "playwright test --config=tests/playwright.config.js smoke",
+    "test:a11y": "playwright test --config=tests/playwright.config.js a11y",
+    "test:report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "@playwright/test": "^1.58.2"
+  }
+}

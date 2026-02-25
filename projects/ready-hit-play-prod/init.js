@@ -12,7 +12,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.20.2', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.2.25.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -42,6 +42,7 @@
       'home-intro.js',
       'intro-format.js',
       'earth-parallax.js',
+      'case-video-controls.js',
       'orchestrator.js',
       'utils.js'
     ]
@@ -147,6 +148,7 @@
         { module: 'about-text-lines.js', ok: typeof RHP.aboutTextLines !== 'undefined', detail: RHP.aboutTextLines?.version || '' },
         { module: 'intro-format.js', ok: typeof RHP.formatIntroText === 'function', detail: '—' },
         { module: 'earth-parallax.js', ok: typeof RHP.earthParallax !== 'undefined', detail: RHP.earthParallax?.version || '' },
+        { module: 'case-video-controls.js', ok: typeof RHP.caseVideoControls !== 'undefined', detail: RHP.caseVideoControls?.version || '' },
         { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: RHP.orchestratorVersion || '' },
         { module: 'utils.js', ok: true, detail: '—' }
       ];
@@ -166,6 +168,7 @@
         'about-text-lines.js': RHP.aboutTextLines?.version || '—',
         'intro-format.js': '—',
         'earth-parallax.js': RHP.earthParallax?.version || '—',
+        'case-video-controls.js': RHP.caseVideoControls?.version || '—',
         'orchestrator.js': RHP.orchestratorVersion || '—',
         'utils.js': '—'
       };

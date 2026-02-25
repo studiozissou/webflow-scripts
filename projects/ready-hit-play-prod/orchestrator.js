@@ -337,12 +337,14 @@
         }
 
         RHP.earthParallax?.init?.(container);
+        RHP.caseVideoControls?.init?.(container);
       },
 
       destroy() {
         if (!active) return;
         active = false;
         RHP.earthParallax?.destroy?.();
+        RHP.caseVideoControls?.destroy?.();
         // Let global logic decide when to stop Lenis; no-op here.
       }
     };

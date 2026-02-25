@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.2.24.1';
+  const WORK_DIAL_VERSION = '2026.2.25.6';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
 
@@ -88,6 +88,7 @@
     let alive = false;
     let cleanup = [];
     let rafId = 0;
+    let driftRafId = 0; // module-level so destroy() can cancel it
     let refs = null;
     let introMode = false;
     let introComplete = false;
@@ -96,6 +97,16 @@
     let interactionUnlocked = false;
     let genericVideo = null;
     let genericVideoComp = null; // comp ref for setDialState (set during init)
+
+    function setDialUiOpacity(targetOpacity) {
+      const dialUi = genericVideoComp?.querySelector('.dial_layer-ui') || document.querySelector('.dial_layer-ui');
+      if (!dialUi) return;
+      if (window.gsap) {
+        window.gsap.to(dialUi, { opacity: targetOpacity, duration: 0.3, ease: 'linear', overwrite: true });
+      } else {
+        dialUi.style.opacity = String(targetOpacity);
+      }
+    }
 
     function on(el, evt, fn, opts) {
       if (!el) return;
@@ -106,6 +117,12 @@
     function stop() {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = 0;
+    }
+
+    // Module-level stop for the drift monitor RAF (mirrors stop() above)
+    function stopDriftMonitorGlobal() {
+      if (driftRafId) cancelAnimationFrame(driftRafId);
+      driftRafId = 0;
     }
 
     function init(container = document, options = {}) {
@@ -160,7 +177,7 @@
         el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
         comp.appendChild(el);
       });
-      cleanup.push(function () { poolPrev.remove(); poolNext.remove(); });
+      cleanup.push(function () { poolPrev.remove(); poolNext.remove(); stopDriftMonitorGlobal(); });
 
       // Generic video: dedicated element for IDLE state (never touches project video pool)
       genericVideo = document.createElement('video');
@@ -177,6 +194,8 @@
       cleanup.push(() => { genericVideo?.remove(); genericVideo = null; });
       genericVideoComp = comp;
       try { genericVideo.play().catch(() => {}); } catch(e) {}
+      let intentionallyPaused = false;
+      let playPairedGen = 0; // increment on each playPaired call; stale bg callbacks bail out
       let loadWindowIndices = { prev: null, next: null };
       let visibleVideo = null; // set on first applyActive: the video element currently in fgWrap (may be original fg or a swapped-in pool element)
       let bgVideoRef = null;   // persistent ref to .dial_bg-video for sync
@@ -255,16 +274,6 @@
         }
       }
 
-      function setDialUiOpacity(targetOpacity) {
-        const dialUi = genericVideoComp?.querySelector('.dial_layer-ui') || document.querySelector('.dial_layer-ui');
-        if (!dialUi) return;
-        if (window.gsap) {
-          window.gsap.to(dialUi, { opacity: targetOpacity, duration: 0.3, ease: 'linear', overwrite: true });
-        } else {
-          dialUi.style.opacity = String(targetOpacity);
-        }
-      }
-
       function setDialState(newState) {
         if (dialState === newState) return;
         dialState = newState;
@@ -273,22 +282,62 @@
 
         if (newState === DIAL_STATES.IDLE) {
           // Show generic video, hide project bg video, hide dial UI
-          if (genericVideo) genericVideo.style.opacity = '1';
-          if (bgVideo) bgVideo.style.opacity = '0';
+          const gsap = window.gsap;
+          const reduced = prefersReduced();
+          // Resume and fade in generic video
+          if (genericVideo) {
+            try { genericVideo.play().catch(() => {}); } catch(e) {}
+            if (gsap && !reduced) gsap.to(genericVideo, { opacity: 1, duration: 0.4, ease: 'linear', overwrite: true });
+            else genericVideo.style.opacity = '1';
+          }
+          // Fade out project bg video, then pause (pause after fully invisible)
+          if (bgVideo) {
+            if (gsap && !reduced) {
+              gsap.to(bgVideo, { opacity: 0, duration: 0.4, ease: 'linear', overwrite: 'auto',
+                onComplete: () => { try { bgVideo.pause(); } catch(e) {} } });
+            } else {
+              bgVideo.style.opacity = '0';
+              try { bgVideo.pause(); } catch(e) {}
+            }
+          }
+          if (visibleVideo) try { visibleVideo.pause(); } catch(e) {}
           setDialUiOpacity(0);
           if (!isMobile()) setCursorPlay(false);
+          // Task: video-sync-drift-monitor — stop drift loop in IDLE
+          stopDriftMonitor();
         } else if (newState === DIAL_STATES.ACTIVE) {
           // Hide generic video, show project bg video, show dial UI
-          if (genericVideo) genericVideo.style.opacity = '0';
-          if (bgVideo) {
-            bgVideo.style.opacity = '1';
-            if (bgVideo.paused) try { bgVideo.play().catch(() => {}); } catch(e) {}
+          const gsap = window.gsap;
+          const reduced = prefersReduced();
+          // Fade out generic video, then pause
+          if (genericVideo) {
+            if (gsap && !reduced) {
+              gsap.to(genericVideo, { opacity: 0, duration: 0.4, ease: 'linear', overwrite: true,
+                onComplete: () => { try { genericVideo.pause(); } catch(e) {} } });
+            } else {
+              genericVideo.style.opacity = '0';
+              try { genericVideo.pause(); } catch(e) {}
+            }
           }
-          if (visibleVideo?.paused) try { visibleVideo.play().catch(() => {}); } catch(e) {}
+          // Fade in project bg video
+          if (bgVideo) {
+            if (gsap && !reduced) gsap.to(bgVideo, { opacity: 1, duration: 0.4, ease: 'linear', overwrite: 'auto' });
+            else bgVideo.style.opacity = '1';
+          }
+          // Task: video-sync-paired-play (2) — play fg+bg in sync
+          if (visibleVideo && bgVideo) {
+            playPaired(visibleVideo, bgVideo);
+          } else if (bgVideo && bgVideo.paused) {
+            try { bgVideo.play().catch(() => {}); } catch(e) {}
+          }
           setDialUiOpacity(1);
+          // Task: video-sync-drift-monitor — start drift loop in ACTIVE
+          startDriftMonitor();
         } else if (newState === DIAL_STATES.ENGAGED) {
           // Dial UI remains visible in ENGAGED state
           setDialUiOpacity(1);
+          // Task: video-sync-drift-monitor — start drift loop in ENGAGED
+          startDriftMonitor();
         }
       }
 
@@ -380,6 +429,86 @@
         } catch (e) { return false; }
       }
 
+      // Task: video-sync-paired-play — wait for both fg+bg to be decodable before playing
+      function waitCanPlay(videoEl) {
+        return new Promise(resolve => {
+          if (videoEl.readyState >= 2) { resolve(); return; }
+          videoEl.addEventListener('canplay', resolve, { once: true });
+        });
+      }
+
+      // Task: video-sync-paired-play — play fg immediately; sync bg to fg when bg becomes ready
+      // Using Promise.all was causing fg to stall whenever bg's canplay never fired (src changed
+      // mid-load cancels the old load; old { once:true } listener never fires → fg never plays).
+      function playPaired(fg, bg) {
+        if (!fg || !bg) return;
+        if (intentionallyPaused) return;
+        const gen = ++playPairedGen; // stale callbacks from cancelled bg loads will bail
+
+        // fg plays immediately — don't block on bg
+        if (fg.readyState >= 2) {
+          try { fg.play().catch(() => {}); } catch(e) {}
+        } else {
+          waitCanPlay(fg).then(() => {
+            if (!intentionallyPaused) try { fg.play().catch(() => {}); } catch(e) {}
+          });
+        }
+
+        // bg: sync to fg's current position when ready, then play
+        if (bg.readyState >= 2) {
+          try { bg.currentTime = fg.currentTime; } catch(e) {}
+          try { bg.play().catch(() => {}); } catch(e) {}
+        } else {
+          waitCanPlay(bg).then(() => {
+            if (gen !== playPairedGen || intentionallyPaused) return; // stale or paused: bail
+            try { bg.currentTime = fg.currentTime; } catch(e) {}
+            try { bg.play().catch(() => {}); } catch(e) {}
+          });
+        }
+      }
+
+      // Task: video-sync-drift-monitor — dedicated RAF loop for drift correction
+      // Uses module-level driftRafId so destroy() can cancel it from outside init()
+      function stopDriftMonitor() {
+        stopDriftMonitorGlobal();
+      }
+
+      function driftMonitorTick() {
+        if (!alive || dialState === DIAL_STATES.IDLE || intentionallyPaused) {
+          driftRafId = 0;
+          return;
+        }
+        const bg = bgVideoRef;
+        // Guard: only sync when bg is actually playing — if bg.paused it may still be loading
+        // (readyState < 2, currentTime = 0), and snapping fg to currentTime=0 would restart playback.
+        if (visibleVideo && bg && bg.tagName === 'VIDEO' && !bg.paused) {
+          const fgSrc = visibleVideo.currentSrc || visibleVideo.src;
+          const bgSrc = bg.currentSrc || bg.src;
+          if (fgSrc && bgSrc && fgSrc === bgSrc) {
+            // bg is master: fg follows bg
+            const drift = visibleVideo.currentTime - bg.currentTime; // positive = fg ahead
+            const threshold = isMobile() ? 0.3 : 0.1;
+            if (drift > threshold) {
+              // fg is too far ahead — pause fg until bg catches up
+              try { visibleVideo.pause(); } catch(e) {}
+            } else if (drift < -threshold) {
+              // fg is too far behind — snap fg forward to match bg
+              try { visibleVideo.currentTime = bg.currentTime; } catch(e) {}
+            } else {
+              if (visibleVideo.paused && !intentionallyPaused) try { visibleVideo.play().catch(() => {}); } catch(e) {}
+            }
+          }
+        }
+        driftRafId = requestAnimationFrame(driftMonitorTick);
+      }
+
+      function startDriftMonitor() {
+        stopDriftMonitor();
+        if (dialState !== DIAL_STATES.IDLE && !intentionallyPaused) {
+          driftRafId = requestAnimationFrame(driftMonitorTick);
+        }
+      }
+
       function applyActive(idx) {
         idx = mod(idx, N);
         if (idx === state.lastIndex) return;
@@ -431,8 +560,8 @@
         if (loadWindowIndices.prev !== null && !inWindow(loadWindowIndices.prev)) saveVideoStateToIndex(poolPrev, loadWindowIndices.prev);
         if (loadWindowIndices.next !== null && !inWindow(loadWindowIndices.next)) saveVideoStateToIndex(poolNext, loadWindowIndices.next);
 
-        const poolPrevReady = poolPrev.readyState >= 4;
-        const poolNextReady = poolNext.readyState >= 4;
+        const poolPrevReady = poolPrev.readyState >= 2; // HAVE_CURRENT_DATA: has a frame, enough for instant swap
+        const poolNextReady = poolNext.readyState >= 2;
         const sameUrl = function (a, b) { return !!(a && b && (a === b || a.slice(-60) === b.slice(-60))); };
         const poolPrevHasUrl = sameUrl(v, poolPrev.currentSrc || poolPrev.src);
         const poolNextHasUrl = sameUrl(v, poolNext.currentSrc || poolNext.src);
@@ -454,12 +583,20 @@
           poolPrev.removeAttribute('aria-hidden');
           poolPrev.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
           visibleVideo = poolPrev;
-          poolPrev = oldVisible;
-          comp.appendChild(poolPrev);
-          poolPrev.style.cssText = poolHiddenStyle;
-          poolPrev.setAttribute('aria-hidden', 'true');
-          if (urlPrev) { poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} startPoolWhenReady(poolPrev); }
-          if (urlNext && poolNext.src !== urlNext) { poolNext.poster = readPosterFromItem(items[newNext]) || ''; poolNext.src = urlNext; try { poolNext.load(); } catch (e) {} startPoolWhenReady(poolNext); }
+          // Task: video-sync-bg-mirror (1) — seek bg only if it already has the same src (no reload needed)
+          if (bgVideo && bgVideo.tagName === 'VIDEO' && sameUrl(bgVideo.currentSrc || bgVideo.src, v)) {
+            bgVideo.currentTime = visibleVideo.currentTime;
+          }
+          // oldVisible has items[newNext] URL fully buffered — reuse as poolNext, no reload needed
+          const freeElPrev = poolNext; // repurpose old poolNext for urlPrev
+          poolNext = oldVisible;
+          comp.appendChild(poolNext);
+          poolNext.style.cssText = poolHiddenStyle;
+          poolNext.setAttribute('aria-hidden', 'true');
+          try { poolNext.pause(); } catch(e) {} // pause demoted video
+          // poolNext.src stays as-is (items[newNext] URL, already buffered — ready for instant forward switch)
+          poolPrev = freeElPrev;
+          if (urlPrev && poolPrev.src !== urlPrev) { poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} startPoolWhenReady(poolPrev); }
           didSwap = true;
         } else if (idx === loadWindowIndices.next && poolNextReady && poolNextHasUrl && fgWrap.contains(visibleVideo)) {
           restoreVideoStateFromIndex(poolNext, idx); // seek while still hidden so no flash when visible
@@ -472,19 +609,27 @@
           poolNext.removeAttribute('aria-hidden');
           poolNext.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
           visibleVideo = poolNext;
-          poolNext = oldVisible;
-          comp.appendChild(poolNext);
-          poolNext.style.cssText = poolHiddenStyle;
-          poolNext.setAttribute('aria-hidden', 'true');
-          if (urlNext) { poolNext.poster = readPosterFromItem(items[newNext]) || ''; poolNext.src = urlNext; try { poolNext.load(); } catch (e) {} startPoolWhenReady(poolNext); }
-          if (urlPrev && poolPrev.src !== urlPrev) { poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} startPoolWhenReady(poolPrev); }
+          // Task: video-sync-bg-mirror (1) — seek bg only if it already has the same src (no reload needed)
+          if (bgVideo && bgVideo.tagName === 'VIDEO' && sameUrl(bgVideo.currentSrc || bgVideo.src, v)) {
+            bgVideo.currentTime = visibleVideo.currentTime;
+          }
+          // oldVisible has items[newPrev] URL fully buffered — reuse as poolPrev, no reload needed
+          const freeElNext = poolPrev; // repurpose old poolPrev for urlNext
+          poolPrev = oldVisible;
+          comp.appendChild(poolPrev);
+          poolPrev.style.cssText = poolHiddenStyle;
+          poolPrev.setAttribute('aria-hidden', 'true');
+          try { poolPrev.pause(); } catch(e) {} // pause demoted video
+          // poolPrev.src stays as-is (items[newPrev] URL, already buffered — ready for instant back-switch)
+          poolNext = freeElNext;
+          if (urlNext && poolNext.src !== urlNext) { poolNext.poster = readPosterFromItem(items[newNext]) || ''; poolNext.src = urlNext; try { poolNext.load(); } catch (e) {} startPoolWhenReady(poolNext); }
           didSwap = true;
         }
 
         if (!didSwap) {
           setVideoSourceAndPoster(visibleVideo, v, poster);
         }
-
+        // Always mirror bg src to active project — setVideoSourceAndPoster skips reload if URL unchanged
         if (bgVideo && bgVideo.tagName === 'VIDEO') {
           setVideoSourceAndPoster(bgVideo, v, poster);
         }
@@ -494,17 +639,20 @@
 
         enforceVideoPolicy(comp);
 
-        const tryPlay = () => {
-          try {
-            if (!visibleVideo.paused) return;
-            visibleVideo.play().catch(function() {});
-          } catch (e) {}
-        };
-        if (visibleVideo.readyState >= 2) tryPlay();
-        else visibleVideo.addEventListener('loadedmetadata', tryPlay, { once: true });
+        // Task: video-sync-crossfade (5) — crossfade on every switch
+        // Pool hit (adjacent, buffered): short 0.15s — snappy but visible
+        // Pool miss (non-adjacent, reload): longer 0.4s — masks load time
+        if (!isInitial && !prefersReduced() && window.gsap) {
+          window.gsap.fromTo(fgWrap, { opacity: 0 }, { opacity: 1, duration: didSwap ? 0.15 : 0.4, ease: 'linear', overwrite: true });
+        }
+
+        // Task: video-sync-paired-play (2) — play fg+bg together when both ready
         if (bgVideo && bgVideo.tagName === 'VIDEO') {
-          if (bgVideo.readyState >= 2) try { bgVideo.play().catch(function() {}); } catch (e) {}
-          else bgVideo.addEventListener('loadedmetadata', function() { try { bgVideo.play().catch(function() {}); } catch (e) {}; }, { once: true });
+          playPaired(visibleVideo, bgVideo);
+        } else {
+          const tryPlay = () => { try { if (!visibleVideo.paused) return; visibleVideo.play().catch(() => {}); } catch(e) {} };
+          if (visibleVideo.readyState >= 2) tryPlay();
+          else visibleVideo.addEventListener('loadedmetadata', tryPlay, { once: true });
         }
 
         var prevSrcChanged = !!(urlPrev && poolPrev.src !== urlPrev);
@@ -671,28 +819,34 @@
         if (isMobile() && state.dragActive) e.preventDefault();
       }
 
+      // Task: video-sync-pause-not-visible (3e) — pause/resume on tab hide/show
       function onVis() {
-        if (document.hidden) stop();
-        else if (alive) {
+        if (document.hidden) {
+          intentionallyPaused = true;
+          stop(); // stops draw RAF
+          stopDriftMonitor();
+          if (visibleVideo) try { visibleVideo.pause(); } catch(e) {}
+          const bg = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+          if (bg && bg.tagName === 'VIDEO') try { bg.pause(); } catch(e) {}
+          if (genericVideo && dialState === DIAL_STATES.IDLE) try { genericVideo.pause(); } catch(e) {}
+        } else if (alive) {
+          intentionallyPaused = false;
           stop();
           rafId = requestAnimationFrame(draw);
+          if (dialState !== DIAL_STATES.IDLE) {
+            startDriftMonitor();
+            const bg = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+            if (visibleVideo && bg && bg.tagName === 'VIDEO') playPaired(visibleVideo, bg);
+          } else {
+            if (genericVideo) try { genericVideo.play().catch(() => {}); } catch(e) {}
+          }
         }
-      }
-
-      // Keep .dial_fg-video in sync with .dial_bg-video (master) so both stay at the same playback position
-      function syncFgToBg() {
-        if (!visibleVideo || !bgVideoRef || bgVideoRef.tagName !== 'VIDEO') return;
-        const fgSrc = visibleVideo.currentSrc || visibleVideo.src;
-        const bgSrc = bgVideoRef.currentSrc || bgVideoRef.src;
-        if (!fgSrc || !bgSrc || fgSrc !== bgSrc) return;
-        const diff = Math.abs(visibleVideo.currentTime - bgVideoRef.currentTime);
-        if (diff > 0.05) try { visibleVideo.currentTime = bgVideoRef.currentTime; } catch (e) {}
       }
 
       function draw() {
         if (!alive) return;
 
-        syncFgToBg();
+        // Task: video-sync-drift-monitor (4) — syncFgToBg() removed; drift handled by dedicated RAF loop
 
         const w = canvas.clientWidth;
         const h = canvas.clientHeight;
@@ -818,15 +972,18 @@
           if (genericVideo) genericVideo.style.opacity = '0';
           const bg = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
           if (bg) bg.style.opacity = '1';
+          // Pre-write handoff time so applyActive/restoreVideoStateFromIndex picks it up for both fg and bg
+          RHP.videoState.byIndex[h.index] = { currentTime: h.currentTime, paused: false };
           applyActive(h.index);
+          // applyActive called playPaired — but seek may have been overridden by restoreVideoStateFromIndex;
+          // ensure both elements are at the exact handoff time before playPaired fires
           const fg = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
-          if (fg) {
-            fg.currentTime = h.currentTime;
-            try { fg.play().catch(function() {}); } catch (e) {}
-          }
-          if (bg && bg.tagName === 'VIDEO') {
-            bg.currentTime = h.currentTime;
-            try { bg.play().catch(function() {}); } catch (e) {}
+          if (fg) try { fg.currentTime = h.currentTime; } catch(e) {}
+          if (bg && bg.tagName === 'VIDEO') try { bg.currentTime = h.currentTime; } catch(e) {}
+          if (fg && bg && bg.tagName === 'VIDEO') {
+            playPaired(fg, bg);
+          } else if (fg) {
+            try { fg.play().catch(function() {}); } catch(e) {}
           }
         }
         RHP.videoState.caseHandoff = null;
@@ -925,6 +1082,7 @@
       alive = false;
 
       stop();
+      stopDriftMonitorGlobal();
       cleanup.forEach(fn => { try { fn(); } catch(e){} });
       cleanup = [];
       refs = null;

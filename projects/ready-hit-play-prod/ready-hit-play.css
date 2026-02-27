@@ -416,7 +416,7 @@
 
 /* Case study: first-screen proportions — video fills, title visible above fold (desktop only) */
 @media (min-width: 992px) {
-  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video {
+  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video.is-header {
     min-height: calc(var(--dial-case-height) - 140px);
     display: flex;
     flex-direction: column;

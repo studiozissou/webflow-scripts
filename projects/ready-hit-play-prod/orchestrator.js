@@ -188,6 +188,7 @@
       const gsap = window.gsap;
       const SplitText = window.SplitText;
       if (!gsap || !SplitText) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       // .nav_logo-embed not in nav = inside main / about hero only
       const logoEmbeds = container.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
@@ -207,7 +208,7 @@
           try {
             const split = new SplitText(h, { type: 'words,lines', linesClass: 'about-hero-line', wordsClass: 'about-hero-word' });
             if (split.words && split.words.length) {
-              gsap.set(split.words, { yPercent: 100, opacity: 0 });
+              gsap.set(split.words, { yPercent: -100, opacity: 0 });
             }
             headingSplits.push({ split, headingEl: h });
           } catch (e) {
@@ -217,12 +218,22 @@
 
         splitInstances.push(...headingSplits);
 
-        const wordDuration = 0.8;
-        const wordStagger = 0.3;
-        const lineDelay = 0.3;
+        const wordDuration = 0.6;
+        const wordStagger = 0.225;
+        const lineDelay = 0.225;
         const leaveDuration = wordDuration / 2;
 
         const onEnter = () => {
+          gsap.killTweensOf(heroReady);
+          headingSplits.forEach(({ split, headingEl }) => {
+            gsap.killTweensOf(headingEl);
+            if (split.words?.length) gsap.killTweensOf(split.words);
+          });
+          gsap.set(heroReady, { opacity: 0.4, y: 0 });
+          headingSplits.forEach(({ split, headingEl }) => {
+            gsap.set(headingEl, { opacity: 0 });
+            if (split.words?.length) gsap.set(split.words, { yPercent: -100, opacity: 0 });
+          });
           gsap.to(heroReady, { opacity: 1, duration: 0.3, ease: 'linear' });
           gsap.to(heroReady, { y: '-1.5rem', duration: 0.5, ease: 'power3.out' });
           headingSplits.forEach(({ split, headingEl }, idx) => {
@@ -372,7 +383,7 @@
     const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
     let isOpen = false;
     let pulloutEl = null;
-    const DEBUG = true;
+    const DEBUG = window.location.hostname === 'localhost';
 
     function findPullout() {
       return scope.querySelector('.nav_contact-pullout') || scope.querySelector('[class*="nav_contact-pullout"]');
@@ -809,7 +820,7 @@
       }
 
       // Page-specific: load Overland AI CSS + script when navigating to it via Barba (if not loaded on initial page)
-      if (ns === 'case' && /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname)) {
+      if (ns === 'case' && /\/work\/overland-ai(\/|$)/.test(window.location.pathname)) {
         var baseUrl = RHP.getScriptBaseUrl && RHP.getScriptBaseUrl();
         var v = RHP.configVersion || '0';
         if (baseUrl) {

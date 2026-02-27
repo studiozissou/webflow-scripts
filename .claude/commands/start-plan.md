@@ -5,3 +5,5 @@ Then read the active project's queue.json (e.g. projects/ready-hit-play-prod/.cl
 Ask me discovery questions — goals, constraints, affected files, edge cases, dependencies — before writing anything.
 
 Do not create any files, specs, or ADRs until I have answered your questions.
+
+Once planning is complete and questions are answered, always write the spec to `.claude/specs/<feature-slug>.md` before the session ends — do not wait to be asked.

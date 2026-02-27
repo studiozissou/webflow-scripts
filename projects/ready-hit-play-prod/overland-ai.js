@@ -2,13 +2,13 @@
    RHP — Overland AI case study (page-specific)
    - Grid hover: dim other items, show cover image (desktop ≥992px)
    - Benefit video autoplay: play when mobile dropdown opens, pause when closes
-   - Loaded only on /case-studies/overland-ai
+   - Loaded only on /work/overland-ai
    ========================================= */
 (() => {
   window.RHP = window.RHP || {};
 
   function isOverlandPage() {
-    return /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname);
+    return /\/work\/overland-ai(\/|$)/.test(window.location.pathname);
   }
 
   function initGridHover(container) {

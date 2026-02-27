@@ -8,6 +8,8 @@ Plan a feature before writing any code.
 5. Flag any architectural decisions that need an ADR before work begins.
 6. Present the plan summary to the user for approval before proceeding.
 
+**Always write the spec file to `.claude/specs/<feature-slug>.md` before the session ends — do not wait to be asked.**
+
 ## Output
 - Spec file at `.claude/specs/<feature-slug>.md`
 - Updated `.claude/queue.json` with new tasks

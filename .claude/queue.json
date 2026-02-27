@@ -1,16 +1,17 @@
 {
   "version": "1.0.0",
-  "updated": "2026-02-24",
+  "updated": "2026-02-27",
   "queue": [
     {
       "id": "qa-rhp-claude-setup",
       "project": "rhp-claude",
       "type": "qa",
       "priority": "medium",
-      "status": "todo",
+      "status": "done",
       "title": "Initial QA — rhp-claude project setup",
       "description": "Run /qa-check on orchestrator.js. Verify Barba namespaces, Lenis init, GSAP context cleanup, and reduced-motion guard are all in place before first deploy.",
-      "created": "2026-02-24"
+      "created": "2026-02-24",
+      "completed": "2026-02-27"
     }
   ]
 }

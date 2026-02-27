@@ -201,10 +201,6 @@
         .to(contactLink, { xPercent: 0, duration: DUR, ease: EASE_TRANSLATE })
         .to(contactLink, { opacity: 1, duration: DUR, ease: EASE_OPACITY }, '<');
 
-      if (dialUi) {
-        tl.to(dialUi, { opacity: 1, duration: 0.3, ease: 'linear' }, 0);
-      }
-
       return tl.then ? tl.then() : new Promise((r) => tl.eventCallback('onComplete', r));
     }
 
@@ -290,6 +286,7 @@
           RHP.workDial?.setAttractionEnabled?.(true);
           RHP.workDial?.onIntroComplete?.();
           await runNavAnimation(scope);
+          RHP.workDial?.onNavAnimationComplete?.();
           (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-home-ready');
         };
 

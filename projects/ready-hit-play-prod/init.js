@@ -12,7 +12,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.25.1', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.2.27.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -107,7 +107,7 @@
       }
 
       // Page-specific: Overland AI case study CSS (fonts + typography)
-      const isOverlandPage = /\/case-studies\/overland-ai(\/|$)/.test(window.location.pathname);
+      const isOverlandPage = /\/work\/overland-ai(\/|$)/.test(window.location.pathname);
       if (isOverlandPage) {
         const versionParam = 'v=' + (CONFIG.version || '0');
         await loadStylesheet(`${baseUrl}/overland-ai.css?${versionParam}`);
@@ -128,7 +128,7 @@
         await loadScript(`${baseUrl}/${module}?${versionParam}`);
       }
 
-      // Page-specific: Overland AI case study (only on /case-studies/overland-ai)
+      // Page-specific: Overland AI case study (only on /work/overland-ai)
       if (isOverlandPage) {
         await loadScript(`${baseUrl}/overland-ai.js?${versionParam}`);
       }

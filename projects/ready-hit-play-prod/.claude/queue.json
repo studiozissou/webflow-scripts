@@ -1,16 +1,17 @@
 {
   "version": "1.0.0",
-  "updated": "2026-02-25T02",
+  "updated": "2026-02-27",
   "queue": [
     {
       "id": "fix-playwright-tests",
       "project": "ready-hit-play-prod",
       "type": "bug",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
       "title": "Fix Playwright tests — all failing (site script tag points to localhost, not jsDelivr)",
       "note": "Webflow Custom Code <script> still loads http://localhost:8080/... — Chrome blocks loopback from HTTPS. Update tag to https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@<hash>/projects/ready-hit-play-prod/init.js then republish Webflow site.",
-      "created": "2026-02-24"
+      "created": "2026-02-24",
+      "completed": "2026-02-27"
     },
     {
       "id": "dial-upgrade-generic-video",
@@ -183,24 +184,46 @@
       "project": "ready-hit-play-prod",
       "type": "qa",
       "priority": "P1",
-      "status": "blocked",
+      "status": "todo",
       "title": "Video sync: QA adjacent switch, non-adjacent switch, IDLE↔ACTIVE transitions, tab hidden/return, Barba return, mobile sync",
-      "note": "Blocked on video-sync-rearchitect. Current src-swap + pool approach still produces 0.3s load lag on every switch (including repeat adjacent switches that should be instant). Root cause: bg video always reloads on src change; pool only helps fg. Architecture must change before QA is useful.",
+      "note": "Blocked on feat-bg-video-pool. Run after BG pool implementation ships — adjacent BG switches should then be instant (pool hit), non-adjacent 0.4s crossfade.",
       "agent": "qa",
       "spec": ".claude/specs/video-sync-homepage.md",
-      "created": "2026-02-24"
+      "created": "2026-02-24",
+      "blockedOn": "feat-bg-video-pool"
     },
     {
       "id": "video-sync-rearchitect",
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P1",
-      "status": "blocked",
+      "status": "closed",
       "title": "Video sync: re-arch to parallel video elements — N fg + N bg elements loaded simultaneously, opacity switching",
-      "note": "Current approach (2 pool + 1 visible fg, 1 bg) is fundamentally flawed: bg.src must change on every switch → browser reload → load lag. Even with playPaired gen-counter fix, the bg reload is unavoidable. New approach: on init, create N fg + N bg <video> elements (one per project, max 8). All load in parallel with preload=auto. Active pair: opacity 1. All others: opacity 0. No src changes ever — switching is purely opacity. Crossfade: gsap.to(outgoing, {opacity:0}) + gsap.to(incoming, {opacity:1}). Drift monitor: same as current. Barba cleanup: pause + remove all N*2 elements. Cost: 8 simultaneous loads vs 3, but all are small loop videos and loads are staggered by browser.",
-      "spec": ".claude/specs/video-sync-homepage.md",
-      "created": "2026-02-25",
-      "blockedOn": "design sign-off — confirm acceptable to load all N videos on init"
+      "note": "Superseded by feat-bg-video-pool (sliding-window BG pool). Closed 2026-02-27.",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-bg-video-pool",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "PENDING_HUMAN_REVIEW",
+      "title": "BG video sliding-window pool: bgPoolPrev/bgPoolNext in applyActive + setDialState uses bgVideoRef",
+      "agent": "code-writer",
+      "spec": ".claude/specs/bg-video-pool.md",
+      "created": "2026-02-27",
+      "note": "ROLLED BACK: 2026.2.27.6 added a 3-rAF re-sync in playPaired to close bg decode startup lag (~50ms on Remote client project). This made things worse — the visible lag between bg loading and playing increased. Reverted to 2026.2.27.5. The residual fractional delay on Remote client is a known limitation: bg decode latency is below the 0.1s drift threshold so the monitor never corrects it. If revisiting: try lowering drift threshold to 0.05s rather than the rAF re-sync approach."
+    },
+    {
+      "id": "feat-bg-video-pool-qa",
+      "project": "ready-hit-play-prod",
+      "type": "qa",
+      "priority": "P1",
+      "status": "in_progress",
+      "title": "BG video pool: QA adjacent/non-adjacent switches, IDLE↔ACTIVE blur, drift monitor, Barba cleanup",
+      "agent": "qa",
+      "spec": ".claude/specs/bg-video-pool.md",
+      "created": "2026-02-27"
     },
     {
       "id": "fix-autoplay-fallback-mobile",
@@ -221,6 +244,128 @@
       "created": "2026-02-24"
     },
     {
+      "id": "fix-about-logo-animation",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P2",
+      "status": "done",
+      "title": "Fix about hero logo hover: direction (top-down), speed (+25%), interrupted-hover restart",
+      "spec": ".claude/specs/fix-about-logo-animation.md",
+      "agent": "code-writer",
+      "note": "All 3 bugs in orchestrator.js:initAboutHeroLogoHover(). (1) yPercent: 100→-100 initial state so words slide down on enter. (2) wordDuration 0.8→0.6, wordStagger 0.3→0.225, lineDelay 0.3→0.225. (3) add kill+reset at top of onEnter to guarantee full restart on re-hover.",
+      "created": "2026-02-25",
+      "completed": "2026-02-27",
+      "qa": "approved"
+    },
+    {
+      "id": "fix-about-logo-animation-qa",
+      "project": "ready-hit-play-prod",
+      "type": "qa",
+      "priority": "P2",
+      "status": "done",
+      "title": "QA: about hero logo hover — direction, speed, interrupted-hover, leave, a11y guard",
+      "spec": ".claude/specs/fix-about-logo-animation.md",
+      "agent": "qa",
+      "blockedOn": "fix-about-logo-animation",
+      "created": "2026-02-27",
+      "completed": "2026-02-27",
+      "qa": "approved"
+    },
+    {
+      "id": "feat-about-team-animations",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "todo",
+      "title": "Add animations to about page team section",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-orange-button-hover",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "done",
+      "title": "Add hover effect on orange buttons",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-scroll-to-top-transition",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "todo",
+      "title": "Scroll-to-top animation when transitioning from project page back to homepage",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-contact-social-icons",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "done",
+      "title": "Add Instagram and LinkedIn icons to contact page",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-case-video-intersection",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "todo",
+      "title": "Case video controls: pause when scrolled out of view, resume when back in view",
+      "note": "Use IntersectionObserver on each .section_case-video. Pause video on leave, resume on enter (only if user hasn't manually paused). Respect user intent — don't auto-resume if paused by user.",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-rename-case-studies-to-work",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "done",
+      "title": "Update /case-studies/ slug to /work/ sitewide",
+      "note": "Update all references in JS (orchestrator.js, overland-ai.js, init.js path checks) and any hardcoded URLs. Webflow page slug change + 301 redirect also needed in Webflow editor.",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-video-title-responsive-scale",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "todo",
+      "title": "Scale video title according to screen size",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-dial-active-state-fg-bg-blur",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "done",
+      "title": "Dial ACTIVE state: show fg video, blur bg video; tighten idle→active proximity threshold",
+      "note": "In ACTIVE state, fg video (inside dial) visible and sharp; bg video (full-bleed behind dial) gets CSS blur filter. Smooth transition in/out (GSAP or CSS). Also tighten the distance-to-circle threshold at which IDLE→ACTIVE activates — currently triggers too far out.",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-update-laptop-mockups",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "todo",
+      "title": "Update laptop mockups",
+      "created": "2026-02-25"
+    },
+    {
+      "id": "feat-video-controls-autohide",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "todo",
+      "title": "Video controls: auto-hide title + controls after 3–8s of mouse idle; mobile fullscreen button TBC",
+      "note": "Hide title and control bar after ~3–8s of no mouse movement; reshow on any mousemove/touch. Mobile fullscreen button pending client decision on default video controls approach.",
+      "created": "2026-02-25"
+    },
+    {
       "id": "fix-mobile-responsiveness",
       "project": "ready-hit-play-prod",
       "type": "bug",
@@ -237,6 +382,36 @@
       "status": "PENDING_REVIEW",
       "title": "Transition polish",
       "created": "2026-02-24"
+    },
+    {
+      "id": "fix-pool-swap-reverse-frames",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P1",
+      "status": "todo",
+      "title": "FG pool swap: new video plays in reverse for a few frames on adjacent switch",
+      "note": "On an adjacent sector switch (pool hit), the incoming FG video briefly plays in reverse for ~2–4 frames before resuming forward playback. Likely cause: the pool element was preloading and playing forward at time T; restoreVideoStateFromIndex then seeks it to a saved currentTime S where S < T (user previously saw an earlier point in this video). The backwards seek causes the browser to render intermediate frames in reverse order before settling at S. Possible fixes: (1) only restore saved state if S > pool element's current position — skip the seek if going backwards; (2) show a poster frame during the pool element's seek instead of letting it render mid-seek frames; (3) don't save/restore playback position per index at all for the dial — always start from the beginning on each visit.",
+      "created": "2026-02-27"
+    },
+    {
+      "id": "feat-dial-engaged-circle-hitbox",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "todo",
+      "title": "Dial ACTIVE→ENGAGED: use circular bounding box for proximity/hit detection instead of square",
+      "note": "Currently the ACTIVE→ENGAGED state transition uses a square bounding box. Replace with a circular distance check (distance from cursor to dial centre ≤ dial radius) so the engaged state only activates when the cursor is truly inside the circle, not the corners of the bounding square.",
+      "created": "2026-02-27"
+    },
+    {
+      "id": "fix-safari-nav-logo-hit-larger",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P2",
+      "status": "todo",
+      "title": "Safari: HIT nav logo SVG appears larger than READY and PLAY",
+      "note": "Safari honours height=\"162\" HTML attribute on SVG elements as the rendered height, overriding the 2rem flex container. HIT has the narrowest viewBox (316px vs 602/494), so preserveAspectRatio scaling makes its glyphs appear largest. Fix: .nav_logo-wrapper-2.is-nav svg { height: var(--logo-small-height); width: auto; } in ready-hit-play.css. CSS property beats HTML presentation attribute. Chrome unaffected.",
+      "created": "2026-02-27"
     }
   ]
 }

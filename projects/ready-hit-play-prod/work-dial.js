@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.2.27.5';
+  const WORK_DIAL_VERSION = '2026.2.27.6';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
 
@@ -1118,6 +1118,13 @@
       // Boot
       resize();
       applyActive(0);
+      // FIX: homeIntro.skip() → resetToVisible() sets bgVideo opacity:1 before init runs.
+      // applyActive(0) skips its crossfade (isInitial=true), so bgVideo stays at 1 in IDLE — wrong.
+      // setDialState(IDLE) only fires on transitions, never at boot. Force correct opacity here.
+      if (dialState === DIAL_STATES.IDLE && bgVisible) {
+        if (window.gsap) window.gsap.set(bgVisible, { opacity: 0, overwrite: true });
+        else bgVisible.style.opacity = '0';
+      }
 
       // If returning from case study, restore handoff index and playback position
       if (RHP.videoState && RHP.videoState.caseHandoff) {
@@ -1142,6 +1149,20 @@
           }
         }
         RHP.videoState.caseHandoff = null;
+        // FIX: dialState was set to ACTIVE directly at init, bypassing setDialState(ACTIVE).
+        // setDialState(ACTIVE) is the only place filter:blur(40px) and fg opacity:1 are applied,
+        // but its guard (if dialState === newState return) blocks it for the rest of this session
+        // until the user first goes IDLE then ACTIVE again. Patch the visual state here.
+        const reduced = prefersReduced();
+        if (bgVideoRef) {
+          if (window.gsap && !reduced) window.gsap.set(bgVideoRef, { filter: 'blur(40px)', overwrite: 'auto' });
+          else bgVideoRef.style.filter = 'blur(40px)';
+        }
+        const handoffFgEl = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
+        if (handoffFgEl) {
+          if (window.gsap && !reduced) window.gsap.set(handoffFgEl, { opacity: 1 });
+          else handoffFgEl.style.opacity = '1';
+        }
       }
 
       on(window, 'resize', resize, { passive: true });

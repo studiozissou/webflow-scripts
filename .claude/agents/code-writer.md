@@ -53,3 +53,15 @@ const <ModuleName> = (() => {
 ```
 
 Always check `projects/<client>/orchestrator.js` and `shared/utils.js` before writing new utilities — avoid duplication.
+
+## Spacing rules
+
+- **Vertical rhythm between components:** Client First spacer divs only
+  (`.padding-global`, `.padding-section-small/medium/large/xlarge`,
+  `.padding-custom`). Never use `margin-top` or `margin-bottom` for spacing
+  between components.
+- **Component-internal layout:** flex or grid where Figma auto-layout maps cleanly.
+- **Absolute placements from Figma:** use nearest approximation. Add a comment:
+  `/* manual placement — verify against design */`
+- **No custom spacing classes or variables** unless no Client First utility covers
+  the use case — and only after confirming with the developer.

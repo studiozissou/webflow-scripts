@@ -16,11 +16,12 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 ---
 
-## Agents (11 total, all `claude-sonnet-4-6`)
+## Agents (12 total)
 
 | Agent | Purpose | Key tools |
 |-------|---------|-----------|
-| `code-writer` | New JS/CSS — animations, Barba transitions, GSAP, Lenis, Finsweet | Read, Write, Edit, Bash, Glob, Grep |
+| `code-writer` | New JS/CSS — animations, Barba transitions, GSAP, Lenis, Finsweet. Includes Client First spacing rules. | Read, Write, Edit, Bash, Glob, Grep |
+| `code-reviewer` | Review code for pattern violations, Webflow gotchas, a11y, Barba lifecycle, selector validity, spacing compliance. Read-only — PASS/WARN/FAIL verdict. | Read, Glob, Grep, Bash, mcp__webflow__element_snapshot_tool, mcp__webflow__style_tool |
 | `refactor` | Behaviour-preserving JS/CSS improvement | Read, Write, Edit, Bash, Glob, Grep |
 | `qa` | Cross-browser, animation regression, a11y, CMS edge cases, Barba integrity | Read, Glob, Grep, Bash |
 | `perf` | Script weight, frame budgets, memory leaks, CDN strategy | Read, Glob, Grep, Bash, WebFetch |
@@ -31,10 +32,6 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | `art-director` | Motion design critique, typography, spacing, Figma→Webflow | Read, Glob, Grep, WebFetch |
 | `ux-researcher` | Heuristic eval, user flows, competitor analysis, a11y (UX lens) | Read, Write, Glob, WebFetch, WebSearch |
 | `schema` | JSON-LD generation (12 types), validation, Webflow placement | Read, Write, Glob, Grep, WebSearch |
-
-Updated agents:
-- `code-reviewer` — now includes `mcp__webflow__element_snapshot_tool` and `mcp__webflow__style_tool` for selector verification + spacing compliance checks
-- `code-writer` — now includes spacing rules (Client First spacer divs, no custom spacing variables)
 
 ---
 

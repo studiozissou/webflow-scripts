@@ -1,4 +1,5 @@
 const { defineConfig, devices } = require('@playwright/test');
+require('dotenv').config({ path: '.env.test' });
 
 module.exports = defineConfig({
   testDir: '.',
@@ -9,7 +10,8 @@ module.exports = defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
 
   use: {
-    baseURL: 'https://rhpcircle.webflow.io',
+    baseURL: process.env.STAGING_URL || 'https://rhpcircle.webflow.io',
+    navigationTimeout: 15_000,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'off',

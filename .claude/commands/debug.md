@@ -19,6 +19,15 @@
 
 ---
 
+## Notion push: Debugging
+If this debug session is related to a tracked task (user names a slug):
+Update queue.json status to Debugging.
+Push to Notion: Status "Debugging", set Last Updated.
+If Notion fails, log warning and continue.
+If not related to a tracked task, skip this step.
+
+---
+
 ## Diagnostic Loop
 
 Activate the **debug skill** and run its full loop:
@@ -49,8 +58,16 @@ Activate the **debug skill** and run its full loop:
 2. **Update CLAUDE.md** — if root cause reveals a recurring pattern, add it to Known Gotchas
 
 3. **Promote if needed** — if the confirmed fix requires a proper build (non-trivial change, touches multiple files, needs QA):
-   - Ask: *"This looks non-trivial — shall I add it to the queue as READY_FOR_BUILD?"*
+   - Ask: *"This looks non-trivial — shall I add it to the queue as Ready to Build?"*
    - If yes: create queue item with slug, summary, and link to debug log
+
+---
+
+## Notion push: post-debug status
+If this was related to a tracked task:
+Ask user for status (same as /build wrap-up: ready-for-review / blocked / building).
+Update queue.json and push to Notion accordingly.
+If Notion fails, log warning and continue.
 
 ---
 

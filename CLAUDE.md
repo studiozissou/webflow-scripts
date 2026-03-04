@@ -34,6 +34,17 @@ Every project has `orchestrator.js` as the single entry. Page-specific modules a
 - Run `/audit-page` when reviewing an existing page for performance or accessibility
 - Agent outputs and session logs go to `.claude/logs/`
 
+## Task statuses
+
+Tasks in queue.json use these statuses:
+Triage → Ready to Plan → Planning → Ready to Build → Building → Ready to Review → Done
+
+Side tracks: Needs Debug → Debugging (rejoin at Ready to Review)
+             Blocked (from any status, returns to previous status when unblocked)
+
+Human gates: Triage→Ready to Plan (triage), Planning→Ready to Build (spec approval),
+Ready to Review→Done (final sign-off).
+
 ## Code Style
 - `const` over `let`; arrow functions; destructuring
 - Named exports only (no default exports in shared/)

@@ -1,23 +1,22 @@
-Show the current project status across all clients.
+# /status
 
-## Output the following
+Show current task status from queue.json.
 
-### Git status
-Run `git status` and `git log --oneline -10` and summarise what's changed and what's been committed recently.
+1. Read .claude/queue.json
+2. Filter out items with status Done
+3. Group by client, sort by priority within each client
+4. Display:
 
-### Queue status
-Read `.claude/queue.json` and show:
-- Pending tasks (grouped by client)
-- In-progress tasks
-- Done tasks from the last 7 days
+   ## Client: Ready Hit Play
+   | Task               | Status          | Priority |
+   |--------------------|-----------------|----------|
+   | Hero animation     | Building        | High     |
+   | CMS filter         | Blocked         | Medium   |
 
-### Specs status
-List all files in `.claude/specs/` with their status (Draft / Review / Approved).
+5. If any tasks are Blocked, highlight:
+   "! 1 blocked task: CMS filter — [blocker reason]"
 
-### ADR log
-List all files in `.claude/adrs/` with their title and status.
+6. Summary: "3 active tasks across 2 clients (1 blocked)"
 
-### Recent logs
-Show the last 10 lines of `.claude/logs/sessions.log` if it exists.
-
-Format everything as a clean markdown summary. Use tables where appropriate.
+7. If the user provides a client name ("/status ready-hit-play"), filter
+   to only that client.

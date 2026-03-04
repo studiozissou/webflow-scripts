@@ -7,6 +7,7 @@
     "test": "playwright test --config=tests/playwright.config.js",
     "test:smoke": "playwright test --config=tests/playwright.config.js smoke",
     "test:a11y": "playwright test --config=tests/playwright.config.js a11y",
+    "test:acceptance": "playwright test --config=tests/playwright.config.js acceptance",
     "test:report": "playwright show-report"
   },
   "keywords": [],
@@ -15,6 +16,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "dotenv": "^17.3.1"
   }
 }

@@ -1,7 +1,7 @@
 ---
 name: pm
 description: Use this agent for project management tasks — writing specs, breaking down features into tasks, estimating scope, maintaining queue.json, drafting briefs, and asking clarifying questions before development begins.
-model: claude-sonnet-4-6
+model: claude-opus-4-6
 tools:
   - Read
   - Write

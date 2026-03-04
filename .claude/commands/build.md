@@ -10,10 +10,15 @@ If Notion fails, log warning and continue.
 1. Read the spec from `.claude/specs/` (if it exists) or ask for a description.
 2. Read all relevant existing files before writing anything.
 3. Use the `code-writer` agent to implement the feature.
-4. If the feature has motion/animation, apply the `gsap-scrolltrigger` or `barba-js` skill as appropriate.
-5. After implementation, run `/qa-check` automatically.
-6. Update the relevant task in `.claude/queue.json` to `"status": "done"`.
-7. Present a summary of what was built, what files were changed, and any deployment steps.
+4. Use the `refactor` agent on all changed files. Instruction: "Refactor the implementation for clarity and pattern compliance. Do not change behaviour."
+5. Use the `code-reviewer` agent to review all changes. Handle the verdict:
+   - **PASS** — continue to the next step.
+   - **WARN** — show warnings to the user, then continue.
+   - **FAIL** — fix the issues, then re-run the code-reviewer. Max 3 review cycles. After 3 failures, mark the task Blocked in queue.json and ask the developer for guidance.
+6. If the feature has motion/animation, apply the `gsap-scrolltrigger` or `barba-js` skill as appropriate.
+7. After implementation, run `/qa-check` automatically.
+8. Update the relevant task in `.claude/queue.json` to `"status": "done"`.
+9. Present a summary of what was built, what files were changed, and any deployment steps.
 
 ## Rules
 - Never start writing code without reading existing files first

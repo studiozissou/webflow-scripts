@@ -36,7 +36,7 @@ Activate the **debug skill** and run its full loop:
 2. **Hypothesise** — state H1–H3 ranked before touching anything
 3. **Instrument** — targeted logging only, no logic changes
 4. **Test** — one hypothesis at a time
-5. **Fix** — apply only after hypothesis is confirmed; if confidence < 80% pause and ask
+5. **Fix** — use the **opus model** when applying fixes. Apply only after hypothesis is confirmed; if confidence < 80% pause and ask
 6. **Confirm** — verify fix, check for regressions, remove all instrumentation
 
 ---

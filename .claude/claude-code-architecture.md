@@ -32,6 +32,10 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | `ux-researcher` | Heuristic eval, user flows, competitor analysis, a11y (UX lens) | Read, Write, Glob, WebFetch, WebSearch |
 | `schema` | JSON-LD generation (12 types), validation, Webflow placement | Read, Write, Glob, Grep, WebSearch |
 
+Updated agents:
+- `code-reviewer` — now includes `mcp__webflow__element_snapshot_tool` and `mcp__webflow__style_tool` for selector verification + spacing compliance checks
+- `code-writer` — now includes spacing rules (Client First spacer divs, no custom spacing variables)
+
 ---
 
 ## Commands (slash commands)
@@ -40,16 +44,29 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | Command | What it does |
 |---------|-------------|
 | `/plan` | Plan-before-code: pm-questioning → spec to `specs/` → tasks to `queue.json` → agents list. Project version also generates Playwright acceptance tests. |
-| `/build` | Read spec → code-writer → `/qa-check` → update queue. Project version adds: commit → purge CDN → acceptance tests → retry loop (up to 8x) → smoke + a11y suites. |
+| `/build` | Read spec → selector verification → spacing check → code-writer → `/qa-check` → update queue. Project version adds: commit → purge CDN → acceptance tests → retry loop (up to 8x) → smoke + a11y suites. |
 | `/debug` | Pre-flight diagnostics → isolate/hypothesise/instrument/test/fix/confirm loop → debug log. |
 | `/status` | Root: full overview (git, specs, ADRs, logs). Project: compact queue table. |
 | `/qa-check` | Checklist: no console errors, mobile, reduced-motion, Barba cleanup, CLS, keyboard access, Playwright. |
 | `/architect` | Problem → architect agent → ADR to `adrs/` → update specs/tasks. |
 
+### Setup workflow
+| Command | What it does |
+|---------|-------------|
+| `/dev-setup` | Live status tracker for the setup phase — shows ✅/❌/⚠️/⏸ for each step |
+| `/client-brief` | Client context questions → writes `client.md` from template |
+| `/figma-audit` | Figma extraction → tokens, reference images, interaction specs, flags |
+| `/component-plan` | Component identification, flag resolution, sign-off → inventory |
+| `/arch-review` | Architect reviews full inventory for systemic risks → risk report |
+| `/webflow-connect` | Connect Webflow, rename vars to kebab-case, create new vars from tokens |
+| `/dev-queue` | Generate `queue.json` and `CLAUDE.md` from approved inventory |
+| `/style-guide` | Extend existing Webflow template style guide page with project tokens |
+| `/intake` | Existing site audit — read-only, captures context + runs automated checks |
+
 ### Scaffolding & generation
 | Command | What it does |
 |---------|-------------|
-| `/bootstrap` | Scaffold new client project with orchestrator.js template. |
+| `/bootstrap` | Scaffold new client project with orchestrator.js template. Now includes Webflow site discovery if MCP connected. |
 | `/new-section` | Scaffold animated section module + Webflow Designer steps. |
 | `/gsap-build` | GSAP animation builder with `gsap.context()` + reduced-motion guard. |
 | `/generate-schema` | JSON-LD structured data with `FILL_IN` placeholders. |
@@ -58,7 +75,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | Command | What it does |
 |---------|-------------|
 | `/discover` | Map codebase: file list, module map, GSAP/Barba inventory, TODOs. |
-| `/audit-page` | All 5 review agents (perf, seo, qa, ux-researcher, content) on one page. |
+| `/audit-page` | Webflow native audit (if MCP) + all 5 review agents on one page. |
 | `/refactor-js` | Propose → approve → Edit (not rewrite) → `/qa-check`. |
 | `/local` | Python CORS server on port 8080. |
 | `/sync-notion` | Push queue.json tasks to Notion dashboard. |
@@ -66,7 +83,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 ---
 
-## Skills (14 reference docs)
+## Skills (15 reference docs)
 
 | Skill | Coverage |
 |-------|----------|
@@ -76,6 +93,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | `pm-questioning` | 5 essential questions, follow-up probes, red flags |
 | `notion-dashboard` | DB ID, data source, property names, status mapping, client relation |
 | `webflow-embeds` | Placement types, CDN loading, CMS embeds, data attributes, gotchas |
+| `webflow-mcp` | Webflow MCP tools: selector verification, page audits, CMS management, Designer companion app |
 | `finsweet-attrs` | v2 API, filter/load/sort/nest attributes, GSAP+MutationObserver integration |
 | `lottie` | Playback, scroll-driven, hover, dynamic colour, a11y, Barba cleanup |
 | `three-js` | Minimal scene, GSAP uniforms, performance, Barba cleanup |
@@ -92,6 +110,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 **PostToolUse hook:** Prettier auto-formats any `.js/.ts/.css/.json` file after Write/Edit.
 **Stop hook:** Appends `[timestamp] session-end` to `logs/sessions.log`.
+**MCP permissions:** Webflow read operations (list, get, snapshot, styles) auto-allowed. Write operations (create, update, delete, publish, element_builder, asset) always prompt.
 
 ---
 
@@ -114,6 +133,22 @@ RHP has 2 accepted ADRs (dial state machine ownership, bg video sync strategy).
 
 ---
 
+## Setup Workflow
+
+New projects follow the setup phase sequence before any code is written:
+
+```
+/client-brief → /figma-audit → /component-plan → /arch-review → /webflow-connect → /dev-queue → /style-guide (optional)
+```
+
+Run `/dev-setup` at any time to check progress. Each step has pre-flight checks that enforce ordering.
+
+For existing sites, use `/intake` instead — captures context, audits the site read-only, and produces a prioritised report.
+
+See `claude-code-project-setup.md` for full workflow documentation (§4, §11–13).
+
+---
+
 ## Project-Level Extras (RHP)
 
 ### Scripts
@@ -129,8 +164,9 @@ RHP has 2 accepted ADRs (dial state machine ownership, bg video sync strategy).
 ```
 .claude/
 ├── agents/           # 11 agent configs (code-writer, qa, architect, pm, etc.)
-├── commands/         # 13+ slash command .md files
-├── skills/           # 14 reference doc .md files
+├── commands/         # 22 slash command .md files
+├── skills/           # 15 reference doc .md files (incl. webflow-mcp/)
+├── templates/        # client.md, acceptance-test.spec.js
 ├── adrs/             # Architecture Decision Records
 ├── specs/            # Feature specs from /plan
 ├── logs/             # sessions.log + debug logs
@@ -138,9 +174,10 @@ RHP has 2 accepted ADRs (dial state machine ownership, bg video sync strategy).
 ├── briefs/           # Project briefs
 ├── schema/           # JSON-LD outputs
 ├── scripts/          # purge-cdn.sh (project-level)
-├── templates/        # acceptance-test.spec.js (project-level)
-├── settings.json     # Prettier hook + session logger
+├── settings.json     # Prettier hook + session logger + MCP permissions
 ├── settings.local.json # Approved permissions (gitignored)
+├── claude-code-architecture.md   # This file
+├── claude-code-project-setup.md  # Setup guide (§4, §11–13)
 └── queue.json        # Task queue (source of truth)
 ```
 
@@ -148,7 +185,10 @@ RHP has 2 accepted ADRs (dial state machine ownership, bg video sync strategy).
 
 ## Key Patterns
 
-- **Workflow:** `/plan` → spec + acceptance tests → `/build` → commit → purge CDN → run tests → `/qa-check` → human review
+- **Setup workflow:** `/dev-setup` → `/client-brief` → `/figma-audit` → `/component-plan` → `/arch-review` → `/webflow-connect` → `/dev-queue` → `/style-guide`
+- **Build workflow:** `/plan` → spec + acceptance tests → `/build` → commit → purge CDN → run tests → `/qa-check` → human review
+- **Complex build:** `/plan` → `/architect` → `/build` (for state, GSAP, Barba, Finsweet, shared state)
 - **Notion sync:** queue.json is source of truth; Notion is read-only dashboard pushed via `/sync-notion`
 - **Agent delegation:** Commands orchestrate agents (e.g., `/build` calls code-writer then qa; `/audit-page` calls all 5 review agents in parallel)
 - **Hooks enforce consistency:** Prettier on every file edit, session logging on every stop
+- **MCP safety:** Read ops auto-allowed, write ops always prompt for approval

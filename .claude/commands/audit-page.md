@@ -3,6 +3,15 @@ Run a comprehensive audit of a specific Webflow page.
 ## Usage
 Provide: page URL and/or the Barba namespace for the page.
 
+## Step 1 — Webflow native audit (if MCP connected)
+
+Run before parallel agent calls:
+1. `site-audit` → save to `audits/site-audit-YYYY-MM-DD.md`
+2. `link-checker` → save to `audits/link-check-YYYY-MM-DD.md`
+3. `accessibility-audit` → save to `audits/a11y-YYYY-MM-DD.md`
+
+Do not duplicate checks already covered by Webflow skills output.
+
 ## Audit areas (run all agents)
 
 ### Performance audit (perf agent)

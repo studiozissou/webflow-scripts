@@ -9,6 +9,23 @@ If Notion fails, log warning and continue.
 0. **Log slug:** Run `.claude/scripts/log-slug.sh build_start <feature-slug>` (derive the slug from the feature/spec name).
 1. Read the spec from `.claude/specs/` (if it exists) or ask for a description.
 2. Read all relevant existing files before writing anything.
+## Selector verification (if Webflow MCP connected)
+
+Before writing JS targeting elements by class or data attribute:
+1. Use `element_snapshot_tool` to read target page DOM
+2. Confirm every selector exists
+3. If missing, stop and ask — do not assume it appears at runtime
+4. Document confirmed selectors in CLAUDE.md under "## Known selectors"
+
+## Spacing check
+
+Before writing any layout code:
+- Use Client First spacer divs for vertical rhythm between components
+- Use flex or grid for component-internal layout
+- Absolute placements: nearest approximation, add comment:
+  `/* manual placement — verify against design */`
+- Never create custom spacing variables or classes if Client First covers it
+
 3. Use the `code-writer` agent to implement the feature.
 4. Use the `refactor` agent on all changed files. Instruction: "Refactor the implementation for clarity and pattern compliance. Do not change behaviour."
 5. Use the `code-reviewer` agent to review all changes. Handle the verdict:
@@ -25,6 +42,8 @@ If Notion fails, log warning and continue.
 - Always check `shared/utils.js` and the project orchestrator before adding new utilities
 - Leave no console.log statements in completed code
 - Mark all tasks complete in queue.json when done
+- Verify all selectors via Webflow MCP before writing JS that targets them
+- Use Client First spacer divs for vertical rhythm — no margin-top/bottom between components
 - **Log slug:** After marking tasks complete, run `.claude/scripts/log-slug.sh build_end <feature-slug>`
 
 ## Wrap up

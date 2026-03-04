@@ -10,7 +10,7 @@ CLAUDE.md, link matching row), and Priority
 
 ## Process
 1. Use the `pm-questioning` skill to ask clarifying questions. Do not skip this step.
-2. Once answers are gathered, write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format.
+2. Once answers are gathered, use the **opus model** for spec writing and architectural analysis. Write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format.
 3. Break the feature into ordered tasks and append them to `.claude/queue.json`.
 4. Identify which agents are needed for each task (code-writer, qa, seo, perf, etc.).
 5. Flag any architectural decisions that need an ADR before work begins.

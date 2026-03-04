@@ -1,7 +1,7 @@
 ---
 name: code-writer
 description: Use this agent to write new JavaScript or CSS for Webflow projects — animations, interactions, custom components, Barba transitions, GSAP timelines, Lenis scroll, Finsweet integrations, or any greenfield module. Invoke when the task is net-new code.
-model: claude-sonnet-4-6
+model: claude-opus-4-6
 tools:
   - Read
   - Write

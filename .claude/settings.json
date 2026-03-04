@@ -1,4 +1,21 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__webflow__*list*",
+      "mcp__webflow__*get*",
+      "mcp__webflow__*read*",
+      "mcp__webflow__element_snapshot*",
+      "mcp__webflow__style_tool*"
+    ],
+    "ask": [
+      "mcp__webflow__*create*",
+      "mcp__webflow__*update*",
+      "mcp__webflow__*delete*",
+      "mcp__webflow__*publish*",
+      "mcp__webflow__element_builder*",
+      "mcp__webflow__asset_tool*"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {

@@ -8,6 +8,18 @@ Bootstrap a new Webflow project in this monorepo.
 5. Add an entry to `.claude/queue.json` for initial QA of the new project setup.
 6. Confirm the folder structure with the user.
 
+## Webflow site discovery (if MCP connected)
+
+If Webflow MCP available:
+1. List authorised sites, find the one matching this project
+2. Read page list and CMS collections
+3. Take element snapshot of home page
+4. Record in CLAUDE.md under "## Webflow": site ID, pages with IDs, CMS schemas,
+   existing custom code embeds
+5. Add empty "## Known selectors" placeholder to CLAUDE.md
+
+Skip silently if not connected.
+
 ## orchestrator.js template to use
 ```js
 // Orchestrator: <ClientName>

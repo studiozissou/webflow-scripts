@@ -5,6 +5,29 @@
 
 ---
 
+## 3. Figma MCP Integration
+
+One-time setup. Installed at user scope — applies to all client projects.
+
+```bash
+claude mcp add --transport http figma https://mcp.figma.com/mcp --scope user
+```
+
+Then authenticate:
+1. Start a new Claude Code session
+2. Run `/mcp` → select `figma` → select **Authenticate**
+3. Authorise in browser → confirm "Authentication successful" in Claude Code
+4. Verify with `/mcp` — figma should show as connected
+
+Read operations (get_design_context, get_metadata, get_screenshot, get_variable_defs,
+get_code_connect_map) — auto-allowed.
+Write operations (generate_figma_design, generate_diagram) — always prompt for approval.
+Permission rules in root `.claude/settings.json`.
+
+No companion app required — the remote MCP server connects directly to Figma's API.
+
+---
+
 ## 4. Webflow MCP Integration
 
 One-time setup. Installed at user scope — applies to all client projects.

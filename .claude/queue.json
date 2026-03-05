@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-02-27",
+  "updated": "2026-03-05",
   "queue": [
     {
       "id": "qa-rhp-claude-setup",
@@ -12,6 +12,128 @@
       "description": "Run /qa-check on orchestrator.js. Verify Barba namespaces, Lenis init, GSAP context cleanup, and reduced-motion guard are all in place before first deploy.",
       "created": "2026-02-24",
       "completed": "2026-02-27"
+    },
+    {
+      "id": "sz-nav-compass",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Nav compass — rotary switch navigation (reusable 2/3/4 links)",
+      "description": "Three-way rotary switch with compass dial. Anchor links: Surface=home, Dive=below, Contact=contact. Hover primes dial ~10deg, click rotates + scrolls. Reusable pattern for 2-4 links. Accessible (aria-hidden dial, reduced-motion skip).",
+      "complexity": "complex",
+      "spec": null,
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-hero-background",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Hero background — two decorative SVG blob/arch shapes",
+      "description": "Two overlapping organic SVG shapes layered behind hero text. Purely decorative, absolute positioned, full-width.",
+      "complexity": "simple",
+      "spec": null,
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-hero-title",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Hero title — 'Studio Zissou' + tagline with SplitText entrance",
+      "description": "Character-by-character entrance animation via GSAP SplitText (or SVG path animation if SVG format chosen). Tagline follows after title. Format TBD (text vs SVG for viewport-width scaling).",
+      "complexity": "complex",
+      "spec": null,
+      "blockedOn": "sz-hero-background",
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-intro-text",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Intro text — right-aligned body paragraphs",
+      "description": "Two-paragraph intro block, right-aligned. PP Rader Regular 14px, #2A2A2A. Static, no animation.",
+      "complexity": "simple",
+      "spec": null,
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-work-clients",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Work clients — CMS list with hover preview images + bracket chars",
+      "description": "CMS-driven client list. Hover fades in preview image at fixed position. All clients have external URLs with ↗ arrow. Font feature settings for bracket characters. CMS collection: name, preview image, URL, display order.",
+      "complexity": "complex",
+      "spec": null,
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-decorative-ovals",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Decorative ovals — breathing gills animation (Ghibli-inspired)",
+      "description": "Five oval SVGs. Inner SVG flips horizontally (scaleX), cascading right-to-left with stagger, 4s pause, repeat. Ghibli airship breathing gills aesthetic. GSAP timeline.",
+      "complexity": "complex",
+      "spec": null,
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-quality-cards",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Quality cards — scroll-triggered reveal (Interfaces/Code/Decisions)",
+      "description": "Three cards with corner pins and dashed connectors. ScrollTrigger-driven reveal: line draws, corners appear, content fades in. Decorative elements, no interaction.",
+      "complexity": "complex",
+      "spec": null,
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-contact-cta",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Contact CTA — heading + body + scroll anchor (mobile only)",
+      "description": "'Let's Talk It Through' heading, body paragraph, 'Get in touch →' anchor link. Link scrolls to form on mobile only (form stacks below on mobile).",
+      "complexity": "simple",
+      "spec": null,
+      "blockedOn": "sz-contact-form",
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-contact-form",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Contact form — postcard/telegram styled Webflow native form",
+      "description": "Vintage postcard aesthetic. Italian labels, SZ monogram, Name/Email/Message fields with dashed underlines. Webflow native form submission. Placeholder copy TBD.",
+      "complexity": "complex",
+      "spec": null,
+      "created": "2026-03-05"
+    },
+    {
+      "id": "sz-footer",
+      "project": "studio-zissou",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Plan",
+      "title": "Footer — © SZ, logo/trumpet, Privacy · Terms",
+      "description": "Simple flex row: © SZ left, SZ logo/trumpet graphic centre, Privacy · Terms right.",
+      "complexity": "simple",
+      "spec": null,
+      "created": "2026-03-05"
     }
   ]
 }

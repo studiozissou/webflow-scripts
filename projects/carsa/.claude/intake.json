@@ -1,0 +1,169 @@
+{
+  "project": {
+    "name": "Carsa",
+    "id": "68348ea61096b37caacd2f95",
+    "workspaceId": "67caba0c5c72084908790f0b",
+    "shortName": "carsa-v2",
+    "timezone": "Europe/London",
+    "createdOn": "2025-05-26",
+    "lastPublished": "2026-03-03"
+  },
+  "urls": {
+    "staging": "https://carsa-v2.webflow.io",
+    "live": "https://www.carsa.co.uk",
+    "customDomains": ["www.carsa.co.uk", "carsa.co.uk"]
+  },
+  "pages": {
+    "total": 64,
+    "published": [
+      { "title": "Home", "slug": "/", "id": "68348ea61096b37caacd2f96" },
+      { "title": "Vehicle Search Results", "slug": "/used-cars", "id": "683966e6b1e1153fbbb7f98c" },
+      { "title": "Car Finance", "slug": "/car-finance", "id": "68768862854a7905d1883339" },
+      { "title": "Car Finance Calculator", "slug": "/car-finance-calculator", "id": "68cc228bf2bd5a841aa4a4bc" },
+      { "title": "Find Your Store", "slug": "/stores", "id": "684295960de21f7c1c3bba1c" },
+      { "title": "Contact", "slug": "/contact", "id": "687f80db2ecb4fc595155864" },
+      { "title": "FAQ", "slug": "/faq", "id": "686d7f12c35891979d86e6b5" },
+      { "title": "Blog", "slug": "/blog", "id": "6842ccfe2be78e9bdd49ef2d" },
+      { "title": "Part Exchange", "slug": "/part-exchange", "id": "6880c6ff825dc00d03c471c1" },
+      { "title": "Value Car", "slug": "/value-car", "id": "696d4bc23b6f59c51ea50927" },
+      { "title": "All Models", "slug": "/all-models", "id": "68a878c27b87c9487b3f1d24" },
+      { "title": "Get Started", "slug": "/get-started", "id": "68ee10dd90ef42b566d39e81" },
+      { "title": "404", "slug": "/404", "id": "68348ea61096b37caacd2f99" },
+      { "title": "Password", "slug": "/401", "id": "68348ea61096b37caacd2f98" },
+      { "title": "About Carsa", "slug": "/about/carsa", "id": "687fc4386d3a7199b8618f88" },
+      { "title": "Car Preparation", "slug": "/about/car-preparation", "id": "687fbe978a47ec9b3daeba5d" },
+      { "title": "Careers", "slug": "/about/careers", "id": "687e3e2650b8b4f37b172812" },
+      { "title": "Car Care", "slug": "/car-care/overview", "id": "687df779a0540d1fc2eae689" },
+      { "title": "carsaCover", "slug": "/car-care/carsacover", "id": "687e342c4a3c47a452087a8f" },
+      { "title": "carsaCover EV", "slug": "/car-care/electric-vehicle-cover", "id": "687e27dc97bf2505003f67ea" },
+      { "title": "carsaProtect", "slug": "/car-care/car-paint-interior-protection", "id": "688256d7ce509abbe7006579" },
+      { "title": "carsaExtras", "slug": "/car-care/car-extras", "id": "688256eb0e727760494647e8" },
+      { "title": "Driveaway Car Insurance", "slug": "/car-care/drive-away-car-insurance", "id": "69a13ed603c7eec276a316b2" },
+      { "title": "Pod Point EV Charger Offer", "slug": "/car-care/podpoint", "id": "69a034913acb82ff151df59a" },
+      { "title": "Extended Mechanical Warranty Offer", "slug": "/car-care/extended-mechanical-warranty-offer", "id": "69a4779b7910d45403ba91bd" },
+      { "title": "Deals", "slug": "/used-cars/deals", "id": "6908c85ca243cb45503e0755" },
+      { "title": "Payment Success", "slug": "/payments/payment-success", "id": "6977a650ebec173189b33fcf" },
+      { "title": "Payment Failure", "slug": "/payments/payment-failure", "id": "6977a9558f03056a981ca4d3" }
+    ],
+    "drafts": [
+      { "title": "Style Guide", "slug": "/style-guide" },
+      { "title": "All Components", "slug": "/static-template-slug-1749539540598" },
+      { "title": "New Page", "slug": "/static-template-slug-1752833204025" },
+      { "title": "Chatbot-test", "slug": "/development/chatbot-test" },
+      { "title": "Wishlist", "slug": "/development/wishlist" },
+      { "title": "VDP Cold Banner", "slug": "/development/vdp-cold-banner" },
+      { "title": "Vehicle Search Results – Highlighted Card", "slug": "/development/vehicle-search-results---highlighted-card" },
+      { "title": "Sell Car Test Landing Page", "slug": "/development/sell-car-test-landing-page" },
+      { "title": "Home - Sell Car Update", "slug": "/development/home---sell-car-update" },
+      { "title": "Selected Results", "slug": "/development/selected-results" },
+      { "title": "Landing Page Example", "slug": "/archive/landing-page-example" },
+      { "title": "Components Page", "slug": "/archive/components-page" },
+      { "title": "Part Exchange - Do Not Use", "slug": "/archive/part-exchange-3" },
+      { "title": "testing-calltracks", "slug": "/archive/testing-calltracks" },
+      { "title": "Home v1 (pre-Autumn Deals)", "slug": "/archive/home-v1-pre-autumn-deals" },
+      { "title": "Home Autumn Deals (04/11/2025)", "slug": "/archive/home-autumn-deals" },
+      { "title": "Vehicle Search Results – Attention Grabber Test", "slug": "/archive/vehicle-search-results---attention-grabber-test" },
+      { "title": "Vehicle Search Results – Price Promotion", "slug": "/archive/vehicle-search-results---price-promotion" },
+      { "title": "Home 04/03/2026 (pre-Sell Car)", "slug": "/archive/home-04-03-2026-pre-sell-car" }
+    ],
+    "cmsTemplates": [
+      { "title": "Vehicles Template", "slug": "/vehicles/used", "collection": "Vehicles" },
+      { "title": "Makes Template", "slug": "/make", "collection": "Makes" },
+      { "title": "Models Template", "slug": "/models", "collection": "Models" },
+      { "title": "Locations Template", "slug": "/stores", "collection": "Locations" },
+      { "title": "Blogs Template", "slug": "/blog", "collection": "Blogs" },
+      { "title": "Blog Categories Template", "slug": "/blog-category", "collection": "Blog Categories" },
+      { "title": "FAQs Template", "slug": "/faq", "collection": "FAQs" },
+      { "title": "FAQ Categories Template", "slug": "/faq-categories", "collection": "FAQ Categories" },
+      { "title": "Terms Pages Template", "slug": "/terms", "collection": "Terms Pages" },
+      { "title": "Testimonials Template", "slug": "/testimonials", "collection": "Testimonials" },
+      { "title": "Features Template", "slug": "/features", "collection": "Features" },
+      { "title": "Car Badges Template", "slug": "/car-badges", "collection": "Car Badges" },
+      { "title": "Facilities Template", "slug": "/facilities", "collection": "Facilities" },
+      { "title": "Postcodes Template", "slug": "/used-cars-for-sale/near", "collection": "Postcodes" },
+      { "title": "Regions Template", "slug": "/regions", "collection": "Regions" },
+      { "title": "Fuel Types Template", "slug": "/used-cars-for-sale/fuel", "collection": "Fuel Types" },
+      { "title": "Promotions Template", "slug": "/used-cars-for-sale/promotions", "collection": "Promotions" }
+    ]
+  },
+  "collections": [
+    { "name": "Vehicles", "slug": "used", "id": "6846ae0d20cd88f8417a8e3f" },
+    { "name": "Makes", "slug": "make", "id": "6846b0361674a9904cfd81f5" },
+    { "name": "Models", "slug": "models", "id": "6838503636cda38a74aed12e" },
+    { "name": "Locations", "slug": "stores", "id": "68429a3b6fa9a12bf88fb7d1" },
+    { "name": "Blogs", "slug": "blog", "id": "683879dedde8cf636e1b496b" },
+    { "name": "Blog Categories", "slug": "blog-category", "id": "683879e7f64260956eacfc93" },
+    { "name": "FAQs", "slug": "faq", "id": "68388247ef681211607f1093" },
+    { "name": "FAQ Categories", "slug": "faq-categories", "id": "686d7f5a7ce43d58bc45300e" },
+    { "name": "Terms Pages", "slug": "terms", "id": "6842ee4ee19d16b5678236c9" },
+    { "name": "Testimonials", "slug": "testimonials", "id": "6836f6abd91ffe6feebf4de2" },
+    { "name": "Features", "slug": "features", "id": "6846b11e3ad940f8e62e7a0e" },
+    { "name": "Car Badges", "slug": "car-badges", "id": "683851884f07202dbf668421" },
+    { "name": "Facilities", "slug": "facilities", "id": "686e7bfa8847a30b145712f8" },
+    { "name": "Postcodes", "slug": "near", "id": "68b1a43d57611df95fee7aea" },
+    { "name": "Regions", "slug": "regions", "id": "68b1b7480122cf5e891a07bb" },
+    { "name": "Fuel Types", "slug": "fuel", "id": "68e8cc3ffed8bbed49f3e895" },
+    { "name": "Promotions", "slug": "promotions", "id": "6901e7888bfc1d5455dd27e0" }
+  ],
+  "ecommerce": false,
+  "localization": false,
+  "checks": {
+    "technical": {
+      "robots_txt": { "status": "pass", "notes": "Present. User-agent: * Allow: / Sitemap referenced." },
+      "sitemap_xml": { "status": "pass", "notes": "Present, ~1900+ URLs, referenced in robots.txt. No sub-sitemaps — single flat file." },
+      "custom_404": { "status": "pass", "notes": "Custom 404 page configured (id: 68348ea61096b37caacd2f99)" },
+      "favicon": { "status": "needs_verification", "notes": "Not confirmed from WebFetch — verify in Webflow site settings" },
+      "ssl": { "status": "pass", "notes": "Site served over HTTPS on www.carsa.co.uk" },
+      "canonical_domain": { "status": "pass", "notes": "Both carsa.co.uk and www.carsa.co.uk configured. Verify www redirect." }
+    },
+    "seo": {
+      "meta_titles": { "status": "warning", "notes": "Most pages have titles. /blog and /contact are MISSING title tags entirely." },
+      "meta_descriptions": { "status": "fail", "notes": "Set in Webflow Page Settings but NOT rendering in live HTML on any of the 8 pages checked. Critical gap." },
+      "og_tags": { "status": "fail", "notes": "No OG title, description, image, or URL on any page checked. Social sharing is uncontrolled." },
+      "canonical_tags": { "status": "fail", "notes": "No <link rel=canonical> found on any page checked. Duplicate content risk with query strings on /used-cars." },
+      "h1_tags": { "status": "fail", "notes": "H1 inflation: homepage 14+, used-cars 9, finance ~21, about 8, blog 3, FAQ 3. Only /stores and /contact correct at 1." },
+      "json_ld": { "status": "fail", "notes": "No static JSON-LD on any page. JS-injected FAQPage on /car-finance and /faq only — not guaranteed crawlable." },
+      "llms_txt": { "status": "pass", "notes": "Present at /llms.txt with company info, offerings, and regulatory numbers." }
+    },
+    "analytics_consent": {
+      "analytics": { "status": "pass", "notes": "GA4 (G-6WQDNZH59K) and GTM (GTM-MM5N6CP8) present." },
+      "cookie_consent": { "status": "warning", "notes": "VWO detected (account 1130895) — but no explicit cookie consent banner/mechanism found. Needs verification for GDPR compliance." },
+      "consent_alignment": { "status": "warning", "notes": "Cannot confirm analytics fires only after consent. VWO loads unconditionally. GTM may need consent mode." }
+    },
+    "content": {
+      "forms": { "status": "needs_verification", "notes": "Forms present (VRM lookup, search filters). Confirmation/redirect behaviour not tested." },
+      "images_alt": { "status": "fail", "notes": "30+ images missing alt attributes entirely (not empty alt — attribute absent). All car images, logos, badges affected." },
+      "viewport": { "status": "pass", "notes": "Webflow includes viewport meta by default. Confirmed present." }
+    },
+    "accessibility": {
+      "skip_link": { "status": "fail", "notes": "No skip-to-content link on any page." },
+      "form_labels": { "status": "fail", "notes": "All form inputs use placeholder only — no associated <label> elements." },
+      "main_landmark": { "status": "fail", "notes": "No <main> landmark element found." },
+      "nav_labels": { "status": "warning", "notes": "Multiple <nav> elements present without aria-label to distinguish them." },
+      "heading_hierarchy": { "status": "fail", "notes": "Contact page has zero headings. Other pages have broken hierarchy (H1 inflation)." },
+      "icon_links": { "status": "warning", "notes": "Social media icon links in footer lack accessible names." },
+      "logo_link": { "status": "fail", "notes": "Logo image inside link has no alt text — link has no accessible name." }
+    }
+  },
+  "customCodeInventory": {
+    "siteWide": {
+      "analytics": ["GA4 (G-6WQDNZH59K)", "GTM (GTM-MM5N6CP8)"],
+      "thirdParty": [
+        "VWO (Visual Website Optimizer) — account 1130895",
+        "n8n Chat widget — carsa.app.n8n.cloud webhook",
+        "@n8n/chat bundle (CDN)"
+      ],
+      "inlineScripts": [
+        "UTM/attribution tracking (referrer, UTM params to sessionStorage)",
+        "Form handling and valuation URL generation",
+        "GSAP draw-line / draw-shape animations",
+        "Chat initialization",
+        "Dynamic Make/Model dropdown filtering",
+        "Equal height card utility",
+        "Event listeners for form submissions"
+      ]
+    },
+    "perPage": "Not retrievable via MCP API — custom code added via Webflow Designer head/body embeds"
+  },
+  "auditDate": "2026-03-04"
+}

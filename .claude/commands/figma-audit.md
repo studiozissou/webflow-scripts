@@ -10,7 +10,28 @@ and prototype notes. Flags ambiguities but does not resolve them — that happen
 
 1. Read `.claude/client.md` — confirm project context
 2. Ask for Figma file URL or file key if not already known
-3. Connect via Figma MCP
+3. Connect via Figma MCP — run `whoami` to verify the connection is healthy before proceeding
+
+---
+
+## Figma MCP reliability rules
+
+The Figma MCP hangs on large nodes. Follow these rules for every MCP call:
+
+1. **Never call `get_metadata` on `0:1` (page root).** It will hang on any non-trivial file.
+2. **Prefer `get_design_context`** over `get_metadata`. It returns code, a screenshot, and
+   tokens — and handles large frames better than metadata serialization.
+3. **Work node-by-node.** If the user provides a page-level URL, ask them to identify the
+   key sections/frames, or use `get_design_context` on the top-level node first to get a
+   screenshot overview, then drill into child nodes by ID from the returned `data-node-id`
+   attributes.
+4. **If any MCP call runs longer than 60 seconds, assume it is hung.** Cancel it, skip that
+   node, log it in `figma-flags.md` as a `type: mcp-timeout` flag, and move on. Do not
+   retry the same call.
+5. **Use `get_screenshot`** (with `excludeScreenshot: false` on `get_design_context`) as a
+   lightweight fallback when full context extraction fails.
+6. **Use `get_variable_defs`** only on specific component/frame nodes that use variables —
+   never on the page root.
 
 ---
 
@@ -54,10 +75,20 @@ Token entry format:
 
 ---
 
-## Step 2 — Export reference images
+## Step 2 — Export reference screenshots
 
-Export screenshot of every distinct component, section, and page frame to
-`.claude/design/references/`. Name by component slug:
+For every distinct component, section, and page frame, save a reference screenshot to
+`.claude/design/references/`. These serve as visual ground truth for QA and regression
+testing later.
+
+**How to capture:**
+- `get_design_context` already returns a screenshot — save it directly from the response.
+- If `get_design_context` fails or times out on a node, use `get_screenshot` as a
+  standalone fallback (it's lighter — image only, no code generation).
+- Never skip the screenshot — if both tools fail on a node, log it as a `type: mcp-timeout`
+  flag and move on.
+
+**Naming — kebab-case by component slug:**
 
 - `nav-desktop.png`, `nav-mobile.png`
 - `hero-homepage.png`

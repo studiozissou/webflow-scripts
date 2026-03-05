@@ -1,6 +1,6 @@
 # Claude Code Architecture — Webflow Scripts Monorepo
 
-> Last updated: 2026-03-04
+> Last updated: 2026-03-05
 > Paste this into any Claude conversation to bring it up to speed on the workspace setup.
 
 ---
@@ -16,7 +16,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 ---
 
-## Agents (12 total)
+## Agents (13 total)
 
 | Agent | Purpose | Key tools |
 |-------|---------|-----------|
@@ -32,6 +32,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | `art-director` | Motion design critique, typography, spacing, Figma→Webflow | Read, Glob, Grep, WebFetch |
 | `ux-researcher` | Heuristic eval, user flows, competitor analysis, a11y (UX lens) | Read, Write, Glob, WebFetch, WebSearch |
 | `schema` | JSON-LD generation (12 types), validation, Webflow placement | Read, Write, Glob, Grep, WebSearch |
+| `convention-auditor` | Audit .claude/ files for project conventions (YAML frontmatter + markdown). Read-only — PASS/WARN/FAIL per file. | Read, Glob, Grep |
 
 ---
 
@@ -40,8 +41,8 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 ### Core workflow
 | Command | What it does |
 |---------|-------------|
-| `/plan` | Plan-before-code: pm-questioning → spec to `specs/` → tasks to `queue.json` → agents list. Project version also generates Playwright acceptance tests. |
-| `/build` | Read spec → selector verification → spacing check → code-writer → `/qa-check` → update queue. Project version adds: commit → purge CDN → acceptance tests → retry loop (up to 8x) → smoke + a11y suites. |
+| `/plan` | Plan-before-code: **research subagents** (GSD-inspired — 3 parallel Explore agents gather codebase patterns, specs/ADRs, and page DOM) → pm-questioning (informed by research) → spec to `specs/` → tasks to `queue.json` → agents list. Project version also generates Playwright acceptance tests. |
+| `/build` | Read spec → selector verification → spacing check → **fresh executor context** (GSD-inspired — spawns Task subagent for steps 3–7: code-writer → refactor → code-reviewer → qa-check) → verify loop in parent context. Project version adds: commit → purge CDN → acceptance tests → retry loop (up to 8x) → smoke + a11y suites. |
 | `/debug` | Pre-flight diagnostics → isolate/hypothesise/instrument/test/fix/confirm loop → debug log. |
 | `/status` | Root: full overview (git, specs, ADRs, logs). Project: compact queue table. |
 | `/qa-check` | Checklist: no console errors, mobile, reduced-motion, Barba cleanup, CLS, keyboard access, Playwright. |
@@ -60,6 +61,13 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | `/style-guide` | Extend existing Webflow template style guide page with project tokens |
 | `/intake` | Existing site audit — read-only, captures context + runs automated checks |
 
+### Commercial workflow
+| Command | What it does |
+|---------|-------------|
+| `/estimate` | Pricing estimate from intake or setup data |
+| `/proposal` | Client-facing proposal from approved estimate |
+| `/scope-check` | In/out of scope verdict with pricing (read-only) |
+
 ### Scaffolding & generation
 | Command | What it does |
 |---------|-------------|
@@ -73,6 +81,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 |---------|-------------|
 | `/discover` | Map codebase: file list, module map, GSAP/Barba inventory, TODOs. |
 | `/audit-page` | Webflow native audit (if MCP) + all 5 review agents on one page. |
+| `/audit-claude-files` | Convention auditor for .claude/ agents, commands, skills — PASS/WARN/FAIL per file. |
 | `/refactor-js` | Propose → approve → Edit (not rewrite) → `/qa-check`. |
 | `/local` | Python CORS server on port 8080. |
 | `/sync-notion` | Push queue.json tasks to Notion dashboard. |
@@ -160,9 +169,10 @@ See `claude-code-project-setup.md` for full workflow documentation (§4, §11–
 
 ```
 .claude/
-├── agents/           # 11 agent configs (code-writer, qa, architect, pm, etc.)
-├── commands/         # 22 slash command .md files
+├── agents/           # 13 agent configs (code-writer, qa, architect, pm, convention-auditor, etc.)
+├── commands/         # 25 slash command .md files
 ├── skills/           # 15 reference doc .md files (incl. webflow-mcp/)
+├── reference/        # rate-card.md, about-me.md (singleton config files)
 ├── templates/        # client.md, acceptance-test.spec.js
 ├── adrs/             # Architecture Decision Records
 ├── specs/            # Feature specs from /plan
@@ -180,11 +190,28 @@ See `claude-code-project-setup.md` for full workflow documentation (§4, §11–
 
 ---
 
+## taches-cc-resources Plugin (Global)
+
+The [glittercowboy/taches-cc-resources](https://github.com/glittercowboy/taches-cc-resources) plugin is installed globally (`~/.claude/`). It provides creator tools, auditors, thinking frameworks, and meta-prompting workflows.
+
+**Safe to use on this project:**
+- `/create-hook`, `/create-subagent`, `/create-slash-command`, `/create-agent-skill`, `/create-meta-prompt` — guided creation tools
+- `/audit-slash-command` — useful for checking command structure
+
+**Do NOT run on existing project files:**
+- `/audit-skill`, `/audit-subagent` — enforce pure XML body format, which is NOT our convention
+- `/heal-skill` — would auto-rewrite files to XML format
+
+Our project uses **YAML frontmatter + markdown headings** for agents/skills. Use `/audit-claude-files` instead for project-convention compliance checks.
+
+---
+
 ## Key Patterns
 
 - **Setup workflow:** `/dev-setup` → `/client-brief` → `/figma-audit` → `/component-plan` → `/arch-review` → `/webflow-connect` → `/dev-queue` → `/style-guide`
-- **Build workflow:** `/plan` → spec + acceptance tests → `/build` → commit → purge CDN → run tests → `/qa-check` → human review
+- **Build workflow:** `/plan` (research agents → pm-questioning → spec + acceptance tests) → `/build` (fresh executor context → commit → purge CDN → run tests) → human review
 - **Complex build:** `/plan` → `/architect` → `/build` (for state, GSAP, Barba, Finsweet, shared state)
+- **GSD patterns:** Research subagents in `/plan` produce informed specs; fresh executor contexts in `/build` prevent context rot across multi-component builds
 - **Notion sync:** queue.json is source of truth; Notion is read-only dashboard pushed via `/sync-notion`
 - **Agent delegation:** Commands orchestrate agents (e.g., `/build` calls code-writer then qa; `/audit-page` calls all 5 review agents in parallel)
 - **Hooks enforce consistency:** Prettier on every file edit, session logging on every stop

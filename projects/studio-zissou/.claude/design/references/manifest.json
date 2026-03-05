@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "source": "Figma MCP screenshots",
+    "generated": "2026-03-05",
+    "note": "Screenshots were captured via get_design_context / get_screenshot and displayed inline. Asset URLs expire after 7 days. Re-run /figma-audit to refresh."
+  },
+  "screenshots": [
+    {
+      "slug": "homepage-full",
+      "node_id": "1:17",
+      "description": "Full homepage — all sections visible",
+      "captured": true
+    },
+    {
+      "slug": "hero-background-upper",
+      "node_id": "1:19",
+      "description": "Upper organic blob/arch SVG shape",
+      "captured": true
+    },
+    {
+      "slug": "hero-background-lower",
+      "node_id": "1:20",
+      "description": "Lower organic blob/arch SVG shape",
+      "captured": true
+    },
+    {
+      "slug": "nav-compass",
+      "node_id": "1:24",
+      "description": "Navigation — Dive, Surface, Contact with compass dial",
+      "captured": true
+    },
+    {
+      "slug": "intro-text",
+      "node_id": "1:31",
+      "description": "Intro paragraph — specialist digital partner",
+      "captured": true
+    },
+    {
+      "slug": "work-clients",
+      "node_id": "1:38",
+      "description": "Work section — client names with Carsa preview card",
+      "captured": true
+    },
+    {
+      "slug": "decorative-ovals",
+      "node_id": "1:125",
+      "description": "Five decorative oval/pill shapes in horizontal row",
+      "captured": true
+    },
+    {
+      "slug": "respect-for-quality",
+      "node_id": "1:219",
+      "description": "Quality section — Interfaces, Code, Decisions cards",
+      "captured": true
+    },
+    {
+      "slug": "contact-cta",
+      "node_id": "1:327",
+      "description": "Contact CTA — Let's Talk It Through + postcard form",
+      "captured": true
+    }
+  ]
+}

@@ -1,0 +1,295 @@
+{
+  "meta": {
+    "source": "Figma — SZ-Web-Dev-v1.2",
+    "file_key": "asCeJjDk4uqpRcn4WJ0Kux",
+    "node_id": "1:17",
+    "extracted": "2026-03-05"
+  },
+  "colors": [
+    {
+      "figma_name": "Background fill (page/sections)",
+      "converted_name": "color-bg-primary",
+      "type": "color",
+      "value": "#EBEDE6",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Text fill (headings, body, nav)",
+      "converted_name": "color-text-primary",
+      "type": "color",
+      "value": "#2A2A2A",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Text fill (body alternate)",
+      "converted_name": "color-text-body",
+      "type": "color",
+      "value": "#000000",
+      "flagged": true,
+      "flag_reason": "Used on intro text (1:31) and CTA body (1:329) — unclear if intentionally different from #2A2A2A or an oversight",
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Form SZ monogram",
+      "converted_name": "color-text-inverse",
+      "type": "color",
+      "value": "#EBEDE6",
+      "flagged": true,
+      "flag_reason": "SZ monogram on form uses background colour as text — confirms inverse pattern but only one use case",
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Border / stroke",
+      "converted_name": "color-border-default",
+      "type": "color",
+      "value": "#2A2A2A",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    }
+  ],
+  "text_styles": [
+    {
+      "figma_name": "Section heading (Respect for Quality, Let's Talk It Through, client names)",
+      "converted_name": "text-heading-section",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Thin",
+        "font_size": "90px",
+        "line_height": "1.2",
+        "letter_spacing": "0",
+        "text_transform": "uppercase"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Body large (Quality section description)",
+      "converted_name": "text-body-large",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Regular",
+        "font_size": "40px",
+        "line_height": "1.2",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Card label (Interfaces, Code, Decisions)",
+      "converted_name": "text-label-card",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Regular",
+        "font_size": "28px",
+        "line_height": "1.5",
+        "letter_spacing": "0",
+        "text_transform": "uppercase",
+        "font_feature_settings": "'onum' 1, 'pnum' 1, 'frac' 1"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Card description / Nav links",
+      "converted_name": "text-body-medium",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Regular",
+        "font_size": "20px",
+        "line_height": "1.2",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Body/Regular (CTA paragraph)",
+      "converted_name": "text-body-default",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Regular",
+        "font_size": "16px",
+        "line_height": "1.5",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Intro text (hero description)",
+      "converted_name": "text-body-small",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Regular",
+        "font_size": "14px",
+        "line_height": "1.5",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Measurement / captions / form micro",
+      "converted_name": "text-caption",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Regular",
+        "font_size": "12px",
+        "line_height": "1.5",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Form field labels (Name, Email, Message)",
+      "converted_name": "text-form-label",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Italic",
+        "font_size": "24px",
+        "line_height": "1",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Form header values (STUDIO ZISSOU, INTERNET, date)",
+      "converted_name": "text-form-header",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Thin",
+        "font_size": "24px",
+        "line_height": "1",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Form section labels (Destinazione, Provienza, etc.)",
+      "converted_name": "text-form-section-label",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Italic",
+        "font_size": "12px",
+        "line_height": "1",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "SZ monogram (form card)",
+      "converted_name": "text-monogram",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Bold",
+        "font_size": "87.55px",
+        "line_height": "1.2",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    }
+  ],
+  "border_radius": [
+    {
+      "figma_name": "Image card (Carsa screenshot)",
+      "converted_name": "radius-card-image",
+      "type": "border-radius",
+      "value": "14px",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Form card body",
+      "converted_name": "radius-card-form",
+      "type": "border-radius",
+      "value": "5px",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Form header cells",
+      "converted_name": "radius-form-header",
+      "type": "border-radius",
+      "value": "2.5px",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    }
+  ],
+  "shadows": [],
+  "breakpoints": [
+    {
+      "figma_name": "Desktop frame width",
+      "converted_name": "breakpoint-desktop",
+      "type": "breakpoint",
+      "value": "1440px",
+      "flagged": true,
+      "flag_reason": "Design frame is 1440px but sections are labelled 2000px — likely wider-than-viewport sections for overflow/parallax effect. Clarify intended viewport vs. section width.",
+      "webflow_variable_id": null
+    }
+  ],
+  "font_features": [
+    {
+      "figma_name": "Card labels (Interfaces, Code, Decisions)",
+      "converted_name": "font-feature-card-labels",
+      "type": "font-feature-settings",
+      "value": "'onum' 1, 'pnum' 1, 'frac' 1",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Work titles with brackets",
+      "converted_name": "font-feature-work-titles",
+      "type": "font-feature-settings",
+      "value": "'ordn' 1, 'ss05' 1, 'ss07' 1, 'ss10' 1, 'ss12' 1, 'case' 1",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    }
+  ]
+}

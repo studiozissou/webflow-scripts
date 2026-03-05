@@ -12,6 +12,7 @@ Enter plan mode. Read all target files and analyse them against the refactor tar
 
 - List every proposed change with file, location, and what will change
 - For each change, write a plain English summary explaining *why* this improves the code (no jargon — a non-developer should be able to follow it)
+- For each change, include at least one concrete test describing how to verify the behaviour is preserved (e.g. "check element X still shows Y", "grep for Z returns zero matches")
 - Group changes by type (extraction, cleanup, pattern unification, etc.)
 - Flag any changes that are borderline behaviour changes
 - Exit plan mode and wait for user approval before touching any code

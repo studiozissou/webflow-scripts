@@ -14,63 +14,36 @@ document.addEventListener('DOMContentLoaded', () => {
 (function() {
   const yearEl = document.getElementById('year');
   if (yearEl) {
-    yearEl.innerText = new Date().getFullYear();
+    yearEl.textContent = new Date().getFullYear();
   }
 })();
 
 // Add hidden fields to each form to track conversion pages and UTMs
-(function() {
-  if (typeof jQuery === 'undefined') return;
-  
-  jQuery(document).ready(function() {
-    const currentUrl = window.location.href;
-    
-    function getUrlParams(url) {
-      const params = {};
-      const parser = document.createElement('a');
-      parser.href = url;
-      const query = parser.search.substring(1);
-      const vars = query.split('&');
-      
-      for (let i = 0; i < vars.length; i++) {
-        const pair = vars[i].split('=');
-        if (pair.length === 2) {
-          params[pair[0]] = decodeURIComponent(pair[1]);
-        }
-      }
-      return params;
+document.addEventListener('DOMContentLoaded', () => {
+  const url = new URL(window.location.href);
+  const urlWithoutUTMs = new URL(url.origin + url.pathname);
+
+  for (const [key, value] of url.searchParams) {
+    if (!key.startsWith('utm_')) {
+      urlWithoutUTMs.searchParams.set(key, value);
     }
-    
-    const urlParams = getUrlParams(currentUrl);
-    let urlWithoutUTMs = currentUrl.split('?')[0];
-    const cleanQueryParams = [];
-    
-    for (const key in urlParams) {
-      if (!key.startsWith('utm_')) {
-        cleanQueryParams.push(key + '=' + encodeURIComponent(urlParams[key]));
+  }
+
+  document.querySelectorAll('form').forEach(form => {
+    const conversionInput = document.createElement('input');
+    conversionInput.type = 'hidden';
+    conversionInput.name = 'Conversion Page';
+    conversionInput.value = urlWithoutUTMs.href;
+    form.appendChild(conversionInput);
+
+    for (const [key, value] of url.searchParams) {
+      if (key.startsWith('utm_')) {
+        const utmInput = document.createElement('input');
+        utmInput.type = 'hidden';
+        utmInput.name = key;
+        utmInput.value = value;
+        form.appendChild(utmInput);
       }
     }
-    
-    if (cleanQueryParams.length > 0) {
-      urlWithoutUTMs += '?' + cleanQueryParams.join('&');
-    }
-    
-    jQuery('form').each(function() {
-      const hiddenInput = jQuery('<input>')
-        .attr('type', 'hidden')
-        .attr('name', 'Conversion Page')
-        .attr('value', urlWithoutUTMs);
-      jQuery(this).append(hiddenInput);
-      
-      for (const key in urlParams) {
-        if (key.startsWith('utm_')) {
-          const utmInput = jQuery('<input>')
-            .attr('type', 'hidden')
-            .attr('name', key)
-            .attr('value', urlParams[key]);
-          jQuery(this).append(utmInput);
-        }
-      }
-    });
   });
-})();
+});

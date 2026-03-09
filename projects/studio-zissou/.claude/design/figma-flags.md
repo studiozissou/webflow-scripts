@@ -116,6 +116,13 @@
 - **Resolved:** yes
 - **Resolution:** Confirmed: © SZ left, Privacy · Terms right, SZ logo/trumpet centre. Simple flex row, no additional content.
 
+## color-palette-corrected
+- **Frame:** All (meta)
+- **Flag:** Previous extraction (2026-03-05) had wrong colour palette — missing brand-primary (#DECEE9), brand-secondary (#FAE89E), background-darker (#E1E3DC), and border-dark (#737373). Also included #000000 which was an oversight.
+- **Type:** variant
+- **Resolved:** yes
+- **Resolution:** User confirmed correct 6-colour palette. All colour tokens updated in figma-tokens.json. #000000 dropped entirely — all text uses #2A2A2A.
+
 ## get-in-touch-cta
 - **Frame:** Section (1:327)
 - **Flag:** "Get in touch →" text is within the CTA paragraph. Unclear if it's a separate link, a button, or a scroll anchor to the adjacent form.

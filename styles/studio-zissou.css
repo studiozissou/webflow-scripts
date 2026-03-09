@@ -1,0 +1,331 @@
+/* ==========================================================================
+   Studio Zissou — Custom Styles
+   ========================================================================== */
+
+:root {
+  --sz-brand-dark: #2A2A2A;
+  --sz-bg-light: #EBEDE6;
+  --sz-border-dark: #737373;
+  --sz-radius-card-image: 0.875rem;
+}
+
+/* Hero Section
+   ========================================================================== */
+
+.sz-hero-section {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Hero Background Shape
+   Decorative arch with notch, positioned below the title text.
+   The SVG lives in a Webflow Embed block with class .sz-hero-bg.
+   ========================================================================== */
+
+.sz-hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  z-index: 0;
+  /* vertical position set via Webflow Designer top value — verify against design */
+}
+
+.sz-hero-bg svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Work Section
+   ========================================================================== */
+
+.sz-work-section {
+  position: relative;
+  padding-top: 8rem;
+  padding-bottom: 8rem;
+  background-color: var(--sz-bg-light);
+}
+
+.sz-work-list {
+  padding-left: 6.25%;
+}
+
+.sz-work-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  text-decoration: none;
+  color: var(--sz-brand-dark);
+  transition: opacity 0.2s ease;
+}
+
+.sz-work-item:hover {
+  opacity: 0.7;
+}
+
+.sz-work-item + .sz-work-item {
+  margin-top: 2.5rem;
+}
+
+.sz-work-name {
+  font-family: 'PP Rader', sans-serif;
+  font-weight: 100;
+  font-size: 5.625rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--sz-brand-dark);
+  font-feature-settings: 'ordn' 1, 'ss05' 1, 'ss07' 1, 'ss10' 1, 'ss12' 1, 'case' 1;
+}
+
+/* Preview Image (hidden until JS hover activates it)
+   ========================================================================== */
+
+.sz-work-preview {
+  position: fixed;
+  top: 50%;
+  right: 10%;
+  transform: translateY(-50%);
+  width: 696px;
+  height: 508px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.sz-work-preview-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--sz-radius-card-image);
+}
+
+/* Arrow — decorative ↗ character */
+.sz-work-arrow {
+  font-family: 'PP Rader', sans-serif;
+  font-weight: 100;
+  font-size: 5.625rem;
+  line-height: 1.2;
+  color: var(--sz-brand-dark);
+  user-select: none;
+}
+
+/* Tablet (768–991px): scale down work section typography and preview */
+@media (max-width: 61.9375rem) {
+  .sz-work-name,
+  .sz-work-arrow {
+    font-size: 3.5rem;
+  }
+
+  .sz-work-preview {
+    width: 440px;
+    height: 322px;
+    right: 5%;
+  }
+
+  .sz-work-item + .sz-work-item {
+    margin-top: 1.5rem;
+  }
+}
+
+/* Mobile (<768px): stack rows, hide preview entirely */
+@media (max-width: 47.9375rem) {
+  .sz-work-name,
+  .sz-work-arrow {
+    font-size: 2.25rem;
+  }
+
+  .sz-work-list {
+    padding-left: 4%;
+  }
+
+  .sz-work-item {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .sz-work-item + .sz-work-item {
+    margin-top: 1rem;
+  }
+
+  .sz-work-preview {
+    display: none;
+  }
+}
+
+/* Reduced motion: disable CSS transitions so no animation runs outside GSAP.
+   !important needed to override inline styles set by GSAP. */
+@media (prefers-reduced-motion: reduce) {
+  .sz-work-item {
+    transition: none !important;
+  }
+}
+
+/* Quality Cards — "Respect for Quality" Section
+   ========================================================================== */
+
+.sz-quality-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 1.5rem;
+}
+
+.sz-quality-card {
+  position: relative;
+  width: 100%;
+  max-width: 50.875rem; /* 814px */
+  min-height: 12.625rem; /* 202px */
+  background-color: var(--sz-bg-light);
+  border: 1px solid var(--sz-border-dark);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+/* Corner pins — decorative circles at each corner */
+.sz-quality-pin {
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--sz-brand-dark);
+  pointer-events: none;
+}
+
+.sz-quality-pin--tl {
+  top: 0.75rem;
+  left: 0.75rem;
+}
+
+.sz-quality-pin--tr {
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.sz-quality-pin--br {
+  bottom: 0.75rem;
+  right: 0.75rem;
+}
+
+.sz-quality-pin--bl {
+  bottom: 0.75rem;
+  left: 0.75rem;
+}
+
+/* Dashed SVG connector line */
+.sz-quality-line {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 0.125rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.sz-quality-line svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sz-quality-line line {
+  stroke: var(--sz-border-dark);
+  stroke-width: 1.5;
+}
+
+/* Card content layout */
+.sz-quality-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Label — e.g. "Interfaces" */
+.sz-quality-label {
+  font-family: 'PP Rader', sans-serif;
+  font-weight: 400;
+  font-size: 1.75rem;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--sz-brand-dark);
+  font-feature-settings: 'onum' 1, 'pnum' 1, 'frac' 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Description — e.g. "that are carefully tuned" */
+.sz-quality-desc {
+  font-family: 'PP Rader', sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--sz-brand-dark);
+}
+
+/* Tablet (768–991px): fluid cards */
+@media (max-width: 61.9375rem) {
+  .sz-quality-card {
+    max-width: 100%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Mobile (<768px): stack vertically, no animation needed */
+@media (max-width: 47.9375rem) {
+  .sz-quality-section {
+    min-height: auto;
+  }
+
+  .sz-quality-card {
+    min-height: 10rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .sz-quality-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .sz-quality-line {
+    display: none;
+  }
+
+  .sz-quality-label {
+    font-size: 1.375rem;
+  }
+
+  .sz-quality-desc {
+    font-size: 1rem;
+  }
+}
+
+/* Reduced motion: ensure everything is visible immediately.
+   !important overrides GSAP inline styles (gsap.set writes to element.style).
+   CSS safety net in case JS hasn't run yet or fails to load. */
+@media (prefers-reduced-motion: reduce) {
+  .sz-quality-pin,
+  .sz-quality-content {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .sz-quality-line line {
+    stroke-dashoffset: 0 !important;
+  }
+}

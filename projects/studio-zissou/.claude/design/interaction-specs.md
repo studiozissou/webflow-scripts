@@ -54,7 +54,7 @@
 
 ### Layout
 - **Type:** Single text block, right-aligned
-- **Notes:** PP Rader Regular 14px, black (#000000). Two paragraphs: "Studio Zissou is a specialist digital partner..." and "We work with teams who need clarity..."
+- **Notes:** PP Rader Regular 14px, #2A2A2A. Two paragraphs: "Studio Zissou is a specialist digital partner..." and "We work with teams who need clarity..."
 
 ---
 

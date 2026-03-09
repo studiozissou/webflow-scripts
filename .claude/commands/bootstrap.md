@@ -5,8 +5,20 @@ Bootstrap a new Webflow project in this monorepo.
 2. Create the directory `projects/<client-slug>/`.
 3. Create `projects/<client-slug>/orchestrator.js` using the standard IIFE template with Barba.js lifecycle hooks and Lenis initialisation.
 4. Create `projects/<client-slug>/README.md` with: client name, site URL, stack summary, deploy instructions.
-5. Add an entry to `.claude/queue.json` for initial QA of the new project setup.
-6. Confirm the folder structure with the user.
+5. Scaffold test files using the templates in `tests/templates/`:
+   - Copy `tests/templates/canary.spec.template.js` → `tests/acceptance/_canary-<client-slug>.spec.js`
+   - Copy `tests/templates/smoke.test.template.js` → `tests/acceptance/smoke-<client-slug>.test.js`
+   - Copy `tests/templates/a11y.test.template.js` → `tests/acceptance/a11y-<client-slug>.test.js`
+   - Replace `__STAGING_URL_PLACEHOLDER__` with the project's Webflow staging URL
+   - Replace `__CLIENT_NAME__` with the client display name
+   - Add npm scripts to root `package.json`:
+     - `"test:<slug>": "playwright test --config=tests/acceptance/playwright.config.js <slug>"`
+     - `"test:<slug>:smoke": "playwright test --config=tests/acceptance/playwright.config.js smoke-<slug>"`
+     - `"test:<slug>:a11y": "playwright test --config=tests/acceptance/playwright.config.js a11y-<slug>"`
+   - Ensure `.env.test` contains the staging URL (add if not present)
+6. Add an entry to `.claude/queue.json` for initial QA of the new project setup.
+7. Run the canary test (`npx playwright test --config=tests/acceptance/playwright.config.js _canary-<slug>`) to verify the staging site is reachable.
+8. Confirm the folder structure with the user.
 
 ## Webflow site discovery (if MCP connected)
 

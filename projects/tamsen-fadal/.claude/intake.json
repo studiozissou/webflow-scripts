@@ -1,0 +1,208 @@
+{
+  "project": {
+    "name": "Tamsen Fadal",
+    "id": "68a2d5617c9630d9c780ded5",
+    "workspaceId": "63d338a14e0fe069797b5e0f",
+    "shortName": "tamsenfadal",
+    "timezone": "America/New_York",
+    "createdOn": "2025-08-18",
+    "lastPublished": "2026-02-25"
+  },
+  "urls": {
+    "staging": "https://tamsenfadal.webflow.io",
+    "live": "https://tamsenfadal.com",
+    "customDomains": [
+      "tamsenfadal.com",
+      "www.tamsenfadal.com"
+    ]
+  },
+  "pages": {
+    "total": 54,
+    "static": [
+      { "title": "Home", "slug": "/", "draft": false },
+      { "title": "About", "slug": "about-tamsen", "draft": false },
+      { "title": "Podcast", "slug": "podcast", "draft": false },
+      { "title": "Book", "slug": "book-how-to-menopause", "draft": false },
+      { "title": "Blog", "slug": "blog", "draft": false },
+      { "title": "Shop", "slug": "shop", "draft": false },
+      { "title": "Events", "slug": "events", "draft": false },
+      { "title": "Speaking", "slug": "speaking", "draft": false },
+      { "title": "Advocacy", "slug": "advocacy", "draft": false },
+      { "title": "Directory", "slug": "menopause-support-provider-directory", "draft": false },
+      { "title": "Menopause Education Hub", "slug": "menopause-education-hub", "draft": false },
+      { "title": "Press", "slug": "press", "draft": false },
+      { "title": "Contact", "slug": "contact", "draft": false },
+      { "title": "Newsletter", "slug": "newsletter", "draft": false },
+      { "title": "M Factor", "slug": "themfactor", "draft": false },
+      { "title": "M Factor 2.0", "slug": "themfactor2", "draft": false },
+      { "title": "Perimenopause Quiz", "slug": "free-menopause-guide", "draft": false },
+      { "title": "Free Resources", "slug": "book-how-to-menopause/free-resources", "draft": false },
+      { "title": "Physician Referral Form", "slug": "menopause-support-provider-directory/physician-referral-form", "draft": false },
+      { "title": "Thank You", "slug": "free-menopause-guide/thank-you", "draft": false },
+      { "title": "Privacy Policy", "slug": "privacy-policy", "draft": false },
+      { "title": "Terms & Conditions", "slug": "terms-conditions", "draft": false },
+      { "title": "404", "slug": "404", "draft": false },
+      { "title": "Password", "slug": "401", "draft": false },
+      { "title": "Style Guide", "slug": "style-guide", "draft": true },
+      { "title": "Podcast v1", "slug": "archive/podcast-v1", "draft": true }
+    ],
+    "cmsTemplates": [
+      "Podcast Episodes",
+      "Podcast / Topics",
+      "Podcast / Trending Searches",
+      "Podcast / Reviews",
+      "Blog / Topics",
+      "Blogs",
+      "Book / Reviews",
+      "Book / Experts",
+      "Book / Events",
+      "Book / Countries",
+      "Book / Reader Photos",
+      "Book / Resources",
+      "Media Types",
+      "Screenings",
+      "Providers",
+      "Providers / Locations",
+      "Providers / Specialties",
+      "Providers / Types",
+      "Press Articles",
+      "Events / Events",
+      "Events / Types",
+      "Education Hub / Resources",
+      "Education Hub / Trending Searches",
+      "Shop Collections",
+      "Speaking / Reviews",
+      "Advocacy / State Legislations",
+      "Advocacy / News Articles",
+      "FAQs"
+    ]
+  },
+  "collections": [
+    { "name": "Podcast Episodes", "id": "68a5993943f9f66c9d22b4b7" },
+    { "name": "Podcast / Topics", "id": "68b19a85b39d5e21fd7e8492" },
+    { "name": "Podcast / Trending Searches", "id": "68c31bbc0c3df44a82140df9" },
+    { "name": "Podcast / Reviews", "id": "6901dec0933ba791e7c957d9" },
+    { "name": "Blog / Topics", "id": "690334267a7ef1cf5bab3aee" },
+    { "name": "Blogs", "id": "68bede1a5ef125759435c0e1" },
+    { "name": "Book / Reviews", "id": "68b1cbd982c2444952e6201f" },
+    { "name": "Book / Experts", "id": "68beda6c6ca77ec1fa8a950c" },
+    { "name": "Book / Events", "id": "68bee220e70e6b65a31b2261" },
+    { "name": "Book / Countries", "id": "68bee231806baa51b480522d" },
+    { "name": "Book / Reader Photos", "id": "68d057cd8e70612690edb043" },
+    { "name": "Book / Resources", "id": "68d0740e0c823854d9bc391f" },
+    { "name": "Media Types", "id": "68bed8b8e4477f11f6c1e832" },
+    { "name": "Screenings", "id": "68bed990779e02f69e5b5f7b" },
+    { "name": "Providers", "id": "68bedb8b4af254930ab6a152" },
+    { "name": "Providers / Locations", "id": "68bedb03af5b501cc26e003c" },
+    { "name": "Providers / Specialties", "id": "68bedb10d59ad056a54bc522" },
+    { "name": "Providers / Types", "id": "68bedb2830246829401c406c" },
+    { "name": "Press Articles", "id": "68bee11715c673b2dcf52e3d" },
+    { "name": "Events / Events", "id": "68d65c61db60f21e8489ce00" },
+    { "name": "Events / Types", "id": "68d666867f1a22f827fa1277" },
+    { "name": "Education Hub / Resources", "id": "68d6721d9e5d8910c339845c" },
+    { "name": "Education Hub / Trending Searches", "id": "68da7e78c034263c19c5cad5" },
+    { "name": "Shop Collections", "id": "68e51ac42e78266cb3fa2813" },
+    { "name": "Speaking / Reviews", "id": "6925aec41cf9f047796a9220" },
+    { "name": "Advocacy / State Legislations", "id": "6942c01a50421ebc419e7790" },
+    { "name": "Advocacy / News Articles", "id": "6942c09d0f3e267e45ffb81a" },
+    { "name": "FAQs", "id": "696a1a546d4704d71448a047" }
+  ],
+  "ecommerce": false,
+  "checks": {
+    "technical": {
+      "robots_txt": {
+        "status": "pass",
+        "notes": "Present. No paths blocked. References sitemap at www.tamsenfadal.com/sitemap.xml."
+      },
+      "sitemap_xml": {
+        "status": "pass",
+        "notes": "Present. 461 URLs. Single file (no sub-sitemaps). Missing lastmod and priority tags."
+      },
+      "custom_404": {
+        "status": "pass",
+        "notes": "Custom 404 page configured and published."
+      },
+      "favicon": {
+        "status": "pass",
+        "notes": "Present. Set in Webflow project settings."
+      },
+      "ssl": {
+        "status": "pass",
+        "notes": "Site served over HTTPS."
+      },
+      "canonical_domain": {
+        "status": "needs_attention",
+        "notes": "Both tamsenfadal.com and www.tamsenfadal.com are custom domains. Sitemap references www. Canonical tags not detected on pages checked. Verify consistent WWW/non-WWW redirect."
+      }
+    },
+    "seo": {
+      "meta_titles": {
+        "status": "pass",
+        "notes": "Present on all key static pages via Webflow page settings. Unique per page."
+      },
+      "meta_descriptions": {
+        "status": "pass",
+        "notes": "Present on all key static pages. Newsletter page has a typo ('seaason')."
+      },
+      "og_tags": {
+        "status": "needs_attention",
+        "notes": "OG title and description set to copy from SEO fields on most pages. OG image not confirmed — verify OG image is set on key pages (Home, Book, Podcast, About)."
+      },
+      "canonical_tags": {
+        "status": "pass",
+        "notes": "Present on all pages. Webflow injects canonical tags server-side pointing to www.tamsenfadal.com."
+      },
+      "h1_tags": {
+        "status": "needs_attention",
+        "notes": "Homepage has 1 H1 (correct). About page has multiple H1s — needs fixing. Other pages (Podcast, Blog, Shop, Events, Speaking, Contact) have exactly 1 H1."
+      },
+      "schema_json_ld": {
+        "status": "pass",
+        "notes": "Homepage has WebSite, Organization (Take Flight Productions LLC), Person (Tamsen Fadal), and WebPage schemas."
+      },
+      "llms_txt": {
+        "status": "pass",
+        "notes": "Present at root. Last updated 2025-12-19. Covers citation policy, content scope, and medical disclaimer."
+      }
+    },
+    "analytics_consent": {
+      "analytics": {
+        "status": "pass",
+        "notes": "GA4 (G-6X6DCE04K4) and GTM (GTM-WFRDD6ZD) both present on homepage."
+      },
+      "cookie_consent": {
+        "status": "needs_attention",
+        "notes": "Custom popup with cookie-based dismiss (24hr expiry). Not a full consent management platform — no opt-in/opt-out granularity. May not comply with GDPR for EU visitors."
+      },
+      "consent_alignment": {
+        "status": "needs_attention",
+        "notes": "GA4 and GTM appear to fire before any consent interaction. Analytics should be gated behind consent for GDPR compliance."
+      }
+    },
+    "content": {
+      "forms": {
+        "status": "pass",
+        "notes": "Contact form has success/error messages configured. Newsletter forms use FormKit. Physician referral form present."
+      },
+      "images_alt_text": {
+        "status": "missing",
+        "notes": "Widespread missing alt text across all pages checked: Home, About, Podcast, Blog, Shop, Events, Speaking, Contact. Logo images, hero images, product images, and event images all affected. Critical accessibility issue."
+      },
+      "viewport": {
+        "status": "pass",
+        "notes": "Webflow injects mobile viewport meta tag by default."
+      }
+    },
+    "custom_code_inventory": {
+      "scripts": [
+        { "name": "Google Analytics 4", "id": "G-6X6DCE04K4", "location": "head" },
+        { "name": "Google Tag Manager", "id": "GTM-WFRDD6ZD", "location": "head" },
+        { "name": "ACSB Accessibility Widget", "location": "body", "notes": "Third-party accessibility overlay plugin" },
+        { "name": "FormKit", "location": "body", "notes": "Email form handling and validation" },
+        { "name": "Swiper", "location": "body", "notes": "Carousel/slider library" },
+        { "name": "Cookie popup script", "location": "body", "notes": "Custom JS for popup dismiss with 24hr cookie" }
+      ]
+    }
+  },
+  "auditDate": "2026-03-09"
+}

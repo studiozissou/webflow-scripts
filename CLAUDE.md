@@ -52,6 +52,47 @@ Ready to Review→Done (final sign-off).
 - Clean up event listeners, ScrollTrigger instances, and timelines on page transitions
 - No `console.log` in committed code (use `DEBUG && console.log(...)` pattern)
 
+## Webflow Clipboard Tool
+
+Generate Webflow-native elements from text descriptions and paste them into the Designer.
+
+### Setup
+1. Add Chrome alias to `~/.zshrc`:
+   ```bash
+   alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-webflow-dev'
+   ```
+2. `npm install` at repo root (installs `@anthropic-ai/sdk` + `playwright`)
+3. Set `ANTHROPIC_API_KEY` env var
+
+### Usage
+```bash
+# Generate + inject to clipboard
+npm run wf-gen -- --description "hero section with heading and CTA"
+
+# Generate only (no clipboard inject)
+npm run wf-gen -- --description "pricing grid" --dry-run
+
+# Capture samples from Designer (reverse-engineering)
+node scripts/webflow/capture-clipboard.js
+```
+
+### Architecture
+- `scripts/webflow/wf-gen.js` — CLI entry point
+- `scripts/webflow/generate-json.js` — Anthropic API → XscpData JSON
+- `scripts/webflow/validate-wf-json.js` — Schema validator
+- `scripts/webflow/inject-clipboard.js` — CDP clipboard writer
+- `scripts/webflow/capture-clipboard.js` — Reverse-engineering capture tool
+- `.claude/skills/webflow-clipboard/` — Format reference
+- `.claude/skills/webflow-clipboard-prompt/` — System prompt for generation
+
+### Gotchas
+- Chrome must be running with `--remote-debugging-port=9222` for inject/capture
+- Designer clipboard uses MIME type `application/json`, not `text/plain`
+- All CSS in `styleLess` must be longhand (no `margin:`, `padding:`, `border-radius:`, etc.)
+- Client First utility classes don't need `styles` entries — they exist in the project
+- UUIDs must be regenerated for each paste (no reuse across operations)
+- ~10,000 char limit for inline clipboard JSON
+
 ## Do Not
 - Never use `document.write`
 - Never inline `<script>` with untrusted content

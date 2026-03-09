@@ -1,0 +1,25 @@
+{
+  "name": "webflow-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Monorepo of custom JS/CSS for Webflow production sites",
+  "scripts": {
+    "wf-gen": "node scripts/webflow/wf-gen.js",
+    "test:wf": "node --test 'tests/webflow/*.test.js'",
+    "test:sz": "playwright test --config=tests/acceptance/playwright.config.js",
+    "test:sz:smoke": "playwright test --config=tests/acceptance/playwright.config.js smoke",
+    "test:sz:a11y": "playwright test --config=tests/acceptance/playwright.config.js a11y",
+    "test:sz:acceptance": "playwright test --config=tests/acceptance/playwright.config.js acceptance",
+    "test:report": "playwright show-report"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "@playwright/test": "^1.58.2",
+    "dotenv": "^17.3.1",
+    "playwright": "^1.50.0"
+  }
+}

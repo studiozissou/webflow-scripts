@@ -1,63 +1,114 @@
 {
   "meta": {
     "source": "Figma MCP screenshots",
-    "generated": "2026-03-05",
-    "note": "Screenshots were captured via get_design_context / get_screenshot and displayed inline. Asset URLs expire after 7 days. Re-run /figma-audit to refresh."
+    "generated": "2026-03-06",
+    "note": "Screenshots captured via get_screenshot MCP tool. Images are inline-only (not saved to disk) — they appear in the conversation context where captured. Re-run /figma-audit to refresh."
   },
   "screenshots": [
     {
       "slug": "homepage-full",
       "node_id": "1:17",
       "description": "Full homepage — all sections visible",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
+    },
+    {
+      "slug": "home--hero",
+      "node_id": "1:18",
+      "description": "Hero section — display title, tagline, nav compass, intro text, SVG background",
+      "captured": true,
+      "captured_date": "2026-03-06"
+    },
+    {
+      "slug": "home--work",
+      "node_id": "1:38",
+      "description": "Work section — client names with bracket characters, Carsa hover preview",
+      "captured": true,
+      "captured_date": "2026-03-06"
+    },
+    {
+      "slug": "home--gills",
+      "node_id": "1:125",
+      "description": "Gills section — five decorative oval/pill shapes in horizontal row",
+      "captured": true,
+      "captured_date": "2026-03-06"
+    },
+    {
+      "slug": "home--quality",
+      "node_id": "1:219",
+      "description": "Quality section — Respect for Quality heading, Interfaces/Code/Decisions cards",
+      "captured": true,
+      "captured_date": "2026-03-06"
+    },
+    {
+      "slug": "home--contact",
+      "node_id": "1:327",
+      "description": "Contact section — Let's Talk It Through CTA + postcard-style form",
+      "captured": true,
+      "captured_date": "2026-03-06"
+    },
+    {
+      "slug": "home--footer",
+      "node_id": "1:441",
+      "description": "Footer — SZ monogram, wave shapes, copyright, Privacy/Terms links",
+      "captured": true,
+      "captured_date": "2026-03-06"
     },
     {
       "slug": "hero-background-upper",
       "node_id": "1:19",
       "description": "Upper organic blob/arch SVG shape",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     },
     {
       "slug": "hero-background-lower",
       "node_id": "1:20",
       "description": "Lower organic blob/arch SVG shape",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     },
     {
       "slug": "nav-compass",
       "node_id": "1:24",
       "description": "Navigation — Dive, Surface, Contact with compass dial",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     },
     {
       "slug": "intro-text",
       "node_id": "1:31",
       "description": "Intro paragraph — specialist digital partner",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     },
     {
       "slug": "work-clients",
       "node_id": "1:38",
       "description": "Work section — client names with Carsa preview card",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     },
     {
       "slug": "decorative-ovals",
       "node_id": "1:125",
       "description": "Five decorative oval/pill shapes in horizontal row",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     },
     {
       "slug": "respect-for-quality",
       "node_id": "1:219",
       "description": "Quality section — Interfaces, Code, Decisions cards",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     },
     {
       "slug": "contact-cta",
       "node_id": "1:327",
       "description": "Contact CTA — Let's Talk It Through + postcard form",
-      "captured": true
+      "captured": true,
+      "captured_date": "2026-03-05"
     }
   ]
 }

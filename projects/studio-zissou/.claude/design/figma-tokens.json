@@ -3,56 +3,114 @@
     "source": "Figma — SZ-Web-Dev-v1.2",
     "file_key": "asCeJjDk4uqpRcn4WJ0Kux",
     "node_id": "1:17",
-    "extracted": "2026-03-05"
+    "extracted": "2026-03-06",
+    "notes": "Colour palette corrected per user confirmation (2026-03-06). Previous extraction had wrong colours."
   },
   "colors": [
     {
-      "figma_name": "Background fill (page/sections)",
-      "converted_name": "color-bg-primary",
+      "figma_name": "Brand primary accent (lavender)",
+      "converted_name": "brand-primary",
       "type": "color",
-      "value": "#EBEDE6",
+      "value": "#DECEE9",
+      "cf_mapping": "brand-primary",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
-      "webflow_variable_id": null
+      "webflow_variable_id": "variable-1d2b7ddd-6834-f8f6-f634-60a5812d7005"
     },
     {
-      "figma_name": "Text fill (headings, body, nav)",
-      "converted_name": "color-text-primary",
+      "figma_name": "Brand secondary accent (gold)",
+      "converted_name": "brand-secondary",
+      "type": "color",
+      "value": "#FAE89E",
+      "cf_mapping": "brand-secondary",
+      "cf_class": null,
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": "variable-c8010ba7-171f-f3cb-0a74-e748704318b1"
+    },
+    {
+      "figma_name": "Dark text / alternate background",
+      "converted_name": "brand-dark",
       "type": "color",
       "value": "#2A2A2A",
+      "cf_mapping": "brand-dark",
+      "cf_class": "text-color-primary, background-color-alternate",
       "flagged": false,
       "flag_reason": null,
-      "webflow_variable_id": null
+      "webflow_variable_id": "variable-a93f481e-99df-fcbf-bdd8-e7ad5048520c"
     },
     {
-      "figma_name": "Text fill (body alternate)",
-      "converted_name": "color-text-body",
-      "type": "color",
-      "value": "#000000",
-      "flagged": true,
-      "flag_reason": "Used on intro text (1:31) and CTA body (1:329) — unclear if intentionally different from #2A2A2A or an oversight",
-      "webflow_variable_id": null
-    },
-    {
-      "figma_name": "Form SZ monogram",
-      "converted_name": "color-text-inverse",
+      "figma_name": "Light background (page/sections)",
+      "converted_name": "background-light",
       "type": "color",
       "value": "#EBEDE6",
-      "flagged": true,
-      "flag_reason": "SZ monogram on form uses background colour as text — confirms inverse pattern but only one use case",
-      "webflow_variable_id": null
-    },
-    {
-      "figma_name": "Border / stroke",
-      "converted_name": "color-border-default",
-      "type": "color",
-      "value": "#2A2A2A",
+      "cf_mapping": "background-color-primary",
+      "cf_class": "background-color-primary",
       "flagged": false,
       "flag_reason": null,
-      "webflow_variable_id": null
+      "webflow_variable_id": "variable-39425a93-f874-f0db-b670-7236e08424e1"
+    },
+    {
+      "figma_name": "Darker background (alternate sections)",
+      "converted_name": "background-darker",
+      "type": "color",
+      "value": "#E1E3DC",
+      "cf_mapping": "background-color-secondary",
+      "cf_class": "background-color-secondary",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": "variable-db1c495c-62d4-deba-dfb1-3a44151192ca"
+    },
+    {
+      "figma_name": "Border / stroke (medium grey)",
+      "converted_name": "border-dark",
+      "type": "color",
+      "value": "#737373",
+      "cf_mapping": "stroke-medium",
+      "cf_class": null,
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": "variable-513667b2-2465-83b3-dfc5-334d78351f4e"
     }
   ],
   "text_styles": [
+    {
+      "figma_name": "Hero display title (Studio Zissou)",
+      "converted_name": "text-display-hero",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Bold",
+        "font_size": "15.625rem",
+        "line_height": "1",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "cf_mapping": "custom",
+      "cf_class": null,
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
+    {
+      "figma_name": "Hero tagline (Designed for warmth...)",
+      "converted_name": "text-tagline-hero",
+      "type": "text",
+      "value": {
+        "font_family": "PP Rader",
+        "font_weight": "Thin",
+        "font_size": "2.5rem",
+        "line_height": "1.2",
+        "letter_spacing": "0",
+        "text_transform": "none"
+      },
+      "cf_mapping": "heading-style-h2",
+      "cf_class": "heading-style-h2",
+      "flagged": false,
+      "flag_reason": null,
+      "webflow_variable_id": null
+    },
     {
       "figma_name": "Section heading (Respect for Quality, Let's Talk It Through, client names)",
       "converted_name": "text-heading-section",
@@ -60,11 +118,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Thin",
-        "font_size": "90px",
+        "font_size": "5.625rem",
         "line_height": "1.2",
         "letter_spacing": "0",
         "text_transform": "uppercase"
       },
+      "cf_mapping": "heading-style-h1",
+      "cf_class": "heading-style-h1",
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -76,11 +136,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Regular",
-        "font_size": "40px",
+        "font_size": "2.5rem",
         "line_height": "1.2",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "text-size-xlarge",
+      "cf_class": "text-size-xlarge",
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -92,12 +154,14 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Regular",
-        "font_size": "28px",
+        "font_size": "1.75rem",
         "line_height": "1.5",
         "letter_spacing": "0",
         "text_transform": "uppercase",
         "font_feature_settings": "'onum' 1, 'pnum' 1, 'frac' 1"
       },
+      "cf_mapping": "text-size-large",
+      "cf_class": "text-size-large",
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -109,11 +173,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Regular",
-        "font_size": "20px",
+        "font_size": "1.25rem",
         "line_height": "1.2",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "text-size-medium",
+      "cf_class": "text-size-medium",
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -125,11 +191,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Regular",
-        "font_size": "16px",
+        "font_size": "1rem",
         "line_height": "1.5",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "text-size-regular",
+      "cf_class": "text-size-regular",
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -141,11 +209,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Regular",
-        "font_size": "14px",
+        "font_size": "0.875rem",
         "line_height": "1.5",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "text-size-small",
+      "cf_class": "text-size-small",
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -157,11 +227,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Regular",
-        "font_size": "12px",
+        "font_size": "0.75rem",
         "line_height": "1.5",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "text-size-tiny",
+      "cf_class": "text-size-tiny",
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -173,11 +245,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Italic",
-        "font_size": "24px",
+        "font_size": "1.5rem",
         "line_height": "1",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "custom",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -189,11 +263,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Thin",
-        "font_size": "24px",
+        "font_size": "1.5rem",
         "line_height": "1",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "custom",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -205,11 +281,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Italic",
-        "font_size": "12px",
+        "font_size": "0.75rem",
         "line_height": "1",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "custom",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -221,11 +299,13 @@
       "value": {
         "font_family": "PP Rader",
         "font_weight": "Bold",
-        "font_size": "87.55px",
+        "font_size": "5.472rem",
         "line_height": "1.2",
         "letter_spacing": "0",
         "text_transform": "none"
       },
+      "cf_mapping": "custom",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -236,28 +316,34 @@
       "figma_name": "Image card (Carsa screenshot)",
       "converted_name": "radius-card-image",
       "type": "border-radius",
-      "value": "14px",
+      "value": "0.875rem",
+      "cf_mapping": "radius-large",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
-      "webflow_variable_id": null
+      "webflow_variable_id": "relume-variable--radius-large"
     },
     {
       "figma_name": "Form card body",
       "converted_name": "radius-card-form",
       "type": "border-radius",
-      "value": "5px",
+      "value": "0.3125rem",
+      "cf_mapping": "radius-medium",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
-      "webflow_variable_id": null
+      "webflow_variable_id": "relume-variable--radius-medium"
     },
     {
       "figma_name": "Form header cells",
       "converted_name": "radius-form-header",
       "type": "border-radius",
-      "value": "2.5px",
+      "value": "0.15625rem",
+      "cf_mapping": "radius-small",
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
-      "webflow_variable_id": null
+      "webflow_variable_id": "relume-variable--radius-small"
     }
   ],
   "shadows": [],
@@ -266,7 +352,9 @@
       "figma_name": "Desktop frame width",
       "converted_name": "breakpoint-desktop",
       "type": "breakpoint",
-      "value": "1440px",
+      "value": "90rem",
+      "cf_mapping": null,
+      "cf_class": null,
       "flagged": true,
       "flag_reason": "Design frame is 1440px but sections are labelled 2000px — likely wider-than-viewport sections for overflow/parallax effect. Clarify intended viewport vs. section width.",
       "webflow_variable_id": null
@@ -278,6 +366,8 @@
       "converted_name": "font-feature-card-labels",
       "type": "font-feature-settings",
       "value": "'onum' 1, 'pnum' 1, 'frac' 1",
+      "cf_mapping": null,
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null
@@ -287,6 +377,8 @@
       "converted_name": "font-feature-work-titles",
       "type": "font-feature-settings",
       "value": "'ordn' 1, 'ss05' 1, 'ss07' 1, 'ss10' 1, 'ss12' 1, 'case' 1",
+      "cf_mapping": null,
+      "cf_class": null,
       "flagged": false,
       "flag_reason": null,
       "webflow_variable_id": null

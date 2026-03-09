@@ -13,13 +13,22 @@ Run each in its own session, reviewing output before the next.
 | 0 | `/dev-setup` | See where you are (all X on a fresh project) |
 | 1 | `/client-brief` | Load client context and write client.md |
 | 2 | `/figma-audit` | Extract and analyse a Figma design for implementation |
-| 3 | `/component-plan` | Identify components and get sign-off (blocking) |
-| 4 | `/arch-review` | Pre-build architecture review (blocking) |
-| 5 | `/webflow-connect` | Webflow connection and variable setup |
-| 6 | `/dev-queue` | Generate queue.json and CLAUDE.md for the project |
-| 7 | `/style-guide` | Extend or review the template style guide (optional) |
+| 3 | `/style-guide` | Set up design system — variables, base CF classes, visual reference |
+| 4 | `/component-plan` | Identify components and get sign-off (blocking) |
+| 5 | `/arch-review` | Pre-build architecture review (blocking) |
+| 6 | `/webflow-connect` | Webflow connection and variable setup |
+| 7 | `/dev-queue` | Generate queue.json and CLAUDE.md for the project |
 
 Check `/dev-setup` at the start of any session to see current status.
+
+Setup sequence:
+```
+/client-brief → /figma-audit → /style-guide → /component-plan → /arch-review
+                                                                       ↓
+                                              /dev-queue ← /webflow-connect
+                       ↓
+         Build loop: /plan → /build → publish to staging → /qa-check
+```
 
 ### Commercial
 

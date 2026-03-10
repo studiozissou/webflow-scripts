@@ -41,13 +41,20 @@ use it as-is — no mapping needed.
       - Report: "Updated: [slug] — [old status] → [new status]"
    d. If not found:
       - Create a new row:
-        - Task Name: item title or slug (humanised)
-        - Slug: item id/slug
+        - Task Name: a plain-English, clear, short description of the task (rewrite the title if needed — drop technical shorthand, slugs, and abbreviations so a non-dev can understand it at a glance)
+        - Slug: project initials prefix + short plain-English slug (e.g. "sz-hero-background", "rhp-qa-setup", "wfs-class-registry"). Derive initials from the project name in queue.json. Keep the slug part as brief and non-technical as possible.
         - Status: mapped status
         - Client: search Clients DB by name, link the matching row. Ask user if no match found.
         - Priority: from queue.json if available, default "Medium"
         - Type: from queue.json if available, default "Feature"
         - Last Updated: now
+      - After creating/updating the row, set the **page body** (content block inside the Notion page) to a step-by-step outline:
+        - Start with a 1-2 sentence summary of the issue/feature
+        - Then a numbered list (or bullet points) breaking down the implementation steps, derived from the `description` field. Always use numbered/bulleted formatting — never prose paragraphs.
+        - If the task has a `spec` path, read the spec file and include its key steps as sub-bullets
+        - If the task has `blockedOn`, add a "Blocked by:" line listing the dependencies
+        - If the task has `complexity`, note it at the top
+        - Keep it scannable — short bullets, no code blocks, no long sentences
       - Report: "Created: [slug] — [status]"
    e. If the Notion API call fails for this item, report the error
       and continue to the next item.

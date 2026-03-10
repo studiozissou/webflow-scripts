@@ -81,6 +81,39 @@
   max-width: none;
 }
 
+/* Safari: SVG height="162" attribute overrides flex container sizing.
+   Cascade height:100% from .is-nav (which has --logo-small-height) through
+   .about-hero_ready and .nav_logo-embed so the SVG inherits the constrained
+   height instead of using its 162px presentation attribute. width:auto
+   preserves each glyph's viewBox aspect ratio. */
+.nav_logo-wrapper-2.is-nav .about-hero_ready,
+.nav_logo-wrapper-2.is-nav .nav_logo-embed {
+  height: 100%;
+}
+.nav_logo-wrapper-2.is-nav svg {
+  height: 100%;
+  width: auto;
+}
+
+/* Logo proportional flex: distribute widths by each SVG's viewBox width
+   (602, 316, 494) so all three words render at identical height.
+   Applies to both the about hero AND the transition overlay logo
+   (GSAP animates the transition logo to height:auto — SVGs need
+   CSS height:auto to override the HTML height="100%" attribute,
+   otherwise auto resolves to ~0 and the logo collapses). */
+.section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1),
+.about-transition .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1) { flex: 602 1 0%; }
+.section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2),
+.about-transition .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2) { flex: 316 1 0%; }
+.section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3),
+.about-transition .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3) { flex: 494 1 0%; }
+
+.section_about-hero .nav_logo-wrapper-2 svg,
+.about-transition .nav_logo-wrapper-2 svg {
+  width: 100%;
+  height: auto;
+}
+
 /* Breakpoint overrides: edit logo sizes per viewport (Webflow breakpoints: 991px, 767px, 479px) */
 @media screen and (max-width: 991px) {
   :root {
@@ -252,6 +285,9 @@
   display: grid;
   place-items: center;
   z-index: 3;
+  /* Safari: place-items on grid doesn't reliably center absolute children.
+     Explicit margin:auto + inset:0 is the cross-browser centering pattern. */
+  margin: auto;
   /* pointer-events are managed in JS / via dial interaction */
 }
 
@@ -619,6 +655,48 @@
   aspect-ratio: 1 !important;
   pointer-events: none;
   transform-origin: 50% 50%;
+}
+
+/* ====== Case Video Progress Bar ====== */
+.section_case-video {
+  position: relative;
+}
+
+.case-video_progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0.5rem;
+  z-index: 10;
+  cursor: none;
+}
+
+.case-video_progress-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.case-video_progress-hover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.case-video_progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  background: #05EFBF;
+  pointer-events: none;
 }
 
 /* Disable custom cursor on touch devices */

@@ -1,5 +1,9 @@
 Plan a feature before writing any code.
 
+## Model split
+- **Opus max-effort** for clarifying questions (step 2), spec writing + task breakdown + parallelisation map (steps 3–7), and Barba impact check
+- **Sonnet** for research agents (step 1), acceptance test generation (step 8), and Notion pushes
+
 ## Notion push: Planning (if Notion connected)
 Update queue.json: set this slug's status to Planning.
 Push to Notion: search by Slug + Client, update Status to "Planning",
@@ -31,13 +35,19 @@ Use the `pm-questioning` skill to ask clarifying questions. Do not skip this ste
 
 ### 3–8. Spec writing and task breakdown
 
-3. Once answers are gathered, use the **opus model** for spec writing and architectural analysis. Write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format. Incorporate research findings into the spec — reference reusable code, confirmed selectors, and existing patterns.
+3. Once answers are gathered, use **Opus max-effort** for spec writing and architectural analysis. Write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format. Incorporate research findings into the spec — reference reusable code, confirmed selectors, and existing patterns.
 4. Break the feature into ordered tasks and append them to `.claude/queue.json`.
 5. Identify which agents are needed for each task (code-writer, qa, seo, perf, etc.).
+5b. **Parallelisation analysis** — For every task in the breakdown, evaluate parallel potential. Reference the `parallelisation` skill. Produce a **Parallelisation Map** in the spec:
+   - Independent streams (tasks that can run simultaneously) with agent, est. time, est. tokens
+   - Sequential dependencies (which tasks gate others)
+   - Recommendation: parallel/sequential, worktrees yes/no, agent teams yes/no
+   - This map feeds into `/build` so it can spawn parallel executors
 6. Flag any architectural decisions that need an ADR before work begins.
 7. **Barba transition impact check** (see below).
 8. **Generate acceptance tests** (see below).
-9. Present the plan summary to the user for approval before proceeding.
+9. **Verification section** — Every plan MUST include a "Verification" section listing concrete steps to confirm the implementation is correct. Prefer automated checks (run tests, run a script, use MCP tools, grep for expected output) over manual inspection.
+10. Present the plan summary to the user for approval before proceeding.
 
 **Always write the spec file to `.claude/specs/<feature-slug>.md` before the session ends — do not wait to be asked.**
 

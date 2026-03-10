@@ -131,6 +131,30 @@ For size tokens with responsive values:
 
 Organize output **by section per page**, not by component.
 
+### Parallelisation gate
+
+After the top-level overview identifies all sections across all pages, reference the
+`parallelisation` skill. Present the gate for parallel section reads:
+
+| # | Stream | Agent type | Est. tokens | Est. wall time |
+|---|--------|-----------|-------------|----------------|
+| 1-3 | Sections batch 1 (3 sections) | Explore | ~45k | ~25s |
+| 4-6 | Sections batch 2 (3 sections) | Explore | ~45k | ~25s |
+| 7-9 | Sections batch 3 (3 sections) | Explore | ~45k | ~25s |
+
+Sequential (9 sections): ~180s / ~135k tokens. Parallel (3-wide batches): ~75s / ~155k tokens (~2.4x faster, +1.15x cost).
+**High risk** — MCP calls can hang on large nodes.
+
+**Recommendation: Parallel (3-wide batches)** with MCP timeout guard.
+
+If user approves parallel, fan out section reads in batches of 3 subagents. Each subagent:
+- Reads its assigned sections via `get_design_context`
+- Enforces 60-second timeout per MCP call (per Figma MCP reliability rules)
+- If a call hangs, skip that section + flag as `type: mcp-timeout` in `figma-flags.md`
+- Returns section map entries + reference screenshots for its batch
+
+If user chooses sequential, read sections one at a time (existing behaviour).
+
 ### Section mapping
 
 > **Tool:** Use `get_design_context` on the top-level page node first to get a screenshot

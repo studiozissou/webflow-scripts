@@ -4,6 +4,14 @@
 Production scripts for https://rhpcircle.webflow.io/ — a creative agency site for Ready Hit Play, Amsterdam.
 Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + modules in sequence.
 
+## Tech stack
+- **Barba.js** — SPA page transitions (4 namespaces: home, about, case, contact)
+- **GSAP 3.14.2** + ScrollTrigger + SplitText (Club) — all animations
+- **Lenis 1.3.17** — smooth scroll (about, case, contact; NOT home)
+- **Webflow** — hosting, CMS, Designer-built DOM
+- **Vanilla ES2022+** — no build step, no jQuery, no TypeScript
+- **jsDelivr CDN** — production delivery, commit-hash pinned
+
 ## Deployment
 - `init.js` is the only script tag in Webflow (head). It self-loads everything.
 - jsDelivr serves files pinned to a commit hash (e.g. `...@abc1234/projects/ready-hit-play-prod/init.js?v=N`).
@@ -90,6 +98,7 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - `.rhp-nav-hidden` — hides nav (about page)
 
 ## Patterns to follow
+- **Barba impact (MANDATORY):** Every plan or code change MUST consider the impact on Barba transitions — before (leave), during (transition animation), and after (enter/afterEnter). Specifically: Does the feature add DOM elements, listeners, or GSAP timelines that need init/destroy? Does anything need to survive across transitions (video state, scroll position)? Could animations or DOM mutations conflict with the leave/enter transition? Does the feature re-initialise cleanly on re-entry (home → about → home)? Which namespaces does it run on — confirm it does NOT init on pages where it shouldn't.
 - Every module: IIFE, registers on `window.RHP`, exposes `version` string and `init(container)` / `destroy()`
 - GSAP: always `gsap.context(() => { ... })` — store the ctx, kill it in `destroy()`
 - Lenis: always call `RHP.lenis.stop()` before destroying; `RHP.lenis.start()` on enter
@@ -99,6 +108,8 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - Video state: use `RHP.videoState` for cross-transition video time persistence
 
 ## Known gotchas
+
+### General
 - Home has no Lenis — scroll is CSS-locked; work-dial owns all scroll/drag input
 - Case pages may or may not have a custom scroll wrapper (`[data-case-scroll-wrapper]`); `lenis-manager.setupScrollTriggerProxy()` must be called when it does
 - `intro-format.js` must run before any SplitText on case pages
@@ -106,6 +117,20 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - `overland-ai.js` re-inits on `rhp:barba:afterenter` (not just on DOMContentLoaded)
 - iOS: video autoplay requires a user gesture; work-dial calls `enforceVideoPolicy()` on `pointerdown`
 - jsDelivr caches aggressively — always pin a commit hash AND bump `?v=` to bust cache
+- Safari nav logo SVG `height="162"` causes oversized rendering — needs explicit size constraint
+
+### Work-dial video system
+- Flash on sector change (unfixed) — `fromTo` with `from: { opacity: 0 }` in `applyActive()` line ~772 forces bgVisible to opacity:0 immediately, causing a brief black flash before the animation completes
+- bgVideo stuck at opacity:1 in IDLE on Barba return (fixed v2026.2.27.6) — `resetToVisible` sets it to 1 before init, `applyActive(0)` isInitial=true skips crossfade
+- No blur in handoff case (fixed v2026.2.27.6) — `dialState = ACTIVE` set directly, bypassing `setDialState(ACTIVE)` which applies `filter:blur(40px)`
+- Pool swap reverse-playback flash
+- Background video decode lag ~50ms (3-rAF re-sync tried and reverted)
+- `originalBgEl` deletion on pool swap + destroy (RC1 root cause)
+- 300ms `setTimeout` for `interactionUnlocked` — known hack, not yet replaced with event-driven approach
+
+### Barba / DOM structure
+- `dial_layer-fg` inside Barba container — should be moved outside (spec exists, not shipped)
+- CSS namespace scoping will break when fg moves outside Barba container
 
 ## Version format
 `YYYY.M.D.N` — year, month, day, daily build number. Bump `CONFIG.version` in `init.js` on each deploy.
@@ -169,8 +194,14 @@ npm run test:report  # open last HTML report
 
 **The rule:** commit → push → update jsDelivr hash → `npm run test:smoke` → if clean, human review. Playwright is a gate before sign-off, not a development tool.
 
+### Two-tier assertion model
+Follow the monorepo-level convention in `CLAUDE.md` § Page Testing Convention:
+- **Hard `expect()`** — functional breakage (404 links, missing forms, console errors, broken images, overflow, H1 issues)
+- **Soft `test.info().annotations`** — design drift (copy differences, nav labels, footer text). These log as `design-drift` warnings in the HTML report but never fail the run.
+
 ### Adding a new test
 1. Add to the relevant suite (`smoke.test.js` for functional, `a11y.test.js` for a11y).
 2. Use `waitForRHP(page)` in `beforeEach` so tests only run after scripts are confirmed loaded.
 3. Keep timeouts generous for elements that animate in (use `await expect(el).toBeVisible()` rather than assuming immediate availability).
-4. Run `/qa-check` after the feature is built — the QA checklist includes running the test suite.
+4. Decide: hard failure or design drift? Use `expect()` for functional checks, `test.info().annotations.push({ type: 'design-drift', description })` for content/copy checks.
+5. Run `/qa-check` after the feature is built — the QA checklist includes running the test suite.

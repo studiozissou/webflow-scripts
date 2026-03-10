@@ -63,14 +63,29 @@ Write to `.claude/client.md`. Confirm before proceeding.
 Record each as ✅ PASS, ⚠️ NEEDS ATTENTION, or ❌ MISSING/BROKEN.
 Write to `intake.json` under `checks`.
 
-Run Webflow skills first:
+### Step 1 — Webflow skills (sequential — MCP connection)
 - `site-audit` skill → record output
 - `link-checker` skill → record output
 - `accessibility-audit` skill → record output
 
-Then additional checks:
+### Step 2 — Parallelisation gate
 
-### Technical
+Reference the `parallelisation` skill. Present the gate with 3 independent streams:
+
+| # | Stream | Agent type | Est. tokens | Est. wall time |
+|---|--------|-----------|-------------|----------------|
+| 1 | Technical + Analytics | Explore | ~18k | ~15s |
+| 2 | SEO | seo (Explore) | ~18k | ~15s |
+| 3 | Content + Code inventory | Explore | ~14k | ~12s |
+
+Sequential: ~45s / ~50k tokens. Parallel: ~25s / ~55k tokens (~1.8x faster, +1.1x cost).
+Medium risk (WebFetch can be flaky on some checks).
+
+**Recommendation: Parallel** (independent check domains, read-only).
+
+If user approves parallel, spawn 3 subagents simultaneously. If sequential, run in order.
+
+### Stream A — Technical + Analytics
 | Check | What to look for |
 |---|---|
 | `robots.txt` | Present, not blocking crawlers |
@@ -79,8 +94,11 @@ Then additional checks:
 | Favicon | Set in Webflow settings |
 | SSL | Site served over HTTPS |
 | Canonical domain | Consistent WWW/non-WWW |
+| Analytics | GA4 or GTM in page embeds |
+| Cookie consent | Any consent mechanism present |
+| Alignment | Analytics not firing before consent |
 
-### SEO
+### Stream B — SEO
 | Check | What to look for |
 |---|---|
 | Meta titles | Present and unique on all pages |
@@ -91,22 +109,17 @@ Then additional checks:
 | Schema.org JSON-LD | Present on homepage |
 | `llms.txt` | Present at root — recommend if absent |
 
-### Analytics and consent
-| Check | What to look for |
-|---|---|
-| Analytics | GA4 or GTM in page embeds |
-| Cookie consent | Any consent mechanism present |
-| Alignment | Analytics not firing before consent |
-
-### Content
+### Stream C — Content + Code inventory
 | Check | What to look for |
 |---|---|
 | Forms | Confirmation or redirect set |
 | Images | 3+ images missing alt text flagged |
 | Viewport | Mobile meta viewport present |
 
-### Custom code inventory
-List all site-wide and per-page head/body embeds and third-party scripts.
+Also list all site-wide and per-page head/body embeds and third-party scripts.
+
+### Step 3 — Merge results
+Merge all stream outputs into `intake.json` under `checks`.
 
 ---
 

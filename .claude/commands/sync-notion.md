@@ -28,7 +28,7 @@ use it as-is — no mapping needed.
 1. Read .claude/queue.json. If it doesn't exist, report "No queue.json
    found — nothing to sync." and stop.
 
-2. Read .claude/skills/notion-dashboard.md for the database ID and
+2. Read .claude/skills/notion-dashboard/SKILL.md for the database ID and
    property names.
 
 3. For each item in queue.json:

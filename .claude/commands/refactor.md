@@ -17,8 +17,23 @@ Enter plan mode. Read all target files and analyse them against the refactor tar
 - Flag any changes that are borderline behaviour changes
 - Exit plan mode and wait for user approval before touching any code
 
-### 1. Refactor (Opus)
-Apply the approved changes using the `refactor` agent with `model: "opus"`.
+### 0.5. MCP baseline capture (skip if no MCP)
+
+Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns.
+
+Before any code changes, capture the current state for comparison:
+1. **Desktop screenshot** — `browser_resize` 1280×800, `browser_navigate`, `browser_take_screenshot`
+2. **Mobile screenshot** — `browser_resize` 375×812, `browser_navigate`, `browser_take_screenshot`
+3. **Console baseline** — `browser_console_messages`, record count and types
+4. **Animation state** (if refactoring animation code) — scroll to animated section, wait per timing table, screenshot + `browser_evaluate` to capture GSAP timeline/ScrollTrigger counts
+5. **DOM snapshot** — `browser_snapshot` of affected sections
+
+Store these as the baseline for step 3.5 comparison.
+
+If MCP is not connected, log "MCP browser not available — skipping baseline capture" and continue.
+
+### 1. Refactor (Opus max-effort)
+Apply the approved changes using the `refactor` agent with `model: "opus"` at max effort.
 
 - Apply changes using Edit (prefer targeted edits over full rewrites)
 - Skip any changes the user rejected in the plan review
@@ -38,7 +53,22 @@ Run the project's test suite to verify nothing broke.
 - If tests fail: fix the regression, return to step 2
 - If no test suite exists: run `/qa-check` on the changed files instead
 
-Repeat steps 2-3 until review passes and tests are green.
+### 3.5. MCP post-refactor comparison (skip if no MCP or no baseline)
+
+Repeat the same captures as step 0.5 and compare:
+1. **Visual match** — desktop and mobile screenshots should be visually identical to baseline
+2. **No new console errors** — error count should not increase vs. baseline
+3. **Same GSAP counts** — timeline/ScrollTrigger instance counts should match baseline
+4. **DOM structure** — key selectors from baseline should still be present
+
+If differences are found:
+- Report with before/after details
+- Ask user to confirm the difference is expected (refactoring sometimes intentionally changes DOM)
+
+If a pre-existing bug is found in both baseline and post-refactor:
+- Offer to generate a regression test using the bridge template from the `playwright-webflow` skill
+
+Repeat steps 2–3.5 until review passes and tests are green.
 
 ## Common refactor targets
 - Duplication across modules → extract to shared utility

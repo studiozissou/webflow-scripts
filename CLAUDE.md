@@ -11,5 +11,5 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - IMPORTANT: After implementing ANY change, verify it works — run tests, check for errors, or use the most relevant automated check available. If no automated check exists, tell the user exactly what to test and how. Never mark work done without verification.
 
 ## Code Style
-- Named exports only (no default exports in `shared/`)
+- Named exports only (no default exports in `shared/`)2
 - No `console.log` in committed code — use `DEBUG && console.log(...)` pattern

@@ -1,7 +1,20 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-04",
+  "updated": "2026-03-11",
   "queue": [
+    {
+      "id": "feat-case-video-progress-autohide",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Done",
+      "title": "Case video: progress bar, viewport auto-pause with volume fade, auto-hide controls",
+      "spec": "../../.claude/plans/floofy-tumbling-umbrella.md",
+      "note": "Consolidates feat-case-video-intersection + feat-video-controls-autohide. Adds clickable progress bar (teal #05EFBF fill, 0.5rem), IntersectionObserver viewport pause/resume with GSAP volume fade, and 2s idle auto-hide controls (tap-to-toggle on mobile). Modifies case-video-controls.js + ready-hit-play.css.",
+      "agent": "code-writer",
+      "created": "2026-03-10",
+      "completed": "2026-03-10"
+    },
     {
       "id": "fix-playwright-tests",
       "project": "ready-hit-play-prod",
@@ -229,10 +242,12 @@
       "id": "fix-dial-bgvideo-barba",
       "project": "ready-hit-play-prod",
       "type": "bug",
-      "priority": "P1",
-      "status": "Triage",
-      "title": "Homepage dial / bg video broken after Barba transitions",
-      "note": "Dial and bg video updates don't work correctly after returning to home via Barba. Likely a cleanup/reinit issue — dial or video state not fully reset on destroy, or reinit missing something after Barba afterEnter.",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Move dial_layer-fg outside Barba container — fix dial breaking after navigation",
+      "spec": ".claude/specs/feat-dial-fg-outside-barba.md",
+      "note": "Root cause: dial_layer-fg lives inside [data-barba='container'] and gets destroyed on every transition. Fix: move it outside (sibling of dial_layer-bg), then update ~13 CSS selectors (namespace→:has() wrapper), fix fgWrap query in work-dial.js, fix 2 orchestrator querySelector calls, add 3 document fallbacks in home-intro.js, remove homeIntro.skip() call, fix bgVisible cleanup on destroy. Requires Webflow Designer change first (move element, publish).",
+      "agent": "code-writer",
       "created": "2026-02-27"
     },
     {
@@ -322,9 +337,9 @@
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P2",
-      "status": "Triage",
+      "status": "Superseded",
       "title": "Case video controls: pause when scrolled out of view, resume when back in view",
-      "note": "Use IntersectionObserver on each .section_case-video. Pause video on leave, resume on enter (only if user hasn't manually paused). Respect user intent — don't auto-resume if paused by user.",
+      "note": "Superseded by feat-case-video-progress-autohide which consolidates progress bar, viewport auto-pause, and auto-hide controls.",
       "created": "2026-02-25"
     },
     {
@@ -370,9 +385,9 @@
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P2",
-      "status": "Triage",
+      "status": "Superseded",
       "title": "Video controls: auto-hide title + controls after 3–8s of mouse idle; mobile fullscreen button TBC",
-      "note": "Hide title and control bar after ~3–8s of no mouse movement; reshow on any mousemove/touch. Mobile fullscreen button pending client decision on default video controls approach.",
+      "note": "Superseded by feat-case-video-progress-autohide which consolidates progress bar, viewport auto-pause, and auto-hide controls.",
       "created": "2026-02-25"
     },
     {
@@ -408,20 +423,22 @@
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P1",
-      "status": "Triage",
+      "status": "Done",
       "title": "Dial ACTIVE→ENGAGED: use circular bounding box for proximity/hit detection instead of square",
-      "note": "Currently the ACTIVE→ENGAGED state transition uses a square bounding box. Replace with a circular distance check (distance from cursor to dial centre ≤ dial radius) so the engaged state only activates when the cursor is truly inside the circle, not the corners of the bounding square.",
-      "created": "2026-02-27"
+      "note": "Already implemented — ACTIVE→ENGAGED uses Math.hypot circular distance check at work-dial.js:893-896. geom.videoR is min(width,height)/2. No additional work needed.",
+      "created": "2026-02-27",
+      "completed": "2026-03-10"
     },
     {
       "id": "fix-safari-nav-logo-hit-larger",
       "project": "ready-hit-play-prod",
       "type": "bug",
       "priority": "P2",
-      "status": "Triage",
+      "status": "Done",
       "title": "Safari: HIT nav logo SVG appears larger than READY and PLAY",
       "note": "Safari honours height=\"162\" HTML attribute on SVG elements as the rendered height, overriding the 2rem flex container. HIT has the narrowest viewBox (316px vs 602/494), so preserveAspectRatio scaling makes its glyphs appear largest. Fix: .nav_logo-wrapper-2.is-nav svg { height: var(--logo-small-height); width: auto; } in ready-hit-play.css. CSS property beats HTML presentation attribute. Chrome unaffected.",
-      "created": "2026-02-27"
+      "created": "2026-02-27",
+      "completed": "2026-03-10"
     },
     {
       "id": "fake-test-plan",
@@ -446,6 +463,16 @@
       "created": "2026-03-03",
       "completed": "2026-03-03",
       "note": "Second test entry — delete after confirming time tracking works."
+    },
+    {
+      "id": "optimise-dial-videos",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Triage",
+      "title": "Optimise dial videos: re-encode fg at 720p, bg at 360p",
+      "note": "Background videos always shown with blur(40px) + scale(1.1) — 360p (640×360) sufficient for desktop, 270p for mobile. Foreground max render: desktop ~1632×918 CSS px (case panel 78vw×85dvh), mobile ~1125×633 CSS px (95vw×75dvh on 390px phone). Single-file approach: 720p fg + 360p bg. Per-device approach: desktop fg 720p/1080p, mobile fg 480p, desktop bg 360p, mobile bg 270p. Use H.264 MP4, CRF 23-28 (fg) / CRF 30-35 (bg), strip audio. Expected 70-80% file size reduction on bg videos.",
+      "created": "2026-03-10"
     }
   ]
 }

@@ -1,6 +1,14 @@
-# Skill: Lottie
+---
+name: lottie
+description: Guides the agent through Lottie animation integration for Webflow — playback, scroll-driven scrub, hover triggers, and cleanup. Activates when the task involves Lottie, JSON animations, or After Effects exports.
+---
 
-## CDN options
+<objective>
+Integrate Lottie animations into Webflow projects with proper playback control, GSAP ScrollTrigger scrubbing, accessibility, and Barba.js cleanup.
+</objective>
+
+<quick_start>
+CDN options:
 ```html
 <!-- Full player (if using interactivity) -->
 <script src="https://cdn.jsdelivr.net/npm/lottie-web@5/build/player/lottie.min.js"></script>
@@ -9,11 +17,11 @@
 <script src="https://cdn.jsdelivr.net/npm/lottie-web@5/build/player/lottie_light.min.js"></script>
 ```
 
-## Basic playback
+Basic playback:
 ```js
 const animation = lottie.loadAnimation({
   container: document.querySelector('[data-lottie]'),
-  renderer: 'svg',   // 'svg' | 'canvas' | 'html'
+  renderer: 'svg',
   loop: false,
   autoplay: false,
   path: '/animations/hero.json',
@@ -23,8 +31,10 @@ animation.addEventListener('DOMLoaded', () => {
   animation.play();
 });
 ```
+</quick_start>
 
-## Scroll-driven (GSAP scrub)
+<common_patterns>
+Scroll-driven (GSAP scrub):
 ```js
 animation.addEventListener('DOMLoaded', () => {
   const totalFrames = animation.totalFrames;
@@ -41,7 +51,7 @@ animation.addEventListener('DOMLoaded', () => {
 });
 ```
 
-## Hover trigger
+Hover trigger:
 ```js
 el.addEventListener('mouseenter', () => {
   animation.setDirection(1);
@@ -53,12 +63,8 @@ el.addEventListener('mouseleave', () => {
 });
 ```
 
-## Dynamic colour (using layers)
+Dynamic colour (modify JSON before loading):
 ```js
-// Change a specific layer's fill colour
-const layer = animation.renderer.elements[0]; // by index
-// Use lottie-colorify for programmatic colour changes, or
-// modify the JSON before loading:
 fetch('/animations/icon.json')
   .then(r => r.json())
   .then(data => {
@@ -67,33 +73,37 @@ fetch('/animations/icon.json')
   });
 ```
 
-## File optimisation
-- Use LottieFiles Optimiser before deploying (remove unused layers, compress)
-- Prefer SVG renderer for resolution-independence
-- Use Canvas renderer for complex animations with many elements (>100 layers)
-- Keep file size under 200 KB
-
-## Accessibility
+Accessibility:
 ```html
 <div data-lottie aria-label="Loading animation" role="img" aria-live="polite"></div>
 ```
-For `prefers-reduced-motion`:
 ```js
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  animation.goToAndStop(animation.totalFrames - 1, true); // show final frame
+  animation.goToAndStop(animation.totalFrames - 1, true);
 } else {
   animation.play();
 }
 ```
 
-## Destroy
-```js
-animation.destroy(); // removes canvas/SVG and event listeners
-```
-
-## Barba cleanup
+Barba cleanup:
 ```js
 barba.hooks.leave(() => {
   animation?.destroy();
 });
 ```
+</common_patterns>
+
+<anti_patterns>
+- Use LottieFiles Optimiser before deploying (remove unused layers, compress)
+- Prefer SVG renderer for resolution-independence
+- Use Canvas renderer only for complex animations with many elements (>100 layers)
+- Keep file size under 200 KB
+</anti_patterns>
+
+<success_criteria>
+- Animation loads and plays on the correct trigger (scroll, hover, or page load)
+- `prefers-reduced-motion` shows final frame instead of animating
+- `animation.destroy()` called on Barba leave
+- File size under 200 KB after optimisation
+- Container has `aria-label` and `role="img"` for accessibility
+</success_criteria>

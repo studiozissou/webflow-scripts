@@ -1,12 +1,19 @@
-# Skill: Barba.js
+---
+name: barba-js
+description: Guides the agent through Barba.js page transition setup for Webflow — init, hooks, views, GSAP cleanup, and gotchas. Activates when the task involves page transitions, Barba, or SPA-like navigation.
+---
 
-## CDN
+<objective>
+Set up Barba.js page transitions for Webflow sites with proper GSAP context cleanup, Lenis integration, namespace-based views, and common gotcha handling.
+</objective>
+
+<quick_start>
+CDN:
 ```html
 <script defer src="https://cdn.jsdelivr.net/npm/@barba/core"></script>
 ```
 
-## Required Webflow setup
-Add to `<body>` via Page Settings custom attributes:
+Required Webflow setup — add to `<body>` via Page Settings custom attributes:
 ```
 data-barba = wrapper
 ```
@@ -15,7 +22,7 @@ Add to the page content wrapper div:
 data-barba-namespace = home   (change per page)
 ```
 
-## Core setup
+Core setup:
 ```js
 barba.init({
   debug: false,
@@ -23,7 +30,6 @@ barba.init({
   transitions: [
     {
       name: 'fade',
-      // Match by namespace:
       to: { namespace: ['home', 'about'] },
 
       async leave(data) {
@@ -36,8 +42,10 @@ barba.init({
   ],
 });
 ```
+</quick_start>
 
-## Global hooks (put these outside transitions)
+<common_patterns>
+Global hooks (outside transitions):
 ```js
 barba.hooks.before(() => {
   lenis?.stop();
@@ -48,18 +56,16 @@ barba.hooks.after(({ next }) => {
   lenis?.start();
   ScrollTrigger.refresh();
   document.documentElement.classList.remove('is-transitioning');
-  // Re-init page modules for the new namespace
   initPage(next.namespace);
 });
 
 barba.hooks.leave(({ current }) => {
-  // Kill GSAP context for the leaving page
   pageContextMap.get(current.namespace)?.revert();
   pageContextMap.delete(current.namespace);
 });
 ```
 
-## Page context pattern (manage GSAP per page)
+Page context pattern (manage GSAP per page):
 ```js
 const pageContextMap = new Map();
 
@@ -71,7 +77,7 @@ function initPage(namespace) {
 }
 ```
 
-## Namespace-based views
+Namespace-based views:
 ```js
 barba.init({
   views: [
@@ -89,21 +95,18 @@ barba.init({
 });
 ```
 
-## Preventing transitions on specific links
+Preventing transitions on specific links:
 ```html
-<!-- Barba ignores links with data-barba-prevent -->
 <a href="/external" data-barba-prevent="self">External link</a>
 <a href="/file.pdf" data-barba-prevent>PDF</a>
 ```
-
-Or programmatically:
 ```js
 barba.init({
   prevent: ({ el }) => el.classList.contains('no-transition') || el.href.includes('.pdf'),
 });
 ```
 
-## Prefetch
+Prefetch:
 ```html
 <script defer src="https://cdn.jsdelivr.net/npm/@barba/prefetch"></script>
 ```
@@ -111,10 +114,21 @@ barba.init({
 import prefetch from '@barba/prefetch';
 barba.use(prefetch);
 ```
+</common_patterns>
 
-## Common gotchas
+<anti_patterns>
 - Webflow IX2 interactions re-fire after Barba — use `Webflow.require('ix2').init()` after transitions or disable IX2 entirely
 - Analytics: re-fire pageview on `barba.hooks.after` — `gtag('event', 'page_view', { page_path: next.url.path })`
 - Forms: Webflow forms need re-initialisation after Barba — call `Webflow.require('commerce').init()` or handle with custom logic
 - Images: lazy-loaded images in new container may not trigger — use `IntersectionObserver` or call a re-init
 - Scroll position: Barba does NOT auto-scroll to top — do it manually in `after` hook: `window.scrollTo(0, 0)`
+</anti_patterns>
+
+<success_criteria>
+- `data-barba="wrapper"` on body and `data-barba-namespace` on page container
+- All GSAP contexts reverted on `barba.hooks.leave`
+- `ScrollTrigger.refresh()` called in `barba.hooks.after`
+- Lenis stopped on leave, started on after
+- Analytics pageview re-fired on transition
+- Scroll position reset to top on page change
+</success_criteria>

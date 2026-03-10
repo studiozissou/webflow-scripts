@@ -1,11 +1,19 @@
-# Skill: Howler.js
+---
+name: howler-js
+description: Guides the agent through Howler.js audio integration for Webflow sites — playback, spatial audio, mute controls, and Barba cleanup. Activates when the task involves sound, audio, or music.
+---
 
-## CDN
+<objective>
+Integrate Howler.js audio into Webflow projects with proper autoplay handling, accessibility controls, format fallbacks, and Barba.js cleanup.
+</objective>
+
+<quick_start>
+CDN:
 ```html
 <script src="https://cdn.jsdelivr.net/npm/howler@2/dist/howler.min.js"></script>
 ```
 
-## Basic sound setup
+Basic sound setup:
 ```js
 const AudioManager = (() => {
   let bgMusic, sfxPool;
@@ -46,8 +54,10 @@ const AudioManager = (() => {
   return { init, playBg, pauseBg, playSfx, destroy };
 })();
 ```
+</quick_start>
 
-## Mute/unmute toggle
+<common_patterns>
+Mute/unmute toggle:
 ```js
 let muted = false;
 
@@ -59,8 +69,8 @@ muteBtn.addEventListener('click', () => {
 });
 ```
 
-## Web Audio policy (autoplay)
-Browsers block autoplay audio without user interaction. Pattern:
+Web Audio policy (autoplay):
+Browsers block autoplay audio without user interaction.
 ```js
 document.addEventListener('click', () => {
   if (Howler.ctx.state === 'suspended') {
@@ -69,23 +79,18 @@ document.addEventListener('click', () => {
 }, { once: true });
 ```
 
-## Spatial audio (3D)
+Spatial audio (3D):
 ```js
 const sound = new Howl({
   src: ['/audio/wind.webm'],
   loop: true,
   pannerAttr: { panningModel: 'HRTF', refDistance: 1, rolloffFactor: 1 },
 });
-sound.pos(x, y, z); // position in 3D space
-Howler.pos(listenerX, listenerY, listenerZ); // listener position
+sound.pos(x, y, z);
+Howler.pos(listenerX, listenerY, listenerZ);
 ```
 
-## Formats
-Always provide both WebM (Opus) and MP3 for compatibility:
-- WebM/Opus: smaller, better quality
-- MP3: Safari fallback (Safari supports WebM since 16.4 but MP3 is safer)
-
-## Barba cleanup
+Barba cleanup:
 ```js
 barba.hooks.before(() => {
   AudioManager.pauseBg();
@@ -93,12 +98,21 @@ barba.hooks.before(() => {
 barba.hooks.after(() => {
   // Re-init or resume as appropriate for the new page
 });
-// On final destroy:
 AudioManager.destroy();
 ```
+</common_patterns>
 
-## Accessibility
-- Always provide a visible mute/unmute control
+<anti_patterns>
 - Never autoplay audio without user consent
-- Indicate audio is playing with a visual state change on the button
-- Use `aria-pressed` on toggle buttons
+- Always provide both WebM (Opus) and MP3 for compatibility — WebM is smaller/better, MP3 is Safari fallback
+- Always provide a visible mute/unmute control
+- Use `aria-pressed` on toggle buttons and indicate audio state visually
+</anti_patterns>
+
+<success_criteria>
+- Audio plays only after user interaction (autoplay policy satisfied)
+- Mute/unmute toggle works with correct `aria-pressed` state
+- Both WebM and MP3 formats provided for cross-browser support
+- `AudioManager.destroy()` called on Barba leave to prevent memory leaks
+- No audio continues playing after page transition
+</success_criteria>

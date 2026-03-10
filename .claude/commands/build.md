@@ -1,5 +1,9 @@
 Build a feature end-to-end using the appropriate agents.
 
+## Model split
+- **Opus max-effort** for all code-writing, hypothesising, and refactoring work (steps 3–5, bug fixes in the verify loop)
+- **Sonnet** for code-reviewer, qa-check, and verification passes (steps 6–7, steps 10–12)
+
 ## Notion push: Building (if Notion connected)
 Update queue.json: set this slug's status to Building.
 Push to Notion: update Status to "Building", set Last Updated.
@@ -53,10 +57,10 @@ This prevents context rot when building multiple components in a single session.
 
 **Instructions for the executor:**
 
-3. Use the `code-writer` agent to implement the feature.
+3. Use the `code-writer` agent with `model: "opus"` to implement the feature.
 4. If the feature has motion/animation, apply the `gsap-scrolltrigger` or `barba-js` skill as appropriate.
-5. Use the `refactor` agent on all changed files. Instruction: "Refactor the implementation for clarity and pattern compliance. Do not change behaviour."
-6. Use the `code-reviewer` agent to review all changes. Handle the verdict:
+5. Use the `refactor` agent with `model: "opus"` on all changed files. Instruction: "Refactor the implementation for clarity and pattern compliance. Do not change behaviour."
+6. Use the `code-reviewer` agent with `model: "sonnet"` to review all changes. Handle the verdict:
    - **PASS** — return results to parent context.
    - **WARN** — include warnings in results, then return.
    - **FAIL** — fix the issues, then re-run the code-reviewer. Max 3 review cycles. After 3 failures, return failure report to parent context.
@@ -68,7 +72,23 @@ This prevents context rot when building multiple components in a single session.
 - QA check results
 - Any warnings or blockers
 
-After the executor returns, continue with the verify loop (steps 8–12) in the parent context.
+After the executor returns, continue with the verify loop (steps 7.5–12.5) in the parent context.
+
+### Step 7.5 — MCP pre-commit smoke (skip if no MCP)
+
+Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns.
+
+Before committing, run live browser checks against the staging URL:
+1. `browser_navigate` to staging URL
+2. **Console check** — `browser_console_messages`, filter benign noise. FAIL if real errors.
+3. **DOM snapshot** — `browser_snapshot`, confirm spec selectors exist on the page.
+4. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
+5. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
+6. **Scroll-triggered check** (if feature has scroll animations) — `browser_evaluate` scroll to section, wait per timing table, `browser_take_screenshot`
+
+On any FAIL: ask user — "Fix before committing or proceed?"
+
+If MCP is not connected, log "MCP browser not available — skipping pre-commit smoke" and continue.
 
 ## Verify loop
 
@@ -86,6 +106,16 @@ Skip this section if the project has no `.env.test`, no acceptance tests, or no 
     Run: `.claude/scripts/purge-cdn.sh`
     This purges changed JS/CSS files from jsDelivr and waits 30s.
 
+### Step 10.5 — MCP post-deploy visual (skip if no MCP)
+
+After CDN purge completes, run a fresh browser check:
+1. `browser_navigate` to staging URL (fresh load after CDN purge)
+2. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
+3. **Console check** — `browser_console_messages`, verify no new errors vs. step 7.5
+4. Compare against step 7.5 screenshots — flag any visual differences
+
+If MCP is not connected, skip silently.
+
 10. Run the acceptance tests for this feature:
     ```
     npx playwright test tests/acceptance/SLUG.spec.js --config=tests/playwright.config.js --reporter=list
@@ -102,6 +132,17 @@ Skip this section if the project has no `.env.test`, no acceptance tests, or no 
        - Stop and report to the user
        - List what's failing and what you've tried
        - Ask for guidance before continuing
+
+### Step 12.5 — Bridge (MCP → regression tests)
+
+For each bug found by MCP in steps 7.5 or 10.5:
+1. Generate a regression spec using the bridge template from the `playwright-webflow` skill
+   - Place in `tests/acceptance/SLUG-regression.spec.js`
+2. Run the generated spec
+3. If it passes, include in the commit
+4. If it fails, flag as manual follow-up
+
+Skip if no MCP bugs were found or MCP was not connected.
 
 12. If ALL acceptance tests pass:
     a. Run the full smoke test suite:

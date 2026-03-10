@@ -1,6 +1,6 @@
 # Claude Code Architecture — Webflow Scripts Monorepo
 
-> Last updated: 2026-03-05
+> Last updated: 2026-03-10
 > Paste this into any Claude conversation to bring it up to speed on the workspace setup.
 
 ---
@@ -89,7 +89,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 ---
 
-## Skills (15 reference docs)
+## Skills (16 reference docs)
 
 | Skill | Coverage |
 |-------|----------|
@@ -108,6 +108,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 | `rive` | State machines, scroll-driven, text runs, a11y |
 | `pixi-js` | v8 async init, filters, GSAP PixiPlugin, particles |
 | `p5-js` | Instance mode, particles, ScrollTrigger integration, WebGL |
+| `parallelisation` | Gate prompt, estimation reference, decision framework for multi-agent fan-out |
 | `playwright-webflow` | Timing reference table for Webflow staging (project-level only) |
 
 ---
@@ -171,7 +172,7 @@ See `claude-code-project-setup.md` for full workflow documentation (§4, §11–
 .claude/
 ├── agents/           # 13 agent configs (code-writer, qa, architect, pm, convention-auditor, etc.)
 ├── commands/         # 25 slash command .md files
-├── skills/           # 15 reference doc .md files (incl. webflow-mcp/)
+├── skills/           # 20 skills in subdirectories (skill-name/SKILL.md)
 ├── reference/        # rate-card.md, about-me.md (singleton config files)
 ├── templates/        # client.md, acceptance-test.spec.js
 ├── adrs/             # Architecture Decision Records
@@ -198,11 +199,71 @@ The [glittercowboy/taches-cc-resources](https://github.com/glittercowboy/taches-
 - `/create-hook`, `/create-subagent`, `/create-slash-command`, `/create-agent-skill`, `/create-meta-prompt` — guided creation tools
 - `/audit-slash-command` — useful for checking command structure
 
-**Do NOT run on existing project files:**
-- `/audit-skill`, `/audit-subagent` — enforce pure XML body format, which is NOT our convention
-- `/heal-skill` — would auto-rewrite files to XML format
+**Also safe on this project:**
+- `/audit-skill`, `/audit-subagent` — our skills now use YAML frontmatter + pure XML body format, matching the official best practices
+- `/heal-skill` — can be used to fix any drift
 
-Our project uses **YAML frontmatter + markdown headings** for agents/skills. Use `/audit-claude-files` instead for project-convention compliance checks.
+Our project uses **YAML frontmatter + pure XML body tags** for skills (aligned with Anthropic skill-creator best practices). Use `/audit-claude-files` for project-convention compliance checks.
+
+---
+
+## Parallelisation Patterns
+
+### Execution modes
+
+| Mode | Wall time | Token cost | Use when |
+|------|-----------|------------|----------|
+| Sequential | sum(streams) | sum(tokens) | <3 streams, data dependencies, <30s total |
+| Parallel subagents | max(streams) + 5s/agent | sum × 1.1 | 3+ independent read-only streams, >45s sequential |
+| Agent Teams | max(streams) × 0.8 | sum × 2.5 | Streams need mid-task coordination |
+
+### Agent type costs (calibrated)
+
+| Agent type | Typical tokens | Typical wall time | Notes |
+|---|---|---|---|
+| Explore (read-only) | ~15k | ~10-15s | Cheapest. No writes. |
+| Review (perf/seo/qa/ux/content) | ~20-30k | ~15-25s | WebFetch adds latency |
+| Task (code-writer) | ~40-60k | ~30-60s | May need worktree |
+| Agent Team member | ~2.5x equiv. subagent | ~0.8x wall time | Bidirectional comms |
+
+### Commands with parallel execution
+
+All upgraded commands reference the `parallelisation` skill and present a gate before spawning.
+
+| Command | Streams | Speed gain | Token overhead | Risk |
+|---------|---------|------------|----------------|------|
+| `/audit-page` | 5 (perf, seo, qa, ux, content) | **3.2x** (80s→25s) | +1.1x | Low |
+| `/plan` | Adds parallelisation map to spec (downstream value) | — | +1.0x | Low |
+| `/discover all` | 1 per client directory | **3x** (45s→20s) | +1.1x | Low |
+| `/qa-check` | 2 (code+a11y, animation+Barba) | **1.7x** (30s→18s) | +1.1x | Low |
+| `/intake` Phase 4 | 3 (technical, SEO, content) | **1.8x** (45s→25s) | +1.1x | Medium |
+| `/figma-audit` Step 2 | 3-wide batches of sections | **2.4x** (180s→75s) | +1.15x | High |
+
+### Gate protocol
+
+Every parallelised command follows the same pattern:
+1. Complete any sequential prerequisites (MCP connections, file reads)
+2. Reference `parallelisation` skill
+3. Present gate table showing streams, estimates, and comparison
+4. User chooses: parallel / sequential / agent team
+5. Execute chosen mode
+6. Merge results
+
+### Correctly sequential commands
+
+| Command | Reason |
+|---------|--------|
+| `/build` | commit → purge → test → fix — strict dependency chain |
+| `/refactor` | refactor → review → test — each step depends on previous |
+| `/debug` | Hypothesis testing is inherently iterative |
+| `/architect` | Single-agent decision process |
+| `/bootstrap`, `/new-section`, `/gsap-build` | Single-agent scaffolding |
+| `/status`, `/cheatsheet`, `/local` | Trivial / instant |
+
+### Agent Teams
+
+Enabled via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.claude/settings.json`.
+No command uses Agent Teams by default — available as user-selected option in the gate.
 
 ---
 

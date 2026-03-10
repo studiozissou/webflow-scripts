@@ -1,11 +1,19 @@
-# Skill: p5.js
+---
+name: p5-js
+description: Guides the agent through p5.js creative coding integration for Webflow — instance mode, scroll binding, WebGL, and cleanup. Activates when the task involves p5.js, generative art, or creative coding sketches.
+---
 
-## CDN
+<objective>
+Integrate p5.js sketches into Webflow projects using instance mode to avoid global namespace pollution, with GSAP scroll binding, accessibility, and Barba.js cleanup.
+</objective>
+
+<quick_start>
+CDN:
 ```html
 <script src="https://cdn.jsdelivr.net/npm/p5@1/lib/p5.min.js"></script>
 ```
 
-## Instance mode (always use this — avoids global namespace pollution)
+Instance mode (always use this):
 ```js
 const P5Sketch = (() => {
   let p5instance;
@@ -19,7 +27,6 @@ const P5Sketch = (() => {
         canvas.parent(container);
         p.colorMode(p.HSB, 360, 100, 100, 1);
 
-        // Populate particles
         for (let i = 0; i < 80; i++) {
           particles.push({ x: p.random(p.width), y: p.random(p.height), vx: p.random(-1, 1), vy: p.random(-1, 1) });
         }
@@ -52,8 +59,10 @@ const P5Sketch = (() => {
   return { init, destroy };
 })();
 ```
+</quick_start>
 
-## Mouse interaction
+<common_patterns>
+Mouse interaction:
 ```js
 p.mouseMoved = () => {
   // p.mouseX, p.mouseY are available
@@ -61,7 +70,7 @@ p.mouseMoved = () => {
 p.mousePressed = () => {};
 ```
 
-## GSAP + p5 (drive sketch from scroll)
+GSAP + p5 (drive sketch from scroll):
 ```js
 let sketchProgress = 0;
 
@@ -72,14 +81,13 @@ ScrollTrigger.create({
   onUpdate: ({ progress }) => { sketchProgress = progress; },
 });
 
-// In p.draw():
-// use sketchProgress to control animation state
+// In p.draw(): use sketchProgress to control animation state
 ```
 
-## Shader/WebGL mode
+Shader/WebGL mode:
 ```js
 p.setup = () => {
-  p.createCanvas(w, h, p.WEBGL); // enables WebGL
+  p.createCanvas(w, h, p.WEBGL);
   p.noStroke();
 };
 p.draw = () => {
@@ -89,23 +97,26 @@ p.draw = () => {
 };
 ```
 
-## Accessibility
-- p5 canvas is not accessible by default — add `aria-label` and `role="img"` to the container
-- For `prefers-reduced-motion`: reduce particle count or stop the draw loop:
-```js
-if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  p.noLoop(); // draw once, no animation
-}
-```
-
-## Performance
-- `p.noLoop()` + `p.redraw()` for static or event-driven sketches (no 60fps loop)
-- Use `p.pixelDensity(1)` on mobile to reduce rendering load
-- Prefer `p.clear()` over `p.background()` for transparent canvas over Webflow elements
-
-## Barba cleanup
+Barba cleanup:
 ```js
 barba.hooks.leave(() => {
   P5Sketch.destroy();
 });
 ```
+</common_patterns>
+
+<anti_patterns>
+- Never use global mode — always use instance mode to avoid namespace pollution
+- `p.noLoop()` + `p.redraw()` for static or event-driven sketches (no 60fps loop needed)
+- Use `p.pixelDensity(1)` on mobile to reduce rendering load
+- Prefer `p.clear()` over `p.background()` for transparent canvas over Webflow elements
+- Add `aria-label` and `role="img"` to the container — p5 canvas is not accessible by default
+</anti_patterns>
+
+<success_criteria>
+- Sketch uses instance mode (no global p5 functions)
+- `prefers-reduced-motion` stops the draw loop with `p.noLoop()`
+- `P5Sketch.destroy()` called on Barba leave
+- Canvas container has `aria-label` and `role="img"`
+- No 60fps loop running when sketch is static or off-screen
+</success_criteria>

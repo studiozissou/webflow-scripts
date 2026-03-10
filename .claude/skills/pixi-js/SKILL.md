@@ -1,11 +1,19 @@
-# Skill: PixiJS
+---
+name: pixi-js
+description: Guides the agent through PixiJS 2D WebGL integration for Webflow — scene setup, filters, GSAP animation, interactive sprites, and cleanup. Activates when the task involves PixiJS, 2D WebGL, or sprite-based graphics.
+---
 
-## CDN
+<objective>
+Integrate PixiJS v8 scenes into Webflow projects with proper async initialisation, GSAP animation, interactive sprites, and Barba.js cleanup.
+</objective>
+
+<quick_start>
+CDN:
 ```html
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
 ```
 
-## Minimal setup (v8 async API)
+Minimal setup (v8 async API):
 ```js
 const PixiScene = (() => {
   let app;
@@ -24,7 +32,6 @@ const PixiScene = (() => {
 
     canvasContainer.appendChild(app.canvas);
 
-    // Resize
     const ro = new ResizeObserver(() => {
       app.renderer.resize(canvasContainer.clientWidth, canvasContainer.clientHeight);
     });
@@ -54,8 +61,10 @@ const PixiScene = (() => {
   return { init, destroy };
 })();
 ```
+</quick_start>
 
-## Filters (post-processing)
+<common_patterns>
+Filters (post-processing):
 ```js
 import { BlurFilter, ColorMatrixFilter } from 'pixi.js';
 
@@ -64,15 +73,11 @@ const cm = new ColorMatrixFilter();
 cm.desaturate();
 
 sprite.filters = [blur, cm];
-
-// Animate with GSAP
 gsap.to(blur, { strengthX: 0, strengthY: 0, duration: 1 });
 ```
 
-## GSAP + PixiJS (animate stage objects)
+GSAP + PixiJS (animate stage objects):
 ```js
-// PixiJS plugin for GSAP (optional but useful)
-// https://gsap.com/docs/v3/Plugins/PixiPlugin/
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(PIXI);
 
@@ -82,7 +87,7 @@ gsap.to(sprite, {
 });
 ```
 
-## Interactive sprites
+Interactive sprites:
 ```js
 sprite.interactive = true;
 sprite.cursor = 'pointer';
@@ -90,7 +95,7 @@ sprite.on('pointerover', () => { gsap.to(sprite.scale, { x: 1.1, y: 1.1, duratio
 sprite.on('pointerout',  () => { gsap.to(sprite.scale, { x: 1, y: 1, duration: 0.2 }); });
 ```
 
-## Particle container (performance)
+Particle container (performance):
 ```js
 const container = new PIXI.ParticleContainer(10000, {
   scale: true, position: true, rotation: false, alpha: true
@@ -98,15 +103,25 @@ const container = new PIXI.ParticleContainer(10000, {
 app.stage.addChild(container);
 ```
 
-## Barba cleanup
+Barba cleanup:
 ```js
 barba.hooks.leave(() => {
   PixiScene.destroy();
 });
 ```
+</common_patterns>
 
-## Performance tips
+<anti_patterns>
 - Use `ParticleContainer` for 1000+ identical sprites
 - Batch textures into a spritesheet (`PIXI.Assets.load('spritesheet.json')`)
 - Avoid `app.ticker.add` callbacks that do heavy computation every frame
 - Use `sprite.cullable = true` to skip off-screen rendering
+</anti_patterns>
+
+<success_criteria>
+- PixiJS v8 async `app.init()` used (not legacy constructor)
+- ResizeObserver handles viewport changes
+- `PixiScene.destroy(true, { children: true, texture: true })` called on Barba leave
+- No ticker callbacks running after destroy
+- Interactive sprites use `pointer` events (not mouse events)
+</success_criteria>

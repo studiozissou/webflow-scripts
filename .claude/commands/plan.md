@@ -46,8 +46,16 @@ Use the `pm-questioning` skill to ask clarifying questions. Do not skip this ste
 6. Flag any architectural decisions that need an ADR before work begins.
 7. **Barba transition impact check** (see below).
 8. **Generate acceptance tests** (see below).
-9. **Verification section** — Every plan MUST include a "Verification" section listing concrete steps to confirm the implementation is correct. Prefer automated checks (run tests, run a script, use MCP tools, grep for expected output) over manual inspection.
-10. Present the plan summary to the user for approval before proceeding.
+9. **Verification section (MANDATORY — do NOT skip)** — Every plan MUST include a "## Verification" section in the spec with:
+   - **Auto-verify command**: A single copy-pasteable shell command that proves the feature works. Use one of:
+     - `npx playwright test tests/acceptance/<slug>.spec.js` (if acceptance tests were generated in step 8)
+     - `node --check <file>` for syntax verification of new modules
+     - A project-specific test command from `package.json` scripts
+     - `grep` / `rg` assertions that confirm expected code patterns exist
+   - **What pass looks like**: Describe the expected output (e.g. "all 6 tests pass", "exit code 0", "no matches for console.log")
+   - **Manual fallback** (only if no automated check is possible): Exact steps, URL to open, and what to look for — but you MUST explain why automation is not possible
+   - **GATE**: If you cannot define at least one automated verification step, stop and ask the user how they want to verify before continuing. Do not proceed to step 10 without this.
+10. Present the plan summary to the user for approval before proceeding. Highlight the verification command so the user sees it.
 
 **Always write the spec file to `.claude/specs/<feature-slug>.md` before the session ends — do not wait to be asked.**
 

@@ -15,6 +15,117 @@
   }
 
   /* -----------------------------
+     Shared transition helpers
+     ----------------------------- */
+  const _getCSSVar = (name, fallback) => {
+    const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+    return v || fallback;
+  };
+
+  const _parseSize = (str) => {
+    if (!str || str === 'auto') return Infinity;
+    const vw = window.innerWidth * 0.01;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const m = str.match(/min\((\d+)vw,\s*([\d.]+)rem\)/);
+    if (m) return Math.min(parseFloat(m[1]) * vw, parseFloat(m[2]) * rem);
+    if (str.includes('vw')) return parseFloat(str) * vw;
+    if (str.includes('rem')) return parseFloat(str) * rem;
+    if (str.includes('px')) return parseFloat(str);
+    return Infinity;
+  };
+
+  const _getScrollbarOffset = () => {
+    var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth <= 0) {
+      var prevOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = 'scroll';
+      scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.overflow = prevOverflow;
+    }
+    return Math.round(scrollbarWidth / 2);
+  };
+
+  const _findTransitionLogo = () =>
+    document.querySelector('#transition-logo') ||
+    document.querySelector('.about-transition_nav-logo-wrapper') ||
+    document.querySelector('.about-transition .nav_logo-wrapper-2.is-about-transition');
+
+  /* Persistent about-transition timeline (overlay + logo only; dial differs by direction) */
+  let aboutTransitionTL = null;
+
+  /* Invalidate cached timeline on resize so positions recalculate.
+     Intentional: IIFE-scope, single page lifetime — no teardown needed. */
+  window.addEventListener('resize', () => { aboutTransitionTL = null; }, { passive: true });
+
+  function getAboutTransitionTimeline() {
+    if (aboutTransitionTL) return aboutTransitionTL;
+    const el = document.querySelector('.about-transition');
+    if (!el || !window.gsap) return null;
+
+    const gsap = window.gsap;
+    const transitionLogo = _findTransitionLogo();
+
+    const scrollbarOffsetPx = _getScrollbarOffset();
+    const logoSmallWidth = _getCSSVar('--logo-small-width', '16rem');
+    const logoSmallHeight = _getCSSVar('--logo-small-height', '2rem');
+    const logoLargeWidth = _getCSSVar('--logo-large-width', '90vw');
+    const logoLargeHeight = _getCSSVar('--logo-large-height', 'auto');
+    const logoLargeMaxWidth = _getCSSVar('--logo-large-max-width', '93rem');
+    const largeWidthPx = _parseSize(logoLargeWidth);
+    const maxWidthPx = _parseSize(logoLargeMaxWidth);
+    const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dur = reducedMotion ? 0 : 1;
+
+    aboutTransitionTL = gsap.timeline({ paused: true });
+
+    // Overlay fade (display managed explicitly in runHomeToAbout/runAboutToHome, not here)
+    aboutTransitionTL.fromTo(el,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3 * dur, ease: 'linear' },
+      0
+    );
+
+    // Logo morph: small (nav position) -> large (centre)
+    if (transitionLogo) {
+      aboutTransitionTL.fromTo(transitionLogo,
+        {
+          position: 'fixed',
+          left: '50%',
+          top: '2vh',
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          yPercent: 0,
+          width: logoSmallWidth,
+          height: logoSmallHeight,
+          maxWidth: 'none',
+          transformOrigin: '50% 50%',
+          opacity: 1,
+          zIndex: 9998
+        },
+        {
+          left: '50%',
+          top: '50%',
+          xPercent: -50,
+          x: -scrollbarOffsetPx,
+          yPercent: -50,
+          width: finalWidthPx,
+          height: logoLargeHeight,
+          maxWidth: logoLargeMaxWidth,
+          opacity: 0.4,
+          duration: 0.75 * dur,
+          ease: 'linear',
+          overwrite: true
+        },
+        0
+      );
+    }
+
+    return aboutTransitionTL;
+  }
+
+  /* -----------------------------
      DOM ready helper
      ----------------------------- */
   const ready = (fn) => {
@@ -627,6 +738,68 @@
     } else if (ns && RHP.views[ns]?.init) {
       RHP.views[ns].init(container);
     }
+
+    // Init transition-dial on every page (symbol is outside Barba container)
+    RHP.transitionDial?.init?.();
+
+    // Direct-land setup: pre-position persistent .about-transition elements
+    const aboutTransition = document.querySelector('.about-transition');
+    if (aboutTransition && window.gsap) {
+      const gsap = window.gsap;
+      if (ns === 'about') {
+        // On /about: pre-position logo+dial to end states, keep overlay hidden
+        gsap.set(aboutTransition, { display: 'none' });
+        const transitionLogo = _findTransitionLogo();
+        if (transitionLogo) {
+          const scrollbarOffsetPx = _getScrollbarOffset();
+          const logoLargeWidth = _getCSSVar('--logo-large-width', '90vw');
+          const logoLargeHeight = _getCSSVar('--logo-large-height', 'auto');
+          const logoLargeMaxWidth = _getCSSVar('--logo-large-max-width', '93rem');
+          const largeWidthPx = _parseSize(logoLargeWidth);
+          const maxWidthPx = _parseSize(logoLargeMaxWidth);
+          const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
+
+          gsap.set(transitionLogo, {
+            position: 'fixed',
+            left: '50%',
+            top: '50%',
+            xPercent: -50,
+            x: -scrollbarOffsetPx,
+            yPercent: -50,
+            width: finalWidthPx,
+            height: logoLargeHeight,
+            maxWidth: logoLargeMaxWidth,
+            opacity: 0.4,
+            zIndex: 9998
+          });
+        }
+        // Pre-position transition dial to end state (small, bottom)
+        const transitionDial = document.querySelector('.transition-dial');
+        if (transitionDial) {
+          const scrollbarOffsetPx = _getScrollbarOffset();
+          const dialSmallW = _getCSSVar('--dial-small-width', '6rem');
+          const dialSmallH = _getCSSVar('--dial-small-height', '6rem');
+          const transitionDialBottom = _getCSSVar('--transition-dial-bottom', '2rem');
+          gsap.set(transitionDial, {
+            position: 'fixed',
+            left: '50%',
+            xPercent: -50,
+            x: -scrollbarOffsetPx,
+            bottom: transitionDialBottom,
+            top: 'auto',
+            right: 'auto',
+            width: dialSmallW,
+            height: dialSmallH,
+            zIndex: 9997
+          });
+          // Redraw canvas at small size (init already called above)
+          RHP.transitionDial?.resize?.();
+        }
+      } else {
+        // On /home, /case: ensure overlay is hidden
+        gsap.set(aboutTransition, { display: 'none' });
+      }
+    }
   }
 
   /* -----------------------------
@@ -864,6 +1037,16 @@
         }
       } catch (e) {}
 
+      // Re-init transition-dial after Barba transition (symbol persists outside container)
+      RHP.transitionDial?.init?.();
+
+      // Safe: Barba guarantees leave() resolves before afterEnter fires.
+      // Hide overlay here for all namespaces — overlay is only visible during transition animations.
+      var aboutTransitionEl = document.querySelector('.about-transition');
+      if (aboutTransitionEl && window.gsap) {
+        window.gsap.set(aboutTransitionEl, { display: 'none' });
+      }
+
       try {
         var ev = new CustomEvent('rhp:barba:afterenter', {
           detail: { namespace: ns, container: data.next ? data.next.container : null }
@@ -874,103 +1057,27 @@
 
     /* NOTE: Logo width vs max-width timing — the div can still reach max-width before the end of the tween on some viewports; revisit so width and position both finish in sync. */
     function runHomeToAboutTransition(data) {
-      const container = data.current?.container || document;
-      const aboutTransition = container.querySelector('.about-transition');
-      if (!aboutTransition || !window.gsap) return Promise.resolve();
       const gsap = window.gsap;
+      if (!gsap) return Promise.resolve();
 
-      const transitionLogo =
-        container.querySelector('#transition-logo') ||
-        container.querySelector('.about-transition_nav-logo-wrapper') ||
-        container.querySelector('.about-transition .nav_logo-wrapper-2.is-about-transition');
+      // Init transition-dial (symbol is on every page now, outside Barba container).
+      // Destroyed in runAboutToHomeTransition after reverse completes; re-init'd here or in runAfterEnter.
+      RHP.transitionDial?.init?.();
 
-      // Account for scrollbar so logo and dial align with about page content (content-centred)
-      var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      if (scrollbarWidth <= 0) {
-        var prevOverflow = document.documentElement.style.overflow;
-        document.documentElement.style.overflow = 'scroll';
-        scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-        document.documentElement.style.overflow = prevOverflow;
-      }
-      var scrollbarOffsetPx = Math.round(scrollbarWidth / 2);
+      // Overlay + logo via persistent timeline
+      const tl = getAboutTransitionTimeline();
 
-      gsap.set(aboutTransition, { display: 'flex', opacity: 0 });
-
-      const overlayTween = gsap.to(aboutTransition, {
-        opacity: 1,
-        duration: 0.3,
-        ease: 'linear'
-      });
-
-      let logoPromise = Promise.resolve();
-      if (transitionLogo) {
-        const getVar = function(name, fallback) {
-          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
-          return v || fallback;
-        };
-        const vw = window.innerWidth * 0.01;
-        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-        const parseSize = function(str) {
-          if (!str || str === 'auto') return Infinity;
-          var m = str.match(/min\((\d+)vw,\s*([\d.]+)rem\)/);
-          if (m) return Math.min(parseFloat(m[1]) * vw, parseFloat(m[2]) * rem);
-          if (str.includes('vw')) return parseFloat(str) * vw;
-          if (str.includes('rem')) return parseFloat(str) * rem;
-          if (str.includes('px')) return parseFloat(str);
-          return Infinity;
-        };
-        const logoSmallWidth = getVar('--logo-small-width', '16rem');
-        const logoSmallHeight = getVar('--logo-small-height', '2rem');
-        const logoLargeWidth = getVar('--logo-large-width', '90vw');
-        const logoLargeHeight = getVar('--logo-large-height', 'auto');
-        const logoLargeMaxWidth = getVar('--logo-large-max-width', '93rem');
-        const largeWidthPx = parseSize(logoLargeWidth);
-        const maxWidthPx = parseSize(logoLargeMaxWidth);
-        const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
-
-        gsap.set(transitionLogo, {
-          position: 'fixed',
-          left: '50%',
-          top: '2vh',
-          xPercent: -50,
-          x: -scrollbarOffsetPx,
-          yPercent: 0,
-          width: logoSmallWidth,
-          height: logoSmallHeight,
-          maxWidth: 'none',
-          transformOrigin: '50% 50%',
-          opacity: 1,
-          zIndex: 9998
-        });
-
-        const logoTween = gsap.to(transitionLogo, {
-          left: '50%',
-          top: '50%',
-          xPercent: -50,
-          x: -scrollbarOffsetPx,
-          yPercent: -50,
-          width: finalWidthPx,
-          height: logoLargeHeight,
-          maxWidth: logoLargeMaxWidth,
-          opacity: 0.4,
-          duration: 0.75,
-          ease: 'linear',
-          overwrite: true
-        });
-        logoPromise = logoTween.then ? logoTween.then() : new Promise(function(r) { logoTween.eventCallback('onComplete', r); });
-      }
-
+      // Dial shrink — .transition-dial used in both directions (buffer always at large resolution)
       let dialPromise = Promise.resolve();
-      const transitionDial = container.querySelector('.transition-dial');
-      if (transitionDial && window.gsap) {
-        const getVar = function(name, fallback) {
-          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
-          return v || fallback;
-        };
+      const transitionDial = document.querySelector('.transition-dial');
+      if (transitionDial) {
+        const scrollbarOffsetPx = _getScrollbarOffset();
         const rect = transitionDial.getBoundingClientRect();
         const bottomFromViewport = window.innerHeight - rect.bottom;
-        const dialSmallW = getVar('--dial-small-width', '6rem');
-        const dialSmallH = getVar('--dial-small-height', '6rem');
+        const dialSmallW = _getCSSVar('--dial-small-width', '6rem');
+        const dialSmallH = _getCSSVar('--dial-small-height', '6rem');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const dur = reducedMotion ? 0 : 1;
         gsap.set(transitionDial, {
           position: 'fixed',
           left: '50%',
@@ -988,200 +1095,98 @@
           gsap.set(transitionDialCanvas, { width: '100%', height: '100%' });
         }
         const dialTween = gsap.to(transitionDial, {
-          bottom: getVar('--transition-dial-bottom', '2rem'),
+          bottom: _getCSSVar('--transition-dial-bottom', '2rem'),
           width: dialSmallW,
           height: dialSmallH,
           x: -scrollbarOffsetPx,
-          duration: 0.75,
+          duration: 0.75 * dur,
           ease: 'power3.out',
           overwrite: true
         });
         dialPromise = dialTween.then ? dialTween.then() : new Promise(function(r) { dialTween.eventCallback('onComplete', r); });
       }
 
-      return Promise.all([
-        overlayTween.then ? overlayTween.then() : new Promise(function(r) { overlayTween.eventCallback('onComplete', r); }),
-        logoPromise,
-        dialPromise
-      ]).then(function() {});
+      if (!tl) return dialPromise;
+
+      // Explicitly set display before playing — GSAP fromTo does not re-apply
+      // non-animatable properties (like display) on timeline replay.
+      const el = document.querySelector('.about-transition');
+      if (el) gsap.set(el, { display: 'flex', opacity: 0 });
+
+      tl.pause().progress(0);
+      const tlPromise = new Promise(function(resolve) {
+        tl.play().eventCallback('onComplete', resolve);
+      });
+
+      return Promise.all([tlPromise, dialPromise]).then(function() {});
     }
 
     function runAboutToHomeTransition(data) {
-      const container = data.current?.container || document;
-      const homeTransition =
-        container.querySelector('.home-transition') ||
-        container.querySelector('.about-transition');
-      if (!homeTransition || !window.gsap) return Promise.resolve();
+      const el = document.querySelector('.about-transition');
       const gsap = window.gsap;
+      if (!el || !gsap) return Promise.resolve();
       var leaveTransitionStart = Date.now();
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const dur = reducedMotion ? 0 : 1;
 
-      const transitionLogo =
-        container.querySelector('#transition-logo') ||
-        container.querySelector('.home-transition_nav-logo-wrapper') ||
-        container.querySelector('.home-transition .nav_logo-wrapper-2') ||
-        container.querySelector('.about-transition_nav-logo-wrapper') ||
-        container.querySelector('.about-transition .nav_logo-wrapper-2');
-
-      // Account for scrollbar (content-centred)
-      var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      if (scrollbarWidth <= 0) {
-        var prevOverflow = document.documentElement.style.overflow;
-        document.documentElement.style.overflow = 'scroll';
-        scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-        document.documentElement.style.overflow = prevOverflow;
+      // Ensure the persistent timeline exists and is at end state before reversing.
+      // If it was never played forward (direct land on /about), build it fresh and set to end.
+      const tl = getAboutTransitionTimeline();
+      if (tl) {
+        tl.progress(1);
       }
-      var scrollbarOffsetPx = Math.round(scrollbarWidth / 2);
 
-      let logoPromise = Promise.resolve();
-      if (transitionLogo) {
-        const getVar = function(name, fallback) {
-          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
-          return v || fallback;
-        };
-        const vw = window.innerWidth * 0.01;
-        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-        const parseSize = function(str) {
-          if (!str || str === 'auto') return Infinity;
-          var m = str.match(/min\((\d+)vw,\s*([\d.]+)rem\)/);
-          if (m) return Math.min(parseFloat(m[1]) * vw, parseFloat(m[2]) * rem);
-          if (str.includes('vw')) return parseFloat(str) * vw;
-          if (str.includes('rem')) return parseFloat(str) * rem;
-          if (str.includes('px')) return parseFloat(str);
-          return Infinity;
-        };
-        const logoSmallWidth = getVar('--logo-small-width', '16rem');
-        const logoSmallHeight = getVar('--logo-small-height', '2rem');
-        const logoLargeWidth = getVar('--logo-large-width', '90vw');
-        const logoLargeHeight = getVar('--logo-large-height', 'auto');
-        const logoLargeMaxWidth = getVar('--logo-large-max-width', '93rem');
-        const largeWidthPx = parseSize(logoLargeWidth);
-        const maxWidthPx = parseSize(logoLargeMaxWidth);
-        const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
-        const logoReturnTop = getVar('--nav-logo-return-top', '2vh');
+      // Show overlay at end state before reversing.
+      // tl.progress(1) above already set the logo to its end state (large, centred, 0.4 opacity).
+      gsap.set(el, { display: 'flex', opacity: 1 });
+      const scrollbarOffsetPx = _getScrollbarOffset();
 
-        // Set logo to centred (viewport centre) before showing overlay so it doesn’t flash at top
-        gsap.set(transitionLogo, {
-          position: 'fixed',
-          left: '50%',
-          top: '50%',
-          xPercent: -50,
-          x: -scrollbarOffsetPx,
-          yPercent: -50,
-          y: 0,
-          width: finalWidthPx,
-          height: logoLargeHeight,
-          maxWidth: logoLargeMaxWidth,
-          transformOrigin: '50% 50%',
-          opacity: 0.4,
-          zIndex: 9998
+      // Reverse the persistent overlay+logo timeline
+      let tlPromise = Promise.resolve();
+      if (tl) {
+        tlPromise = new Promise(function(resolve) {
+          tl.reverse().eventCallback('onReverseComplete', function() {
+            gsap.set(el, { display: 'none' });
+            resolve();
+          });
         });
       }
 
-      gsap.set(homeTransition, { display: 'flex', opacity: 0 });
-
-      const overlayTween = gsap.to(homeTransition, {
-        opacity: 1,
-        duration: 0.3,
-        ease: 'linear'
-      });
-
-      if (transitionLogo) {
-        const getVar = function(name, fallback) {
-          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
-          return v || fallback;
-        };
-        const logoSmallWidth = getVar('--logo-small-width', '16rem');
-        const logoSmallHeight = getVar('--logo-small-height', '2rem');
-        const logoLargeWidth = getVar('--logo-large-width', '90vw');
-        const logoLargeHeight = getVar('--logo-large-height', 'auto');
-        const logoLargeMaxWidth = getVar('--logo-large-max-width', '93rem');
-        const logoReturnTop = getVar('--nav-logo-return-top', '2vh');
-        const vw = window.innerWidth * 0.01;
-        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-        const parseSize = function(str) {
-          if (!str || str === 'auto') return Infinity;
-          var m = str.match(/min\((\d+)vw,\s*([\d.]+)rem\)/);
-          if (m) return Math.min(parseFloat(m[1]) * vw, parseFloat(m[2]) * rem);
-          if (str.includes('vw')) return parseFloat(str) * vw;
-          if (str.includes('rem')) return parseFloat(str) * rem;
-          if (str.includes('px')) return parseFloat(str);
-          return Infinity;
-        };
-        // Parse top offset to px: 2vh = 2% of viewport height; 3rem at 1920+ (CSS handles breakpoint)
-        const parseTopToPx = function(str) {
-          if (!str) return window.innerHeight * 0.02;
-          if (str.includes('vh')) return parseFloat(str) * window.innerHeight / 100;
-          if (str.includes('rem')) return parseFloat(str) * rem;
-          if (str.includes('px')) return parseFloat(str);
-          return window.innerHeight * 0.02;
-        };
-        const maxWidthPx = parseSize(logoLargeMaxWidth);
-        const largeWidthPx = parseSize(logoLargeWidth);
-        const finalWidthPx = Math.min(largeWidthPx, maxWidthPx);
-
-        // Distance from top of #transition-logo to top of viewport (logo is already centred from gsap.set above)
-        const rect = transitionLogo.getBoundingClientRect();
-        const distanceFromViewportTop = rect.top;
-        const targetTopPx = parseTopToPx(logoReturnTop);
-        const translateY = targetTopPx - distanceFromViewportTop;
-
-        const logoTween = gsap.fromTo(
-          transitionLogo,
-          {
-            left: '50%',
-            top: '50%',
-            xPercent: -50,
-            x: -scrollbarOffsetPx,
-            yPercent: -50,
-            y: 0,
-            width: finalWidthPx,
-            height: logoLargeHeight,
-            maxWidth: logoLargeMaxWidth,
-            opacity: 0.4
-          },
-          {
-            left: '50%',
-            top: '50%',
-            xPercent: -50,
-            x: -scrollbarOffsetPx,
-            yPercent: -50,
-            y: translateY,
-            width: logoSmallWidth,
-            height: logoSmallHeight,
-            maxWidth: 'none',
-            opacity: 1,
-            duration: 0.75,
-            ease: 'linear',
-            overwrite: true
-          }
-        );
-        logoPromise = logoTween.then ? logoTween.then() : new Promise(function(r) { logoTween.eventCallback('onComplete', r); });
-      }
-
+      // Grow .transition-dial from the about-page dial position to viewport centre.
+      // Its canvas buffer is always at large resolution, so ticks stay crisp throughout.
+      // Hide .about_dial-wrapper so only the transition dial is visible.
       let dialPromise = Promise.resolve();
-      // About page dial: animate .about_dial-wrapper (contains #dial_ticks-canvas), not .transition-dial
-      const aboutDialWrapper = container.querySelector('.about_dial-wrapper');
-      if (aboutDialWrapper && window.gsap) {
-        const getVar = function(name, fallback) {
-          const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
-          return v || fallback;
-        };
-        var aboutDialLink = aboutDialWrapper.querySelector('.about_dial-link');
-        var aboutDialCanvas = aboutDialWrapper.querySelector('#dial_ticks-canvas');
-        // Measure the visible dial (link or canvas), not the full-width wrapper, so we don't jump to left: 0
-        const dialEl = aboutDialLink || aboutDialCanvas || aboutDialWrapper;
-        const rect = dialEl.getBoundingClientRect();
+      const aboutDialWrapper = document.querySelector('.about_dial-wrapper');
+      const transitionDial = document.querySelector('.transition-dial');
+      if (transitionDial) {
+        // Measure from the about-page dial if present, else fall back to transition-dial's own rect
+        var aboutDialLink = aboutDialWrapper ? aboutDialWrapper.querySelector('.about_dial-link') : null;
+        var aboutDialCanvas = aboutDialWrapper ? aboutDialWrapper.querySelector('#dial_ticks-canvas') : null;
+        const measureEl = aboutDialLink || aboutDialCanvas || aboutDialWrapper || transitionDial;
+        const rect = measureEl.getBoundingClientRect();
+
+        // Hide about-page dial so only the transition dial shows
+        if (aboutDialWrapper) gsap.set(aboutDialWrapper, { visibility: 'hidden' });
 
         // Large dial size in px: matches CSS clamp(180px, min(50svh, 70vw), ...) * 1.184
         var dialLargeBase = Math.max(180, Math.min(window.innerHeight * 0.5, window.innerWidth * 0.7));
         var largeWidthPx = dialLargeBase * 1.184;
         var largeHeightPx = dialLargeBase * 1.184;
 
-        // Final position: centre of viewport (use left/top so nothing can clear a transform)
+        // Final position: centre of viewport
         var centerLeft = (window.innerWidth / 2) - (largeWidthPx / 2) - scrollbarOffsetPx;
         var centerTop = (window.innerHeight / 2) - (largeHeightPx / 2);
 
-        gsap.set(aboutDialWrapper, {
+        // Ensure transition-dial is initialised and drawn
+        RHP.transitionDial?.init?.();
+        RHP.transitionDial?.resize?.();
+
+        const transitionDialCanvas = transitionDial.querySelector('.transition-dial_canvas');
+        if (transitionDialCanvas) {
+          gsap.set(transitionDialCanvas, { width: '100%', height: '100%' });
+        }
+
+        gsap.set(transitionDial, {
           position: 'fixed',
           left: rect.left,
           top: rect.top,
@@ -1192,21 +1197,9 @@
           clearProps: 'transform',
           zIndex: 9997
         });
-        // Override [data-barba-namespace="about"] .about_dial-wrapper #dial_ticks-canvas (and .dial_layer-ticks) !important rules so they can grow with the wrapper
-        function forceFillWithImportant(el) {
-          if (!el) return;
-          el.style.setProperty('width', '100%', 'important');
-          el.style.setProperty('height', '100%', 'important');
-          el.style.setProperty('min-width', '0', 'important');
-          el.style.setProperty('min-height', '0', 'important');
-        }
-        if (aboutDialLink) { gsap.set(aboutDialLink, { width: '100%', height: '100%' }); forceFillWithImportant(aboutDialLink); }
-        if (aboutDialCanvas) { gsap.set(aboutDialCanvas, { width: '100%', height: '100%' }); forceFillWithImportant(aboutDialCanvas); }
-        var dialLayerTicks = aboutDialWrapper.querySelector('.dial_layer-ticks');
-        forceFillWithImportant(dialLayerTicks);
 
         const dialTween = gsap.fromTo(
-          aboutDialWrapper,
+          transitionDial,
           {
             left: rect.left,
             top: rect.top,
@@ -1222,28 +1215,16 @@
             bottom: 'auto',
             width: largeWidthPx,
             height: largeHeightPx,
-            duration: 0.75,
+            duration: 0.75 * dur,
             ease: 'power3.out',
-            overwrite: true,
-            onUpdate: function() {
-              RHP.aboutDialTicks?.resize?.();
-            },
-            onComplete: function() {
-              requestAnimationFrame(function() {
-                RHP.aboutDialTicks?.resize?.();
-              });
-            }
+            overwrite: true
           }
         );
         dialPromise = dialTween.then ? dialTween.then() : new Promise(function(r) { dialTween.eventCallback('onComplete', r); });
       }
 
       var LOGO_DIAL_DURATION_MS = 750;
-      return Promise.all([
-        overlayTween.then ? overlayTween.then() : new Promise(function(r) { overlayTween.eventCallback('onComplete', r); }),
-        logoPromise,
-        dialPromise
-      ]).then(function() {
+      return Promise.all([tlPromise, dialPromise]).then(function() {
         var elapsed = Date.now() - leaveTransitionStart;
         var wait = Math.max(0, LOGO_DIAL_DURATION_MS - elapsed);
         if (wait > 0) {

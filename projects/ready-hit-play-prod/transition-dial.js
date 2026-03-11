@@ -47,16 +47,19 @@
 
     function resize() {
       if (!canvas || !canvas.parentElement) return;
-      const r = canvas.parentElement.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       geom.dpr = dpr;
 
-      const size = Math.min(r.width, r.height) || 96;
+      // Always size the backing buffer at the large (viewport) target so the ticks
+      // stay crisp when the dial grows during about→home. CSS 100% handles display
+      // scaling to the actual wrapper size (small on about, large on home).
+      const dialLargeBase = Math.max(180, Math.min(window.innerHeight * 0.5, window.innerWidth * 0.7));
+      const size = Math.round(dialLargeBase * 1.184);
       const pxSize = Math.round(size * dpr);
       canvas.width = pxSize;
       canvas.height = pxSize;
-      canvas.style.width = size + 'px';
-      canvas.style.height = size + 'px';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
 
       geom.cx = size / 2;
       geom.cy = size / 2;
@@ -144,6 +147,6 @@
       ctx = null;
     }
 
-    return { init, destroy, version: TRANSITION_DIAL_VERSION };
+    return { init, destroy, resize, version: TRANSITION_DIAL_VERSION };
   })();
 })();

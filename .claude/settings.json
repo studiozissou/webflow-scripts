@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "Edit(projects/**)",
@@ -67,9 +70,6 @@
       "mcp__webflow__asset_tool*"
     ]
   },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  },
   "hooks": {
     "PostToolUse": [
       {
@@ -88,6 +88,16 @@
           {
             "type": "command",
             "command": "LOGDIR=\"$(git -C \"$(dirname \"$0\")\" rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/logs\"; mkdir -p \"$LOGDIR\"; echo \"[$(date -u +%Y-%m-%dT%H:%M:%SZ)] session-end\" >> \"$LOGDIR/sessions.log\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code needs permission\" with title \"Claude Code\"'"
           }
         ]
       }

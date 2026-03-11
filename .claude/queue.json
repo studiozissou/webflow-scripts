@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-06",
+  "updated": "2026-03-11",
   "queue": [
     {
       "id": "qa-rhp-claude-setup",
@@ -263,6 +263,124 @@
       "title": "Replace component placeholders in style guide as each component is built",
       "description": "As each SZ component is built, update the style guide page with live examples replacing placeholder sections.",
       "created": "2026-03-06"
+    },
+    {
+      "id": "rhp-transition-dial-pixelation",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P2",
+      "status": "done",
+      "title": "Transition dial canvas pixelated during about→home grow animation",
+      "description": ".transition-dial canvas looks pixelated when growing from small (6rem) to large during the about→home reverse transition. The canvas backing buffer is drawn at the small size and CSS-stretches as the wrapper grows. Needs a resize strategy that redraws the canvas at the target large resolution before or during the grow animation. Shrinking (home→about) is crisp because the buffer starts at large resolution.",
+      "created": "2026-03-11",
+      "completed": "2026-03-11"
+    },
+    {
+      "id": "rhp-transition-dial-refinement",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Backlog",
+      "title": "Debug and refine home↔about transition dial animation",
+      "description": "Multiple issues after transition-dial large-buffer fix:\n1. about→home: transition overlay disappears before animation completes — on homepage after transition the overlay may need to stay visible longer\n2. home→about: dial starts moving from top of page instead of its natural position — likely a display none→flex issue causing getBoundingClientRect to return 0,0 before the element is laid out\n3. home→about: transition dial looks pixelated at the end of the shrink (small size) — buffer is large but CSS 100% at 6rem may need a final resize() call at the small rendered size\n4. Easing refinement: try expo.inOut or similar for smoother feel on both directions\nAll issues are in orchestrator.js runHomeToAboutTransition / runAboutToHomeTransition and transition-dial.js.",
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-finding-schema-config",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Site review: finding schema, logger, and configuration thresholds",
+      "description": "Project scaffold at tools/site-review/. Create the unified Finding data model (createFinding/validateFinding), DEBUG-gated logger, and config module with severity thresholds for all checks. Foundation for all subsequent stages.",
+      "spec": ".claude/specs/site-review-stage-1-skeleton.md",
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-page-fetcher-sitemap-discovery",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Site review: page fetcher with cache and sitemap discovery",
+      "description": "Shared page fetcher that caches HTML, headers, status code, and redirect chain per URL per run. Sitemap.xml parser with fallback to manual --pages flag. Every check module depends on these utilities.",
+      "spec": ".claude/specs/site-review-stage-2-fetch-discovery.md",
+      "blockedOn": "wf-site-review-finding-schema-config",
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-html-checks-meta-alt-security",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Site review: HTML checks — meta tags, image alt text, security headers",
+      "description": "First three checks, all pure HTML parsers. Meta tags checks title, description, OG, and canonical. Image alt detects missing alt attributes. Security headers checks HSTS, CSP, X-Frame-Options, and others. Validates the check module contract pattern.",
+      "spec": ".claude/specs/site-review-stage-3-html-checks.md",
+      "blockedOn": "wf-site-review-page-fetcher-sitemap-discovery",
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-network-checks-links-redirects-pagespeed",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Site review: network checks — broken links, redirect chains, mixed content, PageSpeed Insights",
+      "description": "Four checks involving network requests. Broken links sends HTTP HEAD requests with concurrency limit. Redirect chains follows hops and reports loops. Mixed content detects HTTP resources on HTTPS pages. PageSpeed Insights calls the free Google API for Core Web Vitals and Lighthouse scores.",
+      "spec": ".claude/specs/site-review-stage-4-network-checks.md",
+      "blockedOn": "wf-site-review-page-fetcher-sitemap-discovery",
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-custom-code-extraction-claude-analysis",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Site review: custom code extraction and AI review via Playwright and Claude",
+      "description": "Use Playwright to visit each page and extract inline scripts, styles, and Webflow embed blocks. Filter out known CDN libraries. Send custom code to Claude API for quality analysis, refactoring suggestions, and security review.",
+      "complexity": "complex",
+      "spec": ".claude/specs/site-review-stage-5-code-review.md",
+      "blockedOn": "wf-site-review-page-fetcher-sitemap-discovery",
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-runner-reports-cli-tier-one",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Site review: check runner, report generators, and CLI entry point — tier one complete",
+      "description": "Runner dynamically loads check modules, runs them in parallel, collects and validates findings. JSON and markdown report generators output to reports/<domain>-<date>/. CLI entry point with --url, --tier, --pages, --skip flags. Tier one health check is fully functional after this stage.",
+      "complexity": "complex",
+      "spec": ".claude/specs/site-review-stage-6-runner-reports-cli.md",
+      "blockedOn": ["wf-site-review-html-checks-meta-alt-security", "wf-site-review-network-checks-links-redirects-pagespeed", "wf-site-review-custom-code-extraction-claude-analysis"],
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-csv-importers-screaming-frog-se-ranking",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Site review: CSV importers for Screaming Frog and SE Ranking exports",
+      "description": "Parse Screaming Frog pages and links CSV exports plus SE Ranking audit CSV into the unified Finding schema. Normalise and deduplicate imported findings against automated findings. Uses Node readline, no external CSV library.",
+      "spec": ".claude/specs/site-review-stage-7-csv-importers.md",
+      "blockedOn": "wf-site-review-runner-reports-cli-tier-one",
+      "created": "2026-03-11"
+    },
+    {
+      "id": "wf-site-review-accessibility-deep-dive-tier-two",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Site review: accessibility deep-dive and tier two integration",
+      "description": "Accessibility check using axe-core via Playwright — contrast, form labels, ARIA, focus states, heading hierarchy. Wire CSV importers into the runner for --tier 2 flow. Add --sf-pages, --sf-links, --se-ranking CLI flags. Tier two full review is complete after this stage.",
+      "spec": ".claude/specs/site-review-stage-8-a11y-tier2.md",
+      "blockedOn": "wf-site-review-csv-importers-screaming-frog-se-ranking",
+      "created": "2026-03-11"
     }
   ]
 }

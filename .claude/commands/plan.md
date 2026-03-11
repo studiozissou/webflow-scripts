@@ -47,9 +47,10 @@ Use the `pm-questioning` skill to ask clarifying questions. Do not skip this ste
 7. **Barba transition impact check** (see below).
 8. **Generate acceptance tests** (see below).
 9. **Verification section** — Every plan MUST include a "Verification" section listing concrete steps to confirm the implementation is correct. Prefer automated checks (run tests, run a script, use MCP tools, grep for expected output) over manual inspection.
-10. Present the plan summary to the user for approval before proceeding.
-
-**Always write the spec file to `.claude/specs/<feature-slug>.md` before the session ends — do not wait to be asked.**
+10. Present the plan summary to the user for approval. Use `AskUserQuestion` with the following options (in this order):
+    - **"Save spec, add to queue, and sync to Notion" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`, add tasks to `queue.json` using the `queue-tasks` skill for formatting (plain-English names, descriptive slugs, step-by-step Notion pages with embedded spec and Files section), and sync all new rows to Notion via the `notion-dashboard` skill.
+    - **"Save spec only"** — Write the spec file but do not touch queue.json or Notion.
+    - **"Review changes first"** — Show a summary of what will be written before saving anything.
 
 ## Barba transition impact check
 

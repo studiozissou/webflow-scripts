@@ -1,0 +1,34 @@
+{
+  "loadingExperience": {
+    "metrics": {
+      "LARGEST_CONTENTFUL_PAINT_MS": {
+        "percentile": 4500,
+        "category": "SLOW"
+      },
+      "CUMULATIVE_LAYOUT_SHIFT_SCORE": {
+        "percentile": 8,
+        "category": "FAST"
+      },
+      "INTERACTION_TO_NEXT_PAINT": {
+        "percentile": 150,
+        "category": "FAST"
+      }
+    }
+  },
+  "lighthouseResult": {
+    "categories": {
+      "performance": {
+        "score": 0.35
+      },
+      "accessibility": {
+        "score": 0.92
+      },
+      "best-practices": {
+        "score": 0.85
+      },
+      "seo": {
+        "score": 0.78
+      }
+    }
+  }
+}

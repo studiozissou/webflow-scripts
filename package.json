@@ -7,11 +7,13 @@
   "scripts": {
     "wf-gen": "node scripts/webflow/wf-gen.js",
     "test:wf": "node --test 'tests/webflow/*.test.js'",
+    "test:sr": "node --test 'tests/site-review/**/*.test.js'",
     "test:sz": "playwright test --config=tests/acceptance/playwright.config.js",
     "test:sz:smoke": "playwright test --config=tests/acceptance/playwright.config.js smoke",
     "test:sz:a11y": "playwright test --config=tests/acceptance/playwright.config.js a11y",
     "test:sz:acceptance": "playwright test --config=tests/acceptance/playwright.config.js acceptance",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "site-review": "node tools/site-review/index.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"

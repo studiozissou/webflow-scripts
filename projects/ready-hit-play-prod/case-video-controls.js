@@ -193,6 +193,7 @@
     /* ======== 4. Auto-hide controls ======== */
     let idleTimer = null;
     let controlsHidden = false;
+    let mouseInside = false;
     const cursorWrapper = document.querySelector('.cursor_dot-wrapper');
 
     function showControls() {
@@ -223,7 +224,7 @@
         gsap().killTweensOf(track);
         gsap().to(controlWrapper, { opacity: 0, duration: reducedMotion ? 0 : 0.4 });
         gsap().to(track, { opacity: 0, duration: reducedMotion ? 0 : 0.4 });
-        if (cursorWrapper) {
+        if (mouseInside && cursorWrapper) {
           gsap().killTweensOf(cursorWrapper);
           gsap().to(cursorWrapper, { opacity: 0, duration: reducedMotion ? 0 : 0.4 });
         }
@@ -243,21 +244,31 @@
       const IDLE_DELAY = 2000;
 
       const onSectionMouseMove = () => {
+        mouseInside = true;
         showControls();
         resetIdleTimer(IDLE_DELAY);
       };
 
       const onSectionMouseLeave = () => {
+        mouseInside = false;
         clearTimeout(idleTimer);
         idleTimer = null;
         showControls();
+        /* Defensive: ensure cursor is visible when leaving section */
+        if (cursorWrapper) {
+          if (gsap()) {
+            gsap().killTweensOf(cursorWrapper);
+            gsap().to(cursorWrapper, { opacity: 1, duration: reducedMotion ? 0 : 0.2 });
+          } else {
+            cursorWrapper.style.opacity = '';
+          }
+        }
       };
 
       section.addEventListener('mousemove', onSectionMouseMove);
       section.addEventListener('mouseleave', onSectionMouseLeave);
 
-      /* Start idle timer immediately */
-      resetIdleTimer(IDLE_DELAY);
+      /* No idle timer at init — starts on first mousemove inside section */
 
       cleanups.push(() => {
         section.removeEventListener('mousemove', onSectionMouseMove);

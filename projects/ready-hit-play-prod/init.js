@@ -12,7 +12,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.2.27.1', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.3.12.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -124,6 +124,10 @@
       await new Promise(resolve => setTimeout(resolve, 10));
 
       const versionParam = 'v=' + (CONFIG.version || '0');
+
+      // Project CSS (loaded after vendor CSS, before JS modules)
+      await loadStylesheet(`${baseUrl}/ready-hit-play.css?${versionParam}`);
+
       for (const module of CONFIG.modules) {
         await loadScript(`${baseUrl}/${module}?${versionParam}`);
       }

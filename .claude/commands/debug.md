@@ -7,6 +7,7 @@
 ## Usage
 ```
 /debug "brief description of the problem"
+/debug "jam.dev/j/abc123"
 ```
 
 ---
@@ -32,11 +33,68 @@ If not related to a tracked task, skip this step.
 
 ---
 
+## Jam Intake
+
+If the user provides a Jam URL (`jam.dev/...`) or Jam UUID upfront, run this immediately.
+
+Otherwise, **prompt for a Jam link and design reference** when the bug cannot be automatically tested — i.e. when all hypotheses in Step 2b are marked "None" (visual-only, timing-dependent, interaction-specific, or no DOM signal). Ask:
+> *"This bug looks hard to reproduce automatically. Do you have:*
+> *1. A Jam recording? Paste a jam.dev link and I'll pull console errors, network failures, and the interaction timeline.*
+> *2. A Figma link or screenshot showing the expected behaviour? This helps compare the bug against the intended design."*
+
+If the user provides a Jam link, run the Jam steps below. If they provide a Figma link, run the Design Reference steps below. If they decline both, continue without them.
+
+When a Jam URL or ID is available:
+
+1. **getDetails** — pull description, author, type (video/screenshot), timestamps
+2. **getConsoleLogs** (logLevel: `"error"`) — pull JS errors and stack traces
+3. **getNetworkRequests** (statusCode: `"4xx"` then `"5xx"`) — pull failed HTTP requests
+4. **getUserEvents** — pull the interaction timeline for reproduction steps
+5. **Conditional on Jam type** (from getDetails):
+   - Video → **analyzeVideo** + **getVideoTranscript** (narration context)
+   - Screenshot → **getScreenshots** (visual evidence)
+6. **getMetadata** — pull custom SDK metadata if present
+
+Present a structured summary before proceeding:
+```
+## Jam Bug Report: [title from getDetails]
+**Reporter:** [author]  **Type:** [video/screenshot]  **Date:** [timestamp]
+**Description:** [from getDetails]
+**Console errors:** [count] — [top error summary]
+**Failed requests:** [count] — [top failures]
+**User flow:** [summarised interaction timeline]
+**Visual evidence:** [screenshot description or video analysis summary]
+```
+
+Use this summary to pre-fill the Isolate step — skip manual reproduction if the Jam provides sufficient evidence.
+
+### Design Reference (if Figma link or screenshot provided)
+
+If the user provides a design reference alongside or instead of a Jam link:
+
+- **Figma URL** → call **get_design_context** (from Figma MCP) with the fileKey and nodeId. Extract the intended layout, spacing, colours, and component structure. If the node is a specific component, also call **get_screenshot** for a visual snapshot.
+- **Screenshot / image file** → read the image directly as visual reference.
+
+Present alongside the Jam summary (or standalone if no Jam):
+```
+## Expected Design
+**Source:** [Figma link or screenshot path]
+**Key details:** [layout, colours, spacing, typography, component state — whatever is relevant to the bug]
+```
+
+Use the design reference to:
+- Compare "what it should look like" against the Jam evidence or live site
+- Identify specific CSS/layout deviations in the Isolate step
+- Validate the fix matches the intended design in the Confirm step
+
+---
+
 ## Diagnostic Loop
 
 Activate the **debug skill** and run its full loop:
 
 1. **Isolate** — confirm error is real, repeatable, and scoped
+   - **Jam-sourced isolation** (if Jam Intake ran): use the Jam summary as primary evidence. Console errors seed hypotheses, user events define reproduction steps, screenshots/video provide visual confirmation. Only fall through to MCP reproduction if Jam data is insufficient.
    - **MCP-assisted reproduction** (if MCP connected — reference `playwright-webflow` skill for guard):
      - `browser_navigate` to the affected page, capture `browser_console_messages` + `browser_snapshot`
      - If interaction-triggered: replay clicks/hovers/scrolls with `browser_click`/`browser_hover`, take screenshots at each step
@@ -68,6 +126,13 @@ Activate the **debug skill** and run its full loop:
    - Run the generated spec — include in the fix commit if it passes
    - If it fails or no spec is appropriate, skip and note in the debug log
 
+1b. **Jam comment** (if Jam was used in intake): post a fix summary back to the Jam via **createComment**:
+   ```
+   Fix applied: [brief description]
+   Root cause: [confirmed hypothesis]
+   Commit: [git rev-parse HEAD]
+   ```
+
 2. **Write debug log** to `.claude/logs/debug-[slug]-[YYYY-MM-DD].md` using this format:
 ```
 ## Debug Summary
@@ -76,6 +141,7 @@ Activate the **debug skill** and run its full loop:
 **Root cause:** [confirmed hypothesis]
 **Fix applied:** [what changed and why]
 **Confirmed:** [how verified]
+**Jam source:** [Jam URL or "none"]
 **MCP used:** [yes — reproduced + verified / no]
 **Regression test:** [path to spec or "not applicable"]
 **Test design:** [H1: type — assertion / H2: type — assertion / None: reason]

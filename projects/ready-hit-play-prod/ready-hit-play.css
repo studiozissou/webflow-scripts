@@ -173,9 +173,9 @@
 }
 
 /* ====== Stage (shared home + case + about) ====== */
-[data-barba-namespace="home"] .dial_component,
-[data-barba-namespace="case"] .dial_component,
-[data-barba-namespace="about"] .dial_component {
+.dial_component:has([data-barba-namespace="home"]),
+.dial_component:has([data-barba-namespace="case"]),
+.dial_component:has([data-barba-namespace="about"]) {
   position: relative;
   width: 100%;
   height: 100dvh;
@@ -187,9 +187,9 @@
 }
 
 @supports not (height: 100dvh) {
-  [data-barba-namespace="home"] .dial_component,
-  [data-barba-namespace="case"] .dial_component,
-  [data-barba-namespace="about"] .dial_component {
+  .dial_component:has([data-barba-namespace="home"]),
+  .dial_component:has([data-barba-namespace="case"]),
+  .dial_component:has([data-barba-namespace="about"]) {
     height: 100vh;
   }
 }
@@ -200,9 +200,9 @@
    do NOT include those global html/body rules here. */
 
 /* ====== Layers (shared) ====== */
-[data-barba-namespace="home"] .dial_layer-bg,
-[data-barba-namespace="case"] .dial_layer-bg,
-[data-barba-namespace="about"] .dial_layer-bg {
+.dial_component:has([data-barba-namespace="home"]) .dial_layer-bg,
+.dial_component:has([data-barba-namespace="case"]) .dial_layer-bg,
+.dial_component:has([data-barba-namespace="about"]) .dial_layer-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -214,9 +214,9 @@
   object-fit: cover;
 }
 
-[data-barba-namespace="home"] .dial_bg-video,
-[data-barba-namespace="case"] .dial_bg-video,
-[data-barba-namespace="about"] .dial_bg-video {
+.dial_component:has([data-barba-namespace="home"]) .dial_bg-video,
+.dial_component:has([data-barba-namespace="case"]) .dial_bg-video,
+.dial_component:has([data-barba-namespace="about"]) .dial_bg-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -224,26 +224,26 @@
 }
 
 /* Home: blur(0) default; GSAP animates to blur(40px) on .dial_layer-fg hover (desktop) */
-[data-barba-namespace="home"] .dial_bg-video {
+.dial_component:has([data-barba-namespace="home"]) .dial_bg-video {
   filter: blur(0px);
 }
 
 /* Case/about: always blurred from click-through until return to home */
-[data-barba-namespace="case"] .dial_bg-video,
-[data-barba-namespace="about"] .dial_bg-video {
+.dial_component:has([data-barba-namespace="case"]) .dial_bg-video,
+.dial_component:has([data-barba-namespace="about"]) .dial_bg-video {
   filter: blur(40px);
 }
 
 /* About: hide background video */
-[data-barba-namespace="about"] .dial_bg-video {
+.dial_component:has([data-barba-namespace="about"]) .dial_bg-video {
   display: none;
 }
 
 /* Canvas ticks — full size; tick radius comes from fgWrap in JS (max 50svh × 70vw via video wrap) */
 /* Scope to dial_component only — about page uses .about_dial-wrapper with different layout */
-[data-barba-namespace="home"] .dial_component .dial_layer-ticks,
-[data-barba-namespace="case"] .dial_component .dial_layer-ticks,
-[data-barba-namespace="about"] .dial_component .dial_layer-ticks {
+.dial_component:has([data-barba-namespace="home"]) .dial_layer-ticks,
+.dial_component:has([data-barba-namespace="case"]) .dial_layer-ticks,
+.dial_component:has([data-barba-namespace="about"]) .dial_layer-ticks {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -255,7 +255,7 @@
 }
 
 /* Foreground circle — home: uses dial-large */
-[data-barba-namespace="home"] .dial_layer-fg {
+.dial_component:has([data-barba-namespace="home"]) .dial_layer-fg {
   position: absolute;
   inset: 0;
   margin: auto;
@@ -269,17 +269,17 @@
 /* Desktop: home starts at opacity 0; GSAP animates to 1 on .dial_layer-fg hover.
    Case/about: always opacity 1 from click-through until return to home. */
 @media (hover: hover) {
-  [data-barba-namespace="home"] .dial_layer-fg {
+  .dial_component:has([data-barba-namespace="home"]) .dial_layer-fg {
     opacity: 0;
   }
-  [data-barba-namespace="case"] .dial_layer-fg,
-  [data-barba-namespace="about"] .dial_layer-fg {
+  .dial_component:has([data-barba-namespace="case"]) .dial_layer-fg,
+  .dial_component:has([data-barba-namespace="about"]) .dial_layer-fg {
     opacity: 1;
   }
 }
 
-[data-barba-namespace="case"] .dial_layer-fg,
-[data-barba-namespace="about"] .dial_layer-fg {
+.dial_component:has([data-barba-namespace="case"]) .dial_layer-fg,
+.dial_component:has([data-barba-namespace="about"]) .dial_layer-fg {
   position: absolute;
   inset: 0;
   display: grid;
@@ -293,7 +293,7 @@
 
 /* Fix: case study dial renders at home size before JS expansion tween fires.
    Set correct dimensions at CSS level so initial paint is already right. */
-[data-barba-namespace="case"] .dial_layer-fg {
+.dial_component:has([data-barba-namespace="case"]) .dial_layer-fg {
   width: var(--dial-case-width);
   height: var(--dial-case-height);
   border-radius: var(--dial-case-border-radius);
@@ -391,7 +391,7 @@
 }
 
 /* Fallback: namespace-based (for initial load before JS runs) */
-[data-barba-namespace="home"] .dial_video-wrap {
+.dial_component:has([data-barba-namespace="home"]) .dial_video-wrap {
   width: 100%;
   height: 100%;
   aspect-ratio: 1 / 1;
@@ -399,8 +399,8 @@
   overflow: hidden;
 }
 
-[data-barba-namespace="case"] .dial_video-wrap,
-[data-barba-namespace="about"] .dial_video-wrap {
+.dial_component:has([data-barba-namespace="case"]) .dial_video-wrap,
+.dial_component:has([data-barba-namespace="about"]) .dial_video-wrap {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 0px;
@@ -409,9 +409,9 @@
 
 /* CSS transitions removed - using GSAP for animations */
 
-[data-barba-namespace="home"] .dial_fg-video,
-[data-barba-namespace="case"] .dial_fg-video,
-[data-barba-namespace="about"] .dial_fg-video {
+.dial_component:has([data-barba-namespace="home"]) .dial_fg-video,
+.dial_component:has([data-barba-namespace="case"]) .dial_fg-video,
+.dial_component:has([data-barba-namespace="about"]) .dial_fg-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -419,7 +419,7 @@
 
 /* ====== Labels (home only; fixed, never rotate) ====== */
 /* Position below dial: center + half dial height + gap (matches clamp(180px, min(50svh, 70vw))) */
-[data-barba-namespace="home"] .dial_layer-ui {
+.dial_component:has([data-barba-namespace="home"]) .dial_layer-ui {
   position: absolute;
   left: 0;
   right: 0;
@@ -429,17 +429,17 @@
   justify-content: center;
 }
 
-[data-barba-namespace="home"] .dial_label-wrap {
+.dial_component:has([data-barba-namespace="home"]) .dial_label-wrap {
   text-align: center;
 }
 
 /* CMS list can be hidden on home */
-[data-barba-namespace="home"] .dial_cms-list {
+.dial_component:has([data-barba-namespace="home"]) .dial_cms-list {
   display: none;
 }
 
 /* ====== Case-studies specific ====== */
-[data-barba-namespace="case"] .video-cover {
+.dial_component:has([data-barba-namespace="case"]) .video-cover {
   height: 100%;
   width: 100%;
   object-fit: cover;
@@ -452,39 +452,87 @@
 
 /* Case study: first-screen proportions — video fills, title visible above fold (desktop only) */
 @media (min-width: 992px) {
-  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video.is-header {
+  .dial_component:has([data-barba-namespace="case"]) .dial_layer-fg.is-case-study .section_case-video.is-header {
     min-height: calc(var(--dial-case-height) - 140px);
     display: flex;
     flex-direction: column;
   }
-  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video .dial_video-wrap,
-  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video .video-cover,
-  [data-barba-namespace="case"] .dial_layer-fg.is-case-study .section_case-video video {
+  .dial_component:has([data-barba-namespace="case"]) .dial_layer-fg.is-case-study .section_case-video .dial_video-wrap,
+  .dial_component:has([data-barba-namespace="case"]) .dial_layer-fg.is-case-study .section_case-video .video-cover,
+  .dial_component:has([data-barba-namespace="case"]) .dial_layer-fg.is-case-study .section_case-video video {
     flex: 1;
     min-height: 0;
     object-fit: cover;
   }
 
   /* Override aspect-ratio so video in first section can grow vertically */
-  [data-barba-namespace="case"] .section_case-video .dial_video-wrap,
-  [data-barba-namespace="case"] .section_case-video .video-cover {
+  .dial_component:has([data-barba-namespace="case"]) .section_case-video .dial_video-wrap,
+  .dial_component:has([data-barba-namespace="case"]) .section_case-video .video-cover {
     aspect-ratio: auto;
     height: 100%;
   }
 }
 
 /* Case study: video fills wrapper completely (100% width and height) */
-[data-barba-namespace="case"] .dial_video-wrap.is-case-study {
+.dial_component:has([data-barba-namespace="case"]) .dial_video-wrap.is-case-study {
   position: relative;
   overflow: hidden;
 }
-[data-barba-namespace="case"] .dial_video-wrap.is-case-study .dial_fg-video,
-[data-barba-namespace="case"] .dial_video-wrap.is-case-study .video-cover {
+.dial_component:has([data-barba-namespace="case"]) .dial_video-wrap.is-case-study .dial_fg-video,
+.dial_component:has([data-barba-namespace="case"]) .dial_video-wrap.is-case-study .video-cover {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ====== Namespace-based visibility (data-dial-ns on persistent dial) ====== */
+/* Work: hide ticks, step text, work-link; show case-homepage-link */
+.dial_component[data-dial-ns="work"] .dial_layer-ticks {
+  display: none;
+}
+.dial_component[data-dial-ns="work"] .dial_work-link {
+  visibility: hidden;
+  pointer-events: none;
+}
+.dial_component[data-dial-ns="work"] .heading-style-h7.is-step {
+  display: none;
+}
+/* Home: hide case-homepage-link */
+.dial_component[data-dial-ns="home"] .case-homepage-link {
+  display: none;
+}
+
+/* ====== Work page: dial_layer-fg as scrollable container ====== */
+.dial_component[data-dial-ns="work"] .dial_layer-fg {
+  width: var(--dial-case-width);
+  height: var(--dial-case-height);
+  border-radius: var(--dial-case-border-radius);
+  margin: auto;
+  aspect-ratio: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-flow: column;
+  align-items: stretch;
+}
+
+/* Work: hide labels — !important overrides IX2 reinit which resets inline opacity */
+.dial_component[data-dial-ns="work"] .dial_layer-ui {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Hide scrollbar on work view */
+.dial_layer-fg.no-scrollbar,
+.dial_layer-fg.no-scrollbar .case-studies_wrapper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dial_layer-fg.no-scrollbar::-webkit-scrollbar,
+.dial_layer-fg.no-scrollbar .case-studies_wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 /* ====== Desktop custom cursor ====== */
@@ -604,7 +652,7 @@
 }
 
 /* Home intro: initial black background (fallback before JS runs) */
-[data-barba-namespace="home"] .dial_layer-bg {
+.dial_component:has([data-barba-namespace="home"]) .dial_layer-bg {
   background-color: #000;
 }
 

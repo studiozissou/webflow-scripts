@@ -19,6 +19,10 @@ Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + 
 - On deploy: bump `CONFIG.version` in `init.js`, push, update commit hash + `?v=` in Webflow.
 - CSS (`ready-hit-play.css`) is also linked from jsDelivr in the same Webflow head block.
 
+## IMPORTANT: All RHP work happens here
+- **This folder** (`ready-hit-play-prod/`) is the single source of truth — dev and live.
+- `projects/ready-hit-play/` is legacy and not in use.
+
 ## Module load order (defined in `init.js` `CONFIG.modules`)
 1. `lenis-manager.js`
 2. `cursor.js`
@@ -39,8 +43,8 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 
 | File | Version | Responsibility |
 |------|---------|----------------|
-| `init.js` | 2026.2.20.2 | Loader: load order, dev/CDN URL resolution, health check, `window.RHP` bootstrap |
-| `orchestrator.js` | 2026.2.18.1 | Barba conductor: init/destroy modules per page, transitions, scroll lock, contact pullout |
+| `init.js` | 2026.3.12.1 | Loader: load order, dev/CDN URL resolution, health check, `window.RHP` bootstrap, project CSS loading |
+| `orchestrator.js` | 2026.3.12.1 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
 | `lenis-manager.js` | 2026.2.6.10 | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
 | `cursor.js` | 2026.2.18.1 | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
 | `work-dial.js` | 2026.2.20.1 | Homepage dial: canvas ticks, video pool (sliding window), sector switch, drag/hover |
@@ -128,9 +132,13 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - `originalBgEl` deletion on pool swap + destroy (RC1 root cause)
 - 300ms `setTimeout` for `interactionUnlocked` — known hack, not yet replaced with event-driven approach
 
-### Barba / DOM structure
-- `dial_layer-fg` inside Barba container — should be moved outside (spec exists, not shipped)
-- CSS namespace scoping will break when fg moves outside Barba container
+### Barba / DOM structure (namespace restructure shipped 2026-03-12)
+- `dial_component` + `dial_layer-fg` now persist OUTSIDE Barba container
+- `[data-barba="container"]` is inside `dial_layer-fg`
+- `data-dial-ns="home"|"work"` attribute on `.dial_component` controls CSS visibility
+- Dial morph animations run in Barba `leave()` (pre-swap), not `afterEnter`
+- `clearProps: 'all'` after morph relies on CSS `[data-dial-ns]` rules to maintain layout
+- **Prerequisite**: Webflow Designer must have dial outside Barba container with correct `data-dial-ns` attributes
 
 ## Version format
 `YYYY.M.D.N` — year, month, day, daily build number. Bump `CONFIG.version` in `init.js` on each deploy.

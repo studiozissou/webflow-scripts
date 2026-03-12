@@ -70,6 +70,7 @@
    - CMS order: first 8 items in rendered order
    - Poster support: reads <img class="dial_cms-poster" ...> inside each .dial_cms-item
    - Barba-safe: init(container) / destroy()
+   - Updates dial_work-link href on sector change
    ========================================= */
 (() => {
   window.RHP = window.RHP || {};
@@ -85,6 +86,7 @@
     cmsPoster: '.dial_cms-poster',
     title: '[data-dial-title]',
     meta: '[data-dial-meta]',
+    workLink: '.dial_work-link',
     cursorDot: '.cursor_dot',
     cursorLabel: '.cursor_label'
   };
@@ -94,10 +96,10 @@
 
   const mod = (n, m) => ((n % m) + m) % m;
 
-  // 0° at TOP, clockwise
+  // 0 deg at TOP, clockwise
   const angleTop0 = (dx, dy) => {
-    const degRight0 = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360; // 0° at right
-    return (degRight0 + 90) % 360;                                       // 0° at top
+    const degRight0 = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360; // 0 deg at right
+    return (degRight0 + 90) % 360;                                       // 0 deg at top
   };
 
   // Enforce autoplay/mute/loop (Embed-safe + iOS-friendly)
@@ -158,9 +160,10 @@
       alive = true;
       cleanup = [];
 
-      const comp = container.querySelector(SEL.component) || document.querySelector(SEL.component);
-      const canvas = container.querySelector(SEL.canvas) || document.querySelector(SEL.canvas);
-      const fgWrap = comp ? comp.querySelector(SEL.fgWrap) : document.querySelector(SEL.fgWrap);
+      // Dial elements persist outside Barba container — always query from document
+      const comp = document.querySelector(SEL.component);
+      const canvas = document.querySelector(SEL.canvas);
+      const fgWrap = comp ? comp.querySelector(SEL.fgWrap) : null;
 
       if (!comp || !canvas || !fgWrap) {
         alive = false;
@@ -171,11 +174,12 @@
       enforceVideoPolicy(comp);
 
       const ctx = canvas.getContext('2d');
-      const titleEl = container.querySelector(SEL.title) || document.querySelector(SEL.title);
-      const metaEl  = container.querySelector(SEL.meta)  || document.querySelector(SEL.meta);
+      const titleEl = document.querySelector(SEL.title);
+      const metaEl  = document.querySelector(SEL.meta);
+      const workLinkEl = comp.querySelector(SEL.workLink);
 
-      const cmsItems = Array.from(container.querySelectorAll(SEL.cmsItem));
-      const items = cmsItems.length ? cmsItems : Array.from(document.querySelectorAll(SEL.cmsItem));
+      const cmsItems = Array.from(document.querySelectorAll(SEL.cmsItem));
+      const items = cmsItems;
       const N = Math.min(8, items.length);
 
       if (!N) {
@@ -264,39 +268,21 @@
         return img.currentSrc || img.src || '';
       }
 
-      // Navigate to the currently active case study (Barba-aware)
-      function goToActiveCase(e, items, state) {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-
-        const idx = state?.activeIndex ?? 0;
-        const item = items[idx];
-        if (!item) return;
-
-        // Prefer explicit data attributes if present
+      // Build case study URL from CMS item data
+      function getCaseUrl(item) {
+        if (!item) return '';
         const dataRaw =
           item.getAttribute('data-url') ||
           item.getAttribute('data-case-url') ||
           item.getAttribute('data-link');
-
-        // Fallback: first anchor inside the CMS item
         const linkEl = item.querySelector('a[href]');
-
         let url = dataRaw || linkEl?.href || '';
-        if (!url) return;
-
-        // If author only provided a slug (e.g. "my-case"), build the full case-studies path
+        if (!url) return '';
+        // If author only provided a slug (e.g. "my-case"), build the full path
         if (!url.startsWith('http') && !url.startsWith('/')) {
-          url = `/case-studies/${url.replace(/^\/+/, '')}`;
+          url = `/work/${url.replace(/^\/+/, '')}`;
         }
-
-        if (window.barba && typeof window.barba.go === 'function') {
-          window.barba.go(url);
-        } else {
-          window.location.href = url;
-        }
+        return url;
       }
 
       function applyActive(idx) {
@@ -316,8 +302,14 @@
         if (titleEl) titleEl.textContent = t;
         if (metaEl)  metaEl.textContent  = m;
 
+        // Update dial_work-link href
+        if (workLinkEl) {
+          const caseUrl = getCaseUrl(item);
+          if (caseUrl) workLinkEl.href = caseUrl;
+        }
+
         const fgVideo = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
-        const bgVideo = comp.querySelector(SEL.bgVideo) || document.querySelector(SEL.bgVideo);
+        const bgVideo = document.querySelector(SEL.bgVideo);
 
         // Foreground: set poster, then src
         setVideoSourceAndPoster(fgVideo, v, poster);
@@ -546,13 +538,6 @@
       on(comp, 'wheel', onWheel, { passive: false });
       on(window, 'touchmove', preventTouchScroll, { passive: false });
 
-      // Center dial layer click → go to active case study (Barba transition)
-      const dialFg = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
-      if (dialFg) {
-        dialFg.style.cursor = 'pointer';
-        on(dialFg, 'click', (e) => goToActiveCase(e, items, state), { passive: false });
-      }
-
       on(document, 'visibilitychange', onVis, { passive: true });
 
       // iOS: kick videos again on first gesture
@@ -587,12 +572,25 @@
 <script>
 /* =========================================
    RHP — Orchestrator (Barba conductor)
-   + Scroll lock only on home
-   + Lenis on all non-home pages
+   Namespace restructure:
+   - Barba container is INSIDE dial_layer-fg
+   - Dial elements persist across transitions
+   - Morph animation runs in leave() before DOM swap
+   - data-dial-ns updated by JS during transitions
    ========================================= */
 (() => {
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
+
+  const DEBUG = false;
+
+  /* -----------------------------
+     Shared transition helpers
+     ----------------------------- */
+  const _getCSSVar = (name, fallback) => {
+    const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
+    return v || fallback;
+  };
 
   /* -----------------------------
      DOM ready helper
@@ -654,10 +652,10 @@
         if (active) return;
         active = true;
 
-        // ❌ No Lenis on home
+        // No Lenis on home
         RHP.lenis?.stop();
 
-        // 🔒 Lock scroll
+        // Lock scroll
         RHP.scroll.unlock(); // defensive reset
         RHP.scroll.lock();
 
@@ -687,45 +685,45 @@
 
   RHP.views.about   = RHP.views.about   || makeScrollPage();
 
-  // Case view: Lenis on an inner scrollable wrapper instead of window
+  // Case view: Lenis on the dial_layer-fg (which is the scroll wrapper on work pages)
   RHP.views.case = RHP.views.case || (() => {
     let active = false;
 
     return {
-      init(container) {
+      init(_container) {
         if (active) return;
         active = true;
 
         RHP.scroll.unlock();
 
-        const wrapper =
-          container.querySelector('[data-case-scroll-wrapper]') ||
-          container.querySelector('.case-scroll-wrapper');
-
+        // The scroll wrapper is dial_layer-fg (persists outside Barba container)
+        const dialFg = document.querySelector('.dial_layer-fg');
         const content =
-          wrapper?.querySelector('[data-case-scroll-content]') ||
-          wrapper?.firstElementChild ||
+          dialFg?.querySelector('[data-case-scroll-content]') ||
+          dialFg?.querySelector('.case-studies_wrapper') ||
           null;
 
-        // If we find a specific scroll wrapper, bind Lenis to it.
-        // Otherwise, fall back to normal window scroll.
-        if (wrapper && content) {
+        // Reset scroll position (dialFg persists so scrollTop may be stale)
+        if (dialFg) dialFg.scrollTop = 0;
+
+        if (dialFg && content) {
           RHP.lenis?.stop();
           RHP.lenis?.start({
-            wrapper,
-            content
+            wrapper: dialFg,
+            content: content
           });
-          RHP.lenis?.resize();
+          // Defer resize to next frame so IX2 reinit can settle first
+          requestAnimationFrame(() => RHP.lenis?.resize());
         } else {
           RHP.lenis?.start();
-          RHP.lenis?.resize();
+          requestAnimationFrame(() => RHP.lenis?.resize());
         }
       },
 
       destroy() {
         if (!active) return;
         active = false;
-        // Let global logic decide when to stop Lenis; no-op here.
+        RHP.lenis?.stop();
       }
     };
   })();
@@ -733,23 +731,254 @@
   RHP.views.contact = RHP.views.contact || makeScrollPage();
 
   /* -----------------------------
+     Dial morph helpers
+     ----------------------------- */
+  function getDialVars() {
+    return {
+      homeWidth: _getCSSVar('--dial-home-width', '37.5rem'),
+      homeHeight: _getCSSVar('--dial-home-height', '37.5rem'),
+      homeBR: _getCSSVar('--dial-home-border-radius', '1000rem'),
+      homeAR: _getCSSVar('--dial-home-aspect-ratio', '1'),
+      caseWidth: _getCSSVar('--dial-case-width', '78vw'),
+      caseHeight: _getCSSVar('--dial-case-height', '85dvh'),
+      caseBR: _getCSSVar('--dial-case-border-radius', '7.5rem'),
+      caseAR: _getCSSVar('--dial-case-aspect-ratio', 'auto')
+    };
+  }
+
+  // Animate dial from home circle to work rectangle
+  // Returns a Promise that resolves when animation completes
+  function runDialExpandAnimation() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialComp = document.querySelector('.dial_component');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    const dialTicks = document.querySelector('.dial_layer-ticks');
+    if (!dialFg || !gsap) return Promise.resolve();
+
+    const v = getDialVars();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dur = reduced ? 0 : 0.8;
+
+    return new Promise((resolve) => {
+      // Kill any in-flight morph tweens
+      gsap.killTweensOf(dialFg);
+
+      // 1. Fade out dial_layer-ui and ticks
+      if (dialUI) {
+        gsap.to(dialUI, { opacity: 0, duration: dur * 0.4, ease: 'power2.out' });
+      }
+      if (dialTicks) {
+        gsap.to(dialTicks, { opacity: 0, duration: dur * 0.3, ease: 'power2.out' });
+      }
+
+      // 2. Capture current computed size of dialFg (full-viewport from CSS inset:0)
+      const rect = dialFg.getBoundingClientRect();
+
+      // 2b. Pin dial_video-wrap dimensions before ns change
+      const videoWrap = dialFg.querySelector('.dial_video-wrap');
+      const vRect = videoWrap?.getBoundingClientRect();
+      if (videoWrap && vRect) {
+        gsap.set(videoWrap, { width: vRect.width, height: vRect.height, borderRadius: 999 });
+      }
+
+      // 3. Update data-dial-ns to "work" (CSS hides ticks via display:none)
+      if (dialComp) dialComp.setAttribute('data-dial-ns', 'work');
+
+      // 4. Pin starting state to current computed size (so GSAP can animate from it)
+      gsap.set(dialFg, {
+        width: rect.width,
+        height: rect.height,
+        borderRadius: 0,
+        overflow: 'hidden',
+        margin: 0
+      });
+
+      // 5. Add work classes
+      dialFg.classList.add('is-case-study', 'no-scrollbar');
+
+      // 6. Animate to work rectangle (aspectRatio applied in onComplete — GSAP can't tween to 'auto')
+      gsap.to(dialFg, {
+        width: v.caseWidth,
+        height: v.caseHeight,
+        borderRadius: v.caseBR,
+        margin: 'auto',
+        duration: dur,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          // Clear GSAP inline styles — let CSS [data-dial-ns="work"] rules take over
+          gsap.set(dialFg, { clearProps: 'all' });
+          if (videoWrap) gsap.set(videoWrap, { clearProps: 'all' });
+          resolve();
+        }
+      });
+    });
+  }
+
+  // Animate dial from work rectangle back to home circle
+  // Returns a Promise that resolves when animation completes
+  function runDialShrinkAnimation() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialComp = document.querySelector('.dial_component');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    const dialTicks = document.querySelector('.dial_layer-ticks');
+    if (!dialFg || !gsap) return Promise.resolve();
+
+    const v = getDialVars();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dur = reduced ? 0 : 0.8;
+
+    return new Promise((resolve) => {
+      // Kill any in-flight morph tweens
+      gsap.killTweensOf(dialFg);
+
+      // 1. Pre-set ticks to opacity 0 (they'll be un-hidden by CSS when ns changes)
+      if (dialTicks) gsap.set(dialTicks, { opacity: 0 });
+
+      // 2. Capture current work-state size BEFORE changing data-dial-ns
+      //    (changing ns removes the CSS work rule, which would snap dialFg to full viewport)
+      const rect = dialFg.getBoundingClientRect();
+
+      // 3. Pin starting state with inline styles so CSS changes can't cause a flash
+      gsap.set(dialFg, {
+        width: rect.width,
+        height: rect.height,
+        borderRadius: v.caseBR,
+        overflow: 'hidden',
+        margin: 'auto'
+      });
+
+      // 4. NOW safe to change data-dial-ns and remove classes — inline styles override
+      if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
+      dialFg.classList.remove('is-case-study', 'no-scrollbar');
+
+      // 5. Read target size from dial_component (always full viewport)
+      const comp = document.querySelector('.dial_component');
+      const targetRect = comp
+        ? comp.getBoundingClientRect()
+        : { width: window.innerWidth, height: window.innerHeight };
+
+      // 6. Fade in ticks simultaneously with morph
+      if (dialTicks) {
+        gsap.to(dialTicks, { opacity: 1, duration: dur * 0.6, ease: 'power2.in', delay: dur * 0.2 });
+      }
+
+      // 7. Fade in dial_layer-ui
+      if (dialUI) {
+        gsap.to(dialUI, { opacity: 1, duration: dur * 0.5, ease: 'power2.in', delay: dur * 0.3 });
+      }
+
+      // 8. Animate toward full viewport size, then clear all inline styles
+      gsap.to(dialFg, {
+        width: targetRect.width,
+        height: targetRect.height,
+        borderRadius: 0,
+        margin: 0,
+        duration: dur,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          // Clear ALL GSAP inline styles — CSS inset:0 fills viewport naturally
+          gsap.set(dialFg, { clearProps: 'all' });
+          gsap.set(dialFg, { zIndex: 3 });
+          if (dialTicks) gsap.set(dialTicks, { clearProps: 'opacity' });
+          resolve();
+        }
+      });
+    });
+  }
+
+  // Set dial to expanded work state immediately (for direct-land on work page)
+  function setDialToWorkState() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialComp = document.querySelector('.dial_component');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    if (!dialFg) return;
+
+    const v = getDialVars();
+
+    // data-dial-ns should already be "work" from HTML, but ensure it
+    if (dialComp) dialComp.setAttribute('data-dial-ns', 'work');
+
+    // Add work classes
+    dialFg.classList.add('is-case-study', 'no-scrollbar');
+
+    // CSS [data-dial-ns="work"] .dial_layer-fg handles dimensions, overflow, flex.
+    // Only set what CSS doesn't cover or for immediate override.
+    if (gsap) {
+      // Let CSS handle the layout — just ensure no stale inline styles
+      gsap.set(dialFg, { clearProps: 'all' });
+      // Hide UI labels
+      if (dialUI) gsap.set(dialUI, { opacity: 0 });
+    } else {
+      dialFg.style.cssText = '';
+      if (dialUI) dialUI.style.opacity = '0';
+    }
+  }
+
+  // Set dial to home state immediately (for direct-land or after transition)
+  // On home, dial_layer-fg should have NO inline dimension overrides —
+  // CSS `position: absolute; inset: 0` makes it fill the viewport.
+  // The circular shape comes from dial_video-wrap, not dial_layer-fg.
+  function setDialToHomeState() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    if (!dialFg) return;
+
+    dialFg.classList.remove('is-case-study', 'no-scrollbar');
+
+    if (gsap) {
+      // Clear ALL inline overrides so CSS defaults take over
+      gsap.set(dialFg, { clearProps: 'all' });
+      if (dialUI) gsap.set(dialUI, { clearProps: 'opacity' });
+    } else {
+      dialFg.style.cssText = '';
+      if (dialUI) dialUI.style.cssText = '';
+    }
+  }
+
+  /* -----------------------------
      Initial boot (no Barba nav yet)
      ----------------------------- */
   function bootCurrentView() {
     const container = document.querySelector('[data-barba="container"]');
     const ns = container?.getAttribute('data-barba-namespace');
+    const dialComp = document.querySelector('.dial_component');
+    const dialNs = dialComp?.getAttribute('data-dial-ns') || '';
 
-    if (ns !== 'home') {
+    DEBUG && console.log('RHP boot:', { ns, dialNs });
+
+    // Direct-land setup based on data-dial-ns from HTML
+    if (dialNs === 'work' || ns === 'case') {
+      // Direct-land on work page: set dial to expanded state, no workDial init
+      setDialToWorkState();
       RHP.scroll.unlock();
-      // For case view we let its own init decide how to configure Lenis
-      if (ns !== 'case') {
+
+      // Init case view (starts Lenis on scroll wrapper)
+      if (RHP.views.case?.init) {
+        RHP.views.case.init(container);
+      }
+    } else if (ns === 'about') {
+      // Direct-land on about: view.init() starts Lenis internally
+      RHP.scroll.unlock();
+      if (RHP.views.about?.init) {
+        RHP.views.about.init(container);
+      }
+    } else {
+      // Home or unknown: normal dial boot
+      setDialToHomeState();
+
+      if (ns !== 'home') {
+        RHP.scroll.unlock();
         RHP.lenis?.start();
         RHP.lenis?.resize();
       }
-    }
 
-    if (ns && RHP.views[ns]?.init) {
-      RHP.views[ns].init(container);
+      if (ns && RHP.views[ns]?.init) {
+        RHP.views[ns].init(container);
+      }
     }
   }
 
@@ -770,162 +999,308 @@
         ?.getAttribute('data-barba-namespace') || '';
 
     barba.init({
-      transitions: [{
-        name: 'rhp-core',
+      preventRunning: true,
+      transitions: [
+        /* ---- Home -> Case ---- */
+        {
+          name: 'home-to-case',
+          from: { namespace: ['home'] },
+          to: { namespace: ['case'] },
 
-        beforeLeave(data) {
-          const ns = data.current?.namespace || currentNs;
-          if (ns && RHP.views[ns]?.destroy) {
-            RHP.views[ns].destroy();
+          async leave(data) {
+            const ns = data.current?.namespace || currentNs;
+
+            // 1. Destroy workDial (stop RAF loop, remove listeners)
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+
+            // 2. Animate dial morph: circle -> rectangle
+            await runDialExpandAnimation();
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            currentNs = data.next?.namespace || '';
+
+            // Scroll mode for case
+            RHP.scroll.unlock();
+
+            // Clear overflow so work page can scroll
+            const dialFg = document.querySelector('.dial_layer-fg');
+            if (dialFg && window.gsap) window.gsap.set(dialFg, { clearProps: 'overflow' });
+
+            // Init case view (starts Lenis on dial_layer-fg)
+            if (RHP.views.case?.init) {
+              RHP.views.case.init(data.next.container);
+            }
+
+            // Re-initialize native Webflow Interactions
+            _reinitWebflow();
+
+            // Hide labels on work page
+            const dialUI = document.querySelector('.dial_layer-ui');
+            if (dialUI) window.gsap?.set(dialUI, { opacity: 0 });
+
+            // Fire custom event
+            _fireAfterEnterEvent(currentNs, data.next.container);
           }
         },
 
-        enter() {
-          // Always reset scroll position
-          window.scrollTo(0, 0);
-        },
+        /* ---- Case -> Home ---- */
+        {
+          name: 'case-to-home',
+          from: { namespace: ['case'] },
+          to: { namespace: ['home'] },
 
-        afterEnter(data) {
-          currentNs = data.next?.namespace || '';
-          const ns = currentNs;
-          
-          // Animate dial_layer-fg with GSAP based on namespace
-          const dialFg = data.next.container.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
-          if (dialFg && window.gsap) {
-            // Helper to read CSS custom properties (responsive values)
-            const getCSSVar = (varName) => {
-              return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-            };
-            
-            // Read responsive values from CSS custom properties
-            const homeWidth = getCSSVar('--dial-home-width') || '37.5rem';
-            const homeHeight = getCSSVar('--dial-home-height') || '37.5rem';
-            const homeBorderRadius = getCSSVar('--dial-home-border-radius') || '1000rem';
-            const homeAspectRatio = getCSSVar('--dial-home-aspect-ratio') || '1';
-            
-            const caseWidth = getCSSVar('--dial-case-width') || '78vw';
-            const caseHeight = getCSSVar('--dial-case-height') || '85dvh';
-            const caseBorderRadius = getCSSVar('--dial-case-border-radius') || '7.5rem';
-            const caseAspectRatio = getCSSVar('--dial-case-aspect-ratio') || 'auto';
-            
-            if (ns === 'case' || ns === 'about') {
-              // Set initial state (home style) - including non-animatable properties
-              gsap.set(dialFg, {
-                width: homeWidth,
-                height: homeHeight,
-                borderRadius: homeBorderRadius,
-                aspectRatio: homeAspectRatio,
-                overflow: 'visible'
-              });
-              dialFg.style.display = 'grid';
-              dialFg.style.flexFlow = 'row';
-              
-              // Add class for CSS fallback
-              dialFg.classList.add('is-case-study');
-              
-              // Set non-animatable properties immediately
-              dialFg.style.display = 'flex';
-              dialFg.style.flexFlow = 'column';
-              
-              // Animate animatable properties using responsive CSS variables
-              gsap.to(dialFg, {
-                width: caseWidth,
-                height: caseHeight,
-                borderRadius: caseBorderRadius,
-                aspectRatio: caseAspectRatio,
-                overflow: 'auto',
-                duration: 0.8,
-                ease: 'power2.inOut'
-              });
-            } else {
-              // Home state
-              const prevNs = data.current?.namespace;
-              
-              // If coming from case-study, animate back (reverse animation)
-              if (prevNs === 'case' || prevNs === 'about') {
-                // Set initial state to case-study (where we're coming from)
-                gsap.set(dialFg, {
-                  width: caseWidth,
-                  height: caseHeight,
-                  borderRadius: caseBorderRadius,
-                  aspectRatio: caseAspectRatio,
-                  overflow: 'auto'
-                });
-                dialFg.style.display = 'flex';
-                dialFg.style.flexFlow = 'column';
-                
-                // Remove class
-                dialFg.classList.remove('is-case-study');
-                
-                // Set non-animatable properties immediately for home state
-                dialFg.style.display = 'grid';
-                dialFg.style.flexFlow = 'row';
-                
-                // Animate back to home state (reverse animation)
-                gsap.to(dialFg, {
-                  width: homeWidth,
-                  height: homeHeight,
-                  borderRadius: homeBorderRadius,
-                  aspectRatio: homeAspectRatio,
-                  overflow: 'visible',
-                  duration: 0.8,
-                  ease: 'power2.inOut'
-                });
-              } else {
-                // Already on home or initial load - just ensure class is removed
-                dialFg.classList.remove('is-case-study');
-              }
-            }
-          } else if (dialFg) {
-            // Fallback: just add/remove class if GSAP not available
-            if (ns === 'case' || ns === 'about') {
-              dialFg.classList.add('is-case-study');
-            } else {
-              dialFg.classList.remove('is-case-study');
-            }
-          }
+          async leave(data) {
+            const ns = data.current?.namespace || currentNs;
 
-          // 🔁 Scroll mode switch
-          if (ns === 'home') {
+            // 1. Destroy case view (stops Lenis)
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+
+            // 2. Animate dial morph: rectangle -> circle
+            await runDialShrinkAnimation();
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            currentNs = data.next?.namespace || '';
+
+            // Lock scroll, init dial
             RHP.lenis?.stop();
             RHP.scroll.lock();
-          } else {
-            RHP.scroll.unlock();
-            // Let the case view configure its own Lenis instance on its wrapper
-            if (ns !== 'case') {
-              RHP.lenis?.start();
-              RHP.lenis?.resize();
+
+            if (RHP.views.home?.init) {
+              RHP.views.home.init(data.next.container);
             }
-          }
 
-          if (ns && RHP.views[ns]?.init) {
-            RHP.views[ns].init(data.next.container);
-          }
+            // Ensure dial fg has correct z-index after shrink
+            const dialFg = document.querySelector('.dial_layer-fg');
+            if (dialFg && window.gsap) window.gsap.set(dialFg, { zIndex: 3 });
 
-          // Re-initialize native Webflow Interactions (GSAP-powered)
-          try {
-            if (window.Webflow && typeof window.Webflow.require === 'function') {
-              const ix2 = window.Webflow.require('ix2');
-              if (ix2 && typeof ix2.init === 'function') {
-                ix2.init();
+            // Re-initialize native Webflow Interactions
+            _reinitWebflow();
+
+            // Fire custom event
+            _fireAfterEnterEvent(currentNs, data.next.container);
+          }
+        },
+
+        /* ---- Home -> About ---- */
+        {
+          name: 'home-to-about',
+          from: { namespace: ['home'] },
+          to: { namespace: ['about'] },
+
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            currentNs = data.next?.namespace || '';
+            RHP.scroll.unlock();
+            RHP.lenis?.start();
+            RHP.lenis?.resize();
+
+            if (RHP.views.about?.init) {
+              RHP.views.about.init(data.next.container);
+            }
+
+            _reinitWebflow();
+            _fireAfterEnterEvent(currentNs, data.next.container);
+          }
+        },
+
+        /* ---- Case -> About ---- */
+        {
+          name: 'case-to-about',
+          from: { namespace: ['case'] },
+          to: { namespace: ['about'] },
+
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            currentNs = data.next?.namespace || '';
+            RHP.scroll.unlock();
+            RHP.lenis?.start();
+            RHP.lenis?.resize();
+
+            if (RHP.views.about?.init) {
+              RHP.views.about.init(data.next.container);
+            }
+
+            _reinitWebflow();
+            _fireAfterEnterEvent(currentNs, data.next.container);
+          }
+        },
+
+        /* ---- About -> Home ---- */
+        {
+          name: 'about-to-home',
+          from: { namespace: ['about'] },
+          to: { namespace: ['home'] },
+
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            currentNs = data.next?.namespace || '';
+
+            // Ensure dial is at home state
+            setDialToHomeState();
+
+            RHP.lenis?.stop();
+            RHP.scroll.lock();
+
+            if (RHP.views.home?.init) {
+              RHP.views.home.init(data.next.container);
+            }
+
+            _reinitWebflow();
+            _fireAfterEnterEvent(currentNs, data.next.container);
+          }
+        },
+
+        /* ---- About -> Case ---- */
+        {
+          name: 'about-to-case',
+          from: { namespace: ['about'] },
+          to: { namespace: ['case'] },
+
+          async leave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+
+            // Only expand if not already in work state (e.g. prior case→about left it expanded)
+            const dialComp = document.querySelector('.dial_component');
+            if (dialComp?.getAttribute('data-dial-ns') !== 'work') {
+              await runDialExpandAnimation();
+            } else {
+              setDialToWorkState();
+            }
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            currentNs = data.next?.namespace || '';
+            RHP.scroll.unlock();
+
+            if (RHP.views.case?.init) {
+              RHP.views.case.init(data.next.container);
+            }
+
+            _reinitWebflow();
+            _fireAfterEnterEvent(currentNs, data.next.container);
+          }
+        },
+
+        /* ---- Default fallback ---- */
+        {
+          name: 'default',
+
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            currentNs = data.next?.namespace || '';
+            const ns = currentNs;
+
+            // Scroll mode switch
+            if (ns === 'home') {
+              RHP.lenis?.stop();
+              RHP.scroll.lock();
+              setDialToHomeState();
+            } else {
+              RHP.scroll.unlock();
+              if (ns !== 'case') {
+                RHP.lenis?.start();
+                RHP.lenis?.resize();
               }
             }
-          } catch (e) {
-            // Safe-guard: if Webflow internals change, don't break the transition.
-          }
 
-          // Notify any custom page-level scripts so they can re-initialize on Barba transitions.
-          try {
-            const ev = new CustomEvent('rhp:barba:afterenter', {
-              detail: { namespace: ns, container: data.next.container }
-            });
-            window.dispatchEvent(ev);
-          } catch (e) {
-            // CustomEvent might not exist in very old browsers; ignore.
+            if (ns && RHP.views[ns]?.init) {
+              RHP.views[ns].init(data.next.container);
+            }
+
+            _reinitWebflow();
+            _fireAfterEnterEvent(ns, data.next.container);
           }
         }
-      }]
+      ]
     });
+  }
+
+  /* -----------------------------
+     Shared afterEnter utilities
+     ----------------------------- */
+  function _reinitWebflow() {
+    try {
+      if (window.Webflow && typeof window.Webflow.require === 'function') {
+        const ix2 = window.Webflow.require('ix2');
+        if (ix2 && typeof ix2.init === 'function') {
+          ix2.init();
+        }
+      }
+    } catch (e) {
+      // Safe-guard: if Webflow internals change, don't break the transition.
+    }
+  }
+
+  function _fireAfterEnterEvent(ns, container) {
+    try {
+      const ev = new CustomEvent('rhp:barba:afterenter', {
+        detail: { namespace: ns, container }
+      });
+      window.dispatchEvent(ev);
+    } catch (e) {
+      // CustomEvent might not exist in very old browsers; ignore.
+    }
   }
 
   ready(initBarba);
@@ -937,5 +1312,5 @@
 <!-- Update the copyright year in the footer to the current year -->
 <script>var y=document.getElementById("year");y&&(y.innerText=new Date().getFullYear());</script>
 <!-- Add hidden fields to each form to track conversion pages and UTMs -->
-<script> $(document).ready(function() { var currentUrl = window.location.href; function getUrlParams(url) { var params = {}; var parser = document.createElement('a'); parser.href = url; var query = parser.search.substring(1); var vars = query.split('&'); for (var i = 0; i < vars.length; i++) { var pair = vars[i].split('='); if (pair.length === 2) { params[pair[0]] = decodeURIComponent(pair[1]); } } return params; } var urlParams = getUrlParams(currentUrl); var urlWithoutUTMs = currentUrl.split('?')[0]; var cleanQueryParams = []; for (var key in urlParams) { if (!key.startsWith('utm_')) { cleanQueryParams.push(key + '=' + encodeURIComponent(urlParams[key])); } } if (cleanQueryParams.length > 0) { urlWithoutUTMs += '?' + cleanQueryParams.join('&'); } $('form').each(function() { var hiddenInput = $('<input>') .attr('type', 'hidden') .attr('name', 'Conversion Page') .attr('value', urlWithoutUTMs); $(this).append(hiddenInput); for (var key in urlParams) { if (key.startsWith('utm_')) { var utmInput = $('<input>') .attr('type', 'hidden') .attr('name', key) .attr('value', urlParams[key]); $(this).append(utmInput); } } }); });</script>
+<script> if (typeof $ !== 'undefined') { $(document).ready(function() { var currentUrl = window.location.href; function getUrlParams(url) { var params = {}; var parser = document.createElement('a'); parser.href = url; var query = parser.search.substring(1); var vars = query.split('&'); for (var i = 0; i < vars.length; i++) { var pair = vars[i].split('='); if (pair.length === 2) { params[pair[0]] = decodeURIComponent(pair[1]); } } return params; } var urlParams = getUrlParams(currentUrl); var urlWithoutUTMs = currentUrl.split('?')[0]; var cleanQueryParams = []; for (var key in urlParams) { if (!key.startsWith('utm_')) { cleanQueryParams.push(key + '=' + encodeURIComponent(urlParams[key])); } } if (cleanQueryParams.length > 0) { urlWithoutUTMs += '?' + cleanQueryParams.join('&'); } $('form').each(function() { var hiddenInput = $('<input>') .attr('type', 'hidden') .attr('name', 'Conversion Page') .attr('value', urlWithoutUTMs); $(this).append(hiddenInput); for (var key in urlParams) { if (key.startsWith('utm_')) { var utmInput = $('<input>') .attr('type', 'hidden') .attr('name', key) .attr('value', urlParams[key]); $(this).append(utmInput); } } }); }); }</script>
 <!-- Slater integration removed; GSAP should be initialized by your own scripts per view -->

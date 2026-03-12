@@ -1,33 +1,34 @@
+// @ts-check
 /**
- * Acceptance-test template — generic (all projects).
+ * Acceptance-test template — Ready Hit Play (RHP).
  *
- * Claude: use this as a reference when generating acceptance tests from specs.
- * If a project-local override exists at tests/templates/acceptance-test.spec.js,
- * prefer that instead — it will have project-specific helpers baked in.
+ * Project-specific override of .claude/templates/acceptance-test.spec.js.
+ * Uses CommonJS (RHP package.json "type": "commonjs"), waitForRHP helper,
+ * and @axe-core/playwright (installed in devDependencies).
  *
- * Replace FEATURE_SLUG, PAGE_PATH, and test bodies with real values.
- * Delete any pattern sections that don't apply to the feature.
+ * Claude: use this template (not the generic one) when generating acceptance
+ * tests for ready-hit-play-prod features. Replace FEATURE_SLUG, PAGE_PATH,
+ * and test bodies with real values. Delete pattern sections that don't apply.
  *
- * ── Playwright timing reference for Webflow projects ──
+ * ── Playwright timing reference for RHP ──
  *
  * | What you're waiting for              | waitForTimeout value        |
  * |--------------------------------------|-----------------------------|
  * | Page load (domcontentloaded)         | Built into goto, no extra   |
- * | Custom JS initialisation             | 1500–2000 ms                |
- * | GSAP animation to complete           | 1000–2000 ms (depends)      |
+ * | RHP scripts initialised              | waitForRHP helper (20 s)    |
+ * | GSAP animation to complete           | 1000–2000 ms                |
  * | ScrollTrigger to fire after scroll   | 500–1000 ms                 |
+ * | Barba page transition                | 1500–2500 ms                |
  * | Lenis smooth scroll to settle        | 500–1000 ms                 |
+ * | Work dial sector change              | 500–1000 ms                 |
+ * | About transition (overlay + morph)   | 1500–2500 ms                |
  *
  * When a test fails on timing:
  * 1. Increase the wait by 50 %
  * 2. If still failing, use page.waitForFunction instead of a fixed timeout
- * 3. Example:
- *    await page.waitForFunction(
- *      () => getComputedStyle(document.querySelector('.hero')).opacity === '1',
- *      { timeout: 5000 }
- *    );
  */
 const { test, expect } = require('@playwright/test');
+const AxeBuilder = require('@axe-core/playwright').default;
 require('dotenv').config({ path: '.env.test' });
 
 // ── Config ────────────────────────────────────────────────────
@@ -36,22 +37,19 @@ const PAGE_PATH = '/';                 // page under test (relative)
 
 // ── Helpers ───────────────────────────────────────────────────
 
-/**
- * Wait for the project's scripts to finish initialising.
- * Replace the body with the project's actual ready signal.
- */
-async function waitForReady(page) {
+/** Wait for RHP scripts to finish initialising (window.RHP.scriptsOk). */
+async function waitForRHP(page) {
   await page.waitForFunction(
-    () => document.readyState === 'complete',
+    () => window.RHP?.scriptsOk === true,
     { timeout: 20_000 }
   );
 }
 
-/** Navigate to the feature page and wait for scripts. */
+/** Navigate to the feature page and wait for RHP init. */
 async function loadPage(page, path = PAGE_PATH) {
   await page.goto(path);
-  await waitForReady(page);
-  await page.waitForTimeout(1500); // allow scripts to settle
+  await waitForRHP(page);
+  await page.waitForTimeout(1500); // allow GSAP / init settle
 }
 
 /** Attach a pageerror listener and return the errors array. */
@@ -108,7 +106,37 @@ test.describe(`${SLUG} — Interactions`, () => {
   });
 });
 
-/* 4. prefers-reduced-motion */
+/* 4. Barba page transition lifecycle */
+test.describe(`${SLUG} — Barba Lifecycle`, () => {
+  test('no JS errors on page load', async ({ page }) => {
+    const errors = collectErrors(page);
+    await loadPage(page);
+    await page.waitForTimeout(500);
+    expect(errors, `JS errors: ${errors.map(e => e.message).join(', ')}`)
+      .toHaveLength(0);
+  });
+
+  test('navigate away and back: no errors, clean re-init', async ({ page }) => {
+    const errors = collectErrors(page);
+    await loadPage(page);
+
+    // Navigate away (triggers destroy)
+    await page.goto('/');
+    await waitForRHP(page);
+
+    // Navigate back (triggers re-init)
+    await loadPage(page);
+
+    // No orphaned / duplicated DOM nodes
+    const count = await page.locator('.your-selector').count();
+    expect(count).toBe(1);
+
+    expect(errors, `JS errors: ${errors.map(e => e.message).join(', ')}`)
+      .toHaveLength(0);
+  });
+});
+
+/* 5. prefers-reduced-motion */
 test.describe(`${SLUG} — Reduced Motion`, () => {
   test.use({ reducedMotion: 'reduce' });
 
@@ -120,11 +148,9 @@ test.describe(`${SLUG} — Reduced Motion`, () => {
   });
 });
 
-/* 5. Accessibility (axe-core WCAG 2.1 AA) */
+/* 6. Accessibility (axe-core WCAG 2.1 AA) */
 test.describe(`${SLUG} — Accessibility`, () => {
   test('no WCAG 2.1 AA violations', async ({ page }) => {
-    // Requires @axe-core/playwright in devDependencies
-    const AxeBuilder = require('@axe-core/playwright').default;
     await loadPage(page);
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
@@ -133,7 +159,7 @@ test.describe(`${SLUG} — Accessibility`, () => {
   });
 });
 
-/* 6. Responsive behaviour */
+/* 7. Responsive behaviour */
 test.describe(`${SLUG} — Responsive`, () => {
   test('mobile layout at 375px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });

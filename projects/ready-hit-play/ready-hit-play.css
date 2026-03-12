@@ -1,17 +1,16 @@
 /* =========================================
    Ready Hit Play — Dial Styles (Barba-aware)
-   - Scoped by data-barba-namespace so they work with Barba
-   - Shared dial styles for home + case-studies
+   - Scoped by data-dial-ns on .dial_component
+   - Barba container is INSIDE dial_layer-fg
+   - Dial elements persist across transitions
    ========================================= */
 
-/* ====== Stage (shared home + case + about) ====== */
-[data-barba-namespace="home"] .dial_component,
-[data-barba-namespace="case"] .dial_component,
-[data-barba-namespace="about"] .dial_component {
+/* ====== Stage (shared home + work) ====== */
+.dial_component {
   position: relative;
   width: 100%;
   height: 100dvh;
-  overflow: hidden;
+  overflow: visible;
   display: grid;
   place-items: center;
   -webkit-tap-highlight-color: transparent;
@@ -19,9 +18,7 @@
 }
 
 @supports not (height: 100dvh) {
-  [data-barba-namespace="home"] .dial_component,
-  [data-barba-namespace="case"] .dial_component,
-  [data-barba-namespace="about"] .dial_component {
+  .dial_component {
     height: 100vh;
   }
 }
@@ -31,10 +28,10 @@
    Scroll locking is now handled in JS (RHP.scroll + Lenis), so we intentionally
    do NOT include those global html/body rules here. */
 
-/* ====== Layers (shared) ====== */
-[data-barba-namespace="home"] .dial_layer-bg,
-[data-barba-namespace="case"] .dial_layer-bg,
-[data-barba-namespace="about"] .dial_layer-bg {
+/* ====== Background layer ====== */
+/* dial_layer-bg is OUTSIDE dial_component (sibling of main-wrapper),
+   so no namespace scoping needed — always visible. */
+.dial_layer-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -44,27 +41,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-[data-barba-namespace="home"] .dial_bg-video,
-[data-barba-namespace="case"] .dial_bg-video,
-[data-barba-namespace="about"] .dial_bg-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   filter: blur(40px) saturate(120%);
   transform: scale(1.1);
 }
 
-/* About: hide background video */
-[data-barba-namespace="about"] .dial_bg-video {
-  display: none;
-}
-
-/* Canvas ticks */
-[data-barba-namespace="home"] .dial_layer-ticks,
-[data-barba-namespace="case"] .dial_layer-ticks,
-[data-barba-namespace="about"] .dial_layer-ticks {
+/* ====== Canvas ticks ====== */
+.dial_layer-ticks {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -72,13 +54,17 @@
   z-index: 2;
   pointer-events: none;
   transform-origin: 50% 50%;
-  will-change: transform;
 }
 
-/* Foreground circle */
-[data-barba-namespace="home"] .dial_layer-fg,
-[data-barba-namespace="case"] .dial_layer-fg,
-[data-barba-namespace="about"] .dial_layer-fg {
+/* will-change only on mobile where ticks actually rotate */
+@media (hover: none), (pointer: coarse) {
+  .dial_layer-ticks {
+    will-change: transform;
+  }
+}
+
+/* ====== Foreground layer ====== */
+.dial_layer-fg {
   position: absolute;
   inset: 0;
   display: grid;
@@ -87,6 +73,7 @@
   /* pointer-events are managed in JS / via dial interaction */
 }
 
+/* ====== Video wrap ====== */
 /* Default: circular (home) */
 .dial_video-wrap {
   width: min(640px, 74vw);
@@ -102,7 +89,7 @@
   --dial-home-height: 37.5rem;
   --dial-home-border-radius: 1000rem;
   --dial-home-aspect-ratio: 1;
-  
+
   /* Case-study state values */
   --dial-case-width: 78vw;
   --dial-case-height: 85dvh;
@@ -130,40 +117,24 @@
   }
 }
 
-.dial_component.is-case-study .dial_video-wrap {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 0px;
-}
-
-/* Fallback: namespace-based (for initial load before JS runs) */
-[data-barba-namespace="home"] .dial_video-wrap {
-  width: min(640px, 74vw);
-  aspect-ratio: 1 / 1;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-[data-barba-namespace="case"] .dial_video-wrap,
-[data-barba-namespace="about"] .dial_video-wrap {
+/* Case-study video wrap (when .is-case-study class is applied by JS) */
+.dial_component.is-case-study .dial_video-wrap,
+.dial_component[data-dial-ns="work"] .dial_video-wrap {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 0px;
   overflow: hidden;
 }
 
-/* CSS transitions removed - using GSAP for animations */
-
-[data-barba-namespace="home"] .dial_fg-video,
-[data-barba-namespace="case"] .dial_fg-video,
-[data-barba-namespace="about"] .dial_fg-video {
+/* Foreground video */
+.dial_fg-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
 /* ====== Labels (home only; fixed, never rotate) ====== */
-[data-barba-namespace="home"] .dial_layer-ui {
+.dial_layer-ui {
   position: absolute;
   left: 0;
   right: 0;
@@ -173,17 +144,59 @@
   justify-content: center;
 }
 
-[data-barba-namespace="home"] .dial_label-wrap {
+.dial_label-wrap {
   text-align: center;
 }
 
-/* CMS list can be hidden on home */
-[data-barba-namespace="home"] .dial_cms-list {
+/* CMS list — always hidden (data source only) */
+.dial_cms-list-wrapper {
   display: none;
 }
 
+/* ====== Namespace-based visibility ====== */
+
+/* Work: hide ticks, step text, work-link; show case-homepage-link */
+.dial_component[data-dial-ns="work"] .dial_layer-ticks {
+  display: none;
+}
+
+.dial_component[data-dial-ns="work"] .dial_work-link {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.dial_component[data-dial-ns="work"] .heading-style-h7.is-step {
+  display: none;
+}
+
+/* Home: hide case-homepage-link */
+.dial_component[data-dial-ns="home"] .case-homepage-link {
+  display: none;
+}
+
+/* ====== Work page: dial_layer-fg as scrollable container ====== */
+/* CSS fallback for work state (before JS runs or if JS fails) */
+.dial_component[data-dial-ns="work"] .dial_layer-fg {
+  width: var(--dial-case-width);
+  height: var(--dial-case-height);
+  border-radius: var(--dial-case-border-radius);
+  margin: auto; /* centers within position:absolute + inset:0 */
+  aspect-ratio: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-flow: column;
+  align-items: stretch; /* override base grid place-items:center */
+}
+
+/* Work: hide labels (CSS fallback — GSAP fade handles the transition animation) */
+.dial_component[data-dial-ns="work"] .dial_layer-ui {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
 /* ====== Case-studies specific ====== */
-[data-barba-namespace="case"] .video-cover {
+.video-cover {
   height: 100%;
   width: 100%;
   object-fit: cover;
@@ -192,4 +205,15 @@
 /* Close link (case-homepage-link) — 1px left offset for alignment */
 .dial_component .case-homepage-link {
   left: 1px;
+}
+
+/* Hide scrollbar on work view (class toggled by JS) */
+.dial_layer-fg.no-scrollbar,
+.dial_layer-fg.no-scrollbar .case-studies_wrapper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dial_layer-fg.no-scrollbar::-webkit-scrollbar,
+.dial_layer-fg.no-scrollbar .case-studies_wrapper::-webkit-scrollbar {
+  display: none;
 }

@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.2.18.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.3.12.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -49,6 +49,202 @@
     document.querySelector('#transition-logo') ||
     document.querySelector('.about-transition_nav-logo-wrapper') ||
     document.querySelector('.about-transition .nav_logo-wrapper-2.is-about-transition');
+
+  /* -----------------------------
+     Dial morph helpers (namespace restructure)
+     ----------------------------- */
+  function getDialVars() {
+    return {
+      homeWidth: _getCSSVar('--dial-home-width', '37.5rem'),
+      homeHeight: _getCSSVar('--dial-home-height', '37.5rem'),
+      homeBR: _getCSSVar('--dial-home-border-radius', '1000rem'),
+      homeAR: _getCSSVar('--dial-home-aspect-ratio', '1'),
+      caseWidth: _getCSSVar('--dial-case-width', '78vw'),
+      caseHeight: _getCSSVar('--dial-case-height', '85dvh'),
+      caseBR: _getCSSVar('--dial-case-border-radius', '7.5rem'),
+      caseAR: _getCSSVar('--dial-case-aspect-ratio', 'auto')
+    };
+  }
+
+  function runDialExpandAnimation() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialComp = document.querySelector('.dial_component');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    const dialTicks = document.querySelector('.dial_layer-ticks');
+    if (!dialFg || !gsap) return Promise.resolve();
+
+    const v = getDialVars();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dur = reduced ? 0 : 0.8;
+
+    return new Promise((resolve) => {
+      gsap.killTweensOf(dialFg);
+
+      if (dialUI) {
+        gsap.to(dialUI, { opacity: 0, duration: dur * 0.4, ease: 'power2.out' });
+      }
+      if (dialTicks) {
+        gsap.to(dialTicks, { opacity: 0, duration: dur * 0.3, ease: 'power2.out' });
+      }
+
+      const rect = dialFg.getBoundingClientRect();
+
+      // Pin dial_video-wrap dimensions before ns change
+      const videoWrap = dialFg.querySelector('.dial_video-wrap');
+      const vRect = videoWrap?.getBoundingClientRect();
+      if (videoWrap && vRect) {
+        gsap.set(videoWrap, { width: vRect.width, height: vRect.height, borderRadius: 999 });
+      }
+
+      if (dialComp) dialComp.setAttribute('data-dial-ns', 'work');
+
+      // Pin current dimensions inline. Keep margin:auto so element stays centered
+      // as GSAP tweens width/height (inset:0 + margin:auto = auto-centering).
+      // GSAP cannot tween between margin:0 and margin:auto — always keep auto.
+      gsap.set(dialFg, {
+        width: rect.width,
+        height: rect.height,
+        borderRadius: 0,
+        overflow: 'hidden',
+        margin: 'auto'
+      });
+
+      dialFg.classList.add('is-case-study', 'no-scrollbar');
+
+      gsap.to(dialFg, {
+        width: v.caseWidth,
+        height: v.caseHeight,
+        borderRadius: v.caseBR,
+        duration: dur,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          // Do NOT clearProps here — we're still in leave(), barba namespace
+          // is the OLD page. :has() selectors would match wrong namespace.
+          // clearProps deferred to runAfterEnter where new namespace is live.
+          if (videoWrap) gsap.set(videoWrap, { clearProps: 'all' });
+          resolve();
+        }
+      });
+    });
+  }
+
+  function runDialShrinkAnimation() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialComp = document.querySelector('.dial_component');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    const dialTicks = document.querySelector('.dial_layer-ticks');
+    if (!dialFg || !gsap) return Promise.resolve();
+
+    const v = getDialVars();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dur = reduced ? 0 : 0.8;
+
+    return new Promise((resolve) => {
+      gsap.killTweensOf(dialFg);
+
+      if (dialTicks) gsap.set(dialTicks, { opacity: 0 });
+
+      const rect = dialFg.getBoundingClientRect();
+
+      // Pin current work dimensions inline. margin:auto keeps centering.
+      gsap.set(dialFg, {
+        width: rect.width,
+        height: rect.height,
+        borderRadius: v.caseBR,
+        overflow: 'hidden',
+        margin: 'auto'
+      });
+
+      if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
+      dialFg.classList.remove('is-case-study', 'no-scrollbar');
+
+      if (dialTicks) {
+        gsap.to(dialTicks, { opacity: 1, duration: dur * 0.6, ease: 'power2.in', delay: dur * 0.2 });
+      }
+
+      if (dialUI) {
+        gsap.to(dialUI, { opacity: 1, duration: dur * 0.5, ease: 'power2.in', delay: dur * 0.3 });
+      }
+
+      gsap.to(dialFg, {
+        width: v.homeWidth,
+        height: v.homeHeight,
+        borderRadius: v.homeBR,
+        duration: dur,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          // Do NOT clearProps here — we're still in leave(), barba namespace
+          // is the OLD page. :has() selectors would match wrong namespace.
+          // clearProps deferred to runAfterEnter where new namespace is live.
+          if (dialTicks) gsap.set(dialTicks, { clearProps: 'opacity' });
+          resolve();
+        }
+      });
+    });
+  }
+
+  function setDialToWorkState() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialComp = document.querySelector('.dial_component');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    if (!dialFg) return;
+
+    if (dialComp) dialComp.setAttribute('data-dial-ns', 'work');
+    dialFg.classList.add('is-case-study', 'no-scrollbar');
+
+    if (gsap) {
+      gsap.set(dialFg, { clearProps: 'all' });
+      if (dialUI) gsap.set(dialUI, { opacity: 0 });
+    } else {
+      dialFg.style.cssText = '';
+      if (dialUI) dialUI.style.opacity = '0';
+    }
+  }
+
+  function setDialToHomeState() {
+    const gsap = window.gsap;
+    const dialFg = document.querySelector('.dial_layer-fg');
+    const dialUI = document.querySelector('.dial_layer-ui');
+    const dialComp = document.querySelector('.dial_component');
+    if (!dialFg) return;
+
+    if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
+    dialFg.classList.remove('is-case-study', 'no-scrollbar');
+
+    if (gsap) {
+      gsap.set(dialFg, { clearProps: 'all' });
+      if (dialUI) gsap.set(dialUI, { clearProps: 'opacity' });
+    } else {
+      dialFg.style.cssText = '';
+      if (dialUI) dialUI.style.cssText = '';
+    }
+  }
+
+  function _reinitWebflow() {
+    try {
+      if (window.Webflow && typeof window.Webflow.destroy === 'function' && typeof window.Webflow.ready === 'function') {
+        window.Webflow.destroy();
+        window.Webflow.ready();
+        var ix2 = window.Webflow.require && window.Webflow.require('ix2');
+        if (ix2 && typeof ix2.init === 'function') ix2.init();
+      }
+      if (typeof window.ScrollTrigger !== 'undefined' && typeof window.ScrollTrigger.refresh === 'function') {
+        window.ScrollTrigger.refresh(true);
+      }
+    } catch (e) {}
+  }
+
+  function _fireAfterEnterEvent(ns, container) {
+    try {
+      var ev = new CustomEvent('rhp:barba:afterenter', {
+        detail: { namespace: ns, container: container }
+      });
+      window.dispatchEvent(ev);
+    } catch (e) {}
+  }
 
   /* Persistent about-transition timeline (overlay + logo only; dial differs by direction) */
   let aboutTransitionTL = null;
@@ -418,7 +614,7 @@
     };
   })();
 
-  // Case view: Lenis on an inner scrollable wrapper instead of window
+  // Case view: dial_layer-fg as scroll wrapper (persists outside Barba container)
   RHP.views.case = RHP.views.case || (() => {
     let active = false;
 
@@ -434,28 +630,30 @@
           RHP.formatIntroText(container);
         }
 
-        const wrapper =
-          container.querySelector('[data-case-scroll-wrapper]') ||
-          container.querySelector('.case-scroll-wrapper');
-
+        // The scroll wrapper is dial_layer-fg (persists outside Barba container)
+        const dialFg = document.querySelector('.dial_layer-fg');
         const content =
-          wrapper?.querySelector('[data-case-scroll-content]') ||
-          wrapper?.firstElementChild ||
+          dialFg?.querySelector('[data-case-scroll-content]') ||
+          dialFg?.querySelector('.case-studies_wrapper') ||
           null;
 
-        // If we find a specific scroll wrapper, bind Lenis to it.
-        // Otherwise, fall back to normal window scroll.
-        if (wrapper && content) {
+        // Reset scroll position (dialFg persists so scrollTop may be stale)
+        if (dialFg) dialFg.scrollTop = 0;
+
+        if (dialFg && content) {
           RHP.lenis?.stop();
           RHP.lenis?.start({
-            wrapper,
-            content
+            wrapper: dialFg,
+            content: content
           });
-          RHP.lenis?.resize();
-          RHP.lenis?.setupScrollTriggerProxy?.(wrapper, content);
+          RHP.lenis?.setupScrollTriggerProxy?.(dialFg, content);
+          requestAnimationFrame(() => {
+            RHP.lenis?.resize();
+            window.ScrollTrigger?.refresh?.();
+          });
         } else {
           RHP.lenis?.start();
-          RHP.lenis?.resize();
+          requestAnimationFrame(() => RHP.lenis?.resize());
         }
 
         RHP.earthParallax?.init?.(container);
@@ -467,7 +665,7 @@
         active = false;
         RHP.earthParallax?.destroy?.();
         RHP.caseVideoControls?.destroy?.();
-        // Let global logic decide when to stop Lenis; no-op here.
+        RHP.lenis?.stop();
       }
     };
   })();
@@ -721,22 +919,34 @@
   function bootCurrentView() {
     const container = document.querySelector('[data-barba="container"]');
     const ns = container?.getAttribute('data-barba-namespace');
+    const dialComp = document.querySelector('.dial_component');
+    const dialNs = dialComp?.getAttribute('data-dial-ns') || '';
 
-    if (ns !== 'home') {
+    if (dialNs === 'work' || ns === 'case') {
+      // Direct-land on work page: set dial to expanded state, no workDial init
+      setDialToWorkState();
       RHP.scroll.unlock();
-      // For case view we let its own init decide how to configure Lenis
-      if (ns !== 'case') {
+      RHP.views.case?.init?.(container);
+    } else if (ns === 'about') {
+      // Direct-land on about
+      RHP.scroll.unlock();
+      RHP.views.about?.init?.(container);
+    } else {
+      // Home or unknown: normal dial boot
+      setDialToHomeState();
+
+      if (ns !== 'home') {
+        RHP.scroll.unlock();
         RHP.lenis?.start();
         RHP.lenis?.resize();
       }
-    }
 
-    if (ns === 'home') {
-      // Fresh load of homepage: run intro animation
-      RHP.views.home?.init?.(container, { introMode: true });
-      RHP.homeIntro?.run?.(container);
-    } else if (ns && RHP.views[ns]?.init) {
-      RHP.views[ns].init(container);
+      if (ns === 'home') {
+        RHP.views.home?.init?.(container, { introMode: true });
+        RHP.homeIntro?.run?.(container);
+      } else if (ns && RHP.views[ns]?.init) {
+        RHP.views[ns].init(container);
+      }
     }
 
     // Init transition-dial on every page (symbol is outside Barba container)
@@ -747,7 +957,6 @@
     if (aboutTransition && window.gsap) {
       const gsap = window.gsap;
       if (ns === 'about') {
-        // On /about: pre-position logo+dial to end states, keep overlay hidden
         gsap.set(aboutTransition, { display: 'none' });
         const transitionLogo = _findTransitionLogo();
         if (transitionLogo) {
@@ -773,7 +982,6 @@
             zIndex: 9998
           });
         }
-        // Pre-position transition dial to end state (small, bottom)
         const transitionDial = document.querySelector('.transition-dial');
         if (transitionDial) {
           const scrollbarOffsetPx = _getScrollbarOffset();
@@ -792,11 +1000,9 @@
             height: dialSmallH,
             zIndex: 9997
           });
-          // Redraw canvas at small size (init already called above)
           RHP.transitionDial?.resize?.();
         }
       } else {
-        // On /home, /case: ensure overlay is hidden
         gsap.set(aboutTransition, { display: 'none' });
       }
     }
@@ -818,32 +1024,6 @@
         .querySelector('[data-barba="container"]')
         ?.getAttribute('data-barba-namespace') || '';
 
-    function runCaseDialShrinkAnimation(data) {
-      const dialFg = data.current?.container?.querySelector('.dial_layer-fg');
-      if (!dialFg || !window.gsap) return Promise.resolve();
-
-      const gsap = window.gsap;
-      const getVar = (name, fallback) =>
-        (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim() || fallback;
-
-      const homeWidth = getVar('--dial-home-width', 'clamp(180px, min(50svh, 70vw), min(50svh, 70vw))');
-      const homeHeight = getVar('--dial-home-height', 'clamp(180px, min(50svh, 70vw), min(50svh, 70vw))');
-      const homeBorderRadius = getVar('--dial-home-border-radius', '1000rem');
-      const homeAspectRatio = getVar('--dial-home-aspect-ratio', '1');
-
-      gsap.set(dialFg, { overflow: 'hidden', margin: 'auto' });
-      const tween = gsap.to(dialFg, {
-        width: homeWidth,
-        height: homeHeight,
-        borderRadius: homeBorderRadius,
-        aspectRatio: homeAspectRatio,
-        duration: 0.6,
-        ease: 'power2.inOut',
-        overwrite: true
-      });
-      return tween.then ? tween.then() : new Promise(function(r) { tween.eventCallback('onComplete', r); });
-    }
-
     function runAfterEnter(data) {
       currentNs = data.next ? (data.next.namespace || '') : '';
       const ns = currentNs;
@@ -858,12 +1038,13 @@
         wrapper.classList.remove('rhp-nav-hidden');
       }
 
+      // Nav logo cleanup for about/home transitions
       if (ns === 'about' && window.gsap) {
         const navLogoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
         if (navLogoWrapper) {
-          gsap.set(navLogoWrapper, { clearProps: 'position,left,top,zIndex,xPercent,yPercent' });
+          window.gsap.set(navLogoWrapper, { clearProps: 'position,left,top,zIndex,xPercent,yPercent' });
           const navEmbeds = navLogoWrapper.querySelectorAll('.nav_logo-embed');
-          if (navEmbeds.length) gsap.set(navEmbeds, { clearProps: 'height' });
+          if (navEmbeds.length) window.gsap.set(navEmbeds, { clearProps: 'height' });
           navLogoWrapper.style.visibility = 'hidden';
         }
       }
@@ -872,85 +1053,34 @@
         if (navLogoWrapper) {
           navLogoWrapper.style.visibility = '';
           if (window.gsap) {
-            gsap.set(navLogoWrapper, { clearProps: 'position,left,top,xPercent,yPercent,zIndex' });
+            window.gsap.set(navLogoWrapper, { clearProps: 'position,left,top,xPercent,yPercent,zIndex' });
             var navEmbeds = navLogoWrapper.querySelectorAll('.nav_logo-embed');
-            if (navEmbeds.length) gsap.set(navEmbeds, { clearProps: 'height' });
+            if (navEmbeds.length) window.gsap.set(navEmbeds, { clearProps: 'height' });
           }
         }
       }
 
-      var dialFg = (data.next && data.next.container) ? data.next.container.querySelector('.dial_layer-fg') : null;
-      if (!dialFg) dialFg = document.querySelector('.dial_layer-fg');
-      var bgVideo = (data.next && data.next.container) ? data.next.container.querySelector('.dial_bg-video') : null;
-      if (!bgVideo) bgVideo = document.querySelector('.dial_bg-video');
+      // Deferred clearProps: morph animations in leave() keep inline styles because
+      // :has([data-barba-namespace]) selectors match the OLD page during leave().
+      // Now that Barba has swapped the DOM, the new namespace is live and CSS is correct.
+      // Safe to clearProps and let CSS own the layout.
+      var dialFg = document.querySelector('.dial_layer-fg');
       if (dialFg && window.gsap) {
-        var getCSSVar = function(varName) {
-          return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-        };
-        var homeWidth = getCSSVar('--dial-home-width') || '37.5rem';
-        var homeHeight = getCSSVar('--dial-home-height') || '37.5rem';
-        var homeBorderRadius = getCSSVar('--dial-home-border-radius') || '1000rem';
-        var homeAspectRatio = getCSSVar('--dial-home-aspect-ratio') || '1';
-        var caseWidth = getCSSVar('--dial-case-width') || '78vw';
-        var caseHeight = getCSSVar('--dial-case-height') || '85dvh';
-        var caseBorderRadius = getCSSVar('--dial-case-border-radius') || '7.5rem';
-        var caseAspectRatio = getCSSVar('--dial-case-aspect-ratio') || 'auto';
-
-        if (ns === 'case' || ns === 'about') {
-          /* From click-through: keep opacity 1 and blur on bg for entire case-study view until return to home */
-          gsap.set(dialFg, { opacity: 1 });
-          if (bgVideo) gsap.set(bgVideo, { filter: 'blur(40px)' });
-
-          gsap.set(dialFg, {
-            width: homeWidth,
-            height: homeHeight,
-            borderRadius: homeBorderRadius,
-            aspectRatio: homeAspectRatio,
-            overflow: 'visible'
-          });
-          dialFg.style.display = 'grid';
-          dialFg.style.flexFlow = 'row';
-          dialFg.classList.add('is-case-study');
-          dialFg.style.display = 'flex';
-          dialFg.style.flexFlow = 'column';
-          gsap.to(dialFg, {
-            width: caseWidth,
-            height: caseHeight,
-            borderRadius: caseBorderRadius,
-            aspectRatio: caseAspectRatio,
-            overflow: 'auto',
-            duration: 0.8,
-            ease: 'power2.inOut'
-          });
-        } else {
-          var prevNs = data.current ? data.current.namespace : undefined;
-          var prevPath = (data.current && data.current.url) ? (data.current.url.path || data.current.url.pathname || '') : '';
-          var fromAbout = prevNs === 'about' || /(^|\/)about(\/|$|\?)/.test(prevPath);
-          if (fromAbout) {
-            /* about→home: ensure dial is at home size — kill tweens, clear inline overrides, set home dimensions */
-            dialFg.classList.remove('is-case-study');
-            gsap.killTweensOf(dialFg);
-            gsap.set(dialFg, {
-              width: homeWidth,
-              height: homeHeight,
-              borderRadius: homeBorderRadius,
-              aspectRatio: homeAspectRatio,
-              overflow: 'visible',
-              display: 'grid',
-              flexFlow: 'row'
-            });
-          } else if (prevNs === 'case') {
-            /* case→home: shrink animation runs in leave; home dial is fresh with default CSS */
-            dialFg.classList.remove('is-case-study');
-          } else {
-            dialFg.classList.remove('is-case-study');
-          }
-        }
-      } else if (dialFg) {
-        if (ns === 'case' || ns === 'about') dialFg.classList.add('is-case-study');
-        else dialFg.classList.remove('is-case-study');
+        window.gsap.set(dialFg, { clearProps: 'all' });
       }
 
+      if (ns === 'case') {
+        if (dialFg && window.gsap) {
+          window.gsap.set(dialFg, { opacity: 1 });
+        }
+        var bgVideo = document.querySelector('.dial_bg-video');
+        if (bgVideo && window.gsap) window.gsap.set(bgVideo, { filter: 'blur(40px)' });
+      } else if (ns === 'home') {
+        // Defensive: ensure dial is at home state after clearProps
+        setDialToHomeState();
+      }
+
+      // Scroll mode
       if (ns === 'home') {
         var prevNs = data.current ? data.current.namespace : null;
         if (prevNs && prevNs !== 'home' && data.next && data.next.container) {
@@ -966,19 +1096,25 @@
         }
       }
 
+      // Init view
       if (ns && RHP.views[ns] && RHP.views[ns].init && data.next && data.next.container) {
-        // Read handoff flag BEFORE views.home.init() — work-dial.init() consumes and clears it
         var hadCaseHandoff = ns === 'home' && !!(RHP.videoState?.caseHandoff);
-
-        RHP.views[ns].init(data.next.container);
-
-        // Barba return with case handoff: interaction is locked in work-dial; unlock after settle
-        if (hadCaseHandoff) {
-          setTimeout(function() { RHP.workDial?.setInteractionUnlocked?.(true); }, 300);
+        if (ns === 'home') {
+          // Defer home init by one frame so the browser settles CSS layout
+          // after clearProps + :has() selector changes. work-dial.resize()
+          // reads getBoundingClientRect which needs correct computed styles.
+          requestAnimationFrame(function() {
+            RHP.views.home.init(data.next.container);
+            if (hadCaseHandoff) {
+              setTimeout(function() { RHP.workDial?.setInteractionUnlocked?.(true); }, 300);
+            }
+          });
+        } else {
+          RHP.views[ns].init(data.next.container);
         }
       }
 
-      // Case study: apply video handoff from home (seek to home currentTime + transition duration, then play)
+      // Case study: apply video handoff from home
       if (ns === 'case' && RHP.videoState && RHP.videoState.caseHandoff && data.next && data.next.container) {
         var handoff = RHP.videoState.caseHandoff;
         var seekTime = (handoff.currentTime || 0) + (handoff.transitionDuration || 0.6);
@@ -992,12 +1128,11 @@
         RHP.videoState.caseHandoff = null;
       }
 
-      // Page-specific: load Overland AI CSS + script when navigating to it via Barba (if not loaded on initial page)
+      // Page-specific: Overland AI
       if (ns === 'case' && /\/work\/overland-ai(\/|$)/.test(window.location.pathname)) {
         var baseUrl = RHP.getScriptBaseUrl && RHP.getScriptBaseUrl();
         var v = RHP.configVersion || '0';
         if (baseUrl) {
-          /* Inject overland-ai.css if not already present */
           var cssHref = baseUrl + '/overland-ai.css?v=' + v;
           if (!document.querySelector('link[href*="overland-ai.css"]')) {
             var link = document.createElement('link');
@@ -1015,44 +1150,25 @@
         }
       }
 
-      // Webflow IX2 re-init after Barba DOM swap (destroy clears old bindings, ready+ix2.init rebind to new container)
-      try {
-        if (window.Webflow && typeof window.Webflow.destroy === 'function' && typeof window.Webflow.ready === 'function') {
-          window.Webflow.destroy();
-          window.Webflow.ready();
-          var ix2 = window.Webflow.require && window.Webflow.require('ix2');
-          if (ix2 && typeof ix2.init === 'function') ix2.init();
-        }
-        if (typeof window.ScrollTrigger !== 'undefined' && typeof window.ScrollTrigger.refresh === 'function') {
-          window.ScrollTrigger.refresh(true);
-        }
-        // Re-apply scrollerProxy for case view: Webflow.destroy() clears it, so IX2's new ScrollTriggers need it after init
-        if (ns === 'case' && data.next && data.next.container) {
-          var caseWrapper = data.next.container.querySelector('[data-case-scroll-wrapper]') || data.next.container.querySelector('.case-scroll-wrapper');
-          var caseContent = caseWrapper?.querySelector('[data-case-scroll-content]') || caseWrapper?.firstElementChild;
-          if (caseWrapper && caseContent) {
-            RHP.lenis?.setupScrollTriggerProxy?.(caseWrapper, caseContent);
-            window.ScrollTrigger?.refresh?.(true);
-          }
-        }
-      } catch (e) {}
+      // Re-init Webflow IX2 + ScrollTrigger
+      _reinitWebflow();
 
-      // Re-init transition-dial after Barba transition (symbol persists outside container)
+      // Re-assert UI hidden after _reinitWebflow() (IX2 may reset it)
+      if (ns === 'case') {
+        var dialUI = document.querySelector('.dial_layer-ui');
+        if (dialUI && window.gsap) window.gsap.set(dialUI, { opacity: 0 });
+      }
+
+      // Re-init transition-dial
       RHP.transitionDial?.init?.();
 
-      // Safe: Barba guarantees leave() resolves before afterEnter fires.
-      // Hide overlay here for all namespaces — overlay is only visible during transition animations.
+      // Hide about overlay
       var aboutTransitionEl = document.querySelector('.about-transition');
       if (aboutTransitionEl && window.gsap) {
         window.gsap.set(aboutTransitionEl, { display: 'none' });
       }
 
-      try {
-        var ev = new CustomEvent('rhp:barba:afterenter', {
-          detail: { namespace: ns, container: data.next ? data.next.container : null }
-        });
-        window.dispatchEvent(ev);
-      } catch (e) {}
+      _fireAfterEnterEvent(ns, data.next ? data.next.container : null);
     }
 
     /* NOTE: Logo width vs max-width timing — the div can still reach max-width before the end of the tween on some viewports; revisit so width and position both finish in sync. */
@@ -1237,7 +1353,81 @@
     }
 
     barba.init({
+      preventRunning: true,
       transitions: [
+        /* ---- Home -> Case ---- */
+        {
+          name: 'home-to-case',
+          from: { namespace: ['home'] },
+          to: { namespace: ['case'] },
+
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            // Capture dial video position for handoff to case study page
+            if (ns === 'home' && RHP.videoState && RHP.workDial) {
+              const fgVideo = document.querySelector('.dial_fg-video');
+              const idx = RHP.workDial.getActiveIndex();
+              if (fgVideo && typeof idx === 'number') {
+                RHP.videoState.caseHandoff = {
+                  index: idx,
+                  currentTime: fgVideo.currentTime || 0,
+                  transitionDuration: 0.6
+                };
+              }
+            }
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+          },
+
+          async leave() {
+            await runDialExpandAnimation();
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        },
+
+        /* ---- Case -> Home ---- */
+        {
+          name: 'case-to-home',
+          from: { namespace: ['case'] },
+          to: { namespace: ['home'] },
+
+          beforeLeave(data) {
+            const ns = data.current?.namespace || currentNs;
+            // Capture case study video position for handoff back to home dial
+            if (ns === 'case' && RHP.videoState) {
+              const container = data.current?.container || document;
+              const caseVideo = container.querySelector('.section_case-video video') || container.querySelector('.dial_fg-video') || container.querySelector('.dial_video-wrap video');
+              const idx = RHP.videoState.lastCaseIndex;
+              if (caseVideo && typeof idx === 'number') {
+                RHP.videoState.caseHandoff = {
+                  index: idx,
+                  currentTime: caseVideo.currentTime || 0
+                };
+              }
+            }
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+          },
+
+          async leave() {
+            await runDialShrinkAnimation();
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        },
+
+        /* ---- Home -> About ---- */
         {
           name: 'home-to-about',
           from: { namespace: ['home'] },
@@ -1256,6 +1446,8 @@
             runAfterEnter(data);
           }
         },
+
+        /* ---- About -> Home ---- */
         {
           name: 'about-to-home',
           from: { namespace: ['about'] },
@@ -1274,6 +1466,8 @@
             runAfterEnter(data);
           }
         },
+
+        /* ---- Case -> About ---- */
         {
           name: 'case-to-about',
           from: { namespace: ['case'] },
@@ -1292,55 +1486,42 @@
             runAfterEnter(data);
           }
         },
+
+        /* ---- About -> Case ---- */
         {
-          name: 'case-to-home',
-          from: { namespace: ['case'] },
-          to: { namespace: ['home'] },
+          name: 'about-to-case',
+          from: { namespace: ['about'] },
+          to: { namespace: ['case'] },
+
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
-            // Capture case study video position for handoff back to home dial
-            if (ns === 'case' && RHP.videoState) {
-              const container = data.current?.container || document;
-              const caseVideo = container.querySelector('.section_case-video video') || container.querySelector('.dial_fg-video') || container.querySelector('.dial_video-wrap video');
-              const idx = RHP.videoState.lastCaseIndex;
-              if (caseVideo && typeof idx === 'number') {
-                RHP.videoState.caseHandoff = {
-                  index: idx,
-                  currentTime: caseVideo.currentTime || 0
-                };
-              }
-            }
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
           },
-          leave(data) {
-            return runCaseDialShrinkAnimation(data);
+
+          async leave() {
+            const dialComp = document.querySelector('.dial_component');
+            if (dialComp?.getAttribute('data-dial-ns') !== 'work') {
+              await runDialExpandAnimation();
+            } else {
+              setDialToWorkState();
+            }
           },
+
           enter() {
             window.scrollTo(0, 0);
           },
+
           afterEnter(data) {
             runAfterEnter(data);
           }
         },
-        // Default transition (all other routes, including home → case)
+
+        /* ---- Default transition (fallback) ---- */
         {
           name: 'rhp-core',
 
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
-            // Home → case: capture dial video position for handoff to case study page
-            if (ns === 'home' && RHP.videoState && RHP.workDial) {
-              const container = data.current?.container || document;
-              const fgVideo = container.querySelector('.dial_fg-video') || document.querySelector('.dial_fg-video');
-              const idx = RHP.workDial.getActiveIndex();
-              if (fgVideo && typeof idx === 'number') {
-                RHP.videoState.caseHandoff = {
-                  index: idx,
-                  currentTime: fgVideo.currentTime || 0,
-                  transitionDuration: 0.6
-                };
-              }
-            }
             if (ns && RHP.views[ns]?.destroy) {
               RHP.views[ns].destroy();
             }

@@ -29,6 +29,7 @@ Confirm the error is real and repeatable.
 - Does it happen on staging, production, or both?
 - Is localhost detection active? If so, is `npx serve .` running?
 - Is the jsDelivr URL pinned to the correct commit hash?
+- **Jam bug report** (if user provides a Jam URL or ID): pull structured context from the Jam MCP — see Jam Integration below.
 - **MCP reproduction** (if available): navigate to the page, capture console messages + DOM snapshot, replay interactions with screenshots. See /debug command for full MCP reproduction steps.
 
 Step 2 — Hypothesise:
@@ -91,6 +92,32 @@ Step 6 — Confirm:
 - Update CLAUDE.md "Known Gotchas" if this is a recurring pattern
 - **MCP verification** (if MCP was used in Isolate): replay the same steps, compare before/after screenshots, verify console errors are gone. See /debug command for full MCP verification steps.
 </workflow>
+
+<jam_integration>
+When the user provides a Jam URL (jam.dev/...) or Jam ID, extract bug context automatically before hypothesising:
+
+1. **getDetails** — always call first. Returns: description, author, type (video/screenshot), timestamps.
+2. **getConsoleLogs** (logLevel: "error") — pull JS errors and stack traces captured during the session.
+3. **getNetworkRequests** (statusCode: "4xx" or "5xx") — pull failed HTTP requests.
+4. **getUserEvents** — pull the interaction timeline (clicks, scrolls, navigation) to understand reproduction steps.
+5. **Conditional — based on Jam type:**
+   - Video Jam → **analyzeVideo** for user intent extraction + **getVideoTranscript** for narration
+   - Screenshot Jam → **getScreenshots** for visual evidence
+6. **getMetadata** — pull any custom SDK metadata (user ID, feature flags, app version).
+
+Use the Jam data to:
+- Pre-fill the Isolate step (exact error, page, reproduction steps)
+- Seed H1–H3 hypotheses from console errors and failed network requests
+- Skip manual reproduction if the Jam provides sufficient evidence
+- Reference specific Jam timestamps/events when describing the root cause
+
+After fix is confirmed, use **createComment** to post a summary back to the Jam:
+```
+Fix applied: [brief description]
+Root cause: [confirmed hypothesis]
+Commit: [hash]
+```
+</jam_integration>
 
 <reference_guides>
 Stack-specific checks:

@@ -1,0 +1,259 @@
+{
+  "meta": {
+    "url": "https://studiozissou.webflow.io",
+    "tier": 1,
+    "generatedAt": "2026-03-11T20:46:13.926Z",
+    "pagesAudited": 1,
+    "checksRun": 8,
+    "duration": 41480.21
+  },
+  "summary": {
+    "total": 21,
+    "critical": 1,
+    "warning": 4,
+    "info": 16,
+    "byCategory": {
+      "accessibility": 5,
+      "performance": 5,
+      "security": 4,
+      "seo": 6,
+      "code-quality": 1
+    }
+  },
+  "findings": [
+    {
+      "id": "image-alt-927ec60c",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "accessibility",
+      "title": "Empty alt on non-decorative image",
+      "description": "Image has alt=\"\" but is not marked as decorative (no role=\"presentation\" or aria-hidden=\"true\").",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add descriptive alt text, or mark as decorative with role=\"presentation\"."
+    },
+    {
+      "id": "image-alt-2416a399",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "performance",
+      "title": "Image missing width and height",
+      "description": "Image lacks both width and height attributes, which can contribute to Cumulative Layout Shift (CLS).",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add width and height attributes to prevent layout shifts during loading."
+    },
+    {
+      "id": "image-alt-927ec60c",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "accessibility",
+      "title": "Empty alt on non-decorative image",
+      "description": "Image has alt=\"\" but is not marked as decorative (no role=\"presentation\" or aria-hidden=\"true\").",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add descriptive alt text, or mark as decorative with role=\"presentation\"."
+    },
+    {
+      "id": "image-alt-2416a399",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "performance",
+      "title": "Image missing width and height",
+      "description": "Image lacks both width and height attributes, which can contribute to Cumulative Layout Shift (CLS).",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add width and height attributes to prevent layout shifts during loading."
+    },
+    {
+      "id": "image-alt-927ec60c",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "accessibility",
+      "title": "Empty alt on non-decorative image",
+      "description": "Image has alt=\"\" but is not marked as decorative (no role=\"presentation\" or aria-hidden=\"true\").",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add descriptive alt text, or mark as decorative with role=\"presentation\"."
+    },
+    {
+      "id": "image-alt-2416a399",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "performance",
+      "title": "Image missing width and height",
+      "description": "Image lacks both width and height attributes, which can contribute to Cumulative Layout Shift (CLS).",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add width and height attributes to prevent layout shifts during loading."
+    },
+    {
+      "id": "image-alt-927ec60c",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "accessibility",
+      "title": "Empty alt on non-decorative image",
+      "description": "Image has alt=\"\" but is not marked as decorative (no role=\"presentation\" or aria-hidden=\"true\").",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add descriptive alt text, or mark as decorative with role=\"presentation\"."
+    },
+    {
+      "id": "image-alt-2416a399",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "performance",
+      "title": "Image missing width and height",
+      "description": "Image lacks both width and height attributes, which can contribute to Cumulative Layout Shift (CLS).",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add width and height attributes to prevent layout shifts during loading."
+    },
+    {
+      "id": "image-alt-927ec60c",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "accessibility",
+      "title": "Empty alt on non-decorative image",
+      "description": "Image has alt=\"\" but is not marked as decorative (no role=\"presentation\" or aria-hidden=\"true\").",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add descriptive alt text, or mark as decorative with role=\"presentation\"."
+    },
+    {
+      "id": "image-alt-2416a399",
+      "check": "image-alt",
+      "severity": "info",
+      "category": "performance",
+      "title": "Image missing width and height",
+      "description": "Image lacks both width and height attributes, which can contribute to Cumulative Layout Shift (CLS).",
+      "url": "https://studiozissou.webflow.io",
+      "element": "https://cdn.prod.website-files.com/69a96326ac21dc676b85a6fc/69a96326ac21dc676b85a778_Logo.svg",
+      "recommendation": "Add width and height attributes to prevent layout shifts during loading."
+    },
+    {
+      "id": "security-headers-46ac7ba7",
+      "check": "security-headers",
+      "severity": "warning",
+      "category": "security",
+      "title": "Missing strict-transport-security",
+      "description": "The response is missing the strict-transport-security header.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add Strict-Transport-Security header with max-age of at least 31536000 (1 year).",
+      "meta": {
+        "header": "strict-transport-security"
+      }
+    },
+    {
+      "id": "security-headers-f6d8fa24",
+      "check": "security-headers",
+      "severity": "warning",
+      "category": "security",
+      "title": "Missing x-content-type-options",
+      "description": "The response is missing the x-content-type-options header.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add X-Content-Type-Options: nosniff to prevent MIME type sniffing.",
+      "meta": {
+        "header": "x-content-type-options"
+      }
+    },
+    {
+      "id": "security-headers-8224c395",
+      "check": "security-headers",
+      "severity": "info",
+      "category": "security",
+      "title": "Missing referrer-policy",
+      "description": "The response is missing the referrer-policy header.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add a Referrer-Policy header (e.g., strict-origin-when-cross-origin).",
+      "meta": {
+        "header": "referrer-policy"
+      }
+    },
+    {
+      "id": "security-headers-df1553cf",
+      "check": "security-headers",
+      "severity": "info",
+      "category": "security",
+      "title": "Missing permissions-policy",
+      "description": "The response is missing the permissions-policy header.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add a Permissions-Policy header to control browser feature access.",
+      "meta": {
+        "header": "permissions-policy"
+      }
+    },
+    {
+      "id": "meta-tags-cc999b58",
+      "check": "meta-tags",
+      "severity": "warning",
+      "category": "seo",
+      "title": "Title too short",
+      "description": "Title is 13 characters, below the recommended minimum of 30.",
+      "url": "https://studiozissou.webflow.io",
+      "actual": 13,
+      "expected": "30–60 characters",
+      "recommendation": "Write a more descriptive title."
+    },
+    {
+      "id": "meta-tags-356cfa69",
+      "check": "meta-tags",
+      "severity": "critical",
+      "category": "seo",
+      "title": "Missing meta description",
+      "description": "The page has no <meta name=\"description\"> tag.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add a meta description between 70 and 160 characters."
+    },
+    {
+      "id": "meta-tags-00ee7701",
+      "check": "meta-tags",
+      "severity": "warning",
+      "category": "seo",
+      "title": "Missing canonical link",
+      "description": "The page has no <link rel=\"canonical\"> tag.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add a canonical link to indicate the preferred URL for this page."
+    },
+    {
+      "id": "meta-tags-0eeadc87",
+      "check": "meta-tags",
+      "severity": "info",
+      "category": "seo",
+      "title": "Missing og:title",
+      "description": "The page is missing the <meta property=\"og:title\"> tag.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add a og:title meta tag for better social media sharing."
+    },
+    {
+      "id": "meta-tags-c452b444",
+      "check": "meta-tags",
+      "severity": "info",
+      "category": "seo",
+      "title": "Missing og:description",
+      "description": "The page is missing the <meta property=\"og:description\"> tag.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add a og:description meta tag for better social media sharing."
+    },
+    {
+      "id": "meta-tags-b83805dd",
+      "check": "meta-tags",
+      "severity": "info",
+      "category": "seo",
+      "title": "Missing og:image",
+      "description": "The page is missing the <meta property=\"og:image\"> tag.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Add a og:image meta tag for better social media sharing."
+    },
+    {
+      "id": "code-review-ffe1f0e5",
+      "check": "code-review",
+      "severity": "info",
+      "category": "code-quality",
+      "title": "AI response parse failure",
+      "description": "Could not parse the AI code review response as JSON for https://studiozissou.webflow.io.",
+      "url": "https://studiozissou.webflow.io",
+      "recommendation": "Re-run the review or inspect the code manually."
+    }
+  ]
+}

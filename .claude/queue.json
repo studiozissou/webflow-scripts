@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-11",
+  "updated": "2026-03-12",
   "queue": [
     {
       "id": "qa-rhp-claude-setup",
@@ -369,6 +369,29 @@
       "spec": ".claude/specs/site-review-stage-7-csv-importers.md",
       "blockedOn": "wf-site-review-runner-reports-cli-tier-one",
       "created": "2026-03-11"
+    },
+    {
+      "id": "rhp-barba-namespace-restructure",
+      "project": "ready-hit-play",
+      "type": "feature",
+      "priority": "P1",
+      "status": "done",
+      "title": "Restructure Barba namespace layout for seamless home-work transitions",
+      "description": "Move dial component and videos outside Barba swap zone. Barba container inside dial_layer-fg swaps only page content. Identical outer shells on home and work pages. data-dial-ns attribute on dial_component controls visibility. GSAP leave() hook for morph animation before DOM swap. Persistent video, lazy dial re-init on return.",
+      "spec": ".claude/specs/rhp-barba-namespace-restructure.md",
+      "created": "2026-03-12",
+      "completed": "2026-03-12"
+    },
+    {
+      "id": "rhp-barba-transition-bugs-fix",
+      "project": "ready-hit-play",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Building",
+      "title": "Fix 6 Barba home-work transition bugs (ticks clipped, video blank, labels, scroll, scrollbar, z-index)",
+      "description": "Fix tick clipping (overflow:visible), video blank frame (pin video-wrap before ns change), labels visible on work (opacity !important + JS guard), scroll broken (clear overflow in afterEnter), scrollbar visible (hide on child elements), dial not appearing on return (z-index restoration).",
+      "spec": ".claude/specs/rhp-barba-transition-bugs-fix.md",
+      "created": "2026-03-12"
     },
     {
       "id": "wf-site-review-accessibility-deep-dive-tier-two",

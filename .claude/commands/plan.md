@@ -68,9 +68,12 @@ Add a "Barba Impact" section to the spec with answers. If Barba is not enabled f
 
 After writing the spec, generate acceptance tests for every testable behaviour.
 
-1. Read the template at `.claude/templates/acceptance-test.spec.js` to understand
-   the test patterns available (element visibility, CSS class checks, CMS filtering,
-   console errors, reduced motion, barba transitions, responsive).
+1. Look for a **project-local override** first at `tests/templates/acceptance-test.spec.js`
+   (relative to the project root). If it exists, use it — it has project-specific helpers
+   (e.g. `waitForRHP`, CJS/ESM format, pre-imported axe-core). If not found, fall back to
+   the **generic template** at `.claude/templates/acceptance-test.spec.js`.
+   Both templates show the available test patterns (element visibility, CSS class checks,
+   CMS filtering, console errors, reduced motion, barba transitions, responsive, axe-core).
 
 2. For each testable behaviour described in the spec, write a concrete test.
    Each test must specify:

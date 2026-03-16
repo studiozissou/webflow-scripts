@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.2.27.6';
+  const WORK_DIAL_VERSION = '2026.3.13.1';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
 
@@ -87,6 +87,10 @@
   RHP.workDial = (() => {
     let alive = false;
     let cleanup = [];
+    let suspendCleanup = [];
+    let suspended = false;
+    let _suspendFn = null;  // closure set inside init(), called by suspend()
+    let _resumeFn = null;   // closure set inside init(), called by resume()
     let rafId = 0;
     let driftRafId = 0; // module-level so destroy() can cancel it
     let refs = null;
@@ -108,10 +112,12 @@
       }
     }
 
-    function on(el, evt, fn, opts) {
+    function on(el, evt, fn, opts, suspendable) {
       if (!el) return;
       el.addEventListener(evt, fn, opts);
-      cleanup.push(() => el.removeEventListener(evt, fn, opts));
+      const remover = () => el.removeEventListener(evt, fn, opts);
+      cleanup.push(remover);
+      if (suspendable) suspendCleanup.push(remover);
     }
 
     function stop() {
@@ -1165,31 +1171,110 @@
         }
       }
 
-      on(window, 'resize', resize, { passive: true });
-      on(comp, 'pointermove', onPointerMove, { passive: true });
-      on(comp, 'pointerleave', onPointerLeave, { passive: true });
-
-      on(comp, 'pointerdown', onPointerDown, { passive: true });
-      on(comp, 'pointermove', onPointerMoveMobile, { passive: true });
-      on(window, 'pointerup', onPointerUp, { passive: true });
-
-      on(comp, 'wheel', onWheel, { passive: false });
-      on(window, 'touchmove', preventTouchScroll, { passive: false });
-
       // Center dial layer click → go to active case study (Barba transition)
       const dialFg = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
 
         if (dialFg) {
         dialFg.style.cursor = 'pointer';
-        on(dialFg, 'click', (e) => goToActiveCase(e, items, state), { passive: false });
-
         refs = refs || {};
         }
 
-      on(document, 'visibilitychange', onVis, { passive: true });
+      function bindInteractionListeners() {
+        on(window, 'resize', resize, { passive: true }, true);
+        on(comp, 'pointermove', onPointerMove, { passive: true }, true);
+        on(comp, 'pointerleave', onPointerLeave, { passive: true }, true);
+        on(comp, 'pointerdown', onPointerDown, { passive: true }, true);
+        on(comp, 'pointermove', onPointerMoveMobile, { passive: true }, true);
+        on(window, 'pointerup', onPointerUp, { passive: true }, true);
+        on(comp, 'wheel', onWheel, { passive: false }, true);
+        on(window, 'touchmove', preventTouchScroll, { passive: false }, true);
+        if (dialFg) on(dialFg, 'click', (e) => goToActiveCase(e, items, state), { passive: false }, true);
+        on(document, 'visibilitychange', onVis, { passive: true }, true);
+        on(window, 'pointerdown', () => enforceVideoPolicy(comp), { once: true, passive: true }, true);
+      }
 
-      // iOS: kick videos again on first gesture
-      on(window, 'pointerdown', () => enforceVideoPolicy(comp), { once: true, passive: true });
+      bindInteractionListeners();
+
+      // Suspend/resume closures — capture init-scoped variables
+      _suspendFn = function() {
+        if (!alive || suspended) return;
+        suspended = true;
+
+        // Save state for active sector
+        if (visibleVideo && typeof state.activeIndex === 'number') {
+          saveVideoStateToIndex(visibleVideo, state.activeIndex);
+          if (bgVisible) saveVideoStateToIndex(bgVisible, state.activeIndex);
+        }
+
+        // Keep visible fg/bg playing through the morph animation
+        [genericVideo, poolPrev, poolNext, bgPoolPrev, bgPoolNext]
+          .forEach(v => { if (v && !v.paused) try { v.pause(); } catch(e) {} });
+
+        // Stop RAF loops
+        stop();
+        stopDriftMonitorGlobal();
+
+        // Remove interaction listeners only (DOM stays)
+        suspendCleanup.forEach(fn => { try { fn(); } catch(e) {} });
+        cleanup = cleanup.filter(fn => !suspendCleanup.includes(fn));
+        suspendCleanup = [];
+
+        interactionUnlocked = false;
+      };
+
+      _resumeFn = function(handoff) {
+        if (!alive || !suspended) return;
+        suspended = false;
+
+        bindInteractionListeners();
+
+        // If handoff provided, apply it
+        if (handoff && typeof handoff.index === 'number') {
+          state.lastIndex = -1; // reset so applyActive doesn't bail on same-index
+          RHP.videoState.byIndex[handoff.index] = {
+            currentTime: handoff.currentTime,
+            paused: false
+          };
+          applyActive(handoff.index);
+
+          // Force exact seek
+          if (visibleVideo) try { visibleVideo.currentTime = handoff.currentTime; } catch(e) {}
+          if (bgVisible && bgVisible.tagName === 'VIDEO') try { bgVisible.currentTime = handoff.currentTime; } catch(e) {}
+        }
+
+        // Resume playback (only when not in IDLE — IDLE uses genericVideo)
+        if (dialState !== DIAL_STATES.IDLE && visibleVideo && bgVisible) {
+          playPaired(visibleVideo, bgVisible);
+        }
+        if (genericVideo && dialState === DIAL_STATES.IDLE) {
+          try { genericVideo.play().catch(() => {}); } catch(e) {}
+        }
+
+        // Restart RAF loops — stop first to prevent double-RAF
+        stop();
+        resize();
+        if (dialState === DIAL_STATES.ACTIVE || dialState === DIAL_STATES.ENGAGED) {
+          startDriftMonitor();
+        }
+        rafId = requestAnimationFrame(draw);
+
+        // Preload adjacent pool slots
+        const idx = state.activeIndex;
+        if (typeof idx === 'number' && items && items.length) {
+          const prevIdx = mod(idx - 1, N);
+          const nextIdx = mod(idx + 1, N);
+          const urlPrev = (items[prevIdx] && items[prevIdx].getAttribute('data-video')) || '';
+          const urlNext = (items[nextIdx] && items[nextIdx].getAttribute('data-video')) || '';
+          const posterPrev = readPosterFromItem(items[prevIdx]);
+          const posterNext = readPosterFromItem(items[nextIdx]);
+          setVideoSourceAndPoster(poolPrev, urlPrev, posterPrev);
+          setVideoSourceAndPoster(poolNext, urlNext, posterNext);
+          setVideoSourceAndPoster(bgPoolPrev, urlPrev, posterPrev);
+          setVideoSourceAndPoster(bgPoolNext, urlNext, posterNext);
+        }
+
+        interactionUnlocked = true;
+      };
 
       rafId = requestAnimationFrame(draw);
 
@@ -1225,14 +1310,26 @@
       attractionEnabled = !!enabled;
     }
 
+    function suspend() {
+      if (_suspendFn) _suspendFn();
+    }
+
+    function resume(handoff) {
+      if (_resumeFn) _resumeFn(handoff);
+    }
+
     function destroy() {
       if (!alive) return;
       alive = false;
+      suspended = false;
 
       stop();
       stopDriftMonitorGlobal();
       cleanup.forEach(fn => { try { fn(); } catch(e){} });
       cleanup = [];
+      suspendCleanup = [];
+      _suspendFn = null;
+      _resumeFn = null;
       refs = null;
     }
 
@@ -1240,6 +1337,8 @@
       return refs?.getActiveIndex?.() ?? 0;
     }
 
-    return { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, version: WORK_DIAL_VERSION };
+    function isSuspended() { return suspended; }
+
+    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, version: WORK_DIAL_VERSION };
   })();
 })();

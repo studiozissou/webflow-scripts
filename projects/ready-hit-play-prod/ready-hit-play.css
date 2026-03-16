@@ -402,9 +402,12 @@
 .dial_component:has([data-barba-namespace="case"]) .dial_video-wrap,
 .dial_component:has([data-barba-namespace="about"]) .dial_video-wrap {
   width: 100%;
+  height: auto;
+  max-height: none;
   aspect-ratio: 16 / 9;
   border-radius: 0px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 /* CSS transitions removed - using GSAP for animations */

@@ -1,17 +1,140 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-12",
+  "updated": "2026-03-13",
   "queue": [
     {
-      "id": "qa-rhp-claude-setup",
-      "project": "rhp-claude",
-      "type": "qa",
-      "priority": "medium",
-      "status": "done",
-      "title": "Initial QA — rhp-claude project setup",
-      "description": "Run /qa-check on orchestrator.js. Verify Barba namespaces, Lenis init, GSAP context cleanup, and reduced-motion guard are all in place before first deploy.",
-      "created": "2026-02-24",
-      "completed": "2026-02-27"
+      "id": "rhp-video-transition-cluster",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Building",
+      "title": "Video transition cluster: suspend/resume for home↔case, rectangular FG, autoplay, pool fix",
+      "description": "Cluster fix for 4 bugs: (1) videos destroyed during home↔case transitions — add suspend()/resume() to work-dial.js, (2) FG video circular during morph — snap borderRadius to 0, (3) videos don't autoplay after Barba — explicit play() in afterEnter, (4) pool switching broken after round-trip — preload adjacent slots on resume. See spec for full architecture.",
+      "spec": ".claude/specs/rhp-video-transition-cluster.md",
+      "covers": [
+        "rhp-video-persistence-home-work-transition",
+        "rhp-foreground-video-rectangular-work-transition",
+        "rhp-work-page-video-autoplay-after-barba",
+        "rhp-video-pool-switching-after-barba"
+      ],
+      "created": "2026-03-13"
+    },
+    {
+      "id": "rhp-case-transition-polish",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Case transition polish: video sizing, scroll-to-top, fg-video visibility after resume",
+      "description": "Three fixes for home↔case transitions after suspend/resume shipped: (1) FG video fills 100% of container during expand — should use calc(--dial-case-height - --dial-case-title-gap) leaving room for title peek, with responsive gap (140/120/100/80px). (2) Case→home: scroll dialFg to top before shrink so video is visible. (3) After case→home resume, fg-video invisible — clearProps wipes dialFg opacity but setDialState bails on same-state; force re-apply in _resumeFn.",
+      "spec": ".claude/specs/rhp-case-transition-polish.md",
+      "covers": [
+        "rhp-case-video-sizing-100pct",
+        "rhp-case-to-home-scroll-position",
+        "rhp-case-to-home-fg-invisible"
+      ],
+      "created": "2026-03-16"
+    },
+    {
+      "id": "rhp-about-page-cluster",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "About page cluster: scroll + reveals + dial visibility + HIT logo hover",
+      "description": "Cluster fix for 2 bugs: (1) scroll broken + GSAP reveals hidden + HIT logo hover dead — Lenis double-start orphans scroll listeners, fix by letting runAfterEnter own Lenis; add gsap.context() to about-text-lines; fix HIT logo selector fallback. (2) Dial missing after transition — about_dial-wrapper visibility:hidden never cleared; add clearProps in runAfterEnter. See spec for full architecture.",
+      "spec": ".claude/specs/rhp-about-page-cluster.md",
+      "covers": [
+        "rhp-about-page-scroll-reveal-broken",
+        "rhp-about-dial-missing-after-work-transition"
+      ],
+      "created": "2026-03-13"
+    },
+    {
+      "id": "rhp-transition-polish-cluster",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Transition polish cluster: dial state handoff for about→home + overlay flash fix",
+      "description": "Cluster fix for 2 bugs: (1) dial_layer-fg not scrolled to top on case→about, dial boots IDLE at index 0 on about→home instead of showing just-visited project in ACTIVE — add aboutHandoff save/consume + startIndex/startActive init options. (2) About→home overlay fades 450ms early exposing large logo — pin overlay at opacity:1 during reverse, manual fade after completion; measure nav logo position live instead of hard-coded 2vh. See spec for full architecture.",
+      "spec": ".claude/specs/rhp-transition-polish-cluster.md",
+      "covers": [
+        "rhp-work-to-about-scroll-position-dial-state",
+        "rhp-about-to-home-transition-flash"
+      ],
+      "created": "2026-03-13"
+    },
+    {
+      "id": "rhp-dial-mobile-upgrade",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Blocked",
+      "title": "Dial: mobile interaction upgrade (specification pending)",
+      "description": "Upgrade dial to work on mobile according to spec (to be provided). Blocked waiting for specification.",
+      "blockedOn": "specification-pending",
+      "created": "2026-03-12"
+    },
+    {
+      "id": "rhp-mobile-autoplay-video-fallback",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Triage",
+      "title": "Mobile: autoplay video fallback when autoplay is blocked",
+      "description": "Figure out fallback behaviour when autoplay is blocked on mobile. Affects: homepage foreground/background videos, work page hero videos, work page laptop videos, work page column layout videos.",
+      "created": "2026-03-12"
+    },
+    {
+      "id": "rhp-mobile-responsiveness",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Triage",
+      "title": "Mobile: responsiveness pass across all pages",
+      "description": "General mobile responsiveness pass across all pages — home, about, work, contact.",
+      "created": "2026-03-12"
+    },
+    {
+      "id": "rhp-update-laptop-mockups",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Triage",
+      "title": "Update laptop mockup assets on work pages",
+      "description": "Replace current laptop mockup images/videos with updated versions on work pages.",
+      "created": "2026-03-12"
+    },
+    {
+      "id": "rhp-about-team-section-animations",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Triage",
+      "title": "About page: team section animations",
+      "description": "Add animations to the team section on the about page.",
+      "created": "2026-03-12"
+    },
+    {
+      "id": "rhp-video-title-responsive-scale",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Triage",
+      "title": "Video title: responsive text scaling across breakpoints",
+      "description": "Video title text needs responsive scaling across breakpoints.",
+      "created": "2026-03-12"
+    },
+    {
+      "id": "rhp-video-quality-optimisation",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Triage",
+      "title": "Video performance: lower quality backgrounds, tighter foreground resolution",
+      "description": "Add lower quality videos for background (always shown blurred, can use much lower resolution). Tighten foreground video resolution to reduce bandwidth and decode overhead.",
+      "created": "2026-03-12"
     },
     {
       "id": "sz-nav-compass",
@@ -265,27 +388,6 @@
       "created": "2026-03-06"
     },
     {
-      "id": "rhp-transition-dial-pixelation",
-      "project": "ready-hit-play-prod",
-      "type": "bug",
-      "priority": "P2",
-      "status": "done",
-      "title": "Transition dial canvas pixelated during about→home grow animation",
-      "description": ".transition-dial canvas looks pixelated when growing from small (6rem) to large during the about→home reverse transition. The canvas backing buffer is drawn at the small size and CSS-stretches as the wrapper grows. Needs a resize strategy that redraws the canvas at the target large resolution before or during the grow animation. Shrinking (home→about) is crisp because the buffer starts at large resolution.",
-      "created": "2026-03-11",
-      "completed": "2026-03-11"
-    },
-    {
-      "id": "rhp-transition-dial-refinement",
-      "project": "ready-hit-play-prod",
-      "type": "bug",
-      "priority": "P1",
-      "status": "Backlog",
-      "title": "Debug and refine home↔about transition dial animation",
-      "description": "Multiple issues after transition-dial large-buffer fix:\n1. about→home: transition overlay disappears before animation completes — on homepage after transition the overlay may need to stay visible longer\n2. home→about: dial starts moving from top of page instead of its natural position — likely a display none→flex issue causing getBoundingClientRect to return 0,0 before the element is laid out\n3. home→about: transition dial looks pixelated at the end of the shrink (small size) — buffer is large but CSS 100% at 6rem may need a final resize() call at the small rendered size\n4. Easing refinement: try expo.inOut or similar for smoother feel on both directions\nAll issues are in orchestrator.js runHomeToAboutTransition / runAboutToHomeTransition and transition-dial.js.",
-      "created": "2026-03-11"
-    },
-    {
       "id": "wf-site-review-finding-schema-config",
       "project": "webflow-scripts",
       "type": "feature",
@@ -369,29 +471,6 @@
       "spec": ".claude/specs/site-review-stage-7-csv-importers.md",
       "blockedOn": "wf-site-review-runner-reports-cli-tier-one",
       "created": "2026-03-11"
-    },
-    {
-      "id": "rhp-barba-namespace-restructure",
-      "project": "ready-hit-play",
-      "type": "feature",
-      "priority": "P1",
-      "status": "done",
-      "title": "Restructure Barba namespace layout for seamless home-work transitions",
-      "description": "Move dial component and videos outside Barba swap zone. Barba container inside dial_layer-fg swaps only page content. Identical outer shells on home and work pages. data-dial-ns attribute on dial_component controls visibility. GSAP leave() hook for morph animation before DOM swap. Persistent video, lazy dial re-init on return.",
-      "spec": ".claude/specs/rhp-barba-namespace-restructure.md",
-      "created": "2026-03-12",
-      "completed": "2026-03-12"
-    },
-    {
-      "id": "rhp-barba-transition-bugs-fix",
-      "project": "ready-hit-play",
-      "type": "bug",
-      "priority": "P0",
-      "status": "Building",
-      "title": "Fix 6 Barba home-work transition bugs (ticks clipped, video blank, labels, scroll, scrollbar, z-index)",
-      "description": "Fix tick clipping (overflow:visible), video blank frame (pin video-wrap before ns change), labels visible on work (opacity !important + JS guard), scroll broken (clear overflow in afterEnter), scrollbar visible (hide on child elements), dial not appearing on return (z-index restoration).",
-      "spec": ".claude/specs/rhp-barba-transition-bugs-fix.md",
-      "created": "2026-03-12"
     },
     {
       "id": "wf-site-review-accessibility-deep-dive-tier-two",

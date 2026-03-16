@@ -2,7 +2,7 @@ Build a feature end-to-end using the appropriate agents.
 
 ## Model split
 - **Opus max-effort** for all code-writing, hypothesising, and refactoring work (steps 3–5, bug fixes in the verify loop)
-- **Sonnet** for code-reviewer, qa-check, and verification passes (steps 6–7, steps 10–12)
+- **Sonnet** for all 3 code-reviewer agents (step 6), qa-check, and verification passes (steps 6–7, steps 10–12)
 
 ## Notion push: Building (if Notion connected)
 Update queue.json: set this slug's status to Building.
@@ -60,10 +60,23 @@ This prevents context rot when building multiple components in a single session.
 3. Use the `code-writer` agent with `model: "opus"` to implement the feature.
 4. If the feature has motion/animation, apply the `gsap-scrolltrigger` or `barba-js` skill as appropriate.
 5. Use the `refactor` agent with `model: "opus"` on all changed files. Instruction: "Refactor the implementation for clarity and pattern compliance. Do not change behaviour."
-6. Use the `code-reviewer` agent with `model: "sonnet"` to review all changes. Handle the verdict:
-   - **PASS** — return results to parent context.
-   - **WARN** — include warnings in results, then return.
-   - **FAIL** — fix the issues, then re-run the code-reviewer. Max 3 review cycles. After 3 failures, return failure report to parent context.
+6. **Multi-perspective code review** — spawn 3 parallel `code-reviewer` agents (all `model: "sonnet"`), each with a distinct review lens. Each reviewer scores every issue 0–100 confidence; only issues ≥80 are surfaced.
+
+   **Reviewer A — Simplicity & DRY:**
+   > "Review for unnecessary complexity, code duplication, premature abstraction, and over-engineering. Score each issue 0–100 confidence. Only report issues you are ≥80% confident about. Return a structured list: file, line, issue, confidence, suggested fix."
+
+   **Reviewer B — Bugs & Correctness:**
+   > "Review for logic errors, off-by-one mistakes, null/undefined access, race conditions, missing error handling at system boundaries, and edge cases. Score each issue 0–100 confidence. Only report issues you are ≥80% confident about. Return a structured list: file, line, issue, confidence, suggested fix."
+
+   **Reviewer C — Conventions & Patterns:**
+   > "Review against the project CLAUDE.md guidelines, existing codebase patterns, naming conventions, and architectural decisions from ADRs. Check for console.log without DEBUG guard, default exports in shared/, and missing init/destroy lifecycle methods. Score each issue 0–100 confidence. Only report issues you are ≥80% confident about. Return a structured list: file, line, issue, confidence, suggested fix."
+
+   **Merge results into a unified verdict:**
+   - Collect all issues from all 3 reviewers
+   - Deduplicate: if two reviewers flag the same line, keep the higher confidence score
+   - **PASS** (no issues ≥80) — return results to parent context
+   - **WARN** (issues ≥80 but none ≥95) — include warnings in results, then return
+   - **FAIL** (any issue ≥95) — fix the critical issues, then re-run all 3 reviewers. Max 3 review cycles. After 3 failures, return failure report to parent context
 7. Run `/qa-check` automatically.
 
 **Return to parent context:**
@@ -131,7 +144,19 @@ If MCP is not connected, skip silently.
     g. Track iteration count. After 8 failed iterations on the SAME test:
        - Stop and report to the user
        - List what's failing and what you've tried
-       - Ask for guidance before continuing
+       - Offer the user a choice via `AskUserQuestion`:
+
+         **"How should we proceed with the failing test?"**
+         1. **"Ralph-wiggum mode — keep iterating" (Recommended for timing/flake issues)** — Switch to autonomous TDD loop: keep fixing and re-running the failing test until it passes or hits a hard cap of 20 total iterations. Each iteration: read failure → apply smallest possible fix → commit → push → purge → re-test. No user interaction until pass or cap.
+         2. **"Skip this test and continue"** — Mark the test as `.skip`, log it as a known issue, continue with remaining tests.
+         3. **"Stop and I'll investigate manually"** — End the build loop, preserve all changes, report full diagnostics.
+
+       If user chooses ralph-wiggum mode:
+       - Log: "Entering ralph-wiggum TDD loop — iterating until green or 20 total iterations"
+       - Continue the fix → commit → push → purge → test cycle autonomously
+       - On each iteration, append a one-line summary to the build output: `[ralph #{n}] {what changed} → {pass/fail}`
+       - If the test passes: log "Ralph-wiggum loop resolved after {n} iterations", continue to step 12
+       - If 20 total iterations reached: stop, report full history, ask for manual intervention
 
 ### Step 12.5 — Bridge (MCP → regression tests)
 

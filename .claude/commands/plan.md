@@ -2,7 +2,7 @@ Plan a feature before writing any code.
 
 ## Model split
 - **Opus max-effort** for clarifying questions (step 2), spec writing + task breakdown + parallelisation map (steps 3–7), and Barba impact check
-- **Sonnet** for research agents (step 1), acceptance test generation (step 8), and Notion pushes
+- **Sonnet** for research agents (step 1), acceptance test generation (step 8 — MUST run, see below), and Notion pushes
 
 ## Notion push: Planning (if Notion connected)
 Update queue.json: set this slug's status to Planning.
@@ -33,7 +33,7 @@ Summarize findings in a **Research Summary** block before proceeding. Include:
 Use the `pm-questioning` skill to ask clarifying questions. Do not skip this step.
 **Include research findings in the question context** — reference specific files, patterns, and constraints found by the research agents so the user can make informed decisions.
 
-### 3–8. Spec writing and task breakdown
+### 3–7. Spec writing and task breakdown
 
 3. Once answers are gathered, use **Opus max-effort** for spec writing and architectural analysis. Write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format. Incorporate research findings into the spec — reference reusable code, confirmed selectors, and existing patterns.
 4. Break the feature into ordered tasks and append them to `.claude/queue.json`.
@@ -45,7 +45,23 @@ Use the `pm-questioning` skill to ask clarifying questions. Do not skip this ste
    - This map feeds into `/build` so it can spawn parallel executors
 6. Flag any architectural decisions that need an ADR before work begins.
 7. **Barba transition impact check** (see below).
-8. **Generate acceptance tests** (see below).
+
+### 8. Generate acceptance tests (MANDATORY)
+
+**This step is NOT optional.** Generate acceptance tests immediately after writing the spec.
+
+Before generating, check for test infrastructure:
+- Look for `.env.test` in the project root
+- Look for `package.json` with Playwright in devDependencies
+
+**If test infra exists → generate tests. If not → note in spec and skip.**
+
+For RHP (`ready-hit-play-prod`): test infra IS present (`.env.test`, Playwright, axe-core).
+
+Follow the detailed instructions in the **Acceptance tests** section below. Save the test file to `tests/acceptance/SLUG.spec.js`. Add an "Acceptance Tests" section to the spec listing each test by name.
+
+### 9–10. Verification and approval
+
 9. **Verification section** — Every plan MUST include a "Verification" section listing concrete steps to confirm the implementation is correct. Prefer automated checks (run tests, run a script, use MCP tools, grep for expected output) over manual inspection.
 10. Present the plan summary to the user for approval. Use `AskUserQuestion` with the following options (in this order):
     - **"Save spec, add to queue, and sync to Notion" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`, add tasks to `queue.json` using the `queue-tasks` skill for formatting (plain-English names, descriptive slugs, step-by-step Notion pages with embedded spec and Files section), and sync all new rows to Notion via the `notion-dashboard` skill.
@@ -66,9 +82,10 @@ Add a "Barba Impact" section to the spec with answers. If Barba is not enabled f
 
 ## Acceptance tests
 
-After writing the spec, generate acceptance tests for every testable behaviour.
+Generate acceptance tests for every testable behaviour in the spec.
+The infra check happens in step 8 above — by the time you reach this section, you've confirmed infra exists.
 
-1. Look for a **project-local override** first at `tests/templates/acceptance-test.spec.js`
+1. Read the **project-local template** at `tests/templates/acceptance-test.spec.js`
    (relative to the project root). If it exists, use it — it has project-specific helpers
    (e.g. `waitForRHP`, CJS/ESM format, pre-imported axe-core). If not found, fall back to
    the **generic template** at `.claude/templates/acceptance-test.spec.js`.
@@ -102,9 +119,6 @@ After writing the spec, generate acceptance tests for every testable behaviour.
    file is the machine-runnable version.
 
 8. Do NOT run the tests at this point. They will be run during `/build`.
-
-If the project has no test infrastructure yet (no `package.json` with Playwright,
-no `.env.test`), skip acceptance test generation and note it in the spec output.
 
 ## Notion push: Ready to Build (if Notion connected)
 Update queue.json: set this slug's status to Ready to Build.

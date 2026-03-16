@@ -62,7 +62,8 @@
       caseWidth: _getCSSVar('--dial-case-width', '78vw'),
       caseHeight: _getCSSVar('--dial-case-height', '85dvh'),
       caseBR: _getCSSVar('--dial-case-border-radius', '7.5rem'),
-      caseAR: _getCSSVar('--dial-case-aspect-ratio', 'auto')
+      caseAR: _getCSSVar('--dial-case-aspect-ratio', 'auto'),
+      caseTitleGap: _getCSSVar('--dial-case-title-gap', '140px')
     };
   }
 
@@ -90,19 +91,32 @@
 
       const rect = dialFg.getBoundingClientRect();
 
-      // Pin dial_video-wrap dimensions before ns change
-      const videoWrap = dialFg.querySelector('.dial_video-wrap');
+      // Pin #fg-video-wrap dimensions before ns change
+      const videoWrap = document.getElementById('fg-video-wrap');
       const vRect = videoWrap?.getBoundingClientRect();
       if (videoWrap && vRect) {
         gsap.set(videoWrap, { width: vRect.width, height: vRect.height, borderRadius: 0 });
       }
 
-      // Tween videoWrap to fill expanding dial (CSS can't take over until new namespace is live)
+      // Tween videoWrap to case video height (leaves gap for title peek)
       if (videoWrap) {
+        // Resolve calc(--dial-case-height - --dial-case-title-gap) to pixels
+        const tempEl = document.createElement('div');
+        tempEl.style.height = 'calc(' + v.caseHeight + ' - ' + v.caseTitleGap + ')';
+        tempEl.style.position = 'absolute';
+        tempEl.style.visibility = 'hidden';
+        document.body.appendChild(tempEl);
+        const caseVideoHeight = tempEl.getBoundingClientRect().height;
+        document.body.removeChild(tempEl);
+
+        const caseBR = _parseSize(v.caseBR);
         gsap.to(videoWrap, {
           width: '100%',
-          height: '100%',
-          aspectRatio: 'auto',
+          height: caseVideoHeight,
+          borderTopLeftRadius: caseBR,
+          borderTopRightRadius: caseBR,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
           duration: dur,
           ease: 'power2.inOut'
         });
@@ -962,7 +976,7 @@
       var isMobile = window.matchMedia('(hover: none), (pointer: coarse)').matches;
       var fgSrc = (isMobile && caseWrapper?.getAttribute('fg-video-mobile')) || caseWrapper?.getAttribute('fg-video') || '';
       var bgSrc = caseWrapper?.getAttribute('bg-video') || fgSrc;
-      var fgVideo = document.querySelector('.dial_component > .dial_layer-fg > .dial_video-wrap > .dial_fg-video');
+      var fgVideo = document.querySelector('#fg-video-wrap > .dial_fg-video');
       var bgVideoEl = document.querySelector('.dial_bg-video');
       if (fgSrc && fgVideo && !fgVideo.src) {
         fgVideo.src = fgSrc;
@@ -1129,7 +1143,7 @@
       if (dialFg && window.gsap) {
         window.gsap.set(dialFg, { clearProps: 'all' });
       }
-      var videoWrap = document.querySelector('.dial_video-wrap');
+      var videoWrap = document.getElementById('fg-video-wrap');
       if (videoWrap && window.gsap) {
         window.gsap.set(videoWrap, { clearProps: 'all' });
       }
@@ -1142,7 +1156,7 @@
         if (bgVideo && window.gsap) window.gsap.set(bgVideo, { filter: 'blur(40px)' });
 
         // Sync BG video to FG video on case pages (work-dial drift monitor is suspended)
-        var caseFg = document.querySelector('.dial_component > .dial_layer-fg > .dial_video-wrap > .dial_fg-video');
+        var caseFg = document.querySelector('#fg-video-wrap > .dial_fg-video');
         if (caseFg && bgVideo && bgVideo.tagName === 'VIDEO') {
           // Initial sync
           try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
@@ -1495,6 +1509,10 @@
           to: { namespace: ['home'] },
 
           beforeLeave(data) {
+            // Scroll case content to top so video is visible for shrink animation
+            const dialFg = document.querySelector('.dial_layer-fg');
+            if (dialFg) dialFg.scrollTop = 0;
+
             const ns = data.current?.namespace || currentNs;
             // Capture case study video position for handoff back to home dial
             if (ns === 'case' && RHP.videoState) {

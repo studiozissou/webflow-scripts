@@ -26,7 +26,7 @@
   const SEL = {
     component: '.dial_component',
     canvas: '#dial_ticks-canvas',
-    fgWrap: '.dial_video-wrap',
+    fgWrap: '#fg-video-wrap',
     fgVideo: '.dial_fg-video',
     bgVideo: '.dial_bg-video',
     cmsItem: '.dial_cms-item',
@@ -1249,6 +1249,13 @@
         if (genericVideo && dialState === DIAL_STATES.IDLE) {
           try { genericVideo.play().catch(() => {}); } catch(e) {}
         }
+
+        // Force full visual state refresh — clearProps in runAfterEnter removed inline styles.
+        // Always go through ACTIVE (the only branch that sets dialFg opacity, bg blur, etc).
+        // ENGAGED branch only adjusts UI — it assumes ACTIVE already ran. Pointer events
+        // will naturally transition to ENGAGED if the mouse is close enough after resume.
+        dialState = null;
+        setDialState(DIAL_STATES.ACTIVE);
 
         // Restart RAF loops — stop first to prevent double-RAF
         stop();

@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.3.12.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.3.13.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -94,7 +94,18 @@
       const videoWrap = dialFg.querySelector('.dial_video-wrap');
       const vRect = videoWrap?.getBoundingClientRect();
       if (videoWrap && vRect) {
-        gsap.set(videoWrap, { width: vRect.width, height: vRect.height, borderRadius: 999 });
+        gsap.set(videoWrap, { width: vRect.width, height: vRect.height, borderRadius: 0 });
+      }
+
+      // Tween videoWrap to fill expanding dial (CSS can't take over until new namespace is live)
+      if (videoWrap) {
+        gsap.to(videoWrap, {
+          width: '100%',
+          height: '100%',
+          aspectRatio: 'auto',
+          duration: dur,
+          ease: 'power2.inOut'
+        });
       }
 
       if (dialComp) dialComp.setAttribute('data-dial-ns', 'work');
@@ -122,7 +133,6 @@
           // Do NOT clearProps here — we're still in leave(), barba namespace
           // is the OLD page. :has() selectors would match wrong namespace.
           // clearProps deferred to runAfterEnter where new namespace is live.
-          if (videoWrap) gsap.set(videoWrap, { clearProps: 'all' });
           resolve();
         }
       });
@@ -136,6 +146,7 @@
     const dialUI = document.querySelector('.dial_layer-ui');
     const dialTicks = document.querySelector('.dial_layer-ticks');
     if (!dialFg || !gsap) return Promise.resolve();
+
 
     const v = getDialVars();
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -402,6 +413,25 @@
         RHP.workDial?.destroy?.();
         RHP.transitionDial?.destroy?.();
         RHP.scroll.unlock();
+      },
+
+      suspend() {
+        if (!active) return;
+        active = false;
+
+        RHP.workDial?.suspend?.();
+        RHP.transitionDial?.destroy?.();
+        RHP.scroll.unlock();
+      },
+
+      resume(container, handoff) {
+        if (active) return;
+        active = true;
+
+        RHP.lenis?.stop();
+        RHP.scroll.lock();
+        RHP.workDial?.resume?.(handoff);
+        RHP.transitionDial?.init?.(container);
       }
     };
   })();
@@ -926,6 +956,34 @@
       // Direct-land on work page: set dial to expanded state, no workDial init
       setDialToWorkState();
       RHP.scroll.unlock();
+
+      // Populate persistent FG + BG videos from data attributes on .case-studies_wrapper
+      var caseWrapper = container?.querySelector('.case-studies_wrapper');
+      var isMobile = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+      var fgSrc = (isMobile && caseWrapper?.getAttribute('fg-video-mobile')) || caseWrapper?.getAttribute('fg-video') || '';
+      var bgSrc = caseWrapper?.getAttribute('bg-video') || fgSrc;
+      var fgVideo = document.querySelector('.dial_component > .dial_layer-fg > .dial_video-wrap > .dial_fg-video');
+      var bgVideoEl = document.querySelector('.dial_bg-video');
+      if (fgSrc && fgVideo && !fgVideo.src) {
+        fgVideo.src = fgSrc;
+        fgVideo.play().catch(function() {});
+      }
+      if (bgSrc && bgVideoEl && !bgVideoEl.src) {
+        bgVideoEl.src = bgSrc;
+        bgVideoEl.play().catch(function() {});
+      }
+      // Sync BG to FG once FG starts playing
+      if (fgVideo && bgVideoEl) {
+        fgVideo.addEventListener('playing', function syncBg() {
+          fgVideo.removeEventListener('playing', syncBg);
+          try { bgVideoEl.currentTime = fgVideo.currentTime; } catch(e) {}
+        }, { once: true });
+      }
+      // Apply blur to BG video (matches Barba transition path in runAfterEnter)
+      if (bgVideoEl && window.gsap) {
+        window.gsap.set(bgVideoEl, { filter: 'blur(40px)' });
+      }
+
       RHP.views.case?.init?.(container);
     } else if (ns === 'about') {
       // Direct-land on about
@@ -1023,8 +1081,11 @@
       document
         .querySelector('[data-barba="container"]')
         ?.getAttribute('data-barba-namespace') || '';
+    let _caseBgSyncId = null;
 
     function runAfterEnter(data) {
+      // Clear case BG sync from previous page
+      if (_caseBgSyncId) { clearInterval(_caseBgSyncId); _caseBgSyncId = null; }
       currentNs = data.next ? (data.next.namespace || '') : '';
       const ns = currentNs;
 
@@ -1068,6 +1129,10 @@
       if (dialFg && window.gsap) {
         window.gsap.set(dialFg, { clearProps: 'all' });
       }
+      var videoWrap = document.querySelector('.dial_video-wrap');
+      if (videoWrap && window.gsap) {
+        window.gsap.set(videoWrap, { clearProps: 'all' });
+      }
 
       if (ns === 'case') {
         if (dialFg && window.gsap) {
@@ -1075,6 +1140,22 @@
         }
         var bgVideo = document.querySelector('.dial_bg-video');
         if (bgVideo && window.gsap) window.gsap.set(bgVideo, { filter: 'blur(40px)' });
+
+        // Sync BG video to FG video on case pages (work-dial drift monitor is suspended)
+        var caseFg = document.querySelector('.dial_component > .dial_layer-fg > .dial_video-wrap > .dial_fg-video');
+        if (caseFg && bgVideo && bgVideo.tagName === 'VIDEO') {
+          // Initial sync
+          try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
+          // Ongoing drift correction — cleared on next Barba leave
+          if (_caseBgSyncId) clearInterval(_caseBgSyncId);
+          _caseBgSyncId = setInterval(function() {
+            if (!caseFg || !bgVideo || caseFg.paused) return;
+            var drift = Math.abs(bgVideo.currentTime - caseFg.currentTime);
+            if (drift > 0.15) {
+              try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
+            }
+          }, 500);
+        }
       } else if (ns === 'home') {
         // Defensive: ensure dial is at home state after clearProps
         setDialToHomeState();
@@ -1104,9 +1185,20 @@
           // after clearProps + :has() selector changes. work-dial.resize()
           // reads getBoundingClientRect which needs correct computed styles.
           requestAnimationFrame(function() {
-            RHP.views.home.init(data.next.container);
-            if (hadCaseHandoff) {
-              setTimeout(function() { RHP.workDial?.setInteractionUnlocked?.(true); }, 300);
+            // Resume suspended work-dial (case→home) instead of full re-init.
+            // Gate on isSuspended() — not hadCaseHandoff — because after a
+            // full destroy/init cycle (rapid multi-cycle nav) suspended is false
+            // and resume() would silently no-op.
+            if (hadCaseHandoff && RHP.workDial?.isSuspended?.()) {
+              var handoff = RHP.videoState.caseHandoff;
+              RHP.videoState.caseHandoff = null;
+              RHP.views.home.resume(data.next.container, handoff);
+            } else {
+              RHP.videoState.caseHandoff = null;
+              RHP.views.home.init(data.next.container);
+              if (hadCaseHandoff) {
+                setTimeout(function() { RHP.workDial?.setInteractionUnlocked?.(true); }, 300);
+              }
             }
           });
         } else {
@@ -1375,7 +1467,12 @@
                 };
               }
             }
-            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            // Suspend work-dial (keep videos alive for morph animation)
+            if (ns === 'home' && RHP.views.home?.suspend) {
+              RHP.views.home.suspend();
+            } else if (ns && RHP.views[ns]?.destroy) {
+              RHP.views[ns].destroy();
+            }
           },
 
           async leave() {
@@ -1475,6 +1572,8 @@
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            // If work-dial was suspended (home→case→about path), fully destroy it now
+            RHP.workDial?.destroy?.();
           },
           leave(data) {
             return runHomeToAboutTransition(data);
@@ -1525,6 +1624,8 @@
             if (ns && RHP.views[ns]?.destroy) {
               RHP.views[ns].destroy();
             }
+            // Safety: if work-dial was suspended, fully destroy it
+            RHP.workDial?.destroy?.();
           },
 
           leave() {},

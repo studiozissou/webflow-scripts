@@ -916,7 +916,7 @@
         // Desktop cursor morph - use cursor.js API
         if (!isMobile() && RHP.cursor && RHP.cursor.setPosition) {
           RHP.cursor.setPosition(e.clientX, e.clientY);
-          setCursorPlay(dialState === DIAL_STATES.ACTIVE && state.inInner);
+          setCursorPlay(dialState !== DIAL_STATES.IDLE && state.inInner);
         }
       }
 

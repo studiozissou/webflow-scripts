@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.3.13.1';
+  const WORK_DIAL_VERSION = '2026.3.17.1';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
 
@@ -101,6 +101,8 @@
     let interactionUnlocked = false;
     let genericVideo = null;
     let genericVideoComp = null; // comp ref for setDialState (set during init)
+    const _canPlayAborts = new WeakMap();
+    const _poolReadyAborts = new WeakMap();
 
     function setDialUiOpacity(targetOpacity) {
       const dialUi = genericVideoComp?.querySelector('.dial_layer-ui') || document.querySelector('.dial_layer-ui');
@@ -196,6 +198,19 @@
         el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
         comp.appendChild(el);
       });
+      // Release all pool videos on destroy: abort pending listeners, pause, clear src, reset media element
+      cleanup.unshift(function() {
+        [visibleVideo, bgVisible, poolPrev, poolNext, bgPoolPrev, bgPoolNext, genericVideo]
+          .forEach(function(v) {
+            if (!v) return;
+            var a = _canPlayAborts.get(v); if (a) { a.abort(); _canPlayAborts.delete(v); }
+            var b = _poolReadyAborts.get(v); if (b) { b.abort(); _poolReadyAborts.delete(v); }
+            try { v.pause(); } catch(e) {}
+            v.removeAttribute('src');
+            v.load(); // resets media element, releases network resources
+          });
+      });
+
       let bgVisible = null;                              // currently visible bg <video> element
       let bgLoadWindowIndices = { prev: null, next: null };
 
@@ -492,10 +507,22 @@
       }
 
       // Task: video-sync-paired-play — wait for both fg+bg to be decodable before playing
+      // Per-element AbortController prevents mutual cancellation when called for fg then bg
       function waitCanPlay(videoEl) {
-        return new Promise(resolve => {
+        return new Promise(function(resolve) {
           if (videoEl.readyState >= 2) { resolve(); return; }
-          videoEl.addEventListener('canplay', resolve, { once: true });
+          var prev = _canPlayAborts.get(videoEl);
+          if (prev) prev.abort();
+          var ac = new AbortController();
+          _canPlayAborts.set(videoEl, ac);
+          videoEl.addEventListener('canplay', function() { resolve(); }, {
+            once: true,
+            signal: ac.signal
+          });
+          videoEl.addEventListener('emptied', function() { resolve(); }, {
+            once: true,
+            signal: ac.signal
+          });
         });
       }
 
@@ -689,8 +716,17 @@
 
         const poolHiddenStyle = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
         var startPoolWhenReady = function (el) {
-          if (el.readyState >= 2) try { el.play().catch(function () {}); } catch (e) {}
-          else el.addEventListener('canplay', function () { try { el.play().catch(function () {}); } catch (e) {}; }, { once: true });
+          var prev = _poolReadyAborts.get(el);
+          if (prev) prev.abort();
+          if (el.readyState >= 2) {
+            try { el.play().catch(function () {}); } catch (e) {}
+            return;
+          }
+          var ac = new AbortController();
+          _poolReadyAborts.set(el, ac);
+          el.addEventListener('canplay', function () {
+            try { el.play().catch(function () {}); } catch (e) {}
+          }, { once: true, signal: ac.signal });
         };
         // Seek-mask helper: hide swapped-in video until seeked event fires (prevents reverse-frame jerk)
         var seekMaskReveal = function (el) {
@@ -858,8 +894,6 @@
 
         restoreVideoStateFromIndex(visibleVideo, idx);
         if (!didSwapBg && bgVisible && bgVisible.tagName === 'VIDEO') restoreVideoStateFromIndex(bgVisible, idx);
-
-        enforceVideoPolicy(comp);
 
         // FG crossfade; BG miss crossfade (0.4s masks src reload); BG hit crossfade is handled above
         if (!isInitial && !prefersReduced() && window.gsap) {
@@ -1468,6 +1502,7 @@
       _suspendFn = null;
       _resumeFn = null;
       refs = null;
+      genericVideoComp = null;
     }
 
     function getActiveIndex() {

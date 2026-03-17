@@ -758,6 +758,17 @@
   pointer-events: none;
 }
 
+/* SplitText word wrappers need inline-block for yPercent transform */
+.case-title-word {
+  display: inline-block;
+}
+
+/* Clip mask for word-level entrance animation (yPercent:-100 → 0) */
+.section_case-title h1,
+.section_case-title h6 {
+  overflow: hidden;
+}
+
 /* Disable custom cursor on touch devices */
 @media (hover: none), (pointer: coarse) {
   .cursor_component {

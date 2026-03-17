@@ -1121,6 +1121,34 @@
         rafId = requestAnimationFrame(draw);
       }
 
+      // Ensure fg and bg video elements exist (previous destroy may have removed them
+      // via pool swap cleanup — originals get demoted to pool slots then removed).
+      if (!comp.querySelector(SEL.fgVideo) && !document.querySelector(SEL.fgVideo)) {
+        var freshFg = document.createElement('video');
+        freshFg.className = 'dial_fg-video';
+        freshFg.setAttribute('playsinline', '');
+        freshFg.setAttribute('muted', '');
+        freshFg.setAttribute('loop', '');
+        freshFg.setAttribute('preload', 'auto');
+        freshFg.muted = true;
+        fgWrap.appendChild(freshFg);
+        cleanup.push(function() { freshFg.remove(); });
+      }
+      var bgLayerBoot = comp.querySelector('.dial_layer-bg') || document.querySelector('.dial_layer-bg');
+      if (bgLayerBoot && !comp.querySelector(SEL.bgVideo) && !document.querySelector(SEL.bgVideo)) {
+        var freshBg = document.createElement('video');
+        freshBg.className = 'dial_bg-video';
+        freshBg.setAttribute('playsinline', '');
+        freshBg.setAttribute('muted', '');
+        freshBg.setAttribute('loop', '');
+        freshBg.setAttribute('preload', 'auto');
+        freshBg.setAttribute('aria-hidden', 'true');
+        freshBg.muted = true;
+        freshBg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+        bgLayerBoot.appendChild(freshBg);
+        cleanup.push(function() { freshBg.remove(); });
+      }
+
       // Boot
       resize();
       applyActive(0);

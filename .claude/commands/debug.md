@@ -21,6 +21,11 @@
    - Staging or production?
    - Localhost detection active? Is `npx serve .` running?
    - jsDelivr URL — does it match current `git rev-parse HEAD`?
+5. **Live DOM verification (if Playwright MCP connected)** — Reference the `playwright-webflow` skill's MCP availability guard. Navigate to the affected page on staging, then `browser_snapshot` to capture the live rendered DOM. Document:
+   - Actual selectors and class names present (vs what the code expects)
+   - Dynamically injected elements or CMS-rendered items
+   - Any missing or unexpected DOM nodes relevant to the reported bug
+   - If Playwright MCP is not connected, skip and continue — this step is optional
 
 ---
 

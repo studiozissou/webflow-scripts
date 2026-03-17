@@ -49,11 +49,12 @@
 
   RHP.aboutTextLines = (() => {
     let active = false;
-    let splitInstances = [];
+    let ctx = null;
     let lineElements = [];
     let scrollHandler = null;
     let refreshHandler = null;
     let rafId = null;
+    let scrollWrapper = null;
 
     function doUpdate() {
       if (!active || !window.gsap) return;
@@ -90,37 +91,36 @@
       if (active) return;
 
       active = true;
-      splitInstances = [];
       lineElements = [];
 
-      SECTION_SELECTORS.forEach((sectionSel) => {
-        const section = container?.querySelector(sectionSel) || document.querySelector(sectionSel);
-        if (!section) return;
+      ctx = gsap.context(() => {
+        SECTION_SELECTORS.forEach((sectionSel) => {
+          const section = container?.querySelector(sectionSel) || document.querySelector(sectionSel);
+          if (!section) return;
 
-        const textEls = section.querySelectorAll(TEXT_SELECTORS);
-        textEls.forEach((el) => {
-          if (!el.textContent?.trim()) return;
-          if (el.closest('.visually-hidden')) return;
-          if (el.closest('[data-text-animation="exclude"]')) return;
-          try {
-            const split = new SplitText(el, {
-              type: 'lines',
-              linesClass: 'about-text-line',
-              absolute: false
-            });
-            if (!split.lines?.length) return;
+          const textEls = section.querySelectorAll(TEXT_SELECTORS);
+          textEls.forEach((el) => {
+            if (!el.textContent?.trim()) return;
+            if (el.closest('.visually-hidden')) return;
+            if (el.closest('[data-text-animation="exclude"]')) return;
+            try {
+              const split = new SplitText(el, {
+                type: 'lines',
+                linesClass: 'about-text-line',
+                absolute: false
+              });
+              if (!split.lines?.length) return;
 
-            splitInstances.push(split);
-
-            split.lines.forEach((line) => {
-              gsap.set(line, { opacity: 0 });
-              lineElements.push(line);
-            });
-          } catch (e) {
-            console.warn('RHP about-text-lines SplitText:', e);
-          }
+              split.lines.forEach((line) => {
+                gsap.set(line, { opacity: 0 });
+                lineElements.push(line);
+              });
+            } catch (e) {
+              console.warn('RHP about-text-lines SplitText:', e);
+            }
+          });
         });
-      });
+      }, container);
 
       scrollHandler = () => {
         if (rafId) return;
@@ -132,6 +132,12 @@
 
       refreshHandler = doUpdate;
 
+      // Listen on scroll wrapper (Barba container with position:fixed + overflow:auto),
+      // window (fallback), and Lenis (smooth scroll events)
+      scrollWrapper = container?.closest('[data-barba="container"]') || container;
+      if (scrollWrapper && scrollWrapper !== window) {
+        scrollWrapper.addEventListener('scroll', scrollHandler, { passive: true });
+      }
       window.addEventListener('scroll', scrollHandler, { passive: true });
       RHP.lenis?.onScroll?.(scrollHandler);
       ScrollTrigger.addEventListener('refresh', refreshHandler);
@@ -144,6 +150,9 @@
       if (!active) return;
       active = false;
 
+      if (scrollWrapper && scrollWrapper !== window) {
+        scrollWrapper.removeEventListener('scroll', scrollHandler);
+      }
       window.removeEventListener('scroll', scrollHandler);
       RHP.lenis?.offScroll?.(scrollHandler);
       if (window.ScrollTrigger && refreshHandler) {
@@ -154,13 +163,10 @@
         rafId = null;
       }
 
-      splitInstances.forEach((split) => {
-        try {
-          if (split.revert) split.revert();
-        } catch (e) {}
-      });
-      splitInstances = [];
+      ctx?.revert();  // kills all GSAP tweens + reverts SplitText
+      ctx = null;
       lineElements = [];
+      scrollWrapper = null;
       scrollHandler = null;
       refreshHandler = null;
     }

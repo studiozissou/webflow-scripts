@@ -1,7 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-11",
+  "updated": "2026-03-17",
   "queue": [
+    {
+      "id": "rhp-about-page-cluster",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Ready to Review",
+      "title": "About page cluster: scroll, text reveals, HIT logo hover, dial visibility fixes",
+      "spec": ".claude/specs/rhp-about-page-cluster.md",
+      "agent": "code-writer",
+      "created": "2026-03-17",
+      "note": "Fixed Lenis double-start orphaning scroll listeners, added gsap.context() to about-text-lines and hero/team hover, restored dial wrapper visibility after transitions, added selector document fallbacks, added prefers-reduced-motion guard to team hover."
+    },
     {
       "id": "feat-case-video-progress-autohide",
       "project": "ready-hit-play-prod",
@@ -413,9 +425,9 @@
       "project": "ready-hit-play-prod",
       "type": "bug",
       "priority": "P1",
-      "status": "Triage",
+      "status": "Superseded",
       "title": "FG pool swap: new video plays in reverse for a few frames on adjacent switch",
-      "note": "On an adjacent sector switch (pool hit), the incoming FG video briefly plays in reverse for ~2–4 frames before resuming forward playback. Likely cause: the pool element was preloading and playing forward at time T; restoreVideoStateFromIndex then seeks it to a saved currentTime S where S < T (user previously saw an earlier point in this video). The backwards seek causes the browser to render intermediate frames in reverse order before settling at S. Possible fixes: (1) only restore saved state if S > pool element's current position — skip the seek if going backwards; (2) show a poster frame during the pool element's seek instead of letting it render mid-seek frames; (3) don't save/restore playback position per index at all for the dial — always start from the beginning on each visit.",
+      "note": "Superseded by feat-video-buffering-ux which consolidates spinner, seek-mask, and BG sync.",
       "created": "2026-02-27"
     },
     {
@@ -473,6 +485,52 @@
       "title": "Optimise dial videos: re-encode fg at 720p, bg at 360p",
       "note": "Background videos always shown with blur(40px) + scale(1.1) — 360p (640×360) sufficient for desktop, 270p for mobile. Foreground max render: desktop ~1632×918 CSS px (case panel 78vw×85dvh), mobile ~1125×633 CSS px (95vw×75dvh on 390px phone). Single-file approach: 720p fg + 360p bg. Per-device approach: desktop fg 720p/1080p, mobile fg 480p, desktop bg 360p, mobile bg 270p. Use H.264 MP4, CRF 23-28 (fg) / CRF 30-35 (bg), strip audio. Expected 70-80% file size reduction on bg videos.",
       "created": "2026-03-10"
+    },
+    {
+      "id": "feat-case-title-entrance",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Case title entrance animation: container slide-up + word-level SplitText stagger on H1/H6",
+      "spec": ".claude/specs/feat-case-title-entrance.md",
+      "note": "Animate .section_case-title on case page entry (Barba afterEnter + direct land). Container slides up (opacity 0→1, y 40→0, 0.8s power3.out). H1/H6 words stagger in (yPercent -100→0, 0.6s power4.out, 0.225s stagger) overlapping container by 0.3s. Reset on destroy for clean re-entry. Added to orchestrator.js views.case IIFE. CSS word class in ready-hit-play.css.",
+      "agent": "code-writer",
+      "created": "2026-03-17"
+    },
+    {
+      "id": "refactor-case-to-work-namespace",
+      "project": "ready-hit-play-prod",
+      "type": "refactor",
+      "priority": "P2",
+      "status": "Triage",
+      "title": "Rename Barba namespace 'case' to 'work' across JS, CSS, and Webflow Designer",
+      "note": "Touches 6 Barba route definitions, CSS namespace selectors, orchestrator views object key, CLAUDE.md docs, and data-barba-namespace attributes in Webflow Designer (every case study page). Separate from feat-case-title-entrance to reduce risk.",
+      "created": "2026-03-17"
+    },
+    {
+      "id": "feat-video-loading-spinner",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Superseded",
+      "title": "Video loading spinner: Lottie buffering indicator on all visible videos",
+      "spec": ".claude/specs/feat-video-loading-spinner.md",
+      "agent": "code-writer",
+      "created": "2026-03-17",
+      "note": "Superseded by feat-video-buffering-ux which consolidates spinner, seek-mask, and BG sync."
+    },
+    {
+      "id": "feat-video-buffering-ux",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Video buffering UX: loading spinner, seek-mask on pool swap, BG frame-locked to FG",
+      "spec": ".claude/specs/feat-video-buffering-ux.md",
+      "agent": "code-writer",
+      "created": "2026-03-17",
+      "note": "Consolidates feat-video-loading-spinner + fix-pool-swap-reverse-frames + new BG sync during buffering. Part A: Lottie spinner on FG + all work page videos. Part B: poster/opacity mask during backwards seeks in applyActive(). Part C: FG waiting/playing/seeking events pause+snap BG. New video-loader.js module + work-dial.js + orchestrator.js changes. 8 tasks, sequential build."
     }
   ]
 }

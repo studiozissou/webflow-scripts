@@ -25,7 +25,8 @@
       'https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js',
       'https://cdn.prod.website-files.com/gsap/3.14.2/ScrollTrigger.min.js',
       'https://unpkg.com/@barba/core',
-      'https://unpkg.com/lenis@1.3.17/dist/lenis.min.js'
+      'https://unpkg.com/lenis@1.3.17/dist/lenis.min.js',
+      'https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js'
     ],
 
     // SplitText (Club GreenSock) – same CDN, loaded after ScrollTrigger
@@ -43,6 +44,7 @@
       'intro-format.js',
       'earth-parallax.js',
       'case-video-controls.js',
+      'video-loader.js',
       'orchestrator.js',
       'utils.js'
     ]
@@ -153,6 +155,7 @@
         { module: 'intro-format.js', ok: typeof RHP.formatIntroText === 'function', detail: '—' },
         { module: 'earth-parallax.js', ok: typeof RHP.earthParallax !== 'undefined', detail: RHP.earthParallax?.version || '' },
         { module: 'case-video-controls.js', ok: typeof RHP.caseVideoControls !== 'undefined', detail: RHP.caseVideoControls?.version || '' },
+        { module: 'video-loader.js', ok: typeof RHP.videoLoader !== 'undefined', detail: RHP.videoLoader?.version || '' },
         { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: RHP.orchestratorVersion || '' },
         { module: 'utils.js', ok: true, detail: '—' }
       ];
@@ -173,6 +176,7 @@
         'intro-format.js': '—',
         'earth-parallax.js': RHP.earthParallax?.version || '—',
         'case-video-controls.js': RHP.caseVideoControls?.version || '—',
+        'video-loader.js': RHP.videoLoader?.version || '—',
         'orchestrator.js': RHP.orchestratorVersion || '—',
         'utils.js': '—'
       };

@@ -214,11 +214,28 @@
       cleanup.push(() => { genericVideo?.remove(); genericVideo = null; });
       genericVideoComp = comp;
       try { genericVideo.play().catch(() => {}); } catch(e) {}
+      // Show spinner on generic video when intro was skipped (Barba return from about)
+      var _genericSpinner = null;
+      if (introComplete) {
+        _genericSpinner = document.createElement('div');
+        _genericSpinner.className = prefersReduced() ? 'rhp-video-spinner-fallback' : 'rhp-video-spinner';
+        _genericSpinner.setAttribute('aria-hidden', 'true');
+        _genericSpinner.classList.add('is-active');
+        comp.appendChild(_genericSpinner);
+        if (!prefersReduced() && typeof lottie !== 'undefined') {
+          try { lottie.loadAnimation({ container: _genericSpinner, renderer: 'svg', loop: true, autoplay: true,
+            path: 'https://cdn.prod.website-files.com/641ab9fdf6e779f347e7e659/642558fa09463525f4cc1053_spinner1-white.json' }); } catch(e) {}
+        }
+        cleanup.push(function () { if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; } });
+      }
       let intentionallyPaused = false;
       let playPairedGen = 0; // increment on each playPaired call; stale bg callbacks bail out
       let loadWindowIndices = { prev: null, next: null };
       let visibleVideo = null; // set on first applyActive: the video element currently in fgWrap (may be original fg or a swapped-in pool element)
       let bgVideoRef = null;   // persistent ref to .dial_bg-video for sync
+      let fgBuffering = false; // Part C: true when FG video is waiting/buffering
+      let _fgSyncListeners = null; // Part C: stored refs for detach
+      cleanup.push(detachFgSyncListeners); // register once — detachFgSyncListeners is hoisted
 
       // Dynamic sector sizing
       const sectorSize = 360 / N;
@@ -342,6 +359,8 @@
           const gsap = window.gsap;
           const reduced = prefersReduced();
           const dialFgEl = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
+          // Remove generic spinner (it's about to hide)
+          if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; }
           // Fade out generic video, then pause
           if (genericVideo) {
             if (gsap && !reduced) {
@@ -510,6 +529,49 @@
         }
       }
 
+      // Part C: FG buffering sync listeners — lock BG to FG time during buffering
+      function detachFgSyncListeners() {
+        if (_fgSyncListeners) {
+          _fgSyncListeners.fg.removeEventListener('waiting', _fgSyncListeners.onWaiting);
+          _fgSyncListeners.fg.removeEventListener('playing', _fgSyncListeners.onPlaying);
+          _fgSyncListeners.fg.removeEventListener('seeking', _fgSyncListeners.onSeeking);
+          _fgSyncListeners.fg.removeEventListener('seeked', _fgSyncListeners.onSeeked);
+          _fgSyncListeners = null;
+        }
+        fgBuffering = false;
+      }
+
+      function attachFgSyncListeners(fgEl, bgEl) {
+        // Prevent doubles
+        detachFgSyncListeners();
+        if (!fgEl || !bgEl || bgEl.tagName !== 'VIDEO') return;
+        // cleanup.push is in init() scope — not here, to avoid O(N) accumulation on every sector switch
+
+        var onWaiting = function () {
+          fgBuffering = true;
+          try { bgEl.currentTime = fgEl.currentTime; } catch (e) {}
+          try { bgEl.pause(); } catch (e) {}
+        };
+        var onPlaying = function () {
+          fgBuffering = false;
+          try { bgEl.currentTime = fgEl.currentTime; } catch (e) {}
+          if (!intentionallyPaused) try { bgEl.play().catch(function () {}); } catch (e) {}
+        };
+        var onSeeking = function () {
+          try { bgEl.currentTime = fgEl.currentTime; } catch (e) {}
+        };
+        var onSeeked = function () {
+          try { bgEl.currentTime = fgEl.currentTime; } catch (e) {}
+          if (!fgBuffering && !intentionallyPaused) try { bgEl.play().catch(function () {}); } catch (e) {}
+        };
+
+        fgEl.addEventListener('waiting', onWaiting);
+        fgEl.addEventListener('playing', onPlaying);
+        fgEl.addEventListener('seeking', onSeeking);
+        fgEl.addEventListener('seeked', onSeeked);
+        _fgSyncListeners = { fg: fgEl, onWaiting, onPlaying, onSeeking, onSeeked };
+      }
+
       // Task: video-sync-drift-monitor — dedicated RAF loop for drift correction
       // Uses module-level driftRafId so destroy() can cancel it from outside init()
       function stopDriftMonitor() {
@@ -522,23 +584,32 @@
           return;
         }
         const bg = bgVideoRef;
-        // fg is master: bg snaps to fg when drift exceeds threshold.
-        // Guard on !visibleVideo.paused so we only correct when fg is actually playing —
-        // this also prevents the drift monitor from fighting natural loop-resets on bg.
-        if (visibleVideo && bg && bg.tagName === 'VIDEO' && !visibleVideo.paused) {
-          const fgSrc = visibleVideo.currentSrc || visibleVideo.src;
-          const bgSrc = bg.currentSrc || bg.src;
-          if (fgSrc && bgSrc && fgSrc === bgSrc) {
-            // fg is master: bg follows fg
-            const drift = Math.abs(bg.currentTime - visibleVideo.currentTime);
-            const threshold = isMobile() ? 0.3 : 0.1;
-            if (drift > threshold) {
-              // bg is out of sync — snap bg to fg position
-              try { bg.currentTime = visibleVideo.currentTime; } catch(e) {}
-            }
-            // Keep bg playing if it stalled (loading, ended without loop, etc.)
-            if (bg.paused && !intentionallyPaused) {
-              try { bg.play().catch(() => {}); } catch(e) {}
+        if (visibleVideo && bg && bg.tagName === 'VIDEO') {
+          // Part C: when FG is buffering, snap BG every frame and keep BG paused
+          if (fgBuffering) {
+            try { bg.currentTime = visibleVideo.currentTime; } catch(e) {}
+            if (!bg.paused) try { bg.pause(); } catch(e) {}
+            driftRafId = requestAnimationFrame(driftMonitorTick);
+            return;
+          }
+          // Normal drift correction: fg is master, bg snaps to fg when drift exceeds threshold.
+          // Guard on !visibleVideo.paused so we only correct when fg is actually playing —
+          // this also prevents the drift monitor from fighting natural loop-resets on bg.
+          if (!visibleVideo.paused) {
+            const fgSrc = visibleVideo.currentSrc || visibleVideo.src;
+            const bgSrc = bg.currentSrc || bg.src;
+            if (fgSrc && bgSrc && fgSrc === bgSrc) {
+              // fg is master: bg follows fg
+              const drift = Math.abs(bg.currentTime - visibleVideo.currentTime);
+              const threshold = isMobile() ? 0.3 : 0.1;
+              if (drift > threshold) {
+                // bg is out of sync — snap bg to fg position
+                try { bg.currentTime = visibleVideo.currentTime; } catch(e) {}
+              }
+              // Keep bg playing if it stalled (loading, ended without loop, etc.)
+              if (bg.paused && !intentionallyPaused) {
+                try { bg.play().catch(() => {}); } catch(e) {}
+              }
             }
           }
         }
@@ -621,16 +692,32 @@
           if (el.readyState >= 2) try { el.play().catch(function () {}); } catch (e) {}
           else el.addEventListener('canplay', function () { try { el.play().catch(function () {}); } catch (e) {}; }, { once: true });
         };
+        // Seek-mask helper: hide swapped-in video until seeked event fires (prevents reverse-frame jerk)
+        var seekMaskReveal = function (el) {
+          if (!window.gsap) { el.style.opacity = ''; return; }
+          var revealed = false;
+          var reveal = function () {
+            if (revealed) return;
+            revealed = true;
+            window.gsap.to(el, { opacity: 1, duration: 0.15, ease: 'linear', overwrite: true });
+          };
+          el.addEventListener('seeked', reveal, { once: true });
+          // Timeout guard: force reveal if seeked doesn't fire within 500ms
+          setTimeout(reveal, 500);
+        };
         if (idx === loadWindowIndices.prev && poolPrevReady && poolPrevHasUrl && fgWrap.contains(visibleVideo)) {
-          restoreVideoStateFromIndex(poolPrev, idx); // seek while still hidden so no flash when visible
           const oldVisible = visibleVideo;
           visibleVideo.classList.remove('dial_fg-video');
           fgWrap.removeChild(visibleVideo);
           fgWrap.appendChild(poolPrev);
           poolPrev.classList.add('dial_fg-video');
-          poolPrev.style.cssText = ''; // clear hidden style so video is visible (CSS fills the wrap)
+          // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
+          poolPrev.style.cssText = 'opacity:0;';
           poolPrev.removeAttribute('aria-hidden');
           poolPrev.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
+          seekMaskReveal(poolPrev);
+          // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
+          restoreVideoStateFromIndex(poolPrev, idx);
           visibleVideo = poolPrev;
           // oldVisible has items[newNext] URL fully buffered — reuse as poolNext, no reload needed
           const freeElPrev = poolNext; // repurpose old poolNext for urlPrev
@@ -644,15 +731,18 @@
           if (urlPrev && poolPrev.src !== urlPrev) { poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} startPoolWhenReady(poolPrev); }
           didSwap = true;
         } else if (idx === loadWindowIndices.next && poolNextReady && poolNextHasUrl && fgWrap.contains(visibleVideo)) {
-          restoreVideoStateFromIndex(poolNext, idx); // seek while still hidden so no flash when visible
           const oldVisible = visibleVideo;
           visibleVideo.classList.remove('dial_fg-video');
           fgWrap.removeChild(visibleVideo);
           fgWrap.appendChild(poolNext);
           poolNext.classList.add('dial_fg-video');
-          poolNext.style.cssText = ''; // clear hidden style so video is visible (CSS fills the wrap)
+          // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
+          poolNext.style.cssText = 'opacity:0;';
           poolNext.removeAttribute('aria-hidden');
           poolNext.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
+          seekMaskReveal(poolNext);
+          // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
+          restoreVideoStateFromIndex(poolNext, idx);
           visibleVideo = poolNext;
           // oldVisible has items[newPrev] URL fully buffered — reuse as poolPrev, no reload needed
           const freeElNext = poolPrev; // repurpose old poolPrev for urlNext
@@ -782,6 +872,8 @@
         // Play fg+bg in sync
         if (bgVisible && bgVisible.tagName === 'VIDEO') {
           playPaired(visibleVideo, bgVisible);
+          // Part C: attach FG buffering listeners to lock BG during stalls
+          attachFgSyncListeners(visibleVideo, bgVisible);
         } else {
           const tryPlay = () => { try { if (!visibleVideo.paused) return; visibleVideo.play().catch(() => {}); } catch(e) {} };
           if (visibleVideo.readyState >= 2) tryPlay();
@@ -1158,6 +1250,16 @@
       if (dialState === DIAL_STATES.IDLE && bgVisible) {
         if (window.gsap) window.gsap.set(bgVisible, { opacity: 0, overwrite: true });
         else bgVisible.style.opacity = '0';
+      }
+      // Intro-skipped boot (about→home): fade in genericVideo and dismiss spinner when ready
+      if (dialState === DIAL_STATES.IDLE && introComplete && genericVideo) {
+        var _dismissGenericSpinner = function () {
+          if (window.gsap) window.gsap.to(genericVideo, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: true,
+            onComplete: function () { if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; } } });
+          else { genericVideo.style.opacity = '1'; if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; } }
+        };
+        if (genericVideo.readyState >= 3) { _dismissGenericSpinner(); }
+        else { genericVideo.addEventListener('canplaythrough', _dismissGenericSpinner, { once: true }); }
       }
 
       // If returning from case study, restore handoff index and playback position

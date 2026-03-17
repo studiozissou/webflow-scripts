@@ -493,6 +493,9 @@
     let aboutTeamCtx = null;
 
     function initAboutTeamHover(container) {
+      // Idempotency guard — destroy previous instance if somehow called twice
+      if (aboutTeamCtx) destroyAboutTeamHover();
+
       const gsap = window.gsap;
       if (!gsap) return;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -502,55 +505,139 @@
       const guyEl = scope.querySelector('[data-team="guy"]');
       if (!ryanEl || !guyEl) return;
 
-      const ryanBio = ryanEl.querySelector('.about-team_bio');
-      const guyBio = guyEl.querySelector('.about-team_bio');
-      const ryanImage = ryanEl.querySelector('.about-team_image');
-      const guyImage = guyEl.querySelector('.about-team_image');
-      if (!ryanBio || !guyBio || !ryanImage || !guyImage) return;
+      const members = {
+        ryan: {
+          el: ryanEl,
+          bio: ryanEl.querySelector('.about-team_bio'),
+          image: ryanEl.querySelector('.about-team_image'),
+          imageCover: ryanEl.querySelector('.image-cover'), // optional — falls back to .about-team_image for scale
+          name: ryanEl.querySelector('.about-team_name'),
+          nameDir: 1,  // positive = right
+        },
+        guy: {
+          el: guyEl,
+          bio: guyEl.querySelector('.about-team_bio'),
+          image: guyEl.querySelector('.about-team_image'),
+          imageCover: guyEl.querySelector('.image-cover'), // optional — falls back to .about-team_image for scale
+          name: guyEl.querySelector('.about-team_name'),
+          nameDir: -1, // negative = left
+        }
+      };
 
-      teamTweenTargets = [ryanBio, guyBio, ryanEl, guyEl];
+      // Validate required elements (imageCover is optional)
+      for (const m of Object.values(members)) {
+        if (!m.bio || !m.image || !m.name) return;
+      }
+
+      let activeTeamMember = null; // null | 'ryan' | 'guy'
+
+      const ryanScale = members.ryan.imageCover || members.ryan.image;
+      const guyScale = members.guy.imageCover || members.guy.image;
+
+      teamTweenTargets = [
+        members.ryan.bio, members.guy.bio,
+        members.ryan.el, members.guy.el,
+        members.ryan.name, members.guy.name,
+        ryanScale, guyScale,
+      ];
 
       aboutTeamCtx = gsap.context(() => {
-        // Initial state: both bios collapsed (max-width is set in CSS)
-        gsap.set([ryanBio, guyBio], { width: 0, overflow: 'hidden', opacity: 0 });
-        // Own transform from the start so we don't flip between translate and translate3d (avoids jump on leave)
+        gsap.set([members.ryan.bio, members.guy.bio], { width: 0, overflow: 'hidden', opacity: 0 });
         gsap.set([ryanEl, guyEl], { x: 0, force3D: true });
+        gsap.set([members.ryan.name, members.guy.name], { x: 0, force3D: true });
+        gsap.set([ryanScale, guyScale], { scale: 1, force3D: true });
       }, container);
 
-      const slideOpts = { duration: 0.5, ease: 'power3.out', force3D: true };
-      const onRyanEnter = () => {
-        gsap.to(ryanBio, { width: '100%', overflow: 'visible', duration: 0.5, ease: 'power3.out' });
-        gsap.to(ryanBio, { opacity: 1, duration: 0.5, ease: 'linear' });
-        gsap.to(guyEl, { x: '16vw', ...slideOpts });
-      };
-      const onRyanLeave = () => {
-        gsap.to(ryanBio, { width: 0, overflow: 'hidden', duration: 0.5, ease: 'power3.out' });
-        gsap.to(ryanBio, { opacity: 0, duration: 0.5, ease: 'linear' });
-        gsap.to(guyEl, { x: 0, ...slideOpts });
+      const slideOpts = { duration: 0.5, ease: 'power3.out', force3D: true, overwrite: true };
+
+      const openMember = (key) => {
+        const m = members[key];
+        const other = members[key === 'ryan' ? 'guy' : 'ryan'];
+        // Read name shift from CSS custom property (responsive via breakpoints)
+        const nameShift = _getCSSVar('--team-name-shift', '4rem');
+        const otherShift = key === 'ryan' ? '16vw' : '-16vw';
+        const nameX = m.nameDir > 0 ? nameShift : '-' + nameShift;
+        const scaleTarget = m.imageCover || m.image;
+
+        // Bio expand (single tween — two separate gsap.to with overwrite:true cancel each other)
+        gsap.to(m.bio, { width: '100%', overflow: 'visible', opacity: 1, duration: 0.5, ease: 'power3.out', overwrite: true });
+        // Shift other member away
+        gsap.to(other.el, { x: otherShift, ...slideOpts });
+        // Image scale (R2)
+        gsap.to(scaleTarget, { scale: 1.1, duration: 0.3, ease: 'power3.out', overwrite: true, force3D: true });
+        // Name shift (R3)
+        gsap.to(m.name, { x: nameX, ...slideOpts });
+
+        activeTeamMember = key;
       };
 
-      const onGuyEnter = () => {
-        gsap.to(guyBio, { width: '100%', overflow: 'visible', duration: 0.5, ease: 'power3.out' });
-        gsap.to(guyBio, { opacity: 1, duration: 0.5, ease: 'linear' });
-        gsap.to(ryanEl, { x: '-16vw', ...slideOpts });
-      };
-      const onGuyLeave = () => {
-        gsap.to(guyBio, { width: 0, overflow: 'hidden', duration: 0.5, ease: 'power3.out' });
-        gsap.to(guyBio, { opacity: 0, duration: 0.5, ease: 'linear' });
-        gsap.to(ryanEl, { x: 0, ...slideOpts });
+      const closeMember = (key) => {
+        const m = members[key];
+        const other = members[key === 'ryan' ? 'guy' : 'ryan'];
+        const scaleTarget = m.imageCover || m.image;
+
+        // Bio collapse (single tween — two separate gsap.to with overwrite:true cancel each other)
+        gsap.to(m.bio, { width: 0, overflow: 'hidden', opacity: 0, duration: 0.5, ease: 'power3.out', overwrite: true });
+        // Reset other member position
+        gsap.to(other.el, { x: 0, ...slideOpts });
+        // Image scale reset (R2)
+        gsap.to(scaleTarget, { scale: 1, duration: 0.3, ease: 'power3.out', overwrite: true, force3D: true });
+        // Name shift reset (R3)
+        gsap.to(m.name, { x: 0, ...slideOpts });
+
+        activeTeamMember = null;
       };
 
-      // OPEN on hover of .about-team_image; CLOSE on mouseleave of the whole data-team block
-      ryanImage.addEventListener('mouseenter', onRyanEnter);
-      ryanEl.addEventListener('mouseleave', onRyanLeave);
-      guyImage.addEventListener('mouseenter', onGuyEnter);
-      guyEl.addEventListener('mouseleave', onGuyLeave);
-      teamHoverListeners.push(
-        { el: ryanImage, type: 'enter', fn: onRyanEnter },
-        { el: ryanEl, type: 'leave', fn: onRyanLeave },
-        { el: guyImage, type: 'enter', fn: onGuyEnter },
-        { el: guyEl, type: 'leave', fn: onGuyLeave }
-      );
+      if (isDesktop()) {
+        // Desktop: mouseenter on .about-team_image, mouseleave on [data-team]
+        const onRyanEnter = () => openMember('ryan');
+        const onRyanLeave = () => closeMember('ryan');
+        const onGuyEnter = () => openMember('guy');
+        const onGuyLeave = () => closeMember('guy');
+
+        members.ryan.image.addEventListener('mouseenter', onRyanEnter);
+        ryanEl.addEventListener('mouseleave', onRyanLeave);
+        members.guy.image.addEventListener('mouseenter', onGuyEnter);
+        guyEl.addEventListener('mouseleave', onGuyLeave);
+
+        teamHoverListeners.push(
+          { el: members.ryan.image, type: 'mouseenter', fn: onRyanEnter },
+          { el: ryanEl, type: 'mouseleave', fn: onRyanLeave },
+          { el: members.guy.image, type: 'mouseenter', fn: onGuyEnter },
+          { el: guyEl, type: 'mouseleave', fn: onGuyLeave }
+        );
+      } else {
+        // Mobile: tap to toggle with mutual exclusion (R5)
+        const makeTapHandler = (key) => (e) => {
+          e.preventDefault();
+          if (activeTeamMember === key) {
+            closeMember(key);
+          } else {
+            if (activeTeamMember) closeMember(activeTeamMember);
+            openMember(key);
+          }
+        };
+
+        const onRyanTap = makeTapHandler('ryan');
+        const onGuyTap = makeTapHandler('guy');
+
+        members.ryan.image.addEventListener('click', onRyanTap);
+        members.guy.image.addEventListener('click', onGuyTap);
+
+        // Close on tap outside both team members
+        const onDocTap = (e) => {
+          if (!activeTeamMember) return;
+          if (ryanEl.contains(e.target) || guyEl.contains(e.target)) return;
+          closeMember(activeTeamMember);
+        };
+        document.addEventListener('click', onDocTap);
+
+        teamHoverListeners.push(
+          { el: members.ryan.image, type: 'click', fn: onRyanTap },
+          { el: members.guy.image, type: 'click', fn: onGuyTap },
+          { el: document, type: 'click', fn: onDocTap }
+        );
+      }
     }
 
     function destroyAboutTeamHover() {
@@ -562,7 +649,7 @@
       aboutTeamCtx?.revert();
       aboutTeamCtx = null;
       teamHoverListeners.forEach(({ el, type, fn }) => {
-        el.removeEventListener(type === 'enter' ? 'mouseenter' : 'mouseleave', fn);
+        el.removeEventListener(type, fn);
       });
       teamHoverListeners = [];
       teamTweenTargets = [];
@@ -688,10 +775,8 @@
         // Note: scroll.unlock + lenis.start/resize handled by runAfterEnter (Barba) or bootCurrentView (direct-land)
         RHP.aboutDialTicks?.init?.(container);
         RHP.aboutTextLines?.init?.(container);
-        if (isDesktop()) {
-          initAboutHeroLogoHover(container);
-          initAboutTeamHover(container);
-        }
+        if (isDesktop()) initAboutHeroLogoHover(container); // no internal desktop guard — must stay gated
+        initAboutTeamHover(container); // handles desktop vs mobile internally
       },
       destroy() {
         if (!active) return;

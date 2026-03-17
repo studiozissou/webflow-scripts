@@ -3,6 +3,18 @@
   "updated": "2026-03-17",
   "queue": [
     {
+      "id": "fix-memory-leak-cleanup",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Memory leak fixes: video cleanup on destroy, orphaned listener prevention, static canvas draw-once",
+      "spec": ".claude/specs/fix-memory-leak-cleanup.md",
+      "agent": "code-writer",
+      "created": "2026-03-17",
+      "note": "5 fixes: (1) pause+src-clear all videos in work-dial destroy(), (2) remove enforceVideoPolicy from applyActive(), (3) draw-once for about-dial-ticks + transition-dial RAF loops, (4) AbortController for canplay listeners, (5) null module-level refs. Root cause: videos not released on Barba transitions, accumulating decode contexts until browser caps out."
+    },
+    {
       "id": "rhp-about-page-cluster",
       "project": "ready-hit-play-prod",
       "type": "bug",
@@ -272,13 +284,16 @@
       "created": "2026-02-24"
     },
     {
-      "id": "feat-transition-layer-gsap-flip",
+      "id": "feat-flip-transition",
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P1",
-      "status": "Triage",
-      "title": "Transition layer + GSAP Flip (dial)",
-      "created": "2026-02-24"
+      "status": "Ready to Build",
+      "title": "GSAP Flip-based about transition: logo + dial reparenting, forward-only easing, overlay hold",
+      "spec": ".claude/specs/feat-flip-transition.md",
+      "agent": "code-writer",
+      "created": "2026-03-17",
+      "note": "Replace manual pixel calculations with GSAP Flip for logo + dial positioning during home↔about transitions. Logo flips between .about-transition_logo-start ↔ .about-transition_logo-middle, dial between .about-transition_logo-middle ↔ .about_dial-wrapper. About→home plays forward (not reversed) with same power3.out easing. Overlay stays visible until work-dial ready on about→home. Add Flip.min.js to init.js deps. 9 steps: add Flip dep, remove manual helpers, rewrite transition functions, overlay hold logic, direct-land pre-positioning, remove resize invalidation, CSS cleanup, transition-dial resize, logo opacity. Supersedes feat-transition-layer-gsap-flip."
     },
     {
       "id": "fix-about-logo-animation",
@@ -309,13 +324,17 @@
       "qa": "approved"
     },
     {
-      "id": "feat-about-team-animations",
+      "id": "feat-about-team-hover",
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P2",
-      "status": "Triage",
-      "title": "Add animations to about page team section",
-      "created": "2026-02-25"
+      "status": "Ready to Build",
+      "title": "About team hover: image scale, name shift, mobile tap toggle, scroll reveal exclusion",
+      "spec": ".claude/specs/feat-about-team-hover.md",
+      "agent": "code-writer",
+      "created": "2026-02-25",
+      "updated": "2026-03-17",
+      "note": "Rewrite initAboutTeamHover: scale .image-cover to 1.1 (0.3s), shift .about-team_name ±2rem (0.5s), reverse on leave, overwrite:true for rapid hover. Mobile tap-to-toggle with mutual exclusion. Exclude .about-team_member from about-text-lines scroll reveal. 3 files: about-text-lines.js, orchestrator.js, ready-hit-play.css."
     },
     {
       "id": "feat-orange-button-hover",

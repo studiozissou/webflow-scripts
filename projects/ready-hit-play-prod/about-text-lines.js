@@ -103,6 +103,7 @@
             if (!el.textContent?.trim()) return;
             if (el.closest('.visually-hidden')) return;
             if (el.closest('[data-text-animation="exclude"]')) return;
+            if (el.closest('.about-team_member')) return;
             try {
               const split = new SplitText(el, {
                 type: 'lines',

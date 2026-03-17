@@ -1170,6 +1170,9 @@
       }
     }
 
+    // Video loading spinners (direct-land)
+    if (RHP.videoLoader) RHP.videoLoader.init(container);
+
     // Init transition-dial on every page (symbol is outside Barba container)
     RHP.transitionDial?.init?.();
 
@@ -1245,10 +1248,17 @@
         .querySelector('[data-barba="container"]')
         ?.getAttribute('data-barba-namespace') || '';
     let _caseBgSyncId = null;
+    let _caseFgSyncListeners = null; // Part C: stored refs for case page FG buffering listeners
 
     function runAfterEnter(data) {
       // Clear case BG sync from previous page
       if (_caseBgSyncId) { clearInterval(_caseBgSyncId); _caseBgSyncId = null; }
+      // Clear case FG buffering listeners from previous page
+      if (_caseFgSyncListeners) {
+        _caseFgSyncListeners.fg.removeEventListener('waiting', _caseFgSyncListeners.onWaiting);
+        _caseFgSyncListeners.fg.removeEventListener('playing', _caseFgSyncListeners.onPlaying);
+        _caseFgSyncListeners = null;
+      }
       currentNs = data.next ? (data.next.namespace || '') : '';
       const ns = currentNs;
 
@@ -1315,10 +1325,33 @@
         if (caseFg && bgVideo && bgVideo.tagName === 'VIDEO') {
           // Initial sync
           try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
+
+          // Part C: FG buffering listeners — lock BG to FG during stalls
+          var caseFgBuffering = false;
+          var onCaseFgWaiting = function () {
+            caseFgBuffering = true;
+            try { bgVideo.currentTime = caseFg.currentTime; } catch (e) {}
+            try { bgVideo.pause(); } catch (e) {}
+          };
+          var onCaseFgPlaying = function () {
+            caseFgBuffering = false;
+            try { bgVideo.currentTime = caseFg.currentTime; } catch (e) {}
+            try { bgVideo.play().catch(function () {}); } catch (e) {}
+          };
+          caseFg.addEventListener('waiting', onCaseFgWaiting);
+          caseFg.addEventListener('playing', onCaseFgPlaying);
+          _caseFgSyncListeners = { fg: caseFg, onWaiting: onCaseFgWaiting, onPlaying: onCaseFgPlaying };
+
           // Ongoing drift correction — cleared on next Barba leave
           if (_caseBgSyncId) clearInterval(_caseBgSyncId);
           _caseBgSyncId = setInterval(function() {
             if (!caseFg || !bgVideo || caseFg.paused) return;
+            // Part C: when FG is buffering, snap every tick and keep BG paused
+            if (caseFgBuffering) {
+              try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
+              if (!bgVideo.paused) try { bgVideo.pause(); } catch(e) {}
+              return;
+            }
             var drift = Math.abs(bgVideo.currentTime - caseFg.currentTime);
             if (drift > 0.15) {
               try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
@@ -1389,6 +1422,13 @@
         RHP.videoState.caseHandoff = null;
       }
 
+      // Case study: autoplay all videos in laptop and columns sections after Barba transition
+      if (ns === 'case' && data.next && data.next.container) {
+        var caseContainer = data.next.container;
+        var sectionVideos = caseContainer.querySelectorAll('.section_case-video-laptop video, .section_case-columns video');
+        sectionVideos.forEach(function(v) { v.play().catch(function() {}); });
+      }
+
       // Page-specific: Overland AI
       if (ns === 'case' && /\/work\/overland-ai(\/|$)/.test(window.location.pathname)) {
         var baseUrl = RHP.getScriptBaseUrl && RHP.getScriptBaseUrl();
@@ -1427,6 +1467,12 @@
       var aboutTransitionEl = document.querySelector('.about-transition');
       if (aboutTransitionEl && window.gsap) {
         window.gsap.set(aboutTransitionEl, { display: 'none' });
+      }
+
+      // Video loading spinners
+      if (RHP.videoLoader) {
+        RHP.videoLoader.destroy();
+        RHP.videoLoader.init(data.next ? data.next.container : null);
       }
 
       _fireAfterEnterEvent(ns, data.next ? data.next.container : null);

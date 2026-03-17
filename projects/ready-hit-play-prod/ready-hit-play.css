@@ -769,6 +769,49 @@
   overflow: hidden;
 }
 
+/* ====== Video Loading Spinner ====== */
+.rhp-video-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.rhp-video-spinner.is-active {
+  opacity: 1;
+}
+
+/* Reduced-motion: CSS-only spinner fallback */
+@media (prefers-reduced-motion: reduce) {
+  .rhp-video-spinner-fallback {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: rhp-spin 0.8s linear infinite;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .rhp-video-spinner-fallback.is-active {
+    opacity: 1;
+  }
+  @keyframes rhp-spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+}
+
 /* Disable custom cursor on touch devices */
 @media (hover: none), (pointer: coarse) {
   .cursor_component {

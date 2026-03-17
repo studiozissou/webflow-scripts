@@ -6,7 +6,7 @@
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
-  const ABOUT_DIAL_TICKS_VERSION = '2026.2.6.10';
+  const ABOUT_DIAL_TICKS_VERSION = '2026.3.17.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -32,7 +32,6 @@
   RHP.aboutDialTicks = (() => {
     let alive = false;
     let cleanup = [];
-    let rafId = 0;
     let canvas = null;
     let ctx = null;
     let geom = { cx: 0, cy: 0, videoR: 0, innerR: 0, gap: 0, baseLen: 0, barW: 1, dpr: 1 };
@@ -41,11 +40,6 @@
       if (!el) return;
       el.addEventListener(evt, fn, opts);
       cleanup.push(() => el.removeEventListener(evt, fn, opts));
-    }
-
-    function stop() {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = 0;
     }
 
     function resize() {
@@ -104,15 +98,10 @@
         ctx.stroke();
       }
 
-      rafId = requestAnimationFrame(draw);
     }
 
     function onVis() {
-      if (document.hidden) stop();
-      else if (alive) {
-        stop();
-        rafId = requestAnimationFrame(draw);
-      }
+      if (!document.hidden && alive && ctx) draw();
     }
 
     function init(container = document) {
@@ -132,13 +121,11 @@
       resize();
       on(window, 'resize', resize, { passive: true });
       on(document, 'visibilitychange', onVis, { passive: true });
-      rafId = requestAnimationFrame(draw);
     }
 
     function destroy() {
       if (!alive) return;
       alive = false;
-      stop();
       cleanup.forEach((fn) => {
         try { fn(); } catch (e) {}
       });

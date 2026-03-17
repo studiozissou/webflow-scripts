@@ -145,6 +145,20 @@
   }
 }
 
+/* About team hover: name shift when a member is hovered/tapped. Editable by breakpoint. */
+:root {
+  --team-name-shift: 4rem;
+}
+@media screen and (max-width: 991px) {
+  :root { --team-name-shift: 3.5rem; }
+}
+@media screen and (max-width: 767px) {
+  :root { --team-name-shift: 3rem; }
+}
+@media screen and (max-width: 479px) {
+  :root { --team-name-shift: 2rem; }
+}
+
 /* Transition dial position (home → about): distance from bottom of viewport; x-offset nudges final position (negative = left). Editable by breakpoint. */
 :root {
   --transition-dial-bottom: 2rem;

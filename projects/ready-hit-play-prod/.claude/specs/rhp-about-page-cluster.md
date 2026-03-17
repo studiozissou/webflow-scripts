@@ -4,6 +4,7 @@
 **Client:** ready-hit-play-prod
 **Status:** Planning
 **Created:** 2026-03-13
+**Updated:** 2026-03-17 — line numbers refreshed, suspend/resume + case Lenis notes added
 
 ---
 
@@ -32,14 +33,13 @@ These all affect the about page and share root causes in `orchestrator.js` view 
 
 ### Bug 1 + 2: Scroll broken + reveals hidden
 
-**Lenis double-start.** In `runAfterEnter()` (L1091-1096), Lenis is started for all non-home pages:
+**Lenis double-start.** In `runAfterEnter()` (L1195-1196), Lenis is started for all non-home pages:
 ```js
-RHP.scroll.unlock();
 RHP.lenis && RHP.lenis.start && RHP.lenis.start();
 RHP.lenis && RHP.lenis.resize && RHP.lenis.resize();
 ```
 
-Then `views.about.init()` (L596-598) starts Lenis again:
+Then `views.about.init()` (L647-648) starts Lenis again:
 ```js
 RHP.lenis?.start();
 RHP.lenis?.resize();
@@ -63,13 +63,13 @@ The native `window scroll` listener still works, but with Lenis active, native s
 Possible causes:
 1. `.section_about-hero` is still inside the Barba container → selector should work
 2. If it was moved outside during restructure → selector returns empty → silent fail
-3. The `isDesktop()` guard at L601 could be failing on some viewports
+3. The `isDesktop()` guard at L651 could be failing on some viewports
 
 Investigation needed during build to confirm which cause. The fix approach is the same: ensure the selector works by falling back to `document` if container query fails (same pattern as `about-text-lines.js`).
 
 ### Bug 4: Dial missing after transition
 
-In `runAboutToHomeTransition()` (L1285):
+In `runAboutToHomeTransition()` (L1452):
 ```js
 if (aboutDialWrapper) gsap.set(aboutDialWrapper, { visibility: 'hidden' });
 ```
@@ -90,21 +90,25 @@ No code in `runAfterEnter`, `views.about.init()`, or `about-dial-ticks.init()` c
 
 **File:** `orchestrator.js`
 
-In `views.about.init()` (L596-598), remove:
+In `views.about.init()` (L647-648), remove:
 ```js
 RHP.lenis?.start();
 RHP.lenis?.resize();
 ```
 
-`runAfterEnter` already handles Lenis start + resize for all non-home namespaces (L1091-1096). This eliminates the double-start that orphans scroll listeners.
+`runAfterEnter` already handles Lenis start + resize for all non-home namespaces (L1195-1196). This eliminates the double-start that orphans scroll listeners.
 
-Also remove Lenis calls from `views.case.init()` and `views.contact.init()` if they exist, for consistency — `runAfterEnter` is the single Lenis owner.
+Also remove the `RHP.scroll.unlock()` call at L646 — `runAfterEnter` already calls `RHP.scroll.unlock()` before Lenis start.
+
+**Note on `views.case.init()` (L770-810):** Case pages start Lenis with a custom wrapper/content config (`{ wrapper: dialFg, content }`) which differs from the generic `runAfterEnter` call. Case Lenis calls must stay in `views.case.init()` — they are NOT redundant. Only the about view's generic window Lenis is a double-start.
+
+**Note on `views.contact` (L823):** Uses `makeScrollPage()` factory (L460-467) which calls `lenis.start()` + `resize()`. This IS a double-start with `runAfterEnter`. Remove Lenis calls from `makeScrollPage` or remove the factory and give contact a minimal view that just calls `RHP.scroll.unlock()`.
 
 ### Step 2: Restore `.about_dial-wrapper` visibility on about page enter
 
 **File:** `orchestrator.js`
 
-In `runAfterEnter()`, after the about-specific `rhp-nav-hidden` class is added (L1036) and before `views.about.init()` is called (L1113), add:
+In `runAfterEnter()`, after the about-specific `rhp-nav-hidden` class is added (L1217) and before the generic `views[ns].init()` call (L1126), add:
 
 ```js
 if (ns === 'about') {
@@ -160,7 +164,7 @@ If no GSAP calls exist in `about-dial-ticks.js`, skip this step — don't add `g
 
 **File:** `orchestrator.js`
 
-In `initAboutHeroLogoHover(container)` (L501), change:
+In `initAboutHeroLogoHover(container)` (L544), change:
 ```js
 const logoEmbeds = container.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
 ```
@@ -222,9 +226,15 @@ This ensures all GSAP tweens created by hover interactions are killed on destroy
 - work→about: Same flow — `views.case.destroy()` + `views.about.init()`. Dial wrapper visibility cleared.
 - about→home→about: `runAboutToHomeTransition` hides dial wrapper → `runAfterEnter` clears it → dial renders.
 
-### 5. Namespace scoping
+### 5. Suspend/resume (new since 2026-03-13)
+- `views.home` now has `suspend()` / `resume()` in addition to `init()` / `destroy()`
+- home→case transitions call `views.home.suspend()` (L1592) instead of `destroy()` — keeps videos alive for morph animation
+- home→about transitions also call `views.home.suspend()` (L1592), followed by `RHP.workDial?.destroy?.()` (L1598) — work-dial fully destroyed before about page
+- **Impact on this spec:** None. About view doesn't use suspend/resume. The about→home path calls `runAboutToHomeTransition` which runs `setDialToHomeState()` + `views.home.init()` or `views.home.resume()` depending on `isSuspended()` — all handled in existing orchestrator code, not affected by our changes.
+
+### 6. Namespace scoping
 - All fixes are scoped to `about` namespace
-- Lenis ownership change affects all non-home namespaces equally (case, contact already rely on `runAfterEnter` for Lenis)
+- Lenis ownership change: about and contact views lose their redundant Lenis calls. Case view keeps its own Lenis calls (custom wrapper config — not redundant).
 - `gsap.context()` additions are module-internal — no namespace impact
 
 ---
@@ -233,11 +243,12 @@ This ensures all GSAP tweens created by hover interactions are killed on destroy
 
 | Step | File | Change |
 |------|------|--------|
-| 1 | `orchestrator.js` | Remove Lenis start/resize from `views.about.init()` |
-| 2 | `orchestrator.js` | Add `clearProps: 'visibility'` for `.about_dial-wrapper` in `runAfterEnter` |
+| 1 | `orchestrator.js` | Remove Lenis start/resize + scroll.unlock from `views.about.init()` (L646-648) |
+| 1b | `orchestrator.js` | Remove Lenis from `makeScrollPage()` (L460-467) or replace contact view — fixes double-start for contact too |
+| 2 | `orchestrator.js` | Add `clearProps: 'visibility'` for `.about_dial-wrapper` in `runAfterEnter` (near L1217) |
 | 3 | `about-text-lines.js` | Wrap init in `gsap.context()`, use `ctx.revert()` in destroy |
 | 4 | `about-dial-ticks.js` | Skip if no GSAP calls; add context only if needed |
-| 5 | `orchestrator.js` | Fix HIT logo hover selector with `document` fallback |
+| 5 | `orchestrator.js` | Fix HIT logo hover selector (L544) with `document` fallback |
 | 6 | `orchestrator.js` | Wrap about hero hover in `gsap.context()` |
 
 ---
@@ -246,7 +257,7 @@ This ensures all GSAP tweens created by hover interactions are killed on destroy
 
 | Stream | Tasks | Agent | Est. time | Est. tokens |
 |--------|-------|-------|-----------|-------------|
-| A | Steps 1, 2, 5, 6 (orchestrator.js changes) | code-writer | 15 min | 8k |
+| A | Steps 1, 1b, 2, 5, 6 (orchestrator.js changes) | code-writer | 15 min | 8k |
 | B | Step 3 (about-text-lines gsap.context) | code-writer | 10 min | 5k |
 
 **Dependencies:** None — A and B are independent files.
@@ -261,7 +272,10 @@ This ensures all GSAP tweens created by hover interactions are killed on destroy
 | Direct land on /about | `bootCurrentView()` calls `views.about.init()` (no Lenis double-start since `runAfterEnter` doesn't run). Dial wrapper has no lingering visibility. |
 | home→about→home→about (rapid) | Each destroy cleans `gsap.context`. Each enter clears dial visibility. Lenis started once per enter. |
 | work→about | `views.case.destroy()` runs, then about init. Dial wrapper visibility cleared. |
+| home→case→about | `views.home.suspend()` called, then `RHP.workDial.destroy()`. Case view destroys. About init runs cleanly — no suspended home state leaking. |
 | about→home (dial hidden) | `visibility: hidden` set on wrapper — correct for transition. Cleared on next about enter. |
+| about→home (with resume) | If work-dial was suspended, `views.home.resume()` is called instead of `init()`. Our changes don't affect this path — about→home transition code is untouched. |
+| contact→about | `makeScrollPage` destroy is a no-op. `runAfterEnter` starts Lenis once. About init runs cleanly. |
 | Mobile (not desktop) | `isDesktop()` returns false → HIT logo hover skipped. This is intentional. |
 | prefers-reduced-motion | `initAboutHeroLogoHover` returns early. Text lines skip animation (set `opacity: 1` immediately). |
 
@@ -271,7 +285,7 @@ This ensures all GSAP tweens created by hover interactions are killed on destroy
 
 | File | Change |
 |------|--------|
-| `orchestrator.js` | Remove Lenis from views.about.init(), add dial visibility restore, fix HIT logo selector, add gsap.context to hero hover |
+| `orchestrator.js` | Remove Lenis from views.about.init() + makeScrollPage(), add dial visibility restore, fix HIT logo selector, add gsap.context to hero hover |
 | `about-text-lines.js` | Wrap in gsap.context() for proper GSAP cleanup |
 
 ---

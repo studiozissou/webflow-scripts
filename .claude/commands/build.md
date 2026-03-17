@@ -16,7 +16,8 @@ Before starting the build, check for:
 - `tests/acceptance/SLUG.spec.js` (generated during /plan)
 - `.claude/scripts/purge-cdn.sh` (needed for CDN cache busting)
 
-If any are missing, warn the user but continue — the verify loop will be skipped.
+If `.env.test` or acceptance tests are missing, warn the user — the verify loop will be skipped.
+If `purge-cdn.sh` is missing but Playwright MCP is connected, the verify loop will use **MCP fallback mode** (see below).
 
 ## Process
 
@@ -106,7 +107,13 @@ If MCP is not connected, log "MCP browser not available — skipping pre-commit 
 ## Verify loop
 
 After code review passes and QA is clean, deploy and test against the live staging site.
-Skip this section if the project has no `.env.test`, no acceptance tests, or no `purge-cdn.sh`.
+Skip this section entirely if the project has no `.env.test` and no acceptance tests.
+
+**Two modes:**
+- **Full mode** — `purge-cdn.sh` exists: commit → push → purge CDN → run acceptance tests → smoke/a11y
+- **MCP fallback mode** — no `purge-cdn.sh` but Playwright MCP is connected: commit → push → run MCP browser checks against staging URL (the new code won't be on CDN yet, but we verify selectors, console errors, and visual state). Skip acceptance test execution (they need fresh CDN). Log: "No purge-cdn.sh — using Playwright MCP fallback for staging verification."
+
+If neither `purge-cdn.sh` nor Playwright MCP is available, skip the verify loop and log: "No purge-cdn.sh and no Playwright MCP — verify loop skipped."
 
 8. Stage, commit, and push:
     ```
@@ -118,6 +125,23 @@ Skip this section if the project has no `.env.test`, no acceptance tests, or no 
 9. Purge the CDN cache:
     Run: `.claude/scripts/purge-cdn.sh`
     This purges changed JS/CSS files from jsDelivr and waits 30s.
+
+### Step 9.5 — MCP fallback verification (only in MCP fallback mode)
+
+If running in MCP fallback mode (no `purge-cdn.sh`, Playwright MCP connected):
+
+1. `browser_navigate` to STAGING_URL
+2. **Console check** — `browser_console_messages`, filter benign noise. Report any real errors.
+3. **DOM snapshot** — `browser_snapshot`, confirm all spec selectors exist on the page.
+4. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`. Show to user.
+5. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`. Show to user.
+6. **Scroll-triggered check** (if feature has scroll animations) — `browser_evaluate` scroll to target section, wait per `playwright-webflow` timing table, `browser_take_screenshot`.
+7. **Navigation check** (if feature spans pages) — click relevant nav links, confirm Barba transitions complete, check console for errors on each page.
+
+Report results as: PASS (no errors, selectors confirmed) / WARN (minor issues) / FAIL (errors or missing selectors).
+On FAIL: ask user "Fix before continuing or accept?"
+
+After MCP fallback completes, skip steps 10–11 (they require CDN-purged code) and jump to step 12 (smoke/a11y — these run against current live state as a regression check).
 
 ### Step 10.5 — MCP post-deploy visual (skip if no MCP)
 

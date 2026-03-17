@@ -95,7 +95,12 @@
       const videoWrap = document.getElementById('fg-video-wrap');
       const vRect = videoWrap?.getBoundingClientRect();
       if (videoWrap && vRect) {
-        gsap.set(videoWrap, { width: vRect.width, height: vRect.height, borderRadius: 0 });
+        const caseBR = _parseSize(v.caseBR);
+        gsap.set(videoWrap, {
+          width: vRect.width,
+          height: vRect.height,
+          borderRadius: caseBR
+        });
       }
 
       // Tween videoWrap to case video height (leaves gap for title peek)
@@ -109,16 +114,17 @@
         const caseVideoHeight = tempEl.getBoundingClientRect().height;
         document.body.removeChild(tempEl);
 
-        const caseBR = _parseSize(v.caseBR);
         gsap.to(videoWrap, {
           width: '100%',
           height: caseVideoHeight,
-          borderTopLeftRadius: caseBR,
-          borderTopRightRadius: caseBR,
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
           duration: dur,
-          ease: 'power2.inOut'
+          ease: 'power2.inOut',
+          onComplete: function () {
+            gsap.set(videoWrap, {
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0
+            });
+          }
         });
       }
 
@@ -246,6 +252,19 @@
       dialFg.style.cssText = '';
       if (dialUI) dialUI.style.cssText = '';
     }
+  }
+
+  /** Start Lenis on a scroll wrapper element.
+   *  @param {Element} [wrapper] — the scrollable element (e.g. Barba container with position:fixed + overflow:auto).
+   *  Resets scrollTop and falls back to window Lenis if wrapper is absent. */
+  function _startLenisForPage(wrapper) {
+    if (wrapper) {
+      wrapper.scrollTop = 0;
+      if (RHP.lenis && RHP.lenis.start) RHP.lenis.start({ wrapper: wrapper });
+    } else {
+      if (RHP.lenis && RHP.lenis.start) RHP.lenis.start();
+    }
+    if (RHP.lenis && RHP.lenis.resize) RHP.lenis.resize();
   }
 
   function _reinitWebflow() {
@@ -451,12 +470,9 @@
   })();
 
   // Factory for scrollable pages (window scroll)
+  // Note: scroll.unlock + lenis.start/resize handled by runAfterEnter (Barba) or bootCurrentView (direct-land)
   const makeScrollPage = () => ({
-    init() {
-      RHP.scroll.unlock();
-      RHP.lenis?.start();
-      RHP.lenis?.resize();
-    },
+    init() {},
     destroy() {}
   });
 
@@ -470,15 +486,20 @@
     let splitInstances = [];
     let hoverListeners = [];
     let teamHoverListeners = [];
+    let teamTweenTargets = [];
 
     const isDesktop = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
+
+    let aboutTeamCtx = null;
 
     function initAboutTeamHover(container) {
       const gsap = window.gsap;
       if (!gsap) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      const ryanEl = container.querySelector('[data-team="ryan"]');
-      const guyEl = container.querySelector('[data-team="guy"]');
+      const scope = container || document;
+      const ryanEl = scope.querySelector('[data-team="ryan"]');
+      const guyEl = scope.querySelector('[data-team="guy"]');
       if (!ryanEl || !guyEl) return;
 
       const ryanBio = ryanEl.querySelector('.about-team_bio');
@@ -487,10 +508,14 @@
       const guyImage = guyEl.querySelector('.about-team_image');
       if (!ryanBio || !guyBio || !ryanImage || !guyImage) return;
 
-      // Initial state: both bios collapsed (max-width is set in CSS)
-      gsap.set([ryanBio, guyBio], { width: 0, overflow: 'hidden', opacity: 0 });
-      // Own transform from the start so we don't flip between translate and translate3d (avoids jump on leave)
-      gsap.set([ryanEl, guyEl], { x: 0, force3D: true });
+      teamTweenTargets = [ryanBio, guyBio, ryanEl, guyEl];
+
+      aboutTeamCtx = gsap.context(() => {
+        // Initial state: both bios collapsed (max-width is set in CSS)
+        gsap.set([ryanBio, guyBio], { width: 0, overflow: 'hidden', opacity: 0 });
+        // Own transform from the start so we don't flip between translate and translate3d (avoids jump on leave)
+        gsap.set([ryanEl, guyEl], { x: 0, force3D: true });
+      }, container);
 
       const slideOpts = { duration: 0.5, ease: 'power3.out', force3D: true };
       const onRyanEnter = () => {
@@ -529,11 +554,21 @@
     }
 
     function destroyAboutTeamHover() {
+      // Kill in-flight hover tweens (gsap.to calls live outside the context)
+      const gsap = window.gsap;
+      if (gsap && teamTweenTargets.length) {
+        gsap.killTweensOf(teamTweenTargets);
+      }
+      aboutTeamCtx?.revert();
+      aboutTeamCtx = null;
       teamHoverListeners.forEach(({ el, type, fn }) => {
         el.removeEventListener(type === 'enter' ? 'mouseenter' : 'mouseleave', fn);
       });
       teamHoverListeners = [];
+      teamTweenTargets = [];
     }
+
+    let aboutHeroCtx = null;
 
     function initAboutHeroLogoHover(container) {
       const gsap = window.gsap;
@@ -542,94 +577,107 @@
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       // .nav_logo-embed not in nav = inside main / about hero only
-      const logoEmbeds = container.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
+      let logoEmbeds = container.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
+      if (!logoEmbeds.length) {
+        logoEmbeds = document.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
+      }
       if (!logoEmbeds.length) return;
 
+      aboutHeroCtx = gsap.context(() => {
         logoEmbeds.forEach((embed) => {
-        const heroReady = embed.closest('.about-hero_ready');
-        if (!heroReady) return;
+          const heroReady = embed.closest('.about-hero_ready');
+          if (!heroReady) return;
 
-        gsap.set(heroReady, { opacity: 0.4 });
+          gsap.set(heroReady, { opacity: 0.4 });
 
-        const headings = heroReady.querySelectorAll('.heading-style-h3');
-        if (!headings.length) return;
+          const headings = heroReady.querySelectorAll('.heading-style-h3');
+          if (!headings.length) return;
 
-        const headingSplits = [];
-        headings.forEach((h) => {
-          try {
-            const split = new SplitText(h, { type: 'words,lines', linesClass: 'about-hero-line', wordsClass: 'about-hero-word' });
-            if (split.words && split.words.length) {
-              gsap.set(split.words, { yPercent: -100, opacity: 0 });
+          const headingSplits = [];
+          headings.forEach((h) => {
+            try {
+              const split = new SplitText(h, { type: 'words,lines', linesClass: 'about-hero-line', wordsClass: 'about-hero-word' });
+              if (split.words && split.words.length) {
+                gsap.set(split.words, { yPercent: -100, opacity: 0 });
+              }
+              headingSplits.push({ split, headingEl: h });
+            } catch (e) {
+              console.warn('RHP about-hero SplitText:', e);
             }
-            headingSplits.push({ split, headingEl: h });
-          } catch (e) {
-            console.warn('RHP about-hero SplitText:', e);
-          }
+          });
+
+          splitInstances.push(...headingSplits);
+
+          const wordDuration = 0.6;
+          const wordStagger = 0.225;
+          const lineDelay = 0.225;
+          const leaveDuration = wordDuration / 2;
+
+          const onEnter = () => {
+            gsap.killTweensOf(heroReady);
+            headingSplits.forEach(({ split, headingEl }) => {
+              gsap.killTweensOf(headingEl);
+              if (split.words?.length) gsap.killTweensOf(split.words);
+            });
+            gsap.set(heroReady, { opacity: 0.4, y: 0 });
+            headingSplits.forEach(({ split, headingEl }) => {
+              gsap.set(headingEl, { opacity: 0 });
+              if (split.words?.length) gsap.set(split.words, { yPercent: -100, opacity: 0 });
+            });
+            gsap.to(heroReady, { opacity: 1, duration: 0.3, ease: 'linear' });
+            gsap.to(heroReady, { y: '-1.5rem', duration: 0.5, ease: 'power3.out' });
+            headingSplits.forEach(({ split, headingEl }, idx) => {
+              const delay = idx * lineDelay;
+              gsap.to(headingEl, { opacity: 1, duration: wordDuration, ease: 'power4.out', delay });
+              if (split.words && split.words.length) {
+                gsap.to(split.words, { yPercent: 0, opacity: 1, duration: wordDuration, ease: 'power4.out', stagger: wordStagger, delay });
+              }
+            });
+          };
+
+          const onLeave = () => {
+            gsap.killTweensOf(heroReady);
+            headingSplits.forEach(({ split, headingEl }) => {
+              gsap.killTweensOf(headingEl);
+              if (split.words && split.words.length) gsap.killTweensOf(split.words);
+            });
+            gsap.to(heroReady, { opacity: 0.4, duration: 0.3, ease: 'linear' });
+            gsap.to(heroReady, { y: 0, duration: 0.5, ease: 'power3.out' });
+            headingSplits.forEach(({ split, headingEl }) => {
+              gsap.to(headingEl, { opacity: 0, duration: leaveDuration, ease: 'power4.out' });
+              if (split.words && split.words.length) {
+                gsap.to(split.words, { yPercent: 100, opacity: 0, duration: leaveDuration, ease: 'power4.out' });
+              }
+            });
+          };
+
+          embed.addEventListener('mouseenter', onEnter);
+          embed.addEventListener('mouseleave', onLeave);
+          hoverListeners.push({ embed, onEnter, onLeave });
         });
-
-        splitInstances.push(...headingSplits);
-
-        const wordDuration = 0.6;
-        const wordStagger = 0.225;
-        const lineDelay = 0.225;
-        const leaveDuration = wordDuration / 2;
-
-        const onEnter = () => {
-          gsap.killTweensOf(heroReady);
-          headingSplits.forEach(({ split, headingEl }) => {
-            gsap.killTweensOf(headingEl);
-            if (split.words?.length) gsap.killTweensOf(split.words);
-          });
-          gsap.set(heroReady, { opacity: 0.4, y: 0 });
-          headingSplits.forEach(({ split, headingEl }) => {
-            gsap.set(headingEl, { opacity: 0 });
-            if (split.words?.length) gsap.set(split.words, { yPercent: -100, opacity: 0 });
-          });
-          gsap.to(heroReady, { opacity: 1, duration: 0.3, ease: 'linear' });
-          gsap.to(heroReady, { y: '-1.5rem', duration: 0.5, ease: 'power3.out' });
-          headingSplits.forEach(({ split, headingEl }, idx) => {
-            const delay = idx * lineDelay;
-            gsap.to(headingEl, { opacity: 1, duration: wordDuration, ease: 'power4.out', delay });
-            if (split.words && split.words.length) {
-              gsap.to(split.words, { yPercent: 0, opacity: 1, duration: wordDuration, ease: 'power4.out', stagger: wordStagger, delay });
-            }
-          });
-        };
-
-        const onLeave = () => {
-          gsap.killTweensOf(heroReady);
-          headingSplits.forEach(({ split, headingEl }) => {
-            gsap.killTweensOf(headingEl);
-            if (split.words && split.words.length) gsap.killTweensOf(split.words);
-          });
-          gsap.to(heroReady, { opacity: 0.4, duration: 0.3, ease: 'linear' });
-          gsap.to(heroReady, { y: 0, duration: 0.5, ease: 'power3.out' });
-          headingSplits.forEach(({ split, headingEl }) => {
-            gsap.to(headingEl, { opacity: 0, duration: leaveDuration, ease: 'power4.out' });
-            if (split.words && split.words.length) {
-              gsap.to(split.words, { yPercent: 100, opacity: 0, duration: leaveDuration, ease: 'power4.out' });
-            }
-          });
-        };
-
-        embed.addEventListener('mouseenter', onEnter);
-        embed.addEventListener('mouseleave', onLeave);
-        hoverListeners.push({ embed, onEnter, onLeave });
-      });
+      }, container);
     }
 
     function destroyAboutHeroLogoHover() {
+      // Kill in-flight hover tweens (gsap.to calls fire async outside the context)
+      const gsap = window.gsap;
+      if (gsap) {
+        splitInstances.forEach(({ split, headingEl }) => {
+          gsap.killTweensOf(headingEl);
+          if (split.words?.length) gsap.killTweensOf(split.words);
+        });
+        hoverListeners.forEach(({ embed }) => {
+          const heroReady = embed.closest('.about-hero_ready');
+          if (heroReady) gsap.killTweensOf(heroReady);
+        });
+      }
+      aboutHeroCtx?.revert();
+      aboutHeroCtx = null;
       hoverListeners.forEach(({ embed, onEnter, onLeave }) => {
         embed.removeEventListener('mouseenter', onEnter);
         embed.removeEventListener('mouseleave', onLeave);
       });
       hoverListeners = [];
-      splitInstances.forEach((item) => {
-        try {
-          const split = item.split || item;
-          if (split.revert) split.revert();
-        } catch (e) {}
-      });
       splitInstances = [];
     }
 
@@ -637,9 +685,7 @@
       init(container) {
         if (active) return;
         active = true;
-        RHP.scroll.unlock();
-        RHP.lenis?.start();
-        RHP.lenis?.resize();
+        // Note: scroll.unlock + lenis.start/resize handled by runAfterEnter (Barba) or bootCurrentView (direct-land)
         RHP.aboutDialTicks?.init?.(container);
         RHP.aboutTextLines?.init?.(container);
         if (isDesktop()) {
@@ -650,6 +696,7 @@
       destroy() {
         if (!active) return;
         active = false;
+        RHP.lenis?.stop();
         RHP.aboutDialTicks?.destroy?.();
         RHP.aboutTextLines?.destroy?.();
         destroyAboutHeroLogoHover();
@@ -661,6 +708,102 @@
   // Case view: dial_layer-fg as scroll wrapper (persists outside Barba container)
   RHP.views.case = RHP.views.case || (() => {
     let active = false;
+    let caseTitleSplits = [];
+    let caseTitleCtx = null;
+    let caseTitleSection = null;
+
+    function initCaseTitleEntrance(container) {
+      const gsap = window.gsap;
+      const SplitText = window.SplitText;
+      if (!gsap || !container) return;
+
+      // Idempotent: tear down previous if init called twice without destroy
+      if (caseTitleCtx) {
+        caseTitleCtx.revert();
+        caseTitleCtx = null;
+        caseTitleSplits = [];
+      }
+
+      const section = container.querySelector('.section_case-title');
+      if (!section) return;
+      caseTitleSection = section;
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const h1s = Array.from(section.querySelectorAll('h1'));
+      const h6s = Array.from(section.querySelectorAll('h6'));
+      const headings = [...h1s, ...h6s];
+
+      if (reducedMotion) {
+        gsap.set(section, { opacity: 1, y: 0 });
+        headings.forEach(h => gsap.set(h, { opacity: 1 }));
+        return;
+      }
+
+      // Set hidden state before context so there is no FOUC
+      gsap.set(section, { opacity: 0, y: 40 });
+
+      caseTitleCtx = gsap.context(() => {
+        // SplitText on headings (if SplitText available)
+        if (SplitText) {
+          headings.forEach(h => {
+            // Add role="group" for ARIA before splitting (GSAP SplitText adds aria-label)
+            if (!h.getAttribute('role')) h.setAttribute('role', 'group');
+            try {
+              const split = new SplitText(h, { type: 'words', wordsClass: 'case-title-word' });
+              if (split.words?.length) {
+                gsap.set(split.words, { yPercent: -100, opacity: 0 });
+              }
+              gsap.set(h, { opacity: 1 }); // heading visible, words hidden
+              caseTitleSplits.push({ split, el: h });
+            } catch (e) { /* SplitText init failure — graceful skip */ }
+          });
+        } else {
+          // Fallback: no SplitText — stagger headings as whole elements
+          headings.forEach(h => gsap.set(h, { opacity: 0, y: 20 }));
+        }
+
+        // Container slide-up
+        gsap.to(section, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
+
+        // Word stagger (overlapping — starts 0.3s after container)
+        const wordDuration = 0.6;
+        const wordStagger = 0.225;
+        const lineDelay = 0.225;
+        const overlapDelay = 0.3;
+
+        if (caseTitleSplits.length) {
+          caseTitleSplits.forEach(({ split }, idx) => {
+            const delay = overlapDelay + (idx * lineDelay);
+            if (split.words?.length) {
+              gsap.to(split.words, {
+                yPercent: 0, opacity: 1,
+                duration: wordDuration, ease: 'power4.out',
+                stagger: wordStagger, delay
+              });
+            }
+          });
+        } else {
+          // Fallback stagger
+          headings.forEach((h, idx) => {
+            gsap.to(h, {
+              opacity: 1, y: 0,
+              duration: 0.6, ease: 'power4.out',
+              delay: overlapDelay + (idx * lineDelay)
+            });
+          });
+        }
+      }, section);
+    }
+
+    function destroyCaseTitleEntrance() {
+      if (caseTitleCtx) {
+        caseTitleCtx.revert();
+        caseTitleCtx = null;
+      }
+      caseTitleSplits = [];
+      caseTitleSection = null;
+    }
 
     return {
       init(container) {
@@ -702,11 +845,13 @@
 
         RHP.earthParallax?.init?.(container);
         RHP.caseVideoControls?.init?.(container);
+        initCaseTitleEntrance(container);
       },
 
       destroy() {
         if (!active) return;
         active = false;
+        destroyCaseTitleEntrance();
         RHP.earthParallax?.destroy?.();
         RHP.caseVideoControls?.destroy?.();
         RHP.lenis?.stop();
@@ -1000,17 +1145,21 @@
 
       RHP.views.case?.init?.(container);
     } else if (ns === 'about') {
-      // Direct-land on about
+      // Direct-land on about — Barba container (position:fixed, overflow:auto) is the scroll wrapper
       RHP.scroll.unlock();
+      _startLenisForPage(container);
+      // Clear lingering dial visibility from previous session
+      const aboutDialWrapper = document.querySelector('.about_dial-wrapper');
+      if (aboutDialWrapper && window.gsap) window.gsap.set(aboutDialWrapper, { clearProps: 'visibility' });
       RHP.views.about?.init?.(container);
     } else {
       // Home or unknown: normal dial boot
       setDialToHomeState();
 
       if (ns !== 'home') {
+        // Contact/other: Barba container is the scroll wrapper
         RHP.scroll.unlock();
-        RHP.lenis?.start();
-        RHP.lenis?.resize();
+        _startLenisForPage(container);
       }
 
       if (ns === 'home') {
@@ -1113,6 +1262,12 @@
         wrapper.classList.remove('rhp-nav-hidden');
       }
 
+      // Clear lingering visibility:hidden set by runAboutToHomeTransition
+      if (ns === 'about') {
+        const aboutDialWrapper = document.querySelector('.about_dial-wrapper');
+        if (aboutDialWrapper && window.gsap) window.gsap.set(aboutDialWrapper, { clearProps: 'visibility' });
+      }
+
       // Nav logo cleanup for about/home transitions
       if (ns === 'about' && window.gsap) {
         const navLogoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
@@ -1186,8 +1341,8 @@
       } else {
         RHP.scroll.unlock();
         if (ns !== 'case') {
-          RHP.lenis && RHP.lenis.start && RHP.lenis.start();
-          RHP.lenis && RHP.lenis.resize && RHP.lenis.resize();
+          // About/contact: Barba container (position:fixed, overflow:auto) is the scroll wrapper
+          _startLenisForPage(data.next && data.next.container ? data.next.container : null);
         }
       }
 
@@ -1592,6 +1747,9 @@
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             // If work-dial was suspended (home→case→about path), fully destroy it now
             RHP.workDial?.destroy?.();
+            // Reset dial-ns so about CSS rules (dial_layer-fg overflow/placement) apply
+            const dialComp = document.querySelector('.dial_component');
+            if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
           },
           leave(data) {
             return runHomeToAboutTransition(data);

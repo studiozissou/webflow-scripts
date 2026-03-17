@@ -21,12 +21,14 @@ Before asking any questions, spawn up to 3 Explore agents in parallel to researc
 - **Agent 1 — Codebase patterns:** Search the codebase for existing patterns similar to this feature. Look for reusable functions, components, or modules that could be adapted. Check `shared/utils.js`, the project orchestrator, and any related page modules.
 - **Agent 2 — Specs, ADRs, and conventions:** Read the relevant spec(s), ADRs, and CLAUDE.md sections that relate to this feature's domain (animation, CMS, layout, transitions). Identify constraints and decisions already made.
 - **Agent 3 — Webflow page structure (if MCP connected):** Use `element_snapshot_tool` to snapshot the target page DOM to understand the existing structure and available selectors. If MCP is not connected, skip this agent.
+- **Agent 4 — Live DOM verification (if Playwright MCP connected):** Use the `playwright-webflow` skill's MCP availability guard to navigate to the staging URL, then `browser_snapshot` to capture the live rendered DOM. Compare against Webflow MCP findings to identify: dynamically injected elements, CMS-rendered items, JS-modified classes/attributes, and any discrepancies between Designer DOM and live DOM. If Playwright MCP is not connected, skip this agent. Staging URL resolution: `.env.test` STAGING_URL → project CLAUDE.md staging URL → skip.
 
 Summarize findings in a **Research Summary** block before proceeding. Include:
 - Reusable code found (file paths + function names)
 - Existing patterns to follow
 - Constraints discovered (from ADRs, specs, or CLAUDE.md)
-- Selectors confirmed (if MCP was used)
+- Selectors confirmed via Webflow MCP (Designer DOM)
+- Live DOM structure confirmed via Playwright MCP (rendered DOM) — note any discrepancies with Designer DOM
 
 ### 2. Clarifying questions
 
@@ -63,6 +65,8 @@ Follow the detailed instructions in the **Acceptance tests** section below. Save
 ### 9–10. Verification and approval
 
 9. **Verification section** — Every plan MUST include a "Verification" section listing concrete steps to confirm the implementation is correct. Prefer automated checks (run tests, run a script, use MCP tools, grep for expected output) over manual inspection.
+
+   **CDN deploy availability:** Check if `.claude/scripts/purge-cdn.sh` exists. If it does, the verification plan should include CDN purge + acceptance tests. If it does NOT exist, note in the spec: "No purge-cdn.sh — `/build` will use Playwright MCP fallback for staging verification (console checks, DOM snapshots, screenshots) instead of full CDN deploy + acceptance test cycle." This ensures the `/build` verify loop expectations are set correctly.
 10. Present the plan summary to the user for approval. Use `AskUserQuestion` with the following options (in this order):
     - **"Save spec, add to queue, and sync to Notion" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`, add tasks to `queue.json` using the `queue-tasks` skill for formatting (plain-English names, descriptive slugs, step-by-step Notion pages with embedded spec and Files section), and sync all new rows to Notion via the `notion-dashboard` skill.
     - **"Save spec only"** — Write the spec file but do not touch queue.json or Notion.

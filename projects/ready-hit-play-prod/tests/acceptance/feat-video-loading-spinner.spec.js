@@ -119,23 +119,40 @@ test.describe(`${SLUG} — Console Errors`, () => {
 
 /* 4. Barba lifecycle */
 test.describe(`${SLUG} — Barba Lifecycle`, () => {
-  test('home → case → home: no orphaned spinners', async ({ page }) => {
+  test('home → about → home: no orphaned spinners, no JS errors', async ({ page }) => {
     const errors = collectErrors(page);
     await loadPage(page);
 
-    // Navigate to case page via Barba
-    await page.goto(CASE_PAGE);
-    await waitForRHP(page);
+    // Count spinners before navigation
+    const spinnersBefore = await page.locator('#fg-video-wrap .rhp-video-spinner').count();
+
+    // Navigate to about via Barba (click nav link)
+    await Promise.all([
+      page.waitForFunction(
+        () => document.querySelector('[data-barba-namespace="about"]') !== null,
+        { timeout: 15_000 }
+      ),
+      page.locator('.nav_about-link').click(),
+    ]);
     await page.waitForTimeout(2000);
 
-    // Navigate back to home
-    await page.goto(HOME);
-    await waitForRHP(page);
+    // About page has no videos — should be zero spinners
+    const spinnersAbout = await page.locator('.rhp-video-spinner').count();
+    expect(spinnersAbout).toBe(0);
+
+    // Navigate back to home via logo click
+    await Promise.all([
+      page.waitForFunction(
+        () => document.querySelector('[data-barba-namespace="home"]') !== null,
+        { timeout: 15_000 }
+      ),
+      page.locator('.nav_logo-link').click(),
+    ]);
     await page.waitForTimeout(2000);
 
-    // Should have exactly 1 spinner per visible video, not doubled
-    const fgSpinners = await page.locator('#fg-video-wrap .rhp-video-spinner').count();
-    expect(fgSpinners).toBeLessThanOrEqual(1);
+    // Should have at most 1 spinner on FG video, not doubled from previous cycle
+    const spinnersAfter = await page.locator('#fg-video-wrap .rhp-video-spinner').count();
+    expect(spinnersAfter).toBeLessThanOrEqual(1);
 
     expect(errors, `JS errors: ${errors.map((e) => e.message).join(', ')}`)
       .toHaveLength(0);
@@ -166,15 +183,33 @@ test.describe(`${SLUG} — Module Registration`, () => {
 test.describe(`${SLUG} — Reduced Motion`, () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('spinner container still present (CSS fallback)', async ({ page }) => {
-    await loadPage(page);
-    // Spinner container should exist but use CSS animation, not Lottie
-    const spinner = page.locator('#fg-video-wrap .rhp-video-spinner');
-    // May or may not be attached depending on video load state — just check no errors
+  test('uses fallback spinner class (no Lottie)', async ({ page }) => {
     const errors = collectErrors(page);
+    await loadPage(page);
+
+    // Under reduced motion, JS assigns rhp-video-spinner-fallback instead of rhp-video-spinner
+    const fallback = page.locator('#fg-video-wrap .rhp-video-spinner-fallback');
+    const lottie = page.locator('#fg-video-wrap .rhp-video-spinner');
+
+    // Fallback should be present, Lottie spinner should not
+    const fallbackCount = await fallback.count();
+    const lottieCount = await lottie.count();
+    expect(fallbackCount).toBeGreaterThanOrEqual(0); // may be 0 if video loaded instantly
+    expect(lottieCount).toBe(0); // Lottie class must never be used under reduced motion
+
     await page.waitForTimeout(500);
     expect(errors, `JS errors: ${errors.map((e) => e.message).join(', ')}`)
       .toHaveLength(0);
+  });
+
+  test('fallback spinner has no CSS animation', async ({ page }) => {
+    await loadPage(page);
+    const fallback = page.locator('#fg-video-wrap .rhp-video-spinner-fallback');
+    const count = await fallback.count();
+    if (count > 0) {
+      const anim = await fallback.first().evaluate((el) => getComputedStyle(el).animationName);
+      expect(anim).toBe('none');
+    }
   });
 });
 

@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.3.13.1';
+  const WORK_DIAL_VERSION = '2026.3.17.1';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
 
@@ -1416,6 +1416,9 @@
       rafId = requestAnimationFrame(draw);
 
       refs = Object.assign(refs || {}, { getActiveIndex: () => state.activeIndex });
+
+      // Signal that canvas is drawn and first video is attached — used by overlay hold
+      RHP.workDial._ready = true;
     }
 
     function setIntroComplete() {
@@ -1460,6 +1463,9 @@
       alive = false;
       suspended = false;
 
+      // Clear ready flag — overlay hold in orchestrator checks this
+      RHP.workDial._ready = false;
+
       stop();
       stopDriftMonitorGlobal();
       cleanup.forEach(fn => { try { fn(); } catch(e){} });
@@ -1476,6 +1482,6 @@
 
     function isSuspended() { return suspended; }
 
-    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, version: WORK_DIAL_VERSION };
+    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, _ready: false, version: WORK_DIAL_VERSION };
   })();
 })();

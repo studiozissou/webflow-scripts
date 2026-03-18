@@ -182,6 +182,7 @@
         el.setAttribute('playsinline', '');
         el.setAttribute('loop', '');
         el.setAttribute('preload', 'auto');
+        el.muted = true;
         el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
         comp.appendChild(el);
       });
@@ -195,6 +196,7 @@
         el.setAttribute('playsinline', '');
         el.setAttribute('loop', '');
         el.setAttribute('preload', 'auto');
+        el.muted = true;
         el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
         comp.appendChild(el);
       });
@@ -534,6 +536,10 @@
         if (intentionallyPaused) return;
         const gen = ++playPairedGen; // stale callbacks from cancelled bg loads will bail
 
+        // Belt-and-suspenders: re-assert muted before every play (Safari can lose muted state after .load())
+        fg.muted = true;
+        bg.muted = true;
+
         // fg plays immediately — don't block on bg
         if (fg.readyState >= 2) {
           try { fg.play().catch(() => {}); } catch(e) {}
@@ -718,6 +724,7 @@
         var startPoolWhenReady = function (el) {
           var prev = _poolReadyAborts.get(el);
           if (prev) prev.abort();
+          el.muted = true; // re-assert after .load() — Safari can lose muted state
           if (el.readyState >= 2) {
             try { el.play().catch(function () {}); } catch (e) {}
             return;
@@ -725,6 +732,7 @@
           var ac = new AbortController();
           _poolReadyAborts.set(el, ac);
           el.addEventListener('canplay', function () {
+            el.muted = true; // re-assert before play
             try { el.play().catch(function () {}); } catch (e) {}
           }, { once: true, signal: ac.signal });
         };
@@ -1118,6 +1126,8 @@
           if (genericVideo && dialState === DIAL_STATES.IDLE) try { genericVideo.pause(); } catch(e) {}
         } else if (alive) {
           intentionallyPaused = false;
+          // Re-assert muted on all video elements after tab resume
+          enforceVideoPolicy(comp);
           stop();
           rafId = requestAnimationFrame(draw);
           if (dialState !== DIAL_STATES.IDLE) {

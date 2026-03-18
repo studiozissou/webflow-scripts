@@ -2,7 +2,7 @@ Plan a feature before writing any code.
 
 ## Model split
 - **Opus max-effort** for clarifying questions (step 2), spec writing + task breakdown + parallelisation map (steps 3–7), and Barba impact check
-- **Sonnet** for research agents (step 1), acceptance test generation (step 8 — MUST run, see below), and Notion pushes
+- **Sonnet** for research agents (step 1), approach exploration agents (step 2.5), acceptance test generation (step 8 — MUST run, see below), and Notion pushes
 
 ## Notion push: Planning (if Notion connected)
 Update queue.json: set this slug's status to Planning.
@@ -35,9 +35,69 @@ Summarize findings in a **Research Summary** block before proceeding. Include:
 Use the `pm-questioning` skill to ask clarifying questions. Do not skip this step.
 **Include research findings in the question context** — reference specific files, patterns, and constraints found by the research agents so the user can make informed decisions.
 
+### 2.5. Approach exploration (3 parallel agents)
+
+Before writing the spec, explore 3 competing architectural approaches in parallel.
+
+1. **Formulate 3 approaches** — based on research findings and user answers, define 3 distinct approaches to the feature. Each should be a genuinely different path (e.g. "GSAP timeline" vs "CSS-only" vs "Rive state machine"), not variations of the same idea.
+
+2. **Spawn 3 parallel Explore subagents** (`subagent_type: "Explore"`, `model: "sonnet"`) — one per approach. Each agent receives:
+   - The feature description
+   - The research summary from Step 1
+   - The user's answers from Step 2
+   - ONE specific approach to explore
+   - Instructions to assess: feasibility, files affected, reusable code, complexity (Low/Medium/High), risks, and a confidence score (0–100)
+   - **Read-only** — agents must not modify files
+
+   Subagent prompt template:
+   ```
+   You are exploring ONE architectural approach for a feature. Read-only — do not modify files.
+
+   ## Feature
+   {feature description}
+
+   ## Research Context
+   {research summary from Step 1}
+
+   ## User Requirements
+   {answers from Step 2}
+
+   ## Your Approach
+   {specific approach name and description}
+
+   ## Your Task
+   1. Search the codebase for patterns that support or conflict with this approach
+   2. Identify all files that would need changes
+   3. Find reusable code (functions, patterns, modules) that could be adapted
+   4. Assess complexity: Low (1-2 files, <100 LOC) / Medium (3-5 files, 100-300 LOC) / High (6+ files or 300+ LOC)
+   5. List risks and gotchas specific to this approach
+   6. Rate your confidence (0–100) that this approach is the best path
+
+   ## Return Format
+   - **Approach:** {name}
+   - **Confidence:** {0-100}
+   - **Complexity:** {Low/Medium/High}
+   - **Files affected:** {list with line ranges}
+   - **Reusable code:** {file:function or "none"}
+   - **Risks:** {list}
+   - **Rationale:** {2-3 sentences on why this score}
+   ```
+
+3. **Synthesize** — merge the 3 reports into a comparison table:
+
+   | Approach | Confidence | Complexity | Key Risk | Reusable Code |
+   |----------|-----------|------------|----------|---------------|
+   | A: ...   | 85        | Medium     | ...      | file.js:fn()  |
+   | B: ...   | 70        | Low        | ...      | utils.js:fn() |
+   | C: ...   | 60        | High       | ...      | none          |
+
+4. **Present to user** — show the table with your recommendation and reasoning. Use `AskUserQuestion` with the 3 approaches as options (recommended first). Include a 4th option: "Hybrid — combine elements from multiple approaches".
+
+5. **Proceed** with the chosen approach into spec writing (Steps 3–7 below).
+
 ### 3–7. Spec writing and task breakdown
 
-3. Once answers are gathered, use **Opus max-effort** for spec writing and architectural analysis. Write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format. Incorporate research findings into the spec — reference reusable code, confirmed selectors, and existing patterns.
+3. Once the approach is chosen, use **Opus max-effort** for spec writing and architectural analysis. Write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format. Incorporate research findings into the spec — reference reusable code, confirmed selectors, and existing patterns.
 4. Break the feature into ordered tasks and append them to `.claude/queue.json`.
 5. Identify which agents are needed for each task (code-writer, qa, seo, perf, etc.).
 5b. **Parallelisation analysis** — For every task in the breakdown, evaluate parallel potential. Reference the `parallelisation` skill. Produce a **Parallelisation Map** in the spec:

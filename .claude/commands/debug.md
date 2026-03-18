@@ -2,7 +2,7 @@
 
 ## Model split
 - **Opus max-effort** for hypothesising (step 2), instrumentation (step 3), and fix application (step 5)
-- **Sonnet** for confirmation/regression checks (step 6) and post-fix review
+- **Sonnet** for parallel hypothesis agents (step 2-deep), confirmation/regression checks (step 6), and post-fix review
 
 ## Usage
 ```
@@ -107,8 +107,68 @@ Activate the **debug skill** and run its full loop:
      - If network-related: `browser_network_requests` for failed requests
      - Record: "Reproduced via MCP" or "Could not reproduce via MCP"
    - If MCP is not connected, continue with standard code-reading isolation
-2. **Hypothesise** — state H1–H3 ranked before touching anything
-   2b. **Test Design** — for each hypothesis, specify the test that would confirm or falsify it (Playwright E2E, Node unit, MCP ad-hoc, or "None" with reason). Reference the `playwright-webflow` skill for bridge template and timing.
+
+1.5. **Investigation gate** — after isolation, ask the user:
+
+   > "Quick fix or deep investigation?"
+   > - **Quick** — proceed with standard sequential H1–H3 (Steps 2–6 below, current behaviour)
+   > - **Deep** — spawn 3 parallel hypothesis agents (Step 2-deep below)
+
+   Default to **Quick** if isolation evidence points to a single obvious cause (typo, missing selector, wrong variable name).
+
+2. **Hypothesise** (quick mode) — state H1–H3 ranked before touching anything
+
+   **— OR —**
+
+   **2-deep. Parallel hypothesis investigation** (deep mode) — spawn 3 parallel Explore subagents (`subagent_type: "Explore"`, `model: "sonnet"`), one per hypothesis. Each agent receives:
+   - The bug description and isolation evidence
+   - Error messages, stack traces, Jam data (if available)
+   - ONE specific hypothesis to investigate
+   - Instructions to: read relevant code paths, check `git log` for related changes, look for similar patterns in CLAUDE.md known issues
+   - **Read-only** — agents must not modify files
+
+   Subagent prompt template:
+   ```
+   You are investigating ONE hypothesis for a bug. Read-only — do not modify files.
+
+   ## Bug Description
+   {bug description}
+
+   ## Isolation Evidence
+   {error messages, stack traces, reproduction steps, Jam data if available}
+
+   ## Your Hypothesis
+   {specific hypothesis}
+
+   ## Your Task
+   1. Read the code paths relevant to this hypothesis
+   2. Check git history: `git log --oneline -20 -- {relevant files}` for recent changes
+   3. Look for similar known issues in CLAUDE.md or .claude/logs/
+   4. Find evidence FOR this hypothesis (code that could cause the bug)
+   5. Find evidence AGAINST this hypothesis (guards or patterns that should prevent it)
+   6. Rate your confidence (0–100)
+
+   ## Return Format
+   - **Hypothesis:** {name}
+   - **Confidence:** {0-100}
+   - **Evidence FOR:** {list with file:line references}
+   - **Evidence AGAINST:** {list}
+   - **Code locations:** {file:line for each relevant location}
+   - **Suggested fix direction:** {1-2 sentences}
+   - **Test design:** {Playwright/Unit/MCP/None} — assert {condition}
+   ```
+
+   After all 3 agents return, rank by confidence:
+
+   | Hypothesis | Confidence | Evidence | Code Location | Suggested Fix |
+   |-----------|-----------|----------|---------------|---------------|
+   | H1: ...   | 90        | ...      | file.js:42    | ...           |
+   | H2: ...   | 45        | ...      | module.js:88  | ...           |
+   | H3: ...   | 20        | ...      | init.js:15    | ...           |
+
+   Proceed to Step 3 starting with the highest-confidence hypothesis.
+
+   2b. **Test Design** — for each hypothesis, specify the test that would confirm or falsify it (Playwright E2E, Node unit, MCP ad-hoc, or "None" with reason). Reference the `playwright-webflow` skill for bridge template and timing. (In deep mode, test designs are included in the subagent returns above.)
 3. **Instrument** — targeted logging only, no logic changes
 4. **Validate** — run instrumented code, one hypothesis at a time
 5. **Fix** — use the **opus model** when applying fixes. Apply only after hypothesis is confirmed; if confidence < 80% pause and ask

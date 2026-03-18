@@ -62,6 +62,9 @@
       geom.baseLen = geom.videoR * T.baseLenRatio;
       geom.barW = Math.max(1, geom.videoR * T.barWRatio);
       geom.innerR = geom.videoR + geom.gap;
+
+      // canvas.width/height assignment clears the buffer — must redraw
+      draw();
     }
 
     function draw() {

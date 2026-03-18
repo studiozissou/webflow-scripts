@@ -33,11 +33,13 @@ Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + 
 7. `home-intro.js`
 8. `intro-format.js`
 9. `earth-parallax.js`
-10. `orchestrator.js`
-11. `utils.js`
-12. `overland-ai.js` (only on `/case-studies/overland-ai`)
+10. `case-video-controls.js`
+11. `video-loader.js`
+12. `orchestrator.js`
+13. `utils.js`
+14. `overland-ai.js` (only on `/case-studies/overland-ai`)
 
-Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club), Barba, Lenis 1.3.17.
+Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club), Barba, Lenis 1.3.17, lottie-web 5.12.2 (light).
 
 ## File responsibilities
 
@@ -54,6 +56,8 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | `home-intro.js` | 2026.2.11.1 | One-time intro sequence on fresh home load (step text → ticks → video → nav) |
 | `intro-format.js` | — | Sanitise `[data-text="intro"]` HTML on case pages (decode entities, strip disallowed tags) |
 | `earth-parallax.js` | 2026.2.23.1 | Scroll-linked `.earth-image` parallax on case pages (ScrollTrigger) |
+| `case-video-controls.js` | 2026.3.10.1 | Case video play/pause, mute, progress bar, viewport auto-pause, auto-hide controls |
+| `video-loader.js` | 2026.3.17.1 | Lottie loading spinner on visible videos; MutationObserver for pool swaps; reduced-motion CSS fallback |
 | `overland-ai.js` | — | Page-specific: grid hover + mobile benefit video autoplay |
 | `utils.js` | — | Copyright year, `rel="noreferrer noopener"` on `_blank` links, UTM form fields |
 | `ready-hit-play.css` | — | All styles: dial layout, cursor, state flags, custom properties, Barba namespace scoping |
@@ -82,6 +86,8 @@ RHP.aboutDialTicks — { init, destroy, resize, version }
 RHP.aboutTextLines — { init, destroy, getThresholds, version }
 RHP.homeIntro      — { run }
 RHP.earthParallax  — { init, destroy, getParallaxAmount, version }
+RHP.caseVideoControls — { init, destroy, version }
+RHP.videoLoader    — { init, destroy, version }
 RHP.formatIntroText — Function
 RHP.scroll         — { lock, unlock }  (CSS-level, set by orchestrator)
 RHP.views          — { home, about, case, contact } each { init, destroy }

@@ -45,22 +45,14 @@
     return el.parentElement;
   }
 
-  function _showSpinner(wrapper) {
+  function _spinnerOn(wrapper, anim) {
     if (wrapper) wrapper.classList.add('is-active');
+    if (anim) try { anim.play(); } catch (e) { DEBUG && console.log('[video-loader] Lottie play error:', e); }
   }
 
-  function _hideSpinner(wrapper) {
+  function _spinnerOff(wrapper, anim) {
     if (wrapper) wrapper.classList.remove('is-active');
-  }
-
-  function _activateSpinner(wrapper, anim) {
-    _showSpinner(wrapper);
-    if (anim) try { anim.play(); } catch (_) { /* lottie resilience */ }
-  }
-
-  function _deactivateSpinner(wrapper, anim) {
-    _hideSpinner(wrapper);
-    if (anim) try { anim.pause(); } catch (_) { /* lottie resilience */ }
+    if (anim) try { anim.pause(); } catch (e) { DEBUG && console.log('[video-loader] Lottie pause error:', e); }
   }
 
   function attachSpinner(videoEl) {
@@ -79,9 +71,9 @@
       wrapper.className = 'rhp-video-spinner';
 
       // Load Lottie animation if lottie-web is available
-      if (typeof lottie !== 'undefined') {
+      if (typeof window.lottie !== 'undefined') {
         try {
-          lottieAnim = lottie.loadAnimation({
+          lottieAnim = window.lottie.loadAnimation({
             container: wrapper,
             renderer: 'svg',
             loop: true,
@@ -97,10 +89,10 @@
     parent.appendChild(wrapper);
 
     // Event listeners
-    const onWaiting = () => _activateSpinner(wrapper, lottieAnim);
-    const onPlaying = () => _deactivateSpinner(wrapper, lottieAnim);
-    const onCanPlay = () => _deactivateSpinner(wrapper, lottieAnim);
-    const onError = () => _deactivateSpinner(wrapper, lottieAnim);
+    const onWaiting = () => _spinnerOn(wrapper, lottieAnim);
+    const onPlaying = () => _spinnerOff(wrapper, lottieAnim);
+    const onCanPlay = () => _spinnerOff(wrapper, lottieAnim);
+    const onError = () => _spinnerOff(wrapper, lottieAnim);
 
     videoEl.addEventListener('waiting', onWaiting);
     videoEl.addEventListener('playing', onPlaying);
@@ -115,7 +107,7 @@
 
     // If video is currently buffering, show spinner immediately
     if (videoEl.readyState < 2 && !videoEl.paused) {
-      _activateSpinner(wrapper, lottieAnim);
+      _spinnerOn(wrapper, lottieAnim);
     }
 
     DEBUG && console.log('[video-loader] Attached spinner to', videoEl.className || videoEl.tagName);
@@ -133,7 +125,7 @@
 
     // Destroy Lottie
     if (entry.lottie) {
-      try { entry.lottie.destroy(); } catch (e) {}
+      try { entry.lottie.destroy(); } catch (e) { DEBUG && console.log('[video-loader] Lottie destroy error:', e); }
     }
 
     // Remove DOM

@@ -1554,9 +1554,8 @@
         window.gsap.set(aboutTransitionEl, { display: 'none' });
       }
 
-      // Video loading spinners
+      // Video loading spinners (destroy already called in beforeLeave)
       if (RHP.videoLoader) {
-        RHP.videoLoader.destroy();
         RHP.videoLoader.init(data.next ? data.next.container : null);
       }
 
@@ -1773,6 +1772,7 @@
             } else if (ns && RHP.views[ns]?.destroy) {
               RHP.views[ns].destroy();
             }
+            RHP.videoLoader?.destroy?.();
           },
 
           async leave() {
@@ -1813,6 +1813,7 @@
               }
             }
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            RHP.videoLoader?.destroy?.();
           },
 
           async leave() {
@@ -1836,6 +1837,7 @@
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            RHP.videoLoader?.destroy?.();
           },
           leave(data) {
             return runHomeToAboutTransition(data);
@@ -1856,6 +1858,7 @@
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            RHP.videoLoader?.destroy?.();
           },
           leave(data) {
             return runAboutToHomeTransition(data);
@@ -1878,6 +1881,7 @@
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             // If work-dial was suspended (home→case→about path), fully destroy it now
             RHP.workDial?.destroy?.();
+            RHP.videoLoader?.destroy?.();
             // Reset dial-ns so about CSS rules (dial_layer-fg overflow/placement) apply
             const dialComp = document.querySelector('.dial_component');
             if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
@@ -1902,6 +1906,7 @@
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            RHP.videoLoader?.destroy?.();
           },
 
           async leave() {
@@ -1933,6 +1938,8 @@
             }
             // Safety: if work-dial was suspended, fully destroy it
             RHP.workDial?.destroy?.();
+            // Tear down video spinners before transition animation (prevent stale Lottie callbacks)
+            RHP.videoLoader?.destroy?.();
           },
 
           leave() {},

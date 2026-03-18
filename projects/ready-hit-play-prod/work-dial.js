@@ -1450,6 +1450,9 @@
       rafId = requestAnimationFrame(draw);
 
       refs = Object.assign(refs || {}, { getActiveIndex: () => state.activeIndex });
+
+      // Signal that canvas is drawn and first video is attached — used by overlay hold
+      RHP.workDial._ready = true;
     }
 
     function setIntroComplete() {
@@ -1494,6 +1497,9 @@
       alive = false;
       suspended = false;
 
+      // Clear ready flag — overlay hold in orchestrator checks this
+      RHP.workDial._ready = false;
+
       stop();
       stopDriftMonitorGlobal();
       cleanup.forEach(fn => { try { fn(); } catch(e){} });
@@ -1511,6 +1517,6 @@
 
     function isSuspended() { return suspended; }
 
-    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, version: WORK_DIAL_VERSION };
+    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, _ready: false, version: WORK_DIAL_VERSION };
   })();
 })();

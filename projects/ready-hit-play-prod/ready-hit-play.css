@@ -81,6 +81,25 @@
   max-width: none;
 }
 
+/* When Flip reparents logo into _logo-middle (about position), override .is-nav
+   to use large size. Flip reads this CSS end-state and animates from small → large. */
+.about-transition_logo-middle .nav_logo-wrapper-2.is-nav {
+  width: var(--logo-large-width);
+  height: var(--logo-large-height);
+  max-width: var(--logo-large-max-width);
+}
+
+/* SVGs inside the large-state transition logo need width:100% height:auto
+   (same as the about-hero rules) to fill the container proportionally. */
+.about-transition_logo-middle .nav_logo-wrapper-2.is-nav .about-hero_ready,
+.about-transition_logo-middle .nav_logo-wrapper-2.is-nav .nav_logo-embed {
+  height: auto;
+}
+.about-transition_logo-middle .nav_logo-wrapper-2.is-nav svg {
+  width: 100%;
+  height: auto;
+}
+
 /* Safari: SVG height="162" attribute overrides flex container sizing.
    Cascade height:100% from .is-nav (which has --logo-small-height) through
    .about-hero_ready and .nav_logo-embed so the SVG inherits the constrained
@@ -102,14 +121,14 @@
    CSS height:auto to override the HTML height="100%" attribute,
    otherwise auto resolves to ~0 and the logo collapses). */
 .section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1),
-.about-transition .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1) { flex: 602 1 0%; }
+.about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1) { flex: 602 1 0%; }
 .section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2),
-.about-transition .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2) { flex: 316 1 0%; }
+.about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2) { flex: 316 1 0%; }
 .section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3),
-.about-transition .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3) { flex: 494 1 0%; }
+.about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3) { flex: 494 1 0%; }
 
 .section_about-hero .nav_logo-wrapper-2 svg,
-.about-transition .nav_logo-wrapper-2 svg {
+.about-transition_logo-middle .nav_logo-wrapper-2 svg {
   width: 100%;
   height: auto;
 }
@@ -692,6 +711,15 @@
   min-width: var(--dial-small-width);
   min-height: var(--dial-small-height);
   pointer-events: none;
+}
+
+/* When Flip reparents the dial into the about-page wrapper, shrink to small size.
+   Flip reads this CSS end-state and animates width/height from large → small. */
+.about_dial-wrapper .transition-dial {
+  width: var(--dial-small-width);
+  height: var(--dial-small-height);
+  min-width: 0;
+  min-height: 0;
 }
 
 .transition-dial .transition-dial_canvas {

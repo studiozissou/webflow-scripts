@@ -12,7 +12,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.3.12.1', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.3.17.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -24,6 +24,7 @@
     dependencies: [
       'https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js',
       'https://cdn.prod.website-files.com/gsap/3.14.2/ScrollTrigger.min.js',
+      'https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/Flip.min.js',
       'https://unpkg.com/@barba/core',
       'https://unpkg.com/lenis@1.3.17/dist/lenis.min.js',
       'https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js'
@@ -189,8 +190,9 @@
       }).join(' | ') + ' | version: ' + RHP.version);
       var gsapOk = typeof window.gsap !== 'undefined';
       var scrollTriggerOk = typeof window.ScrollTrigger !== 'undefined';
+      var flipOk = typeof window.Flip !== 'undefined';
       var splitTextOk = typeof window.SplitText !== 'undefined';
-      console.log('RHP GSAP:', gsapOk ? 'gsap OK ' + (window.gsap && window.gsap.version ? '(' + window.gsap.version + ')' : '') : 'gsap MISSING', '| ScrollTrigger:', scrollTriggerOk ? 'OK' : 'MISSING', '| SplitText:', splitTextOk ? 'OK' : (CONFIG.splitTextUrl ? 'MISSING' : 'off'));
+      console.log('RHP GSAP:', gsapOk ? 'gsap OK ' + (window.gsap && window.gsap.version ? '(' + window.gsap.version + ')' : '') : 'gsap MISSING', '| ScrollTrigger:', scrollTriggerOk ? 'OK' : 'MISSING', '| Flip:', flipOk ? 'OK' : 'MISSING', '| SplitText:', splitTextOk ? 'OK' : (CONFIG.splitTextUrl ? 'MISSING' : 'off'));
       if (!gsapOk) {
         console.warn('⚠️ RHP: GSAP did not load. Check dependency URLs in init.js.');
       }

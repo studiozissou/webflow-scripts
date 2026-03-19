@@ -120,13 +120,31 @@ Before generating, check for test infrastructure:
 
 For RHP (`ready-hit-play-prod`): test infra IS present (`.env.test`, Playwright, axe-core).
 
-Follow the detailed instructions in the **Acceptance tests** section below. Save the test file to `tests/acceptance/SLUG.spec.js`. Add an "Acceptance Tests" section to the spec listing each test by name.
+Follow the detailed instructions in the **Acceptance tests** section below. Save the test file to `tests/acceptance/SLUG.spec.js`. Add an "Acceptance Tests" section to the spec with two lists:
+
+### Automated tests (Playwright)
+- List of tests in SLUG.spec.js — things Playwright can verify
+  (DOM presence, console errors, CSS states, scroll triggers, navigation)
+
+### Manual tests
+- List of things that need human verification and why they can't be automated
+  (e.g. "Drag feel on mobile — requires real touch input",
+   "Safari video autoplay — Playwright only runs Chromium",
+   "Animation easing feels natural — subjective visual quality")
+
+`/build` picks up the manual test list at wrap-up and presents it to the user as a checklist.
 
 ### 9–10. Verification and approval
 
 9. **Verification section** — Every plan MUST include a "Verification" section listing concrete steps to confirm the implementation is correct. Prefer automated checks (run tests, run a script, use MCP tools, grep for expected output) over manual inspection.
 
-   **CDN deploy availability:** Check if `.claude/scripts/purge-cdn.sh` exists. If it does, the verification plan should include CDN purge + acceptance tests. If it does NOT exist, note in the spec: "No purge-cdn.sh — `/build` will use Playwright MCP fallback for staging verification (console checks, DOM snapshots, screenshots) instead of full CDN deploy + acceptance test cycle." This ensures the `/build` verify loop expectations are set correctly.
+   **Verify mode:** The default verify mode is Playwright MCP local testing. If MCP is connected, the verification plan uses local browser checks — console errors, DOM snapshots, screenshots, and acceptance tests run directly (no commit/push/purge needed during dev).
+
+   If MCP is not connected, acceptance tests run directly without browser checks.
+
+   CDN deploy verification (commit → push → update hash → acceptance tests) happens in `/deploy`, not `/build`.
+
+   For anything that can't be automated (cross-browser, mobile-specific, subjective visual quality), list manual test steps in the spec's "Manual tests" section under Acceptance Tests.
 10. Present the plan summary to the user for approval. Use `AskUserQuestion` with the following options (in this order):
     - **"Save spec, add to queue, and sync to Notion" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`, add tasks to `queue.json` using the `queue-tasks` skill for formatting (plain-English names, descriptive slugs, step-by-step Notion pages with embedded spec and Files section), and sync all new rows to Notion via the `notion-dashboard` skill.
     - **"Save spec only"** — Write the spec file but do not touch queue.json or Notion.
@@ -184,6 +202,23 @@ The infra check happens in step 8 above — by the time you reach this section, 
 
 8. Do NOT run the tests at this point. They will be run during `/build`.
 
+### 8b. Register in regression database
+
+After generating the acceptance test, register it in the project's test registry:
+
+1. Read `tests/registry.json` in the project root
+   - If the file doesn't exist, create it with `{ "version": 1, "lastUpdated": "TODAY", "entries": [] }`
+2. If an entry with matching `id` already exists → update its `description` field
+3. If new → append an entry with:
+   - `id`: the feature slug
+   - `file`: `tests/acceptance/SLUG.spec.js` (relative to project root)
+   - `type`: `"acceptance"`, `source`: `"plan"`, `critical`: `false`
+   - `slug`: the feature slug
+   - `created`: today's date (YYYY-MM-DD)
+   - `description`: one-line summary of what the test covers
+4. Update the top-level `lastUpdated` to today's date
+5. Write `tests/registry.json`
+
 ## Notion push: Ready to Build (if Notion connected)
 Update queue.json: set this slug's status to Ready to Build.
 Push to Notion: update Status to "Ready to Build", set Last Updated.
@@ -192,6 +227,7 @@ If Notion fails, log warning and continue.
 ## Output
 - Spec file at `.claude/specs/<feature-slug>.md`
 - Acceptance test file at `tests/acceptance/<feature-slug>.spec.js` (if test infra exists)
+- Updated `tests/registry.json` with the new test entry
 - Updated `.claude/queue.json` with new tasks
 - List of agents needed
 - Any blockers or open questions

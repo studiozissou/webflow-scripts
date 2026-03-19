@@ -91,6 +91,7 @@
     var isLocal = scriptSrc && (
       /^(https?:)?\/\/localhost(:\d+)?(\/|$)/i.test(scriptSrc) ||
       /^file:\/\//i.test(scriptSrc) ||
+      /\.ngrok-free\.dev(\/|$)/i.test(scriptSrc) ||
       (!scriptSrc.includes('@') && scriptSrc.indexOf(window.location.origin) === 0)
     );
     if (isLocal) {

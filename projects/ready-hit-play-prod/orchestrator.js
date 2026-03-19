@@ -1103,6 +1103,20 @@
      Initial boot (no Barba nav yet)
      Only on initial load: if home, run home intro (not when transitioning from case/about)
      ----------------------------- */
+  // Measure nav height and set as CSS custom property (matches CSS @media max-width:991px)
+  var _navRafId = 0;
+  function setNavHeight() {
+    if (!window.matchMedia('(max-width: 991px)').matches) return;
+    var nav = document.querySelector('.nav_component') || document.querySelector('.nav');
+    if (nav && nav.offsetHeight > 0) {
+      document.documentElement.style.setProperty('--nav-height', nav.offsetHeight + 'px');
+    }
+  }
+  function setNavHeightDebounced() {
+    cancelAnimationFrame(_navRafId);
+    _navRafId = requestAnimationFrame(setNavHeight);
+  }
+
   function bootCurrentView() {
     const container = document.querySelector('[data-barba="container"]');
     const ns = container?.getAttribute('data-barba-namespace');
@@ -1296,6 +1310,7 @@
       }
 
       if (ns === 'case') {
+        setNavHeight();
         if (dialFg && window.gsap) {
           window.gsap.set(dialFg, { opacity: 1 });
         }
@@ -1885,6 +1900,8 @@
       ]
     });
   }
+
+  window.addEventListener('resize', setNavHeightDebounced, { passive: true });
 
   ready(() => {
     initBarba();

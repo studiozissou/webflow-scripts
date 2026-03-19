@@ -6,7 +6,7 @@
 
    html { font-size: calc(0.7416576964477932rem + 0.21528525296017226vw); }
    @media screen and (max-width:1920px) { html { font-size: calc(0.7416576964477933rem + 0.21528525296017226vw); } }
-   @media screen and (max-width:991px) { html { font-size: calc(0.7498737373737374rem + 0.20202020202020202vw); } } 
+   @media screen and (max-width:991px) { html { font-size: calc(0.85rem + 0.25vw); } }
 
 /* Hide cursor + disable dial click until video plays on home */
 [data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-cursor-ready) .cursor_component {
@@ -367,29 +367,11 @@
   --dial-case-title-gap: 140px; /* desktop */
 }
 
-/* Breakpoint overrides: dial-large and dial-small (edit per viewport) */
+/* Breakpoint overrides: dial-large and dial-small (values same across all mobile breakpoints) */
 @media (max-width: 991px) {
   :root {
-    --dial-large-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
-    --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
-    --dial-small-width: 6rem;
-    --dial-small-height: 6rem;
-  }
-}
-
-@media (max-width: 767px) {
-  :root {
-    --dial-large-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
-    --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
-    --dial-small-width: 6rem;
-    --dial-small-height: 6rem;
-  }
-}
-
-@media (max-width: 479px) {
-  :root {
-    --dial-large-width: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
-    --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
+    --dial-large-width: min(65vw, 65svh);
+    --dial-large-height: min(65vw, 65svh);
     --dial-small-width: 6rem;
     --dial-small-height: 6rem;
   }
@@ -850,6 +832,72 @@
 @media (prefers-reduced-motion: reduce) {
   .rhp-video-spinner {
     transition: none;
+  }
+}
+
+/* ====== Mobile white dot indicator (sector position at 6 o'clock) ====== */
+/* Positioned below the max tick extension: dial radius * ~1.35 accounts for gap + maxLen ratios */
+.dial_sector-dot {
+  position: absolute;
+  bottom: calc(50% - var(--dial-large-height) / 2 * 1.4 - 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  z-index: 5;
+  pointer-events: none;
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .dial_component:has([data-barba-namespace="home"]) .dial_sector-dot {
+    display: block;
+  }
+}
+
+/* Hide dot on non-home pages */
+.dial_component[data-dial-ns="work"] .dial_sector-dot,
+.dial_component:has([data-barba-namespace="about"]) .dial_sector-dot,
+.dial_component:has([data-barba-namespace="case"]) .dial_sector-dot,
+.dial_component:has([data-barba-namespace="contact"]) .dial_sector-dot {
+  display: none !important;
+}
+
+/* ====== Mobile: nav always visible ====== */
+@media (max-width: 991px) {
+  .nav {
+    position: relative;
+    z-index: 1000;
+  }
+}
+
+/* ====== Case/work page mobile: full-screen content ====== */
+@media (max-width: 991px) {
+  .dial_component:has([data-barba-namespace="case"]) .dial_layer-ui,
+  .dial_component[data-dial-ns="work"] .dial_layer-ui {
+    display: none !important; /* !important overrides IX2 which sets display:flex inline */
+  }
+
+  /* Shrink component to leave room for nav — no bottom gap */
+  .dial_component[data-dial-ns="work"],
+  .dial_component:has([data-barba-namespace="case"]) {
+    height: calc(100dvh - var(--nav-height, 3.5rem));
+  }
+
+  /* fg fills the shrunken component */
+  .dial_component[data-dial-ns="work"] .dial_layer-fg,
+  .dial_component:has([data-barba-namespace="case"]) .dial_layer-fg {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  :root {
+    --dial-case-width: 100vw;
+    --dial-case-height: calc(100dvh - var(--nav-height, 3.5rem));
+    --dial-case-border-radius: 0;
   }
 }
 

@@ -229,6 +229,14 @@
       genericVideo.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;z-index:0;';
       comp.appendChild(genericVideo);
       cleanup.push(() => { genericVideo?.remove(); genericVideo = null; });
+
+      // White dot indicator (sector position at 6 o'clock — CSS handles visibility per breakpoint)
+      let sectorDot = document.createElement('div');
+      sectorDot.className = 'dial_sector-dot';
+      sectorDot.setAttribute('aria-hidden', 'true');
+      comp.appendChild(sectorDot);
+      cleanup.push(() => { if (sectorDot) { sectorDot.remove(); sectorDot = null; } });
+
       genericVideoComp = comp;
       try { genericVideo.play().catch(() => {}); } catch(e) {}
       // Show spinner on generic video when intro was skipped (Barba return from about)
@@ -305,6 +313,7 @@
         // mobile dial
         rotationDeg: 0,
         dragActive: false,
+        dragStartX: 0,
         dragStartY: 0,
         dragStartRot: 0,
         startedInInner: false,
@@ -656,6 +665,19 @@
         }
       }
 
+      // Mobile video source swap: prefer data-video-mobile on mobile, fallback to data-video.
+      // 'bg' type reserved for future per-item bg overrides — bg pool currently mirrors fg URL.
+      function getVideoUrl(item, type) {
+        if (!item) return '';
+        if (isMobile()) {
+          const mobileAttr = type === 'bg' ? 'data-video-bg-mobile' : 'data-video-mobile';
+          const mobileUrl = item.getAttribute(mobileAttr);
+          if (mobileUrl) return mobileUrl;
+        }
+        const desktopAttr = type === 'bg' ? 'data-video-bg' : 'data-video';
+        return item.getAttribute(desktopAttr) || '';
+      }
+
       function applyActive(idx) {
         idx = mod(idx, N);
         if (idx === state.lastIndex) return;
@@ -679,7 +701,7 @@
 
         const t = item.getAttribute('data-title') || '';
         const m = item.getAttribute('data-meta') || '';
-        const v = item.getAttribute('data-video') || '';
+        const v = getVideoUrl(item, 'fg');
         const poster = readPosterFromItem(item);
 
         if (titleEl) titleEl.textContent = t;
@@ -705,8 +727,8 @@
 
         const newPrev = mod(idx - 1, N);
         const newNext = mod(idx + 1, N);
-        const urlPrev = (items[newPrev] && items[newPrev].getAttribute('data-video')) || '';
-        const urlNext = (items[newNext] && items[newNext].getAttribute('data-video')) || '';
+        const urlPrev = getVideoUrl(items[newPrev], 'fg');
+        const urlNext = getVideoUrl(items[newNext], 'fg');
         const inWindow = function (i) { return i === idx || i === newPrev || i === newNext; };
         if (loadWindowIndices.prev !== null && !inWindow(loadWindowIndices.prev)) saveVideoStateToIndex(poolPrev, loadWindowIndices.prev);
         if (loadWindowIndices.next !== null && !inWindow(loadWindowIndices.next)) saveVideoStateToIndex(poolNext, loadWindowIndices.next);
@@ -1069,7 +1091,16 @@
       const ROTATE_PER_PX = 0.22; // deg per px (tune)
       function onPointerDown(e) {
         if (!isMobile()) return;
+        // Kill in-flight snap tween so dragStartRot captures a stable value
+        if (window.gsap) window.gsap.killTweensOf(state, 'rotationDeg');
+
+        // First touch on mobile: activate dial (show project videos)
+        if (interactionUnlocked && dialState === DIAL_STATES.IDLE) {
+          setDialState(DIAL_STATES.ACTIVE);
+        }
+
         state.dragActive = true;
+        state.dragStartX = e.clientX;
         state.dragStartY = e.clientY;
         state.dragStartRot = state.rotationDeg;
 
@@ -1083,14 +1114,39 @@
         if (!isMobile()) return;
         state.dragActive = false;
         state.startedInInner = false;
+
+        // Snap to nearest sector (kill any in-flight snap first)
+        if (window.gsap) window.gsap.killTweensOf(state, 'rotationDeg');
+        const nearestSector = Math.round(state.rotationDeg / sectorSize);
+        if (prefersReduced() || !window.gsap) {
+          state.rotationDeg = nearestSector * sectorSize;
+          applyActive(mod(nearestSector, N));
+        } else {
+          window.gsap.to(state, {
+            rotationDeg: nearestSector * sectorSize,
+            duration: 0.2,
+            ease: 'power2.out',
+            overwrite: true,
+            onUpdate: () => {
+              if (!alive) return;
+              applyActive(mod(Math.round(state.rotationDeg / sectorSize), N));
+            },
+            onComplete: () => {
+              // Normalise to prevent unbounded accumulation
+              state.rotationDeg = mod(state.rotationDeg, 360);
+            }
+          });
+        }
       }
 
       function onPointerMoveMobile(e) {
         if (!isMobile() || !state.dragActive) return;
         if (state.startedInInner) return;
 
+        const dx = e.clientX - state.dragStartX;
         const dy = e.clientY - state.dragStartY;
-        state.rotationDeg = state.dragStartRot + (-dy * ROTATE_PER_PX);
+        const delta = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+        state.rotationDeg = state.dragStartRot + (-delta * ROTATE_PER_PX);
 
         // Variant B: update active index as steps cross boundaries
         const stepped = Math.round(state.rotationDeg / sectorSize);
@@ -1153,6 +1209,12 @@
         if (isMobile()) {
           canvas.style.transform = `rotate(${state.rotationDeg}deg)`;
 
+          // Mobile attraction: ticks always point toward the dot (screen-space bottom).
+          // Canvas rotates via CSS, so compensate: target = 180° - rotation in canvas coords.
+          const hasAttrMobile = attractionEnabled && !prefersReduced();
+          const MOBILE_ATTR_EASE = 0.6;
+          const attractionTarget = mod(180 - state.rotationDeg, 360);
+
           // draw ticks — intro scale + opacity when in intro mode; sector highlight gradient
           const ease = state.sectorHighlightEase ?? 1;
           for (let i = 0; i < T.bars; i++) {
@@ -1167,7 +1229,14 @@
               tickScale = prefersReduced() ? raw : 1 - Math.pow(1 - raw, 4);
               tickOpacity = raw;
             }
-            const len = geom.baseLen * tickScale;
+            let mobileInf = 0;
+            if (hasAttrMobile) {
+              // degTop0: tick angle in top-0 frame (+90 converts canvas right-0 to top-0)
+              const degTop0 = (i / T.bars * 360 + 90) % 360;
+              const dAng = Math.min(Math.abs(degTop0 - attractionTarget), 360 - Math.abs(degTop0 - attractionTarget));
+              mobileInf = Math.max(0, 1 - dAng / T.angFalloff) * MOBILE_ATTR_EASE;
+            }
+            const len = (geom.baseLen + (geom.maxLen - geom.baseLen) * mobileInf) * tickScale;
 
             const prevMix = sectorGradientMix(i, state.prevActiveIndex);
             const currMix = sectorGradientMix(i, state.activeIndex);
@@ -1444,8 +1513,8 @@
         if (typeof idx === 'number' && items && items.length) {
           const prevIdx = mod(idx - 1, N);
           const nextIdx = mod(idx + 1, N);
-          const urlPrev = (items[prevIdx] && items[prevIdx].getAttribute('data-video')) || '';
-          const urlNext = (items[nextIdx] && items[nextIdx].getAttribute('data-video')) || '';
+          const urlPrev = getVideoUrl(items[prevIdx], 'fg');
+          const urlNext = getVideoUrl(items[nextIdx], 'fg');
           const posterPrev = readPosterFromItem(items[prevIdx]);
           const posterNext = readPosterFromItem(items[nextIdx]);
           setVideoSourceAndPoster(poolPrev, urlPrev, posterPrev);

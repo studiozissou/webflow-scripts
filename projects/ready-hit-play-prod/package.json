@@ -8,6 +8,8 @@
     "test:smoke": "playwright test --config=tests/playwright.config.js smoke",
     "test:a11y": "playwright test --config=tests/playwright.config.js a11y",
     "test:acceptance": "playwright test --config=tests/playwright.config.js acceptance",
+    "test:registry": "node -e \"const e=require('./tests/registry.json').entries;console.log(e.map(x=>x.file).join(' '))\" | xargs playwright test --config=tests/playwright.config.js --reporter=list",
+    "test:registry-critical": "node -e \"const e=require('./tests/registry.json').entries.filter(x=>x.critical);console.log(e.map(x=>x.file).join(' '))\" | xargs playwright test --config=tests/playwright.config.js --reporter=list",
     "test:report": "playwright show-report"
   },
   "keywords": [],

@@ -122,29 +122,35 @@ For RHP (`ready-hit-play-prod`): test infra IS present (`.env.test`, Playwright,
 
 Follow the detailed instructions in the **Acceptance tests** section below. Save the test file to `tests/acceptance/SLUG.spec.js`. Add an "Acceptance Tests" section to the spec with two lists:
 
-### Automated tests (Playwright)
-- List of tests in SLUG.spec.js — things Playwright can verify
-  (DOM presence, console errors, CSS states, scroll triggers, navigation)
+### Test Plan (3 tiers)
 
-### Manual tests
-- List of things that need human verification and why they can't be automated
-  (e.g. "Drag feel on mobile — requires real touch input",
-   "Safari video autoplay — Playwright only runs Chromium",
-   "Animation easing feels natural — subjective visual quality")
+Every plan MUST produce a test plan with all 3 tiers. `/build`, `/debug`, and `/deploy` consume this format.
 
-`/build` picks up the manual test list at wrap-up and presents it to the user as a checklist.
+#### Tier 1 — Auto: Playwright local (runs during `/build` and `/debug` verify loop)
+- Tests in `tests/acceptance/SLUG.spec.js` — things Playwright can verify locally
+- DOM presence, console errors, CSS states, scroll triggers, Barba navigation
+- MCP ad-hoc checks (browser snapshots, screenshots, interaction replay)
+- No deploy needed — runs against localhost or staging URL
+
+#### Tier 2 — Auto: CDN regression (runs during `/deploy`)
+- The acceptance tests from Tier 1 get registered in `tests/registry.json` — this builds cumulative regression coverage
+- On `/deploy`, the user chooses: run ALL registry tests, or only tests created since last deploy
+- These run after commit → push → CDN hash update (live jsDelivr URL)
+
+#### Tier 3 — Manual (presented as checklist after `/build` and `/debug`)
+- Things that can't be automated and WHY:
+  - Interactions requiring real user input (drag, multi-touch, audio playback)
+  - Cross-browser (Safari, Firefox) — Playwright only runs Chromium
+  - Mobile device-specific (iOS video autoplay, Safari scroll bounce)
+  - Visual polish (animation timing feel, easing curves, subjective quality)
+- If nothing is manual, note "No manual tests needed"
 
 ### 9–10. Verification and approval
 
-9. **Verification section** — Every plan MUST include a "Verification" section listing concrete steps to confirm the implementation is correct. Prefer automated checks (run tests, run a script, use MCP tools, grep for expected output) over manual inspection.
-
-   **Verify mode:** The default verify mode is Playwright MCP local testing. If MCP is connected, the verification plan uses local browser checks — console errors, DOM snapshots, screenshots, and acceptance tests run directly (no commit/push/purge needed during dev).
-
-   If MCP is not connected, acceptance tests run directly without browser checks.
-
-   CDN deploy verification (commit → push → update hash → acceptance tests) happens in `/deploy`, not `/build`.
-
-   For anything that can't be automated (cross-browser, mobile-specific, subjective visual quality), list manual test steps in the spec's "Manual tests" section under Acceptance Tests.
+9. **Verification section** — Every plan MUST include a "Verification" section that references the 3-tier test plan from Step 8. Structure it as:
+   - **Tier 1 (auto local):** Which acceptance tests to run during `/build` verify loop
+   - **Tier 2 (auto CDN):** Confirm tests are registered in `registry.json` for `/deploy` regression
+   - **Tier 3 (manual):** Concrete steps for human verification, with reasons why each can't be automated
 10. Present the plan summary to the user for approval. Use `AskUserQuestion` with the following options (in this order):
     - **"Save spec, add to queue, and sync to Notion" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`, add tasks to `queue.json` using the `queue-tasks` skill for formatting (plain-English names, descriptive slugs, step-by-step Notion pages with embedded spec and Files section), and sync all new rows to Notion via the `notion-dashboard` skill.
     - **"Save spec only"** — Write the spec file but do not touch queue.json or Notion.

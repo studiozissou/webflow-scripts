@@ -16,8 +16,15 @@
 
 1. **Read CLAUDE.md** — note deployment model, known gotchas, module load order
 2. **Check queue.json** — is there an existing item related to this problem? If yes, reference it throughout
-3. **Check recent git diff** — `git diff HEAD~3` — any changes that correlate with the problem appearing?
-4. **Confirm environment** — ask if not obvious:
+3. **Test inventory** — read `tests/registry.json`, check for existing acceptance tests related to the affected module/page. Present:
+   ```
+   Test inventory:
+     Registry entries: N total (M critical)
+     Related tests:    [list any specs matching affected files/slugs, or "none"]
+     Playwright MCP:   [connected / not connected]
+   ```
+4. **Check recent git diff** — `git diff HEAD~3` — any changes that correlate with the problem appearing?
+5. **Confirm environment** — ask if not obvious:
    - Staging or production?
    - Localhost detection active? Is `npx serve .` running?
    - jsDelivr URL — does it match current `git rev-parse HEAD`?
@@ -193,7 +200,7 @@ After applying the fix, run a local verify loop — same pattern as `/build`:
 
    On FAIL: fix and re-verify (return to step 5). Track iteration count — after 5 failed iterations, stop and ask user.
 
-   **Fallback** (no MCP): Run regression test and smoke/a11y suites directly. If no tests exist, skip verify with warning.
+   **Fallback** (no MCP): Run regression test and smoke/a11y suites directly via `npx playwright test`. If no tests exist, run smoke + a11y only and warn.
 
 ---
 
@@ -301,9 +308,9 @@ Before closing the session, assess and grow the project's test coverage:
 
 ---
 
-## Manual Test Checklist
+## Tier 3 — Manual Test Checklist
 
-Before closing, present the **Manual Test Checklist** from Post-Fix step 1a to the user with checkboxes. If there are no manual tests, note "No manual tests needed" and continue.
+Before closing, present the **Tier 3 — Manual Test Checklist** from Post-Fix step 1a to the user with checkboxes. If there are no manual tests, note "No manual tests needed" and continue.
 
 ---
 

@@ -173,11 +173,27 @@ Activate the **debug skill** and run its full loop:
 4. **Validate** — run instrumented code, one hypothesis at a time
 5. **Fix** — use the **opus model** when applying fixes. Apply only after hypothesis is confirmed; if confidence < 80% pause and ask
 6. **Confirm** — verify fix, check for regressions, remove all instrumentation
-   - **MCP-assisted verification** (if MCP was used in Isolate):
-     - Replay the exact same MCP steps from Isolate
-     - Compare before/after screenshots
-     - Verify original error is gone from `browser_console_messages`
-     - If error persists: return to step 2 with new evidence
+
+### Verify loop (Playwright MCP default)
+
+After applying the fix, run a local verify loop — same pattern as `/build`:
+
+   a. `browser_navigate` to the affected page on STAGING_URL
+   b. **Console check** — `browser_console_messages`, filter benign noise. FAIL on real errors.
+   c. **DOM snapshot** — `browser_snapshot`, confirm the fix is reflected in the DOM.
+   d. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
+   e. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
+   f. **Reproduction replay** — replay the exact MCP steps from Isolate. Verify original error is gone.
+   g. Compare before/after screenshots — flag any visual regressions.
+   h. Run the bridge regression test (if generated in Post-Fix step 1 below):
+      ```
+      npx playwright test tests/acceptance/debug-SLUG.spec.js --config=tests/playwright.config.js --reporter=list
+      ```
+   i. Run smoke + a11y suites as regression: `npm test`
+
+   On FAIL: fix and re-verify (return to step 5). Track iteration count — after 5 failed iterations, stop and ask user.
+
+   **Fallback** (no MCP): Run regression test and smoke/a11y suites directly. If no tests exist, skip verify with warning.
 
 ---
 
@@ -190,6 +206,31 @@ Activate the **debug skill** and run its full loop:
      - If MCP was used: include the exact reproduction steps from the Isolate phase
    - Run the generated spec — include in the fix commit if it passes
    - If it fails or no spec is appropriate, skip and note in the debug log
+
+1-registry. **Register in regression database**
+
+If a bridge regression test was generated in step 1:
+1. Read `tests/registry.json` in the project root
+   - If the file doesn't exist, create it with `{ "version": 1, "lastUpdated": "TODAY", "entries": [] }`
+2. If an entry with matching `id` already exists → update its `description` field
+3. If new → append an entry with:
+   - `id`: the debug slug (e.g. `fix-memory-leak-cleanup`)
+   - `file`: path to the generated spec (e.g. `tests/acceptance/fix-memory-leak-cleanup.spec.js`)
+   - `type`: `"regression"`, `source`: `"debug"`, `critical`: `false`
+   - `slug`: the debug slug
+   - `created`: today's date (YYYY-MM-DD)
+   - `description`: "Regression — [root cause summary]"
+4. Update the top-level `lastUpdated` to today's date
+5. Write `tests/registry.json`
+
+Skip if no regression test was generated.
+
+1a. **Manual test list** — identify anything the fix affects that can't be automated:
+   - Interactions requiring real user input (drag, multi-touch, audio)
+   - Cross-browser (Safari, Firefox) — Playwright only runs Chromium
+   - Mobile device-specific (iOS video autoplay, Safari scroll)
+   - Visual polish (animation timing feel, easing curves)
+   - If the fix is purely logic/code with no manual aspects, note "No manual tests needed"
 
 1b. **Jam comment** (if Jam was used in intake): post a fix summary back to the Jam via **createComment**:
    ```
@@ -209,6 +250,8 @@ Activate the **debug skill** and run its full loop:
 **Jam source:** [Jam URL or "none"]
 **MCP used:** [yes — reproduced + verified / no]
 **Regression test:** [path to spec or "not applicable"]
+**Registry entry:** [id or "not registered"]
+**Manual tests:** [list or "none"]
 **Test design:** [H1: type — assertion / H2: type — assertion / None: reason]
 **Related queue item:** [slug or none]
 **Gotcha added to CLAUDE.md:** [yes / no — include entry if yes]
@@ -255,6 +298,12 @@ Before closing the session, assess and grow the project's test coverage:
    - The fix still ships; the test is a best-effort addition
 
 6. **Test Foundation is opt-in** — if the user declines the baseline recommendation, log "Test baseline: declined" and move on. No debug session should be blocked by test infrastructure gaps.
+
+---
+
+## Manual Test Checklist
+
+Before closing, present the **Manual Test Checklist** from Post-Fix step 1a to the user with checkboxes. If there are no manual tests, note "No manual tests needed" and continue.
 
 ---
 

@@ -2,7 +2,7 @@ Build a feature end-to-end using the appropriate agents.
 
 ## Model split
 - **Opus max-effort** for all code-writing, hypothesising, and refactoring work (steps 3–5, bug fixes in the verify loop)
-- **Sonnet** for all 3 code-reviewer agents (step 6), qa-check, and verification passes (steps 6–7, steps 10–12)
+- **Sonnet** for all 3 code-reviewer agents (step 6), qa-check, and verification passes (steps 6–7, steps 8–17)
 
 ## Notion push: Building (if Notion connected)
 Update queue.json: set this slug's status to Building.
@@ -14,10 +14,9 @@ If Notion fails, log warning and continue.
 Before starting the build, check for:
 - `.env.test` with STAGING_URL (needed for verify loop)
 - `tests/acceptance/SLUG.spec.js` (generated during /plan)
-- `.claude/scripts/purge-cdn.sh` (needed for CDN cache busting)
+- Playwright MCP connection (default verify mode)
 
-If `.env.test` or acceptance tests are missing, warn the user — the verify loop will be skipped.
-If `purge-cdn.sh` is missing but Playwright MCP is connected, the verify loop will use **MCP fallback mode** (see below).
+Only log prerequisites that ARE found, not ones that are missing.
 
 ## Process
 
@@ -86,114 +85,72 @@ This prevents context rot when building multiple components in a single session.
 - QA check results
 - Any warnings or blockers
 
-After the executor returns, continue with the verify loop (steps 7.5–12.5) in the parent context.
-
-### Step 7.5 — MCP pre-commit smoke (skip if no MCP)
+After the executor returns, continue with the verify loop (steps 8–17) in the parent context.
 
 Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns.
 
-Before committing, run live browser checks against the staging URL:
-1. `browser_navigate` to staging URL
-2. **Console check** — `browser_console_messages`, filter benign noise. FAIL if real errors.
-3. **DOM snapshot** — `browser_snapshot`, confirm spec selectors exist on the page.
-4. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
-5. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
-6. **Scroll-triggered check** (if feature has scroll animations) — `browser_evaluate` scroll to section, wait per timing table, `browser_take_screenshot`
-
-On any FAIL: ask user — "Fix before committing or proceed?"
-
-If MCP is not connected, log "MCP browser not available — skipping pre-commit smoke" and continue.
-
 ## Verify loop
 
-After code review passes and QA is clean, deploy and test against the live staging site.
+After code review passes and QA is clean, verify the feature locally using Playwright MCP.
 Skip this section entirely if the project has no `.env.test` and no acceptance tests.
 
-**Two modes:**
-- **Full mode** — `purge-cdn.sh` exists: commit → push → purge CDN → run acceptance tests → smoke/a11y
-- **MCP fallback mode** — no `purge-cdn.sh` but Playwright MCP is connected: commit → push → run MCP browser checks against staging URL (the new code won't be on CDN yet, but we verify selectors, console errors, and visual state). Skip acceptance test execution (they need fresh CDN). Log: "No purge-cdn.sh — using Playwright MCP fallback for staging verification."
+**Default: Playwright MCP local verify** (no commit/push/purge — that moves to `/deploy`)
 
-If neither `purge-cdn.sh` nor Playwright MCP is available, skip the verify loop and log: "No purge-cdn.sh and no Playwright MCP — verify loop skipped."
-
-8. Stage, commit, and push:
-    ```
-    git add .
-    git commit -m "feat(SLUG): description of changes"
-    git push
-    ```
-
-9. Purge the CDN cache:
-    Run: `.claude/scripts/purge-cdn.sh`
-    This purges changed JS/CSS files from jsDelivr and waits 30s.
-
-### Step 9.5 — MCP fallback verification (only in MCP fallback mode)
-
-If running in MCP fallback mode (no `purge-cdn.sh`, Playwright MCP connected):
-
-1. `browser_navigate` to STAGING_URL
-2. **Console check** — `browser_console_messages`, filter benign noise. Report any real errors.
-3. **DOM snapshot** — `browser_snapshot`, confirm all spec selectors exist on the page.
-4. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`. Show to user.
-5. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`. Show to user.
-6. **Scroll-triggered check** (if feature has scroll animations) — `browser_evaluate` scroll to target section, wait per `playwright-webflow` timing table, `browser_take_screenshot`.
-7. **Navigation check** (if feature spans pages) — click relevant nav links, confirm Barba transitions complete, check console for errors on each page.
-
-Report results as: PASS (no errors, selectors confirmed) / WARN (minor issues) / FAIL (errors or missing selectors).
-On FAIL: ask user "Fix before continuing or accept?"
-
-After MCP fallback completes, skip steps 10–11 (they require CDN-purged code) and jump to step 12 (smoke/a11y — these run against current live state as a regression check).
-
-### Step 10.5 — MCP post-deploy visual (skip if no MCP)
-
-After CDN purge completes, run a fresh browser check:
-1. `browser_navigate` to staging URL (fresh load after CDN purge)
-2. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
-3. **Console check** — `browser_console_messages`, verify no new errors vs. step 7.5
-4. Compare against step 7.5 screenshots — flag any visual differences
-
-If MCP is not connected, skip silently.
-
-10. Run the acceptance tests for this feature:
+8. `browser_navigate` to STAGING_URL
+9. **Console check** — `browser_console_messages`, filter benign noise. FAIL on real errors.
+10. **DOM snapshot** — `browser_snapshot`, confirm spec selectors exist on the page.
+11. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
+12. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
+13. **Scroll-triggered check** (if feature has scroll animations) — scroll to section, wait per `playwright-webflow` timing table, `browser_take_screenshot`
+14. Run acceptance tests directly:
     ```
     npx playwright test tests/acceptance/SLUG.spec.js --config=tests/playwright.config.js --reporter=list
     ```
+15. Run smoke + a11y suites as regression:
+    ```
+    npm test
+    ```
 
-11. If ANY test fails:
+16. If ANY test fails:
     a. Read the full failure output carefully
     b. Identify the root cause — is it a code bug, a timing issue, or a wrong selector?
     c. If timing issue: increase the waitForTimeout value and retry
     d. If wrong selector: check the Webflow staging site to confirm the correct selector
     e. If code bug: fix the code
-    f. Go back to step 8 (commit, push, purge, test again)
+    f. Go back to step 8 (re-verify — no commit/push/purge needed)
     g. Track iteration count. After 8 failed iterations on the SAME test:
        - Stop and report to the user
        - List what's failing and what you've tried
        - Offer the user a choice via `AskUserQuestion`:
 
          **"How should we proceed with the failing test?"**
-         1. **"Ralph-wiggum mode — keep iterating" (Recommended for timing/flake issues)** — Switch to autonomous TDD loop: keep fixing and re-running the failing test until it passes or hits a hard cap of 20 total iterations. Each iteration: read failure → apply smallest possible fix → commit → push → purge → re-test. No user interaction until pass or cap.
+         1. **"Ralph-wiggum mode — keep iterating" (Recommended for timing/flake issues)** — Switch to autonomous TDD loop: keep fixing and re-running the failing test until it passes or hits a hard cap of 20 total iterations. Each iteration: read failure → apply smallest possible fix → re-verify. No user interaction until pass or cap.
          2. **"Skip this test and continue"** — Mark the test as `.skip`, log it as a known issue, continue with remaining tests.
          3. **"Stop and I'll investigate manually"** — End the build loop, preserve all changes, report full diagnostics.
 
        If user chooses ralph-wiggum mode:
        - Log: "Entering ralph-wiggum TDD loop — iterating until green or 20 total iterations"
-       - Continue the fix → commit → push → purge → test cycle autonomously
+       - Continue the fix → re-verify cycle autonomously
        - On each iteration, append a one-line summary to the build output: `[ralph #{n}] {what changed} → {pass/fail}`
-       - If the test passes: log "Ralph-wiggum loop resolved after {n} iterations", continue to step 12
+       - If the test passes: log "Ralph-wiggum loop resolved after {n} iterations", continue to step 17
        - If 20 total iterations reached: stop, report full history, ask for manual intervention
 
-### Step 12.5 — Bridge (MCP → regression tests)
+### Step 16.5 — Bridge (MCP → regression tests)
 
-For each bug found by MCP in steps 7.5 or 10.5:
+For each bug found by MCP in steps 8–13:
 1. Generate a regression spec using the bridge template from the `playwright-webflow` skill
    - Place in `tests/acceptance/SLUG-regression.spec.js`
 2. Run the generated spec
-3. If it passes, include in the commit
+3. If it passes, include in the final commit
 4. If it fails, flag as manual follow-up
 
 Skip if no MCP bugs were found or MCP was not connected.
 
-12. If ALL acceptance tests pass:
+> **Note:** `/build` runs only this feature's acceptance spec + smoke + a11y. The full regression registry (`npm run test:registry`) runs during `/deploy` as the pre-sign-off gate.
+
+**Fallback** (no Playwright MCP): Run acceptance tests directly without browser checks. If no acceptance tests exist, skip verify with warning: "No MCP and no acceptance tests — verify loop skipped."
+
+17. If ALL acceptance tests pass:
     a. Run the full smoke test suite:
        `npx playwright test tests/smoke.test.js --config=tests/playwright.config.js --reporter=list`
     b. Run accessibility tests:
@@ -212,6 +169,20 @@ Skip if no MCP bugs were found or MCP was not connected.
 - **Log slug** (if `log-slug.sh` exists): After marking tasks complete, run `.claude/scripts/log-slug.sh build_end <feature-slug>`
 
 ## Wrap up
+
+### Manual Test Checklist
+
+Before asking for status, generate and present a **Manual Test Checklist** for anything that can't be automated. Include items from the spec's "Manual tests" section (generated during `/plan`) plus anything discovered during the build. Categories:
+
+- **Interactions requiring real user input** — drag, multi-touch, audio playback, gesture-based features
+- **Cross-browser** — Safari, Firefox behaviour (Playwright MCP only runs Chromium)
+- **Mobile device-specific** — iOS video autoplay, Safari scroll bounce, touch events
+- **Visual polish** — animation timing feel, easing curves, subjective visual quality
+
+Present the checklist to the user with checkboxes. If there are no manual tests, note "No manual tests needed" and continue.
+
+### Status question
+
 Before finishing, ask: "Status for SLUG?"
 Offer: in-progress / blocked / ready-for-review / done
 If blocked, ask: "What's blocking you?"

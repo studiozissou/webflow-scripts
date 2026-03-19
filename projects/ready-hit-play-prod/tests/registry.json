@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-03-19",
+  "entries": [
+    {
+      "id": "smoke",
+      "file": "tests/smoke.test.js",
+      "type": "smoke",
+      "source": "manual",
+      "critical": true,
+      "slug": "smoke",
+      "created": "2026-02-24",
+      "description": "Core smoke — modules loaded, DOM present, Barba transitions, nav links"
+    },
+    {
+      "id": "a11y",
+      "file": "tests/a11y.test.js",
+      "type": "a11y",
+      "source": "manual",
+      "critical": true,
+      "slug": "a11y",
+      "created": "2026-02-24",
+      "description": "WCAG 2.1 AA — axe-core, aria-hidden, keyboard focus, reduced motion"
+    },
+    {
+      "id": "canary",
+      "file": "tests/acceptance/_canary.spec.js",
+      "type": "canary",
+      "source": "manual",
+      "critical": true,
+      "slug": "canary",
+      "created": "2026-03-03",
+      "description": "Pipeline canary — staging URL configured, site loads, no critical errors"
+    },
+    {
+      "id": "case-video-progress-autohide",
+      "file": "tests/acceptance/case-video-progress-autohide.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "case-video-progress-autohide",
+      "created": "2026-03-10",
+      "description": "Case video controls — progress bar, viewport auto-pause, auto-hide, Barba cleanup"
+    },
+    {
+      "id": "feat-about-team-hover",
+      "file": "tests/acceptance/feat-about-team-hover.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-about-team-hover",
+      "created": "2026-03-17",
+      "description": "About page team member hover — scale, directional shift, tap toggle, Barba re-entry"
+    },
+    {
+      "id": "feat-case-title-entrance",
+      "file": "tests/acceptance/feat-case-title-entrance.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-case-title-entrance",
+      "created": "2026-03-17",
+      "description": "Case page title entrance animation — SplitText, Barba re-entry, reduced motion"
+    },
+    {
+      "id": "feat-flip-transition",
+      "file": "tests/acceptance/feat-flip-transition.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-flip-transition",
+      "created": "2026-03-18",
+      "description": "GSAP Flip-based about transition — logo reparenting, overlay, re-entry, direct land"
+    },
+    {
+      "id": "feat-video-buffering-ux",
+      "file": "tests/acceptance/feat-video-buffering-ux.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-video-buffering-ux",
+      "created": "2026-03-17",
+      "description": "Video buffering UX — spinner on FG/work videos, BG/FG sync, Barba cleanup"
+    },
+    {
+      "id": "feat-video-loading-spinner",
+      "file": "tests/acceptance/feat-video-loading-spinner.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-video-loading-spinner",
+      "created": "2026-03-18",
+      "description": "Lottie video loading spinner — visibility, CSS, reduced motion fallback, Barba cleanup"
+    },
+    {
+      "id": "fix-memory-leak-cleanup",
+      "file": "tests/acceptance/fix-memory-leak-cleanup.spec.js",
+      "type": "regression",
+      "source": "debug",
+      "critical": false,
+      "slug": "fix-memory-leak-cleanup",
+      "created": "2026-03-18",
+      "description": "Memory leak regression — video count bounded, dial canvas, rapid navigation survival"
+    },
+    {
+      "id": "rhp-case-transition-polish",
+      "file": "tests/acceptance/rhp-case-transition-polish.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-case-transition-polish",
+      "created": "2026-03-16",
+      "description": "Case transition polish — FG video gap, scroll reset, opacity, rapid multi-cycle"
+    },
+    {
+      "id": "rhp-mobile-home-work",
+      "file": "tests/acceptance/rhp-mobile-home-work.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-mobile-home-work",
+      "created": "2026-03-18",
+      "description": "Mobile homepage — dial sizing, white dot visibility, case bottom nav, Barba at 390px"
+    }
+  ]
+}

@@ -101,6 +101,7 @@
     let interactionUnlocked = false;
     let genericVideo = null;
     let genericVideoComp = null; // comp ref for setDialState (set during init)
+    let sectorDotRef = null; // module-level ref for fade-in after intro
     const _canPlayAborts = new WeakMap();
     const _poolReadyAborts = new WeakMap();
 
@@ -234,8 +235,11 @@
       let sectorDot = document.createElement('div');
       sectorDot.className = 'dial_sector-dot';
       sectorDot.setAttribute('aria-hidden', 'true');
+      // Hidden on fresh load; fades in after dial intro completes (setIntroComplete)
+      if (!introComplete) sectorDot.style.opacity = '0';
       comp.appendChild(sectorDot);
-      cleanup.push(() => { if (sectorDot) { sectorDot.remove(); sectorDot = null; } });
+      sectorDotRef = sectorDot;
+      cleanup.push(() => { if (sectorDot) { sectorDot.remove(); sectorDot = null; } sectorDotRef = null; });
 
       genericVideoComp = comp;
       try { genericVideo.play().catch(() => {}); } catch(e) {}
@@ -278,7 +282,7 @@
         bars: 96,
         barWRatio: 1.686 / REF_R,
         baseLenRatio: 22.51 / REF_R,
-        maxLenRatio: 64 / REF_R, // longest attracted tick (adjust this number to change length)
+        maxLenRatio: (window.innerWidth <= 991 ? 96 : 64) / REF_R, // 50% longer on tablet/mobile; original length on desktop
         nearPxRatio: 80 / REF_R,
         radFalloffRatio: 1,
         angFalloff: 18,
@@ -1035,8 +1039,8 @@
         state.rDist = Math.hypot(dx, dy);
         state.angDeg = angleTop0(dx, dy);
 
-        // IDLE ↔ ACTIVE transitions (only when interaction is unlocked)
-        if (interactionUnlocked) {
+        // IDLE ↔ ACTIVE transitions — desktop only (mobile uses tap radius in onPointerDown)
+        if (!isMobile() && interactionUnlocked) {
           if (dialState === DIAL_STATES.IDLE && state.rDist <= geom.idleThreshold) {
             setDialState(DIAL_STATES.ACTIVE);
           } else if (dialState === DIAL_STATES.ACTIVE && state.rDist > geom.idleThreshold) {
@@ -1082,32 +1086,49 @@
         state.inInner = false;
         state.inSwitch = false;
         if (!isMobile()) setCursorPlay(false);
-        if (interactionUnlocked && dialState !== DIAL_STATES.IDLE) {
+        // Mobile: IDLE transition handled by tap radius in onPointerDown, not pointer leave
+        if (!isMobile() && interactionUnlocked && dialState !== DIAL_STATES.IDLE) {
           setDialState(DIAL_STATES.IDLE);
         }
       }
 
       // Mobile dial: vertical drag rotates ticks only; update index per snap step (Variant B)
       const ROTATE_PER_PX = 0.22; // deg per px (tune)
+      let _justActivatedMobile = false; // suppress click-to-navigate on activation tap
       function onPointerDown(e) {
         if (!isMobile()) return;
         // Kill in-flight snap tween so dragStartRot captures a stable value
         if (window.gsap) window.gsap.killTweensOf(state, 'rotationDeg');
 
-        // First touch on mobile: activate dial (show project videos)
-        if (interactionUnlocked && dialState === DIAL_STATES.IDLE) {
-          setDialState(DIAL_STATES.ACTIVE);
+        // Tap radius: within 4rem of dial outer edge → ACTIVE, outside → IDLE
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const dist = Math.hypot(x - geom.cx, y - geom.cy);
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const activeRadius = geom.innerR + geom.maxLen + (4 * rem);
+
+        if (interactionUnlocked) {
+          // Taps inside dial_layer-ui (project info, links) should not change state
+          const inUI = e.target.closest('.dial_layer-ui') || e.target.closest('.dial_work-link');
+          if (dist <= activeRadius || inUI) {
+            if (dialState === DIAL_STATES.IDLE) {
+              setDialState(DIAL_STATES.ACTIVE);
+              _justActivatedMobile = true;
+              setTimeout(() => { _justActivatedMobile = false; }, 400);
+            }
+          } else {
+            if (dialState !== DIAL_STATES.IDLE) {
+              setDialState(DIAL_STATES.IDLE);
+            }
+          }
         }
 
         state.dragActive = true;
         state.dragStartX = e.clientX;
         state.dragStartY = e.clientY;
         state.dragStartRot = state.rotationDeg;
-
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        state.startedInInner = (Math.hypot(x - geom.cx, y - geom.cy) <= geom.innerR);
+        state.startedInInner = (dist <= geom.innerR);
       }
 
       function onPointerUp() {
@@ -1145,8 +1166,9 @@
 
         const dx = e.clientX - state.dragStartX;
         const dy = e.clientY - state.dragStartY;
-        const delta = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
-        state.rotationDeg = state.dragStartRot + (-delta * ROTATE_PER_PX);
+        // y-axis: swipe down → clockwise; x-axis: swipe right → counterclockwise (inverted)
+        const delta = Math.abs(dy) >= Math.abs(dx) ? dy : -dx;
+        state.rotationDeg = state.dragStartRot + (delta * ROTATE_PER_PX);
 
         // Variant B: update active index as steps cross boundaries
         const stepped = Math.round(state.rotationDeg / sectorSize);
@@ -1158,8 +1180,8 @@
         if (!isMobile()) return;
         e.preventDefault();
 
-        const delta = (Math.abs(e.deltaY) > Math.abs(e.deltaX)) ? e.deltaY : e.deltaX;
-        state.rotationDeg += (-delta * 0.08); // tune sensitivity
+        const delta = (Math.abs(e.deltaY) > Math.abs(e.deltaX)) ? e.deltaY : -e.deltaX;
+        state.rotationDeg += (delta * 0.08); // tune sensitivity
 
         const stepped = Math.round(state.rotationDeg / sectorSize);
         applyActive(mod(stepped, N));
@@ -1238,12 +1260,9 @@
             }
             const len = (geom.baseLen + (geom.maxLen - geom.baseLen) * mobileInf) * tickScale;
 
-            const prevMix = sectorGradientMix(i, state.prevActiveIndex);
-            const currMix = sectorGradientMix(i, state.activeIndex);
-            const sectorMix = prevMix + (currMix - prevMix) * ease;
-
+            // Mobile: all ticks stay teal (no orange — sector highlight + attraction color disabled)
             ctx.globalAlpha = tickOpacity;
-            ctx.strokeStyle = mix(T.teal, T.orange, sectorMix);
+            ctx.strokeStyle = mix(T.teal, T.orange, 0);
             ctx.lineWidth = geom.barW;
             ctx.lineCap = 'round';
 
@@ -1431,7 +1450,13 @@
         on(window, 'pointerup', onPointerUp, { passive: true }, true);
         on(comp, 'wheel', onWheel, { passive: false }, true);
         on(window, 'touchmove', preventTouchScroll, { passive: false }, true);
-        if (dialFg) on(dialFg, 'click', (e) => goToActiveCase(e, items, state), { passive: false }, true);
+        if (dialFg) on(dialFg, 'click', (e) => {
+          // On mobile, suppress navigation on the tap that activated the dial
+          if (isMobile() && _justActivatedMobile) { _justActivatedMobile = false; return; }
+          // Only navigate when dial is in ACTIVE or ENGAGED state
+          if (isMobile() && dialState === DIAL_STATES.IDLE) return;
+          goToActiveCase(e, items, state);
+        }, { passive: false }, true);
         on(document, 'visibilitychange', onVis, { passive: true }, true);
         on(window, 'pointerdown', () => enforceVideoPolicy(comp), { once: true, passive: true }, true);
       }
@@ -1536,6 +1561,12 @@
 
     function setIntroComplete() {
       introComplete = true;
+      // Fade in the mobile sector dot after dial ticks have animated in
+      if (sectorDotRef && window.gsap) {
+        window.gsap.to(sectorDotRef, { opacity: 1, duration: 0.4, ease: 'power2.out' });
+      } else if (sectorDotRef) {
+        sectorDotRef.style.opacity = '1';
+      }
     }
 
     // Called by home-intro after generic video fades in — unlocks state transitions

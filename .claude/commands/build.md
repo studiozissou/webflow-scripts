@@ -9,14 +9,20 @@ Update queue.json: set this slug's status to Building.
 Push to Notion: update Status to "Building", set Last Updated.
 If Notion fails, log warning and continue.
 
-## Prerequisites
+## Test inventory
 
-Before starting the build, check for:
-- `.env.test` with STAGING_URL (needed for verify loop)
-- `tests/acceptance/SLUG.spec.js` (generated during /plan)
-- Playwright MCP connection (default verify mode)
+Before starting the build, read `tests/registry.json` and check for `tests/acceptance/SLUG.spec.js`.
 
-Only log prerequisites that ARE found, not ones that are missing.
+Present a test inventory:
+```
+Test inventory for SLUG:
+  Tier 1 (auto local):  tests/acceptance/SLUG.spec.js — [exists / missing]
+  Tier 2 (CDN regress): registered in registry.json — [yes (N total entries) / no]
+  Tier 3 (manual):      see spec — [N items / none]
+  Playwright MCP:       [connected / not connected]
+```
+
+If Tier 1 tests are missing, warn: "No acceptance tests for this slug — verify loop will run smoke + a11y only. Consider running `/plan` first to generate tests."
 
 ## Process
 
@@ -49,7 +55,7 @@ This prevents context rot when building multiple components in a single session.
 **Context to load into the executor prompt:**
 - The full spec from `.claude/specs/SLUG.md`
 - The project CLAUDE.md
-- The acceptance test from `tests/acceptance/SLUG.spec.js` (if it exists)
+- The acceptance test from `tests/acceptance/SLUG.spec.js` (from test inventory)
 - The existing orchestrator.js for this project
 - Any files the spec references as dependencies
 - Selector verification results from step 2 (if Webflow MCP was used)
@@ -91,8 +97,9 @@ Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns
 
 ## Verify loop
 
-After code review passes and QA is clean, verify the feature locally using Playwright MCP.
-Skip this section entirely if the project has no `.env.test` and no acceptance tests.
+After code review passes and QA is clean, run the verify loop.
+
+**What runs:** Tier 1 acceptance tests for this slug (if they exist) + smoke + a11y as regression. If no acceptance tests exist, run smoke + a11y only and warn.
 
 **Default: Playwright MCP local verify** (no commit/push/purge — that moves to `/deploy`)
 
@@ -148,7 +155,7 @@ Skip if no MCP bugs were found or MCP was not connected.
 
 > **Note:** `/build` runs only this feature's acceptance spec + smoke + a11y. The full regression registry (`npm run test:registry`) runs during `/deploy` as the pre-sign-off gate.
 
-**Fallback** (no Playwright MCP): Run acceptance tests directly without browser checks. If no acceptance tests exist, skip verify with warning: "No MCP and no acceptance tests — verify loop skipped."
+**Fallback** (no Playwright MCP): Run acceptance tests directly via `npx playwright test` without MCP browser checks. If no acceptance tests exist, run smoke + a11y only.
 
 17. If ALL acceptance tests pass:
     a. Run the full smoke test suite:
@@ -172,14 +179,12 @@ Skip if no MCP bugs were found or MCP was not connected.
 
 ### Manual Test Checklist
 
-Before asking for status, generate and present a **Manual Test Checklist** for anything that can't be automated. Include items from the spec's "Manual tests" section (generated during `/plan`) plus anything discovered during the build. Categories:
+Before asking for status, present the **Tier 3 — Manual Test Checklist**:
 
-- **Interactions requiring real user input** — drag, multi-touch, audio playback, gesture-based features
-- **Cross-browser** — Safari, Firefox behaviour (Playwright MCP only runs Chromium)
-- **Mobile device-specific** — iOS video autoplay, Safari scroll bounce, touch events
-- **Visual polish** — animation timing feel, easing curves, subjective visual quality
-
-Present the checklist to the user with checkboxes. If there are no manual tests, note "No manual tests needed" and continue.
+1. Read the spec's "Tier 3 — Manual" section (generated during `/plan`)
+2. Add anything discovered during the build that can't be automated
+3. Present to the user with checkboxes
+4. If there are no manual tests, note "No manual tests needed" and continue
 
 ### Status question
 

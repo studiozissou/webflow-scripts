@@ -41,13 +41,18 @@ H3: [reason]
 ```
 
 Step 2b — Test Design:
-For each hypothesis, specify the automated test that would confirm or falsify it.
+For each hypothesis, specify the automated test that would confirm or falsify it. Classify into tiers:
 
-Determine test type:
+Tier 1 (auto local — runs in verify loop):
 - Playwright E2E — bug manifests in browser (visual state, timing, DOM, console errors, Barba lifecycle, GSAP output)
 - Node unit test — bug is in a pure JS function (validation, data transform, no DOM needed)
 - MCP ad-hoc — bug can be checked live via MCP browser tools (reference playwright-webflow skill ad-hoc patterns)
-- None — genuinely untestable (CDN 404, third-party auth, visual-only with no DOM signal)
+
+Tier 2 (auto CDN — registered in registry.json, runs on /deploy):
+- Same Playwright E2E tests, but registered for regression coverage
+
+Tier 3 (manual — presented as checklist):
+- Genuinely untestable (CDN 404, third-party auth, visual-only with no DOM signal, cross-browser, mobile-specific)
 
 For each hypothesis, write the test spec:
   H1 test: [Playwright/Unit/MCP/None] — assert [condition] on [page/module]

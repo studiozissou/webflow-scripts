@@ -5,6 +5,23 @@
 (function() {
   'use strict';
 
+  // FOUC prevention: inject critical hide rules synchronously before first paint.
+  // ready-hit-play.css loads later (after deps); these inline styles cover the gap.
+  (function() {
+    var s = document.createElement('style');
+    s.textContent =
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_logo-link,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_about-link,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_contact-link,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_layer-ui,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) [data-text="step"],' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .heading-style-h7.is-step,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_layer-ticks,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_bg-video' +
+      '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}';
+    document.head.appendChild(s);
+  })();
+
   // Capture init script URL immediately (currentScript is only set during initial execution; async init() may run after it's cleared)
   var INIT_SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src)
     ? document.currentScript.src

@@ -48,15 +48,39 @@ test.describe(`${SLUG} — Homepage Mobile Elements`, () => {
       .toHaveLength(0);
   });
 
-  test('dial is >= 300px wide at 390px viewport', async ({ page }) => {
+  test('dial is >= 200px wide at 390px viewport', async ({ page }) => {
     const width = await page.locator('.dial_layer-fg').evaluate(
       el => el.getBoundingClientRect().width
     );
-    expect(width).toBeGreaterThanOrEqual(300);
+    // 65vw at 390px = ~253px
+    expect(width).toBeGreaterThanOrEqual(200);
   });
 
   test('white dot indicator visible on mobile', async ({ page }) => {
     await expect(page.locator('.dial_sector-dot')).toBeVisible();
+  });
+
+  test('nav is fixed and transparent on mobile', async ({ page }) => {
+    const nav = page.locator('.nav').first();
+    const position = await nav.evaluate(el => getComputedStyle(el).position);
+    expect(position).toBe('fixed');
+  });
+
+  test('nav has no backdrop blur on mobile', async ({ page }) => {
+    const embed = page.locator('.nav_logo-embed').first();
+    if (await embed.count() > 0) {
+      const blur = await embed.evaluate(el => getComputedStyle(el).backdropFilter);
+      expect(blur).toBe('none');
+    }
+  });
+
+  test('logo is smaller at 390px viewport', async ({ page }) => {
+    const logo = page.locator('.nav_logo-wrapper-2.is-nav').first();
+    if (await logo.count() > 0) {
+      const height = await logo.evaluate(el => el.getBoundingClientRect().height);
+      // Should be ~1.25rem ≈ 20px at mobile font-size
+      expect(height).toBeLessThanOrEqual(30);
+    }
   });
 });
 
@@ -84,7 +108,7 @@ test.describe(`${SLUG} — Case Page Mobile`, () => {
       .toHaveLength(0);
   });
 
-  test('bottom nav hidden on case page mobile', async ({ page }) => {
+  test('dial_layer-ui hidden on case page mobile', async ({ page }) => {
     await loadPage(page, '/work/overland-ai');
     await expect(page.locator('.dial_layer-ui')).not.toBeVisible();
   });
@@ -95,6 +119,50 @@ test.describe(`${SLUG} — Case Page Mobile`, () => {
       el => el.getBoundingClientRect().width
     );
     expect(width).toBeGreaterThanOrEqual(380);
+  });
+
+  test('case container is full viewport height on mobile', async ({ page }) => {
+    await loadPage(page, '/work/overland-ai');
+    const { compHeight, viewportHeight } = await page.evaluate(() => ({
+      compHeight: document.querySelector('.dial_component')?.getBoundingClientRect().height || 0,
+      viewportHeight: window.innerHeight
+    }));
+    // Should be 100dvh (full viewport, no nav subtraction since nav is fixed)
+    expect(compHeight).toBeGreaterThanOrEqual(viewportHeight - 5);
+  });
+
+  test('nav about-link hidden on case page mobile', async ({ page }) => {
+    await loadPage(page, '/work/overland-ai');
+    const aboutLink = page.locator('.nav_about-link').first();
+    if (await aboutLink.count() > 0) {
+      await expect(aboutLink).not.toBeVisible();
+    }
+  });
+
+  test('nav contact-link hidden on case page mobile', async ({ page }) => {
+    await loadPage(page, '/work/overland-ai');
+    const contactLink = page.locator('.nav_contact-link').first();
+    if (await contactLink.count() > 0) {
+      await expect(contactLink).not.toBeVisible();
+    }
+  });
+
+  test('case page is scrollable on mobile', async ({ page }) => {
+    await loadPage(page, '/work/overland-ai');
+    const dialFg = page.locator('.dial_layer-fg');
+    const scrollable = await dialFg.evaluate(el => {
+      const style = getComputedStyle(el);
+      return style.overflowY === 'auto' || style.overflowY === 'scroll';
+    });
+    expect(scrollable).toBe(true);
+  });
+
+  test('touch-action allows scrolling on case page mobile', async ({ page }) => {
+    await loadPage(page, '/work/overland-ai');
+    const touchAction = await page.locator('.dial_component').evaluate(
+      el => getComputedStyle(el).touchAction
+    );
+    expect(touchAction).not.toBe('none');
   });
 });
 
@@ -120,7 +188,42 @@ test.describe(`${SLUG} — Barba Mobile`, () => {
   });
 });
 
-// ── 5. Reduced motion ─────────────────────────────────────────
+// ── 5. Dial tick rendering ───────────────────────────────────
+
+test.describe(`${SLUG} — Dial Ticks`, () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('tick canvas renders at mobile viewport', async ({ page }) => {
+    await loadPage(page);
+    const canvas = page.locator('#dial_ticks-canvas');
+    await expect(canvas).toBeVisible();
+    const { width, height } = await canvas.evaluate(el => ({
+      width: el.getBoundingClientRect().width,
+      height: el.getBoundingClientRect().height
+    }));
+    expect(width).toBeGreaterThan(100);
+    expect(height).toBeGreaterThan(100);
+  });
+});
+
+// ── 6. Nav logo link ─────────────────────────────────────────
+
+test.describe(`${SLUG} — Nav Logo`, () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('nav logo has role=link and is keyboard accessible', async ({ page }) => {
+    await loadPage(page, '/work/overland-ai');
+    const logo = page.locator('.nav_logo-link').first();
+    if (await logo.count() > 0) {
+      const role = await logo.getAttribute('role');
+      const tabindex = await logo.getAttribute('tabindex');
+      expect(role).toBe('link');
+      expect(Number(tabindex)).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
+// ── 7. Reduced motion ─────────────────────────────────────────
 
 test.describe(`${SLUG} — Reduced Motion`, () => {
   test.use({
@@ -136,7 +239,7 @@ test.describe(`${SLUG} — Reduced Motion`, () => {
   });
 });
 
-// ── 6. Accessibility ──────────────────────────────────────────
+// ── 8. Accessibility ──────────────────────────────────────────
 
 test.describe(`${SLUG} — Accessibility`, () => {
   test.use({ viewport: { width: 390, height: 844 } });

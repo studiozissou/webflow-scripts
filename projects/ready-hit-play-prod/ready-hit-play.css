@@ -30,6 +30,12 @@
   pointer-events: none !important;
 }
 
+/* FOUC: hide dial ticks + bg video before intro JS runs; !important overrides Webflow IX2 inline opacity */
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_layer-ticks,
+[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_bg-video {
+  opacity: 0 !important;
+}
+
 /* Hide nav completely on About page (not visible, not clickable) */
 [data-barba="wrapper"].rhp-nav-hidden .nav {
   display: none !important;
@@ -142,6 +148,11 @@
     --logo-small-width: 16rem;
     --logo-small-height: 2rem;
   }
+  /* Remove Webflow backdrop blur on nav logo */
+  .nav_logo-embed {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
 }
 
 @media screen and (max-width: 767px) {
@@ -149,8 +160,9 @@
     --logo-large-width: 90vw;
     --logo-large-height: auto;
     --logo-large-max-width: 93rem;
-    --logo-small-width: 16rem;
-    --logo-small-height: 2rem;
+    /* Smaller nav logo: ~1.25rem height, ~11.4rem width (scales with fluid rem) */
+    --logo-small-width: 11.4rem;
+    --logo-small-height: 1.25rem;
   }
 }
 
@@ -159,8 +171,8 @@
     --logo-large-width: 90vw;
     --logo-large-height: auto;
     --logo-large-max-width: 93rem;
-    --logo-small-width: 16rem;
-    --logo-small-height: 2rem;
+    --logo-small-width: 11.4rem;
+    --logo-small-height: 1.25rem;
   }
 }
 
@@ -457,6 +469,13 @@
 
 .dial_component:has([data-barba-namespace="home"]) .dial_label-wrap {
   text-align: center;
+}
+
+/* Mobile: position dial UI 16px below the white dot indicator */
+@media (max-width: 991px) {
+  .dial_component:has([data-barba-namespace="home"]) .dial_layer-ui {
+    top: calc(50% + var(--dial-large-height) / 2 * 1.55 + 0.5rem + 16px);
+  }
 }
 
 /* CMS list can be hidden on home */
@@ -836,10 +855,10 @@
 }
 
 /* ====== Mobile white dot indicator (sector position at 6 o'clock) ====== */
-/* Positioned below the max tick extension: dial radius * ~1.35 accounts for gap + maxLen ratios */
+/* Positioned below the max tick extension: dial radius * ~1.55 accounts for gap + 50%-longer maxLen */
 .dial_sector-dot {
   position: absolute;
-  bottom: calc(50% - var(--dial-large-height) / 2 * 1.4 - 0.5rem);
+  bottom: calc(50% - var(--dial-large-height) / 2 * 1.55 - 0.5rem);
   left: 50%;
   transform: translateX(-50%);
   width: 8px;
@@ -865,11 +884,15 @@
   display: none !important;
 }
 
-/* ====== Mobile: nav always visible ====== */
+/* ====== Mobile: nav fixed transparent overlay ====== */
 @media (max-width: 991px) {
   .nav {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
+    background: transparent;
   }
 }
 
@@ -880,13 +903,13 @@
     display: none !important; /* !important overrides IX2 which sets display:flex inline */
   }
 
-  /* Shrink component to leave room for nav — no bottom gap */
+  /* Full viewport — nav is fixed overlay, no subtraction needed */
   .dial_component[data-dial-ns="work"],
   .dial_component:has([data-barba-namespace="case"]) {
-    height: calc(100dvh - var(--nav-height, 3.5rem));
+    height: 100dvh;
   }
 
-  /* fg fills the shrunken component */
+  /* fg fills the full component */
   .dial_component[data-dial-ns="work"] .dial_layer-fg,
   .dial_component:has([data-barba-namespace="case"]) .dial_layer-fg {
     width: 100%;
@@ -894,10 +917,36 @@
     border-radius: 0;
   }
 
+  /* Allow touch scroll on work/case/about pages (home keeps touch-action:none for dial) */
+  .dial_component[data-dial-ns="work"],
+  .dial_component:has([data-barba-namespace="case"]),
+  .dial_component:has([data-barba-namespace="about"]) {
+    touch-action: pan-y;
+  }
+
   :root {
     --dial-case-width: 100vw;
-    --dial-case-height: calc(100dvh - var(--nav-height, 3.5rem));
+    --dial-case-height: 100dvh;
     --dial-case-border-radius: 0;
+  }
+}
+
+/* Contact section above everything on mobile */
+@media (max-width: 991px) {
+  .section_contact {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+  }
+}
+
+/* Hide "Who We Are" and "Contact" nav links on work/case pages (mobile) */
+@media (max-width: 991px) {
+  [data-barba="wrapper"]:has([data-barba-namespace="case"]) .nav_about-link,
+  [data-barba="wrapper"]:has([data-barba-namespace="case"]) .nav_contact-link,
+  [data-barba="wrapper"]:has(.dial_component[data-dial-ns="work"]) .nav_about-link,
+  [data-barba="wrapper"]:has(.dial_component[data-dial-ns="work"]) .nav_contact-link {
+    display: none !important;
   }
 }
 

@@ -1100,6 +1100,25 @@
   }
 
   /* -----------------------------
+     Nav logo → homepage (Webflow renders .nav_logo-link as <div>, not <a>)
+     ----------------------------- */
+  function initNavLogoLink() {
+    var navLogo = document.querySelector('.nav_logo-link');
+    if (!navLogo) return;
+    navLogo.style.cursor = 'pointer';
+    navLogo.setAttribute('role', 'link');
+    navLogo.setAttribute('tabindex', '0');
+    navLogo.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (window.barba && typeof window.barba.go === 'function') {
+        window.barba.go('/');
+      } else {
+        window.location.href = '/';
+      }
+    });
+  }
+
+  /* -----------------------------
      Initial boot (no Barba nav yet)
      Only on initial load: if home, run home intro (not when transitioning from case/about)
      ----------------------------- */
@@ -1419,11 +1438,16 @@
         RHP.videoState.caseHandoff = null;
       }
 
-      // Case study: autoplay all videos in laptop and columns sections after Barba transition
+      // Case study: autoplay all videos in case-video, laptop and columns sections after Barba transition
       if (ns === 'case' && data.next && data.next.container) {
         var caseContainer = data.next.container;
-        var sectionVideos = caseContainer.querySelectorAll('.section_case-video-laptop video, .section_case-columns video');
-        sectionVideos.forEach(function(v) { v.play().catch(function() {}); });
+        var handoffVideoEl = caseVideoEl; // reference from handoff block above (may be undefined if no handoff)
+        var sectionVideos = caseContainer.querySelectorAll('.section_case-video video, .section_case-video-laptop video, .section_case-columns video');
+        sectionVideos.forEach(function(v) {
+          // Skip the handoff video (already seeked + playing from handoff above)
+          if (v === handoffVideoEl) return;
+          v.play().catch(function() {});
+        });
       }
 
       // Page-specific: Overland AI
@@ -1906,5 +1930,6 @@
   ready(() => {
     initBarba();
     initContactPullout();
+    initNavLogoLink();
   });
 })();

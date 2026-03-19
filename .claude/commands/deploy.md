@@ -22,27 +22,38 @@ If the project uses jsDelivr with commit-hash pinning (check project CLAUDE.md f
 10. Ask: "Run post-deploy verification?" (Yes / Skip)
 11. If yes, wait 30s for jsDelivr to index the new commit, then present the **regression gate**:
 
-    Read `tests/registry.json` and count entries. Show:
-    > **Regression gate:** N specs in registry (~Xm estimated at 20s/spec).
-    > - **Full regression (Recommended)** — runs all N specs
-    > - **Changed-only** — runs critical specs + specs matching changed files since last deploy
+    Read `tests/registry.json` and count entries. Read `lastDeployed` date from registry (if present). Show:
+    ```
+    Regression gate:
+      Total specs in registry: N (~Xm estimated at 20s/spec)
+      Last deploy: YYYY-MM-DD (or "never")
+      New since last deploy: M specs
+    ```
+
+    Offer the gate choice:
+    > - **Full regression (Recommended)** — runs all N specs in registry
+    > - **Since last deploy** — runs only the M specs created after last deploy date + all critical specs
 
     If the project has no `tests/registry.json`, fall back to `npm test` (smoke + a11y) and skip the gate.
 
-    **Full regression** (default):
+    **Full regression:**
     ```
     npm run test:registry
     ```
 
-    **Changed-only:**
-    - Identify changed JS/CSS files from `git log --name-only LAST_HASH..HEAD`
-    - Match changed filenames to registry entry slugs
-    - Build a file list: all matched specs + all entries with `"critical": true`
+    **Since last deploy:**
+    - Read `lastDeployed` from `tests/registry.json`
+    - Filter entries where `created > lastDeployed` OR `critical: true`
+    - Build a file list from the filtered entries
     - Run:
       ```
-      npx playwright test [matched + critical files] --config=tests/playwright.config.js --reporter=list
+      npx playwright test [filtered files] --config=tests/playwright.config.js --reporter=list
       ```
 
     Report pass/fail per suite + total spec count.
 
 12. If any test fails: report failures — user decides whether to fix and re-deploy or accept.
+
+13. **Stamp deploy** — after successful verification (or if user accepts despite failures):
+    - Update `tests/registry.json`: set `lastDeployed` to today's date, set `lastDeployedHash` to the new commit hash
+    - This becomes the baseline for the next deploy's "since last deploy" filter

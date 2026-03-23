@@ -163,30 +163,28 @@ test.describe(`${SLUG} — Module Registration`, () => {
 
 // ── Part C: BG Sync ───────────────────────────────────────────
 
-test.describe(`${SLUG} — BG/FG Sync`, () => {
-  test('BG and FG video currentTime are within sync threshold', async ({ page }) => {
+test.describe(`${SLUG} — BG Canvas Mirror`, () => {
+  test('BG canvas exists and mirrors FG video (no separate bg video)', async ({ page }) => {
     await loadPage(page);
-    // Wait for dial to be in ACTIVE state (videos playing)
     await page.waitForTimeout(3000);
 
-    const sync = await page.evaluate(() => {
-      const fg = document.querySelector('.dial_fg-video');
-      const bg = document.querySelector('.dial_bg-video');
-      if (!fg || !bg || fg.tagName !== 'VIDEO' || bg.tagName !== 'VIDEO') {
-        return { hasBoth: false };
-      }
+    const result = await page.evaluate(() => {
+      const bgCanvas = document.querySelector('.dial_bg-canvas');
+      const bgVideo = document.querySelector('.dial_bg-video');
       return {
-        hasBoth: true,
-        fgTime: fg.currentTime,
-        bgTime: bg.currentTime,
-        drift: Math.abs(fg.currentTime - bg.currentTime),
+        hasCanvas: !!bgCanvas,
+        hasBgVideo: !!bgVideo,
+        canvasWidth: bgCanvas ? bgCanvas.width : 0,
+        canvasHeight: bgCanvas ? bgCanvas.height : 0,
       };
     });
 
-    if (sync.hasBoth) {
-      // Drift should be within 0.3s (mobile threshold) at most
-      expect(sync.drift).toBeLessThan(0.5);
-    }
+    // Canvas mirror replaced bg video — no bg video should exist
+    expect(result.hasCanvas).toBe(true);
+    expect(result.hasBgVideo).toBe(false);
+    // Canvas should have non-zero dimensions (half-res of component)
+    expect(result.canvasWidth).toBeGreaterThan(0);
+    expect(result.canvasHeight).toBeGreaterThan(0);
   });
 });
 

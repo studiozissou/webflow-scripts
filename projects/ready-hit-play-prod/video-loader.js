@@ -27,9 +27,8 @@
     if (style.left === '-9999px') return true;
     const rect = videoEl.getBoundingClientRect();
     if (rect.width <= 1 || rect.height <= 1) return true;
-    // Skip generic video and bg video
+    // Skip generic video (not a real content video)
     if (videoEl.classList.contains('dial_generic-video')) return true;
-    if (videoEl.classList.contains('dial_bg-video')) return true;
     return false;
   }
 
@@ -150,8 +149,7 @@
       // before MutationObserver fires. Anything added to #fg-video-wrap is a real FG video.
       for (const node of mutation.addedNodes) {
         if (node.nodeType === 1 && node.tagName === 'VIDEO'
-            && !node.classList.contains('dial_generic-video')
-            && !node.classList.contains('dial_bg-video')) {
+            && !node.classList.contains('dial_generic-video')) {
           attachSpinner(node);
         }
       }

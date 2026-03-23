@@ -28,6 +28,24 @@ If Tier 1 tests are missing, warn: "No acceptance tests for this slug — verify
 
 0. **Log slug** (if `log-slug.sh` exists): Run `.claude/scripts/log-slug.sh build_start <feature-slug>`.
 1. Read the spec from `.claude/specs/` (if it exists) or ask for a description.
+
+### Verify-loop gate
+
+After reading the spec, check that it contains an explicit verify loop — a section describing how to confirm the feature works after implementation (acceptance tests, MCP checks, manual steps, or a combination).
+
+**Search for:** a heading or section matching "verify", "verification", "test plan", "acceptance", or "how to confirm" in the spec.
+
+- **Found:** continue to step 2.
+- **Not found:**
+  1. Flag: *"No verify loop found in the spec for SLUG."*
+  2. Re-read the full spec one more time to make sure you didn't miss it (could be named differently or embedded in another section).
+  3. If still not found, ask the user via `AskUserQuestion`:
+
+     **"The spec has no verify loop — how should we handle this?"**
+     1. **"Generate one now" (Recommended)** — Draft a verify loop section (acceptance criteria, Playwright assertions, MCP checks if applicable, manual items) and append it to the spec file. Then continue.
+     2. **"Skip — I'll verify manually"** — Log "verify loop: skipped by user" and continue without one.
+     3. **"Stop — let me update the spec first"** — Halt the build so the user can add a verify loop to the spec themselves.
+
 2. Read all relevant existing files before writing anything.
 
 ### Selector verification (if Webflow MCP connected)
@@ -95,13 +113,15 @@ After the executor returns, continue with the verify loop (steps 8–17) in the 
 
 Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns.
 
-## Verify loop
+## Verify loop (Playwright MCP only — no CLI tests)
 
 After code review passes and QA is clean, run the verify loop.
 
-**What runs:** Tier 1 acceptance tests for this slug (if they exist) + smoke + a11y as regression. If no acceptance tests exist, run smoke + a11y only and warn.
+> **IMPORTANT:** `/build` and `/debug` verify loops use Playwright MCP exclusively. Code hasn't been deployed to CDN yet, so `npx playwright test` against the staging URL will test OLD code — not your changes. CLI test suites (`npm test`, `npx playwright test`) are reserved for `/deploy`, which runs them AFTER pushing to CDN.
 
-**Default: Playwright MCP local verify** (no commit/push/purge — that moves to `/deploy`)
+**What runs:** MCP browser checks against the staging URL (which loads your localhost code if dev server is running, or tests the live DOM structure if not). The goal is to verify DOM state, console health, visual correctness, and spec pass/fail criteria — all through MCP tools.
+
+**Prerequisite:** Playwright MCP must be connected. If not connected, skip to the **Fallback** section below.
 
 8. `browser_navigate` to STAGING_URL
 9. **Console check** — `browser_console_messages`, filter benign noise. FAIL on real errors.
@@ -109,62 +129,62 @@ After code review passes and QA is clean, run the verify loop.
 11. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
 12. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
 13. **Scroll-triggered check** (if feature has scroll animations) — scroll to section, wait per `playwright-webflow` timing table, `browser_take_screenshot`
-14. Run acceptance tests directly:
-    ```
-    npx playwright test tests/acceptance/SLUG.spec.js --config=tests/playwright.config.js --reporter=list
-    ```
-15. Run smoke + a11y suites as regression:
-    ```
-    npm test
-    ```
+14. **Spec verify-loop criteria** — walk through each pass/fail criterion from the spec's "## Verify Loop" section using MCP tools:
+    - DOM assertions → `browser_snapshot` + check for elements/classes/attributes
+    - Visual assertions → `browser_take_screenshot` at the specified viewport/scroll position
+    - Interaction assertions → `browser_click`/`browser_hover`/`browser_evaluate` to trigger, then snapshot/screenshot to confirm
+    - Console assertions → `browser_console_messages` filtered for expected output
+    - For each criterion, log: `[PASS]` or `[FAIL] — {what went wrong}`
+15. **Smoke checks via MCP** — replicate core smoke concerns through MCP (not CLI):
+    - `browser_console_messages` — no JS errors on the page
+    - `browser_snapshot` — key DOM elements present (nav, barba container, critical modules)
+    - `browser_navigate` to 2–3 other pages (home, about, a case study) — confirm no console errors after Barba transition
+    - `browser_evaluate` — `window.RHP?.scriptsOk === true` on each page
 
-16. If ANY test fails:
-    a. Read the full failure output carefully
+16. If ANY check fails:
+    a. Read the failure carefully
     b. Identify the root cause — is it a code bug, a timing issue, or a wrong selector?
-    c. If timing issue: increase the waitForTimeout value and retry
-    d. If wrong selector: check the Webflow staging site to confirm the correct selector
+    c. If timing issue: add a `browser_evaluate` wait or increase delay and retry
+    d. If wrong selector: verify against `browser_snapshot` DOM
     e. If code bug: fix the code
-    f. Go back to step 8 (re-verify — no commit/push/purge needed)
-    g. Track iteration count. After 8 failed iterations on the SAME test:
+    f. Go back to step 8 (re-verify)
+    g. Track iteration count. After 8 failed iterations on the SAME check:
        - Stop and report to the user
        - List what's failing and what you've tried
        - Offer the user a choice via `AskUserQuestion`:
 
-         **"How should we proceed with the failing test?"**
-         1. **"Ralph-wiggum mode — keep iterating" (Recommended for timing/flake issues)** — Switch to autonomous TDD loop: keep fixing and re-running the failing test until it passes or hits a hard cap of 20 total iterations. Each iteration: read failure → apply smallest possible fix → re-verify. No user interaction until pass or cap.
-         2. **"Skip this test and continue"** — Mark the test as `.skip`, log it as a known issue, continue with remaining tests.
+         **"How should we proceed with the failing check?"**
+         1. **"Ralph-wiggum mode — keep iterating" (Recommended for timing/flake issues)** — Switch to autonomous loop: keep fixing and re-checking until it passes or hits a hard cap of 20 total iterations. Each iteration: read failure → apply smallest possible fix → re-verify. No user interaction until pass or cap.
+         2. **"Skip this check and continue"** — Log it as a known issue, continue with remaining checks.
          3. **"Stop and I'll investigate manually"** — End the build loop, preserve all changes, report full diagnostics.
 
        If user chooses ralph-wiggum mode:
        - Log: "Entering ralph-wiggum TDD loop — iterating until green or 20 total iterations"
        - Continue the fix → re-verify cycle autonomously
        - On each iteration, append a one-line summary to the build output: `[ralph #{n}] {what changed} → {pass/fail}`
-       - If the test passes: log "Ralph-wiggum loop resolved after {n} iterations", continue to step 17
+       - If the check passes: log "Ralph-wiggum loop resolved after {n} iterations", continue to step 17
        - If 20 total iterations reached: stop, report full history, ask for manual intervention
 
 ### Step 16.5 — Bridge (MCP → regression tests)
 
-For each bug found by MCP in steps 8–13:
+For each bug found by MCP in steps 8–15:
 1. Generate a regression spec using the bridge template from the `playwright-webflow` skill
    - Place in `tests/acceptance/SLUG-regression.spec.js`
-2. Run the generated spec
-3. If it passes, include in the final commit
-4. If it fails, flag as manual follow-up
+2. Do NOT run the generated spec now — it targets the CDN URL and code isn't deployed yet
+3. Include in the commit; it will run during `/deploy`
 
-Skip if no MCP bugs were found or MCP was not connected.
+Skip if no MCP bugs were found.
 
-> **Note:** `/build` runs only this feature's acceptance spec + smoke + a11y. The full regression registry (`npm run test:registry`) runs during `/deploy` as the pre-sign-off gate.
+> **Note:** `/build` verifies via MCP only. CLI test suites (`npm test`, acceptance specs, smoke, a11y, full registry) all run during `/deploy` after the code is live on CDN.
 
-**Fallback** (no Playwright MCP): Run acceptance tests directly via `npx playwright test` without MCP browser checks. If no acceptance tests exist, run smoke + a11y only.
+**Fallback** (no Playwright MCP): Cannot run MCP verify loop. Instead:
+- Read the spec's verify-loop criteria and present them as a **manual checklist** for the user
+- Log: "MCP not connected — verify loop skipped, manual verification required before `/deploy`"
+- Do NOT run `npx playwright test` — it would test old deployed code, not the current changes
 
-17. If ALL acceptance tests pass:
-    a. Run the full smoke test suite:
-       `npx playwright test tests/smoke.test.js --config=tests/playwright.config.js --reporter=list`
-    b. Run accessibility tests:
-       `npx playwright test tests/a11y.test.js --config=tests/playwright.config.js --reporter=list`
-    c. Report results of both suites
-    d. If smoke or a11y tests fail, report the failures but don't loop —
-       these are existing tests, not part of this feature's acceptance criteria
+17. If ALL MCP checks pass:
+    - Report the full pass/fail summary from step 14
+    - Note: "CLI test suites (smoke, a11y, acceptance, registry) will run during `/deploy` after CDN push"
 
 ## Rules
 - Never start writing code without reading existing files first

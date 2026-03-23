@@ -147,10 +147,32 @@ Every plan MUST produce a test plan with all 3 tiers. `/build`, `/debug`, and `/
 
 ### 9–10. Verification and approval
 
-9. **Verification section** — Every plan MUST include a "Verification" section that references the 3-tier test plan from Step 8. Structure it as:
-   - **Tier 1 (auto local):** Which acceptance tests to run during `/build` verify loop
-   - **Tier 2 (auto CDN):** Confirm tests are registered in `registry.json` for `/deploy` regression
-   - **Tier 3 (manual):** Concrete steps for human verification, with reasons why each can't be automated
+9. **Verify loop (MANDATORY)** — Every spec MUST include a "## Verify Loop" section that `/build` and `/debug` will consume directly. This is NOT optional — if the spec lacks a verify loop, `/build` will halt and flag it.
+
+   The verify loop section must contain:
+
+   a. **Pass/fail criteria** — concrete, observable conditions (not vague "it should work"):
+      - DOM state assertions (element visible, class present, attribute value)
+      - Console state (no errors, specific log output)
+      - Visual state (scroll position, animation end state, responsive layout)
+
+   b. **Reproduction steps** — exact sequence to trigger the feature:
+      - Page URL
+      - User actions (scroll to X, click Y, resize to Z)
+      - Wait conditions (animation duration, network load)
+
+   c. **Tier mapping** — which checks are automated vs manual:
+      - Reference Tier 1 acceptance tests by name (from step 8)
+      - Reference Tier 2 registry entry
+      - List Tier 3 manual checks with reasons why they can't be automated
+
+   d. **Regression scope** — what existing behaviour must NOT break:
+      - Barba transitions (if applicable)
+      - Other modules on the same page
+      - Cross-page state (video handoff, scroll position, etc.)
+
+   **Self-check before proceeding:** Re-read the verify loop section you wrote. If it doesn't answer "how does `/build` know this feature is working?", rewrite it.
+
 10. Present the plan summary to the user for approval. Use `AskUserQuestion` with the following options (in this order):
     - **"Save spec, add to queue, and sync to Notion" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`, add tasks to `queue.json` using the `queue-tasks` skill for formatting (plain-English names, descriptive slugs, step-by-step Notion pages with embedded spec and Files section), and sync all new rows to Notion via the `notion-dashboard` skill.
     - **"Save spec only"** — Write the spec file but do not touch queue.json or Notion.

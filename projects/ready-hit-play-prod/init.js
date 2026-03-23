@@ -17,7 +17,7 @@
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) [data-text="step"],' +
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .heading-style-h7.is-step,' +
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_layer-ticks,' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_bg-video' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_bg-canvas' +
       '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}';
     document.head.appendChild(s);
   })();

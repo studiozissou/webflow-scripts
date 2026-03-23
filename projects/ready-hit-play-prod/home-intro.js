@@ -1,10 +1,10 @@
 /* =========================================
    RHP — Homepage Intro Animation
    Only runs on fresh load of homepage (not when transitioning from case studies or about)
-   Sequence: step text → dial ticks → bg video fade in → nav + dial_layer-ui
+   Sequence: step text → dial ticks → generic video fade in → nav + dial_layer-ui
    ========================================= */
 (() => {
-  const HOME_INTRO_VERSION = '2026.2.11.1';
+  const HOME_INTRO_VERSION = '2026.3.19.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -33,9 +33,9 @@
         document.querySelector('.heading-style-h7.is-step');
     }
 
-    /** .dial_bg-video may be inside .dial_component or elsewhere in container (e.g. dial_layer-bg moved in HTML) */
-    function getBgVideo(container) {
-      return container?.querySelector('.dial_bg-video') || document.querySelector('.dial_bg-video');
+    /** .dial_bg-canvas may be inside .dial_component or elsewhere in container */
+    function getBgCanvas(container) {
+      return container?.querySelector('.dial_bg-canvas') || document.querySelector('.dial_bg-canvas');
     }
 
     function setInitialState(container) {
@@ -45,7 +45,7 @@
       const nav = scope?.querySelector('.nav');
       const dialTicks = comp?.querySelector('.dial_layer-ticks');
       const dialFg = comp?.querySelector('.dial_layer-fg');
-      const bgVideo = getBgVideo(container);
+      const bgCanvas = getBgCanvas(container);
       const stepEl = getStepEl(container);
 
       // Dial and nav hidden
@@ -56,10 +56,8 @@
       }
       if (dialTicks) dialTicks.style.opacity = '0';
       if (dialFg) dialFg.style.opacity = '0';
-      if (bgVideo) {
-        try { bgVideo.pause(); } catch (e) {}
-        if (window.gsap) window.gsap.set(bgVideo, { opacity: 0, filter: 'blur(0px)' });
-      }
+      // BG canvas starts hidden; draw loop populates it but opacity keeps it invisible
+      if (bgCanvas && window.gsap) window.gsap.set(bgCanvas, { opacity: 0 });
 
       // .dial_layer-ui opacity 0
       if (dialUi) window.gsap?.set(dialUi, { opacity: 0 });
@@ -104,25 +102,25 @@
       });
     }
 
-    /** Called only after circle (tick) animation is complete. Fades in and starts .dial_bg-video (or generic video in IDLE state). */
-    function fadeInBgVideo(container) {
-      // Use the generic video element during fresh-load intro (IDLE state); fall back to project bg video
-      const bgVideo = RHP.workDial?.getIntroVideoEl?.() || getBgVideo(container);
-      if (!bgVideo || !window.gsap) return Promise.resolve();
+    /** Called only after circle (tick) animation is complete. Fades in generic video (IDLE state). */
+    function fadeInIntroVideo(container) {
+      // Use the generic video element during fresh-load intro (IDLE state)
+      const introVideo = RHP.workDial?.getIntroVideoEl?.();
+      if (!introVideo || !window.gsap) return Promise.resolve();
 
       return new Promise((resolve) => {
         const onReady = () => {
-          bgVideo.removeEventListener('canplay', onReady);
-          bgVideo.removeEventListener('loadeddata', onReady);
+          introVideo.removeEventListener('canplay', onReady);
+          introVideo.removeEventListener('loadeddata', onReady);
           const gsap = window.gsap;
-          gsap.to(bgVideo, { opacity: 1, duration: 0.2, ease: 'linear', onComplete: resolve });
-          try { bgVideo.play(); } catch (e) {}
+          gsap.to(introVideo, { opacity: 1, duration: 0.2, ease: 'linear', onComplete: resolve });
+          try { introVideo.play(); } catch (e) {}
         };
-        if (bgVideo.readyState >= 2) {
+        if (introVideo.readyState >= 2) {
           onReady();
         } else {
-          bgVideo.addEventListener('canplay', onReady, { once: true });
-          bgVideo.addEventListener('loadeddata', onReady, { once: true });
+          introVideo.addEventListener('canplay', onReady, { once: true });
+          introVideo.addEventListener('loadeddata', onReady, { once: true });
         }
       });
     }
@@ -210,7 +208,6 @@
       const nav = scope?.querySelector('.nav');
       const dialUi = comp?.querySelector('.dial_layer-ui');
       const dialTicks = comp?.querySelector('.dial_layer-ticks');
-      const bgVideo = getBgVideo(container);
       const dialFg = comp?.querySelector('.dial_layer-fg');
       const stepEl = getStepEl(container);
 
@@ -222,10 +219,6 @@
       }
       if (dialUi) window.gsap?.set(dialUi, { opacity: 1 });
       if (dialTicks) dialTicks.style.opacity = '1';
-      if (bgVideo) {
-        window.gsap?.set(bgVideo, { opacity: 1 });
-        try { bgVideo.play(); } catch (e) {}
-      }
       if (dialFg && isMobile()) window.gsap?.set(dialFg, { opacity: 1 });
       if (stepEl) window.gsap?.set(stepEl, { opacity: 1 });
 
@@ -280,10 +273,13 @@
           }
 
           await runDialTickAnimation(container);
-          await fadeInBgVideo(container);
+          RHP.workDial?.setAttractionEnabled?.(true);
+          await Promise.race([
+            fadeInIntroVideo(container),
+            new Promise(r => setTimeout(r, 5000))
+          ]);
           (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-cursor-ready');
           RHP.cursor?.setLockedToDot?.(false);
-          RHP.workDial?.setAttractionEnabled?.(true);
           RHP.workDial?.onIntroComplete?.();
           await runNavAnimation(scope);
           RHP.workDial?.onNavAnimationComplete?.();
@@ -300,6 +296,7 @@
         resetToVisible(container);
         RHP.cursor?.setLockedToDot?.(false);
         RHP.workDial?.setIntroComplete?.();
+        RHP.workDial?.setAttractionEnabled?.(true);
       },
 
       destroy() {

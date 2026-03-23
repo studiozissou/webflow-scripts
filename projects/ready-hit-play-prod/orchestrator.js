@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.3.17.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.3.19.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -25,6 +25,8 @@
     const v = (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim();
     return v || fallback;
   };
+
+  const _remToPx = (rem) => rem * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16);
 
   const _parseSize = (str) => {
     if (!str || str === 'auto') return Infinity;
@@ -404,6 +406,7 @@
     const isDesktop = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
 
     let aboutTeamCtx = null;
+    let teamScrollState = null;
 
     function initAboutTeamHover(container) {
       // Idempotency guard — destroy previous instance if somehow called twice
@@ -411,7 +414,8 @@
 
       const gsap = window.gsap;
       if (!gsap) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       const scope = container || document;
       const ryanEl = scope.querySelector('[data-team="ryan"]');
@@ -442,8 +446,6 @@
         if (!m.bio || !m.image || !m.name) return;
       }
 
-      let activeTeamMember = null; // null | 'ryan' | 'guy'
-
       const ryanScale = members.ryan.imageCover || members.ryan.image;
       const guyScale = members.guy.imageCover || members.guy.image;
 
@@ -453,6 +455,42 @@
         members.ryan.name, members.guy.name,
         ryanScale, guyScale,
       ];
+
+      // --- Helper: measure expanded bio height, set min-height on member container ---
+      // Store measured bio heights for maxHeight animation
+      const bioHeights = {};
+
+      const measureAndSetMinHeights = () => {
+        for (const [key, m] of Object.entries(members)) {
+          // Temporarily make bio visible to measure its natural height
+          gsap.set(m.bio, { maxHeight: 'none', opacity: 1 });
+          const bioHeight = m.bio.scrollHeight;
+          // Revert to hidden
+          gsap.set(m.bio, { maxHeight: 0, opacity: 0 });
+
+          bioHeights[key] = bioHeight;
+
+          // Set min-height: current collapsed height + full bio height + 2rem gap
+          const currentHeight = m.el.getBoundingClientRect().height;
+          const gap = _remToPx(2);
+          m.el.style.minHeight = (currentHeight + bioHeight + gap) + 'px';
+        }
+      };
+
+      // --- Reduced motion: show bios statically, no animation ---
+      if (reducedMotion && !isDesktop()) {
+        aboutTeamCtx = gsap.context(() => {
+          for (const m of Object.values(members)) {
+            gsap.set(m.bio, { width: '100%', maxHeight: 'none', opacity: 1, overflow: 'visible' });
+          }
+        }, container);
+        measureAndSetMinHeights();
+        return;
+      }
+
+      if (reducedMotion) return; // Desktop reduced motion — skip entirely
+
+      let activeTeamMember = null; // null | 'ryan' | 'guy'
 
       aboutTeamCtx = gsap.context(() => {
         gsap.set([members.ryan.bio, members.guy.bio], { width: 0, overflow: 'hidden', opacity: 0 });
@@ -520,36 +558,72 @@
           { el: guyEl, type: 'mouseleave', fn: onGuyLeave }
         );
       } else {
-        // Mobile: tap to toggle with mutual exclusion (R5)
-        const makeTapHandler = (key) => (e) => {
-          e.preventDefault();
-          if (activeTeamMember === key) {
-            closeMember(key);
-          } else {
-            if (activeTeamMember) closeMember(activeTeamMember);
-            openMember(key);
-          }
+        // Mobile: scroll-linked bio reveal (maxHeight + opacity, not width)
+        // CSS overrides position to relative so bio flows below name in column layout.
+        // Override the shared init: set bio hidden via maxHeight instead of width.
+        gsap.set([members.ryan.bio, members.guy.bio], { width: '100%', maxHeight: 0, opacity: 0, overflow: 'hidden' });
+
+        measureAndSetMinHeights();
+
+        const scrollState = { rafId: null, onScroll: null, resizeTimer: null };
+        const scrollWrapper = container?.closest('[data-barba="container"]') || container;
+
+        const onScroll = () => {
+          if (scrollState.rafId) return;
+          scrollState.rafId = requestAnimationFrame(() => {
+            scrollState.rafId = null;
+            const vh = window.innerHeight;
+            const slideRaw = _getCSSVar('--team-photo-slide', '6vw');
+            const slideDistance = (parseFloat(slideRaw) / 100) * window.innerWidth;
+
+            for (const [key, m] of Object.entries(members)) {
+              const rect = m.el.getBoundingClientRect();
+              // start: element top at viewport bottom (progress=0)
+              // end: element centered in viewport (progress=1)
+              const start = vh;
+              const end = (vh - rect.height) / 2;
+              const raw = (start - rect.top) / (start - end);
+              const progress = Math.max(0, Math.min(1, raw));
+
+              const scaleTarget = m.imageCover || m.image;
+              // Photo slides: Ryan (nameDir=1) slides left (negative x), Guy (nameDir=-1) slides right (positive x)
+              const photoX = -m.nameDir * slideDistance * progress;
+              const mh = bioHeights[key] || 0;
+
+              gsap.set(m.image, { x: photoX, force3D: true });
+              gsap.set(m.bio, { maxHeight: mh * progress, opacity: progress, overflow: progress > 0.95 ? 'visible' : 'hidden' });
+              // No name shift on mobile — stacked column layout doesn't benefit, and shift can clip past section padding
+              gsap.set(scaleTarget, { scale: 1 + 0.05 * progress, force3D: true });
+            }
+          });
         };
 
-        const onRyanTap = makeTapHandler('ryan');
-        const onGuyTap = makeTapHandler('guy');
+        // Listen on scroll wrapper, window, and Lenis (same pattern as about-text-lines.js)
+        if (scrollWrapper && scrollWrapper !== window) {
+          scrollWrapper.addEventListener('scroll', onScroll, { passive: true });
+          teamHoverListeners.push({ el: scrollWrapper, type: 'scroll', fn: onScroll });
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        teamHoverListeners.push({ el: window, type: 'scroll', fn: onScroll });
+        RHP.lenis?.onScroll?.(onScroll);
+        teamHoverListeners.push({ el: null, type: 'lenis', fn: onScroll });
 
-        members.ryan.image.addEventListener('click', onRyanTap);
-        members.guy.image.addEventListener('click', onGuyTap);
-
-        // Close on tap outside both team members
-        const onDocTap = (e) => {
-          if (!activeTeamMember) return;
-          if (ryanEl.contains(e.target) || guyEl.contains(e.target)) return;
-          closeMember(activeTeamMember);
+        // Debounced resize handler — re-measure bio heights
+        const onResize = () => {
+          clearTimeout(scrollState.resizeTimer);
+          scrollState.resizeTimer = setTimeout(() => {
+            measureAndSetMinHeights();
+            onScroll(); // re-apply with new measurements
+          }, 200);
         };
-        document.addEventListener('click', onDocTap);
+        window.addEventListener('resize', onResize, { passive: true });
+        teamHoverListeners.push({ el: window, type: 'resize', fn: onResize });
 
-        teamHoverListeners.push(
-          { el: members.ryan.image, type: 'click', fn: onRyanTap },
-          { el: members.guy.image, type: 'click', fn: onGuyTap },
-          { el: document, type: 'click', fn: onDocTap }
-        );
+        scrollState.onScroll = onScroll;
+        teamScrollState = scrollState;
+
+        // Kick once to set initial positions
+        onScroll();
       }
     }
 
@@ -558,10 +632,25 @@
       const gsap = window.gsap;
       if (gsap && teamTweenTargets.length) {
         gsap.killTweensOf(teamTweenTargets);
+        // Clear inline styles set by scroll rAF (outside gsap.context, so ctx.revert won't reach them)
+        gsap.set(teamTweenTargets, { clearProps: 'transform,width,opacity,overflow,scale,maxHeight' });
       }
       aboutTeamCtx?.revert();
       aboutTeamCtx = null;
+
+      // Cleanup scroll state (mobile scroll-linked reveal)
+      if (teamScrollState) {
+        if (teamScrollState.rafId) cancelAnimationFrame(teamScrollState.rafId);
+        clearTimeout(teamScrollState.resizeTimer);
+        RHP.lenis?.offScroll?.(teamScrollState.onScroll);
+        // Clear min-height set by measureAndSetMinHeights (direct style, not in gsap.context)
+        document.querySelectorAll('[data-team]').forEach(el => { el.style.minHeight = ''; });
+        teamScrollState = null;
+      }
+
       teamHoverListeners.forEach(({ el, type, fn }) => {
+        // 'lenis' is a sentinel — RHP.lenis.offScroll handles cleanup above
+        if (type === 'lenis') return;
         el.removeEventListener(type, fn);
       });
       teamHoverListeners = [];
@@ -681,6 +770,172 @@
       splitInstances = [];
     }
 
+    /* Mobile (≤991px) scroll-driven logo animation
+       - Each of the 3 .about-hero_ready elements animates in a bell curve
+         within its third of the section: fade 0.4→1, SplitText words slide in,
+         then reverse out. Driven by scrub:true ScrollTrigger on .section_about-hero.
+       - Desktop keeps the existing hover interaction (gated by isDesktop()). */
+    let aboutHeroScrollCtx = null;
+    let scrollSplitInstances = []; // separate from hover's splitInstances
+
+    function initAboutHeroLogoScroll(container) {
+      const gsap = window.gsap;
+      const ScrollTrigger = window.ScrollTrigger;
+      const SplitText = window.SplitText;
+      if (!gsap || !ScrollTrigger || !SplitText) return;
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        // Show all words fully visible, skip animation
+        const heroReadyEls = (container || document).querySelectorAll('.section_about-hero .about-hero_ready');
+        heroReadyEls.forEach(el => { el.style.opacity = '1'; });
+        return;
+      }
+
+      const section = (container || document).querySelector('.section_about-hero');
+      if (!section) return;
+
+      const heroReadyEls = section.querySelectorAll('.about-hero_ready');
+      if (heroReadyEls.length < 3) return;
+
+      // About page scrolls inside fixed Barba container, not window
+      const scroller = container?.closest('[data-barba="container"]') || container || window;
+
+      aboutHeroScrollCtx = gsap.context(() => {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            scroller: scroller,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: true,
+          }
+        });
+
+        heroReadyEls.forEach((heroReady, i) => {
+          // Initial state: same as desktop hover initial state
+          gsap.set(heroReady, { opacity: 0.4, y: 0 });
+
+          // SplitText on headings (reuse hover pattern)
+          const headings = heroReady.querySelectorAll('.heading-style-h3');
+          const allHeadings = Array.from(headings);
+          const allWords = [];
+
+          headings.forEach(h => {
+            try {
+              gsap.set(h, { opacity: 0 }); // heading hidden until animated in
+              const split = new SplitText(h, {
+                type: 'words,lines',
+                linesClass: 'about-hero-line',
+                wordsClass: 'about-hero-word'
+              });
+              if (split.words?.length) {
+                gsap.set(split.words, { yPercent: -100, opacity: 0 });
+                allWords.push(...split.words);
+              }
+              scrollSplitInstances.push({ split, headingEl: h });
+            } catch (e) {
+              // SplitText failed for this heading — skip gracefully
+            }
+          });
+
+          // Timeline: 3 thirds fit in 0–0.9, final 0.9–1.0 is all-visible reveal
+          const totalAnim = 0.9;
+          const third = totalAnim / 3;
+          const thirdStart = i * third;
+          const inEnd = thirdStart + third * 0.25;   // IN finishes at 25% of third
+          const outStart = thirdStart + third * 0.75; // OUT begins at 75% of third
+          const thirdEnd = (i + 1) * third;
+          const inDuration = inEnd - thirdStart;
+          const outDuration = thirdEnd - outStart;
+
+          const names = ['ready', 'hit', 'play'];
+          const name = names[i];
+
+          // Stagger: keep all words finishing within inDuration
+          const wordStagger = allWords.length > 1
+            ? inDuration / (allWords.length * 3)
+            : 0;
+
+          // Read y-shift from CSS (responsive via --hero-logo-scroll-y)
+          const scrollY = _getCSSVar('--hero-logo-scroll-y', '-1.5rem');
+
+          // IN: thirdStart → inEnd (25% of third)
+          tl.addLabel(`${name}-in`, thirdStart);
+          tl.to(heroReady, {
+            opacity: 1,
+            y: scrollY,
+            duration: inDuration,
+            ease: 'none',
+          }, thirdStart);
+
+          if (allHeadings.length) {
+            tl.to(allHeadings, {
+              opacity: 1,
+              duration: inDuration,
+              ease: 'none',
+            }, thirdStart);
+          }
+
+          if (allWords.length) {
+            tl.to(allWords, {
+              yPercent: 0,
+              opacity: 1,
+              duration: inDuration,
+              ease: 'none',
+              stagger: wordStagger,
+            }, thirdStart);
+          }
+
+          // HOLD: inEnd → outStart (50% of third) — GSAP holds final state automatically
+
+          // OUT: outStart → thirdEnd (25% of third)
+          tl.addLabel(`${name}-out`, outStart);
+          tl.to(heroReady, {
+            opacity: 0.4,
+            y: 0,
+            duration: outDuration,
+            ease: 'none',
+          }, outStart);
+
+          if (allHeadings.length) {
+            tl.to(allHeadings, {
+              opacity: 0,
+              duration: outDuration,
+              ease: 'none',
+            }, outStart);
+          }
+
+          if (allWords.length) {
+            tl.to(allWords, {
+              yPercent: 100,
+              opacity: 0,
+              duration: outDuration,
+              ease: 'none',
+              stagger: wordStagger,
+            }, outStart);
+          }
+
+          // After PLAY's OUT: fade all 3 to full opacity (0.9 → 1.0)
+          if (i === 2) {
+            const revealStart = 0.9;
+            const revealDuration = 0.1;
+            tl.addLabel('reveal', revealStart);
+            heroReadyEls.forEach(el => {
+              tl.to(el, { opacity: 1, duration: revealDuration, ease: 'none' }, revealStart);
+            });
+          }
+        });
+      }, container);
+    }
+
+    function destroyAboutHeroLogoScroll() {
+      if (!aboutHeroScrollCtx) return;
+      // ctx.revert() kills all tweens + ScrollTrigger created inside the context
+      aboutHeroScrollCtx.revert();
+      aboutHeroScrollCtx = null;
+      scrollSplitInstances = [];
+    }
+
     return {
       init(container) {
         if (active) return;
@@ -688,7 +943,13 @@
         // Note: scroll.unlock + lenis.start/resize handled by runAfterEnter (Barba) or bootCurrentView (direct-land)
         RHP.aboutDialTicks?.init?.(container);
         RHP.aboutTextLines?.init?.(container);
-        if (isDesktop()) initAboutHeroLogoHover(container); // no internal desktop guard — must stay gated
+        // Gate matches CSS @media (max-width: 991px) — width-based, not hover-based,
+        // so scroll layout + JS path always agree (touch laptops, MCP headless, etc.)
+        if (window.innerWidth > 991) {
+          initAboutHeroLogoHover(container);
+        } else {
+          initAboutHeroLogoScroll(container);
+        }
         initAboutTeamHover(container); // handles desktop vs mobile internally
       },
       destroy() {
@@ -698,6 +959,7 @@
         RHP.aboutDialTicks?.destroy?.();
         RHP.aboutTextLines?.destroy?.();
         destroyAboutHeroLogoHover();
+        destroyAboutHeroLogoScroll();
         destroyAboutTeamHover();
       }
     };
@@ -1136,6 +1398,37 @@
     _navRafId = requestAnimationFrame(setNavHeight);
   }
 
+  /* Case BG canvas rAF draw — mirrors fg video frame into bg canvas on case pages
+     (work-dial draw loop is suspended during case view; orchestrator owns the loop here) */
+  let _caseBgRafId = null;
+  function startCaseBgDraw() {
+    stopCaseBgDraw();
+    const bgCanvas = document.querySelector('.dial_bg-canvas');
+    const caseFgEl = document.querySelector('#fg-video-wrap > .dial_fg-video');
+    if (!bgCanvas || !caseFgEl) return;
+    // Size canvas to half-res of parent (work-dial resize() is suspended on case pages)
+    const parent = bgCanvas.parentElement;
+    if (parent) {
+      const pw = parent.offsetWidth;
+      const ph = parent.offsetHeight;
+      if (pw > 0 && ph > 0) {
+        bgCanvas.width = Math.round(pw * 0.5);
+        bgCanvas.height = Math.round(ph * 0.5);
+      }
+    }
+    const bgCtx = bgCanvas.getContext('2d');
+    function tick() {
+      if (caseFgEl.readyState >= 2) {
+        try { bgCtx.drawImage(caseFgEl, 0, 0, bgCanvas.width, bgCanvas.height); } catch(e) {}
+      }
+      _caseBgRafId = requestAnimationFrame(tick);
+    }
+    _caseBgRafId = requestAnimationFrame(tick);
+  }
+  function stopCaseBgDraw() {
+    if (_caseBgRafId) { cancelAnimationFrame(_caseBgRafId); _caseBgRafId = null; }
+  }
+
   function bootCurrentView() {
     const container = document.querySelector('[data-barba="container"]');
     const ns = container?.getAttribute('data-barba-namespace');
@@ -1147,32 +1440,21 @@
       setDialToWorkState();
       RHP.scroll.unlock();
 
-      // Populate persistent FG + BG videos from data attributes on .case-studies_wrapper
+      // Populate persistent FG video from data attributes on .case-studies_wrapper
       var caseWrapper = container?.querySelector('.case-studies_wrapper');
       var isMobile = window.matchMedia('(hover: none), (pointer: coarse)').matches;
       var fgSrc = (isMobile && caseWrapper?.getAttribute('fg-video-mobile')) || caseWrapper?.getAttribute('fg-video') || '';
-      var bgSrc = caseWrapper?.getAttribute('bg-video') || fgSrc;
       var fgVideo = document.querySelector('#fg-video-wrap > .dial_fg-video');
-      var bgVideoEl = document.querySelector('.dial_bg-video');
       if (fgSrc && fgVideo && !fgVideo.src) {
         fgVideo.src = fgSrc;
         fgVideo.play().catch(function() {});
       }
-      if (bgSrc && bgVideoEl && !bgVideoEl.src) {
-        bgVideoEl.src = bgSrc;
-        bgVideoEl.play().catch(function() {});
+      // BG canvas: set blur + opacity, start rAF draw loop
+      const bgCanvas = document.querySelector('.dial_bg-canvas');
+      if (bgCanvas && window.gsap) {
+        window.gsap.set(bgCanvas, { filter: 'blur(40px)', opacity: 1 });
       }
-      // Sync BG to FG once FG starts playing
-      if (fgVideo && bgVideoEl) {
-        fgVideo.addEventListener('playing', function syncBg() {
-          fgVideo.removeEventListener('playing', syncBg);
-          try { bgVideoEl.currentTime = fgVideo.currentTime; } catch(e) {}
-        }, { once: true });
-      }
-      // Apply blur to BG video (matches Barba transition path in runAfterEnter)
-      if (bgVideoEl && window.gsap) {
-        window.gsap.set(bgVideoEl, { filter: 'blur(40px)' });
-      }
+      startCaseBgDraw();
 
       RHP.views.case?.init?.(container);
     } else if (ns === 'about') {
@@ -1261,19 +1543,11 @@
       document
         .querySelector('[data-barba="container"]')
         ?.getAttribute('data-barba-namespace') || '';
-    let _caseBgSyncId = null;
-    let _caseFgSyncListeners = null; // Part C: stored refs for case page FG buffering listeners
     let _overlayPollCancelled = false; // Cancel token for about→home overlay rAF poll
 
     function runAfterEnter(data) {
-      // Clear case BG sync from previous page
-      if (_caseBgSyncId) { clearInterval(_caseBgSyncId); _caseBgSyncId = null; }
-      // Clear case FG buffering listeners from previous page
-      if (_caseFgSyncListeners) {
-        _caseFgSyncListeners.fg.removeEventListener('waiting', _caseFgSyncListeners.onWaiting);
-        _caseFgSyncListeners.fg.removeEventListener('playing', _caseFgSyncListeners.onPlaying);
-        _caseFgSyncListeners = null;
-      }
+      // Stop case BG canvas draw from previous page
+      stopCaseBgDraw();
       currentNs = data.next ? (data.next.namespace || '') : '';
       const ns = currentNs;
 
@@ -1333,47 +1607,10 @@
         if (dialFg && window.gsap) {
           window.gsap.set(dialFg, { opacity: 1 });
         }
-        var bgVideo = document.querySelector('.dial_bg-video');
-        if (bgVideo && window.gsap) window.gsap.set(bgVideo, { filter: 'blur(40px)' });
-
-        // Sync BG video to FG video on case pages (work-dial drift monitor is suspended)
-        var caseFg = document.querySelector('#fg-video-wrap > .dial_fg-video');
-        if (caseFg && bgVideo && bgVideo.tagName === 'VIDEO') {
-          // Initial sync
-          try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
-
-          // Part C: FG buffering listeners — lock BG to FG during stalls
-          var caseFgBuffering = false;
-          var onCaseFgWaiting = function () {
-            caseFgBuffering = true;
-            try { bgVideo.currentTime = caseFg.currentTime; } catch (e) {}
-            try { bgVideo.pause(); } catch (e) {}
-          };
-          var onCaseFgPlaying = function () {
-            caseFgBuffering = false;
-            try { bgVideo.currentTime = caseFg.currentTime; } catch (e) {}
-            try { bgVideo.play().catch(function () {}); } catch (e) {}
-          };
-          caseFg.addEventListener('waiting', onCaseFgWaiting);
-          caseFg.addEventListener('playing', onCaseFgPlaying);
-          _caseFgSyncListeners = { fg: caseFg, onWaiting: onCaseFgWaiting, onPlaying: onCaseFgPlaying };
-
-          // Ongoing drift correction — cleared on next Barba leave
-          if (_caseBgSyncId) clearInterval(_caseBgSyncId);
-          _caseBgSyncId = setInterval(function() {
-            if (!caseFg || !bgVideo || caseFg.paused) return;
-            // Part C: when FG is buffering, snap every tick and keep BG paused
-            if (caseFgBuffering) {
-              try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
-              if (!bgVideo.paused) try { bgVideo.pause(); } catch(e) {}
-              return;
-            }
-            var drift = Math.abs(bgVideo.currentTime - caseFg.currentTime);
-            if (drift > 0.15) {
-              try { bgVideo.currentTime = caseFg.currentTime; } catch(e) {}
-            }
-          }, 500);
-        }
+        // BG canvas: set blur + opacity, start rAF draw loop (mirrors case fg video)
+        const bgCanvas = document.querySelector('.dial_bg-canvas');
+        if (bgCanvas && window.gsap) window.gsap.set(bgCanvas, { filter: 'blur(40px)', opacity: 1 });
+        startCaseBgDraw();
       } else if (ns === 'home') {
         // Defensive: ensure dial is at home state after clearProps
         setDialToHomeState();

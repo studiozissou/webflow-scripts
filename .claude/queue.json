@@ -1,7 +1,18 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-13",
+  "updated": "2026-03-19",
   "queue": [
+    {
+      "id": "fix-dial-namespace-selectors",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Fix dial CSS namespace selectors broken after Barba about→home transition",
+      "description": "Replace .dial_component:has([data-barba-namespace]) CSS selectors with [data-dial-ns] attribute selectors. Root cause: about page Barba container is a sibling of dial_component (not a descendant), so :has() never matches. Extend data-dial-ns to all namespaces (home, about, case, contact). ~30 CSS rules + orchestrator.js setAttribute calls.",
+      "spec": ".claude/specs/fix-dial-namespace-selectors.md",
+      "created": "2026-03-19"
+    },
     {
       "id": "rhp-video-transition-cluster",
       "project": "ready-hit-play-prod",

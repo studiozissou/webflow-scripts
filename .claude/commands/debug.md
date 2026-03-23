@@ -24,6 +24,26 @@
      Playwright MCP:   [connected / not connected]
    ```
 4. **Check recent git diff** — `git diff HEAD~3` — any changes that correlate with the problem appearing?
+
+### Verify-loop gate
+
+If a spec exists for the affected feature (in `.claude/specs/`), check that it contains a verify loop — a section describing how to confirm the fix works (regression test, MCP checks, manual steps, or a combination).
+
+**Search for:** a heading or section matching "verify", "verification", "test plan", "acceptance", or "how to confirm" in the spec.
+
+- **Found:** note the verify criteria — use them in the Confirm step (step 6) and post-fix verify loop.
+- **Not found:**
+  1. Flag: *"No verify loop found in the spec for this feature."*
+  2. Re-read the full spec to make sure you didn't miss it (could be named differently or embedded in another section).
+  3. If still not found, ask the user via `AskUserQuestion`:
+
+     **"The spec has no verify loop — how should we handle this?"**
+     1. **"Generate one now" (Recommended)** — Draft a verify loop section (reproduction steps, expected vs actual, Playwright assertions, MCP checks if applicable) and append it to the spec file. Then continue.
+     2. **"Skip — I'll verify manually"** — Log "verify loop: skipped by user" and continue without one.
+     3. **"No spec — just debug it"** — Continue without a spec-based verify loop (the diagnostic loop's own Confirm step and post-fix verify loop still apply).
+
+If no spec exists at all, skip this gate — the debug command's built-in verify loop (post-fix steps a–i) serves as the verification mechanism.
+
 5. **Confirm environment** — ask if not obvious:
    - Staging or production?
    - Localhost detection active? Is `npx serve .` running?
@@ -181,9 +201,11 @@ Activate the **debug skill** and run its full loop:
 5. **Fix** — use the **opus model** when applying fixes. Apply only after hypothesis is confirmed; if confidence < 80% pause and ask
 6. **Confirm** — verify fix, check for regressions, remove all instrumentation
 
-### Verify loop (Playwright MCP default)
+### Verify loop (Playwright MCP only — no CLI tests)
 
-After applying the fix, run a local verify loop — same pattern as `/build`:
+> **IMPORTANT:** `/build` and `/debug` verify loops use Playwright MCP exclusively. Code hasn't been deployed to CDN yet, so `npx playwright test` against the staging URL will test OLD code — not your changes. CLI test suites (`npm test`, `npx playwright test`) are reserved for `/deploy`.
+
+After applying the fix, run a verify loop via MCP:
 
    a. `browser_navigate` to the affected page on STAGING_URL
    b. **Console check** — `browser_console_messages`, filter benign noise. FAIL on real errors.
@@ -192,15 +214,15 @@ After applying the fix, run a local verify loop — same pattern as `/build`:
    e. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
    f. **Reproduction replay** — replay the exact MCP steps from Isolate. Verify original error is gone.
    g. Compare before/after screenshots — flag any visual regressions.
-   h. Run the bridge regression test (if generated in Post-Fix step 1 below):
-      ```
-      npx playwright test tests/acceptance/debug-SLUG.spec.js --config=tests/playwright.config.js --reporter=list
-      ```
-   i. Run smoke + a11y suites as regression: `npm test`
+   h. **Smoke checks via MCP** — replicate core smoke concerns through MCP:
+      - `browser_console_messages` — no JS errors on the page
+      - `browser_snapshot` — key DOM elements present (nav, barba container, critical modules)
+      - `browser_navigate` to 2–3 other pages — confirm no console errors after Barba transition
+      - `browser_evaluate` — `window.RHP?.scriptsOk === true` on each page
 
    On FAIL: fix and re-verify (return to step 5). Track iteration count — after 5 failed iterations, stop and ask user.
 
-   **Fallback** (no MCP): Run regression test and smoke/a11y suites directly via `npx playwright test`. If no tests exist, run smoke + a11y only and warn.
+   **Fallback** (no MCP): Cannot run MCP verify loop. Present the spec's verify-loop criteria as a **manual checklist** for the user. Log: "MCP not connected — verify loop skipped, manual verification required before `/deploy`". Do NOT run `npx playwright test` — it would test old deployed code.
 
 ---
 

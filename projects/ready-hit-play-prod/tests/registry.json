@@ -121,6 +121,36 @@
       "slug": "rhp-mobile-home-work",
       "created": "2026-03-18",
       "description": "Mobile homepage — dial sizing, white dot visibility, case bottom nav, Barba at 390px"
+    },
+    {
+      "id": "feat-about-team-mobile-scroll",
+      "file": "tests/acceptance/feat-about-team-mobile-scroll.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-about-team-mobile-scroll",
+      "created": "2026-03-19",
+      "description": "Mobile scroll-linked team bio reveal — scroll triggers, reverse, direction, console errors, desktop regression, Barba re-entry, reduced motion"
+    },
+    {
+      "id": "fix-dial-namespace-selectors",
+      "file": "tests/acceptance/fix-dial-namespace-selectors.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "slug": "fix-dial-namespace-selectors",
+      "created": "2026-03-19",
+      "description": "Dial namespace selectors — data-dial-ns attribute + display:grid on all pages and Barba transitions"
+    },
+    {
+      "id": "rhp-about-hero-logo-scroll",
+      "file": "tests/acceptance/rhp-about-hero-logo-scroll.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-about-hero-logo-scroll",
+      "created": "2026-03-19",
+      "description": "Mobile about hero — scroll-driven logo animation, sticky logo, bell-curve per third, Barba re-entry"
     }
   ]
 }

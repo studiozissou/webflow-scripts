@@ -118,7 +118,7 @@
         });
       }
 
-      if (dialComp) dialComp.setAttribute('data-dial-ns', 'work');
+      setDialNs('work');
 
       // Pin current dimensions inline. Keep margin:auto so element stays centered
       // as GSAP tweens width/height (inset:0 + margin:auto = auto-centering).
@@ -178,7 +178,7 @@
         margin: 'auto'
       });
 
-      if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
+      setDialNs('home');
       dialFg.classList.remove('is-case-study', 'no-scrollbar');
 
       if (dialTicks) {
@@ -213,7 +213,7 @@
     const dialUI = document.querySelector('.dial_layer-ui');
     if (!dialFg) return;
 
-    if (dialComp) dialComp.setAttribute('data-dial-ns', 'work');
+    setDialNs('work');
     dialFg.classList.add('is-case-study', 'no-scrollbar');
 
     if (gsap) {
@@ -232,7 +232,7 @@
     const dialComp = document.querySelector('.dial_component');
     if (!dialFg) return;
 
-    if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
+    setDialNs('home');
     dialFg.classList.remove('is-case-study', 'no-scrollbar');
 
     if (gsap) {
@@ -242,6 +242,12 @@
       dialFg.style.cssText = '';
       if (dialUI) dialUI.style.cssText = '';
     }
+  }
+
+  /** Set data-dial-ns attribute on .dial_component (drives CSS layout). */
+  function setDialNs(ns) {
+    const dialComp = document.querySelector('.dial_component');
+    if (dialComp) dialComp.setAttribute('data-dial-ns', ns);
   }
 
   /** Start Lenis on a scroll wrapper element.
@@ -1438,6 +1444,7 @@
     if (dialNs === 'work' || ns === 'case') {
       // Direct-land on work page: set dial to expanded state, no workDial init
       setDialToWorkState();
+      setDialNs('case');
       RHP.scroll.unlock();
 
       // Populate persistent FG video from data attributes on .case-studies_wrapper
@@ -1459,6 +1466,7 @@
       RHP.views.case?.init?.(container);
     } else if (ns === 'about') {
       // Direct-land on about — Barba container (position:fixed, overflow:auto) is the scroll wrapper
+      setDialNs('about');
       RHP.scroll.unlock();
       _startLenisForPage(container);
       // Clear lingering dial visibility from previous session
@@ -1468,6 +1476,7 @@
     } else {
       // Home or unknown: normal dial boot
       setDialToHomeState();
+      if (ns === 'contact') setDialNs('contact');
 
       if (ns !== 'home') {
         // Contact/other: Barba container is the scroll wrapper
@@ -1550,6 +1559,7 @@
       stopCaseBgDraw();
       currentNs = data.next ? (data.next.namespace || '') : '';
       const ns = currentNs;
+      setDialNs(ns);
 
       var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
       if (ns === 'home') {
@@ -1590,8 +1600,8 @@
       }
 
       // Deferred clearProps: morph animations in leave() keep inline styles because
-      // :has([data-barba-namespace]) selectors match the OLD page during leave().
-      // Now that Barba has swapped the DOM, the new namespace is live and CSS is correct.
+      // [data-dial-ns] was set to the transition value during leave().
+      // Now that Barba has swapped, setDialNs(ns) above set the correct value.
       // Safe to clearProps and let CSS own the layout.
       var dialFg = document.querySelector('.dial_layer-fg');
       if (dialFg && window.gsap) {
@@ -2089,8 +2099,7 @@
             RHP.workDial?.destroy?.();
             RHP.videoLoader?.destroy?.();
             // Reset dial-ns so about CSS rules (dial_layer-fg overflow/placement) apply
-            const dialComp = document.querySelector('.dial_component');
-            if (dialComp) dialComp.setAttribute('data-dial-ns', 'home');
+            setDialNs('home');
           },
           leave(data) {
             return runHomeToAboutTransition(data);

@@ -1,6 +1,8 @@
 {
   "version": 1,
-  "lastUpdated": "2026-03-19",
+  "lastUpdated": "2026-03-24",
+  "lastDeployed": "2026-03-24",
+  "lastDeployedHash": "16d6c3b",
   "entries": [
     {
       "id": "smoke",

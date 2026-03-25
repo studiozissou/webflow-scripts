@@ -176,7 +176,8 @@
         height: rect.height,
         borderRadius: v.caseBR,
         overflow: 'hidden',
-        margin: 'auto'
+        margin: 'auto',
+        opacity: 1
       });
 
       setDialNs('home');

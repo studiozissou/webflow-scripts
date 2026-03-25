@@ -7,7 +7,7 @@
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P2",
-      "status": "Ready to Review",
+      "status": "Done",
       "title": "Dev/CDN source switch via URL param + localStorage",
       "description": "URL-param toggle (?rhp=local / ?rhp=cdn) with localStorage persistence to switch init.js module loading between localhost and CDN without changing the Webflow head block.",
       "spec": ".claude/specs/feat-dev-cdn-source-switch.md",

@@ -128,7 +128,8 @@
         height: rect.height,
         borderRadius: 0,
         overflow: 'hidden',
-        margin: 'auto'
+        margin: 'auto',
+        opacity: 1
       });
 
       dialFg.classList.add('is-case-study', 'no-scrollbar');
@@ -247,7 +248,7 @@
   /** Set data-dial-ns attribute on .dial_component (drives CSS layout). */
   function setDialNs(ns) {
     const dialComp = document.querySelector('.dial_component');
-    if (dialComp) dialComp.setAttribute('data-dial-ns', ns);
+    if (dialComp) dialComp.setAttribute('data-dial-ns', ns === 'case' ? 'work' : ns);
   }
 
   /** Start Lenis on a scroll wrapper element.
@@ -1124,6 +1125,8 @@
       }
     };
   })();
+  // Alias: Barba namespace was renamed from 'case' to 'work'
+  RHP.views.work = RHP.views.case;
 
   RHP.views.contact = RHP.views.contact || makeScrollPage();
 
@@ -1441,10 +1444,10 @@
     const dialComp = document.querySelector('.dial_component');
     const dialNs = dialComp?.getAttribute('data-dial-ns') || '';
 
-    if (dialNs === 'work' || ns === 'case') {
+    if (dialNs === 'work' || ns === 'case' || ns === 'work') {
       // Direct-land on work page: set dial to expanded state, no workDial init
       setDialToWorkState();
-      setDialNs('case');
+      setDialNs('work');
       RHP.scroll.unlock();
 
       // Populate persistent FG video from data attributes on .case-studies_wrapper
@@ -1612,7 +1615,7 @@
         window.gsap.set(videoWrap, { clearProps: 'all' });
       }
 
-      if (ns === 'case') {
+      if (ns === 'case' || ns === 'work') {
         setNavHeight();
         if (dialFg && window.gsap) {
           window.gsap.set(dialFg, { opacity: 1 });
@@ -1636,7 +1639,7 @@
         RHP.scroll.lock();
       } else {
         RHP.scroll.unlock();
-        if (ns !== 'case') {
+        if (ns !== 'case' && ns !== 'work') {
           // About/contact: Barba container (position:fixed, overflow:auto) is the scroll wrapper
           _startLenisForPage(data.next && data.next.container ? data.next.container : null);
         }
@@ -1672,7 +1675,7 @@
       }
 
       // Case study: apply video handoff from home
-      if (ns === 'case' && RHP.videoState && RHP.videoState.caseHandoff && data.next && data.next.container) {
+      if ((ns === 'case' || ns === 'work') && RHP.videoState && RHP.videoState.caseHandoff && data.next && data.next.container) {
         var handoff = RHP.videoState.caseHandoff;
         var seekTime = (handoff.currentTime || 0) + (handoff.transitionDuration || 0.6);
         if (typeof handoff.index === 'number') RHP.videoState.lastCaseIndex = handoff.index;
@@ -1686,7 +1689,7 @@
       }
 
       // Case study: autoplay all videos in case-video, laptop and columns sections after Barba transition
-      if (ns === 'case' && data.next && data.next.container) {
+      if ((ns === 'case' || ns === 'work') && data.next && data.next.container) {
         var caseContainer = data.next.container;
         var handoffVideoEl = caseVideoEl; // reference from handoff block above (may be undefined if no handoff)
         var sectionVideos = caseContainer.querySelectorAll('.section_case-video video, .section_case-video-laptop video, .section_case-columns video');
@@ -1698,7 +1701,7 @@
       }
 
       // Page-specific: Overland AI
-      if (ns === 'case' && /\/work\/overland-ai(\/|$)/.test(window.location.pathname)) {
+      if ((ns === 'case' || ns === 'work') && /\/work\/overland-ai(\/|$)/.test(window.location.pathname)) {
         var baseUrl = RHP.getScriptBaseUrl && RHP.getScriptBaseUrl();
         var v = RHP.configVersion || '0';
         if (baseUrl) {
@@ -1723,7 +1726,7 @@
       _reinitWebflow();
 
       // Re-assert UI hidden after _reinitWebflow() (IX2 may reset it)
-      if (ns === 'case') {
+      if (ns === 'case' || ns === 'work') {
         var dialUI = document.querySelector('.dial_layer-ui');
         if (dialUI && window.gsap) window.gsap.set(dialUI, { opacity: 0 });
       }
@@ -1962,11 +1965,11 @@
     barba.init({
       preventRunning: true,
       transitions: [
-        /* ---- Home -> Case ---- */
+        /* ---- Home -> Work ---- */
         {
-          name: 'home-to-case',
+          name: 'home-to-work',
           from: { namespace: ['home'] },
-          to: { namespace: ['case'] },
+          to: { namespace: ['case', 'work'] },
 
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
@@ -2004,20 +2007,22 @@
           }
         },
 
-        /* ---- Case -> Home ---- */
+        /* ---- Work -> Home ---- */
         {
-          name: 'case-to-home',
-          from: { namespace: ['case'] },
+          name: 'work-to-home',
+          from: { namespace: ['case', 'work'] },
           to: { namespace: ['home'] },
 
           beforeLeave(data) {
+            // Stop Lenis before scrollTop reset so rAF doesn't override it
+            RHP.lenis?.stop();
             // Scroll case content to top so video is visible for shrink animation
             const dialFg = document.querySelector('.dial_layer-fg');
             if (dialFg) dialFg.scrollTop = 0;
 
             const ns = data.current?.namespace || currentNs;
             // Capture case study video position for handoff back to home dial
-            if (ns === 'case' && RHP.videoState) {
+            if ((ns === 'case' || ns === 'work') && RHP.videoState) {
               const container = data.current?.container || document;
               const caseVideo = container.querySelector('.section_case-video video') || container.querySelector('.dial_fg-video') || container.querySelector('.dial_video-wrap video');
               const idx = RHP.videoState.lastCaseIndex;
@@ -2087,12 +2092,14 @@
           }
         },
 
-        /* ---- Case -> About ---- */
+        /* ---- Work -> About ---- */
         {
-          name: 'case-to-about',
-          from: { namespace: ['case'] },
+          name: 'work-to-about',
+          from: { namespace: ['case', 'work'] },
           to: { namespace: ['about'] },
           beforeLeave(data) {
+            // Stop Lenis before scrollTop reset so rAF doesn't override it
+            RHP.lenis?.stop();
             // Scroll case content to top before leaving (dialFg persists across transitions)
             const dialFg = document.querySelector('.dial_layer-fg');
             if (dialFg) dialFg.scrollTop = 0;
@@ -2116,11 +2123,11 @@
           }
         },
 
-        /* ---- About -> Case ---- */
+        /* ---- About -> Work ---- */
         {
-          name: 'about-to-case',
+          name: 'about-to-work',
           from: { namespace: ['about'] },
-          to: { namespace: ['case'] },
+          to: { namespace: ['case', 'work'] },
 
           beforeLeave(data) {
             const ns = data.current?.namespace || currentNs;
@@ -2151,6 +2158,8 @@
           name: 'rhp-core',
 
           beforeLeave(data) {
+            // Stop Lenis before scrollTop reset so rAF doesn't override it
+            RHP.lenis?.stop();
             // Scroll case content to top before leaving (dialFg persists across transitions)
             const dialFg = document.querySelector('.dial_layer-fg');
             if (dialFg) dialFg.scrollTop = 0;

@@ -2,7 +2,7 @@
    Ready Hit Play — Dial Styles (Barba-aware)
    - Scoped by data-dial-ns attribute (set by JS) for dial layout
    - [data-barba="wrapper"]:has() selectors still used for wrapper-level rules
-   - Shared dial styles for home + case-studies
+   - Shared dial styles for home + work
    ========================================= */
 
    html { font-size: calc(0.7416576964477932rem + 0.21528525296017226vw); }
@@ -289,9 +289,14 @@
   }
 }
 
-/* ====== Stage (shared home + case + about) ====== */
+/* Hide native cursor on the entire dial when custom cursor is active */
+[data-barba="wrapper"].rhp-cursor-ready .dial_component {
+  cursor: none;
+}
+
+/* ====== Stage (shared home + work + about) ====== */
 .dial_component[data-dial-ns="home"],
-.dial_component[data-dial-ns="case"],
+.dial_component[data-dial-ns="work"],
 .dial_component[data-dial-ns="about"] {
   position: relative;
   width: 100%;
@@ -305,7 +310,7 @@
 
 @supports not (height: 100dvh) {
   .dial_component[data-dial-ns="home"],
-  .dial_component[data-dial-ns="case"],
+  .dial_component[data-dial-ns="work"],
   .dial_component[data-dial-ns="about"] {
     height: 100vh;
   }
@@ -318,7 +323,7 @@
 
 /* ====== Layers (shared) ====== */
 .dial_component[data-dial-ns="home"] .dial_layer-bg,
-.dial_component[data-dial-ns="case"] .dial_layer-bg,
+.dial_component[data-dial-ns="work"] .dial_layer-bg,
 .dial_component[data-dial-ns="about"] .dial_layer-bg {
   position: absolute;
   inset: 0;
@@ -332,7 +337,7 @@
 }
 
 .dial_component[data-dial-ns="home"] .dial_bg-canvas,
-.dial_component[data-dial-ns="case"] .dial_bg-canvas,
+.dial_component[data-dial-ns="work"] .dial_bg-canvas,
 .dial_component[data-dial-ns="about"] .dial_bg-canvas {
   width: 100%;
   height: 100%;
@@ -345,8 +350,8 @@
   filter: blur(0px);
 }
 
-/* Case/about: always blurred from click-through until return to home */
-.dial_component[data-dial-ns="case"] .dial_bg-canvas,
+/* Work/about: always blurred from click-through until return to home */
+.dial_component[data-dial-ns="work"] .dial_bg-canvas,
 .dial_component[data-dial-ns="about"] .dial_bg-canvas {
   filter: blur(40px);
 }
@@ -359,7 +364,7 @@
 /* Canvas ticks — full size; tick radius comes from fgWrap in JS (max 50svh × 70vw via video wrap) */
 /* Scope to dial_component only — about page uses .about_dial-wrapper with different layout */
 .dial_component[data-dial-ns="home"] .dial_layer-ticks,
-.dial_component[data-dial-ns="case"] .dial_layer-ticks,
+.dial_component[data-dial-ns="work"] .dial_layer-ticks,
 .dial_component[data-dial-ns="about"] .dial_layer-ticks {
   position: absolute;
   inset: 0;
@@ -389,13 +394,13 @@
   .dial_component[data-dial-ns="home"] .dial_layer-fg {
     opacity: 0;
   }
-  .dial_component[data-dial-ns="case"] .dial_layer-fg,
+  .dial_component[data-dial-ns="work"] .dial_layer-fg,
   .dial_component[data-dial-ns="about"] .dial_layer-fg {
     opacity: 1;
   }
 }
 
-.dial_component[data-dial-ns="case"] .dial_layer-fg,
+.dial_component[data-dial-ns="work"] .dial_layer-fg,
 .dial_component[data-dial-ns="about"] .dial_layer-fg {
   position: absolute;
   inset: 0;
@@ -406,16 +411,6 @@
      Explicit margin:auto + inset:0 is the cross-browser centering pattern. */
   margin: auto;
   /* pointer-events are managed in JS / via dial interaction */
-}
-
-/* Fix: case study dial renders at home size before JS expansion tween fires.
-   Set correct dimensions at CSS level so initial paint is already right. */
-.dial_component[data-dial-ns="case"] .dial_layer-fg {
-  width: var(--dial-case-width);
-  height: var(--dial-case-height);
-  border-radius: var(--dial-case-border-radius);
-  aspect-ratio: var(--dial-case-aspect-ratio);
-  overflow: auto;
 }
 
 /* Default: circular (home) — fills dial_layer-fg which is clamped to max 50svh × 70vw */
@@ -502,7 +497,7 @@
   overflow: hidden;
 }
 
-.dial_component[data-dial-ns="case"] #fg-video-wrap,
+.dial_component[data-dial-ns="work"] #fg-video-wrap,
 .dial_component[data-dial-ns="about"] #fg-video-wrap {
   width: 100%;
   height: calc(var(--dial-case-height) - var(--dial-case-title-gap));
@@ -513,15 +508,13 @@
 }
 
 /* Other video wraps on case pages: no border-radius (reset from base .dial_video-wrap) */
-.dial_component[data-dial-ns="case"] .dial_video-wrap {
+.dial_component[data-dial-ns="work"] .dial_video-wrap {
   border-radius: 0;
 }
 
 /* CSS transitions removed - using GSAP for animations */
 
-.dial_component[data-dial-ns="home"] .dial_fg-video,
-.dial_component[data-dial-ns="case"] .dial_fg-video,
-.dial_component[data-dial-ns="about"] .dial_fg-video {
+.dial_fg-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -555,8 +548,8 @@
   display: none;
 }
 
-/* ====== Case-studies specific ====== */
-.dial_component[data-dial-ns="case"] .video-cover {
+/* ====== Work/case-studies specific ====== */
+.dial_component[data-dial-ns="work"] .video-cover {
   height: 100%;
   width: 100%;
   object-fit: cover;
@@ -567,36 +560,36 @@
   left: 1px;
 }
 
-/* Case study: first-screen proportions — video fills, title visible above fold (desktop only) */
+/* Work page: first-screen proportions — video fills, title visible above fold (desktop only) */
 @media (min-width: 992px) {
-  .dial_component[data-dial-ns="case"] .dial_layer-fg.is-case-study .section_case-video.is-header {
+  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video.is-header {
     min-height: calc(var(--dial-case-height) - var(--dial-case-title-gap));
     display: flex;
     flex-direction: column;
   }
-  .dial_component[data-dial-ns="case"] .dial_layer-fg.is-case-study .section_case-video .dial_video-wrap,
-  .dial_component[data-dial-ns="case"] .dial_layer-fg.is-case-study .section_case-video .video-cover,
-  .dial_component[data-dial-ns="case"] .dial_layer-fg.is-case-study .section_case-video video {
+  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video .dial_video-wrap,
+  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video .video-cover,
+  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video video {
     flex: 1;
     min-height: 0;
     object-fit: cover;
   }
 
   /* Override aspect-ratio so video in first section can grow vertically */
-  .dial_component[data-dial-ns="case"] .section_case-video .dial_video-wrap,
-  .dial_component[data-dial-ns="case"] .section_case-video .video-cover {
+  .dial_component[data-dial-ns="work"] .section_case-video .dial_video-wrap,
+  .dial_component[data-dial-ns="work"] .section_case-video .video-cover {
     aspect-ratio: auto;
     height: 100%;
   }
 }
 
-/* Case study: video fills wrapper completely (100% width and height) */
-.dial_component[data-dial-ns="case"] #fg-video-wrap {
+/* Work page: video fills wrapper completely (100% width and height) */
+.dial_component[data-dial-ns="work"] #fg-video-wrap {
   position: relative;
   overflow: hidden;
 }
-.dial_component[data-dial-ns="case"] #fg-video-wrap .dial_fg-video,
-.dial_component[data-dial-ns="case"] #fg-video-wrap .video-cover {
+.dial_component[data-dial-ns="work"] #fg-video-wrap .dial_fg-video,
+.dial_component[data-dial-ns="work"] #fg-video-wrap .video-cover {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -605,18 +598,15 @@
 }
 
 /* ====== Namespace-based visibility (data-dial-ns on persistent dial) ====== */
-/* Work/case: hide ticks, step text, work-link; show case-homepage-link */
-.dial_component[data-dial-ns="work"] .dial_layer-ticks,
-.dial_component[data-dial-ns="case"] .dial_layer-ticks {
+/* Work: hide ticks, step text, work-link; show case-homepage-link */
+.dial_component[data-dial-ns="work"] .dial_layer-ticks {
   display: none;
 }
-.dial_component[data-dial-ns="work"] .dial_work-link,
-.dial_component[data-dial-ns="case"] .dial_work-link {
+.dial_component[data-dial-ns="work"] .dial_work-link {
   visibility: hidden;
   pointer-events: none;
 }
-.dial_component[data-dial-ns="work"] .heading-style-h7.is-step,
-.dial_component[data-dial-ns="case"] .heading-style-h7.is-step {
+.dial_component[data-dial-ns="work"] .heading-style-h7.is-step {
   display: none;
 }
 /* Home: hide case-homepage-link */
@@ -624,9 +614,8 @@
   display: none;
 }
 
-/* ====== Work/case page: dial_layer-fg as scrollable container ====== */
-.dial_component[data-dial-ns="work"] .dial_layer-fg,
-.dial_component[data-dial-ns="case"] .dial_layer-fg {
+/* ====== Work page: dial_layer-fg as scrollable container ====== */
+.dial_component[data-dial-ns="work"] .dial_layer-fg {
   width: var(--dial-case-width);
   height: var(--dial-case-height);
   border-radius: var(--dial-case-border-radius);
@@ -637,11 +626,16 @@
   display: flex;
   flex-flow: column;
   align-items: stretch;
+  /* Hide scrollbar at namespace level (no-scrollbar class can be lost during Barba transitions) */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dial_component[data-dial-ns="work"] .dial_layer-fg::-webkit-scrollbar {
+  display: none;
 }
 
-/* Work/case: hide labels — !important overrides IX2 reinit which resets inline opacity */
-.dial_component[data-dial-ns="work"] .dial_layer-ui,
-.dial_component[data-dial-ns="case"] .dial_layer-ui {
+/* Work: hide labels — !important overrides IX2 reinit which resets inline opacity */
+.dial_component[data-dial-ns="work"] .dial_layer-ui {
   opacity: 0 !important;
   pointer-events: none;
 }
@@ -752,22 +746,22 @@
 
 /* Cursor state: dot (default) */
 [data-cursor="dot"] {
-  cursor: none;
+  cursor: none !important;
 }
 
 /* Cursor state: solid-orange */
 [data-cursor="solid-orange"] {
-  cursor: none;
+  cursor: none !important;
 }
 
 /* Cursor state: arrow-orange-outline */
 [data-cursor="arrow-orange-outline"] {
-  cursor: none;
+  cursor: none !important;
 }
 
 /* Cursor state: arrow-white-outline */
 [data-cursor="arrow-white-outline"] {
-  cursor: none;
+  cursor: none !important;
 }
 
 /* ====== Contact menu (.section_contact + .contact_overlay) ====== */
@@ -967,7 +961,6 @@
 /* Hide dot on non-home pages */
 .dial_component[data-dial-ns="work"] .dial_sector-dot,
 .dial_component[data-dial-ns="about"] .dial_sector-dot,
-.dial_component[data-dial-ns="case"] .dial_sector-dot,
 .dial_component[data-dial-ns="contact"] .dial_sector-dot {
   display: none !important;
 }
@@ -984,22 +977,19 @@
   }
 }
 
-/* ====== Case/work page mobile: full-screen content ====== */
+/* ====== Work page mobile: full-screen content ====== */
 @media (max-width: 991px) {
-  .dial_component[data-dial-ns="case"] .dial_layer-ui,
   .dial_component[data-dial-ns="work"] .dial_layer-ui {
     display: none !important; /* !important overrides IX2 which sets display:flex inline */
   }
 
   /* Full viewport — nav is fixed overlay, no subtraction needed */
-  .dial_component[data-dial-ns="work"],
-  .dial_component[data-dial-ns="case"] {
+  .dial_component[data-dial-ns="work"] {
     height: 100dvh;
   }
 
   /* fg fills the full component */
-  .dial_component[data-dial-ns="work"] .dial_layer-fg,
-  .dial_component[data-dial-ns="case"] .dial_layer-fg {
+  .dial_component[data-dial-ns="work"] .dial_layer-fg {
     width: 100%;
     height: 100%;
     border-radius: 0;
@@ -1007,7 +997,6 @@
 
   /* Allow touch scroll on work/case/about pages (home keeps touch-action:none for dial) */
   .dial_component[data-dial-ns="work"],
-  .dial_component[data-dial-ns="case"],
   .dial_component[data-dial-ns="about"] {
     touch-action: pan-y;
   }
@@ -1028,10 +1017,8 @@
   }
 }
 
-/* Hide "Who We Are" and "Contact" nav links on work/case pages (mobile) */
+/* Hide "Who We Are" and "Contact" nav links on work pages (mobile) */
 @media (max-width: 991px) {
-  [data-barba="wrapper"]:has(.dial_component[data-dial-ns="case"]) .nav_about-link,
-  [data-barba="wrapper"]:has(.dial_component[data-dial-ns="case"]) .nav_contact-link,
   [data-barba="wrapper"]:has(.dial_component[data-dial-ns="work"]) .nav_about-link,
   [data-barba="wrapper"]:has(.dial_component[data-dial-ns="work"]) .nav_contact-link {
     display: none !important;

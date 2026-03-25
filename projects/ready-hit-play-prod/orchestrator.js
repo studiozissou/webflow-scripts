@@ -2093,6 +2093,10 @@
           from: { namespace: ['case'] },
           to: { namespace: ['about'] },
           beforeLeave(data) {
+            // Scroll case content to top before leaving (dialFg persists across transitions)
+            const dialFg = document.querySelector('.dial_layer-fg');
+            if (dialFg) dialFg.scrollTop = 0;
+
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             // If work-dial was suspended (home→case→about path), fully destroy it now
@@ -2147,6 +2151,10 @@
           name: 'rhp-core',
 
           beforeLeave(data) {
+            // Scroll case content to top before leaving (dialFg persists across transitions)
+            const dialFg = document.querySelector('.dial_layer-fg');
+            if (dialFg) dialFg.scrollTop = 0;
+
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) {
               RHP.views[ns].destroy();

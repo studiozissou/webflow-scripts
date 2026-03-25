@@ -657,6 +657,17 @@
   display: none;
 }
 
+/* Hide scrollbar on about/contact pages (Barba container is scroll wrapper, not <body>) */
+[data-barba-namespace="about"],
+[data-barba-namespace="contact"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-barba-namespace="about"]::-webkit-scrollbar,
+[data-barba-namespace="contact"]::-webkit-scrollbar {
+  display: none;
+}
+
 /* ====== Desktop custom cursor ====== */
 .cursor_component {
   position: fixed;

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-03-24",
+  "lastUpdated": "2026-03-25",
   "lastDeployed": "2026-03-24",
   "lastDeployedHash": "16d6c3b",
   "entries": [
@@ -153,6 +153,16 @@
       "slug": "rhp-about-hero-logo-scroll",
       "created": "2026-03-19",
       "description": "Mobile about hero — scroll-driven logo animation, sticky logo, bell-curve per third, Barba re-entry"
+    },
+    {
+      "id": "feat-dev-cdn-source-switch",
+      "file": "tests/acceptance/feat-dev-cdn-source-switch.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-dev-cdn-source-switch",
+      "created": "2026-03-25",
+      "description": "Dev/CDN source switch — localStorage toggle via URL param, console indicator, graceful localhost failure"
     }
   ]
 }

@@ -1,7 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-17",
+  "updated": "2026-03-25",
   "queue": [
+    {
+      "id": "feat-dev-cdn-source-switch",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Dev/CDN source switch: URL param + localStorage toggle in init.js",
+      "spec": ".claude/specs/feat-dev-cdn-source-switch.md",
+      "agent": "code-writer",
+      "created": "2026-03-25",
+      "note": "~12 LOC in init.js only. ?rhp=local writes localStorage, ?rhp=cdn clears it. getBaseUrl() early-returns localhost when override active. Console indicator shows active source. One CDN deploy enables permanent dev/presentation switching."
+    },
     {
       "id": "fix-memory-leak-cleanup",
       "project": "ready-hit-play-prod",

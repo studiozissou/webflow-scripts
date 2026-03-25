@@ -27,6 +27,15 @@
     ? document.currentScript.src
     : '';
 
+  // Source-switch: ?rhp=local persists to localStorage; ?rhp=cdn clears it
+  (function() {
+    try {
+      var p = new URLSearchParams(window.location.search).get('rhp');
+      if (p === 'local') localStorage.setItem('rhp-source', 'local');
+      else if (p === 'cdn') localStorage.removeItem('rhp-source');
+    } catch(e) { /* storage or location access blocked — ignore */ }
+  })();
+
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
     version: '2026.3.17.1', // bump when you deploy – new ?v= busts cache so modules reload
@@ -103,6 +112,11 @@
   }
 
   function getBaseUrl() {
+    try {
+      if (localStorage.getItem('rhp-source') === 'local') {
+        return 'https://localhost:8080/projects/ready-hit-play-prod';
+      }
+    } catch(e) { /* localStorage blocked — fall through to normal detection */ }
     var scriptSrc = INIT_SCRIPT_SRC;
     // Local dev: script from localhost or same-origin without CDN @commit
     var isLocal = scriptSrc && (
@@ -122,6 +136,13 @@
   async function init() {
     try {
       var baseUrl = getBaseUrl();
+
+      if (/^https?:\/\/localhost(:\d+)?(\/|$)/i.test(baseUrl)) {
+        console.log('%c[RHP] SOURCE: LOCALHOST', 'color: #ff8200; font-weight: bold');
+      } else {
+        var commitMatch = baseUrl.match(/@([a-f0-9]{7,40})/i);
+        console.log('%c[RHP] SOURCE: CDN' + (commitMatch ? ' @' + commitMatch[1] : ''), 'color: #05EFBF; font-weight: bold');
+      }
 
       for (const css of CONFIG.cssDependencies) {
         await loadStylesheet(css);

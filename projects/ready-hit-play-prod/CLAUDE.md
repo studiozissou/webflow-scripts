@@ -5,9 +5,9 @@ Production scripts for https://rhpcircle.webflow.io/ — a creative agency site 
 Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + modules in sequence.
 
 ## Tech stack
-- **Barba.js** — SPA page transitions (4 namespaces: home, about, case, contact)
+- **Barba.js** — SPA page transitions (3 page namespaces: home, about, case) + contact pullout panel
 - **GSAP 3.14.2** + ScrollTrigger + SplitText (Club) — all animations
-- **Lenis 1.3.17** — smooth scroll (about, case, contact; NOT home)
+- **Lenis 1.3.17** — smooth scroll (about, case; NOT home)
 - **Webflow** — hosting, CMS, Designer-built DOM
 - **Vanilla ES2022+** — no build step, no jQuery, no TypeScript
 - **jsDelivr CDN** — production delivery, commit-hash pinned
@@ -69,11 +69,26 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | `home` | CSS-locked (`overflow: hidden`) | Stopped | work-dial (introMode), transition-dial, cursor |
 | `about` | Unlocked | Started (window) | about-dial-ticks, about-text-lines, cursor |
 | `case` | Unlocked | Started (custom wrapper if present) | earth-parallax, cursor; intro-format on enter |
-| `contact` | Unlocked | Started (window) | cursor |
 
 - Barba wrapper: `data-barba="wrapper"` on the outer shell
 - Barba container: `data-barba="container" data-barba-namespace="<name>"` on the page inner div
 - Custom event `rhp:barba:afterenter` fired on `window` after each transition; cursor.js + overland-ai.js listen
+
+## Contact pullout
+
+There is **no separate contact page**. Contact is a slide-out panel built into the nav, managed by `orchestrator.js → initContactPullout()`.
+
+| Element | Class | Role |
+|---------|-------|------|
+| Trigger | `.nav_contact-link` | Opens the pullout on click |
+| Panel | `.nav_contact-pullout` | The slide-out form panel |
+| Section wrapper | `.section_contact` | `display: none/block` toggled by JS |
+| Overlay | `.contact_overlay` | Backdrop; click to close |
+| Close button | `.nav_contact-close` | Optional explicit close button |
+
+- **Open:** `.nav_contact-link` click → `.section_contact` display block → `.contact_overlay` opacity 1 (0.2s) + pullout translateX (same time)
+- **Close:** overlay or close-button click → reverse animation → `.section_contact` display none on complete
+- Available on every page (lives outside Barba container in the nav)
 
 ## window.RHP shape
 Every module registers itself here before orchestrator runs. Key entries:
@@ -90,7 +105,7 @@ RHP.caseVideoControls — { init, destroy, version }
 RHP.videoLoader    — { init, destroy, version }
 RHP.formatIntroText — Function
 RHP.scroll         — { lock, unlock }  (CSS-level, set by orchestrator)
-RHP.views          — { home, about, case, contact } each { init, destroy }
+RHP.views          — { home, about, case } each { init, destroy } (contact is a pullout, not a view)
 RHP.videoState     — { byIndex: {}, caseHandoff: null }  (shared between work-dial and orchestrator)
 ```
 

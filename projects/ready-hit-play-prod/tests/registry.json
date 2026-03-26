@@ -1,6 +1,7 @@
 {
   "version": 1,
-  "lastUpdated": "2026-03-25",
+  "lastUpdated": "2026-03-26",
+  "note": "Updated with fix-autoplay-fallback-mobile",
   "lastDeployed": "2026-03-25",
   "lastDeployedHash": "db98d78",
   "entries": [
@@ -163,6 +164,36 @@
       "slug": "feat-dev-cdn-source-switch",
       "created": "2026-03-25",
       "description": "Dev/CDN source switch — localStorage toggle via URL param, console indicator, graceful localhost failure"
+    },
+    {
+      "id": "refactor-about-team-scroll-reveal",
+      "file": "tests/acceptance/refactor-about-team-scroll-reveal.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "refactor-about-team-scroll-reveal",
+      "created": "2026-03-26",
+      "description": "About team scroll reveal — per-element ScrollTrigger scrub, translateX+opacity, scale, reverse, desktop hover regression, Barba re-entry, reduced motion"
+    },
+    {
+      "id": "perf-fg-video-preload-on-transition",
+      "file": "tests/acceptance/perf-fg-video-preload-on-transition.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "perf-fg-video-preload-on-transition",
+      "created": "2026-03-26",
+      "description": "FG video preload on case→home transition — cleanup, readyState, no accumulation, reduced motion"
+    },
+    {
+      "id": "fix-autoplay-fallback-mobile",
+      "file": "tests/acceptance/fix-autoplay-fallback-mobile.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-autoplay-fallback-mobile",
+      "created": "2026-03-26",
+      "description": "Mobile autoplay fallback — tap-to-play homepage, persistent case controls, SVG overlay, viewport auto-pause/resume"
     }
   ]
 }

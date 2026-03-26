@@ -86,6 +86,7 @@ Complex = state, GSAP, Barba hooks, Finsweet, or shared state. When in doubt, st
 | `/local` | Start a local Python HTTP server with CORS on port 8080 |
 | `/debug` | Debug a specific issue |
 | `/deploy` | Commit all changes and push to remote |
+| `/merge-worktrees` | List all worktrees, merge oldest-first with smoke tests, auto-cleanup |
 | `/start-build` | Read CLAUDE.md and prepare for a build session |
 | `/start-plan` | Read CLAUDE.md and prepare for a planning session |
 | `/start-debug` | Read CLAUDE.md and prepare for a debug session |

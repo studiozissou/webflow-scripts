@@ -9,6 +9,7 @@
 
   let lenis = null;
   let rafId = null;
+  let lastScrollHeight = 0;
 
   const prefersReduced = () =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -31,9 +32,24 @@
 
     lenis = new Lenis({ ...defaults, ...options });
 
+    // Watch the scroll wrapper for content height changes.
+    // Lenis autoResize uses ResizeObserver on the content element's border-box,
+    // but for position:fixed wrappers the border-box never changes — only
+    // scrollHeight does (images load, fonts swap, SplitText rewrap).
+    // Poll scrollHeight on each rAF tick and call resize() when it drifts.
+    const wrapper = options.wrapper && options.wrapper !== window
+      ? options.wrapper : document.documentElement;
+    lastScrollHeight = wrapper.scrollHeight;
+
     const raf = (time) => {
       if (!lenis) return;
       lenis.raf(time);
+      // Cheap scrollHeight check — one property read per frame
+      const sh = wrapper.scrollHeight;
+      if (sh !== lastScrollHeight) {
+        lastScrollHeight = sh;
+        lenis.resize();
+      }
       rafId = requestAnimationFrame(raf);
     };
 

@@ -355,9 +355,12 @@
           const gsap = window.gsap;
           const reduced = prefersReduced();
           const dialFgEl = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
+          // Kill any running tweens on bgCanvas — the IDLE branch tweens both
+          // opacity + filter together, and a rapid IDLE→ACTIVE transition would
+          // let the old tween overwrite filter back to blur(0px) after our set().
+          if (bgCanvas && gsap) gsap.killTweensOf(bgCanvas);
           // Remove generic spinner (it's about to hide)
           if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; }
-          // Fade out generic video, then pause
           if (genericVideo) {
             if (gsap && !reduced) {
               gsap.to(genericVideo, { opacity: 0, duration: 0.3, ease: 'linear', overwrite: true,

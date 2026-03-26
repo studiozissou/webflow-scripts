@@ -3,6 +3,30 @@
   "updated": "2026-03-25",
   "queue": [
     {
+      "id": "perf-fg-video-preload-on-transition",
+      "project": "ready-hit-play-prod",
+      "type": "perf",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "FG video preload: warm browser cache during case→home Barba leave phase",
+      "spec": ".claude/specs/perf-fg-video-preload-on-transition.md",
+      "agent": "code-writer",
+      "created": "2026-03-26",
+      "note": "Add _preloadFgVideos() helper in orchestrator.js. Creates hidden <video preload=auto/metadata> elements during beforeLeave for case→home. Prioritised: handoff sector + ±1 get auto, rest get metadata. Connection-gated: skip on 2g, limit on 3g. Cleanup in runAfterEnter. ~30 LOC, orchestrator.js only."
+    },
+    {
+      "id": "refactor-about-team-scroll-reveal",
+      "project": "ready-hit-play-prod",
+      "type": "refactor",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "About team scroll reveal: replace rAF mobile animation with per-element ScrollTrigger scrub",
+      "spec": ".claude/specs/refactor-about-team-scroll-reveal.md",
+      "agent": "code-writer",
+      "created": "2026-03-26",
+      "note": "Remove mobile team CSS layout overrides (rebuilt in Webflow), remove --team-photo-slide vars. Replace manual rAF+Lenis.onScroll mobile branch with per-element ScrollTrigger scrub (opacity:0+translateX:100% → opacity:1+translateX:0, image scale:1→1.05). Wire setupScrollTriggerProxy for about page. Add ScrollTrigger.refresh() to about boot path. Desktop hover unchanged. 4 tasks: CSS removal, proxy wiring, animation replacement, test updates."
+    },
+    {
       "id": "feat-dev-cdn-source-switch",
       "project": "ready-hit-play-prod",
       "type": "feature",
@@ -291,9 +315,13 @@
       "project": "ready-hit-play-prod",
       "type": "bug",
       "priority": "P1",
-      "status": "Triage",
-      "title": "Autoplay fallback (mobile)",
-      "created": "2026-02-24"
+      "status": "Ready to Build",
+      "title": "Autoplay fallback (mobile): detect .play() rejection, show tap-to-play UI per context",
+      "spec": ".claude/specs/fix-autoplay-fallback-mobile.md",
+      "agent": "code-writer",
+      "created": "2026-02-24",
+      "updated": "2026-03-26",
+      "note": "Inline detection per module (no new file). Homepage: swap step text to 'Tap here to play', revert after tap. Case with controls: keep UI visible until play tapped. Case without controls: SVG play overlay. Viewport auto-pause preserved, auto-resume after gesture unlock. 8 tasks across home-intro.js, work-dial.js, case-video-controls.js, orchestrator.js, CSS. Streams A+B+C parallelisable."
     },
     {
       "id": "feat-flip-transition",

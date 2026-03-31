@@ -21,14 +21,15 @@ Before asking any questions, spawn up to 3 Explore agents in parallel to researc
 - **Agent 1 — Codebase patterns:** Search the codebase for existing patterns similar to this feature. Look for reusable functions, components, or modules that could be adapted. Check `shared/utils.js`, the project orchestrator, and any related page modules.
 - **Agent 2 — Specs, ADRs, and conventions:** Read the relevant spec(s), ADRs, and CLAUDE.md sections that relate to this feature's domain (animation, CMS, layout, transitions). Identify constraints and decisions already made.
 - **Agent 3 — Webflow page structure (if MCP connected):** Use `element_snapshot_tool` to snapshot the target page DOM to understand the existing structure and available selectors. If MCP is not connected, skip this agent.
-- **Agent 4 — Live DOM verification (if Playwright MCP connected):** Use the `playwright-webflow` skill's MCP availability guard to navigate to the staging URL, then `browser_snapshot` to capture the live rendered DOM. Compare against Webflow MCP findings to identify: dynamically injected elements, CMS-rendered items, JS-modified classes/attributes, and any discrepancies between Designer DOM and live DOM. If Playwright MCP is not connected, skip this agent. Staging URL resolution: `.env.test` STAGING_URL → project CLAUDE.md staging URL → skip.
+- **Agent 4 — Live DOM verification (if browser MCP connected):** Use the `chrome-devtools` skill's MCP availability guard. Navigate to the staging URL via `navigate_page`, then `take_snapshot` to capture the live rendered DOM. Compare against Webflow MCP findings to identify: dynamically injected elements, CMS-rendered items, JS-modified classes/attributes, and any discrepancies between Designer DOM and live DOM. Can also run `lighthouse_audit` with `categories: ["accessibility", "performance"]` to get baseline scores for the target page. If no browser MCP is connected, skip this agent. Staging URL resolution: `.env.test` STAGING_URL → project CLAUDE.md staging URL → skip.
 
 Summarize findings in a **Research Summary** block before proceeding. Include:
 - Reusable code found (file paths + function names)
 - Existing patterns to follow
 - Constraints discovered (from ADRs, specs, or CLAUDE.md)
 - Selectors confirmed via Webflow MCP (Designer DOM)
-- Live DOM structure confirmed via Playwright MCP (rendered DOM) — note any discrepancies with Designer DOM
+- Live DOM structure confirmed via browser MCP (rendered DOM) — note any discrepancies with Designer DOM
+- Lighthouse baseline scores (if browser MCP was connected)
 
 ### 2. Clarifying questions
 

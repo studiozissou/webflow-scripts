@@ -38,17 +38,19 @@ Falls back to 2-stream (A + B only) if MCP browser is not connected.
 - GSAP timelines killed on destroy
 - No memory leaks from orphaned listeners or intervals
 
-### Stream C — MCP live browser checks (skip if no MCP)
+### Stream C — Browser checks (Chrome DevTools preferred)
 
-Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns.
+Reference the `chrome-devtools` skill for guard and ad-hoc check patterns. Fall back to Playwright MCP if Chrome DevTools unavailable.
 
-1. **Console errors** — navigate to staging URL, capture `browser_console_messages`, filter benign noise. FAIL if real errors remain.
-2. **Mobile rendering** — `browser_resize` 375×812, navigate, check horizontal overflow via `browser_evaluate`, take screenshot. FAIL if scrollWidth > clientWidth.
-3. **CLS measurement** — inject PerformanceObserver via `browser_evaluate`, wait 5s. PASS < 0.1, WARN 0.1–0.25, FAIL > 0.25.
-4. **Animation smoke** — scroll to feature section, wait per timing table, screenshot. `browser_evaluate` to check GSAP timeline count matches expectation.
-5. **Keyboard a11y spot check** — Tab through first 5 interactive elements via `browser_press_key`, check `:focus-visible` after each. WARN if focus ring not visible.
+1. **Console errors** — `navigate_page` to staging URL, `list_console_messages` with `types: ["error"]`, filter benign noise. FAIL if real errors remain.
+2. **Mobile rendering** — `emulate` with `viewport: { width: 375, height: 812 }`, navigate, check horizontal overflow via `evaluate_script`: `() => { return document.documentElement.scrollWidth > document.documentElement.clientWidth }`, `take_screenshot`. FAIL if scrollWidth > clientWidth.
+3. **CLS measurement** — inject PerformanceObserver via `evaluate_script` (see `chrome-devtools` skill CLS pattern), wait 5s. PASS < 0.1, WARN 0.1–0.25, FAIL > 0.25.
+4. **Animation smoke** — `evaluate_script` to scroll to feature section, wait per timing table, `take_screenshot`. `evaluate_script` to check GSAP timeline count matches expectation.
+5. **Keyboard a11y spot check** — Tab through first 5 interactive elements via `press_key`, check `:focus-visible` after each via `evaluate_script`. WARN if focus ring not visible.
+6. **Lighthouse a11y audit** — `lighthouse_audit` with `categories: ["accessibility"]`. PASS ≥ 90, WARN 70–89, FAIL < 70.
+7. **Lighthouse performance** — `lighthouse_audit` with `categories: ["performance"]`. WARN only (informational, does not block).
 
-If MCP is not connected, log "MCP browser not available — skipping Stream C" and continue with Streams A + B only.
+If Chrome DevTools not connected, try Playwright MCP (see `playwright-webflow` skill). If neither connected, log "No browser MCP available — skipping Stream C" and continue with Streams A + B only.
 
 ## Step 3 — Merge and report
 3. For each FAIL item, provide:

@@ -21,7 +21,7 @@
    Test inventory:
      Registry entries: N total (M critical)
      Related tests:    [list any specs matching affected files/slugs, or "none"]
-     Playwright MCP:   [connected / not connected]
+     Browser MCP:      [Chrome DevTools / Playwright / not connected]
    ```
 4. **Check recent git diff** — `git diff HEAD~3` — any changes that correlate with the problem appearing?
 
@@ -48,11 +48,11 @@ If no spec exists at all, skip this gate — the debug command's built-in verify
    - Staging or production?
    - Localhost detection active? Is `npx serve .` running?
    - jsDelivr URL — does it match current `git rev-parse HEAD`?
-5. **Live DOM verification (if Playwright MCP connected)** — Reference the `playwright-webflow` skill's MCP availability guard. Navigate to the affected page on staging, then `browser_snapshot` to capture the live rendered DOM. Document:
+5. **Live DOM verification (if browser MCP connected)** — Reference the `chrome-devtools` skill's MCP availability guard. Navigate to the affected page on staging via `navigate_page`, then `take_snapshot` to capture the live rendered DOM. Document:
    - Actual selectors and class names present (vs what the code expects)
    - Dynamically injected elements or CMS-rendered items
    - Any missing or unexpected DOM nodes relevant to the reported bug
-   - If Playwright MCP is not connected, skip and continue — this step is optional
+   - If no browser MCP is connected, skip and continue — this step is optional
 
 ---
 
@@ -127,13 +127,15 @@ Activate the **debug skill** and run its full loop:
 
 1. **Isolate** — confirm error is real, repeatable, and scoped
    - **Jam-sourced isolation** (if Jam Intake ran): use the Jam summary as primary evidence. Console errors seed hypotheses, user events define reproduction steps, screenshots/video provide visual confirmation. Only fall through to MCP reproduction if Jam data is insufficient.
-   - **MCP-assisted reproduction** (if MCP connected — reference `playwright-webflow` skill for guard):
-     - `browser_navigate` to the affected page, capture `browser_console_messages` + `browser_snapshot`
-     - If interaction-triggered: replay clicks/hovers/scrolls with `browser_click`/`browser_hover`, take screenshots at each step
-     - If responsive: `browser_resize` to the reported breakpoint, take screenshot
-     - If network-related: `browser_network_requests` for failed requests
+   - **MCP-assisted reproduction** (if browser MCP connected — reference `chrome-devtools` skill for guard):
+     - `navigate_page` to the affected page, capture `list_console_messages` with `types: ["error"]` + `take_snapshot`
+     - If interaction-triggered: replay clicks/hovers/scrolls with `click`/`hover` (uid from `take_snapshot`), take screenshots at each step
+     - If responsive: `emulate` with target viewport, take screenshot
+     - If network-related: `list_network_requests` for failed requests
+     - If performance-related: `performance_start_trace` before reproduction, `performance_stop_trace` after, `performance_analyze_insight` on results
+     - If memory-leak suspected: `take_memory_snapshot` before and after interaction, compare heap sizes
      - Record: "Reproduced via MCP" or "Could not reproduce via MCP"
-   - If MCP is not connected, continue with standard code-reading isolation
+   - If no browser MCP is connected, continue with standard code-reading isolation
 
 1.5. **Investigation gate** — after isolation, ask the user:
 
@@ -201,28 +203,31 @@ Activate the **debug skill** and run its full loop:
 5. **Fix** — use the **opus model** when applying fixes. Apply only after hypothesis is confirmed; if confidence < 80% pause and ask
 6. **Confirm** — verify fix, check for regressions, remove all instrumentation
 
-### Verify loop (Playwright MCP only — no CLI tests)
+### Verify loop (Browser MCP only — no CLI tests)
 
-> **IMPORTANT:** `/build` and `/debug` verify loops use Playwright MCP exclusively. Code hasn't been deployed to CDN yet, so `npx playwright test` against the staging URL will test OLD code — not your changes. CLI test suites (`npm test`, `npx playwright test`) are reserved for `/deploy`.
+> **IMPORTANT:** `/build` and `/debug` verify loops use browser MCP exclusively. Code hasn't been deployed to CDN yet, so `npx playwright test` against the staging URL will test OLD code — not your changes. CLI test suites (`npm test`, `npx playwright test`) are reserved for `/deploy`.
+
+Prefer Chrome DevTools MCP. Fall back to Playwright MCP if Chrome DevTools unavailable. Reference the `chrome-devtools` skill for the availability guard.
 
 After applying the fix, run a verify loop via MCP:
 
-   a. `browser_navigate` to the affected page on STAGING_URL
-   b. **Console check** — `browser_console_messages`, filter benign noise. FAIL on real errors.
-   c. **DOM snapshot** — `browser_snapshot`, confirm the fix is reflected in the DOM.
-   d. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
-   e. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
+   a. `navigate_page` to the affected page on STAGING_URL
+   b. **Console check** — `list_console_messages` with `types: ["error"]`, filter benign noise. FAIL on real errors.
+   c. **DOM snapshot** — `take_snapshot`, confirm the fix is reflected in the DOM.
+   d. **Desktop screenshot** — `resize_page` 1280×800, `take_screenshot`
+   e. **Mobile screenshot** — `emulate` with `viewport: { width: 375, height: 812 }`, `take_screenshot`
    f. **Reproduction replay** — replay the exact MCP steps from Isolate. Verify original error is gone.
    g. Compare before/after screenshots — flag any visual regressions.
    h. **Smoke checks via MCP** — replicate core smoke concerns through MCP:
-      - `browser_console_messages` — no JS errors on the page
-      - `browser_snapshot` — key DOM elements present (nav, barba container, critical modules)
-      - `browser_navigate` to 2–3 other pages — confirm no console errors after Barba transition
-      - `browser_evaluate` — `window.RHP?.scriptsOk === true` on each page
+      - `list_console_messages` with `types: ["error"]` — no JS errors on the page
+      - `take_snapshot` — key DOM elements present (nav, barba container, critical modules)
+      - `navigate_page` to 2–3 other pages — confirm no console errors after Barba transition
+      - `evaluate_script`: `() => { return window.RHP?.scriptsOk === true }` on each page
+   h.5. **Lighthouse spot check** — `lighthouse_audit` with `categories: ["accessibility", "best-practices"]`. Compare a11y score to baseline (if captured in Pre-Flight). WARN on score < 90.
 
    On FAIL: fix and re-verify (return to step 5). Track iteration count — after 5 failed iterations, stop and ask user.
 
-   **Fallback** (no MCP): Cannot run MCP verify loop. Present the spec's verify-loop criteria as a **manual checklist** for the user. Log: "MCP not connected — verify loop skipped, manual verification required before `/deploy`". Do NOT run `npx playwright test` — it would test old deployed code.
+   **Fallback** (no browser MCP): If Chrome DevTools not connected, try Playwright MCP (see `playwright-webflow` skill). If neither connected: present the spec's verify-loop criteria as a **manual checklist** for the user. Log: "No browser MCP available — verify loop skipped, manual verification required before `/deploy`". Do NOT run `npx playwright test` — it would test old deployed code.
 
 ---
 

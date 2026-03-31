@@ -4,6 +4,8 @@ description: Guides the agent through Playwright timing for Webflow staging site
 ---
 
 <objective>
+**Role: Secondary / Fallback.** Chrome DevTools MCP (`chrome-devtools` skill) is the primary browser tool for live checks. This skill provides: (1) timing guidance for Playwright CLI test specs, (2) bridge test templates for capturing MCP findings as permanent tests, (3) fallback ad-hoc patterns when Chrome DevTools is not connected.
+
 Provide timing guidance for Playwright tests against Webflow staging sites, where custom JS, GSAP animations, and Finsweet attributes need extra wait time beyond standard page load.
 </objective>
 

@@ -7,7 +7,7 @@
       "project": "ready-hit-play-prod",
       "type": "perf",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Ready to Review",
       "title": "FG video preload: warm browser cache during case→home Barba leave phase",
       "spec": ".claude/specs/perf-fg-video-preload-on-transition.md",
       "agent": "code-writer",

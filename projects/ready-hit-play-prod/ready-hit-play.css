@@ -209,59 +209,6 @@
   :root { --team-name-shift: 2rem; }
 }
 
-/* Team photo slide distance (mobile scroll reveal) */
-@media screen and (max-width: 991px) {
-  :root { --team-photo-slide: 8vw; }
-}
-@media screen and (max-width: 767px) {
-  :root { --team-photo-slide: 6vw; }
-}
-@media screen and (max-width: 479px) {
-  :root { --team-photo-slide: 4vw; }
-}
-
-/* Mobile team section: reflow for scroll-linked bio reveal */
-@media screen and (max-width: 991px) {
-  .section_about-team { padding-left: 5vw; padding-right: 5vw; }
-  /* Stack member vertically */
-  .about-team_member { flex-direction: column !important; }
-  /* Image wrapper: stack children vertically */
-  .about-team_image-wrapper {
-    display: flex !important;
-    flex-direction: column;
-    width: 100%;
-  }
-  /* Image: fill width, natural height, appear FIRST (above name+bio) */
-  .about-team_image {
-    width: 100% !important;
-    order: -1;
-  }
-  .about-team_image .image-cover { width: 100%; height: auto !important; }
-  /* Name: flow below image (override Webflow absolute positioning + left offset + max-width) */
-  .about-team_name {
-    position: relative !important;
-    left: 0 !important;
-    top: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-top: 1rem;
-  }
-  /* Bio: flow below name, override Webflow max-width + left offset so text fills container */
-  .about-team_bio {
-    position: relative !important;
-    left: 0 !important;
-    top: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-  .about-team_bio .text-rich-text { max-width: 100% !important; }
-}
-@media screen and (max-width: 479px) {
-  .section_about-team { padding-left: 4vw; padding-right: 4vw; }
-}
-
 /* Transition dial position (home → about): distance from bottom of viewport; x-offset nudges final position (negative = left). Editable by breakpoint. */
 :root {
   --transition-dial-bottom: 2rem;

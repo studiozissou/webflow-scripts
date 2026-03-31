@@ -414,7 +414,6 @@
     const isDesktop = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
 
     let aboutTeamCtx = null;
-    let teamScrollState = null;
 
     function initAboutTeamHover(container) {
       // Idempotency guard — destroy previous instance if somehow called twice
@@ -464,48 +463,19 @@
         ryanScale, guyScale,
       ];
 
-      // --- Helper: measure expanded bio height, set min-height on member container ---
-      // Store measured bio heights for maxHeight animation
-      const bioHeights = {};
-
-      const measureAndSetMinHeights = () => {
-        for (const [key, m] of Object.entries(members)) {
-          // Temporarily make bio visible to measure its natural height
-          gsap.set(m.bio, { maxHeight: 'none', opacity: 1 });
-          const bioHeight = m.bio.scrollHeight;
-          // Revert to hidden
-          gsap.set(m.bio, { maxHeight: 0, opacity: 0 });
-
-          bioHeights[key] = bioHeight;
-
-          // Set min-height: current collapsed height + full bio height + 2rem gap
-          const currentHeight = m.el.getBoundingClientRect().height;
-          const gap = _remToPx(2);
-          m.el.style.minHeight = (currentHeight + bioHeight + gap) + 'px';
-        }
-      };
-
       // --- Reduced motion: show bios statically, no animation ---
       if (reducedMotion && !isDesktop()) {
         aboutTeamCtx = gsap.context(() => {
           for (const m of Object.values(members)) {
-            gsap.set(m.bio, { width: '100%', maxHeight: 'none', opacity: 1, overflow: 'visible' });
+            gsap.set(m.bio, { opacity: 1, x: 0 });
+            gsap.set(m.name, { opacity: 1, x: 0 });
+            gsap.set(m.image, { opacity: 1, x: 0, scale: 1 });
           }
         }, container);
-        measureAndSetMinHeights();
         return;
       }
 
       if (reducedMotion) return; // Desktop reduced motion — skip entirely
-
-      let activeTeamMember = null; // null | 'ryan' | 'guy'
-
-      aboutTeamCtx = gsap.context(() => {
-        gsap.set([members.ryan.bio, members.guy.bio], { width: 0, overflow: 'hidden', opacity: 0 });
-        gsap.set([ryanEl, guyEl], { x: 0, force3D: true });
-        gsap.set([members.ryan.name, members.guy.name], { x: 0, force3D: true });
-        gsap.set([ryanScale, guyScale], { scale: 1, force3D: true });
-      }, container);
 
       const slideOpts = { duration: 0.5, ease: 'power3.out', force3D: true, overwrite: true };
 
@@ -526,8 +496,6 @@
         gsap.to(scaleTarget, { scale: 1.1, duration: 0.3, ease: 'power3.out', overwrite: true, force3D: true });
         // Name shift (R3)
         gsap.to(m.name, { x: nameX, ...slideOpts });
-
-        activeTeamMember = key;
       };
 
       const closeMember = (key) => {
@@ -543,12 +511,46 @@
         gsap.to(scaleTarget, { scale: 1, duration: 0.3, ease: 'power3.out', overwrite: true, force3D: true });
         // Name shift reset (R3)
         gsap.to(m.name, { x: 0, ...slideOpts });
-
-        activeTeamMember = null;
       };
 
+      aboutTeamCtx = gsap.context(() => {
+        if (isDesktop()) {
+          // Desktop: initial state + hover listeners
+          gsap.set([members.ryan.bio, members.guy.bio], { width: 0, overflow: 'hidden', opacity: 0 });
+          gsap.set([ryanEl, guyEl], { x: 0, force3D: true });
+          gsap.set([members.ryan.name, members.guy.name], { x: 0, force3D: true });
+          gsap.set([ryanScale, guyScale], { scale: 1, force3D: true });
+        } else {
+          // Mobile: per-element ScrollTrigger scrub
+          // All fromTo + ScrollTrigger instances created inside context so ctx.revert() kills them
+          for (const m of Object.values(members)) {
+            const children = [m.image, m.name, m.bio];
+
+            for (const el of children) {
+              const props = { opacity: 1, x: 0 };
+              if (el === m.image) props.scale = 1.05;
+
+              gsap.fromTo(el,
+                { opacity: 0, x: '100%', ...(el === m.image ? { scale: 1 } : {}) },
+                {
+                  ...props,
+                  ease: 'none',
+                  scrollTrigger: {
+                    trigger: el,
+                    scroller: container,
+                    start: 'top bottom',
+                    end: 'top 40%',
+                    scrub: true,
+                  }
+                }
+              );
+            }
+          }
+        }
+      }, container);
+
       if (isDesktop()) {
-        // Desktop: mouseenter on .about-team_image, mouseleave on [data-team]
+        // Desktop hover listeners (outside context — cleaned up via teamHoverListeners)
         const onRyanEnter = () => openMember('ryan');
         const onRyanLeave = () => closeMember('ryan');
         const onGuyEnter = () => openMember('guy');
@@ -565,102 +567,21 @@
           { el: members.guy.image, type: 'mouseenter', fn: onGuyEnter },
           { el: guyEl, type: 'mouseleave', fn: onGuyLeave }
         );
-      } else {
-        // Mobile: scroll-linked bio reveal (maxHeight + opacity, not width)
-        // CSS overrides position to relative so bio flows below name in column layout.
-        // Override the shared init: set bio hidden via maxHeight instead of width.
-        gsap.set([members.ryan.bio, members.guy.bio], { width: '100%', maxHeight: 0, opacity: 0, overflow: 'hidden' });
-
-        measureAndSetMinHeights();
-
-        const scrollState = { rafId: null, onScroll: null, resizeTimer: null };
-        const scrollWrapper = container?.closest('[data-barba="container"]') || container;
-
-        const onScroll = () => {
-          if (scrollState.rafId) return;
-          scrollState.rafId = requestAnimationFrame(() => {
-            scrollState.rafId = null;
-            const vh = window.innerHeight;
-            const slideRaw = _getCSSVar('--team-photo-slide', '6vw');
-            const slideDistance = (parseFloat(slideRaw) / 100) * window.innerWidth;
-
-            for (const [key, m] of Object.entries(members)) {
-              const rect = m.el.getBoundingClientRect();
-              // start: element top at viewport bottom (progress=0)
-              // end: element centered in viewport (progress=1)
-              const start = vh;
-              const end = (vh - rect.height) / 2;
-              const raw = (start - rect.top) / (start - end);
-              const progress = Math.max(0, Math.min(1, raw));
-
-              const scaleTarget = m.imageCover || m.image;
-              // Photo slides: Ryan (nameDir=1) slides left (negative x), Guy (nameDir=-1) slides right (positive x)
-              const photoX = -m.nameDir * slideDistance * progress;
-              const mh = bioHeights[key] || 0;
-
-              gsap.set(m.image, { x: photoX, force3D: true });
-              gsap.set(m.bio, { maxHeight: mh * progress, opacity: progress, overflow: progress > 0.95 ? 'visible' : 'hidden' });
-              // No name shift on mobile — stacked column layout doesn't benefit, and shift can clip past section padding
-              gsap.set(scaleTarget, { scale: 1 + 0.05 * progress, force3D: true });
-            }
-          });
-        };
-
-        // Listen on scroll wrapper, window, and Lenis (same pattern as about-text-lines.js)
-        if (scrollWrapper && scrollWrapper !== window) {
-          scrollWrapper.addEventListener('scroll', onScroll, { passive: true });
-          teamHoverListeners.push({ el: scrollWrapper, type: 'scroll', fn: onScroll });
-        }
-        window.addEventListener('scroll', onScroll, { passive: true });
-        teamHoverListeners.push({ el: window, type: 'scroll', fn: onScroll });
-        RHP.lenis?.onScroll?.(onScroll);
-        teamHoverListeners.push({ el: null, type: 'lenis', fn: onScroll });
-
-        // Debounced resize handler — re-measure bio heights
-        const onResize = () => {
-          clearTimeout(scrollState.resizeTimer);
-          scrollState.resizeTimer = setTimeout(() => {
-            measureAndSetMinHeights();
-            onScroll(); // re-apply with new measurements
-          }, 200);
-        };
-        window.addEventListener('resize', onResize, { passive: true });
-        teamHoverListeners.push({ el: window, type: 'resize', fn: onResize });
-
-        scrollState.onScroll = onScroll;
-        teamScrollState = scrollState;
-
-        // Kick once to set initial positions
-        onScroll();
       }
     }
 
     function destroyAboutTeamHover() {
-      // Kill in-flight hover tweens (gsap.to calls live outside the context)
       const gsap = window.gsap;
       if (gsap && teamTweenTargets.length) {
         gsap.killTweensOf(teamTweenTargets);
-        // Clear inline styles set by scroll rAF (outside gsap.context, so ctx.revert won't reach them)
-        gsap.set(teamTweenTargets, { clearProps: 'transform,width,opacity,overflow,scale,maxHeight' });
+        gsap.set(teamTweenTargets, { clearProps: 'transform,width,opacity,overflow,scale' });
       }
       aboutTeamCtx?.revert();
       aboutTeamCtx = null;
 
-      // Cleanup scroll state (mobile scroll-linked reveal)
-      if (teamScrollState) {
-        if (teamScrollState.rafId) cancelAnimationFrame(teamScrollState.rafId);
-        clearTimeout(teamScrollState.resizeTimer);
-        RHP.lenis?.offScroll?.(teamScrollState.onScroll);
-        // Clear min-height set by measureAndSetMinHeights (direct style, not in gsap.context)
-        document.querySelectorAll('[data-team]').forEach(el => { el.style.minHeight = ''; });
-        teamScrollState = null;
+      for (const l of teamHoverListeners) {
+        if (l.el) l.el.removeEventListener(l.type, l.fn);
       }
-
-      teamHoverListeners.forEach(({ el, type, fn }) => {
-        // 'lenis' is a sentinel — RHP.lenis.offScroll handles cleanup above
-        if (type === 'lenis') return;
-        el.removeEventListener(type, fn);
-      });
       teamHoverListeners = [];
       teamTweenTargets = [];
     }
@@ -1473,6 +1394,11 @@
       setDialNs('about');
       RHP.scroll.unlock();
       _startLenisForPage(container);
+      RHP.lenis?.setupScrollTriggerProxy?.(container, null);
+      requestAnimationFrame(function() {
+        RHP.lenis?.resize();
+        window.ScrollTrigger?.refresh?.();
+      });
       // Clear lingering dial visibility from previous session
       const aboutDialWrapper = document.querySelector('.about_dial-wrapper');
       if (aboutDialWrapper && window.gsap) window.gsap.set(aboutDialWrapper, { clearProps: 'visibility' });
@@ -1643,6 +1569,13 @@
         if (ns !== 'case' && ns !== 'work') {
           // About/contact: Barba container (position:fixed, overflow:auto) is the scroll wrapper
           _startLenisForPage(data.next && data.next.container ? data.next.container : null);
+          if (ns === 'about') {
+            RHP.lenis?.setupScrollTriggerProxy?.(data.next.container, null);
+            requestAnimationFrame(function() {
+              RHP.lenis?.resize();
+              window.ScrollTrigger?.refresh?.();
+            });
+          }
         }
       }
 

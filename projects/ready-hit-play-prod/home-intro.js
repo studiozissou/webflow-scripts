@@ -25,6 +25,19 @@
   RHP.homeIntro = (() => {
     let splitInstance = null;
     let hasRun = false;
+    let _tapAbort = null; // AbortController for tap-to-play listener
+    let _tapStepEl = null; // step element ref for destroy() restore
+    let _tapOrigText = ''; // original step text for restore
+    let _tapOrigLabel = ''; // original aria-label for restore
+
+    async function tryPlay(video) {
+      try {
+        await video.play();
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: e };
+      }
+    }
 
     function getStepEl(container) {
       return container?.querySelector('[data-text="step"]') ||
@@ -109,12 +122,48 @@
       if (!introVideo || !window.gsap) return Promise.resolve();
 
       return new Promise((resolve) => {
-        const onReady = () => {
+        const onReady = async () => {
           introVideo.removeEventListener('canplay', onReady);
           introVideo.removeEventListener('loadeddata', onReady);
           const gsap = window.gsap;
-          gsap.to(introVideo, { opacity: 1, duration: 0.2, ease: 'linear', onComplete: resolve });
-          try { introVideo.play(); } catch (e) {}
+          gsap.to(introVideo, { opacity: 1, duration: 0.2, ease: 'linear' });
+
+          const result = await tryPlay(introVideo);
+          if (result.ok) {
+            resolve();
+            return;
+          }
+
+          // Autoplay blocked — show tap-to-play on step text
+          const stepEl = getStepEl(container);
+          if (!stepEl) { resolve(); return; }
+
+          // Capture original text BEFORE SplitText (revert first to get clean text)
+          if (splitInstance) { try { splitInstance.revert(); } catch (e) {} }
+          _tapOrigText = stepEl.textContent || '';
+          _tapOrigLabel = stepEl.getAttribute('aria-label') || '';
+          _tapStepEl = stepEl;
+
+          stepEl.textContent = 'Tap here to play';
+          stepEl.setAttribute('aria-label', 'Tap here to play');
+          stepEl.classList.add('is-tap-to-play');
+
+          _tapAbort = new AbortController();
+          const dialFg = document.querySelector('.dial_layer-fg');
+          const tapTarget = dialFg || stepEl;
+
+          tapTarget.addEventListener('click', async () => {
+            await tryPlay(introVideo);
+            stepEl.textContent = _tapOrigText;
+            stepEl.setAttribute('aria-label', _tapOrigLabel);
+            stepEl.classList.remove('is-tap-to-play');
+            _tapStepEl = null;
+            window.dispatchEvent(new CustomEvent('rhp:autoplay:unlocked'));
+            _tapAbort = null;
+          }, { once: true, signal: _tapAbort.signal });
+
+          // Resolve immediately so ticks + nav proceed regardless of tap
+          resolve();
         };
         if (introVideo.readyState >= 2) {
           onReady();
@@ -286,7 +335,7 @@
           (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-home-ready');
         };
 
-        run().catch(console.error);
+        run().catch(() => {});
       },
 
       skip(container) {
@@ -300,6 +349,17 @@
       },
 
       destroy() {
+        if (_tapAbort) {
+          _tapAbort.abort();
+          _tapAbort = null;
+        }
+        // Restore step text if user never tapped
+        if (_tapStepEl) {
+          _tapStepEl.textContent = _tapOrigText;
+          _tapStepEl.setAttribute('aria-label', _tapOrigLabel);
+          _tapStepEl.classList.remove('is-tap-to-play');
+          _tapStepEl = null;
+        }
         if (splitInstance) {
           try {
             if (splitInstance.revert) splitInstance.revert();

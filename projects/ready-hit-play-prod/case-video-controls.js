@@ -7,7 +7,7 @@
    + Auto-hide controls + cursor on mouse inactivity
    ========================================= */
 (() => {
-  const VERSION = '2026.3.10.1';
+  const VERSION = '2026.3.27.1';
   window.RHP = window.RHP || {};
 
   const cleanups = [];
@@ -22,6 +22,19 @@
      and shared cursor wrapper — all outside a single scoped container. Explicit
      killTweensOf per-target in cleanup handles teardown instead. */
   const gsap = () => window.gsap;
+
+  async function tryPlay(video) {
+    try {
+      await video.play();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e };
+    }
+  }
+
+  /* No-controls section tracking */
+  const noControlsCleanups = [];
+  let noControlsObserver = null;
 
   function syncIcons(video, playPause, muteUnmute) {
     const playIcon   = playPause.querySelector('.is-play');
@@ -68,6 +81,17 @@
         video._rhpAutoPaused = false;
         const savedVol = video._rhpSavedVolume ?? video.volume;
 
+        /* If autoplay was never gesture-unlocked, keep paused and force controls visible.
+           Note: showControls() is scoped per wireSection closure, not accessible here.
+           Direct style set is correct for the shared IO callback. */
+        if (!video._rhpGestureUnlocked) {
+          const cw = section.querySelector('.case-video_control-wrapper');
+          const trk = section.querySelector('.case-video_progress-track');
+          if (cw) cw.style.opacity = '1';
+          if (trk) trk.style.opacity = '1';
+          return;
+        }
+
         video.play().catch(() => {});
 
         if (!video.muted && !reducedMotion && gsap()) {
@@ -93,10 +117,13 @@
     syncIcons(video, playPause, muteUnmute);
 
     /* ======== 1. Play/Pause + userPaused flag ======== */
-    const onPlayPauseClick = () => {
+    const onPlayPauseClick = async () => {
       if (video.paused) {
         video._rhpUserPaused = false;
-        video.play().catch(() => {});
+        const result = await tryPlay(video);
+        if (result.ok) {
+          video._rhpGestureUnlocked = true;
+        }
       } else {
         video._rhpUserPaused = true;
         video.pause();
@@ -295,8 +322,17 @@
 
       section.addEventListener('click', onSectionTap);
 
-      /* Start auto-hide timer */
-      resetIdleTimer(MOBILE_IDLE_DELAY);
+      /* Check autoplay — if blocked, keep controls visible until user taps play */
+      tryPlay(video).then(result => {
+        if (result.ok) {
+          video._rhpGestureUnlocked = true;
+          resetIdleTimer(MOBILE_IDLE_DELAY);
+        } else {
+          /* Force controls visible — set controlsHidden true first so showControls() acts */
+          controlsHidden = true;
+          showControls();
+        }
+      });
 
       cleanups.push(() => {
         section.removeEventListener('click', onSectionTap);
@@ -350,9 +386,106 @@
       delete video._rhpUserPaused;
       delete video._rhpAutoPaused;
       delete video._rhpSavedVolume;
+      delete video._rhpGestureUnlocked;
 
       /* Unobserve */
       if (observer) observer.unobserve(section);
+    });
+  }
+
+  /* ---- no-controls: overlay injection helper ---- */
+  const PLAY_OVERLAY_SVG = '<svg viewBox="0 0 52 51" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M26 50.5C40.3594 50.5 52 39.1355 52 25.1132C52 11.0909 40.3594 0 26 0C11.6406 0 0 11.0909 0 25.1132C0 39.1355 11.6406 50.5 26 50.5Z" fill="currentColor" fill-opacity="0.25"/>' +
+    '<path d="M36.8577 24.4547C37.475 24.8175 37.475 25.6825 36.8577 26.0453L21.2773 35.2009C20.6462 35.5718 19.8462 35.1254 19.8462 34.4056L19.8462 16.0944C19.8462 15.3746 20.6462 14.9282 21.2773 15.2991L36.8577 24.4547Z" fill="currentColor"/>' +
+    '</svg>';
+
+  function _injectPlayOverlay(section, video) {
+    if (section.querySelector('.rhp-play-overlay')) return; // already present
+
+    const overlay = document.createElement('div');
+    overlay.className = 'rhp-play-overlay';
+    overlay.setAttribute('aria-label', 'Tap to play video');
+    overlay.setAttribute('role', 'button');
+    overlay.setAttribute('tabindex', '0');
+    overlay.innerHTML = PLAY_OVERLAY_SVG;
+
+    section.appendChild(overlay);
+
+    const onOverlayActivate = async () => {
+      const playResult = await tryPlay(video);
+      if (playResult.ok) {
+        video._rhpGestureUnlocked = true;
+      }
+      if (gsap()) {
+        gsap().to(overlay, { opacity: 0, duration: 0.3, onComplete: () => overlay.remove() });
+      } else {
+        overlay.remove();
+      }
+    };
+    overlay.addEventListener('click', onOverlayActivate, { once: true });
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onOverlayActivate();
+      }
+    }, { once: true });
+
+    noControlsCleanups.push(() => {
+      if (overlay.parentNode) overlay.remove();
+    });
+  }
+
+  /* ---- no-controls section wiring ---- */
+  const _wiredNoControlsSections = new WeakSet();
+
+  function wireNoControlsSection(section) {
+    const video = section.querySelector('video.video-cover') || section.querySelector('video');
+    if (!video) return;
+
+    tryPlay(video).then(result => {
+      if (result.ok) {
+        video._rhpGestureUnlocked = true;
+        return;
+      }
+      _injectPlayOverlay(section, video);
+    });
+
+    /* Viewport auto-pause/resume for no-controls videos */
+    if (!noControlsObserver) {
+      noControlsObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const sec = entry.target;
+          const vid = sec.querySelector('video.video-cover') || sec.querySelector('video');
+          if (!vid) return;
+
+          if (!entry.isIntersecting) {
+            if (!vid.paused) {
+              vid._rhpAutoPaused = true;
+              vid.pause();
+            }
+          } else {
+            if (!vid._rhpAutoPaused) return;
+            vid._rhpAutoPaused = false;
+
+            if (vid._rhpGestureUnlocked) {
+              vid.play().catch(() => {});
+            } else {
+              _injectPlayOverlay(sec, vid);
+            }
+          }
+        });
+      }, { threshold: 0.3 });
+    }
+
+    if (!_wiredNoControlsSections.has(section)) {
+      _wiredNoControlsSections.add(section);
+      noControlsObserver.observe(section);
+    }
+
+    noControlsCleanups.push(() => {
+      if (noControlsObserver) noControlsObserver.unobserve(section);
+      delete video._rhpGestureUnlocked;
+      delete video._rhpAutoPaused;
     });
   }
 
@@ -373,6 +506,9 @@
     cleanups.forEach(fn => fn());
     cleanups.length = 0;
 
+    noControlsCleanups.forEach(fn => fn());
+    noControlsCleanups.length = 0;
+
     /* Kill volume tweens for any remaining wired videos */
     if (gsap()) {
       wiredVideos.forEach((video) => {
@@ -381,12 +517,16 @@
     }
     wiredVideos.clear();
 
-    /* Disconnect observer */
+    /* Disconnect observers */
     if (observer) {
       observer.disconnect();
       observer = null;
     }
+    if (noControlsObserver) {
+      noControlsObserver.disconnect();
+      noControlsObserver = null;
+    }
   }
 
-  window.RHP.caseVideoControls = { init, destroy, version: VERSION };
+  window.RHP.caseVideoControls = { init, destroy, wireNoControlsSection, version: VERSION };
 })();

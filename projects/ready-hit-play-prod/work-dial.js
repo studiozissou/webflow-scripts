@@ -48,6 +48,20 @@
     return (degRight0 + 90) % 360;                                       // 0° at top
   };
 
+  // Async play with rejection detection
+  async function tryPlay(video) {
+    try {
+      await video.play();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e };
+    }
+  }
+
+  // Module-scope autoplay flags (shared between enforceVideoPolicy and RHP.workDial internals)
+  let _autoplayBlocked = false;
+  let _autoplayUnlocked = false;
+
   // Enforce autoplay/mute/loop (Embed-safe + iOS-friendly)
   const enforceVideoPolicy = (root = document) => {
     root.querySelectorAll('video').forEach(v => {
@@ -63,9 +77,12 @@
         v.loop = true;
         v.autoplay = true;
 
-        const tryPlay = () => v.play?.().catch(()=>{});
-        if (v.readyState >= 2) tryPlay();
-        else v.addEventListener('loadedmetadata', tryPlay, { once: true });
+        const attempt = async () => {
+          const result = await tryPlay(v);
+          if (!result.ok) _autoplayBlocked = true;
+        };
+        if (v.readyState >= 2) attempt();
+        else v.addEventListener('loadedmetadata', () => attempt(), { once: true });
       } catch(e){}
     });
   };
@@ -131,6 +148,8 @@
       if (alive) return;
       alive = true;
       cleanup = [];
+      _autoplayBlocked = false;
+      _autoplayUnlocked = false;
       introMode = options.introMode === true;
       introComplete = !introMode;
       attractionEnabled = !introMode;
@@ -223,7 +242,7 @@
       cleanup.push(() => { if (sectorDot) { sectorDot.remove(); sectorDot = null; } sectorDotRef = null; });
 
       genericVideoComp = comp;
-      try { genericVideo.play().catch(() => {}); } catch(e) {}
+      tryPlay(genericVideo).then(r => { if (!r.ok) _autoplayBlocked = true; });
       // Show spinner on generic video when intro was skipped (Barba return from about)
       var _genericSpinner = null;
       if (introComplete) {
@@ -507,12 +526,13 @@
       // Simple fg-only play (replaces playPaired — bg is now a canvas mirror)
       function playFg(fg) {
         if (!fg || intentionallyPaused) return;
+        if (_autoplayBlocked && !_autoplayUnlocked) return;
         fg.muted = true;
         if (fg.readyState >= 2) {
-          try { fg.play().catch(() => {}); } catch(e) {}
+          tryPlay(fg).then(r => { if (!r.ok) _autoplayBlocked = true; });
         } else {
           waitCanPlay(fg).then(() => {
-            if (!intentionallyPaused) try { fg.play().catch(() => {}); } catch(e) {}
+            if (!intentionallyPaused) tryPlay(fg).then(r => { if (!r.ok) _autoplayBlocked = true; });
           });
         }
       }
@@ -938,10 +958,11 @@
           enforceVideoPolicy(comp);
           stop();
           rafId = requestAnimationFrame(draw);
+          if (_autoplayBlocked && !_autoplayUnlocked) return;
           if (dialState !== DIAL_STATES.IDLE) {
             if (visibleVideo) playFg(visibleVideo);
           } else {
-            if (genericVideo) try { genericVideo.play().catch(() => {}); } catch(e) {}
+            if (genericVideo) tryPlay(genericVideo).then(r => { if (!r.ok) _autoplayBlocked = true; });
           }
         }
       }
@@ -1184,6 +1205,11 @@
         }, { passive: false }, true);
         on(document, 'visibilitychange', onVis, { passive: true }, true);
         on(window, 'pointerdown', () => enforceVideoPolicy(comp), { once: true, passive: true }, true);
+
+        // Listen for home-intro tap-to-play unlock
+        const onAutoplayUnlocked = () => { _autoplayUnlocked = true; };
+        window.addEventListener('rhp:autoplay:unlocked', onAutoplayUnlocked);
+        cleanup.push(() => window.removeEventListener('rhp:autoplay:unlocked', onAutoplayUnlocked));
       }
 
       bindInteractionListeners();

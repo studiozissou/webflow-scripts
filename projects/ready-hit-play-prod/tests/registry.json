@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "lastUpdated": "2026-03-26",
-  "note": "Updated with fix-autoplay-fallback-mobile",
-  "lastDeployed": "2026-03-26",
-  "lastDeployedHash": "4090c6f",
+  "lastUpdated": "2026-03-31",
+  "note": "Deploy: about-team-scroll-reveal + autoplay-fallback-mobile + fg-video-preload",
+  "lastDeployed": "2026-03-31",
+  "lastDeployedHash": "5e11edb",
   "entries": [
     {
       "id": "smoke",

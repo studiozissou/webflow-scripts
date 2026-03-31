@@ -315,12 +315,12 @@
       "project": "ready-hit-play-prod",
       "type": "bug",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Ready to Review",
       "title": "Autoplay fallback (mobile): detect .play() rejection, show tap-to-play UI per context",
       "spec": ".claude/specs/fix-autoplay-fallback-mobile.md",
       "agent": "code-writer",
       "created": "2026-02-24",
-      "updated": "2026-03-26",
+      "updated": "2026-03-27",
       "note": "Inline detection per module (no new file). Homepage: swap step text to 'Tap here to play', revert after tap. Case with controls: keep UI visible until play tapped. Case without controls: SVG play overlay. Viewport auto-pause preserved, auto-resume after gesture unlock. 8 tasks across home-intro.js, work-dial.js, case-video-controls.js, orchestrator.js, CSS. Streams A+B+C parallelisable."
     },
     {

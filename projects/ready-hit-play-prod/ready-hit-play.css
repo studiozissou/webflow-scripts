@@ -991,3 +991,33 @@
     cursor: auto !important;
   }
 }
+
+/* Autoplay fallback — play overlay for no-controls videos */
+.rhp-play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.rhp-play-overlay svg {
+  width: 52px;
+  height: 51px;
+  color: #fff;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.rhp-play-overlay:hover svg,
+.rhp-play-overlay:active svg {
+  opacity: 1;
+}
+
+/* Step text tap-to-play state */
+[data-text="step"].is-tap-to-play {
+  cursor: pointer;
+}

@@ -19,7 +19,7 @@ Test inventory for SLUG:
   Tier 1 (auto local):  tests/acceptance/SLUG.spec.js — [exists / missing]
   Tier 2 (CDN regress): registered in registry.json — [yes (N total entries) / no]
   Tier 3 (manual):      see spec — [N items / none]
-  Playwright MCP:       [connected / not connected]
+  Browser MCP:          [Chrome DevTools / Playwright / not connected]
 ```
 
 If Tier 1 tests are missing, warn: "No acceptance tests for this slug — verify loop will run smoke + a11y only. Consider running `/plan` first to generate tests."
@@ -27,7 +27,11 @@ If Tier 1 tests are missing, warn: "No acceptance tests for this slug — verify
 ## Process
 
 0. **Log slug** (if `log-slug.sh` exists): Run `.claude/scripts/log-slug.sh build_start <feature-slug>`.
-1. Read the spec from `.claude/specs/` (if it exists) or ask for a description.
+1. **Find the spec:**
+   - Try `.claude/specs/SLUG.md` first (exact match).
+   - If not found, glob `.claude/specs/*SLUG*.md` for partial matches.
+   - If exactly one partial match, use it. If multiple matches, list them and ask the user to pick.
+   - If no matches at all, ask the user for a description.
 
 ### Verify-loop gate
 
@@ -111,35 +115,36 @@ This prevents context rot when building multiple components in a single session.
 
 After the executor returns, continue with the verify loop (steps 8–17) in the parent context.
 
-Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns.
+Reference the `chrome-devtools` skill for guard and ad-hoc check patterns. Reference the `playwright-webflow` skill for bridge test template only.
 
-## Verify loop (Playwright MCP only — no CLI tests)
+## Verify loop (Browser MCP only — no CLI tests)
 
 After code review passes and QA is clean, run the verify loop.
 
-> **IMPORTANT:** `/build` and `/debug` verify loops use Playwright MCP exclusively. Code hasn't been deployed to CDN yet, so `npx playwright test` against the staging URL will test OLD code — not your changes. CLI test suites (`npm test`, `npx playwright test`) are reserved for `/deploy`, which runs them AFTER pushing to CDN.
+> **IMPORTANT:** `/build` and `/debug` verify loops use browser MCP exclusively. Code hasn't been deployed to CDN yet, so `npx playwright test` against the staging URL will test OLD code — not your changes. CLI test suites (`npm test`, `npx playwright test`) are reserved for `/deploy`, which runs them AFTER pushing to CDN.
 
 **What runs:** MCP browser checks against the staging URL (which loads your localhost code if dev server is running, or tests the live DOM structure if not). The goal is to verify DOM state, console health, visual correctness, and spec pass/fail criteria — all through MCP tools.
 
-**Prerequisite:** Playwright MCP must be connected. If not connected, skip to the **Fallback** section below.
+**Prerequisite:** Prefer Chrome DevTools MCP. Fall back to Playwright MCP if Chrome DevTools unavailable. Reference the `chrome-devtools` skill for the availability guard.
 
-8. `browser_navigate` to STAGING_URL
-9. **Console check** — `browser_console_messages`, filter benign noise. FAIL on real errors.
-10. **DOM snapshot** — `browser_snapshot`, confirm spec selectors exist on the page.
-11. **Desktop screenshot** — `browser_resize` 1280×800, `browser_take_screenshot`
-12. **Mobile screenshot** — `browser_resize` 375×812, `browser_take_screenshot`
-13. **Scroll-triggered check** (if feature has scroll animations) — scroll to section, wait per `playwright-webflow` timing table, `browser_take_screenshot`
+8. `navigate_page` to STAGING_URL
+9. **Console check** — `list_console_messages` with `types: ["error"]`, filter benign noise. FAIL on real errors.
+10. **DOM snapshot** — `take_snapshot`, confirm spec selectors exist on the page.
+11. **Desktop screenshot** — `resize_page` 1280×800, `take_screenshot`
+12. **Mobile screenshot** — `emulate` with `viewport: { width: 375, height: 812 }`, `take_screenshot`
+13. **Scroll-triggered check** (if feature has scroll animations) — `evaluate_script` to scroll to section, wait per `chrome-devtools` timing table, `take_screenshot`
 14. **Spec verify-loop criteria** — walk through each pass/fail criterion from the spec's "## Verify Loop" section using MCP tools:
-    - DOM assertions → `browser_snapshot` + check for elements/classes/attributes
-    - Visual assertions → `browser_take_screenshot` at the specified viewport/scroll position
-    - Interaction assertions → `browser_click`/`browser_hover`/`browser_evaluate` to trigger, then snapshot/screenshot to confirm
-    - Console assertions → `browser_console_messages` filtered for expected output
+    - DOM assertions → `take_snapshot` + check for elements/classes/attributes
+    - Visual assertions → `take_screenshot` at the specified viewport/scroll position
+    - Interaction assertions → `click`/`hover` (uid from `take_snapshot`)/`evaluate_script` to trigger, then snapshot/screenshot to confirm
+    - Console assertions → `list_console_messages` filtered for expected output
     - For each criterion, log: `[PASS]` or `[FAIL] — {what went wrong}`
 15. **Smoke checks via MCP** — replicate core smoke concerns through MCP (not CLI):
-    - `browser_console_messages` — no JS errors on the page
-    - `browser_snapshot` — key DOM elements present (nav, barba container, critical modules)
-    - `browser_navigate` to 2–3 other pages (home, about, a case study) — confirm no console errors after Barba transition
-    - `browser_evaluate` — `window.RHP?.scriptsOk === true` on each page
+    - `list_console_messages` with `types: ["error"]` — no JS errors on the page
+    - `take_snapshot` — key DOM elements present (nav, barba container, critical modules)
+    - `navigate_page` to 2–3 other pages (home, about, a case study) — confirm no console errors after Barba transition
+    - `evaluate_script`: `() => { return window.RHP?.scriptsOk === true }` on each page
+15.5. **Lighthouse audit** — `lighthouse_audit` with `categories: ["accessibility", "best-practices"]`. WARN on score < 90, FAIL on score < 70.
 
 16. If ANY check fails:
     a. Read the failure carefully
@@ -177,9 +182,9 @@ Skip if no MCP bugs were found.
 
 > **Note:** `/build` verifies via MCP only. CLI test suites (`npm test`, acceptance specs, smoke, a11y, full registry) all run during `/deploy` after the code is live on CDN.
 
-**Fallback** (no Playwright MCP): Cannot run MCP verify loop. Instead:
+**Fallback** (no browser MCP): If Chrome DevTools not connected, try Playwright MCP (see `playwright-webflow` skill). If neither connected:
 - Read the spec's verify-loop criteria and present them as a **manual checklist** for the user
-- Log: "MCP not connected — verify loop skipped, manual verification required before `/deploy`"
+- Log: "No browser MCP available — verify loop skipped, manual verification required before `/deploy`"
 - Do NOT run `npx playwright test` — it would test old deployed code, not the current changes
 
 17. If ALL MCP checks pass:

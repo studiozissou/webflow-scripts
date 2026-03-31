@@ -17,20 +17,21 @@ Enter plan mode. Read all target files and analyse them against the refactor tar
 - Flag any changes that are borderline behaviour changes
 - Exit plan mode and wait for user approval before touching any code
 
-### 0.5. MCP baseline capture (skip if no MCP)
+### 0.5. MCP baseline capture (skip if no browser MCP)
 
-Reference the `playwright-webflow` skill for MCP guard and ad-hoc check patterns.
+Reference the `chrome-devtools` skill for guard and ad-hoc check patterns. Fall back to Playwright MCP if Chrome DevTools unavailable.
 
 Before any code changes, capture the current state for comparison:
-1. **Desktop screenshot** — `browser_resize` 1280×800, `browser_navigate`, `browser_take_screenshot`
-2. **Mobile screenshot** — `browser_resize` 375×812, `browser_navigate`, `browser_take_screenshot`
-3. **Console baseline** — `browser_console_messages`, record count and types
-4. **Animation state** (if refactoring animation code) — scroll to animated section, wait per timing table, screenshot + `browser_evaluate` to capture GSAP timeline/ScrollTrigger counts
-5. **DOM snapshot** — `browser_snapshot` of affected sections
+1. **Desktop screenshot** — `resize_page` 1280×800, `navigate_page`, `take_screenshot`
+2. **Mobile screenshot** — `emulate` with `viewport: { width: 375, height: 812 }`, `navigate_page`, `take_screenshot`
+3. **Console baseline** — `list_console_messages` with `types: ["error"]`, record count and types
+4. **Animation state** (if refactoring animation code) — `evaluate_script` to scroll to animated section, wait per timing table, `take_screenshot` + `evaluate_script` to capture GSAP timeline/ScrollTrigger counts
+5. **DOM snapshot** — `take_snapshot` of affected sections
+6. **Performance trace** (if refactoring perf-sensitive code) — `performance_start_trace` before page load, `performance_stop_trace` after, record metrics as baseline
 
 Store these as the baseline for step 3.5 comparison.
 
-If MCP is not connected, log "MCP browser not available — skipping baseline capture" and continue.
+If no browser MCP is connected, log "No browser MCP available — skipping baseline capture" and continue.
 
 ### 1. Refactor (Opus max-effort)
 Apply the approved changes using the `refactor` agent with `model: "opus"` at max effort.
@@ -53,13 +54,14 @@ Run the project's test suite to verify nothing broke.
 - If tests fail: fix the regression, return to step 2
 - If no test suite exists: run `/qa-check` on the changed files instead
 
-### 3.5. MCP post-refactor comparison (skip if no MCP or no baseline)
+### 3.5. MCP post-refactor comparison (skip if no browser MCP or no baseline)
 
 Repeat the same captures as step 0.5 and compare:
 1. **Visual match** — desktop and mobile screenshots should be visually identical to baseline
 2. **No new console errors** — error count should not increase vs. baseline
 3. **Same GSAP counts** — timeline/ScrollTrigger instance counts should match baseline
 4. **DOM structure** — key selectors from baseline should still be present
+5. **Performance regression** (if baseline trace was captured) — compare trace metrics. WARN if any metric regressed > 10%.
 
 If differences are found:
 - Report with before/after details

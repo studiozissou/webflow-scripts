@@ -41,6 +41,77 @@
   };
 
   /* -----------------------------
+     FG video preload (case → home)
+     Warms browser cache during dial-shrink so work-dial
+     videos load from cache instead of showing spinners.
+     ----------------------------- */
+  let _preloadEls = [];
+
+  function _preloadFgVideos(handoffIndex) {
+    _cleanupPreload();
+
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const ect = conn && conn.effectiveType;
+    if (ect === '2g' || ect === 'slow-2g') return;
+    const limitTo3 = (ect === '3g');
+
+    const items = document.querySelectorAll('.dial_cms-item');
+    if (!items.length) return;
+
+    const N = Math.min(8, items.length);
+    const isMobile = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+    // Priority: handoff sector, then ±1 adjacent, then remaining
+    const order = [];
+    if (typeof handoffIndex === 'number') order.push(handoffIndex);
+    const prev = ((handoffIndex || 0) - 1 + N) % N;
+    const next = ((handoffIndex || 0) + 1) % N;
+    if (order.indexOf(prev) === -1) order.push(prev);
+    if (order.indexOf(next) === -1) order.push(next);
+    if (!limitTo3) {
+      for (let i = 0; i < N; i++) {
+        if (order.indexOf(i) === -1) order.push(i);
+      }
+    }
+
+    const frag = document.createDocumentFragment();
+    order.forEach(function(idx, rank) {
+      const item = items[idx];
+      if (!item) return;
+      const url = item.getAttribute(isMobile ? 'data-video-mobile' : 'data-video')
+               || item.getAttribute('data-video');
+      if (!url) return;
+
+      const el = document.createElement('video');
+      el.setAttribute('preload', rank < 3 ? 'auto' : 'metadata');
+      el.setAttribute('muted', '');
+      el.setAttribute('playsinline', '');
+      el.setAttribute('data-preload-temp', '');
+      el.muted = true;
+      el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
+      el.src = url;
+      try { el.load(); } catch(e) { /* swallow */ }
+      frag.appendChild(el);
+      _preloadEls.push(el);
+    });
+
+    // Appended outside Barba container so elements survive DOM swap;
+    // _cleanupPreload() removes them on afterEnter
+    const comp = document.querySelector('.dial_component');
+    if (comp) comp.appendChild(frag);
+  }
+
+  function _cleanupPreload() {
+    _preloadEls.forEach(function(el) {
+      try { el.pause(); } catch(e) { /* swallow */ }
+      el.removeAttribute('src');
+      try { el.load(); } catch(e) { /* swallow */ }
+      el.remove();
+    });
+    _preloadEls = [];
+  }
+
+  /* -----------------------------
      Dial morph helpers (namespace restructure)
      ----------------------------- */
   function getDialVars() {
@@ -1727,6 +1798,9 @@
         RHP.videoLoader.init(data.next ? data.next.container : null);
       }
 
+      // Clean up any preloaded video elements (cache is already warm)
+      _cleanupPreload();
+
       _fireAfterEnterEvent(ns, data.next ? data.next.container : null);
     }
 
@@ -1984,6 +2058,10 @@
             }
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             RHP.videoLoader?.destroy?.();
+
+            // Preload fg videos while dial shrink animates (~1s head start)
+            const handoffIdx = RHP.videoState?.lastCaseIndex;
+            if (typeof handoffIdx === 'number') _preloadFgVideos(handoffIdx);
           },
 
           async leave() {

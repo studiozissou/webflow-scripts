@@ -1689,13 +1689,28 @@
         RHP.videoState.caseHandoff = null;
       }
 
-      // Case study: autoplay all videos in case-video, laptop and columns sections after Barba transition
+      // Case study: autoplay videos — wire no-controls sections for autoplay fallback
       if ((ns === 'case' || ns === 'work') && data.next && data.next.container) {
         var caseContainer = data.next.container;
         var handoffVideoEl = caseVideoEl; // reference from handoff block above (may be undefined if no handoff)
-        var sectionVideos = caseContainer.querySelectorAll('.section_case-video video, .section_case-video-laptop video, .section_case-columns video');
-        sectionVideos.forEach(function(v) {
-          // Skip the handoff video (already seeked + playing from handoff above)
+
+        // Sections WITH controls are handled by caseVideoControls.init() (already called above)
+        // Sections WITHOUT controls get wireNoControlsSection for autoplay fallback UI
+        var allVideoSections = caseContainer.querySelectorAll('.section_case-video, .section_case-video-laptop');
+        allVideoSections.forEach(function(sec) {
+          // Skip sections that have control wrappers (handled by wireSection)
+          if (sec.querySelector('.case-video_control-wrapper')) return;
+          // Skip if the only video is the handoff video (already seeked + playing)
+          var vid = sec.querySelector('video.video-cover') || sec.querySelector('video');
+          if (vid === handoffVideoEl) return;
+          if (RHP.caseVideoControls && RHP.caseVideoControls.wireNoControlsSection) {
+            RHP.caseVideoControls.wireNoControlsSection(sec);
+          }
+        });
+
+        // Columns sections: simple autoplay (no overlay needed — small inline videos)
+        var columnVideos = caseContainer.querySelectorAll('.section_case-columns video');
+        columnVideos.forEach(function(v) {
           if (v === handoffVideoEl) return;
           v.play().catch(function() {});
         });

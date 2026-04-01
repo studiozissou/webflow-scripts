@@ -99,10 +99,9 @@
       var script = document.createElement('script');
       script.src = src;
       script.async = false;
-        script.onload = function() { resolve(); };
-        script.onerror = function() { reject(new Error('Failed to load: ' + src)); };
-        document.head.appendChild(script);
-      }
+      script.onload = function() { resolve(); };
+      script.onerror = function() { reject(new Error('Failed to load: ' + src)); };
+      document.head.appendChild(script);
     });
   }
 

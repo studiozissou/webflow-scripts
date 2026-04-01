@@ -77,37 +77,60 @@
     ]
   };
 
+  // ngrok free tier: fetch with skip-header to bypass interstitial
+  var _isNgrok = window.__RHP_BASE && /\.ngrok-free\.dev/i.test(window.__RHP_BASE);
+
   // Load a stylesheet and return a promise
   function loadStylesheet(href) {
     return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`link[href="${href}"]`);
-      if (existing) {
-        resolve();
-        return;
+      var existing = document.querySelector('link[href="' + href + '"]');
+      if (existing) { resolve(); return; }
+
+      if (_isNgrok && /\.ngrok-free\.dev/i.test(href)) {
+        fetch(href, { headers: { 'ngrok-skip-browser-warning': '1' } })
+          .then(function(r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+          .then(function(text) {
+            var s = document.createElement('style');
+            s.textContent = text;
+            document.head.appendChild(s);
+            resolve();
+          })
+          .catch(function(e) { reject(new Error('Failed to load: ' + href + ' (' + e.message + ')')); });
+      } else {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = function() { resolve(); };
+        link.onerror = function() { reject(new Error('Failed to load: ' + href)); };
+        document.head.appendChild(link);
       }
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      link.onload = () => resolve();
-      link.onerror = () => reject(new Error(`Failed to load: ${href}`));
-      document.head.appendChild(link);
     });
   }
 
   // Load a script and return a promise
   function loadScript(src) {
     return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[src="${src}"]`);
-      if (existing) {
-        resolve();
-        return;
+      var existing = document.querySelector('script[src="' + src + '"]');
+      if (existing) { resolve(); return; }
+
+      if (_isNgrok && /\.ngrok-free\.dev/i.test(src)) {
+        fetch(src, { headers: { 'ngrok-skip-browser-warning': '1' } })
+          .then(function(r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+          .then(function(text) {
+            var s = document.createElement('script');
+            s.textContent = text;
+            document.head.appendChild(s);
+            resolve();
+          })
+          .catch(function(e) { reject(new Error('Failed to load: ' + src + ' (' + e.message + ')')); });
+      } else {
+        var script = document.createElement('script');
+        script.src = src;
+        script.async = false;
+        script.onload = function() { resolve(); };
+        script.onerror = function() { reject(new Error('Failed to load: ' + src)); };
+        document.head.appendChild(script);
       }
-      const script = document.createElement('script');
-      script.src = src;
-      script.async = false;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Failed to load: ${src}`));
-      document.head.appendChild(script);
     });
   }
 

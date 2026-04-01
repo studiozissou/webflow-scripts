@@ -112,8 +112,11 @@
   }
 
   function getBaseUrl() {
+    // __RHP_BASE set by inline snippet in Webflow head (supports ?dev= for mobile)
+    if (window.__RHP_BASE) return window.__RHP_BASE;
     try {
-      if (localStorage.getItem('rhp-source') === 'local') {
+      var localOverride = localStorage.getItem('rhp-source');
+      if (localOverride === 'local') {
         return 'https://localhost:8080/projects/ready-hit-play-prod';
       }
     } catch(e) { /* localStorage blocked — fall through to normal detection */ }
@@ -137,8 +140,13 @@
     try {
       var baseUrl = getBaseUrl();
 
-      if (/^https?:\/\/localhost(:\d+)?(\/|$)/i.test(baseUrl)) {
-        console.log('%c[RHP] SOURCE: LOCALHOST', 'color: #ff8200; font-weight: bold');
+      var isDevMode = /^https?:\/\/localhost(:\d+)?(\/|$)/i.test(baseUrl) || /\.ngrok-free\.dev(\/|$)/i.test(baseUrl);
+      if (isDevMode) {
+        console.log('%c[RHP] SOURCE: LOCALHOST' + (/ngrok/.test(baseUrl) ? ' (ngrok)' : ''), 'color: #ff8200; font-weight: bold');
+        // Visual dev indicator — small orange dot, top-left
+        var dot = document.createElement('div');
+        dot.style.cssText = 'position:fixed;top:8px;left:8px;width:10px;height:10px;background:#ff8200;border-radius:50%;z-index:99999;pointer-events:none;opacity:0.8';
+        document.body.appendChild(dot);
       } else {
         var commitMatch = baseUrl.match(/@([a-f0-9]{7,40})/i);
         console.log('%c[RHP] SOURCE: CDN' + (commitMatch ? ' @' + commitMatch[1] : ''), 'color: #05EFBF; font-weight: bold');

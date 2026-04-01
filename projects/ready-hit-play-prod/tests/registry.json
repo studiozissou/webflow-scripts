@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "lastUpdated": "2026-03-31",
-  "note": "Deploy: about-team-scroll-reveal + autoplay-fallback-mobile + fg-video-preload",
-  "lastDeployed": "2026-03-31",
-  "lastDeployedHash": "5e11edb",
+  "lastUpdated": "2026-04-01",
+  "note": "Deploy: ngrok mobile dev support",
+  "lastDeployed": "2026-04-01",
+  "lastDeployedHash": "3e47ad7",
   "entries": [
     {
       "id": "smoke",

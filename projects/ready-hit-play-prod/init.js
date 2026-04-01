@@ -77,11 +77,27 @@
     ]
   };
 
+  // ngrok free tier: use fetch + skip header to bypass interstitial on mobile
+  var _isNgrok = window.__RHP_BASE && /\.ngrok-free\.dev/i.test(window.__RHP_BASE);
+  var _ngrokHeaders = { 'ngrok-skip-browser-warning': '1' };
+
   // Load a stylesheet and return a promise
   function loadStylesheet(href) {
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
       var existing = document.querySelector('link[href="' + href + '"]');
       if (existing) { resolve(); return; }
+      if (_isNgrok && /\.ngrok-free\.dev/i.test(href)) {
+        fetch(href, { headers: _ngrokHeaders })
+          .then(function(r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+          .then(function(css) {
+            var s = document.createElement('style');
+            s.textContent = css;
+            document.head.appendChild(s);
+            resolve();
+          })
+          .catch(function(e) { reject(new Error('Failed to load: ' + href + ' (' + e.message + ')')); });
+        return;
+      }
       var link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = href;
@@ -93,9 +109,21 @@
 
   // Load a script and return a promise
   function loadScript(src) {
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
       var existing = document.querySelector('script[src="' + src + '"]');
       if (existing) { resolve(); return; }
+      if (_isNgrok && /\.ngrok-free\.dev/i.test(src)) {
+        fetch(src, { headers: _ngrokHeaders })
+          .then(function(r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+          .then(function(js) {
+            var s = document.createElement('script');
+            s.textContent = js;
+            document.head.appendChild(s);
+            resolve();
+          })
+          .catch(function(e) { reject(new Error('Failed to load: ' + src + ' (' + e.message + ')')); });
+        return;
+      }
       var script = document.createElement('script');
       script.src = src;
       script.async = false;

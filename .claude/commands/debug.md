@@ -203,6 +203,30 @@ Activate the **debug skill** and run its full loop:
 5. **Fix** — use the **opus model** when applying fixes. Apply only after hypothesis is confirmed; if confidence < 80% pause and ask
 6. **Confirm** — verify fix, check for regressions, remove all instrumentation
 
+### Worktree Server (auto — before verify loop)
+
+If the current working directory is inside a git worktree (`git rev-parse --git-dir` output contains `/worktrees/`):
+
+1. **Find free port:** Check 8080, 8081, ... 8089 via `lsof -ti:<port>`. Use first free port. Store as `WT_PORT`.
+2. **Start server:** Run the `/local` Python HTTPS server from the worktree root on `WT_PORT`.
+   - Certs: use main repo root certs (`git worktree list | head -1 | awk '{print $1}'` for the main root path)
+   - Serve from: `$(git rev-parse --show-toplevel)`
+   - Run in background
+3. **Verify serving:** `curl -k https://localhost:$WT_PORT/projects/ready-hit-play-prod/init.js` — must return 200.
+4. **Set WT_PORT for verify loop:** All `navigate_page` calls in the verify loop below must use the **Worktree navigate pattern**.
+
+If NOT in a worktree: skip this section entirely (existing behaviour).
+
+**Worktree navigate pattern:** For every `navigate_page` call in the verify loop, if a worktree server is running on `WT_PORT`:
+1. `navigate_page` to `STAGING_URL` (or `STAGING_URL + path`)
+2. `evaluate_script`: `() => { window.__RHP_BASE = 'https://localhost:WT_PORT/projects/ready-hit-play-prod'; location.reload(); }`
+3. Wait for page reload + RHP scripts to load: `evaluate_script`: `() => { return window.RHP?.scriptsOk === true }` (poll until true or 20s timeout)
+4. Proceed with the check
+
+**Worktree cleanup:** After the verify loop completes (pass or fail), kill the worktree server process (`lsof -ti:$WT_PORT | xargs kill`).
+
+---
+
 ### Verify loop (Browser MCP only — no CLI tests)
 
 > **IMPORTANT:** `/build` and `/debug` verify loops use browser MCP exclusively. Code hasn't been deployed to CDN yet, so `npx playwright test` against the staging URL will test OLD code — not your changes. CLI test suites (`npm test`, `npx playwright test`) are reserved for `/deploy`.

@@ -63,6 +63,9 @@ Complex = state, GSAP, Barba hooks, Finsweet, or shared state. When in doubt, st
 
 | Command | What it does |
 |---------|-------------|
+| `/carsa-build` | Build a component/section on Carsa via Webflow MCP (plan → build → log → verify → report) |
+| `/carsa-build --review` | Weekly review of Carsa builds — new styles, components, unverified work |
+| `/carsa-build --dry-run` | Plan only — check components and present approach without building |
 | `/gsap-build` | Build a GSAP animation — timeline, ScrollTrigger, SplitText, or choreography |
 | `/new-section` | Scaffold a new animated section for a Webflow page |
 | `/refactor` | Plan-first refactor with code review + test loop (Opus refactors, Sonnet reviews) |
@@ -73,7 +76,7 @@ Complex = state, GSAP, Barba hooks, Finsweet, or shared state. When in doubt, st
 
 | Command | What it does |
 |---------|-------------|
-| `/audit-page` | Run a comprehensive audit of a specific Webflow page |
+| `/test-page` | Comprehensive page analysis — Lighthouse, perf, a11y, CLS, Figma comparison, regression baseline |
 | `/discover` | Explore and map the codebase for a client or the whole monorepo |
 | `/qa-check` | Run a QA checklist on a feature or file |
 | `/status` | Show current task status from queue.json |

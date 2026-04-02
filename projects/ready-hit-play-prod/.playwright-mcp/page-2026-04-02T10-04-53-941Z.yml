@@ -1,0 +1,19 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Ready Hit Play" [level=1] [ref=e5]
+    - generic [ref=e6]:
+      - generic "Step into the circle" [ref=e7]:
+        - generic [ref=e8]:
+          - generic [ref=e9]: Step
+          - generic [ref=e10]: into
+          - generic [ref=e11]: the
+          - generic [ref=e12]: circle
+      - generic:
+        - link:
+          - /url: "#"
+        - generic:
+          - generic:
+            - img
+      - generic [ref=e14]:
+        - heading "Overland AI" [level=2] [ref=e15]
+        - generic [ref=e16]: Website | Films | Messaging

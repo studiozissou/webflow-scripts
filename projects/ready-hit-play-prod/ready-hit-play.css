@@ -486,7 +486,7 @@
 /* Mobile: position dial UI 16px below the white dot indicator */
 @media (max-width: 991px) {
   .dial_component[data-dial-ns="home"] .dial_layer-ui {
-    top: calc(50% + var(--dial-large-height) / 2 * 1.55 + 0.5rem + 16px);
+    top: calc(50% + var(--dial-large-height) / 2 * 1.55 + 0.5rem + 16px - 1rem);
   }
 }
 
@@ -887,7 +887,7 @@
 /* Positioned below the max tick extension: dial radius * ~1.55 accounts for gap + 50%-longer maxLen */
 .dial_sector-dot {
   position: absolute;
-  bottom: calc(50% - var(--dial-large-height) / 2 * 1.55 - 0.5rem);
+  bottom: calc(50% - var(--dial-large-height) / 2 * 1.55 - 0.5rem + 1rem);
   left: 50%;
   transform: translateX(-50%);
   width: 8px;

@@ -28,11 +28,15 @@
     : '';
 
   // Source-switch: ?rhp=local persists to localStorage; ?rhp=cdn clears it
+  // Optional: ?rhp-port=8081 persists the local server port (default 8080)
   (function() {
     try {
-      var p = new URLSearchParams(window.location.search).get('rhp');
+      var params = new URLSearchParams(window.location.search);
+      var p = params.get('rhp');
       if (p === 'local') localStorage.setItem('rhp-source', 'local');
-      else if (p === 'cdn') localStorage.removeItem('rhp-source');
+      else if (p === 'cdn') { localStorage.removeItem('rhp-source'); localStorage.removeItem('rhp-port'); }
+      var port = params.get('rhp-port');
+      if (port && /^\d{4,5}$/.test(port)) localStorage.setItem('rhp-port', port);
     } catch(e) { /* storage or location access blocked — ignore */ }
   })();
 
@@ -139,7 +143,8 @@
     try {
       var localOverride = localStorage.getItem('rhp-source');
       if (localOverride === 'local') {
-        return 'https://localhost:8080/projects/ready-hit-play-prod';
+        var storedPort = localStorage.getItem('rhp-port') || '8080';
+        return 'https://localhost:' + storedPort + '/projects/ready-hit-play-prod';
       }
     } catch(e) { /* localStorage blocked — fall through to normal detection */ }
     var scriptSrc = INIT_SCRIPT_SRC;

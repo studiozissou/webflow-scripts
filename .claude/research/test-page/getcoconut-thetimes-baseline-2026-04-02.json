@@ -1,0 +1,34 @@
+{
+  "url": "https://www.getcoconut.com/thetimes",
+  "date": "2026-04-02",
+  "mode": "light",
+  "scores": {
+    "accessibility": 92,
+    "bestPractices": 58,
+    "seo": 92
+  },
+  "cls": 0.002,
+  "consoleErrors": 0,
+  "mobileOverflow": false,
+  "issues": {
+    "critical": 0,
+    "high": 3,
+    "medium": 4,
+    "low": 1,
+    "total": 8
+  },
+  "failedAudits": [
+    "deprecations",
+    "third-party-cookies",
+    "color-contrast",
+    "label-content-name-mismatch",
+    "landmark-one-main",
+    "target-size",
+    "inspector-issues",
+    "link-text"
+  ],
+  "screenshots": {
+    "desktop": ".claude/research/test-page/getcoconut-thetimes-desktop.png",
+    "mobile": ".claude/research/test-page/getcoconut-thetimes-mobile.png"
+  }
+}

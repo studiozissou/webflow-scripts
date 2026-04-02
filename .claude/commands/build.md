@@ -117,6 +117,37 @@ After the executor returns, continue with the verify loop (steps 8–17) in the 
 
 Reference the `chrome-devtools` skill for guard and ad-hoc check patterns. Reference the `playwright-webflow` skill for bridge test template only.
 
+## Worktree Server (auto — before verify loop)
+
+If the current working directory is inside a git worktree (`git rev-parse --git-dir` output contains `/worktrees/`):
+
+1. **Find free port:** Check 8080, 8081, ... 8089 via `lsof -ti:<port>`. Use first free port. Store as `WT_PORT`.
+2. **Start server:** Run the `/local` Python HTTPS server from the worktree root on `WT_PORT`.
+   - Certs: use main repo root certs (`git worktree list | head -1 | awk '{print $1}'` for the main root path)
+   - Serve from: `$(git rev-parse --show-toplevel)`
+   - Run in background
+3. **Verify serving:** `curl -k https://localhost:$WT_PORT/projects/ready-hit-play-prod/init.js` — must return 200.
+4. **Set WT_PORT for verify loop:** All `navigate_page` calls in the verify loop below must use the **Worktree navigate pattern** (see below).
+
+If NOT in a worktree: skip this section entirely (existing behaviour).
+
+### Worktree navigate pattern
+
+For every `navigate_page` call in the verify loop, if a worktree server is running on `WT_PORT`:
+
+1. `navigate_page` to `STAGING_URL` (or `STAGING_URL + path`)
+2. `evaluate_script`: `() => { window.__RHP_BASE = 'https://localhost:WT_PORT/projects/ready-hit-play-prod'; location.reload(); }`
+3. Wait for page reload + RHP scripts to load: `evaluate_script`: `() => { return window.RHP?.scriptsOk === true }` (poll until true or 20s timeout)
+4. Proceed with the check
+
+This replaces the single `navigate_page` at the start of each verify step. The `__RHP_BASE` override takes priority in `init.js`, so all modules load from the worktree server regardless of what the Webflow `<script>` tag points to.
+
+### Worktree cleanup
+
+After the verify loop completes (pass or fail), kill the worktree server process (`lsof -ti:$WT_PORT | xargs kill`).
+
+---
+
 ## Verify loop (Browser MCP only — no CLI tests)
 
 After code review passes and QA is clean, run the verify loop.

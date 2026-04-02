@@ -1,7 +1,29 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-25",
+  "updated": "2026-04-01",
   "queue": [
+    {
+      "id": "carsa-webflow-skill-v2",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Carsa Webflow skill v2 — planning phase, build log, MCP fallback, verification, /carsa-build command",
+      "description": "Restructure carsa-webflow skill with XML tags, add planning phase with component template page check, build log for weekly review, Slack reporting (MCP + copy-paste fallback), MCP fallback pipeline, dynamic verification checklist, and /carsa-build command.",
+      "spec": ".claude/specs/carsa-webflow-skill-v2.md",
+      "created": "2026-04-01"
+    },
+    {
+      "id": "carsa-check-finance-link",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Check finance link — build eligibility URL with VRM and UTMs, open in new tab",
+      "description": "Click handler on [data-link='check-finance'] builds https://quote.carsa.co.uk/eligibility/questions?vrm={VRM} with stored UTM attribution, opens in new tab. Ancestor <a> href swap on hover for browser URL preview. Vanilla JS, event delegation for Finsweet dynamic loads.",
+      "spec": ".claude/specs/carsa-check-finance-link.md",
+      "created": "2026-03-31"
+    },
     {
       "id": "feat-dev-cdn-source-switch",
       "project": "ready-hit-play-prod",

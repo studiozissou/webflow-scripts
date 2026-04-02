@@ -848,6 +848,7 @@
       // Mobile dial: vertical drag rotates ticks only; update index per snap step (Variant B)
       const ROTATE_PER_PX = 0.22; // deg per px (tune)
       let _justActivatedMobile = false; // suppress click-to-navigate on activation tap
+      let _mobileActiveLocked = false; // once ACTIVE, never revert to IDLE until destroy
       function onPointerDown(e) {
         if (!isMobile()) return;
         // Kill in-flight snap tween so dragStartRot captures a stable value
@@ -867,11 +868,12 @@
           if (dist <= activeRadius || inUI) {
             if (dialState === DIAL_STATES.IDLE) {
               setDialState(DIAL_STATES.ACTIVE);
+              _mobileActiveLocked = true; // Lock to ACTIVE permanently
               _justActivatedMobile = true;
               setTimeout(() => { _justActivatedMobile = false; }, 400);
             }
           } else {
-            if (dialState !== DIAL_STATES.IDLE) {
+            if (!_mobileActiveLocked && dialState !== DIAL_STATES.IDLE) {
               setDialState(DIAL_STATES.IDLE);
             }
           }
@@ -1022,10 +1024,10 @@
             ctx.lineWidth = geom.barW;
             ctx.lineCap = 'round';
 
-            const x0 = crisp(geom.cx + Math.cos(a) * geom.innerR);
-            const y0 = crisp(geom.cy + Math.sin(a) * geom.innerR);
-            const x1 = crisp(geom.cx + Math.cos(a) * (geom.innerR + len));
-            const y1 = crisp(geom.cy + Math.sin(a) * (geom.innerR + len));
+            const x0 = geom.cx + Math.cos(a) * geom.innerR;
+            const y0 = geom.cy + Math.sin(a) * geom.innerR;
+            const x1 = geom.cx + Math.cos(a) * (geom.innerR + len);
+            const y1 = geom.cy + Math.sin(a) * (geom.innerR + len);
 
             ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
             ctx.globalAlpha = 1;
@@ -1303,6 +1305,7 @@
 
     function setIntroComplete() {
       introComplete = true;
+      attractionEnabled = true; // Safety net: guarantee attraction enabled after intro
       // Fade in the mobile sector dot after dial ticks have animated in
       if (sectorDotRef && window.gsap) {
         window.gsap.to(sectorDotRef, { opacity: 1, duration: 0.4, ease: 'power2.out' });
@@ -1358,6 +1361,7 @@
       suspendCleanup = [];
       _suspendFn = null;
       _resumeFn = null;
+      _mobileActiveLocked = false;
       refs = null;
       genericVideoComp = null;
     }

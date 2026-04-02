@@ -1,0 +1,11 @@
+{
+  "testPages": [
+    {
+      "slug": "getcoconut-thetimes",
+      "url": "https://www.getcoconut.com/thetimes",
+      "spec": "tests/acceptance/test-page-getcoconut-thetimes.spec.js",
+      "baseline": ".claude/research/test-page/getcoconut-thetimes-baseline-2026-04-02.json",
+      "created": "2026-04-02"
+    }
+  ]
+}

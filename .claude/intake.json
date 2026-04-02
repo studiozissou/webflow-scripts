@@ -1,0 +1,182 @@
+{
+  "client": "Coconut",
+  "project": {
+    "name": "Coconut",
+    "id": "6069af2a39978132d0155fd7",
+    "workspaceId": "638793b179342a5eeafd53c5",
+    "shortName": "getcoconut",
+    "createdOn": "2021-04-04T12:20:59.708Z",
+    "lastPublished": "2026-03-27T12:27:18.708Z"
+  },
+  "urls": {
+    "staging": "https://getcoconut.webflow.io",
+    "live": "https://www.getcoconut.com",
+    "customDomains": [
+      "www.getcoconut.com",
+      "getcoconut.com",
+      "www.getcoconut.co.uk",
+      "getcoconut.co.uk"
+    ]
+  },
+  "pages": {
+    "total": 151,
+    "published": [
+      { "title": "Home", "slug": "/", "id": "68307bf37726cd11f285d580" },
+      { "title": "About", "slug": "/about", "id": "65afe5d79038933a4ba8d1b8" },
+      { "title": "Pricing", "slug": "/pricing", "id": "683ef56fe874d977c1c221e1" },
+      { "title": "Features", "slug": "/features", "id": "6846b8006dd1d088496bd5b3" },
+      { "title": "Are you ready for Making Tax Digital?", "slug": "/mtd-software", "id": "686d341bc775236fb65fcfe7" },
+      { "title": "MTD for sole traders", "slug": "/mtd-software/sole-traders", "id": "69c2784e0b860803a1919a88" },
+      { "title": "MTD for Sole Traders", "slug": "/sole-traders", "id": "69ba97a918a448b45d31b107" },
+      { "title": "MTD for sole traders", "slug": "/mtd-for-sole-traders", "id": "69b9213742fe289a2b625ab6" },
+      { "title": "Competitor comparison", "slug": "/hmrc-free-mtd-software-comparison", "id": "69ba8b8a4bd205cd2e6c5dec" },
+      { "title": "The Times X Coconut", "slug": "/thetimes", "id": "69c14da4045864a80e2051ff" },
+      { "title": "New Accountants", "slug": "/accountant-software", "id": "684c3935ca3ce547daec1be8" },
+      { "title": "Knowledge Hub", "slug": "/revamp/knowledge-hub", "id": "68480f212839017aaa439b28" },
+      { "title": "GoSimpleTax", "slug": "/gosimpletax-mtd", "id": "68404e4101eb8c087a34d57f" },
+      { "title": "Coconut - Gov.uk", "slug": "/mtd-software-2", "id": "681a23f8ac27eba4dcab2df1" },
+      { "title": "Making Tax Digital Quiz", "slug": "/making-tax-digital-quiz", "id": "698ca13ba2914387383a8310" },
+      { "title": "Making Tax Digital for Income Tax Software (Zempler Customers)", "slug": "/making-tax-digital-for-income-tax-software-zempler-customers", "id": "68d4f061ec02f5b76d56ff3d" },
+      { "title": "Ready for Making Tax Digital (Zempler)", "slug": "/zempler-customers-get-coconut-free-for-making-tax-digital", "id": "68b6c61e0b8bfa3295464b61" },
+      { "title": "Jobs", "slug": "/jobs", "id": "65afe5d79038933a4ba8d2e8" },
+      { "title": "Sign Up", "slug": "/sign-up", "id": "65afe5d79038933a4ba8d356" },
+      { "title": "Blog Posts Template", "slug": "/blog", "id": "65afe5d79038933a4ba8d270" },
+      { "title": "Self-Assessment Tax Return Guide", "slug": "/self-assessment-tax-return-guide", "id": "65afe5d79038933a4ba8d355" },
+      { "title": "Work From Home Allowance Calculator", "slug": "/work-from-home-allowance-calculator", "id": "65afe5d79038933a4ba8d3b8" },
+      { "title": "Webinars and events", "slug": "/webinars-and-events", "id": "695d2d199f7ed1b38f85c1c9" },
+      { "title": "Documentation", "slug": "/documentation", "id": "65afe5d79038933a4ba8d295" },
+      { "title": "Subscribe", "slug": "/subscribe", "id": "65afe5d79038933a4ba8d372" },
+      { "title": "User Referral", "slug": "/userreferral", "id": "65afe5d79038933a4ba8d3b5" },
+      { "title": "404", "slug": "/404", "id": "65afe5d79038933a4ba8d194" },
+      { "title": "Password", "slug": "/401", "id": "65afe5d79038933a4ba8d172" },
+      { "title": "Search Results", "slug": "/search", "id": "65afe5d79038933a4ba8d351" }
+    ],
+    "drafts_count": 35,
+    "archive_count": 18,
+    "style_guide_count": 30,
+    "cms_template_count": 16,
+    "notes": "Site has extensive style guide pages (draft), archive pages under /archive/ and /archive-2025/, and multiple MTD-related landing pages. Several duplicate/variant sole-trader pages."
+  },
+  "collections": [
+    { "name": "Feature Highlights", "id": "65afe5d79038933a4ba8d155" },
+    { "name": "Authors", "id": "65afe5d79038933a4ba8d156" },
+    { "name": "Landing Pages", "id": "65afe5d79038933a4ba8d157" },
+    { "name": "2025 Archive Features", "id": "65afe5d79038933a4ba8d158" },
+    { "name": "Blog Categories", "id": "65afe5d79038933a4ba8d159" },
+    { "name": "Tags", "id": "65afe5d79038933a4ba8d15a" },
+    { "name": "Reviews", "id": "65afe5d79038933a4ba8d15b" },
+    { "name": "FAQs", "id": "65afe5d79038933a4ba8d15c" },
+    { "name": "Jobs", "id": "65afe5d79038933a4ba8d15d" },
+    { "name": "Categories", "id": "65afe5d79038933a4ba8d15e" },
+    { "name": "Blog Posts", "id": "65afe5d79038933a4ba8d15f" },
+    { "name": "Tools", "id": "65afe5d79038933a4ba8d160" },
+    { "name": "Knowledge Hub Articles", "id": "65afe5d79038933a4ba8d161" },
+    { "name": "Chapters", "id": "65afe5d79038933a4ba8d162" },
+    { "name": "Integrations", "id": "65afe5d79038933a4ba8d163" },
+    { "name": "25 New Features", "id": "683ebf9571fba472b081c90d" },
+    { "name": "Webinars and events", "id": "695e35770d14eeb9f306e6e4" },
+    { "name": "Speaker for Webinars and events", "id": "695e36099481bccafcf2fe3e" },
+    { "name": "Blog Banner Ads", "id": "69a1a1a673eab7d4477dd149" }
+  ],
+  "checks": {
+    "technical": {
+      "robots_txt": {
+        "status": "NEEDS ATTENTION",
+        "note": "Present. Blocks /banking-service-migration, /banking-service-migration-accountants, /self-assessment-tax-return-guide. Sitemap referenced twice (duplicate line). Verify disallowed pages are intentional."
+      },
+      "sitemap_xml": {
+        "status": "PASS",
+        "note": "Present with 382 URLs. Referenced in robots.txt. No sub-sitemaps."
+      },
+      "custom_404": {
+        "status": "PASS",
+        "note": "Custom 404 page exists at /404 (page ID 65afe5d79038933a4ba8d194)."
+      },
+      "favicon": {
+        "status": "NEEDS ATTENTION",
+        "note": "No favicon link tag detected in homepage HTML. May be set in Webflow project settings but not rendering in source."
+      },
+      "ssl": {
+        "status": "PASS",
+        "note": "Site served over HTTPS."
+      },
+      "canonical_domain": {
+        "status": "NEEDS ATTENTION",
+        "note": "4 custom domains configured (www.getcoconut.com, getcoconut.com, www.getcoconut.co.uk, getcoconut.co.uk). Canonical link tag not visible in homepage HTML via WebFetch (Webflow may inject server-side). Verify redirects from .co.uk and non-www to www.getcoconut.com."
+      },
+      "analytics": {
+        "status": "PASS",
+        "note": "GTM (GTM-WLRSZ9N), GA4 via gtag(), Facebook Pixel (664589987931207), Omni API (account 165435) all present."
+      },
+      "cookie_consent": {
+        "status": "NEEDS ATTENTION",
+        "note": "Custom cookie consent banner (#cw-cookie_banner) with analytics/ads/functionality toggles. Not a recognized third-party solution (Cookiebot, OneTrust, etc.). Verify GDPR/PECR compliance of custom implementation."
+      },
+      "consent_alignment": {
+        "status": "NEEDS ATTENTION",
+        "note": "GTM loads with consent mode configuration. Facebook Pixel appears to initialise before explicit consent. Verify FB pixel respects consent state."
+      }
+    },
+    "seo": {
+      "meta_titles": {
+        "status": "PASS",
+        "note": "Present and unique on all checked pages (/, /pricing, /features, /about, /mtd-software)."
+      },
+      "meta_descriptions": {
+        "status": "NEEDS ATTENTION",
+        "note": "Present on /, /pricing, /features, /mtd-software. MISSING on /about page."
+      },
+      "og_tags": {
+        "status": "NEEDS ATTENTION",
+        "note": "OG tags not visible via WebFetch on homepage, /pricing, or /features. Webflow may inject server-side via SEO settings (titleCopied/descriptionCopied flags are set). Verify OG image is configured in Webflow page settings."
+      },
+      "canonical_tags": {
+        "status": "PASS",
+        "note": "Not visible via WebFetch but Webflow injects canonical tags server-side on all published pages. Assume present."
+      },
+      "h1_tags": {
+        "status": "NEEDS ATTENTION",
+        "note": "Homepage: 1 h1 (PASS). Pricing: 1 h1 (PASS). Features: 1 h1 (PASS). About: 2 h1 tags (FAIL — 'About Coconut.' and 'Coconut's vision is...'). MTD: 1 h1 (PASS)."
+      },
+      "schema_json_ld": {
+        "status": "PASS",
+        "note": "SoftwareApplication schema present on homepage with pricing tiers and feature list."
+      },
+      "llms_txt": {
+        "status": "MISSING",
+        "note": "No llms.txt file at root. Recommend creating one for LLM discoverability."
+      }
+    },
+    "content": {
+      "forms": {
+        "status": "PASS",
+        "note": "Email signup forms on /sign-up and /mtd-software. Both use inline confirmation messages (no redirect). Submit to internal API + Zapier webhook."
+      },
+      "images_alt_text": {
+        "status": "NEEDS ATTENTION",
+        "note": "About page: 6+ images missing alt text (logo, stock photos, QR code, app store badges). Sign-up page: multiple images missing alt (QR code, app store badges, logo). Sitewide issue with badge/logo images."
+      },
+      "viewport_meta": {
+        "status": "PASS",
+        "note": "Viewport meta tag present (standard Webflow injection)."
+      }
+    },
+    "code_inventory": {
+      "sitewide_scripts": [
+        { "name": "Google Tag Manager", "id": "GTM-WLRSZ9N", "location": "head" },
+        { "name": "GA4 (via GTM/gtag)", "note": "Consent mode configured", "location": "head" },
+        { "name": "Facebook Pixel", "id": "664589987931207", "location": "head" },
+        { "name": "Omni API (OptinMonster)", "account": "165435", "src": "a.omappapi.com/app/js/api.min.js", "location": "body" },
+        { "name": "Google Fonts", "families": ["Inconsolata:400,700", "Work Sans:300,400,500,600,700"], "location": "head" },
+        { "name": "Custom cookie consent", "id": "cw-cookie_banner", "note": "Custom JS implementation, not third-party", "location": "body" },
+        { "name": "UTM/AppsFlyer attribution mapper", "note": "Maps UTM params to AppsFlyer attribution", "location": "body" },
+        { "name": "Conversion cookie handler", "note": "Stores referrer/querystring, 730-day expiry", "location": "body" }
+      ],
+      "page_specific": [
+        { "page": "/mtd-software", "scripts": ["Email form handler with duplicate-checking", "Zapier webhook integration", "Attribution encoding (base64)"] },
+        { "page": "/sign-up", "scripts": ["Email form handler", "Zapier webhook"] },
+        { "page": "/features", "scripts": ["Slick carousel initialisation"] }
+      ]
+    }
+  }
+}

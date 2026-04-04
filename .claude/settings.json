@@ -77,7 +77,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(cat /dev/stdin | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''))\" 2>/dev/null); [ -n \"$FILE\" ] && [[ \"$FILE\" =~ \\.(js|ts|css|json)$ ]] && prettier --write \"$FILE\" 2>/dev/null || true"
+            "command": "FILE=$(cat /dev/stdin | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''))\" 2>/dev/null); [ -n \"$FILE\" ] && [[ \"$FILE\" =~ \\.(js|ts|css|json)$ ]] && prettier --write \"$FILE\" 2>/dev/null || true",
+            "shell": "bash"
           }
         ]
       }

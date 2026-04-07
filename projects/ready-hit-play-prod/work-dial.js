@@ -603,6 +603,7 @@
         let didSwap = false;
 
         const poolHiddenStyle = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
+        const fgVideoBaseStyle = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;';
         // Pool videos only need to buffer (preload="auto" handles download).
         // Do NOT play — saves bandwidth (was 4 extra concurrent streams).
         var ensurePoolBuffered = function (el) {
@@ -622,21 +623,33 @@
           };
           el.addEventListener('seeked', reveal, { once: true });
           // Timeout guard: force reveal if seeked doesn't fire within 500ms
-          setTimeout(reveal, 500);
+          setTimeout(reveal, isMobile() ? 150 : 500);
         };
         if (idx === loadWindowIndices.prev && poolPrevReady && poolPrevHasUrl && fgWrap.contains(visibleVideo)) {
           const oldVisible = visibleVideo;
           visibleVideo.classList.remove('dial_fg-video');
-          fgWrap.removeChild(visibleVideo);
-          fgWrap.appendChild(poolPrev);
-          poolPrev.classList.add('dial_fg-video');
-          // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
-          poolPrev.style.cssText = 'opacity:0;';
-          poolPrev.removeAttribute('aria-hidden');
-          poolPrev.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
-          seekMaskReveal(poolPrev);
-          // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
-          restoreVideoStateFromIndex(poolPrev, idx);
+          if (isMobile()) {
+            // Mobile: add new video on top, keep old visible as backdrop until new is ready
+            fgWrap.appendChild(poolPrev);
+            poolPrev.classList.add('dial_fg-video');
+            poolPrev.style.cssText = fgVideoBaseStyle + 'opacity:1;'; // instant — no seek-mask on mobile
+            poolPrev.removeAttribute('aria-hidden');
+            poolPrev.poster = '';
+            restoreVideoStateFromIndex(poolPrev, idx);
+            // Now remove old (new video is already visible on top)
+            fgWrap.removeChild(oldVisible);
+          } else {
+            fgWrap.removeChild(visibleVideo);
+            fgWrap.appendChild(poolPrev);
+            poolPrev.classList.add('dial_fg-video');
+            // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
+            poolPrev.style.cssText = fgVideoBaseStyle + 'opacity:0;';
+            poolPrev.removeAttribute('aria-hidden');
+            poolPrev.poster = '';
+            seekMaskReveal(poolPrev);
+            // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
+            restoreVideoStateFromIndex(poolPrev, idx);
+          }
           visibleVideo = poolPrev;
           // oldVisible has items[newNext] URL fully buffered — reuse as poolNext, no reload needed
           const freeElPrev = poolNext; // repurpose old poolNext for urlPrev
@@ -652,16 +665,28 @@
         } else if (idx === loadWindowIndices.next && poolNextReady && poolNextHasUrl && fgWrap.contains(visibleVideo)) {
           const oldVisible = visibleVideo;
           visibleVideo.classList.remove('dial_fg-video');
-          fgWrap.removeChild(visibleVideo);
-          fgWrap.appendChild(poolNext);
-          poolNext.classList.add('dial_fg-video');
-          // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
-          poolNext.style.cssText = 'opacity:0;';
-          poolNext.removeAttribute('aria-hidden');
-          poolNext.poster = ''; // already buffered: show video frame, not poster (avoids brief poster flash)
-          seekMaskReveal(poolNext);
-          // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
-          restoreVideoStateFromIndex(poolNext, idx);
+          if (isMobile()) {
+            // Mobile: add new video on top, keep old visible as backdrop until new is ready
+            fgWrap.appendChild(poolNext);
+            poolNext.classList.add('dial_fg-video');
+            poolNext.style.cssText = fgVideoBaseStyle + 'opacity:1;'; // instant — no seek-mask on mobile
+            poolNext.removeAttribute('aria-hidden');
+            poolNext.poster = '';
+            restoreVideoStateFromIndex(poolNext, idx);
+            // Now remove old (new video is already visible on top)
+            fgWrap.removeChild(oldVisible);
+          } else {
+            fgWrap.removeChild(visibleVideo);
+            fgWrap.appendChild(poolNext);
+            poolNext.classList.add('dial_fg-video');
+            // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
+            poolNext.style.cssText = fgVideoBaseStyle + 'opacity:0;';
+            poolNext.removeAttribute('aria-hidden');
+            poolNext.poster = '';
+            seekMaskReveal(poolNext);
+            // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
+            restoreVideoStateFromIndex(poolNext, idx);
+          }
           visibleVideo = poolNext;
           // oldVisible has items[newPrev] URL fully buffered — reuse as poolPrev, no reload needed
           const freeElNext = poolPrev; // repurpose old poolPrev for urlNext
@@ -677,6 +702,20 @@
         }
 
         if (!didSwap) {
+          if (isMobile() && poster) {
+            // Mobile: Safari won't show <video> poster on a previously-played element.
+            // Overlay a poster <img> so the circle isn't blank while the new video loads.
+            var posterImg = document.createElement('img');
+            posterImg.src = poster;
+            posterImg.style.cssText = fgVideoBaseStyle + 'opacity:1;z-index:1;';
+            posterImg.setAttribute('aria-hidden', 'true');
+            fgWrap.appendChild(posterImg);
+            var removePoster = function () {
+              if (posterImg.parentNode) posterImg.parentNode.removeChild(posterImg);
+            };
+            visibleVideo.addEventListener('loadeddata', removePoster, { once: true });
+            setTimeout(removePoster, 3000); // fallback: remove after 3s max
+          }
           setVideoSourceAndPoster(visibleVideo, v, poster);
         }
 
@@ -684,7 +723,12 @@
 
         // FG crossfade on sector switch (canvas mirrors fg automatically — no bg crossfade needed)
         if (!isInitial && !prefersReduced() && window.gsap) {
-          window.gsap.fromTo(fgWrap, { opacity: 0 }, { opacity: 1, duration: didSwap ? 0.15 : 0.4, ease: 'linear', overwrite: true });
+          if (isMobile()) {
+            // Mobile: keep fgWrap at full opacity — seek-mask handles per-element reveal for pool swaps
+            window.gsap.set(fgWrap, { opacity: 1 });
+          } else {
+            window.gsap.fromTo(fgWrap, { opacity: 0 }, { opacity: 1, duration: didSwap ? 0.15 : 0.4, ease: 'linear', overwrite: true });
+          }
         }
 
         // BG canvas: if FG video not yet decoded, draw poster or fill black so canvas

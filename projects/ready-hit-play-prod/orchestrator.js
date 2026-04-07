@@ -310,6 +310,8 @@
 
     if (gsap) {
       gsap.set(dialFg, { clearProps: 'all' });
+      // Assert centering — defensive against stale inline styles on mobile
+      gsap.set(dialFg, { position: 'absolute', inset: 0, margin: 'auto' });
       if (dialUI) gsap.set(dialUI, { clearProps: 'opacity' });
     } else {
       dialFg.style.cssText = '';
@@ -485,6 +487,11 @@
     const isDesktop = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
 
     let aboutTeamCtx = null;
+    // Mobile scroll-driven state (manual pattern — no ScrollTrigger, works with smoothTouch:false)
+    let teamScrollHandler = null;
+    let teamScrollWrapper = null;
+    let teamRafId = null;
+    let teamScrollElements = []; // { el, isImage } for mobile scroll update
 
     function initAboutTeamHover(container) {
       // Idempotency guard — destroy previous instance if somehow called twice
@@ -592,31 +599,61 @@
           gsap.set([members.ryan.name, members.guy.name], { x: 0, force3D: true });
           gsap.set([ryanScale, guyScale], { scale: 1, force3D: true });
         } else {
-          // Mobile: per-element ScrollTrigger scrub
-          // All fromTo + ScrollTrigger instances created inside context so ctx.revert() kills them
+          // Mobile: manual scroll-driven reveal (no ScrollTrigger — Lenis smoothTouch:false
+          // means the scroller proxy doesn't receive touch updates on real devices).
+          // Pattern matches about-text-lines.js: listen on wrapper + Lenis, use getBoundingClientRect.
+          teamScrollElements = [];
           for (const m of Object.values(members)) {
-            const children = [m.image, m.name, m.bio];
-
-            for (const el of children) {
-              const props = { opacity: 1, x: 0 };
-              if (el === m.image) props.scale = 1.05;
-
-              gsap.fromTo(el,
-                { opacity: 0, x: '100%', ...(el === m.image ? { scale: 1 } : {}) },
-                {
-                  ...props,
-                  ease: 'none',
-                  scrollTrigger: {
-                    trigger: el,
-                    scroller: container,
-                    start: 'top bottom',
-                    end: 'top 40%',
-                    scrub: true,
-                  }
-                }
-              );
+            for (const el of [m.image, m.name, m.bio]) {
+              gsap.set(el, { opacity: 0, x: '100%', force3D: true, ...(el === m.image ? { scale: 1 } : {}) });
+              teamScrollElements.push({ el, isImage: el === m.image });
             }
           }
+
+          // Scroll update: map each element's position to 0–1 progress
+          // Start: element top hits viewport bottom. End: element top hits 40% from top.
+          const doTeamScrollUpdate = () => {
+            const vBottom = window.innerHeight;
+            const endY = vBottom * 0.4;
+            const startY = vBottom;
+            const range = startY - endY;
+            if (range === 0) return;
+
+            for (const { el, isImage } of teamScrollElements) {
+              const top = el.getBoundingClientRect().top;
+              let progress = 0;
+              if (top <= endY) {
+                progress = 1;
+              } else if (top < startY) {
+                progress = (startY - top) / range;
+              }
+              progress = Math.max(0, Math.min(1, progress));
+
+              gsap.set(el, {
+                opacity: progress,
+                x: ((1 - progress) * 100) + '%',
+                ...(isImage ? { scale: 1 + progress * 0.05 } : {}),
+              });
+            }
+          };
+
+          teamScrollHandler = () => {
+            if (teamRafId) return;
+            teamRafId = requestAnimationFrame(() => {
+              teamRafId = null;
+              doTeamScrollUpdate();
+            });
+          };
+
+          // Listen on scroll wrapper (Barba container), window, and Lenis
+          teamScrollWrapper = container?.closest('[data-barba="container"]') || container;
+          if (teamScrollWrapper && teamScrollWrapper !== window) {
+            teamScrollWrapper.addEventListener('scroll', teamScrollHandler, { passive: true });
+          }
+          window.addEventListener('scroll', teamScrollHandler, { passive: true });
+          RHP.lenis?.onScroll?.(teamScrollHandler);
+
+          doTeamScrollUpdate();
         }
       }, container);
 
@@ -649,6 +686,20 @@
       }
       aboutTeamCtx?.revert();
       aboutTeamCtx = null;
+
+      // Mobile scroll cleanup
+      if (teamScrollWrapper && teamScrollWrapper !== window) {
+        teamScrollWrapper.removeEventListener('scroll', teamScrollHandler);
+      }
+      window.removeEventListener('scroll', teamScrollHandler);
+      RHP.lenis?.offScroll?.(teamScrollHandler);
+      if (teamRafId) {
+        cancelAnimationFrame(teamRafId);
+        teamRafId = null;
+      }
+      teamScrollHandler = null;
+      teamScrollWrapper = null;
+      teamScrollElements = [];
 
       for (const l of teamHoverListeners) {
         if (l.el) l.el.removeEventListener(l.type, l.fn);
@@ -1625,6 +1676,14 @@
       } else if (ns === 'home') {
         // Defensive: ensure dial is at home state after clearProps
         setDialToHomeState();
+        // Mobile: prevent stale suspended video flash for one rAF frame.
+        // Desktop is protected by CSS opacity:0 on .dial_layer-fg in home state
+        // (media: hover:hover). On mobile that CSS rule doesn't apply, so the
+        // suspended fg video would be visible until resume()'s setDialState(ACTIVE)
+        // runs. Hide dialFg now so that fade-in is a proper 0→1 transition.
+        if (dialFg && window.gsap && RHP.workDial?.isSuspended?.()) {
+          window.gsap.set(dialFg, { opacity: 0 });
+        }
       }
 
       // Scroll mode

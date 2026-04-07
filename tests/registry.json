@@ -8,6 +8,13 @@
       "spec": "tests/acceptance/test-page-getcoconut-thetimes.spec.js",
       "baseline": ".claude/research/test-page/getcoconut-thetimes-baseline-2026-04-02.json",
       "created": "2026-04-02"
+    },
+    {
+      "slug": "coconut-pricing",
+      "url": "https://getcoconut.webflow.io/pricing",
+      "baseline": ".claude/research/test-page/coconut-pricing-baseline-2026-04-03.json",
+      "report": ".claude/research/test-page/coconut-pricing-report-2026-04-03.md",
+      "created": "2026-04-03"
     }
   ]
 }

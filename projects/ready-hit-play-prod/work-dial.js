@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.3.19.2';
+  const WORK_DIAL_VERSION = '2026.4.8.1';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
 
@@ -36,6 +36,10 @@
     cursorDot: '.cursor_dot',
     cursorLabel: '.cursor_label'
   };
+
+  if (window.gsap && window.ScrambleTextPlugin) {
+    window.gsap.registerPlugin(window.ScrambleTextPlugin);
+  }
 
   const prefersReduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isMobile = () => window.matchMedia('(hover: none), (pointer: coarse)').matches;
@@ -176,6 +180,50 @@
       const ctx = canvas.getContext('2d');
       const titleEl = container.querySelector(SEL.title) || document.querySelector(SEL.title);
       const metaEl  = container.querySelector(SEL.meta)  || document.querySelector(SEL.meta);
+
+      const stepEl = comp.querySelector('[data-text="step"]') || document.querySelector('[data-text="step"]');
+      const origStepText = stepEl ? stepEl.textContent.trim() : '';
+      let splitReverted = false;
+      function revertStepSplit() {
+        if (splitReverted) return;
+        splitReverted = true;
+        if (stepEl && stepEl.querySelector('.home-intro-word')) {
+          stepEl.textContent = stepEl.textContent.trim();
+        }
+      }
+      // Kill any in-flight scramble tween on Barba destroy so it can't write to a detached node
+      cleanup.push(() => {
+        if (stepEl && window.gsap) window.gsap.killTweensOf(stepEl);
+        if (stepEl) stepEl.classList.remove('is-scrambling');
+      });
+
+      // ScrambleText helper for [data-text="step"] — single source of truth for
+      // the three call sites (IDLE/ACTIVE state transitions and ACTIVE sector changes).
+      // Falls back to direct textContent swap when reduced-motion is on or the
+      // plugin failed to load. `revert` cleans up any residual SplitText wrappers
+      // from the home intro sequence before the first scramble runs.
+      function scrambleStep(text, { duration, speed, revert }) {
+        if (!stepEl) return;
+        if (revert) revertStepSplit();
+        const gsapLib = window.gsap;
+        const reduced = prefersReduced();
+        if (gsapLib && !reduced && window.ScrambleTextPlugin) {
+          // Allow break-anywhere wrapping during scramble so the random char
+          // string doesn't overflow the dial when scrambling between texts of
+          // different word-break shapes. Class is removed on complete so the
+          // final clean text wraps on word boundaries again.
+          stepEl.classList.add('is-scrambling');
+          gsapLib.to(stepEl, {
+            duration,
+            scrambleText: { text, chars: 'upperCase', speed },
+            overwrite: true,
+            onComplete: () => stepEl.classList.remove('is-scrambling'),
+            onInterrupt: () => stepEl.classList.remove('is-scrambling')
+          });
+        } else {
+          stepEl.textContent = text;
+        }
+      }
 
       const cmsItems = Array.from(container.querySelectorAll(SEL.cmsItem));
       const items = cmsItems.length ? cmsItems : Array.from(document.querySelectorAll(SEL.cmsItem));
@@ -362,11 +410,8 @@
             else dialFgEl.style.opacity = '0';
           }
           if (visibleVideo) try { visibleVideo.pause(); } catch(e) {}
-          // Fade in step text
-          document.querySelectorAll('[data-text="step"]').forEach(el => {
-            if (gsap && !reduced) gsap.to(el, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: 'auto' });
-            else el.style.opacity = '1';
-          });
+          // Scramble step text back to original copy
+          scrambleStep(origStepText, { duration: 0.85, speed: 0.4, revert: false });
           setDialUiOpacity(0);
           if (!isMobile()) setCursorPlay(false);
         } else if (newState === DIAL_STATES.ACTIVE) {
@@ -401,11 +446,9 @@
             if (gsap && !reduced) gsap.to(dialFgEl, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: 'auto' });
             else dialFgEl.style.opacity = '1';
           }
-          // Fade out step text
-          document.querySelectorAll('[data-text="step"]').forEach(el => {
-            if (gsap && !reduced) gsap.to(el, { opacity: 0, duration: 0.3, ease: 'linear', overwrite: 'auto' });
-            else el.style.opacity = '0';
-          });
+          // Scramble step text to active project name
+          const projectName = items[state.activeIndex]?.getAttribute('data-title') || '';
+          scrambleStep(projectName, { duration: 0.85, speed: 0.4, revert: true });
           // Play fg video
           if (visibleVideo) playFg(visibleVideo);
           setDialUiOpacity(1);
@@ -576,8 +619,15 @@
         const v = getVideoUrl(item, 'fg');
         const poster = readPosterFromItem(item);
 
-        if (titleEl) titleEl.textContent = t;
+        // Skip titleEl write when it resolves to the step element — scrambleStep owns step text
+        // (the live DOM only has [data-dial-title] on the step element; the layer-ui h2 doesn't exist)
+        if (titleEl && titleEl !== stepEl) titleEl.textContent = t;
         if (metaEl)  metaEl.textContent  = m;
+
+        // Scramble step text on sector change while ACTIVE (shorter, snappier than state transitions)
+        if (dialState === DIAL_STATES.ACTIVE && !isInitial) {
+          scrambleStep(t, { duration: 0.65, speed: 0.6, revert: true });
+        }
 
         if (!visibleVideo) visibleVideo = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
 
@@ -702,9 +752,10 @@
         }
 
         if (!didSwap) {
-          if (isMobile() && poster) {
+          if (isMobile() && poster && !isInitial) {
             // Mobile: Safari won't show <video> poster on a previously-played element.
             // Overlay a poster <img> so the circle isn't blank while the new video loads.
+            // Skip on isInitial (Barba resume) — video was suspended mid-play, no load gap.
             var posterImg = document.createElement('img');
             posterImg.src = poster;
             posterImg.style.cssText = fgVideoBaseStyle + 'opacity:1;z-index:1;';

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-08",
-  "note": "Deploy: ngrok mobile dev support",
-  "lastDeployed": "2026-04-01",
-  "lastDeployedHash": "3e47ad7",
+  "note": "Deploy: scramble-text step label on dial ACTIVE (tests skipped by user)",
+  "lastDeployed": "2026-04-08",
+  "lastDeployedHash": "debe518",
   "entries": [
     {
       "id": "smoke",

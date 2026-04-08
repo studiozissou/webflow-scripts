@@ -1,0 +1,15 @@
+[     375ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://rhpcircle.webflow.io/case-studies/overland-ai:0
+[     682ms] [LOG] %c[RHP] SOURCE: LOCALHOST color: #ff8200; font-weight: bold @ https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@debe518/projects/ready-hit-play-prod/init.js?v=7:172
+[     898ms] Uncaught Error: [@barba/core] No Barba wrapper found
+    at i.init (https://unpkg.com/@barba/core:0:26887)
+    at initBarba (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.4.8.1:2046:10)
+    at <anonymous> (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.4.8.1:2279:4)
+    at ready (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.4.8.1:371:6)
+    at <anonymous> (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.4.8.1:2278:2)
+    at <anonymous> (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.4.8.1:2283:2)
+[     898ms] [LOG] RHP script versions (loaded): @ https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@debe518/projects/ready-hit-play-prod/init.js?v=7:259
+[     898ms] [TABLE] {init (loader): 2026.4.8.1, lenis-manager.js: 2026.2.6.10, cursor.js: 2026.2.18.1 (transitionDuration: 0.25), work-dial.js: 2026.4.8.1, transition-dial.js: 2026.3.17.1, about-dial-ticks.js: 2026.3.17.1, about-text-lines.js: 2026.2.13.1, intro-format.js: —, earth-parallax.js: 2026.2.23.1, case-video-controls.js: 2026.3.27.1, video-loader.js: 2026.3.17.1, orchestrator.js: 2026.3.19.1, utils.js: —} @ https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@debe518/projects/ready-hit-play-prod/init.js?v=7:260
+[     899ms] [LOG] RHP load check: lenis-manager.js: OK (2026.2.6.10) | cursor.js: OK (2026.2.18.1) | work-dial.js: OK (2026.4.8.1) | transition-dial.js: OK (2026.3.17.1) | about-dial-ticks.js: OK (2026.3.17.1) | about-text-lines.js: OK (2026.2.13.1) | intro-format.js: OK (—) | earth-parallax.js: OK (2026.2.23.1) | case-video-controls.js: OK (2026.3.27.1) | video-loader.js: OK (2026.3.17.1) | orchestrator.js: OK (2026.3.19.1) | utils.js: OK (—) | version: 2026.4.8.1 @ https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@debe518/projects/ready-hit-play-prod/init.js?v=7:262
+[     900ms] [LOG] RHP GSAP: gsap OK (3.14.2) | ScrollTrigger: OK | Flip: OK | ScrambleText: OK | SplitText: OK @ https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@debe518/projects/ready-hit-play-prod/init.js?v=7:270
+[     900ms] [LOG] ✅ RHP: all 12 scripts present @ https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@debe518/projects/ready-hit-play-prod/init.js?v=7:275
+[     900ms] [LOG] ✅ RHP scripts loaded successfully @ https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@debe518/projects/ready-hit-play-prod/init.js?v=7:280

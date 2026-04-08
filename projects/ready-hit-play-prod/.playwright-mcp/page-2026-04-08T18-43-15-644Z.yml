@@ -1,0 +1,5 @@
+- generic [ref=e3]:
+  - heading "Page Not Found" [level=3] [ref=e4]
+  - generic [ref=e6]: The page you are looking for doesn't exist or has been moved
+  - link "Go Home" [ref=e8] [cursor=pointer]:
+    - /url: /

@@ -1,7 +1,31 @@
 {
   "version": "1.0.0",
-  "updated": "2026-03-25",
+  "updated": "2026-04-08",
   "queue": [
+    {
+      "id": "rhp-dial-short-viewport-bump",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Dial short-viewport bump: grow --dial-large to 60svh on 1440-1990 wide ≤849 tall",
+      "spec": ".claude/specs/rhp-dial-short-viewport-bump.md",
+      "agent": "code-writer",
+      "created": "2026-04-08",
+      "note": "CSS-only. Add one media query after the default :root dial-size block in ready-hit-play.css (~line 378). Overrides --dial-large-width/height to 60svh inside @media (min-width: 1440px) and (max-width: 1990px) and (max-height: 849px). Fixes cramped step text 'Great stories made undeniable' at 1440×800 (94%→78% fill), 1440×768 (98%→82%). Unchanged at 1440×900 (450px), 1920×1080 (540px), and mobile. 7-line change, single file. No JS touched. Barba impact: N/A (pure CSS)."
+    },
+    {
+      "id": "feat-work-nav-prev-next",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Work page prev/next navigation: wire published buttons to CMS list with cyclic wrap",
+      "spec": ".claude/specs/feat-work-nav-prev-next.md",
+      "agent": "code-writer",
+      "created": "2026-04-08",
+      "note": "New work-nav.js IIFE module. On RHP.views.case.init: query .dial_cms-list .w-dyn-item, resolve current slug via [data-wf-item-slug] with location.pathname fallback, compute prev/next indices with modulo wrap, populate href on a[data-button='work-previous'] and a[data-button='work-next'] as /work/<slug>. Barba handles clicks natively. 3 files: new work-nav.js (~90 LOC), orchestrator.js (+2 lines in views.case.init/destroy), init.js (+3 lines: modules list, health check, version row). Acceptance test covers hrefs populated, cyclic wrap, Barba navigation, re-entry. Confidence 92%, Low complexity, sequential build."
+    },
     {
       "id": "perf-fg-video-preload-on-transition",
       "project": "ready-hit-play-prod",

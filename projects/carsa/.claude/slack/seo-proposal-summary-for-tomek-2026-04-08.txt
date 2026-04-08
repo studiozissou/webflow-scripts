@@ -1,0 +1,48 @@
+Hey Tomek — quick summary of the programmatic SEO proposal I've drafted. Full doc to follow but here's the shape of it.
+
+*The problem*
+`/used-cars` is a single page with client-side filtering. Google can't index individual makes or models, there's no dedicated landing pages for ads, and the initial load is slow because every car gets fetched up front.
+
+*The fix*
+522 static pages — one per make (47) + one per model (475) — under a clean URL structure:
+•  `/used-cars/bmw` — all BMW
+•  `/used-cars/bmw/3-series` — BMW 3 Series only
+•  `/used-cars/audi/a4` — Audi A4 only
+
+All 522 pages share a single Webflow component, so one design update propagates everywhere. The existing React search widget needs a small URL-parsing tweak — your dev team ships that, and I'll pair on the implementation + handle debugging and design tweaks on the React car card as it lands on the new pages.
+
+*What it delivers*
+•  522 indexable pages with unique SEO metadata (title, description, OG tags)
+•  Dedicated landing pages for Google Ads and campaigns
+•  Faster perceived load (filtered API payload per page)
+•  Per-make/model analytics granularity
+
+*Scope (what's included)*
+•  CMS data mapping + slug rules (handles Mercedes-Benz, Cupra León, DS 3 etc.)
+•  Shared Webflow component build
+•  Automated creation of 47 folders + 522 pages via the Webflow API (4h)
+•  SEO metadata for every page (templated title / description / OG)
+•  QA + verification
+•  Debugging + design tweaks on the React car card, paired with your dev team (2h)
+
+Not included: the core URL-parsing logic itself (your dev team owns that in the React bundle), broader design changes, content writing, and Google Search Console setup.
+
+*Timeline*
+~1 week from approval. Pages can go live on staging immediately and will show the unfiltered search widget until your dev team ships the URL-parsing update — no downtime or disruption to the live `/used-cars` page.
+
+*Investment*
+£1,100 total
+
+*Optional add-on*
+£300 for a sync automation script that auto-creates pages when new makes/models enter inventory, and reports pages with zero current stock (without removing them, so Google keeps them indexed). Kills the long-term manual maintenance cost.
+
+*Future option — Algolia*
+Once the programmatic approach proves out, the next step up is Algolia — hosted search platform. Rough ballpark: ~£3,200 build cost (indexing, React integration, ranking config) + ~£90/month Algolia platform fees. Benefits: instant ~50ms search, typo tolerance, faceted filtering at any scale, and query analytics. The approach above is a quicker, cheaper way to validate the SEO bet first — happy to revisit Algolia once the programmatic pages are pulling traffic.
+
+*What I need from you*
+•  Webflow MCP access authorised for the Carsa site
+•  Confirmation the 47 makes / 475 models list is current
+•  Commitment from your dev team to ship the URL-parsing script update
+•  Ask Shane what his React search component can do — my assumption is it handles server-side + client-side filtering in one, which makes the URL-parsing integration straightforward. Worth confirming before I finalise the approach.
+
+Happy to chat through any of it.

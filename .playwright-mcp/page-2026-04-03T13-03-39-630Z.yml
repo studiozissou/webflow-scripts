@@ -1,0 +1,634 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - link "!Coconut Logo" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - img "!Coconut Logo" [ref=e7]
+    - generic [ref=e8]:
+      - link "Features" [ref=e9] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e10]: Features
+      - link "Pricing" [ref=e11] [cursor=pointer]:
+        - /url: /pricing
+        - generic [ref=e12]: Pricing
+      - link "Help" [ref=e13] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e14]: Help
+      - link "Products" [ref=e15] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e16]: Products
+      - link "Login" [ref=e17] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e18]: Login
+      - link "Sign up today!" [ref=e19] [cursor=pointer]:
+        - /url: https://web.getcoconut.com/signup
+        - generic [ref=e20]: Sign up today!
+  - generic [ref=e23]:
+    - link "Home" [ref=e24] [cursor=pointer]:
+      - /url: /
+    - link "Pricing":
+      - /url: "#"
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - heading "Spend a little each month, save a lot at the end of the tax year" [level=1] [ref=e29]:
+        - text: Spend a little each month,
+        - text: save a lot at the end of the tax year
+      - paragraph [ref=e30]: Join thousands of other sole traders and landlords using !Coconut, a trusted sole trader accounting app, to get their finances in order, all for less than a few lattes each month – a lot less than unpaid invoices, forgotten expenses, or an unexpected tax bill.
+      - generic [ref=e32]:
+        - link "Start your 14-day free trial" [ref=e33] [cursor=pointer]:
+          - /url: https://web.getcoconut.com/signup
+          - generic [ref=e34]: Start your 14-day free trial
+        - list [ref=e36]:
+          - listitem [ref=e37]:
+            - generic [ref=e38]: No card details required
+          - listitem [ref=e39]:
+            - generic [ref=e40]: FCA authorised
+          - listitem [ref=e41]:
+            - generic [ref=e42]: Bank level security
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - heading "Bookkeeping" [level=2] [ref=e47]
+            - tabpanel "Yearly Save over £100" [ref=e50]:
+              - generic [ref=e51]: £99.99
+              - generic [ref=e52]: per year
+              - paragraph [ref=e53]: Or £16.99 per month
+          - generic [ref=e54]:
+            - heading "Key features" [level=3] [ref=e55]
+            - heading [level=3] [ref=e56]
+            - list [ref=e57]:
+              - listitem [ref=e58]:
+                - strong [ref=e59]: Automatic income and expense tracking
+              - listitem [ref=e60]:
+                - strong [ref=e61]: Connect your bank in 30 seconds
+              - listitem [ref=e62]:
+                - strong [ref=e63]: Expenses categorised for you
+              - listitem [ref=e64]:
+                - strong [ref=e65]: Friendly UK expert support
+              - listitem [ref=e66]:
+                - strong [ref=e67]: Self-employment tax estimate (SA103)
+            - link "Start your 14-day free trial" [ref=e70] [cursor=pointer]:
+              - /url: https://web.getcoconut.com/signup
+              - generic [ref=e71]: Start your 14-day free trial
+          - generic [ref=e72]:
+            - link "See all features" [ref=e73] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e74]: See all features
+            - link "Start Bookkeeping free trial" [ref=e77] [cursor=pointer]:
+              - /url: https://web.getcoconut.com/signup
+              - generic [ref=e78]: Start Bookkeeping free trial
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - generic [ref=e81]: Most popular
+            - heading "MTD filing" [level=2] [ref=e82]
+            - tabpanel "Yearly Save over £100" [ref=e85]:
+              - generic [ref=e86]: £129.99
+              - generic [ref=e87]: per year
+              - paragraph [ref=e88]: Or £21.99 per month
+          - generic [ref=e89]:
+            - heading "Key features" [level=3] [ref=e90]
+            - heading "Everything in Bookkeeping, plus:" [level=3] [ref=e91]
+            - list [ref=e92]:
+              - listitem [ref=e93]:
+                - strong [ref=e94]: Send quarterly MTD updates to HMRC
+              - listitem [ref=e95]:
+                - strong [ref=e96]: Submit your MTD year-end return
+              - listitem [ref=e97]:
+                - strong [ref=e98]: Dedicated MTD expert help
+              - listitem [ref=e99]:
+                - strong [ref=e100]: Multiple income streams
+              - listitem [ref=e101]:
+                - strong [ref=e102]: In year tax estimates
+              - listitem [ref=e103]:
+                - strong [ref=e104]: HMRC recognised for MTD
+            - link "Start your 14-day free trial" [ref=e107] [cursor=pointer]:
+              - /url: https://web.getcoconut.com/signup
+              - generic [ref=e108]: Start your 14-day free trial
+          - generic [ref=e109]:
+            - link "See all features" [ref=e110] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e111]: See all features
+            - link "Start MTD filing free trial" [ref=e114] [cursor=pointer]:
+              - /url: https://web.getcoconut.com/signup
+              - generic [ref=e115]: Start MTD filing free trial
+      - generic [ref=e116]:
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - heading "Want !Coconut for free for 2 years?" [level=3] [ref=e120]
+            - paragraph [ref=e121]:
+              - text: Then apply for a free Zempler bank account within !Coconut.
+              - text: It only takes 2 minutes!
+          - generic [ref=e123]:
+            - link "Sign up" [ref=e124] [cursor=pointer]:
+              - /url: https://web.getcoconut.com/signup
+              - generic [ref=e125]: Sign up
+            - link "More information" [ref=e126] [cursor=pointer]:
+              - /url: /zempler-customers-get-coconut-free-for-making-tax-digital
+              - generic [ref=e127]: More information
+        - generic [ref=e128]: Savings are based on the monthly price
+  - generic [ref=e131]:
+    - iframe [ref=e134]:
+      - generic [ref=f27e2]:
+        - link "Trustpilot reviews" [ref=f27e3] [cursor=pointer]:
+          - /url: https://uk.trustpilot.com/review/getcoconut.com?utm_medium=trustbox&utm_source=MicroStar
+          - generic [ref=f27e4]: Great
+          - img [ref=f27e9]
+          - img [ref=f27e32]
+        - generic [ref=f27e36]: Rated Great. 4.1 out of 5 on Trustpilot
+        - generic [ref=f27e37]: Click to view the company's Trustpilot profile
+    - img "Badge of FCA Authorised" [ref=e135]
+  - generic [ref=e139]:
+    - heading "Common questions" [level=2] [ref=e141]
+    - list [ref=e143]:
+      - listitem [ref=e144]:
+        - generic [ref=e146] [cursor=pointer]:
+          - link "Expand / Collapse" [ref=e147]:
+            - /url: "#"
+          - generic [ref=e150]: Are there different !Coconut plans for MTD users vs non‑MTD users?
+      - listitem [ref=e151]:
+        - generic [ref=e153] [cursor=pointer]:
+          - link "Expand / Collapse" [ref=e154]:
+            - /url: "#"
+          - generic [ref=e157]: Can I downgrade or cancel if I don’t need MTD features yet?
+      - listitem [ref=e158]:
+        - generic [ref=e160] [cursor=pointer]:
+          - link "Expand / Collapse" [ref=e161]:
+            - /url: "#"
+          - generic [ref=e164]: Do I need to pay extra for landlord functionality in !Coconut?
+      - listitem [ref=e165]:
+        - generic [ref=e167] [cursor=pointer]:
+          - link "Expand / Collapse" [ref=e168]:
+            - /url: "#"
+          - generic [ref=e171]: How can I see what I’m paying for before upgrading to an MTD plan?
+  - generic [ref=e174]:
+    - heading "Why choose !Coconut?" [level=2] [ref=e175]
+    - paragraph [ref=e176]: "!Coconut has been designed specifically for sole traders and landlords. It's simple to use, HMRC recognised, securely connects with your bank and gives you the full picture of your finances in real-time."
+    - generic [ref=e177]:
+      - generic [ref=e178]:
+        - heading "Business finance all in on place" [level=3] [ref=e179]
+        - paragraph [ref=e180]: Keep track of your financial records as you go for a stress-free tax return
+      - generic [ref=e181]:
+        - heading "Save for tax with confidence" [level=3] [ref=e182]
+        - paragraph [ref=e183]: Find out how much tax to set aside throughout the year - no more guesswork
+      - generic [ref=e184]:
+        - heading "Automatic sync with bank statement feeds" [level=3] [ref=e185]
+        - paragraph [ref=e186]: See new transactions in real-time, without manually adding them
+      - generic [ref=e187]:
+        - heading "Professional invoices on the go" [level=3] [ref=e188]
+        - paragraph [ref=e189]: Create, send and track invoices in just a few clicks
+  - generic [ref=e192]:
+    - heading "How to get started" [level=2] [ref=e193]
+    - generic [ref=e194]:
+      - generic [ref=e195]:
+        - paragraph [ref=e196]: Download the mobile app or access via your web browser
+        - generic [ref=e197]:
+          - link "Download on the App Store" [ref=e198] [cursor=pointer]:
+            - /url: https://apps.apple.com/gb/app/coconut-tax-for-self-employed/id1318768066
+            - img "Download on the App Store" [ref=e199]
+          - link "Get it on Google Play" [ref=e200] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=com.getcoconut.coconut&hl=en_GB
+            - img "Get it on Google Play" [ref=e201]
+      - generic [ref=e203]:
+        - paragraph [ref=e204]: Get set up and securely connect your bank in minutes
+        - list [ref=e206]:
+          - listitem [ref=e207]:
+            - generic [ref=e208]: No card details required
+          - listitem [ref=e209]:
+            - generic [ref=e210]: FCA authorised
+          - listitem [ref=e211]:
+            - generic [ref=e212]: Bank level security
+      - generic [ref=e214]:
+        - paragraph [ref=e215]: Start organising your finances straight away
+        - link "Get started today" [ref=e217] [cursor=pointer]:
+          - /url: https://web.getcoconut.com/signup
+          - generic [ref=e218]: Get started today
+  - generic [ref=e221]:
+    - heading "Make accounting and tax updates easily from today with !Coconut" [level=2] [ref=e222]
+    - paragraph [ref=e223]: Sign up now for a free 14-day trial so you can try it for yourself!
+    - link "Sign up today!" [ref=e225] [cursor=pointer]:
+      - /url: https://web.getcoconut.com/signup
+      - generic [ref=e226]: Sign up today!
+  - generic [ref=e229]:
+    - heading "What our !Coconut community says" [level=2] [ref=e230]
+    - iframe [ref=e235]:
+      - generic "Trustpilot reviews. Rated 4.1 out of 5 based on 769 reviews on Trustpilot. Showing our 4 & 5 star reviews" [ref=f28e2]:
+        - generic [ref=f28e3]:
+          - button "Carousel scroll left" [disabled] [ref=f28e6] [cursor=pointer]:
+            - img [ref=f28e9]
+          - button "Carousel scroll right" [ref=f28e14] [cursor=pointer]:
+            - img [ref=f28e17]
+          - region "Showing our 4 & 5 star reviews" [ref=f28e20]:
+            - list [ref=f28e21]:
+              - listitem [ref=f28e22]:
+                - generic [ref=f28e23]:
+                  - img "5 out of 5 star rating on Trustpilot" [ref=f28e28]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e50] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e51]:
+                      - img [ref=f28e55]
+                      - generic [ref=f28e57]: Verified
+                - link "Review by Brian Spencer, 25 March, Friendly Vibe & Mulitiple Income Streams, Coconut has a friendly vibe and I find the interface understandable and engaging. My main bank account is not yet able to link to my Coconut platform, however I know Coconut are working on this and meantime the transactions can be entered by me. A standout feature is my various income streams can all be accommodated within one single subscription - there are other MTD providers who don’t do this., Click to view the full review on Trustpilot" [ref=f28e58] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/69c4157db339da5868c421be?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e59]:
+                    - generic [ref=f28e60]: Friendly Vibe & Mulitiple Income Streams
+                    - generic [ref=f28e61]: Coconut has a friendly vibe and I find the interface understandable and engaging. My...
+                    - generic [ref=f28e62]:
+                      - generic [ref=f28e63]: Brian Spencer,
+                      - generic [ref=f28e64]: 25 March
+              - listitem [ref=f28e65]:
+                - img "5 out of 5 star rating on Trustpilot" [ref=f28e71]
+                - link "Review by Peter, 27 February, Easy to use and great support, Easy to use and great support , Click to view the full review on Trustpilot" [ref=f28e91] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/69a1c00b345b76f1884dfd7b?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e92]:
+                    - generic [ref=f28e93]: Easy to use and great support
+                    - generic [ref=f28e94]: Easy to use and great support
+                    - generic [ref=f28e95]:
+                      - generic [ref=f28e96]: Peter,
+                      - generic [ref=f28e97]: 27 February
+              - listitem [ref=f28e98]:
+                - img "5 out of 5 star rating on Trustpilot" [ref=f28e104]
+                - link "Review by Murad, 15 January, The best bookkeeping account for sole…, The best bookkeeping account for sole traders! I recently signed up to coconut after a very frustrating experience with QuickBooks - who messed up my account upgrade, lost a lot of my data and provided little customer support. After a lot of trial and error with many platforms, I found coconut to be the most easiest and efficient to use for all sole traders. Highly recommend them. , Click to view the full review on Trustpilot" [ref=f28e124] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/696906ea6d2d3fb8e6963ad7?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e125]:
+                    - generic [ref=f28e126]: The best bookkeeping account for sole…
+                    - generic [ref=f28e127]: The best bookkeeping account for sole traders! I recently signed up to coconut after...
+                    - generic [ref=f28e128]:
+                      - generic [ref=f28e129]: Murad,
+                      - generic [ref=f28e130]: 15 January
+              - listitem [ref=f28e131]:
+                - img "5 out of 5 star rating on Trustpilot" [ref=f28e137]
+                - link "Review by Jess Winterbottom, 20 December, Best accounting software there is! , As a sole trader I’ve used many accounting softwares in the past & coconut is by far the best, most straightforward & reliable. Being able to attach my receipts, so not having to keep the paper copy is a game changer for me. I am able to connect all bank accounts & assign transactions to business/personal, it’s also useful to see how much of a turnover & profit I’m making. Would highly recommend! Thank you Team Coconut , Click to view the full review on Trustpilot" [ref=f28e157] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/6945c9be6f722a2ee2995665?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e158]:
+                    - generic [ref=f28e159]: Best accounting software there is!
+                    - generic [ref=f28e160]: As a sole trader I’ve used many accounting softwares in the past & coconut is by far...
+                    - generic [ref=f28e161]:
+                      - generic [ref=f28e162]: Jess Winterbottom,
+                      - generic [ref=f28e163]: 20 December
+              - listitem [ref=f28e164]:
+                - generic [ref=f28e165]:
+                  - img "4 out of 5 star rating on Trustpilot" [ref=f28e170]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e192] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e193]:
+                      - img [ref=f28e197]
+                      - generic [ref=f28e199]: Verified
+                - link "Review by Bex Anderson, 14 December, I found it quite difficult to navigate…, I found it quite difficult to navigate certain parts of the app to begin with but the online help guides are really handy, loses 1* because I am unable to pay for the self assessment version monthly and I can’t afford to pay for the year outright while my business is still early days and Christmas coming up etc, Click to view the full review on Trustpilot" [ref=f28e200] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/693f015127ae137f196df74b?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e201]:
+                    - generic [ref=f28e202]: I found it quite difficult to navigate…
+                    - generic [ref=f28e203]: I found it quite difficult to navigate certain parts of the app to begin with but the...
+                    - generic [ref=f28e204]:
+                      - generic [ref=f28e205]: Bex Anderson,
+                      - generic [ref=f28e206]: 14 December
+              - listitem [ref=f28e207]:
+                - generic [ref=f28e208]:
+                  - img "5 out of 5 star rating on Trustpilot" [ref=f28e213]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e235] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e236]:
+                      - img [ref=f28e240]
+                      - generic [ref=f28e242]: Verified
+                - link "Review by Peter Kolodziej, 8 December, I wanted an accounting software which…, I wanted an accounting software which was easy to use for me personally which it was seems I only need money in money out software with the ability for receipts invoicing and now the dreaded MTD hahaha Highly recommended if your a sole trader looking for the same as me , Click to view the full review on Trustpilot" [ref=f28e243] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/693712c4ffb836df30526ee8?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e244]:
+                    - generic [ref=f28e245]: I wanted an accounting software which…
+                    - generic [ref=f28e246]: I wanted an accounting software which was easy to use for me personally which it was...
+                    - generic [ref=f28e247]:
+                      - generic [ref=f28e248]: Peter Kolodziej,
+                      - generic [ref=f28e249]: 8 December
+              - listitem [ref=f28e250]:
+                - generic [ref=f28e251]:
+                  - img "5 out of 5 star rating on Trustpilot" [ref=f28e256]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e278] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e279]:
+                      - img [ref=f28e283]
+                      - generic [ref=f28e285]: Verified
+                - link "Review by Rich, 27 November, Made my accounting so easy and it’s…, Made my accounting so easy and it’s digital just right for hmrc. Value for money., Click to view the full review on Trustpilot" [ref=f28e286] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/69282333edbc8dbca122567a?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e287]:
+                    - generic [ref=f28e288]: Made my accounting so easy and it’s…
+                    - generic [ref=f28e289]: Made my accounting so easy and it’s digital just right for hmrc. Value for money.
+                    - generic [ref=f28e290]:
+                      - generic [ref=f28e291]: Rich,
+                      - generic [ref=f28e292]: 27 November
+              - listitem [ref=f28e293]:
+                - img "5 out of 5 star rating on Trustpilot" [ref=f28e299]
+                - link "Review by Jeremy Greene, 26 October, easy to use, easy to use. geat help when there is a problem. price reasonsble, Click to view the full review on Trustpilot" [ref=f28e319] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68fd2d714c239a05bbd2b6a8?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e320]:
+                    - generic [ref=f28e321]: easy to use
+                    - generic [ref=f28e322]: easy to use. geat help when there is a problem. price reasonsble
+                    - generic [ref=f28e323]:
+                      - generic [ref=f28e324]: Jeremy Greene,
+                      - generic [ref=f28e325]: 26 October
+              - listitem [ref=f28e326]:
+                - generic [ref=f28e327]:
+                  - img "5 out of 5 star rating on Trustpilot" [ref=f28e332]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e354] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e355]:
+                      - img [ref=f28e359]
+                      - generic [ref=f28e361]: Verified
+                - link "Review by David, 24 October, Great app, Great app, issues are dealt with fast if you contact them. , Click to view the full review on Trustpilot" [ref=f28e362] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68fad74092dac02ce162b98e?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e363]:
+                    - generic [ref=f28e364]: Great app
+                    - generic [ref=f28e365]: Great app, issues are dealt with fast if you contact them.
+                    - generic [ref=f28e366]:
+                      - generic [ref=f28e367]: David,
+                      - generic [ref=f28e368]: 24 October
+              - listitem [ref=f28e369]:
+                - img "5 out of 5 star rating on Trustpilot" [ref=f28e375]
+                - link "Review by Atta Ur Rahman, 22 October, Very good app,Easy to use,Hassle…, Very good app,Easy to use,Hassle free,No burden to keep invoices,Directly connects to your bank., Click to view the full review on Trustpilot" [ref=f28e395] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68f8755b90086ea9dd96314c?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e396]:
+                    - generic [ref=f28e397]: Very good app,Easy to use,Hassle…
+                    - generic [ref=f28e398]: Very good app,Easy to use,Hassle free,No burden to keep invoices,Directly connects to...
+                    - generic [ref=f28e399]:
+                      - generic [ref=f28e400]: Atta Ur Rahman,
+                      - generic [ref=f28e401]: 22 October
+              - listitem [ref=f28e402]:
+                - generic [ref=f28e403]:
+                  - img "5 out of 5 star rating on Trustpilot" [ref=f28e408]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e430] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e431]:
+                      - img [ref=f28e435]
+                      - generic [ref=f28e437]: Verified
+                - link "Review by Anna, 30 September, Really good affordable product, Really good affordable product, very simple perfect for a sole trader. Jumped in board ready for MTD! Intelligent at sorting through transactions and knowing which items are income and transfers. Very happy , Click to view the full review on Trustpilot" [ref=f28e438] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68dbef217b39ff444cb98d45?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e439]:
+                    - generic [ref=f28e440]: Really good affordable product
+                    - generic [ref=f28e441]: Really good affordable product, very simple perfect for a sole trader. Jumped in boar...
+                    - generic [ref=f28e442]:
+                      - generic [ref=f28e443]: Anna,
+                      - generic [ref=f28e444]: 30 September
+              - listitem [ref=f28e445]:
+                - generic [ref=f28e446]:
+                  - img "5 out of 5 star rating on Trustpilot" [ref=f28e451]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e473] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e474]:
+                      - img [ref=f28e478]
+                      - generic [ref=f28e480]: Verified
+                - link "Review by Josh Nicholas, 28 September, Great bit of software, Great bit of software. 5* , Click to view the full review on Trustpilot" [ref=f28e481] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68d91a8566cf8cca3048bb22?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e482]:
+                    - generic [ref=f28e483]: Great bit of software
+                    - generic [ref=f28e484]: Great bit of software. 5*
+                    - generic [ref=f28e485]:
+                      - generic [ref=f28e486]: Josh Nicholas,
+                      - generic [ref=f28e487]: 28 September
+              - listitem [ref=f28e488]:
+                - img "5 out of 5 star rating on Trustpilot" [ref=f28e494]
+                - link "Review by Ting Dalton, 26 August, Simple to use and stress-free, I’ve played around with lots of different accountancy software and none of them match the ease and simplicity of Coconut. I’m a freelancer and find it hard to keep track of several different accounts. I love how you can connect all accounts - even personal ones - and assign transactions quickly. It even tells you how much you need to put aside for HMRC, as well as create invoices. , Click to view the full review on Trustpilot" [ref=f28e514] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68ad52448c58cbff22f33088?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e515]:
+                    - generic [ref=f28e516]: Simple to use and stress-free
+                    - generic [ref=f28e517]: I’ve played around with lots of different accountancy software and none of them match...
+                    - generic [ref=f28e518]:
+                      - generic [ref=f28e519]: Ting Dalton,
+                      - generic [ref=f28e520]: 26 August
+              - listitem [ref=f28e521]:
+                - generic [ref=f28e522]:
+                  - img "5 out of 5 star rating on Trustpilot" [ref=f28e527]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e549] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e550]:
+                      - img [ref=f28e554]
+                      - generic [ref=f28e556]: Verified
+                - link "Review by Declan Duffy, 18 August, Everything is easy, Everything is easy. from tracking expenses, categorising them, sending invoices, tracking tax. , Click to view the full review on Trustpilot" [ref=f28e557] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68a2f521f2e67cd4ef2c1eae?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e558]:
+                    - generic [ref=f28e559]: Everything is easy
+                    - generic [ref=f28e560]: Everything is easy. from tracking expenses, categorising them, sending invoices, trac...
+                    - generic [ref=f28e561]:
+                      - generic [ref=f28e562]: Declan Duffy,
+                      - generic [ref=f28e563]: 18 August
+              - listitem [ref=f28e564]:
+                - generic [ref=f28e565]:
+                  - img "4 out of 5 star rating on Trustpilot" [ref=f28e570]
+                  - link "Verified review. Click to learn more about review types" [ref=f28e592] [cursor=pointer]:
+                    - /url: https://help.trustpilot.com/s/article/How-do-reviews-get-on-Trustpilot?language=en_US
+                    - generic [ref=f28e593]:
+                      - img [ref=f28e597]
+                      - generic [ref=f28e599]: Verified
+                - link "Review by Sonia Thomas, 14 July, Coconut.com, Coconut, It seem really good. I have not seen it know that when a particular Items come in that its knows its the same company. Still waiting for that to happen, Click to view the full review on Trustpilot" [ref=f28e600] [cursor=pointer]:
+                  - /url: https://uk.trustpilot.com/reviews/68751903fd94f62282f967bd?utm_medium=trustbox&utm_source=Slider
+                  - generic [ref=f28e601]:
+                    - generic [ref=f28e602]: Coconut.com
+                    - generic [ref=f28e603]: Coconut, It seem really good. I have not seen it know that when a particular Items...
+                    - generic [ref=f28e604]:
+                      - generic [ref=f28e605]: Sonia Thomas,
+                      - generic [ref=f28e606]: 14 July
+        - link "Trustpilot reviews. Rated 4.1 out of 5 based on 769 reviews on Trustpilot. Click to view the company’s Trustpilot profile." [ref=f28e608] [cursor=pointer]:
+          - /url: https://uk.trustpilot.com/review/getcoconut.com?utm_medium=trustbox&utm_source=Slider
+          - generic [ref=f28e609]:
+            - generic [ref=f28e610]:
+              - text: Rated
+              - strong [ref=f28e611]: "4.1"
+              - text: / 5 based on
+              - strong [ref=f28e612]: 769 reviews
+              - text: .
+            - generic [ref=f28e613]:
+              - generic [ref=f28e614]: Showing our 4 & 5 star reviews
+              - text: .
+          - img "Trustpilot" [ref=f28e618]
+  - generic [ref=e238]:
+    - heading "Crack your finances" [level=2] [ref=e240]
+    - paragraph [ref=e241]: with our easy-to-read articles
+    - list [ref=e243]:
+      - listitem [ref=e244]:
+        - generic [ref=e245]:
+          - link "5 features to look for in MTD for Income Tax software" [ref=e247] [cursor=pointer]:
+            - /url: /knowledge-hub/choosing-mtd-for-income-tax-software
+          - generic [ref=e248]:
+            - link "5 features to look for in MTD for Income Tax software" [ref=e249] [cursor=pointer]:
+              - /url: /knowledge-hub/choosing-mtd-for-income-tax-software
+              - heading "5 features to look for in MTD for Income Tax software" [level=3] [ref=e250]
+            - link "choosing-mtd-for-income-tax-software" [ref=e251] [cursor=pointer]:
+              - /url: /knowledge-hub/choosing-mtd-for-income-tax-software
+              - text: Read more
+      - listitem [ref=e252]:
+        - generic [ref=e253]:
+          - 'link "Making Tax Digital for Income Tax: key dates and deadlines to know" [ref=e255] [cursor=pointer]':
+            - /url: /knowledge-hub/making-tax-digital-income-tax-deadlines
+          - generic [ref=e256]:
+            - 'link "Making Tax Digital for Income Tax: key dates and deadlines to know" [ref=e257] [cursor=pointer]':
+              - /url: /knowledge-hub/making-tax-digital-income-tax-deadlines
+              - 'heading "Making Tax Digital for Income Tax: key dates and deadlines to know" [level=3] [ref=e258]'
+            - link "making-tax-digital-income-tax-deadlines" [ref=e259] [cursor=pointer]:
+              - /url: /knowledge-hub/making-tax-digital-income-tax-deadlines
+              - text: Read more
+      - listitem [ref=e260]:
+        - generic [ref=e261]:
+          - link "What is cash basis accounting and should you use it?" [ref=e263] [cursor=pointer]:
+            - /url: /knowledge-hub/what-is-cash-basis-accounting
+          - generic [ref=e264]:
+            - link "What is cash basis accounting and should you use it?" [ref=e265] [cursor=pointer]:
+              - /url: /knowledge-hub/what-is-cash-basis-accounting
+              - heading "What is cash basis accounting and should you use it?" [level=3] [ref=e266]
+            - link "what-is-cash-basis-accounting" [ref=e267] [cursor=pointer]:
+              - /url: /knowledge-hub/what-is-cash-basis-accounting
+              - text: Read more
+      - listitem [ref=e268]:
+        - generic [ref=e269]:
+          - 'link "Claiming Back CIS Deductions: How to Reclaim Tax if You’ve Paid Too Much" [ref=e271] [cursor=pointer]':
+            - /url: /knowledge-hub/claiming-back-cis-deductions
+          - generic [ref=e272]:
+            - 'link "Claiming Back CIS Deductions: How to Reclaim Tax if You’ve Paid Too Much" [ref=e273] [cursor=pointer]':
+              - /url: /knowledge-hub/claiming-back-cis-deductions
+              - 'heading "Claiming Back CIS Deductions: How to Reclaim Tax if You’ve Paid Too Much" [level=3] [ref=e274]'
+            - link "claiming-back-cis-deductions" [ref=e275] [cursor=pointer]:
+              - /url: /knowledge-hub/claiming-back-cis-deductions
+              - text: Read more
+  - generic [ref=e281]:
+    - 'heading "!Coconut: the accounting & tax app for self-employed people and landlords" [level=2] [ref=e282]'
+    - generic [ref=e283]:
+      - link "Start your 14-day free trial" [ref=e284] [cursor=pointer]:
+        - /url: https://web.getcoconut.com/signup
+        - generic [ref=e285]: Start your 14-day free trial
+      - list [ref=e287]:
+        - listitem [ref=e288]:
+          - generic [ref=e289]: No card details required
+        - listitem [ref=e290]:
+          - generic [ref=e291]: FCA authorised
+        - listitem [ref=e292]:
+          - generic [ref=e293]: Bank level security
+    - iframe [ref=e297]:
+      - generic [ref=f29e2]:
+        - link "Trustpilot reviews" [ref=f29e3] [cursor=pointer]:
+          - /url: https://uk.trustpilot.com/review/getcoconut.com?utm_medium=trustbox&utm_source=MicroStar
+          - generic [ref=f29e4]: Great
+          - img [ref=f29e9]
+          - img [ref=f29e32]
+        - generic [ref=f29e36]: Rated Great. 4.1 out of 5 on Trustpilot
+        - generic [ref=f29e37]: Click to view the company's Trustpilot profile
+    - generic [ref=e298]:
+      - link "Download on the App Store" [ref=e299] [cursor=pointer]:
+        - /url: https://apps.apple.com/gb/app/coconut-tax-for-self-employed/id1318768066
+        - img "Download on the App Store" [ref=e300]
+      - link "Get it on Google Play" [ref=e301] [cursor=pointer]:
+        - /url: https://play.google.com/store/apps/details?id=com.getcoconut.coconut&hl=en_GB
+        - img "Get it on Google Play" [ref=e302]
+  - contentinfo [ref=e303]:
+    - generic [ref=e304]:
+      - generic [ref=e305]:
+        - generic [ref=e307]:
+          - link "Facebook" [ref=e308] [cursor=pointer]:
+            - /url: https://www.youtube.com/@getcoconut
+            - img [ref=e310]
+          - link "Facebook" [ref=e312] [cursor=pointer]:
+            - /url: https://www.facebook.com/getcoconut
+            - img [ref=e314]
+          - link "Twitter" [ref=e316] [cursor=pointer]:
+            - /url: https://twitter.com/getcoconut
+            - img [ref=e318]
+          - link "LinkedIn" [ref=e320] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/getcoconut
+            - img [ref=e322]
+          - link "Instagram" [ref=e324] [cursor=pointer]:
+            - /url: https://www.instagram.com/getcoconut/
+            - img [ref=e326]
+        - generic [ref=e328]:
+          - generic [ref=e329]:
+            - link "Features" [ref=e331] [cursor=pointer]:
+              - /url: /features
+            - generic [ref=e332]:
+              - link "MTD for Income Tax ready" [ref=e333] [cursor=pointer]:
+                - /url: /features/mtd-compliant-software
+                - generic [ref=e334]: MTD for Income Tax ready
+              - link "Expert support" [ref=e335] [cursor=pointer]:
+                - /url: /features/tax-help-support
+                - generic [ref=e336]: Expert support
+              - link "Work with your accountant" [ref=e337] [cursor=pointer]:
+                - /url: /features/work-with-your-accountant
+                - generic [ref=e338]: Work with your accountant
+              - link "Capture your receipts & records" [ref=e339] [cursor=pointer]:
+                - /url: /features/scan-receipts
+                - generic [ref=e340]: Capture your receipts & records
+              - link "Send & track invoices" [ref=e341] [cursor=pointer]:
+                - /url: /features/online-invoicing
+                - generic [ref=e342]: Send & track invoices
+              - link "Sort your taxes" [ref=e343] [cursor=pointer]:
+                - /url: /features/tax-software
+                - generic [ref=e344]: Sort your taxes
+              - link "Claim every expense" [ref=e345] [cursor=pointer]:
+                - /url: /features/expense-management-software
+                - generic [ref=e346]: Claim every expense
+              - link "Know your numbers" [ref=e347] [cursor=pointer]:
+                - /url: /features/know-your-numbers
+                - generic [ref=e348]: Know your numbers
+          - link "Pricing" [ref=e350] [cursor=pointer]:
+            - /url: /pricing
+          - generic [ref=e351]:
+            - generic [ref=e352]: Help
+            - generic [ref=e353]:
+              - link "Events & webinars" [ref=e354] [cursor=pointer]:
+                - /url: /webinars-and-events
+                - generic [ref=e355]: Events & webinars
+              - link "Making Tax Digital" [ref=e356] [cursor=pointer]:
+                - /url: /categories/making-tax-digital
+                - generic [ref=e357]: Making Tax Digital
+              - link "!Coconut news" [ref=e358] [cursor=pointer]:
+                - /url: /categories/coconut-news
+                - generic [ref=e359]: "!Coconut news"
+              - link "Self-employment advice" [ref=e360] [cursor=pointer]:
+                - /url: /categories/self-employment-advice
+                - generic [ref=e361]: Self-employment advice
+              - link "Tax tips" [ref=e362] [cursor=pointer]:
+                - /url: /categories/tax-tips
+                - generic [ref=e363]: Tax tips
+              - link "Resources for accountants" [ref=e364] [cursor=pointer]:
+                - /url: /categories/resources-for-accountants
+                - generic [ref=e365]: Resources for accountants
+              - link "Self Assessment tax returns" [ref=e366] [cursor=pointer]:
+                - /url: /categories/self-assessment-tax-returns
+                - generic [ref=e367]: Self Assessment tax returns
+              - link "Business grants & loans" [ref=e368] [cursor=pointer]:
+                - /url: /categories/business-grants-loans
+                - generic [ref=e369]: Business grants & loans
+              - link "Accounting & bookkeeping advice" [ref=e370] [cursor=pointer]:
+                - /url: /categories/accounting-bookkeeping-advice
+                - generic [ref=e371]: Accounting & bookkeeping advice
+              - link "Support" [ref=e372] [cursor=pointer]:
+                - /url: https://help.getcoconut.com/en/
+                - generic [ref=e373]: Support
+          - generic [ref=e374]:
+            - generic [ref=e375]: Products
+            - generic [ref=e376]:
+              - link "Accountants" [ref=e377] [cursor=pointer]:
+                - /url: /accountant-software
+                - generic [ref=e378]: Accountants
+              - link "Self Assessment" [ref=e379] [cursor=pointer]:
+                - /url: /gosimpletax-mtd
+                - generic [ref=e380]: Self Assessment
+              - link "Making Tax Digital for Income Tax" [ref=e381] [cursor=pointer]:
+                - /url: /mtd-software
+                - generic [ref=e382]: Making Tax Digital for Income Tax
+              - link "Free MTD software" [ref=e383] [cursor=pointer]:
+                - /url: /zempler-customers-get-coconut-free-for-making-tax-digital
+                - generic [ref=e384]: Free MTD software
+              - link "WFH calculator" [ref=e385] [cursor=pointer]:
+                - /url: /work-from-home-allowance-calculator
+                - generic [ref=e386]: WFH calculator
+              - link "Payroll" [ref=e387] [cursor=pointer]:
+                - /url: /payroll-software-for-accountants
+                - generic [ref=e388]: Payroll
+          - generic [ref=e389]:
+            - link "Customer Login" [ref=e390] [cursor=pointer]:
+              - /url: https://web.getcoconut.com/login
+            - link "Accountant Login" [ref=e391] [cursor=pointer]:
+              - /url: https://accountant.getcoconut.com/login
+        - generic [ref=e392]:
+          - generic [ref=e393]: © 2026 !Coconut. All rights reserved.
+          - generic [ref=e394]:
+            - link "Privacy policy" [ref=e395] [cursor=pointer]:
+              - /url: /legal/privacy-policy
+            - link "Terms" [ref=e396] [cursor=pointer]:
+              - /url: /legal/terms
+            - link "Cookies Consent" [ref=e397] [cursor=pointer]:
+              - /url: "#"
+      - generic [ref=e401]: "@Coconut and !Coconut are trading names of @Coconut Platform Ltd, company number 09904418. !Coconut is registered with the Financial Conduct Authority (FCA) as an Account Information Service Provider under the Payment Services Regulations 2017 (reference 931194)."

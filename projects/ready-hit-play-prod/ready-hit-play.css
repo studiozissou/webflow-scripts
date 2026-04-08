@@ -479,6 +479,29 @@
   justify-content: center;
 }
 
+/* ScrambleText takes over: step text shows project name in ACTIVE state, dial_layer-ui no longer needed.
+   Scoped to home namespace — equal specificity cascades over the labels rule above. */
+.dial_component[data-dial-ns="home"] .dial_layer-ui {
+  display: none;
+}
+
+/* Step text must sit above .dial_layer-fg (z-index 3) so the scrambled project name
+   stays visible when the foreground video fades in during ACTIVE state. */
+.dial_component[data-dial-ns="home"] .heading-style-h7.is-step,
+.dial_component[data-dial-ns="home"] [data-text="step"] {
+  z-index: 5;
+}
+
+/* While ScrambleText is animating, the random char string has no whitespace
+   and cannot wrap on word boundaries. Allow break-anywhere wrapping for the
+   duration of the scramble so the text never overflows the dial. The class
+   is removed onComplete, restoring normal word-based wrapping. */
+[data-text="step"].is-scrambling,
+.heading-style-h7.is-step.is-scrambling {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .dial_component[data-dial-ns="home"] .dial_label-wrap {
   text-align: center;
 }

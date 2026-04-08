@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-01",
+  "lastUpdated": "2026-04-08",
   "note": "Deploy: ngrok mobile dev support",
   "lastDeployed": "2026-04-01",
   "lastDeployedHash": "3e47ad7",
@@ -194,6 +194,16 @@
       "slug": "fix-autoplay-fallback-mobile",
       "created": "2026-03-26",
       "description": "Mobile autoplay fallback — tap-to-play homepage, persistent case controls, SVG overlay, viewport auto-pause/resume"
+    },
+    {
+      "id": "rhp-step-text-scramble",
+      "file": "tests/acceptance/rhp-step-text-scramble.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-step-text-scramble",
+      "created": "2026-04-08",
+      "description": "Homepage step text — ScrambleText to active project name on dial ACTIVE, revert to original on IDLE, reduced motion fallback, Barba re-entry"
     }
   ]
 }

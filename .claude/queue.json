@@ -1,7 +1,18 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-01",
+  "updated": "2026-04-08",
   "queue": [
+    {
+      "id": "rhp-home-intro-scroll-morph",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Home intro section: scroll-driven logo morph, dial small to large expand, about slide transitions, nav logo replay",
+      "description": "Add an intro section on home with the large interactive logo (moved from about) over the IDLE background video with the dial rendered small. On 100vh scroll, Flip-reparent the logo into the nav slot and morph the dial from small to large via a ScrollTrigger scrub timeline, then lock scroll and hand control back to work-dial. Rebuild home to about and about to home Barba transitions as a simple container slide (translate minus one hundred percent to zero, opacity zero to one, power three out, zero point seven five seconds). On about to home the dial returns to IDLE. On Barba re-entry to home, skip the intro and land directly in the dial-large state. Case to home handoff still keeps dial ACTIVE with the previous project. Clicking the nav logo on home scrolls to top and replays the morph in reverse. Three cooperating modules: refactor home-intro.js (keep autoplay fallback), add home-scroll-morph.js (Flip plus ScrollTrigger scrub plus scroll lock plus canvas redraw plus replay API), add home-about-slide.js (slide transitions). Wire into orchestrator.js, init.js, and ready-hit-play.css. Prereq: Webflow Designer adds the home intro section container and moves the logo markup into a symbol. Follows Approach C (hybrid decomposition) from the plan.",
+      "spec": ".claude/specs/rhp-home-intro-scroll-morph.md",
+      "created": "2026-04-08"
+    },
     {
       "id": "carsa-webflow-skill-v2",
       "project": "carsa",

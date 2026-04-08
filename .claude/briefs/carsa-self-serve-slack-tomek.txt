@@ -1,0 +1,47 @@
+Hey Tomek — wrote up a plan for a self-serve Webflow build system for Rishi. Wanted to run it past you before kicking off.
+
+WHAT IT IS
+A dedicated Claude Code setup installed on Rishi's Mac (standalone `carsa-self-serve` GitHub repo) so he can build new content sections on carsa-v2.webflow.io himself with minimal back-and-forth with me.
+
+HOW IT WORKS
+1. Rishi runs /carsa-build in his terminal
+2. Claude asks 3 questions: Where on the site, Why (what the visitor should do/feel), Who it's aimed at
+3. Claude generates 2-3 candidate section designs — each with a concept image, layout, and draft copy already written in Carsa brand voice
+4. Rishi picks one and chooses "use this draft copy" or pastes his own
+5. System builds the section in Webflow, publishes to staging, runs automated accessibility + contrast + touch-target checks
+6. Every build is logged to a password-protected /changelog page on the Carsa staging site so we have a visual audit trail
+
+WHAT KEEPS QUALITY HIGH
+- Claude reasons from pre-loaded Carsa brand context (voice do/don'ts, design tokens pulled live from Webflow variables, ~20 hard design laws on contrast, typography, touch targets)
+- Copy runs through a de-AI-ifier before Rishi sees it (strips hedges, em-dashes, forbidden phrases)
+- No path to push to live carsa.co.uk — staging only, hardcoded. Live publishes still go through me.
+- Scope guard: nav, footer, forms, global styles, CMS schema all still come to me, not Rishi
+
+BEFORE HANDING OVER
+I test the full workflow by building 5 test sections on a /sandbox page myself. Nothing ships to Rishi until all 5 pass.
+
+BENEFITS
+- No more Will bottleneck — Rishi ships sections on his own schedule, doesn't wait on me
+- Less chance of me having to intervene to fix errors — every build runs automated contrast, touch-target, and accessibility checks before Rishi sees it
+- Less chance of design drift — Claude is grounded in a live design tokens file (pulled from Webflow variables), a hand-written brand voice doc, and ~20 hard design laws, so sections stay on-brand even when I'm not involved
+- Codified institutional knowledge — the brand voice, design rules, and build process live in the repo, not just in my head. Survives if I'm on holiday / hit by a bus
+- Scalable and testable — the whole system is version-controlled, has acceptance tests, and every Rishi build is logged to the /changelog page for audit
+- Lower ongoing cost — once built, each new section costs Rishi ~£2-£3 of Claude runtime instead of my hourly rate
+
+RISKS
+- Generative design quality can vary — sometimes a candidate section lands off-brand. Mitigated by giving Rishi 2-3 options per run (pick the best) and my 5-section test build before handover
+- Copy tone drift — the de-AI-ifier is good but not perfect. Mitigated by Rishi always having the "paste my own copy" escape hatch in the flow
+- Third-party dependencies — the copy humanizer is an open-source project (pinned to a specific version so it can't change under us), and concept images use Google's nano-banana model (stable but Google-owned)
+- Rishi learning curve — he'll need 30 min on the handoff call to get comfortable with the terminal flow. Loom walkthrough covers the rest
+- Scope creep temptation — if Rishi tries to build nav / forms / global styles with it, he'll hit guardrails and come back to me. That's by design but worth flagging
+
+PRICING
+Flat fee £1,600 one-time. Covers the whole build, setup, 5-section test run, Loom walkthrough, and a 30-min handoff call. Per-section support billed separately if ever needed. Rishi covers his own Claude runtime (~£2-£3 per build he runs).
+
+QUESTIONS BEFORE I START
+1. Rishi OK to publish to carsa-v2.webflow.io only (never live) via this system? (assumed yes)
+2. Does Rishi have Claude Code + Anthropic billing set up, or add that to the handoff?
+3. Do you want visibility into Rishi's builds via /changelog, or is weekly review from me enough?
+4. Who signs off on the brand voice Do/Don'ts — you, Rishi, or me?
+
+Full spec is in my repo at .claude/specs/carsa-rishi-self-serve.md if you want the detail.

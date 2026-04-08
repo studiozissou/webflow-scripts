@@ -1,0 +1,114 @@
+- generic [ref=e2]:
+  - generic:
+    - generic:
+      - generic:
+        - generic: PLAY
+        - generic:
+          - img
+  - navigation:
+    - generic:
+      - generic:
+        - img
+      - link [ref=e3] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e4]:
+          - img [ref=e7]
+          - img [ref=e11]
+          - img [ref=e17]
+    - link "Who we are" [ref=e19]:
+      - /url: /about
+      - generic [ref=e20]: Who we are
+    - link "Contact" [ref=e21]:
+      - /url: "#"
+      - generic [ref=e22]: Contact
+      - img [ref=e24]
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - heading "Ready Hit Play" [level=1] [ref=e28]
+      - generic [ref=e29]:
+        - link [ref=e30]:
+          - /url: /
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic:
+              - img
+          - generic [ref=e35]:
+            - generic [ref=e37]:
+              - group "Overland AI" [ref=e38]:
+                - generic [ref=e39]: Overland
+                - generic [ref=e40]: AI
+              - list [ref=e43]:
+                - listitem [ref=e44]:
+                  - paragraph [ref=e45]: Website
+                - listitem [ref=e46]:
+                  - paragraph [ref=e47]: Brand films
+                - listitem [ref=e48]:
+                  - paragraph [ref=e49]: Investor narrative
+                - listitem [ref=e50]:
+                  - paragraph [ref=e51]: Strategic messaging
+            - heading "The market didn’t believe true off-road autonomy was possible. We changed that." [level=2] [ref=e54]:
+              - text: The market didn’t believe true off-road autonomy was possible.
+              - strong [ref=e55]: We changed that.
+            - generic [ref=e57]:
+              - paragraph [ref=e59]: We rebuilt Overland AI’s narrative from the ground up, defining language that separated them from the rest.
+              - link "OVERLAND.AI" [ref=e61] [cursor=pointer]:
+                - /url: https://www.overland.ai
+                - generic [ref=e62]: OVERLAND.AI
+                - img [ref=e64]
+            - paragraph [ref=e76]: From that narrative, we designed a system— a visual language blending the grit of the domain with the cutting edge of autonomy.
+            - generic [ref=e78]:
+              - paragraph [ref=e80]:
+                - text: Visually arresting. Heavy-lifting.
+                - text: Driving home the importance of their key benefits.
+              - generic [ref=e82]:
+                - generic [ref=e87] [cursor=pointer]:
+                  - img [ref=e89]
+                  - generic [ref=e101]: Without reliance on detailed maps
+                - generic [ref=e106] [cursor=pointer]:
+                  - img [ref=e108]
+                  - generic [ref=e136]:
+                    - text: "With visual distractions:"
+                    - text: dust, rain, snow, fog, etc.
+                - generic [ref=e141] [cursor=pointer]:
+                  - img [ref=e143]
+                  - generic [ref=e146]: At operationally relevant speeds
+                - generic [ref=e151] [cursor=pointer]:
+                  - img [ref=e153]
+                  - generic [ref=e160]: With no signature passive-only sensing
+                - generic [ref=e165] [cursor=pointer]:
+                  - img [ref=e167]
+                  - generic [ref=e173]: With disrupted or no remote communications
+                - generic [ref=e178] [cursor=pointer]:
+                  - img [ref=e180]
+                  - generic [ref=e185]: In GPS-denied environments
+                - generic [ref=e190] [cursor=pointer]:
+                  - img [ref=e192]
+                  - generic [ref=e204]: In austere environments with rough terrain
+                - generic [ref=e209] [cursor=pointer]:
+                  - img [ref=e211]
+                  - generic [ref=e218]:
+                    - text: "Through all surface conditions:"
+                    - text: ‍Mud, ice, sand, brush, etc.
+                - generic [ref=e223] [cursor=pointer]:
+                  - img [ref=e225]
+                  - generic [ref=e228]: Under the cover of night
+            - generic [ref=e230]:
+              - blockquote [ref=e231]: “Ready Hit Play didn’t just help us communicate. They helped us own the narrative.”
+              - paragraph [ref=e233]: — Byron Boots, CEO
+            - generic [ref=e234]:
+              - generic [ref=e237]:
+                - heading "ULTRA | Fully Autonomous Tactical Vehicle" [level=2] [ref=e238]
+                - generic [ref=e239]:
+                  - img [ref=e242]
+                  - img [ref=e247]
+              - slider "Video progress" [ref=e254]
+            - generic [ref=e257]:
+              - link "Previous" [ref=e258] [cursor=pointer]:
+                - /url: "#"
+                - img [ref=e260]
+                - generic [ref=e263]: Previous
+              - generic [ref=e265]: Close
+              - link "Next" [ref=e266] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e267]: Next
+                - img [ref=e269]

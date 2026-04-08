@@ -15,6 +15,13 @@
       "baseline": ".claude/research/test-page/coconut-pricing-baseline-2026-04-03.json",
       "report": ".claude/research/test-page/coconut-pricing-report-2026-04-03.md",
       "created": "2026-04-03"
+    },
+    {
+      "slug": "carsa-rishi-self-serve",
+      "url": "https://carsa-v2.webflow.io",
+      "spec": "tests/acceptance/carsa-rishi-self-serve.spec.js",
+      "description": "Validates /carsa-build Phase 6 verification scripts (contrast, touch targets, analytics soft check) and skill trigger narrowing.",
+      "created": "2026-04-08"
     }
   ]
 }

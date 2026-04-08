@@ -1,0 +1,68 @@
+{
+  "url": "https://getcoconut.webflow.io/pricing",
+  "date": "2026-04-03",
+  "viewport": {
+    "desktop": { "width": 1280, "height": 800 },
+    "mobile": { "width": 375, "height": 812 }
+  },
+  "scores": {
+    "cls": 0.048,
+    "desktopOverflow": false,
+    "mobileOverflow": false,
+    "consoleErrors": {
+      "count": 1,
+      "critical": 0,
+      "thirdParty": ["api-iam.intercom.io/messenger/web/ping 403"]
+    }
+  },
+  "pricingSection": {
+    "plans": [
+      {
+        "name": "Bookkeeping",
+        "yearlyPrice": "£99.99",
+        "monthlyPrice": "£16.99",
+        "cta": "Start Bookkeeping free trial",
+        "features": [
+          "Automatic income and expense tracking",
+          "Connect your bank in 30 seconds",
+          "Expenses categorised for you",
+          "Friendly UK expert support",
+          "Self-employment tax estimate (SA103)"
+        ]
+      },
+      {
+        "name": "MTD filing",
+        "yearlyPrice": "£129.99",
+        "monthlyPrice": "£21.99",
+        "badge": "Most popular",
+        "cta": "Start MTD filing free trial",
+        "subtitle": "Everything in Bookkeeping, plus:",
+        "features": [
+          "Send quarterly MTD updates to HMRC",
+          "Submit your MTD year-end return",
+          "Dedicated MTD expert help",
+          "Multiple income streams",
+          "In year tax estimates",
+          "HMRC recognised for MTD"
+        ]
+      }
+    ],
+    "removedPlans": ["+Self Assessment", "Full"],
+    "toggleRemoved": true
+  },
+  "accessibility": {
+    "headingHierarchy": "valid",
+    "h1Count": 1,
+    "emptyHeadings": 1,
+    "missingAltImages": 35,
+    "emptyLinks": 5,
+    "keyboardFocusVisible": true
+  },
+  "screenshots": {
+    "desktop": "coconut-test-desktop-1280.png",
+    "desktopPricing": "coconut-test-pricing.png",
+    "mobile": "coconut-test-mobile-375.png",
+    "mobilePricing": "coconut-test-mobile-pricing.png",
+    "liveReference": "coconut-live-pricing.png"
+  }
+}

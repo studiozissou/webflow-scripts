@@ -1,0 +1,80 @@
+- generic [ref=e2]:
+  - generic:
+    - generic:
+      - generic:
+        - generic: PLAY
+        - generic:
+          - img
+  - navigation:
+    - generic:
+      - generic:
+        - img
+      - link [ref=e3] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e4]:
+          - img [ref=e7]
+          - img [ref=e11]
+          - img [ref=e17]
+    - link "Who we are" [ref=e19]:
+      - /url: /about
+      - generic [ref=e20]: Who we are
+    - link "Contact" [ref=e21]:
+      - /url: "#"
+      - generic [ref=e22]: Contact
+      - img [ref=e24]
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - heading "Ready Hit Play" [level=1] [ref=e28]
+      - generic [ref=e29]:
+        - link [ref=e30]:
+          - /url: /
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic:
+              - img
+          - generic [ref=e35]:
+            - generic [ref=e37]:
+              - group "Stoke Space" [ref=e38]:
+                - generic [ref=e39]: Stoke
+                - generic [ref=e40]: Space
+              - list [ref=e43]:
+                - listitem [ref=e44]:
+                  - paragraph [ref=e45]: Brand films
+                - listitem [ref=e46]:
+                  - paragraph [ref=e47]: Visualization of future tech
+                - listitem [ref=e48]:
+                  - paragraph [ref=e49]: Strategic messaging
+                - listitem [ref=e50]:
+                  - paragraph [ref=e51]: Investor narrative
+            - heading "Stoke Space is building what others only theorize. We made that impossible to miss." [level=2] [ref=e54]:
+              - text: Stoke Space is building what others only theorize.
+              - text: We made that impossible to miss.
+            - generic [ref=e55]:
+              - generic [ref=e58]:
+                - heading "More Than a Launch Company" [level=2] [ref=e59]
+                - generic [ref=e60]:
+                  - img [ref=e63]
+                  - img [ref=e68]
+              - slider "Video progress" [ref=e75]
+            - generic [ref=e76]:
+              - paragraph [ref=e81]: Closing a $100M Series B doesn’t happen by accident. It happens when the story is undeniable.
+              - generic [ref=e85]:
+                - blockquote [ref=e86]: “Ready Hit Play understood our vision and brought it to life. Our films are instrumental in telling our story.”
+                - paragraph [ref=e88]: – Andy Lapsa, CEO
+            - generic [ref=e89]:
+              - generic [ref=e92]:
+                - heading "We are Stoke Space" [level=2] [ref=e93]
+                - generic [ref=e94]:
+                  - img [ref=e97]
+                  - img [ref=e102]
+              - slider "Video progress" [ref=e109]
+            - generic [ref=e112]:
+              - link "Previous" [ref=e113] [cursor=pointer]:
+                - /url: "#"
+                - img [ref=e115]
+                - generic [ref=e118]: Previous
+              - generic [ref=e120]: Close
+              - link "Next" [ref=e121] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e122]: Next
+                - img [ref=e124]

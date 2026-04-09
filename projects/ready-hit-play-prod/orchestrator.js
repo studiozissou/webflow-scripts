@@ -1157,6 +1157,7 @@
         RHP.earthParallax?.init?.(container);
         RHP.caseVideoControls?.init?.(container);
         initCaseTitleEntrance(container);
+        RHP.workNav?.init?.(container);
       },
 
       destroy() {
@@ -1165,6 +1166,7 @@
         destroyCaseTitleEntrance();
         RHP.earthParallax?.destroy?.();
         RHP.caseVideoControls?.destroy?.();
+        RHP.workNav?.destroy?.();
         RHP.lenis?.stop();
       }
     };

@@ -45,6 +45,13 @@ async function readButtonHref(page, which) {
   return page.getAttribute(`a[data-button="work-${which}"]`, 'href');
 }
 
+/** Read the label text of a button (prev or next). */
+async function readButtonLabel(page, which) {
+  return page.locator(
+    `a[data-button="work-${which}"] .text-size-tiny.text-style-allcaps`
+  ).textContent();
+}
+
 function collectErrors(page) {
   const errors = [];
   page.on('pageerror', (err) => errors.push(err));
@@ -76,6 +83,33 @@ test.describe(`${SLUG} — Elements & hrefs`, () => {
     const version = await page.evaluate(() => window.RHP?.workNav?.version);
     expect(typeof version).toBe('string');
     expect(version.length).toBeGreaterThan(0);
+  });
+
+  test('button labels show the target project title (not "Previous"/"Next")', async ({ page }) => {
+    // Read CMS data-title for the prev/next neighbours of the entry case
+    const meta = await page.evaluate(() => {
+      const items = Array.from(document.querySelectorAll('.dial_cms-list .w-dyn-item'))
+        .map((el) => ({
+          url: el.getAttribute('data-url'),
+          title: el.getAttribute('data-title')
+        }))
+        .filter((i) => i.url && i.title);
+      const slug = location.pathname.split('/').filter(Boolean).pop();
+      const idx = items.findIndex((i) => i.url === slug);
+      if (idx === -1 || items.length < 2) return null;
+      const prev = items[(idx - 1 + items.length) % items.length];
+      const next = items[(idx + 1) % items.length];
+      return { prevTitle: prev.title, nextTitle: next.title };
+    });
+    test.skip(meta === null, 'CMS list missing or current slug not in list');
+
+    const prevLabel = (await readButtonLabel(page, 'previous')).trim();
+    const nextLabel = (await readButtonLabel(page, 'next')).trim();
+    expect(prevLabel).toBe(meta.prevTitle);
+    expect(nextLabel).toBe(meta.nextTitle);
+    // Defensive: ensure we did NOT leave the placeholder labels in place
+    expect(prevLabel.toLowerCase()).not.toBe('previous');
+    expect(nextLabel.toLowerCase()).not.toBe('next');
   });
 });
 

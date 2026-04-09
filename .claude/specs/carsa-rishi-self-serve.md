@@ -151,6 +151,7 @@ carsa-self-serve/
 **`frontend-design` skill (Anthropic official)**
 - Role: generative design reasoning. Reads `design-state.md` + `design-tokens.json` + `design-laws.md`. Given a brief + constraints, returns a section shape (layout, semantic HTML, Client First class tree, component hierarchy, rationale).
 - Invoked in Phase 2 of `/carsa-build` (DESIGN step)
+- **Returns exactly 3 candidates on a creativity spread 1-10: A safe (2-3), B balanced (5), C bold (8-10).** The spread is enforced in the prompt, not left to model taste. Always-safe A reduces the risk of an all-off-brand run
 - Does NOT write to Webflow — returns a design spec only
 
 **`content` agent (existing, `.claude/agents/content.md`)**
@@ -165,7 +166,7 @@ carsa-self-serve/
 
 **`nano-banana` skill (Google Gemini image gen, existing)**
 - Role: generate a visual concept image per section candidate. Rishi sees the concept BEFORE any Webflow MCP writes — catches visual mismatches early.
-- Invoked at the end of Phase 2, one concept per candidate (1-3 per build)
+- Invoked at the end of Phase 2, one concept per candidate (exactly 3 per build — one per creativity tier)
 - ~£0.10/image via Gemini 2.5 Flash Image
 
 **`design-state.md` (hand-authored, Will-maintained)**
@@ -388,11 +389,19 @@ Sequence:
 
 **2a. Gather context.** Read `design-state.md`, `design-tokens.json`, `.claude/skills/carsa-webflow/references/design-laws.md`. Call Webflow MCP (`element_snapshot_tool`) to snapshot the target page around the insertion anchor.
 
-**2b. `frontend-design` skill invocation.** Pass brief (Phase 1 answers) + Carsa tokens + laws + page anchor snapshot. Skill returns 2-3 candidate section designs, each with:
-- Shape name + 1-sentence description
-- Layout rationale (why this shape for this brief)
+**2b. `frontend-design` skill invocation.** Pass brief (Phase 1 answers) + Carsa tokens + laws + page anchor snapshot. Skill returns **exactly 3 candidate section designs positioned on a creativity scale 1-10**, giving Rishi a deliberate spread of directions rather than 3 random variations:
+
+- **Candidate A — Safe (creativity 2-3):** Conventional, proven pattern that echoes an existing Carsa section. Minimal visual risk. This is the "this will definitely work" option — always on-brand by construction, reducing the risk of an all-off-brand run.
+- **Candidate B — Balanced (creativity 5):** Familiar shape with one distinctive element (unusual layout, typographic treatment, asymmetric grid, or interaction hint). Recognisably Carsa but clearly fresh.
+- **Candidate C — Bold (creativity 8-10):** Expressive, experimental. Unusual composition, layered typography, bold colour use, or motion cues. Still bounded by design-laws.md (contrast, touch targets, line length) so it can't break accessibility — just stretches the visual language.
+
+Each candidate returns:
+- Creativity score (2-3 / 5 / 8-10) and 1-sentence direction
+- Layout rationale (why this shape *at this creativity level* for this brief)
 - Client First class tree
 - Copy slots (heading, body, CTAs) as placeholders
+
+The creativity scale is enforced in the `frontend-design` prompt, not left to the model's taste. Safe must genuinely be safe; bold must genuinely be bold. If the brief is a legal/compliance section, `frontend-design` still returns 3 but narrows the spread (e.g. 2 / 4 / 6) and notes the narrowing in its rationale.
 
 **2c. `content` agent invocation.** For each candidate, pass layout + copy slots + `design-state.md` voice block. Agent returns draft copy per slot in Carsa brand voice.
 
@@ -400,13 +409,14 @@ Sequence:
 
 **2e. `nano-banana` concept images.** For each candidate, generate a concept image prompt from (layout + polished copy + Carsa brand context) and call the skill. Returns 1 image per candidate, ~£0.10/image.
 
-**2f. Assemble candidate previews.** Build Rishi-facing preview per candidate:
-- 1-sentence description
-- Anchor reference (which live Carsa page this shape echoes, if any)
+**2f. Assemble candidate previews.** Build Rishi-facing preview per candidate, labelled by creativity tier so he picks direction before detail:
+- **Header:** `A — Safe (2/10)` / `B — Balanced (5/10)` / `C — Bold (9/10)`
+- 1-sentence direction
+- Anchor reference (which live Carsa page this shape echoes, if any — A almost always has one, C rarely does)
 - Nano-banana concept image
 - Draft copy bullets (heading + subhead + primary CTA)
 
-Present all candidates in one message.
+Present all 3 candidates in one message, in A→B→C order (safe to bold). This ordering matters: it anchors Rishi in familiar territory first, then stretches outward, which psychologically makes B and C feel like considered steps rather than risky gambles.
 
 **Phase 3 — CONFIRM**
 
@@ -551,7 +561,7 @@ Recommendation: **Option 1**. Clear, scoped, defensible. Aligns with Carsa's ad-
 
 ### Ongoing cost for Rishi per build session
 
-Estimated Claude Code tokens: ~50-80k input, ~20-35k output (higher than v1 because of the generative pipeline + humanizer). At Opus pricing: ~£1.50-£2.80. Plus 2-3 nano-banana concept images at ~£0.10 each = £0.20-£0.30. **Total ~£2.00-£3.10 per build.** Still negligible. Rishi covers this via his own Anthropic billing (see Open Questions).
+Estimated Claude Code tokens: ~50-80k input, ~20-35k output (higher than v1 because of the generative pipeline + humanizer). At Opus pricing: ~£1.50-£2.80. Plus 3 nano-banana concept images (one per creativity tier) at ~£0.10 each = £0.30. **Total ~£2.00-£3.10 per build.** Still negligible. Rishi covers this via his own Anthropic billing (see Open Questions).
 
 ---
 
@@ -622,7 +632,7 @@ Test registered in `tests/registry.json` as `carsa-rishi-self-serve`. Runs durin
 **System is working when:**
 - `/carsa-build` can be invoked and completes Phases 1-8 without manual intervention
 - Phase 1 asks exactly 3 questions (Where / Why / Who)
-- Phase 2 returns ≥2 candidates each with: `frontend-design` layout + `content` agent draft + `humanizer` polished copy + `nano-banana` concept image
+- Phase 2 returns exactly 3 candidates on a creativity spread (A: 2-3 safe / B: 5 balanced / C: 8-10 bold), each with `frontend-design` layout + `content` agent draft + `humanizer` polished copy + `nano-banana` concept image. Candidates presented in A→B→C order and clearly labelled with creativity score.
 - Phase 3 asks the copy question ("got copy already or shall I make some?") and routes all three branches correctly
 - Phase 6 verify step runs all 6 Chrome DevTools MCP checks and returns a structured verdict
 - Phase 6 hard-fails on: contrast < 4.5:1 body text, touch target < 44x44, console errors, lighthouse a11y REGRESSION vs `design-tokens.json > lighthouseBaseline`
@@ -640,7 +650,7 @@ Test registered in `tests/registry.json` as `carsa-rishi-self-serve`. Runs durin
 2. Run `/carsa-build` conversationally: "add a trust signal section to the /car-finance page"
 3. Verify: system asks exactly 2 questions (goal + audience)
 4. Provide answers
-5. Verify: system proposes 2-3 section shapes, each referencing an existing Carsa page
+5. Verify: system proposes exactly 3 section shapes on the creativity spread (A safe / B balanced / C bold), each clearly labelled with a creativity score, presented in A→B→C order
 6. Pick one, confirm build
 7. Verify: Webflow MCP build proceeds, publish to carsa-v2.webflow.io succeeds
 8. Verify: Chrome DevTools MCP navigates to the published URL and runs all 6 checks
@@ -781,7 +791,7 @@ If any criterion fails, fix before handoff.
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| Design quality variance — generative sections sometimes look off-brand | MEDIUM | `frontend-design` skill grounded in `design-state.md` + `design-tokens.json` + `design-laws.md`. `nano-banana` preview commits Rishi visually before any MCP writes. 5-section dogfood (§12) is the final gate before handoff. If quality drifts in production, add tighter shape templates in v2. |
+| Design quality variance — generative sections sometimes look off-brand | LOW-MEDIUM | Creativity spread guarantees Candidate A is always a safe, conventional pattern echoing an existing Carsa section — Rishi always has an on-brand fallback. `frontend-design` grounded in `design-state.md` + `design-tokens.json` + `design-laws.md`. `nano-banana` preview commits Rishi visually before any MCP writes. 5-section test build (§12) is the final gate before handoff. If bold C options drift in production, narrow the spread to 2/4/6 in v2. |
 | Humanizer brand voice drift | MEDIUM | `design-state.md` Do/Don'ts are explicit calibration input. Phase 3 always offers "got copy already?" escape — if the humanizer draft misses, Rishi pastes his own in 10 seconds. Zero-friction recovery. |
 | Third-party `humanizer` skill changes or breaks upstream | MEDIUM | Pinned to commit hash at install time. Delivery repo has its own copy, not live-linked. Upstream changes cannot break Rishi. Will re-pins manually on a quarterly review. |
 | Design spirit is hard for AI to capture | MEDIUM (was HIGH) | Downgraded: split `design-state.md` (voice + live URL anchors) + `design-tokens.json` (primitives + baseline) + `design-laws.md` (rules) + `frontend-design` skill gives Claude concrete scaffolding. `nano-banana` preview is the visual commitment gate. |
@@ -856,7 +866,7 @@ Phase 1 (tool built) is successful when:
 - [ ] `/carsa-refresh-tokens` command works and is idempotent
 - [ ] `humanizer` skill installed and pinned to commit hash
 - [ ] `/carsa-build` asks exactly 3 questions in Phase 1 (Where/Why/Who)
-- [ ] Phase 2 generative pipeline returns ≥2 candidates with `frontend-design` layout + `humanizer`-polished copy + `nano-banana` concept image
+- [ ] Phase 2 generative pipeline returns exactly 3 candidates on the creativity spread (A safe 2-3 / B balanced 5 / C bold 8-10), each with `frontend-design` layout + `humanizer`-polished copy + `nano-banana` concept image
 - [ ] Phase 3 asks the copy question ("got copy already or shall I make some?") and routes correctly
 - [ ] Phase 6 runs all 6 Chrome DevTools verify checks against `carsa-v2.webflow.io`
 - [ ] Phase 7 writes to both local JSON and Webflow CMS

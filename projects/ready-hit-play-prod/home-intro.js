@@ -4,7 +4,7 @@
    Sequence: step text → dial ticks → generic video fade in → nav + dial_layer-ui
    ========================================= */
 (() => {
-  const HOME_INTRO_VERSION = '2026.3.19.1';
+  const HOME_INTRO_VERSION = '2026.4.9.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -29,6 +29,18 @@
     let _tapStepEl = null; // step element ref for destroy() restore
     let _tapOrigText = ''; // original step text for restore
     let _tapOrigLabel = ''; // original aria-label for restore
+
+    function _markIntroComplete() {
+      // Flip the `done` flag, notify listeners, start Lenis so scroll-morph can scrub.
+      if (RHP.homeIntro) RHP.homeIntro.done = true;
+      try {
+        window.dispatchEvent(new CustomEvent('rhp:home-intro:complete'));
+      } catch (e) {}
+      // Only start Lenis if we're still on the home namespace — guards against
+      // the intro throwing and completing after the user has navigated away.
+      const onHome = !!document.querySelector('[data-barba-namespace="home"]');
+      if (onHome && window.RHP?.lenis?.start) window.RHP.lenis.start();
+    }
 
     async function tryPlay(video) {
       try {
@@ -281,6 +293,7 @@
 
     return {
       version: HOME_INTRO_VERSION,
+      done: false,
 
       run(container) {
         if (hasRun) return;
@@ -333,9 +346,14 @@
           await runNavAnimation(scope);
           RHP.workDial?.onNavAnimationComplete?.();
           (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-home-ready');
+          _markIntroComplete();
         };
 
-        run().catch(() => {});
+        run().catch(() => {
+          // Defensive: even if the sequence throws, flip the done flag so
+          // downstream modules (home-scroll-morph, orchestrator) aren't blocked.
+          _markIntroComplete();
+        });
       },
 
       skip(container) {
@@ -346,7 +364,10 @@
         RHP.cursor?.setLockedToDot?.(false);
         RHP.workDial?.setIntroComplete?.();
         RHP.workDial?.setAttractionEnabled?.(true);
+        _markIntroComplete();
       },
+
+      version: HOME_INTRO_VERSION,
 
       destroy() {
         if (_tapAbort) {

@@ -213,7 +213,7 @@
       "critical": false,
       "slug": "rhp-home-intro-scroll-morph",
       "created": "2026-04-08",
-      "description": "Home intro section + 100vh scroll-driven logo Flip to nav + dial small→large morph + scroll lock + Barba skip intro + about slide transitions + nav logo replay + reduced motion + mobile 375px"
+      "description": "Home intro section + 100vh scroll-driven cloned-logo morph to nav + dial small→large + scroll lock + Barba skip intro + about slide transitions + nav logo replay + reduced motion + mobile 375px sticky slot + defensive CSS scoping on about/case + about-hero logo animations removed"
     },
     {
       "id": "feat-work-nav-prev-next",

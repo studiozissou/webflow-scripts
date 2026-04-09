@@ -3,16 +3,19 @@
  * Acceptance tests — rhp-home-intro-scroll-morph
  *
  * Covers:
- *   - Fresh-load intro section + small dial
- *   - 100vh scroll-driven morph to dial-large + logo reparent
+ *   - Fresh-load intro section + small dial + cloned logo in slot
+ *   - Real nav logo hidden (opacity:0) while intro visible
+ *   - 100vh scroll-driven morph: clone disposed, nav logo revealed
  *   - Scroll lock after morph complete
  *   - Barba re-entry skips intro
  *   - Home↔About slide transitions (power3.out, 0.75s)
  *   - Dial returns to IDLE on about→home
  *   - Nav logo click replays intro
  *   - Reduced motion fast-path
- *   - Mobile 375px
+ *   - Mobile 375px with sticky intro slot
  *   - No console errors
+ *   - Defensive CSS scoping: intro hidden on about & case
+ *   - About hero logo animations deleted (no hover transforms)
  *   - axe-core WCAG 2.1 AA soft assertion
  *
  * Spec: .claude/specs/rhp-home-intro-scroll-morph.md
@@ -25,6 +28,7 @@ require('dotenv').config({ path: '.env.test' });
 const SLUG = 'rhp-home-intro-scroll-morph';
 const HOME_PATH = '/';
 const ABOUT_PATH = '/about';
+const CASE_PATH = '/case-studies/overland-ai';
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -63,7 +67,7 @@ function collectErrors(page) {
 
 // ── 1. Fresh-load intro state ─────────────────────────────────
 test.describe(`${SLUG} — Fresh load`, () => {
-  test('intro section visible with small dial and logo in slot', async ({ page }) => {
+  test('intro section visible with small dial and cloned logo in slot', async ({ page }) => {
     await loadHome(page);
 
     // Intro section present and visible
@@ -71,15 +75,26 @@ test.describe(`${SLUG} — Fresh load`, () => {
     await expect(intro).toBeAttached();
     await expect(intro).toBeVisible();
 
-    // Logo is inside the intro slot
-    const introLogo = page.locator('.home-intro_logo-slot .nav_logo-wrapper-2.is-nav');
-    await expect(introLogo).toBeVisible();
+    // Cloned logo is inside the intro slot (marked with data-home-intro-clone)
+    const clonedLogo = page.locator(
+      '.home-intro_logo-slot .nav_logo-wrapper-2.is-nav[data-home-intro-clone]'
+    );
+    await expect(clonedLogo).toBeVisible();
 
     // Dial is rendered at the small size (width < large threshold)
     const dialWidth = await page.locator('.dial_component[data-dial-ns="home"]').evaluate(
       (el) => el.getBoundingClientRect().width
     );
     expect(dialWidth).toBeLessThan(500); // small dial is ~6rem–15rem range; large is >~400–600px
+  });
+
+  test('real nav logo is hidden (opacity 0) while intro is visible', async ({ page }) => {
+    await loadHome(page);
+
+    const opacity = await page.locator('.nav_logo-link .nav_logo-wrapper-2.is-nav').evaluate(
+      (el) => parseFloat(getComputedStyle(el).opacity || '1')
+    );
+    expect(opacity).toBeLessThan(0.1);
   });
 
   test('homeScrollMorph is initialised and not complete', async ({ page }) => {
@@ -95,20 +110,24 @@ test.describe(`${SLUG} — Fresh load`, () => {
 
 // ── 2. Scroll morph ───────────────────────────────────────────
 test.describe(`${SLUG} — Scroll morph`, () => {
-  test('scrolling 100vh completes morph and reparents logo to nav', async ({ page }) => {
+  test('scrolling 100vh completes morph, disposes clone, reveals nav logo', async ({ page }) => {
     await loadHome(page);
     await scrollMorph(page);
 
     const complete = await page.evaluate(() => window.RHP?.homeScrollMorph?.complete === true);
     expect(complete).toBe(true);
 
-    // Logo is now inside the nav
-    const navLogo = page.locator('.nav_logo-link .nav_logo-wrapper-2.is-nav');
-    await expect(navLogo).toBeVisible();
+    // Real nav logo is visible (opacity restored)
+    const navLogoOpacity = await page.locator('.nav_logo-link .nav_logo-wrapper-2.is-nav').evaluate(
+      (el) => parseFloat(getComputedStyle(el).opacity || '1')
+    );
+    expect(navLogoOpacity).toBeGreaterThan(0.9);
 
-    // Intro logo slot no longer contains the logo
-    const introSlotLogoCount = await page.locator('.home-intro_logo-slot .nav_logo-wrapper-2.is-nav').count();
-    expect(introSlotLogoCount).toBe(0);
+    // Clone has been removed from the intro slot
+    const cloneCount = await page.locator(
+      '.home-intro_logo-slot [data-home-intro-clone]'
+    ).count();
+    expect(cloneCount).toBe(0);
   });
 
   test('intro section is hidden after morph', async ({ page }) => {
@@ -215,13 +234,85 @@ test.describe(`${SLUG} — Barba lifecycle`, () => {
     await page.locator('a.nav_logo-link, a[href="/"]').first().click();
     await page.waitForTimeout(1800);
 
-    // Exactly one logo wrapper in the DOM tree that lives inside nav
+    // Exactly one logo wrapper inside nav (the real one — clones disposed)
     const navLogoCount = await page.locator('.nav_logo-link .nav_logo-wrapper-2.is-nav').count();
     expect(navLogoCount).toBe(1);
+
+    // No orphaned clone anywhere in the page
+    const orphanCloneCount = await page.locator('[data-home-intro-clone]').count();
+    expect(orphanCloneCount).toBe(0);
 
     // Intro section is either absent or hidden
     const visibleIntro = await page.locator('.section_home-intro:visible').count();
     expect(visibleIntro).toBe(0);
+  });
+});
+
+// ── 4b. Defensive CSS scoping ─────────────────────────────────
+test.describe(`${SLUG} — CSS namespace scoping`, () => {
+  test('about page: .section_home-intro is display:none (if markup leaks)', async ({ page }) => {
+    await page.goto(ABOUT_PATH);
+    await waitForRHP(page);
+    await page.waitForTimeout(1000);
+
+    const introCount = await page.locator('.section_home-intro').count();
+    if (introCount > 0) {
+      // If the markup exists (e.g. symbol leaked), CSS must hide it.
+      const display = await page.locator('.section_home-intro').first().evaluate(
+        (el) => getComputedStyle(el).display
+      );
+      expect(display).toBe('none');
+    }
+    // If introCount === 0, the section isn't on About — equally fine.
+    expect(true).toBe(true);
+  });
+
+  test('case page: .section_home-intro is absent or display:none', async ({ page }) => {
+    await page.goto(CASE_PATH);
+    await waitForRHP(page);
+    await page.waitForTimeout(1000);
+
+    const introCount = await page.locator('.section_home-intro').count();
+    if (introCount > 0) {
+      const display = await page.locator('.section_home-intro').first().evaluate(
+        (el) => getComputedStyle(el).display
+      );
+      expect(display).toBe('none');
+    }
+    expect(true).toBe(true);
+  });
+});
+
+// ── 4c. About hero logo animations removed ────────────────────
+test.describe(`${SLUG} — About hero logo animations removed`, () => {
+  test('hovering .about-hero_ready on /about triggers no inline transform or filter', async ({ page }) => {
+    await page.goto(ABOUT_PATH);
+    await waitForRHP(page);
+    await page.waitForTimeout(1000);
+
+    const targets = page.locator('.section_about-hero .about-hero_ready');
+    const count = await targets.count();
+
+    // If the big hero logo was hidden/removed by Designer, there may be nothing to hover.
+    // In that case the test is a no-op — we just want to confirm NO lingering listeners
+    // are writing styles onto any remaining .about-hero_ready elements.
+    if (count === 0) {
+      expect(true).toBe(true);
+      return;
+    }
+
+    const target = targets.first();
+    await target.hover().catch(() => { /* element may not be hoverable */ });
+    await page.waitForTimeout(500);
+
+    const { transform, filter } = await target.evaluate((el) => ({
+      transform: el.style.transform || '',
+      filter: el.style.filter || ''
+    }));
+
+    // Inline style should be empty (no JS-driven hover animation)
+    expect(transform).toBe('');
+    expect(filter).toBe('');
   });
 });
 
@@ -247,8 +338,10 @@ test.describe(`${SLUG} — Nav logo replay`, () => {
     complete = await page.evaluate(() => window.RHP?.homeScrollMorph?.complete === true);
     expect(complete).toBe(false);
 
-    // Logo should be back in the intro slot
-    await expect(page.locator('.home-intro_logo-slot .nav_logo-wrapper-2.is-nav')).toBeVisible();
+    // Clone should be back in the intro slot
+    await expect(page.locator(
+      '.home-intro_logo-slot .nav_logo-wrapper-2.is-nav[data-home-intro-clone]'
+    )).toBeVisible();
   });
 });
 
@@ -279,20 +372,35 @@ test.describe(`${SLUG} — Reduced motion`, () => {
 
 // ── 7. Mobile responsive ──────────────────────────────────────
 test.describe(`${SLUG} — Mobile 375px`, () => {
-  test('intro + scroll morph work at 375×812', async ({ page }) => {
+  test('intro + scroll morph work at 375×812 with sticky slot', async ({ page }) => {
     const errors = collectErrors(page);
     await page.setViewportSize({ width: 375, height: 812 });
     await loadHome(page);
 
     await expect(page.locator('.section_home-intro')).toBeVisible();
 
+    // Sticky slot: computed position should be 'sticky' at mobile breakpoint
+    const slotPosition = await page.locator('.home-intro_logo-slot').evaluate(
+      (el) => getComputedStyle(el).position
+    );
+    // Accept 'sticky' (preferred) or '-webkit-sticky'. If neither, warn via soft assert —
+    // the Webflow CSS override may be gated on a different breakpoint.
+    expect.soft(['sticky', '-webkit-sticky']).toContain(slotPosition);
+
+    // Clone should be present on mobile fresh load
+    await expect(page.locator(
+      '.home-intro_logo-slot .nav_logo-wrapper-2.is-nav[data-home-intro-clone]'
+    )).toBeVisible();
+
     await scrollMorph(page);
 
     const complete = await page.evaluate(() => window.RHP?.homeScrollMorph?.complete === true);
     expect(complete).toBe(true);
 
-    // Logo ends up in nav
+    // After morph: real nav logo is visible, clone disposed
     await expect(page.locator('.nav_logo-link .nav_logo-wrapper-2.is-nav')).toBeVisible();
+    const orphanCloneCount = await page.locator('[data-home-intro-clone]').count();
+    expect(orphanCloneCount).toBe(0);
 
     expect(errors, `JS errors: ${errors.map(e => e.message).join(', ')}`)
       .toHaveLength(0);

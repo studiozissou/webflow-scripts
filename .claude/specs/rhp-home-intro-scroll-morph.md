@@ -5,6 +5,24 @@
 **Status:** Ready to Build
 **Approach:** C — Hybrid decomposition (3 modules)
 
+## Update 2026-04-09 — Clone-from-nav simplification
+
+After verifying the live homepage markup (`reference/homepage.html`), the original "move the About big logo into a symbol and drop it into the home intro slot" Designer prereq is **unnecessary**. The nav logo (`.nav_logo-link > .nav_logo-wrapper-2.is-nav`) already contains the exact same 3× `.about-hero_ready` SVG markup as the About hero big logo — they share identical DOM structure, only the parent CSS sizes them differently.
+
+Five changes flow from this:
+
+1. **Simplified Designer prereq** — User only adds an empty `.section_home-intro > .home-intro_logo-slot` inside the home Barba container. No symbol creation, no markup moving from About.
+2. **Clone-based JS approach** — `home-scroll-morph.js` clones the nav logo wrapper into the intro slot on `init()`, hides the real nav logo via `opacity: 0`, and at morph-complete fades the clone out while fading the nav logo back in (or just reveals the nav logo after the clone is removed). No Flip reparent of the real logo is needed — the clone disposes, the nav logo stays where it always lived.
+3. **Remove About hero logo animations** — Delete `initAboutHeroLogoHover` / `destroyAboutHeroLogoHover` (orchestrator.js ~711–822) and `initAboutHeroLogoScroll` / `destroyAboutHeroLogoScroll` (~824+). These drove interactions on the big About-hero logo which is now moved out of the About hero layout (user may hide the `.section_about-hero` big logo via Webflow visibility or remove it entirely).
+4. **Defensive CSS for intro scoping** — Ensure `.section_home-intro` only renders on the home namespace:
+   ```css
+   .section_home-intro { display: none; }
+   [data-barba-namespace="home"] .section_home-intro { display: flex; }
+   ```
+5. **Mobile sticky slot** — User has already added `position: sticky; top: 0;` to `.home-intro_logo-slot` on mobile in Webflow Designer. This preserves the mobile "scroll-driven logo reveal" interaction that used to live in `initAboutHeroLogoScroll`. ScrollTrigger scrub remains compatible — sticky pins the slot within the parent, total scroll distance is still the intro section's 100vh. The morph's `x/y/scale` tween on the clone element works against the sticky parent's layout position; Flip end-state measurements are re-taken on scroll each tick via `invalidateOnRefresh: true`.
+
+All other architecture (3 modules, Barba slide transitions, scroll lock after morph, replay API) is unchanged. Sections below have been revised accordingly — the original reparent-based code remains inline but is now clearly marked as superseded where relevant.
+
 ## Summary
 
 Major homepage restructure. On fresh page load, the homepage presents an intro section featuring the large interactive logo (currently on /about) over the IDLE background video, with the dial rendered small (About-page size). As the user scrolls 100vh, the logo Flip-reparents to the nav position and the dial morphs from small → large. At the end of that 100vh range, native/Lenis scroll is locked and the homepage behaves exactly as it does today (work-dial owns all input).
@@ -25,31 +43,42 @@ Clicking the nav logo while on home scrolls to top and replays the scroll-morph 
 
 ## Non-goals
 
-- No Designer/CMS schema changes beyond adding the new `.home_intro` container and moving the existing logo markup into it.
+- No Designer/CMS schema changes beyond adding the empty `.section_home-intro > .home-intro_logo-slot` container on home and setting `position: sticky` on the slot at mobile (already done).
+- No symbol creation or markup migration from About hero — JS clones from the existing nav logo at runtime.
 - No change to case-page transitions, work-dial internals, or the video pool.
-- No mobile-specific intro UI — same scroll-driven interaction at all breakpoints.
+- No mobile-specific intro UI code path — user's Webflow sticky CSS on `.home-intro_logo-slot` replaces the old `initAboutHeroLogoScroll` mobile behaviour.
 - No removal of the current intro sequence (step text → dial ticks → video fade) — it runs inside the new intro section.
 
 ## DOM Context
 
-### Current state (live, verified via Chrome DevTools MCP)
+### Current state (verified via `reference/homepage.html` snapshot)
 
-- **Big logo** (/about only): `.section_about-hero .nav_logo-wrapper-2.is-nav` — contains 3× `.about-hero_ready` SVG. Inside Barba container `[data-barba-namespace="about"]`.
-- **Small nav logo** (all pages): `.nav_logo-link > .nav_logo-wrapper-2.is-nav` — inside persistent nav, outside Barba.
-- **Dial** (persistent, outside Barba): `.dial_component[data-dial-ns="home"|"work"]` — CSS controls visibility by namespace.
-- **Home Barba container**: `[data-barba-namespace="home"]` — currently empty-ish; dial + nav live outside.
+- **Nav logo** (all pages, single source of truth): `nav.nav > .nav_logo-wrapper > .nav_logo-link > .nav_logo-wrapper-2.is-nav` — contains 3× `<div data-cursor="dot" class="about-hero_ready"><div class="nav_logo-embed w-embed"><svg>...</svg></div></div>` (R / H / P characters). Inside persistent nav, OUTSIDE Barba container.
+- **Big logo on /about** (legacy): `.section_about-hero .about-hero_ready` — identical 3-SVG markup, just sized larger via parent CSS. Currently driven by `initAboutHeroLogoHover` + `initAboutHeroLogoScroll` animations in orchestrator.js. These animations will be deleted in this spec.
+- **Dial** (persistent, outside Barba — restructured 2026-03-12): `.dial_component[data-dial-ns="home"|"work"]` lives inside `.dial_layer-fg`, OUTSIDE Barba container. CSS visibility controlled by `data-dial-ns`.
+- **Home Barba container**: `<main data-barba-namespace="home" data-barba="container" class="main-wrapper">` contains `.section_home` and `.about-transition` overlay.
 - **Transition dial** (small static canvas): `.transition-dial` — separate module.
 - **Home bg video**: owned by `work-dial.js`, `RHP.workDial.getIntroVideoEl()` returns it.
 
 ### After Webflow Designer prereq (user will do before /build)
 
-1. In the home Barba container, add a new section: `<section class="section_home-intro" data-home-intro>` with a flex-centred wrapper `.home-intro_logo-slot` that will receive the reparented logo.
-2. Move (cut) the `.nav_logo-wrapper-2.is-nav` + `.about-hero_ready` SVG markup from the About hero into a Webflow **symbol** named `home-intro-logo`.
-3. Place the symbol instance inside `.home-intro_logo-slot` on the home page. Remove the big-logo instance from the About hero (About hero becomes text-only).
-4. Ensure both `.nav_logo-link` (nav) and `.home-intro_logo-slot` use identical intrinsic layout for the logo wrapper so Flip can measure cleanly (same `display`, no transform).
-5. Add `.home_intro` class to the new section and give it `height: 100vh` in Webflow Designer (the JS will `ScrollTrigger.refresh()` on resize).
+Only **two** Designer tasks are required:
 
-**Prereq confirmation step**: `home-scroll-morph.js` will fail loudly with a console warning if `.home-intro_logo-slot` or the reparented logo SVG is missing, and will no-op (no scroll lock, no morph) so the site still works.
+1. **Add an empty intro section** inside the home Barba container, as the first child of `[data-barba-namespace="home"]`:
+   ```html
+   <section class="section_home-intro">
+     <div class="home-intro_logo-slot"></div>
+   </section>
+   ```
+   - `.section_home-intro`: `height: 100vh`, `display: flex` centred (both Designer and CSS rules).
+   - `.home-intro_logo-slot`: flex-centred, sized to house the large logo. **Mobile override (user already applied):** `position: sticky; top: 0;` so the slot pins within the intro section during the 100vh scroll range, preserving the mobile scroll-driven logo reveal interaction.
+   - Leave the slot empty — JS will clone the nav logo markup into it on `init()`.
+
+2. **(Optional cleanup)** Hide or delete the big `.about-hero_ready` logo inside `.section_about-hero` on the About page. It's no longer animated by JS, but can be kept if desired. If kept, the about hero still shows static large characters; if deleted, About hero becomes text-only. **Recommended: hide via Webflow visibility (display: none)** so Designer markup is preserved as a backup.
+
+No symbol creation. No markup moving between pages. The nav logo is the single source of truth.
+
+**Prereq confirmation step**: `home-scroll-morph.js` fails loudly with a console warning if `.home-intro_logo-slot` is missing or if `.nav_logo-link .nav_logo-wrapper-2.is-nav` is missing (so cloning cannot happen), and then no-ops — no scroll lock, no morph — so the site still works.
 
 ## Architecture (Approach C — Hybrid decomposition)
 
@@ -127,24 +156,26 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
 { run, done: boolean, version }
 ```
 
-### File 2: `home-scroll-morph.js` (NEW)
+### File 2: `home-scroll-morph.js` (NEW — clone-from-nav approach)
+
+Instead of physically reparenting the nav logo, this module clones the nav logo markup into the intro slot on init, hides the real nav logo while the intro section is visible, and disposes the clone at morph-complete (simultaneously revealing the real nav logo). This keeps the nav logo in its stable DOM position at all times and avoids Flip reparent of a live element.
 
 ```js
 // IIFE module — home-scroll-morph.js
 (function () {
   'use strict';
-  const VERSION = '2026.4.8.1';
+  const VERSION = '2026.4.9.1';
   const DEBUG = false;
 
   let ctx = null;
-  let flipState = null;
   let scrubTL = null;
   let scrollTrigger = null;
   let initialised = false;
   let complete = false;
   let introSlot = null;
-  let navSlot = null;
-  let logoEl = null;
+  let navLogoLink = null;      // real nav logo wrapper link (stable)
+  let navLogoWrapper = null;   // real .nav_logo-wrapper-2.is-nav inside nav
+  let cloneEl = null;          // the cloned big logo that lives in the intro slot
   let dialEl = null;
 
   function prefersReduced() {
@@ -152,10 +183,30 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
   }
 
   function redrawDialCanvas() {
-    // Redraw the work-dial canvas at new size to avoid pixelation.
-    // work-dial.js exposes no redraw API yet — we'll fire a resize event
-    // which work-dial listens for and triggers its own canvas re-paint.
+    // work-dial listens for resize and re-paints its canvas.
     window.dispatchEvent(new Event('resize'));
+  }
+
+  function ensureClone() {
+    // Clone the nav logo wrapper into the intro slot if not already there.
+    if (!introSlot || !navLogoWrapper) return null;
+    let existing = introSlot.querySelector('.nav_logo-wrapper-2.is-nav');
+    if (existing) return existing;
+    const clone = navLogoWrapper.cloneNode(true);
+    clone.setAttribute('data-home-intro-clone', '');
+    introSlot.appendChild(clone);
+    return clone;
+  }
+
+  function hideNavLogo() {
+    if (navLogoWrapper) window.gsap?.set(navLogoWrapper, { opacity: 0 });
+  }
+  function showNavLogo() {
+    if (navLogoWrapper) window.gsap?.set(navLogoWrapper, { opacity: 1, clearProps: 'opacity' });
+  }
+  function removeClone() {
+    if (cloneEl?.parentNode) cloneEl.parentNode.removeChild(cloneEl);
+    cloneEl = null;
   }
 
   function init(container) {
@@ -163,33 +214,41 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
 
     const gsap = window.gsap;
     const ScrollTrigger = window.ScrollTrigger;
-    const Flip = window.Flip;
-    if (!gsap || !ScrollTrigger || !Flip) {
-      console.warn('[home-scroll-morph] GSAP/ScrollTrigger/Flip missing');
+    if (!gsap || !ScrollTrigger) {
+      console.warn('[home-scroll-morph] GSAP/ScrollTrigger missing');
       return;
     }
 
     introSlot = document.querySelector('.home-intro_logo-slot');
-    navSlot = document.querySelector('.nav_logo-link');
-    logoEl = document.querySelector('.home-intro_logo-slot .nav_logo-wrapper-2.is-nav');
+    navLogoLink = document.querySelector('.nav_logo-link');
+    navLogoWrapper = document.querySelector('.nav_logo-link .nav_logo-wrapper-2.is-nav');
     dialEl = document.querySelector('.dial_component[data-dial-ns="home"]');
 
-    if (!introSlot || !navSlot || !logoEl || !dialEl) {
-      console.warn('[home-scroll-morph] required DOM missing — intro morph disabled');
+    if (!introSlot || !navLogoLink || !navLogoWrapper || !dialEl) {
+      console.warn('[home-scroll-morph] required DOM missing — intro morph disabled', {
+        introSlot: !!introSlot, navLogoLink: !!navLogoLink,
+        navLogoWrapper: !!navLogoWrapper, dialEl: !!dialEl
+      });
       return;
     }
 
     initialised = true;
+
+    // 1. Clone the nav logo into the intro slot
+    cloneEl = ensureClone();
+    // 2. Hide the real nav logo while intro is visible
+    hideNavLogo();
+
     ctx = gsap.context(() => {
-      // Initial state: dial small (matches about size), logo in intro slot
+      // Initial state: dial small (matches about size)
       gsap.set(dialEl, {
         '--dial-live-width': 'var(--dial-small-width)',
         '--dial-live-height': 'var(--dial-small-height)'
       });
 
-      // Build scrub timeline gated on intro completion
       const buildTimeline = () => {
         if (scrubTL) scrubTL.kill();
+        if (!cloneEl) return;
 
         scrubTL = gsap.timeline({
           scrollTrigger: {
@@ -203,7 +262,7 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
           }
         });
 
-        // Dial small → large (drive CSS vars; work-dial reads these)
+        // Dial small → large (drives CSS vars; work-dial reads these)
         scrubTL.to(dialEl, {
           '--dial-live-width': 'var(--dial-large-width)',
           '--dial-live-height': 'var(--dial-large-height)',
@@ -211,17 +270,14 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
           duration: 1
         }, 0);
 
-        // Logo reparent via Flip happens at scroll progress 1.0 (not scrubbed —
-        // Flip is an immediate transform, so we trigger it at the end).
-        // Instead: tween logo scale + position during scrub, then do a final
-        // Flip reparent at onLeave.
-        const startRect = logoEl.getBoundingClientRect();
-        const targetRect = navSlot.getBoundingClientRect();
+        // Clone logo tween: scale/position toward the nav target.
+        const startRect = cloneEl.getBoundingClientRect();
+        const targetRect = navLogoWrapper.getBoundingClientRect();
         const dx = targetRect.left + targetRect.width / 2 - (startRect.left + startRect.width / 2);
         const dy = targetRect.top + targetRect.height / 2 - (startRect.top + startRect.height / 2);
         const scaleTarget = targetRect.width / startRect.width;
 
-        scrubTL.to(logoEl, {
+        scrubTL.to(cloneEl, {
           x: dx,
           y: dy,
           scale: scaleTarget,
@@ -231,36 +287,31 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
       };
 
       buildTimeline();
-      scrollTrigger = scrubTL.scrollTrigger;
+      scrollTrigger = scrubTL?.scrollTrigger || null;
 
-      // Rebuild on resize
+      // Rebuild on resize (mobile sticky slot means the clone's layout origin
+      // can change mid-scroll; invalidateOnRefresh re-measures on ST refresh).
       window.addEventListener('resize', buildTimeline);
     }, container || document);
   }
 
   function onMorphComplete() {
     complete = true;
-    if (!logoEl || !navSlot) return;
 
-    // Flip-reparent the logo into the nav, keeping its visual position
-    const state = window.Flip.getState(logoEl);
-    navSlot.appendChild(logoEl);
-    window.gsap.set(logoEl, { clearProps: 'all' });
-    window.Flip.from(state, { duration: 0, absolute: false });
+    // Reveal the real nav logo, dispose the clone
+    showNavLogo();
+    removeClone();
 
     // Hide the (now-empty) intro section so it no longer takes layout
     const introSection = document.querySelector('.section_home-intro');
     if (introSection) window.gsap.set(introSection, { display: 'none' });
 
-    // Redraw dial canvas at new (large) size to avoid pixelation
     redrawDialCanvas();
 
-    // Enable work-dial interaction
     if (window.RHP?.workDial?.setInteractionUnlocked) {
       window.RHP.workDial.setInteractionUnlocked(true);
     }
 
-    // Lock scroll
     if (window.RHP?.lenis?.stop) window.RHP.lenis.stop();
     if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
 
@@ -268,24 +319,29 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
   }
 
   function onMorphReverse() {
-    // User scrolled back up past the intro start — re-parent logo to intro slot.
-    if (!logoEl || !introSlot) return;
-    const state = window.Flip.getState(logoEl);
-    introSlot.appendChild(logoEl);
-    window.gsap.set(logoEl, { clearProps: 'all' });
-    window.Flip.from(state, { duration: 0, absolute: false });
+    // User scrolled back up past the intro start — recreate the clone, hide nav logo.
+    if (!introSlot || !navLogoWrapper) return;
+    cloneEl = ensureClone();
+    if (cloneEl) window.gsap.set(cloneEl, { clearProps: 'all' });
+    hideNavLogo();
     complete = false;
   }
 
   function skipToEnd() {
     // Called on Barba re-entry to home. Land in dial-large state without animation.
-    init(document);
+    // Re-query DOM because Barba just swapped the home container.
+    introSlot = document.querySelector('.home-intro_logo-slot');
+    navLogoLink = document.querySelector('.nav_logo-link');
+    navLogoWrapper = document.querySelector('.nav_logo-link .nav_logo-wrapper-2.is-nav');
+    dialEl = document.querySelector('.dial_component[data-dial-ns="home"]');
+
     const introSection = document.querySelector('.section_home-intro');
     if (introSection) introSection.style.display = 'none';
-    if (navSlot && logoEl && logoEl.parentNode !== navSlot) {
-      navSlot.appendChild(logoEl);
-      window.gsap.set(logoEl, { clearProps: 'all' });
-    }
+
+    // Ensure nav logo is visible (no clone needed)
+    removeClone();
+    showNavLogo();
+
     if (dialEl) {
       window.gsap.set(dialEl, {
         '--dial-live-width': 'var(--dial-large-width)',
@@ -293,6 +349,7 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
       });
     }
     complete = true;
+    initialised = true; // block double-init from view hook
     if (window.RHP?.workDial?.setInteractionUnlocked) {
       window.RHP.workDial.setInteractionUnlocked(true);
     }
@@ -307,18 +364,15 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
     const introSection = document.querySelector('.section_home-intro');
     if (introSection) introSection.style.display = '';
 
-    // Re-parent logo back to intro slot
-    if (logoEl && introSlot && logoEl.parentNode !== introSlot) {
-      introSlot.appendChild(logoEl);
-      window.gsap.set(logoEl, { clearProps: 'all' });
-    }
+    // Recreate clone in the slot, hide real nav logo
+    cloneEl = ensureClone();
+    if (cloneEl) window.gsap.set(cloneEl, { clearProps: 'all' });
+    hideNavLogo();
 
-    // Disable work-dial interaction while morph reverses
     if (window.RHP?.workDial?.setInteractionUnlocked) {
       window.RHP.workDial.setInteractionUnlocked(false);
     }
 
-    // Unlock + restart Lenis + scroll to top
     if (window.RHP?.scroll?.unlock) window.RHP.scroll.unlock();
     if (window.RHP?.lenis?.start) window.RHP.lenis.start();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -330,6 +384,8 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
     if (scrubTL) { scrubTL.kill(); scrubTL = null; }
     if (scrollTrigger) { scrollTrigger.kill(); scrollTrigger = null; }
     if (ctx) { ctx.revert(); ctx = null; }
+    removeClone();
+    showNavLogo();
     initialised = false;
     complete = false;
   }
@@ -342,6 +398,12 @@ if (window.RHP?.lenis) window.RHP.lenis.start();
   };
 })();
 ```
+
+**Why clone instead of Flip reparent?**
+- The nav logo is persistent and outside Barba. Reparenting it mid-run risks losing listeners, cursor attributes, and any Webflow IX bindings.
+- Cloning is a one-way operation: `cloneNode(true)` copies markup + inline SVG. No IX bindings are copied, but none are needed on the clone (it's purely visual during the morph).
+- At morph complete, we dispose the clone and reveal the real nav logo. The user never sees the swap because both elements occupy the same screen position at that moment (the clone's tween end-state matches the nav logo's live position).
+- Flip is no longer strictly required, but we keep it loaded for `about-transition` (if that symbol still uses it elsewhere) and for future use. If Flip is absent, this module still works.
 
 ### File 3: `home-about-slide.js` (NEW)
 
@@ -413,6 +475,12 @@ Simple GSAP tweens on the About Barba container. Both directions use `power3.out
 - `aboutTransitionTL` persistent timeline (lines ~1872–2020).
 - All Flip-based home↔about morph logic.
 - Any pre-positioning of logo/dial on direct-land /about.
+- `initAboutHeroLogoHover(container)` and `destroyAboutHeroLogoHover()` (lines ~711–822). These drove hover-triggered SplitText/opacity/y tweens on `.section_about-hero .about-hero_ready .nav_logo-embed`.
+- `initAboutHeroLogoScroll(container)` and `destroyAboutHeroLogoScroll()` (lines ~824 onward), including the `aboutHeroScrollCtx` and `scrollSplitInstances` state. This was the bell-curve mobile scroll-linked animation on the About hero big logo.
+- Any orchestrator calls into those four functions (search for `initAboutHeroLogoHover`, `initAboutHeroLogoScroll`, `destroyAboutHeroLogoHover`, `destroyAboutHeroLogoScroll`). Typically called from the About view init/destroy and/or `rhp:barba:afterenter` handler.
+- Any `window.innerWidth > 991` gating that was specific to these hero logo scroll animations.
+
+**Why:** the big About-hero logo is being hidden (or removed) by the Webflow Designer prereq. With no big logo to animate, these four functions are dead code. The mobile scroll-linked logo reveal is replaced by the user's `position: sticky` CSS on `.home-intro_logo-slot` in combination with the ScrollTrigger scrub in `home-scroll-morph.js`.
 
 **Add to Barba transitions array:**
 ```js
@@ -476,30 +544,64 @@ Update `CONFIG.modules` to include the two new files in the order shown above. B
 ### File 6: `ready-hit-play.css` changes
 
 ```css
-/* New home intro section */
+/* ── Home intro section ─────────────────────────────────────── */
+
+/* Defensive namespace scoping: intro only renders on home.
+   Prevents accidental display on about / case if the section markup
+   bleeds through via a Webflow symbol or legacy copy. */
 .section_home-intro {
+  display: none;
+}
+[data-barba-namespace="home"] .section_home-intro {
+  display: flex;
   height: 100vh;
   width: 100%;
-  display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 2;
 }
+
 .home-intro_logo-slot {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* NOTE: user has already added `position: sticky; top: 0;` to
+   .home-intro_logo-slot at mobile breakpoints in Webflow Designer.
+   This replaces the old initAboutHeroLogoScroll bell-curve interaction:
+   on mobile, the slot pins within the 100vh intro section while the
+   user scrolls, preserving the "scroll-driven logo reveal" feel.
+   No JS mobile branch is needed. */
+
 /* Dial "live" size custom properties — driven by home-scroll-morph */
 .dial_component[data-dial-ns="home"] {
   width: var(--dial-live-width, var(--dial-small-width));
   height: var(--dial-live-height, var(--dial-small-height));
 }
+
+/* ── About hero cleanup (if big logo is kept visually in Designer) ── */
+/* If user opts to leave the big .about-hero_ready markup on /about
+   as a visual-only element, remove any transforms/filters the old
+   hover/scroll animations might have left on it. The old init*HeroLogo*
+   functions applied inline styles that stuck around after destroy.
+   Clearing these resets to the Designer baseline. */
+.section_about-hero .about-hero_ready {
+  transform: none;
+  filter: none;
+  opacity: 1;
+}
 ```
 
 Work-dial already reads `--dial-large-width/height` and `--dial-small-width/height` — we introduce `--dial-live-width/height` as the value that is tweened.
+
+**Mobile sticky slot — compatibility note:** User's Webflow CSS adds `position: sticky; top: 0;` to `.home-intro_logo-slot` at mobile breakpoints. This is compatible with the ScrollTrigger scrub because:
+1. The trigger is `.section_home-intro`, not the slot — the 100vh scroll range is measured on the section, unaffected by the slot's sticky positioning.
+2. `invalidateOnRefresh: true` re-measures `startRect` / `targetRect` on every ST refresh, so even if the sticky slot's layout origin shifts during scroll, the clone's tween start-point is always up to date.
+3. `cloneEl.getBoundingClientRect()` is evaluated lazily inside `buildTimeline()` when ScrollTrigger refreshes — so at the moment the tween is built, it reflects the slot's actual current position (sticky or not).
+
+If the mobile sticky causes noticeable drift in the clone's transform (because sticky offsets compound with GSAP's `x/y`), the fallback is to attach the sticky to `.home-intro_logo-slot > .home-intro_logo-inner` and leave the slot itself statically positioned, isolating the sticky effect from the tween target.
 
 ## Edge cases
 
@@ -558,8 +660,12 @@ Work-dial already reads `--dial-large-width/height` and `--dial-small-width/heig
 - [ ] Case → Home (Barba): existing handoff still works — dial is ACTIVE with previous project
 - [ ] No JS errors in console throughout all scenarios
 - [ ] `prefers-reduced-motion`: intro still plays (fast-forward), morph is a jump-cut at scroll end, slides are instant
-- [ ] Mobile 375px: same scroll-driven interaction, logo morph smooth, canvas not pixelated after resize
+- [ ] Mobile 375px: same scroll-driven interaction, logo clone morphs smoothly above the sticky slot, canvas not pixelated after resize
 - [ ] Webflow Designer prereq missing: page loads with console warning, no intro section, dial defaults to large — site still functional
+- [ ] `/about` page: `.section_home-intro` is `display: none` (defensive CSS scoping works)
+- [ ] `/case-studies/<any>` page: `.section_home-intro` is `display: none`
+- [ ] `/about` page: no residual hover/scroll animations on `.section_about-hero .about-hero_ready` (no transform/filter mutations, no SplitText wrappers injected)
+- [ ] Nav logo is visible on /about and /case after the removed logo animations are deleted — no regression from orphaned listeners
 
 ### Reproduction steps
 
@@ -585,21 +691,27 @@ Work-dial already reads `--dial-large-width/height` and `--dial-small-width/heig
 
 - **work-dial.js**: sector switching, video pool, hover/drag, case handoff — must not break after morph completion.
 - **home-intro.js**: iOS autoplay tap-to-play fallback must still fire if `tryPlay()` rejects.
-- **cursor.js**: custom cursor states must continue to work on both intro and post-morph homepage.
-- **About page**: continues to work when navigated via slide. Big logo is now gone from About hero (intentional — it's a symbol, so removing from About page leaves text-only hero).
+- **cursor.js**: custom cursor states must continue to work on both intro and post-morph homepage. Clone element must inherit `data-cursor="dot"` attributes from the cloneNode so cursor feedback survives on the clone.
+- **About page**: continues to work when navigated via slide. Big `.about-hero_ready` logo in `.section_about-hero` is visually hidden/removed via Webflow Designer. Hover and scroll animations are deleted from orchestrator.js. The About hero should render without the old logo interaction.
 - **Case pages**: earth-parallax, case-video-controls, intro-format all unchanged.
 - **Barba transitions**: case↔home, case↔case, home→case, about→case must still work (only home↔about is changed).
 - **Lenis**: about page and case pages Lenis behaviour unchanged. Only home gains a temporary Lenis window during the intro → morph phase.
+- **Mobile scroll-driven logo reveal**: user's `position: sticky` CSS on `.home-intro_logo-slot` replaces the old `initAboutHeroLogoScroll` bell-curve animation. The visual effect should still read as "logo reveals as you scroll" but driven by scroll + sticky + the morph tween instead of a JS-animated bell curve.
 
 ## Tasks
 
 1. **Refactor `home-intro.js`** — Strip post-intro logic, keep autoplay fallback untouched, dispatch `rhp:home-intro:complete` + start Lenis on completion, set `RHP.homeIntro.done = true`.
-2. **Create `home-scroll-morph.js`** — IIFE module with init, destroy, skipToEnd, replay. Flip-reparent logic, ScrollTrigger scrub timeline, canvas redraw, scroll-lock handoff.
+2. **Create `home-scroll-morph.js`** — IIFE module with init, destroy, skipToEnd, replay. Clone-from-nav logic, ScrollTrigger scrub timeline, canvas redraw, scroll-lock handoff.
 3. **Create `home-about-slide.js`** — IIFE module exposing `leaveHomeToAbout` and `leaveAboutToHome` functions.
-4. **Modify `orchestrator.js`** — Delete old Flip `aboutTransitionTL`. Add Barba transitions for home↔about using `home-about-slide`. Wire `home-scroll-morph.init()` on home view init. Wire `skipToEnd()` on Barba re-entry to home. Add nav logo click handler for replay.
+4. **Modify `orchestrator.js`** — Delete:
+   - Old Flip `aboutTransitionTL`
+   - `initAboutHeroLogoHover` + `destroyAboutHeroLogoHover`
+   - `initAboutHeroLogoScroll` + `destroyAboutHeroLogoScroll`
+   - All call sites for the four removed functions
+   Add: Barba transitions for home↔about using `home-about-slide`, `home-scroll-morph.init()` on home view init, `skipToEnd()` on Barba re-entry to home, nav logo click handler for replay.
 5. **Modify `init.js`** — Add `home-scroll-morph.js` and `home-about-slide.js` to CONFIG.modules. Bump version.
-6. **Modify `ready-hit-play.css`** — Add `.section_home-intro` + `.home-intro_logo-slot` + `--dial-live-*` custom property rules.
-7. **Generate Playwright acceptance tests** — `tests/acceptance/rhp-home-intro-scroll-morph.spec.js` covering all Tier 1 criteria.
+6. **Modify `ready-hit-play.css`** — Add `.section_home-intro` defensive namespace scoping (`display:none` by default, `display:flex` inside `[data-barba-namespace="home"]`), `.home-intro_logo-slot` base rules, `--dial-live-*` custom property rules, and `.section_about-hero .about-hero_ready` reset (transform/filter/opacity).
+7. **Generate Playwright acceptance tests** — `tests/acceptance/rhp-home-intro-scroll-morph.spec.js` covering all Tier 1 criteria plus the new regressions: intro section has `display: none` on about/case; no About-hero-logo animations firing on about.
 8. **Register in `tests/registry.json`** — Add entry with slug, file, type, source, critical, description.
 9. **QA on staging** — Run smoke + new acceptance test after deploy; manual Tier 3 checklist.
 
@@ -639,6 +751,9 @@ File: `projects/ready-hit-play-prod/tests/acceptance/rhp-home-intro-scroll-morph
 10. **Reduced motion** — With `reducedMotion: 'reduce'`, fresh-load intro completes fast, scroll-morph jump-cuts at scroll end, no JS errors.
 11. **Mobile 375px** — Viewport 375×812, fresh load, scroll 100vh, morph completes, no layout breakage.
 12. **Nav logo replay** — After morph complete, click nav logo, wait for scroll-to-top + reverse, assert intro section visible again + `RHP.homeScrollMorph.complete === false`.
+13. **About page intro hidden** — Navigate to /about, assert `getComputedStyle('.section_home-intro').display === 'none'` (CSS defensive scoping works even if markup exists).
+14. **Case page intro hidden** — Navigate to /case-studies/overland-ai, assert `.section_home-intro` is absent from the DOM OR computed display is none.
+15. **About hero hover animations removed** — Navigate to /about, hover over `.section_about-hero .about-hero_ready` (first one), wait 500ms, assert element has no inline `transform` or `filter` style (i.e. no animation was triggered).
 
 ### Tier 2 — Auto: CDN regression
 
@@ -658,8 +773,8 @@ File: `projects/ready-hit-play-prod/tests/acceptance/rhp-home-intro-scroll-morph
 Generated file: `projects/ready-hit-play-prod/tests/acceptance/rhp-home-intro-scroll-morph.spec.js`
 
 Tests:
-- `fresh load: intro section visible, dial small, logo in slot`
-- `scroll 100vh: morph completes, logo reparented to nav`
+- `fresh load: intro section visible, dial small, clone in slot`
+- `scroll 100vh: morph completes, clone disposed, nav logo visible`
 - `after morph: scroll is locked`
 - `after morph: intro section hidden, dial is large`
 - `no JS errors on full intro → morph flow`
@@ -667,6 +782,11 @@ Tests:
 - `home → about: About container slides in from left`
 - `about → home: About slides out, dial returns to IDLE, home is dial-large`
 - `reduced motion: no animation, content visible, no errors`
-- `mobile 375px: intro + morph work at mobile viewport`
+- `mobile 375px: intro + morph work at mobile viewport with sticky slot`
 - `nav logo click: replay reverses morph and shows intro`
 - `no WCAG 2.1 AA violations on home with intro visible` (axe-core soft assert)
+- `about page: .section_home-intro is display:none (CSS scoping)`
+- `case page: .section_home-intro is absent or display:none`
+- `about page: no hover/scroll animation on .about-hero_ready (deleted functions)`
+
+**Note**: The existing `rhp-home-intro-scroll-morph.spec.js` was generated before the clone-from-nav and defensive CSS scoping decisions. Tasks #7 and #15 in the task list will update the test file to: (a) use clone/nav-logo assertions instead of "logo reparented" assertions, (b) add the three new regression tests, (c) adjust mobile test to expect sticky slot behaviour.

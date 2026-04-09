@@ -42,7 +42,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.4.8.2', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.4.9.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -73,6 +73,8 @@
       'about-dial-ticks.js',
       'about-text-lines.js',
       'home-intro.js',
+      'home-scroll-morph.js',
+      'home-about-slide.js',
       'intro-format.js',
       'earth-parallax.js',
       'case-video-controls.js',
@@ -229,6 +231,9 @@
         { module: 'transition-dial.js', ok: typeof RHP.transitionDial !== 'undefined', detail: RHP.transitionDial?.version || '' },
         { module: 'about-dial-ticks.js', ok: typeof RHP.aboutDialTicks !== 'undefined', detail: RHP.aboutDialTicks?.version || '' },
         { module: 'about-text-lines.js', ok: typeof RHP.aboutTextLines !== 'undefined', detail: RHP.aboutTextLines?.version || '' },
+        { module: 'home-intro.js', ok: typeof RHP.homeIntro !== 'undefined', detail: RHP.homeIntro?.version || '(no version)' },
+        { module: 'home-scroll-morph.js', ok: typeof RHP.homeScrollMorph !== 'undefined', detail: RHP.homeScrollMorph?.version || '' },
+        { module: 'home-about-slide.js', ok: typeof RHP.homeAboutSlide !== 'undefined', detail: RHP.homeAboutSlide?.version || '' },
         { module: 'intro-format.js', ok: typeof RHP.formatIntroText === 'function', detail: '—' },
         { module: 'earth-parallax.js', ok: typeof RHP.earthParallax !== 'undefined', detail: RHP.earthParallax?.version || '' },
         { module: 'case-video-controls.js', ok: typeof RHP.caseVideoControls !== 'undefined', detail: RHP.caseVideoControls?.version || '' },
@@ -251,6 +256,9 @@
         'transition-dial.js': RHP.transitionDial?.version || '—',
         'about-dial-ticks.js': RHP.aboutDialTicks?.version || '—',
         'about-text-lines.js': RHP.aboutTextLines?.version || '—',
+        'home-intro.js': RHP.homeIntro?.version || '—',
+        'home-scroll-morph.js': RHP.homeScrollMorph?.version || '—',
+        'home-about-slide.js': RHP.homeAboutSlide?.version || '—',
         'intro-format.js': '—',
         'earth-parallax.js': RHP.earthParallax?.version || '—',
         'case-video-controls.js': RHP.caseVideoControls?.version || '—',

@@ -49,7 +49,7 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | `orchestrator.js` | 2026.3.12.1 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
 | `lenis-manager.js` | 2026.2.6.10 | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
 | `cursor.js` | 2026.2.18.1 | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
-| `work-dial.js` | 2026.2.20.1 | Homepage dial: canvas ticks, video pool (sliding window), sector switch, drag/hover |
+| `work-dial.js` | 2026.4.8.2 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover |
 | `transition-dial.js` | 2026.2.18.1 | Static teal canvas dial shown during Barba transitions |
 | `about-dial-ticks.js` | 2026.2.6.10 | Small 6rem static teal dial on about page |
 | `about-text-lines.js` | 2026.2.13.1 | Scroll-linked per-line text fade on about page (SplitText + Lenis scroll events) |
@@ -95,7 +95,7 @@ Every module registers itself here before orchestrator runs. Key entries:
 ```
 RHP.lenis          — { start, stop, resize, onScroll, offScroll, setupScrollTriggerProxy, version }
 RHP.cursor         — { init, destroy, refresh, setPosition, setState, setLockedToDot, getCurrentState, transitionDuration, version }
-RHP.workDial       — { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, version }
+RHP.workDial       — { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, setDeadzoneRatio, version }
 RHP.transitionDial — { init, destroy, version }
 RHP.aboutDialTicks — { init, destroy, resize, version }
 RHP.aboutTextLines — { init, destroy, getThresholds, version }

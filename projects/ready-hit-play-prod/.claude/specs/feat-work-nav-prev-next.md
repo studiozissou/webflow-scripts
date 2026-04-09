@@ -14,7 +14,9 @@ Wire the two already-published links on every `/work/<slug>` case page —
 clicking them navigates to the previous / next case study in the CMS collection,
 cyclically. First → last and last → first wrap around. Clicks are handled by
 Barba's built-in link interception (same-origin anchor → `case` transition);
-the module only needs to populate the `href` attributes.
+the module populates the `href` attribute AND replaces the button label
+(`.text-size-tiny.text-style-allcaps`) with the target project's `data-title`,
+preserving the SVG arrow icon.
 
 ## Background
 
@@ -47,9 +49,13 @@ the module only needs to populate the `href` attributes.
   - `data-url` → slug, e.g. `"overland-ai"`, `"remote"`, `"stoke-space"`
   - `data-title` → display name (not used by this feature, but present)
 
-**Current-page signal (ranked)**
-1. `[data-wf-item-slug]` attribute on a container element — most reliable
-2. `location.pathname` last segment (`/work/<slug>` → `<slug>`) — fallback
+**Current-page signal**
+- `location.pathname` last segment (`/work/<slug>` → `<slug>`) — **only reliable
+  source under Barba**. Barba case→case transitions use `history.pushState`, so
+  `location.pathname` updates correctly.
+- ❌ `[data-wf-item-slug]` lives on the `<html>` element. Barba only swaps
+  `[data-barba="container"]`, not `<html>` — so the attribute is STALE after any
+  Barba transition. Discovered during verify loop on 2026-04-09. **Do not use.**
 
 ### Codebase precedents
 
@@ -81,9 +87,9 @@ New module `projects/ready-hit-play-prod/work-nav.js` that:
    - Query `.dial_cms-list .w-dyn-item` (prefer `container.querySelectorAll`,
      fall back to `document.querySelectorAll` since the CMS list location may
      vary across Webflow template edits).
-   - Resolve current slug:
-     - First: `document.querySelector('[data-wf-item-slug]')?.getAttribute('data-wf-item-slug')`
-     - Fallback: `location.pathname` last non-empty segment
+   - Resolve current slug from `location.pathname` last non-empty segment.
+     Do NOT use `[data-wf-item-slug]` — it lives on `<html>` and is stale
+     after Barba case→case transitions (see Research findings).
    - Build an ordered array of slugs from `items.map(i => i.getAttribute('data-url'))`.
    - Find `currentIndex = slugs.indexOf(currentSlug)`; if `-1`, default to `0`
      and log a `DEBUG && console.warn(...)`.
@@ -149,10 +155,10 @@ New module `projects/ready-hit-play-prod/work-nav.js` that:
     let nextBtn = null;
 
     function _resolveCurrentSlug() {
-      const attr = document
-        .querySelector('[data-wf-item-slug]')
-        ?.getAttribute('data-wf-item-slug');
-      if (attr) return attr;
+      // Use location.pathname — Barba case→case transitions use
+      // history.pushState so pathname updates. [data-wf-item-slug] on <html>
+      // is a Webflow server-side CMS attribute that only refreshes on full
+      // page loads, so it's stale after Barba transitions.
       const parts = location.pathname.split('/').filter(Boolean);
       return parts[parts.length - 1] || '';
     }

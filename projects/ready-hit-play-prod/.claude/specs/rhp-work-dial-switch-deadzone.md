@@ -35,7 +35,7 @@ Live-tuneable via `window.RHP.workDial.setDeadzoneRatio(0.65)` in DevTools.
 
 - Add a module-scoped, runtime-mutable `SWITCH_DEADZONE_RATIO` constant at the top of the IIFE (default `0.7`).
 - Add `geom.deadzoneR` computed in `setupGeometry()` as `geom.videoR * SWITCH_DEADZONE_RATIO`. Recomputed on every resize via the existing `setupGeometry()` call path.
-- Add hysteresis helpers `H.deadzoneEnter = () => geom.deadzoneR - 6` and `H.deadzoneExit = () => geom.deadzoneR + 10` to match the existing `inner*`/`switch*` helper pattern.
+- Add hysteresis helpers `H.deadzoneEnter = () => geom.deadzoneR` and `H.deadzoneExit = () => geom.deadzoneR + 10` to match the existing `inner*`/`switch*` helper pattern. The enter threshold is the nominal ratio line exactly (so `SWITCH_DEADZONE_RATIO = 0.7` locks at exactly 70 % of `videoR`); the +10 px exit margin is hysteresis-only (prevents flicker when the cursor re-exits).
 
 ### R2: Move the ACTIVE ↔ ENGAGED threshold to the deadzone
 

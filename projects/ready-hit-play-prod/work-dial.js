@@ -10,11 +10,18 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.4.8.1';
+  const WORK_DIAL_VERSION = '2026.4.8.2';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
 
   const DIAL_STATES = { IDLE: 'idle', ACTIVE: 'active', ENGAGED: 'engaged' };
+
+  // Outer switch ring inside the fg video:
+  // cursor beyond (videoR * this ratio) from fg centre still updates the active
+  // sector even though it's over the video. Inside = switching locked.
+  // Live-tuneable via RHP.workDial.setDeadzoneRatio().
+  let SWITCH_DEADZONE_RATIO = 0.7;
+
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -337,7 +344,7 @@
       const mix = (a,b,t)=>`rgb(${(a.r+(b.r-a.r)*t|0)},${(a.g+(b.g-a.g)*t|0)},${(a.b+(b.b-a.b)*t|0)})`;
 
       // Geometry derived from rendered circle (scaled values filled in resize)
-      const geom = { cx:0, cy:0, fgCX:0, fgCY:0, videoR:0, innerR:0, switchMaxR:0, dpr:1, gap:0, baseLen:0, maxLen:0, barW:1, nearPx:0, radFalloff:0 };
+      const geom = { cx:0, cy:0, fgCX:0, fgCY:0, videoR:0, innerR:0, switchMaxR:0, deadzoneR:0, dpr:1, gap:0, baseLen:0, maxLen:0, barW:1, nearPx:0, radFalloff:0 };
 
       // Runtime state
       const state = {
@@ -348,6 +355,7 @@
         // zones
         inInner:false,
         inSwitch:false,
+        inDeadzone:false,
 
         // selection
         activeIndex: 0,
@@ -854,6 +862,7 @@
         geom.innerR = geom.videoR + geom.gap;
         const outerBase = geom.innerR + geom.baseLen;
         geom.switchMaxR = outerBase + geom.maxLen + geom.videoR * T.switchBufferRatio;
+        geom.deadzoneR  = geom.videoR * SWITCH_DEADZONE_RATIO;
 
         // Idle threshold: 200px beyond outer tick ring edge at 3000px viewport, scaled by dial width
         geom.idleThreshold = (geom.innerR + geom.baseLen) + (200 * (r.width / 3000)) * 0.6;
@@ -870,10 +879,14 @@
 
       // Hysteresis thresholds (prevents boundary flicker)
       const H = {
-        innerEnter: () => geom.innerR - 6,
-        innerExit:  () => geom.innerR + 10,
-        switchEnter:() => geom.switchMaxR - 10,
-        switchExit: () => geom.switchMaxR + 20
+        innerEnter:    () => geom.innerR - 6,
+        innerExit:     () => geom.innerR + 10,
+        switchEnter:   () => geom.switchMaxR - 10,
+        switchExit:    () => geom.switchMaxR + 20,
+        // Lock at exactly SWITCH_DEADZONE_RATIO * videoR (nominal ratio is the lock line).
+        // Unlock 10 px beyond it for hysteresis so the boundary doesn't flicker.
+        deadzoneEnter: () => geom.deadzoneR,
+        deadzoneExit:  () => geom.deadzoneR + 10
       };
 
       // Desktop hover switching + cursor follow
@@ -887,6 +900,9 @@
         state.rDist = Math.hypot(dx, dy);
         state.angDeg = angleTop0(dx, dy);
 
+        // Hoisted — reused by ACTIVE↔ENGAGED transition AND inDeadzone tracker
+        const fgDist = Math.hypot(e.clientX - geom.fgCX, e.clientY - geom.fgCY);
+
         // IDLE ↔ ACTIVE transitions — desktop only (mobile uses tap radius in onPointerDown)
         if (!isMobile() && interactionUnlocked) {
           if (dialState === DIAL_STATES.IDLE && state.rDist <= geom.idleThreshold) {
@@ -898,25 +914,30 @@
           }
         }
 
-        // Zone updates (hysteresis)
+        // inInner zone — unchanged. Still drives cursor PLAY + tick warmth.
         if (!state.inInner && state.rDist <= H.innerEnter()) state.inInner = true;
         else if (state.inInner && state.rDist >= H.innerExit()) state.inInner = false;
 
-        // ACTIVE ↔ ENGAGED: use fgWrap viewport centre — immune to canvas/fgWrap offset
+        // inDeadzone zone — new. Drives sector-switching exclusion inside fg video.
+        if (!state.inDeadzone && fgDist <= H.deadzoneEnter()) state.inDeadzone = true;
+        else if (state.inDeadzone && fgDist >= H.deadzoneExit()) state.inDeadzone = false;
+
+        // ACTIVE ↔ ENGAGED: now based on deadzone, not fg video edge
         if (!isMobile() && interactionUnlocked && introComplete) {
-          const fgDist = Math.hypot(e.clientX - geom.fgCX, e.clientY - geom.fgCY);
-          if (dialState === DIAL_STATES.ACTIVE && fgDist <= geom.videoR - 6) {
+          if (dialState === DIAL_STATES.ACTIVE && fgDist <= geom.deadzoneR - 6) {
             setDialState(DIAL_STATES.ENGAGED);
-          } else if (dialState === DIAL_STATES.ENGAGED && fgDist >= geom.videoR + 4) {
+          } else if (dialState === DIAL_STATES.ENGAGED && fgDist >= geom.deadzoneR + 4) {
             setDialState(DIAL_STATES.ACTIVE);
           }
         }
 
-        if (!state.inSwitch && state.rDist <= H.switchEnter() && state.rDist > geom.innerR) state.inSwitch = true;
-        else if (state.inSwitch && (state.rDist >= H.switchExit() || state.rDist <= geom.innerR)) state.inSwitch = false;
+        // inSwitch — relaxed: no longer requires rDist > innerR. The !state.inDeadzone
+        // check below handles the centre exclusion inside the fg video.
+        if (!state.inSwitch && state.rDist <= H.switchEnter()) state.inSwitch = true;
+        else if (state.inSwitch && state.rDist >= H.switchExit()) state.inSwitch = false;
 
-        // Desktop: switch only when ACTIVE, inSwitch, and NOT inInner
-        if (!isMobile() && dialState === DIAL_STATES.ACTIVE && state.inSwitch && !state.inInner) {
+        // Desktop: switch only when ACTIVE, inSwitch, and NOT inDeadzone
+        if (!isMobile() && dialState === DIAL_STATES.ACTIVE && state.inSwitch && !state.inDeadzone) {
           const idx = Math.floor(mod(state.angDeg + sectorOffset, 360) / sectorSize);
           applyActive(idx);
         }
@@ -933,6 +954,7 @@
         state.rDist = 1e9;
         state.inInner = false;
         state.inSwitch = false;
+        state.inDeadzone = false;
         if (!isMobile()) setCursorPlay(false);
         // Mobile: IDLE transition handled by tap radius in onPointerDown, not pointer leave
         if (!isMobile() && interactionUnlocked && dialState !== DIAL_STATES.IDLE) {
@@ -1392,7 +1414,7 @@
 
       rafId = requestAnimationFrame(draw);
 
-      refs = Object.assign(refs || {}, { getActiveIndex: () => state.activeIndex });
+      refs = Object.assign(refs || {}, { getActiveIndex: () => state.activeIndex, geom });
 
       // Signal that canvas is drawn and first video is attached — used by overlay hold
       RHP.workDial._ready = true;
@@ -1467,6 +1489,13 @@
 
     function isSuspended() { return suspended; }
 
-    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, _ready: false, version: WORK_DIAL_VERSION };
+    function setDeadzoneRatio(ratio) {
+      if (typeof ratio !== 'number' || !isFinite(ratio) || ratio < 0 || ratio > 1) return;
+      SWITCH_DEADZONE_RATIO = ratio;
+      const g = refs && refs.geom;
+      if (g && g.videoR) g.deadzoneR = g.videoR * ratio;
+    }
+
+    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, setDeadzoneRatio, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, _ready: false, version: WORK_DIAL_VERSION };
   })();
 })();

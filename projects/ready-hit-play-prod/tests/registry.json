@@ -2,8 +2,8 @@
   "version": 1,
   "lastUpdated": "2026-04-09",
   "note": "Updated: rhp-dial-short-viewport-bump finalised at 63svh (was 60svh → 65svh draft → 63svh final) — step text is 438.55px due to letter-spacing, 63svh gives 504px dial at 1440×800 for ~87% fill",
-  "lastDeployed": "2026-04-08",
-  "lastDeployedHash": "debe518",
+  "lastDeployed": "2026-04-09",
+  "lastDeployedHash": "1d4aabf",
   "entries": [
     {
       "id": "smoke",

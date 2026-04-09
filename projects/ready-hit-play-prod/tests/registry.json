@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-09",
-  "note": "Deployed: rhp-home-intro-scroll-morph — new home intro section with 100vh scroll-driven logo morph (clone-from-nav) + dial small→large; rewritten home↔about slide transitions. Tests skipped by user at deploy time, manual verification.",
+  "note": "Deployed: .section_home-intro scoped via main.main-wrapper:has([data-barba-namespace=\"home\"]) so the section can live as a sibling of .section_home outside the Barba container. Tests skipped by user at deploy time, manual verification.",
   "lastDeployed": "2026-04-09",
-  "lastDeployedHash": "99669a1",
+  "lastDeployedHash": "08c0558",
   "entries": [
     {
       "id": "smoke",

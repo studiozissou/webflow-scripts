@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.3.19.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.4.9.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -415,16 +415,20 @@
   // Home view (dial owns scroll)
   RHP.views.home = RHP.views.home || (() => {
     let active = false;
+    // Listener we register so ScrollTrigger refreshes once the intro has
+    // fully unlocked (intro animation sets RHP.homeIntro.done = true).
+    let _introCompleteHandler = null;
 
     return {
       init(container, options = {}) {
         if (active) return;
         active = true;
 
-        // ❌ No Lenis on home
+        // ❌ No Lenis on home until the intro sequence completes.
+        // home-intro.js will start it once RHP.homeIntro.done flips true.
         RHP.lenis?.stop();
 
-        // 🔒 Lock scroll
+        // 🔒 Lock scroll (home-scroll-morph will lock again after morph)
         RHP.scroll.unlock(); // defensive reset
         RHP.scroll.lock();
 
@@ -433,12 +437,41 @@
 
         // Transition dial (static teal ticks in .transition-dial for page transitions)
         RHP.transitionDial?.init?.(container);
+
+        // Home scroll morph — only initialise once the intro sequence has
+        // completed (ScrollTrigger needs the final DOM layout + Lenis running).
+        // On a fresh load the intro isn't done yet, so defer until the event.
+        // On Barba re-entry we take the skipToEnd path (wired in the
+        // about-to-home transition enter hook), so init() becomes a no-op.
+        const initScrollMorph = () => {
+          if (RHP.homeScrollMorph?.init) {
+            RHP.homeScrollMorph.init(container);
+            // ScrollTrigger needs a refresh after the intro section finally
+            // has its real layout measurements.
+            if (window.ScrollTrigger?.refresh) window.ScrollTrigger.refresh();
+          }
+        };
+        if (RHP.homeIntro?.done === true) {
+          initScrollMorph();
+        } else {
+          _introCompleteHandler = () => {
+            window.removeEventListener('rhp:home-intro:complete', _introCompleteHandler);
+            _introCompleteHandler = null;
+            initScrollMorph();
+          };
+          window.addEventListener('rhp:home-intro:complete', _introCompleteHandler);
+        }
       },
 
       destroy() {
         if (!active) return;
         active = false;
 
+        if (_introCompleteHandler) {
+          window.removeEventListener('rhp:home-intro:complete', _introCompleteHandler);
+          _introCompleteHandler = null;
+        }
+        RHP.homeScrollMorph?.destroy?.();
         RHP.workDial?.destroy?.();
         RHP.transitionDial?.destroy?.();
         RHP.scroll.unlock();
@@ -448,6 +481,10 @@
         if (!active) return;
         active = false;
 
+        if (_introCompleteHandler) {
+          window.removeEventListener('rhp:home-intro:complete', _introCompleteHandler);
+          _introCompleteHandler = null;
+        }
         RHP.workDial?.suspend?.();
         RHP.transitionDial?.destroy?.();
         RHP.scroll.unlock();
@@ -457,10 +494,16 @@
         if (active) return;
         active = true;
 
+        // Kill any previous scroll-morph ctx/timeline/listener before the
+        // skip-to-end state is applied — prevents leaks across home→case→home.
+        RHP.homeScrollMorph?.destroy?.();
+
         RHP.lenis?.stop();
         RHP.scroll.lock();
         RHP.workDial?.resume?.(handoff);
         RHP.transitionDial?.init?.(container);
+        // Re-entry: no intro, no scrub morph — skip straight to dial-large.
+        RHP.homeScrollMorph?.skipToEnd?.(container);
       }
     };
   })();
@@ -479,8 +522,6 @@
      ----------------------------- */
   RHP.views.about = RHP.views.about || (() => {
     let active = false;
-    let splitInstances = [];
-    let hoverListeners = [];
     let teamHoverListeners = [];
     let teamTweenTargets = [];
 
@@ -708,285 +749,6 @@
       teamTweenTargets = [];
     }
 
-    let aboutHeroCtx = null;
-
-    function initAboutHeroLogoHover(container) {
-      const gsap = window.gsap;
-      const SplitText = window.SplitText;
-      if (!gsap || !SplitText) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-      // .nav_logo-embed not in nav = inside main / about hero only
-      let logoEmbeds = container.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
-      if (!logoEmbeds.length) {
-        logoEmbeds = document.querySelectorAll('.section_about-hero .about-hero_ready .nav_logo-embed');
-      }
-      if (!logoEmbeds.length) return;
-
-      aboutHeroCtx = gsap.context(() => {
-        logoEmbeds.forEach((embed) => {
-          const heroReady = embed.closest('.about-hero_ready');
-          if (!heroReady) return;
-
-          gsap.set(heroReady, { opacity: 0.4 });
-
-          const headings = heroReady.querySelectorAll('.heading-style-h3');
-          if (!headings.length) return;
-
-          const headingSplits = [];
-          headings.forEach((h) => {
-            try {
-              const split = new SplitText(h, { type: 'words,lines', linesClass: 'about-hero-line', wordsClass: 'about-hero-word' });
-              if (split.words && split.words.length) {
-                gsap.set(split.words, { yPercent: -100, opacity: 0 });
-              }
-              headingSplits.push({ split, headingEl: h });
-            } catch (e) {
-              console.warn('RHP about-hero SplitText:', e);
-            }
-          });
-
-          splitInstances.push(...headingSplits);
-
-          const wordDuration = 0.6;
-          const wordStagger = 0.225;
-          const lineDelay = 0.225;
-          const leaveDuration = wordDuration / 2;
-
-          const onEnter = () => {
-            gsap.killTweensOf(heroReady);
-            headingSplits.forEach(({ split, headingEl }) => {
-              gsap.killTweensOf(headingEl);
-              if (split.words?.length) gsap.killTweensOf(split.words);
-            });
-            gsap.set(heroReady, { opacity: 0.4, y: 0 });
-            headingSplits.forEach(({ split, headingEl }) => {
-              gsap.set(headingEl, { opacity: 0 });
-              if (split.words?.length) gsap.set(split.words, { yPercent: -100, opacity: 0 });
-            });
-            gsap.to(heroReady, { opacity: 1, duration: 0.3, ease: 'linear' });
-            gsap.to(heroReady, { y: '-1.5rem', duration: 0.5, ease: 'power3.out' });
-            headingSplits.forEach(({ split, headingEl }, idx) => {
-              const delay = idx * lineDelay;
-              gsap.to(headingEl, { opacity: 1, duration: wordDuration, ease: 'power4.out', delay });
-              if (split.words && split.words.length) {
-                gsap.to(split.words, { yPercent: 0, opacity: 1, duration: wordDuration, ease: 'power4.out', stagger: wordStagger, delay });
-              }
-            });
-          };
-
-          const onLeave = () => {
-            gsap.killTweensOf(heroReady);
-            headingSplits.forEach(({ split, headingEl }) => {
-              gsap.killTweensOf(headingEl);
-              if (split.words && split.words.length) gsap.killTweensOf(split.words);
-            });
-            gsap.to(heroReady, { opacity: 0.4, duration: 0.3, ease: 'linear' });
-            gsap.to(heroReady, { y: 0, duration: 0.5, ease: 'power3.out' });
-            headingSplits.forEach(({ split, headingEl }) => {
-              gsap.to(headingEl, { opacity: 0, duration: leaveDuration, ease: 'power4.out' });
-              if (split.words && split.words.length) {
-                gsap.to(split.words, { yPercent: 100, opacity: 0, duration: leaveDuration, ease: 'power4.out' });
-              }
-            });
-          };
-
-          embed.addEventListener('mouseenter', onEnter);
-          embed.addEventListener('mouseleave', onLeave);
-          hoverListeners.push({ embed, onEnter, onLeave });
-        });
-      }, container);
-    }
-
-    function destroyAboutHeroLogoHover() {
-      // Kill in-flight hover tweens (gsap.to calls fire async outside the context)
-      const gsap = window.gsap;
-      if (gsap) {
-        splitInstances.forEach(({ split, headingEl }) => {
-          gsap.killTweensOf(headingEl);
-          if (split.words?.length) gsap.killTweensOf(split.words);
-        });
-        hoverListeners.forEach(({ embed }) => {
-          const heroReady = embed.closest('.about-hero_ready');
-          if (heroReady) gsap.killTweensOf(heroReady);
-        });
-      }
-      aboutHeroCtx?.revert();
-      aboutHeroCtx = null;
-      hoverListeners.forEach(({ embed, onEnter, onLeave }) => {
-        embed.removeEventListener('mouseenter', onEnter);
-        embed.removeEventListener('mouseleave', onLeave);
-      });
-      hoverListeners = [];
-      splitInstances = [];
-    }
-
-    /* Mobile (≤991px) scroll-driven logo animation
-       - Each of the 3 .about-hero_ready elements animates in a bell curve
-         within its third of the section: fade 0.4→1, SplitText words slide in,
-         then reverse out. Driven by scrub:true ScrollTrigger on .section_about-hero.
-       - Desktop keeps the existing hover interaction (gated by isDesktop()). */
-    let aboutHeroScrollCtx = null;
-    let scrollSplitInstances = []; // separate from hover's splitInstances
-
-    function initAboutHeroLogoScroll(container) {
-      const gsap = window.gsap;
-      const ScrollTrigger = window.ScrollTrigger;
-      const SplitText = window.SplitText;
-      if (!gsap || !ScrollTrigger || !SplitText) return;
-
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        // Show all words fully visible, skip animation
-        const heroReadyEls = (container || document).querySelectorAll('.section_about-hero .about-hero_ready');
-        heroReadyEls.forEach(el => { el.style.opacity = '1'; });
-        return;
-      }
-
-      const section = (container || document).querySelector('.section_about-hero');
-      if (!section) return;
-
-      const heroReadyEls = section.querySelectorAll('.about-hero_ready');
-      if (heroReadyEls.length < 3) return;
-
-      // About page scrolls inside fixed Barba container, not window
-      const scroller = container?.closest('[data-barba="container"]') || container || window;
-
-      aboutHeroScrollCtx = gsap.context(() => {
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: section,
-            scroller: scroller,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: true,
-          }
-        });
-
-        heroReadyEls.forEach((heroReady, i) => {
-          // Initial state: same as desktop hover initial state
-          gsap.set(heroReady, { opacity: 0.4, y: 0 });
-
-          // SplitText on headings (reuse hover pattern)
-          const headings = heroReady.querySelectorAll('.heading-style-h3');
-          const allHeadings = Array.from(headings);
-          const allWords = [];
-
-          headings.forEach(h => {
-            try {
-              gsap.set(h, { opacity: 0 }); // heading hidden until animated in
-              const split = new SplitText(h, {
-                type: 'words,lines',
-                linesClass: 'about-hero-line',
-                wordsClass: 'about-hero-word'
-              });
-              if (split.words?.length) {
-                gsap.set(split.words, { yPercent: -100, opacity: 0 });
-                allWords.push(...split.words);
-              }
-              scrollSplitInstances.push({ split, headingEl: h });
-            } catch (e) {
-              // SplitText failed for this heading — skip gracefully
-            }
-          });
-
-          // Timeline: 3 thirds fit in 0–0.9, final 0.9–1.0 is all-visible reveal
-          const totalAnim = 0.9;
-          const third = totalAnim / 3;
-          const thirdStart = i * third;
-          const inEnd = thirdStart + third * 0.25;   // IN finishes at 25% of third
-          const outStart = thirdStart + third * 0.75; // OUT begins at 75% of third
-          const thirdEnd = (i + 1) * third;
-          const inDuration = inEnd - thirdStart;
-          const outDuration = thirdEnd - outStart;
-
-          const names = ['ready', 'hit', 'play'];
-          const name = names[i];
-
-          // Stagger: keep all words finishing within inDuration
-          const wordStagger = allWords.length > 1
-            ? inDuration / (allWords.length * 3)
-            : 0;
-
-          // Read y-shift from CSS (responsive via --hero-logo-scroll-y)
-          const scrollY = _getCSSVar('--hero-logo-scroll-y', '-1.5rem');
-
-          // IN: thirdStart → inEnd (25% of third)
-          tl.addLabel(`${name}-in`, thirdStart);
-          tl.to(heroReady, {
-            opacity: 1,
-            y: scrollY,
-            duration: inDuration,
-            ease: 'none',
-          }, thirdStart);
-
-          if (allHeadings.length) {
-            tl.to(allHeadings, {
-              opacity: 1,
-              duration: inDuration,
-              ease: 'none',
-            }, thirdStart);
-          }
-
-          if (allWords.length) {
-            tl.to(allWords, {
-              yPercent: 0,
-              opacity: 1,
-              duration: inDuration,
-              ease: 'none',
-              stagger: wordStagger,
-            }, thirdStart);
-          }
-
-          // HOLD: inEnd → outStart (50% of third) — GSAP holds final state automatically
-
-          // OUT: outStart → thirdEnd (25% of third)
-          tl.addLabel(`${name}-out`, outStart);
-          tl.to(heroReady, {
-            opacity: 0.4,
-            y: 0,
-            duration: outDuration,
-            ease: 'none',
-          }, outStart);
-
-          if (allHeadings.length) {
-            tl.to(allHeadings, {
-              opacity: 0,
-              duration: outDuration,
-              ease: 'none',
-            }, outStart);
-          }
-
-          if (allWords.length) {
-            tl.to(allWords, {
-              yPercent: 100,
-              opacity: 0,
-              duration: outDuration,
-              ease: 'none',
-              stagger: wordStagger,
-            }, outStart);
-          }
-
-          // After PLAY's OUT: fade all 3 to full opacity (0.9 → 1.0)
-          if (i === 2) {
-            const revealStart = 0.9;
-            const revealDuration = 0.1;
-            tl.addLabel('reveal', revealStart);
-            heroReadyEls.forEach(el => {
-              tl.to(el, { opacity: 1, duration: revealDuration, ease: 'none' }, revealStart);
-            });
-          }
-        });
-      }, container);
-    }
-
-    function destroyAboutHeroLogoScroll() {
-      if (!aboutHeroScrollCtx) return;
-      // ctx.revert() kills all tweens + ScrollTrigger created inside the context
-      aboutHeroScrollCtx.revert();
-      aboutHeroScrollCtx = null;
-      scrollSplitInstances = [];
-    }
-
     return {
       init(container) {
         if (active) return;
@@ -994,13 +756,6 @@
         // Note: scroll.unlock + lenis.start/resize handled by runAfterEnter (Barba) or bootCurrentView (direct-land)
         RHP.aboutDialTicks?.init?.(container);
         RHP.aboutTextLines?.init?.(container);
-        // Gate matches CSS @media (max-width: 991px) — width-based, not hover-based,
-        // so scroll layout + JS path always agree (touch laptops, MCP headless, etc.)
-        if (window.innerWidth > 991) {
-          initAboutHeroLogoHover(container);
-        } else {
-          initAboutHeroLogoScroll(container);
-        }
         initAboutTeamHover(container); // handles desktop vs mobile internally
       },
       destroy() {
@@ -1009,8 +764,6 @@
         RHP.lenis?.stop();
         RHP.aboutDialTicks?.destroy?.();
         RHP.aboutTextLines?.destroy?.();
-        destroyAboutHeroLogoHover();
-        destroyAboutHeroLogoScroll();
         destroyAboutTeamHover();
       }
     };
@@ -1418,6 +1171,9 @@
 
   /* -----------------------------
      Nav logo → homepage (Webflow renders .nav_logo-link as <div>, not <a>)
+     When already on home and the scroll-morph is complete, calling it
+     triggers homeScrollMorph.replay() instead of a Barba round-trip —
+     so the intro section re-appears and the dial scrubs back to small.
      ----------------------------- */
   function initNavLogoLink() {
     var navLogo = document.querySelector('.nav_logo-link');
@@ -1427,6 +1183,14 @@
     navLogo.setAttribute('tabindex', '0');
     navLogo.addEventListener('click', function(e) {
       e.preventDefault();
+      var container = document.querySelector('[data-barba="container"]');
+      var ns = container && container.getAttribute('data-barba-namespace');
+      var morph = window.RHP && window.RHP.homeScrollMorph;
+      // On home post-morph: replay the intro section scroll-up.
+      if (ns === 'home' && morph && morph.complete === true && typeof morph.replay === 'function') {
+        morph.replay();
+        return;
+      }
       if (window.barba && typeof window.barba.go === 'function') {
         window.barba.go('/');
       } else {
@@ -1552,43 +1316,23 @@
     // Init transition-dial on every page (symbol is outside Barba container)
     RHP.transitionDial?.init?.();
 
-    // Direct-land setup: pre-position persistent .about-transition elements using Flip containers
+    // Legacy .about-transition overlay (from old Flip logo morph) —
+    // always hidden now that home↔about is driven by home-about-slide.js.
     const aboutTransition = document.querySelector('.about-transition');
     if (aboutTransition && window.gsap) {
-      const gsap = window.gsap;
-      const logo = document.querySelector('#transition-logo');
-      const dial = document.querySelector('.transition-dial');
-
-      if (ns === 'about') {
-        // Direct land /about: reparent logo + dial to about-state containers, hide overlay
-        gsap.set(aboutTransition, { display: 'none' });
-        const logoEnd = document.querySelector('.about-transition_logo-middle');
-        const dialEnd = document.querySelector('.about_dial-wrapper');
-        if (logo && logoEnd && !logoEnd.contains(logo)) {
-          logoEnd.appendChild(logo);
-          gsap.set(logo, { clearProps: 'all' });
-          gsap.set(logo, { opacity: 0.4 });
-        }
-        if (dial && dialEnd && !dialEnd.contains(dial)) {
-          dialEnd.appendChild(dial);
-          gsap.set(dial, { clearProps: 'all' });
-          RHP.transitionDial?.resize?.();
-        }
-      } else {
-        // Home / case / contact: logo in _logo-start, dial in _logo-middle (default positions)
-        gsap.set(aboutTransition, { display: 'none' });
-        const logoStart = document.querySelector('.about-transition_logo-start');
-        const logoMiddle = document.querySelector('.about-transition_logo-middle');
-        if (logo && logoStart && !logoStart.contains(logo)) {
-          logoStart.appendChild(logo);
-          gsap.set(logo, { clearProps: 'all' });
-        }
-        if (dial && logoMiddle && !logoMiddle.contains(dial)) {
-          logoMiddle.appendChild(dial);
-          gsap.set(dial, { clearProps: 'all' });
-        }
-      }
+      window.gsap.set(aboutTransition, { display: 'none' });
     }
+
+    // Direct-land on home: if we didn't arrive via the intro sequence
+    // (e.g. user hit refresh after scrolling past the intro), skip the
+    // morph straight to the end state so the dial is already large.
+    // On a fresh intro run, home-intro.js is in charge — don't skip.
+    // Note: bootCurrentView runs before home-intro starts, so the only
+    // time we want skipToEnd() at boot is when we're re-entering via
+    // Barba (handled in the about-to-home transition enter hook) or
+    // when there's no intro at all. The view init already queues
+    // initialisation behind the rhp:home-intro:complete event, so we
+    // don't need to do anything extra here for fresh loads.
   }
 
   /* -----------------------------
@@ -1606,7 +1350,6 @@
       document
         .querySelector('[data-barba="container"]')
         ?.getAttribute('data-barba-namespace') || '';
-    let _overlayPollCancelled = false; // Cancel token for about→home overlay rAF poll
 
     function runAfterEnter(data) {
       // Stop case BG canvas draw from previous page
@@ -1625,31 +1368,21 @@
         wrapper.classList.remove('rhp-nav-hidden');
       }
 
-      // Clear lingering visibility:hidden set by runAboutToHomeTransition
+      // Clear lingering about_dial visibility (legacy Flip transition leftover)
       if (ns === 'about') {
         const aboutDialWrapper = document.querySelector('.about_dial-wrapper');
         if (aboutDialWrapper && window.gsap) window.gsap.set(aboutDialWrapper, { clearProps: 'visibility' });
       }
 
-      // Nav logo cleanup for about/home transitions
-      if (ns === 'about' && window.gsap) {
-        const navLogoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
-        if (navLogoWrapper) {
-          window.gsap.set(navLogoWrapper, { clearProps: 'position,left,top,zIndex,xPercent,yPercent' });
-          const navEmbeds = navLogoWrapper.querySelectorAll('.nav_logo-embed');
-          if (navEmbeds.length) window.gsap.set(navEmbeds, { clearProps: 'height' });
-          navLogoWrapper.style.visibility = 'hidden';
-        }
-      }
-      if (ns === 'home') {
+      // Nav logo: the old Flip logo morph used to inline-style the
+      // .nav_logo-wrapper-2 (position/xPercent/yPercent). home-about-slide.js
+      // never touches it, so no cleanup is needed here. On home, make sure
+      // visibility isn't inherited from a previous session and the wrapper
+      // is visible (home-scroll-morph owns opacity via the clone dance).
+      if (ns === 'home' && window.gsap) {
         var navLogoWrapper = wrapper ? wrapper.querySelector('.nav_logo-wrapper-2') : null;
         if (navLogoWrapper) {
           navLogoWrapper.style.visibility = '';
-          if (window.gsap) {
-            window.gsap.set(navLogoWrapper, { clearProps: 'position,left,top,xPercent,yPercent,zIndex' });
-            var navEmbeds = navLogoWrapper.querySelectorAll('.nav_logo-embed');
-            if (navEmbeds.length) window.gsap.set(navEmbeds, { clearProps: 'height' });
-          }
         }
       }
 
@@ -1815,43 +1548,11 @@
       // Re-init transition-dial
       RHP.transitionDial?.init?.();
 
-      // Hide about overlay — on about->home, hold until work-dial is ready, then fade
+      // Legacy .about-transition overlay (old Flip logo morph) is always hidden now
+      // that home↔about is driven by home-about-slide.js.
       var aboutTransitionEl = document.querySelector('.about-transition');
       if (aboutTransitionEl && window.gsap) {
-        var aboutOverlayVisible = window.getComputedStyle(aboutTransitionEl).display !== 'none' &&
-          parseFloat(window.getComputedStyle(aboutTransitionEl).opacity) > 0;
-
-        if (ns === 'home' && aboutOverlayVisible) {
-          // Overlay hold: wait for work-dial to be ready before fading
-          _overlayPollCancelled = false;
-          var _overlayFadeStarted = false;
-          var _fadeOverlay = function() {
-            if (_overlayFadeStarted || _overlayPollCancelled) return;
-            _overlayFadeStarted = true;
-            window.gsap.to(aboutTransitionEl, {
-              opacity: 0,
-              duration: 0.4,
-              ease: 'linear',
-              onComplete: function() {
-                window.gsap.set(aboutTransitionEl, { display: 'none' });
-              }
-            });
-          };
-          // Poll for work-dial _ready via rAF, with 3s safety timeout
-          var _safetyTimeout = setTimeout(_fadeOverlay, 3000);
-          var _pollReady = function() {
-            if (_overlayFadeStarted || _overlayPollCancelled) { clearTimeout(_safetyTimeout); return; }
-            if (RHP.workDial?._ready) {
-              clearTimeout(_safetyTimeout);
-              _fadeOverlay();
-            } else {
-              requestAnimationFrame(_pollReady);
-            }
-          };
-          requestAnimationFrame(_pollReady);
-        } else {
-          window.gsap.set(aboutTransitionEl, { display: 'none' });
-        }
+        window.gsap.set(aboutTransitionEl, { display: 'none' });
       }
 
       // Video loading spinners (destroy already called in beforeLeave)
@@ -1863,187 +1564,6 @@
       _cleanupPreload();
 
       _fireAfterEnterEvent(ns, data.next ? data.next.container : null);
-    }
-
-    /**
-     * Home -> About (or Case -> About) transition using GSAP Flip.
-     * Reparents #transition-logo from _logo-start to _logo-middle,
-     * and .transition-dial from _logo-middle to .about_dial-wrapper.
-     * Creates disposable Flip tweens each time — no persistent timeline.
-     */
-    function runHomeToAboutTransition(data) {
-      _overlayPollCancelled = true; // Cancel any in-flight about→home overlay poll
-      const gsap = window.gsap;
-      const Flip = window.Flip;
-      if (!gsap) return Promise.resolve();
-
-      const overlay = document.querySelector('.about-transition');
-      const logo = document.querySelector('#transition-logo');
-      const dial = document.querySelector('.transition-dial');
-      const logoEnd = document.querySelector('.about-transition_logo-middle');
-      const dialEnd = document.querySelector('.about_dial-wrapper');
-
-      if (!overlay || !Flip) {
-        // Fallback: no Flip plugin or overlay — instant transition
-        if (overlay) gsap.set(overlay, { display: 'none' });
-        return Promise.resolve();
-      }
-
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      // Init transition-dial so canvas is drawn before capture
-      RHP.transitionDial?.init?.();
-
-      if (reducedMotion) {
-        // Instant reparent, no animation
-        gsap.set(overlay, { display: 'flex', opacity: 1 });
-        if (logo && logoEnd) { logoEnd.appendChild(logo); gsap.set(logo, { clearProps: 'all' }); gsap.set(logo, { opacity: 0.4 }); }
-        if (dial && dialEnd) { dialEnd.appendChild(dial); gsap.set(dial, { clearProps: 'all' }); }
-        RHP.transitionDial?.resize?.();
-        return Promise.resolve();
-      }
-
-      // Show overlay hidden at opacity 0
-      gsap.set(overlay, { display: 'flex', opacity: 0 });
-
-      // Capture current states
-      const logoState = logo ? Flip.getState(logo) : null;
-      const dialState = dial ? Flip.getState(dial) : null;
-
-      // Reparent to about-state containers
-      if (logo && logoEnd) logoEnd.appendChild(logo);
-      if (dial && dialEnd) dialEnd.appendChild(dial);
-
-      // Clear any stale inline styles from previous transitions so Flip reads CSS layout
-      if (logo) gsap.set(logo, { clearProps: 'all' });
-      if (dial) gsap.set(dial, { clearProps: 'all' });
-
-      const promises = [];
-
-      // Overlay fade in
-      const overlayTween = gsap.to(overlay, { opacity: 1, duration: 0.3, ease: 'linear' });
-      promises.push(_tweenPromise(overlayTween));
-
-      // Logo Flip
-      if (logoState && logo) {
-        const logoFlip = Flip.from(logoState, {
-          targets: logo,
-          duration: 0.75,
-          ease: 'power3.out',
-          absolute: true
-        });
-        promises.push(_tweenPromise(logoFlip));
-        // Logo opacity animated separately (opacity is not a layout prop)
-        const logoOpacity = gsap.to(logo, { opacity: 0.4, duration: 0.75, ease: 'power3.out' });
-        promises.push(_tweenPromise(logoOpacity));
-      }
-
-      // Dial Flip
-      if (dialState && dial) {
-        const dialFlip = Flip.from(dialState, {
-          targets: dial,
-          duration: 0.75,
-          ease: 'power3.out',
-          absolute: true
-        });
-        promises.push(_tweenPromise(dialFlip));
-      }
-
-      return Promise.all(promises).then(() => {
-        // Resize transition-dial canvas to new container size
-        RHP.transitionDial?.resize?.();
-        // Clear Flip inline styles — let CSS own final layout
-        if (logo) { gsap.set(logo, { clearProps: 'all' }); gsap.set(logo, { opacity: 0.4 }); }
-        if (dial) gsap.set(dial, { clearProps: 'all' });
-      });
-    }
-
-    /**
-     * About -> Home transition using GSAP Flip.
-     * Reparents #transition-logo from _logo-middle to _logo-start,
-     * and .transition-dial from .about_dial-wrapper to _logo-middle.
-     * Plays a NEW forward animation (not reverse) with forward easing.
-     * Overlay stays visible until work-dial is ready (handled in runAfterEnter).
-     */
-    function runAboutToHomeTransition(data) {
-      _overlayPollCancelled = true; // Cancel any in-flight overlay poll from a prior cycle
-      const overlay = document.querySelector('.about-transition');
-      const gsap = window.gsap;
-      const Flip = window.Flip;
-      if (!overlay || !gsap) return Promise.resolve();
-
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      const logo = document.querySelector('#transition-logo');
-      const dial = document.querySelector('.transition-dial');
-      const logoHome = document.querySelector('.about-transition_logo-start');
-      const dialHome = document.querySelector('.about-transition_logo-middle');
-      const aboutDialWrapper = document.querySelector('.about_dial-wrapper');
-
-      // Ensure overlay is visible at full opacity (we're leaving about page)
-      gsap.set(overlay, { display: 'flex', opacity: 1 });
-
-      // Hide about-page dial so only the transition dial shows
-      if (aboutDialWrapper) gsap.set(aboutDialWrapper, { visibility: 'hidden' });
-
-      // Ensure transition-dial is initialised
-      RHP.transitionDial?.init?.();
-
-      if (!Flip || reducedMotion) {
-        // Instant reparent, no animation — overlay stays visible for runAfterEnter to fade
-        if (logo && logoHome) { logoHome.appendChild(logo); gsap.set(logo, { clearProps: 'all' }); }
-        if (dial && dialHome) { dialHome.appendChild(dial); gsap.set(dial, { clearProps: 'all' }); }
-        RHP.transitionDial?.resize?.();
-        return Promise.resolve();
-      }
-
-      // Capture current states at about positions
-      const logoState = logo ? Flip.getState(logo) : null;
-      const dialState = dial ? Flip.getState(dial) : null;
-
-      // Reparent to home-state containers
-      if (logo && logoHome) logoHome.appendChild(logo);
-      if (dial && dialHome) dialHome.appendChild(dial);
-
-      // Clear stale inline styles so Flip reads CSS layout
-      if (logo) gsap.set(logo, { clearProps: 'all' });
-      if (dial) gsap.set(dial, { clearProps: 'all' });
-
-      const promises = [];
-
-      // Logo Flip (forward easing, NOT reversed)
-      if (logoState && logo) {
-        const logoFlip = Flip.from(logoState, {
-          targets: logo,
-          duration: 0.75,
-          ease: 'power3.out',
-          absolute: true
-        });
-        promises.push(_tweenPromise(logoFlip));
-        // Logo opacity back to 1
-        const logoOpacity = gsap.to(logo, { opacity: 1, duration: 0.75, ease: 'power3.out' });
-        promises.push(_tweenPromise(logoOpacity));
-      }
-
-      // Dial Flip
-      if (dialState && dial) {
-        const dialFlip = Flip.from(dialState, {
-          targets: dial,
-          duration: 0.75,
-          ease: 'power3.out',
-          absolute: true
-        });
-        promises.push(_tweenPromise(dialFlip));
-      }
-
-      // Do NOT fade overlay here — it stays visible until work-dial is ready (runAfterEnter handles)
-      return Promise.all(promises).then(() => {
-        // Resize transition-dial canvas after Flip completes
-        RHP.transitionDial?.resize?.();
-        // Clear Flip inline styles — let CSS own layout
-        if (logo) gsap.set(logo, { clearProps: 'all' });
-        if (dial) gsap.set(dial, { clearProps: 'all' });
-      });
     }
 
     barba.init({
@@ -2138,7 +1658,10 @@
           }
         },
 
-        /* ---- Home -> About ---- */
+        /* ---- Home -> About ----
+           Container-slide transition owned by home-about-slide.js.
+           The About container slides over a fixed home/dial; no Flip logo
+           morph, no .about-transition overlay. */
         {
           name: 'home-to-about',
           from: { namespace: ['home'] },
@@ -2148,18 +1671,23 @@
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             RHP.videoLoader?.destroy?.();
           },
-          leave(data) {
-            return runHomeToAboutTransition(data);
-          },
-          enter() {
+          // No leave animation — home container stays put; About slides IN on top.
+          leave() {},
+          enter(data) {
             window.scrollTo(0, 0);
+            return RHP.homeAboutSlide?.leaveHomeToAbout
+              ? RHP.homeAboutSlide.leaveHomeToAbout(data)
+              : undefined;
           },
           afterEnter(data) {
             runAfterEnter(data);
           }
         },
 
-        /* ---- About -> Home ---- */
+        /* ---- About -> Home ----
+           About container slides OUT to the left, revealing the fixed home/dial
+           underneath. On re-entry home-scroll-morph.skipToEnd() lands in
+           dial-large state so there's no second intro morph. */
         {
           name: 'about-to-home',
           from: { namespace: ['about'] },
@@ -2170,17 +1698,24 @@
             RHP.videoLoader?.destroy?.();
           },
           leave(data) {
-            return runAboutToHomeTransition(data);
+            return RHP.homeAboutSlide?.leaveAboutToHome
+              ? RHP.homeAboutSlide.leaveAboutToHome(data)
+              : undefined;
           },
           enter() {
             window.scrollTo(0, 0);
+            // Skip directly to the post-morph dial-large state; no replay on re-entry.
+            RHP.homeScrollMorph?.skipToEnd?.();
           },
           afterEnter(data) {
             runAfterEnter(data);
           }
         },
 
-        /* ---- Work -> About ---- */
+        /* ---- Work -> About ----
+           Case pages live inside the dial_layer-fg scroll wrapper. We shrink
+           the dial back to small, then let the About container slide IN on
+           top via homeAboutSlide.leaveHomeToAbout (same visual as home→about). */
         {
           name: 'work-to-about',
           from: { namespace: ['case', 'work'] },
@@ -2200,11 +1735,15 @@
             // Reset dial-ns so about CSS rules (dial_layer-fg overflow/placement) apply
             setDialNs('home');
           },
-          leave(data) {
-            return runHomeToAboutTransition(data);
+          async leave() {
+            // Shrink dial back to small BEFORE About slides in.
+            await runDialShrinkAnimation();
           },
-          enter() {
+          enter(data) {
             window.scrollTo(0, 0);
+            return RHP.homeAboutSlide?.leaveHomeToAbout
+              ? RHP.homeAboutSlide.leaveHomeToAbout(data)
+              : undefined;
           },
           afterEnter(data) {
             runAfterEnter(data);

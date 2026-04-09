@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.2.18.1'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.4.9.1'; // bump when you deploy; check in console: RHP.cursor.version
   const CURSOR_TRANSITION_DURATION = 0.25; // seconds for state changes; check in console: RHP.cursor.transitionDuration
 
   window.RHP = window.RHP || {};
@@ -356,6 +356,39 @@
             cursorDot.style.height = '1rem';
             cursorDot.style.backgroundColor = '#ffffff';
             cursorDot.style.borderColor = '#ffffff';
+          }
+          if (cursorLabel) {
+            if (gsap) {
+              gsap.to(cursorLabel, { duration, opacity: 0, ease });
+            } else {
+              cursorLabel.style.opacity = '0';
+            }
+          }
+          if (cursorArrows) {
+            if (gsap) {
+              gsap.to(cursorArrows, { duration, opacity: 0, ease });
+            } else {
+              cursorArrows.style.opacity = '0';
+            }
+          }
+          break;
+
+        case 'orange-dot':
+          // Small orange dot 1rem x 1rem — same size as `dot`, orange colour
+          if (gsap) {
+            gsap.to(cursorDot, {
+              duration,
+              width: '1rem',
+              height: '1rem',
+              backgroundColor: orangeColor,
+              borderColor: orangeColor,
+              ease
+            });
+          } else {
+            cursorDot.style.width = '1rem';
+            cursorDot.style.height = '1rem';
+            cursorDot.style.backgroundColor = orangeColor;
+            cursorDot.style.borderColor = orangeColor;
           }
           if (cursorLabel) {
             if (gsap) {

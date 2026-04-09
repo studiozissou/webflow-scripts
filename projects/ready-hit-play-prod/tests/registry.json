@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-08",
-  "note": "Added: rhp-dial-short-viewport-bump (desktop dial bumped to 60svh on 1440-1990 wide, ≤849 tall)",
+  "lastUpdated": "2026-04-09",
+  "note": "Added: feat-work-nav-prev-next-regression (Barba case→case slug resolution — guards against stale [data-wf-item-slug] on <html>)",
   "lastDeployed": "2026-04-08",
   "lastDeployedHash": "debe518",
   "entries": [
@@ -224,6 +224,16 @@
       "slug": "feat-work-nav-prev-next",
       "created": "2026-04-08",
       "description": "Work page prev/next navigation — hrefs populated from CMS list, cyclic wrapping on first/last, Barba case→case navigation, re-entry correctness"
+    },
+    {
+      "id": "feat-work-nav-prev-next-regression",
+      "file": "tests/acceptance/feat-work-nav-prev-next-regression.spec.js",
+      "type": "regression",
+      "source": "debug",
+      "critical": false,
+      "slug": "feat-work-nav-prev-next-regression",
+      "created": "2026-04-09",
+      "description": "Guards against [data-wf-item-slug] on <html> being stale after Barba case→case transitions; asserts prev/next hrefs reflect the new current page using location.pathname"
     },
     {
       "id": "rhp-dial-short-viewport-bump",

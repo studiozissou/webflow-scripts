@@ -42,7 +42,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.4.8.1', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.4.8.2', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -77,6 +77,7 @@
       'earth-parallax.js',
       'case-video-controls.js',
       'video-loader.js',
+      'work-nav.js',
       'orchestrator.js',
       'utils.js'
     ]
@@ -232,6 +233,7 @@
         { module: 'earth-parallax.js', ok: typeof RHP.earthParallax !== 'undefined', detail: RHP.earthParallax?.version || '' },
         { module: 'case-video-controls.js', ok: typeof RHP.caseVideoControls !== 'undefined', detail: RHP.caseVideoControls?.version || '' },
         { module: 'video-loader.js', ok: typeof RHP.videoLoader !== 'undefined', detail: RHP.videoLoader?.version || '' },
+        { module: 'work-nav.js', ok: typeof RHP.workNav !== 'undefined', detail: RHP.workNav?.version || '' },
         { module: 'orchestrator.js', ok: typeof RHP.views !== 'undefined' && typeof RHP.scroll !== 'undefined', detail: RHP.orchestratorVersion || '' },
         { module: 'utils.js', ok: true, detail: '—' }
       ];
@@ -253,6 +255,7 @@
         'earth-parallax.js': RHP.earthParallax?.version || '—',
         'case-video-controls.js': RHP.caseVideoControls?.version || '—',
         'video-loader.js': RHP.videoLoader?.version || '—',
+        'work-nav.js': RHP.workNav?.version || '—',
         'orchestrator.js': RHP.orchestratorVersion || '—',
         'utils.js': '—'
       };

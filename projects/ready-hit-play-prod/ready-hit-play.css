@@ -51,27 +51,13 @@
   visibility: visible;
 }
 
-/* About hero: initial opacity 0.4 before JS runs (avoids flash on hard refresh) */
+/* About hero: static final-state (no JS hover/scroll anim on this element anymore).
+   home-about-slide.js owns the whole about page container entry/exit — the hero
+   logo is just a static layout element now. */
 .section_about-hero .about-hero_ready {
-  opacity: 0.4;
-}
-
-/* About hero: mobile scroll-driven logo animation layout */
-@media (max-width: 991px) {
-  :root { --hero-logo-scroll-y: -1.5rem; }
-  .section_about-hero {
-    height: 250vh;  /* fallback for pre-iOS 15.4 */
-    height: 250svh;
-    overflow: clip; /* does not create scroll container — preserves sticky child */
-  }
-  .section_about-hero .nav_logo-wrapper-2 {
-    position: sticky;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-}
-@media (max-width: 767px) {
-  :root { --hero-logo-scroll-y: -0.75rem; }
+  opacity: 1;
+  transform: none;
+  filter: none;
 }
 
 /* About → Home transition: nav logo end position (top of viewport; 2vh default, 3rem at 1920+) */
@@ -323,13 +309,16 @@
   will-change: transform;
 }
 
-/* Foreground circle — home: uses dial-large */
+/* Foreground circle — home: uses --dial-live-width/height, which
+   home-scroll-morph.js scrubs between --dial-small-* and --dial-large-*.
+   Fallback to --dial-large-* if the live vars were never set (post-morph
+   steady state or no-JS environment). */
 .dial_component[data-dial-ns="home"] .dial_layer-fg {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: var(--dial-large-width);
-  height: var(--dial-large-height);
+  width: var(--dial-live-width, var(--dial-large-width));
+  height: var(--dial-live-height, var(--dial-large-height));
   display: grid;
   place-items: center;
   z-index: 3;
@@ -375,6 +364,61 @@
   --dial-large-height: clamp(180px, min(50svh, 70vw), min(50svh, 70vw));
   --dial-small-width: 6rem;
   --dial-small-height: 6rem;
+}
+
+/* =========================================
+   Home intro section + logo slot
+   - Only visible inside the home Barba namespace (defensive — the symbol
+     may appear in other namespaces via Webflow symbols).
+   - home-scroll-morph.js scrubs the dial size over the intro section height
+     and clones the nav logo into .home-intro_logo-slot.
+   - At morph complete the module sets display:none on this section so it
+     stops taking layout room.
+   ========================================= */
+.section_home-intro {
+  display: none;
+}
+[data-barba="container"][data-barba-namespace="home"] .section_home-intro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100svh;
+  min-height: 100svh;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Intro logo slot — receives the cloned .nav_logo-wrapper-2.is-nav.
+   The clone carries its own .is-nav sizing (small 16rem × 2rem). GSAP
+   scrubs transform toward the nav target, so no CSS positioning needed
+   beyond centring in the slot. */
+.home-intro_logo-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--logo-large-width, 90vw);
+  max-width: var(--logo-large-max-width, 93rem);
+  height: auto;
+  pointer-events: none;
+}
+
+/* When the clone lands in the slot, let it render at the full large logo
+   size (same rule Flip used to use on _logo-middle). GSAP will then scale
+   it down toward the nav target. */
+.home-intro_logo-slot .nav_logo-wrapper-2.is-nav {
+  width: var(--logo-large-width);
+  height: var(--logo-large-height);
+  max-width: var(--logo-large-max-width);
+}
+.home-intro_logo-slot .nav_logo-wrapper-2.is-nav .about-hero_ready,
+.home-intro_logo-slot .nav_logo-wrapper-2.is-nav .nav_logo-embed {
+  height: auto;
+}
+.home-intro_logo-slot .nav_logo-wrapper-2.is-nav svg {
+  width: 100%;
+  height: auto;
 }
 
 /* Short-viewport desktop laptops: bump dial so step text fits with breathing

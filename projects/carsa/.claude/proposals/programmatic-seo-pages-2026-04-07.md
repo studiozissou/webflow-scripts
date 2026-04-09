@@ -1,9 +1,11 @@
-# Proposal: Programmatic SEO Pages for Used Cars
+# Proposal: Make & Model SEO Pages for Used Cars
 
-**Date:** 7 April 2026
+**Date:** 9 April 2026
 **Prepared for:** Tomek Stacharski, Carsa
 **Prepared by:** Will Morley
-**Status:** Draft
+**Status:** Draft (revised approach)
+
+> **Revision note:** This replaces the earlier programmatic pages draft (7 April). After reviewing the constraints, we've pivoted to a leaner Webflow CMS Collections approach that uses native Webflow features and integrates Shane's existing React filtering component via DevLink.
 
 ---
 
@@ -11,9 +13,9 @@
 
 Carsa's used car search lives on a single page — `/used-cars`. Every make and model is filtered client-side, which means:
 
-- **Search engines can't index individual makes and models.** There's no `/used-cars/bmw/3-series` page for Google to find. When someone searches "used BMW 3 Series Carsa", there's nothing specific to rank.
-- **Slow initial load.** The page loads every car, then filters in the browser. A dedicated page per model would load only what's needed.
-- **No landing pages for ads or links.** If Carsa wants to run a Google Ads campaign for "used Audi A4", there's no dedicated URL to point it at — just `/used-cars` with a filter applied, which doesn't persist or index.
+- **Search engines can't index individual makes and models.** There's no dedicated page for Google to find. When someone searches "used BMW 3 Series Carsa", there's nothing specific to rank.
+- **Slow initial load.** The page loads the entire inventory, then filters in the browser. A scoped page per make or model would only load what's needed.
+- **No landing pages for ads or campaigns.** If Carsa wants to run Google Ads for "used Audi A4", there's no dedicated URL to point it at — just `/used-cars` with a filter applied, which doesn't persist or index.
 
 Competitors like AutoTrader and Cinch have dedicated pages for every make and model. This is table stakes for automotive SEO.
 
@@ -21,55 +23,64 @@ Competitors like AutoTrader and Cinch have dedicated pages for every make and mo
 
 ## The Solution
 
-Create **522 static pages** in Webflow — one for each make (47) and one for each model (475) — in a clean URL structure:
+Use Webflow's CMS Collections to generate native search pages for every make and model, scope each page's results to the relevant inventory, and integrate Shane's existing React filtering component via Webflow DevLink. The interactive layer stays in sync with the Webflow design system without duplicate implementations.
+
+The approach has three parts:
+
+1. **Make + Model CMS pages.** Duplicate the existing VSRP (Vehicle Search Results Page) into two Webflow Collection templates — one for Makes, one for Models. Every make and model in the CMS gets its own search page automatically. Scope each page's results so initial loads only pull the relevant inventory.
+
+2. **Crosslinks + internal linking.** Add a crosslinks section to each template so Make pages link to their Models, Model pages link back to their Make and to related models, and the whole catalogue becomes a tightly-interlinked graph for crawlers.
+
+3. **Shane's React filtering layer via DevLink.** Integrate Shane's existing React filtering component on the VSRP via Webflow DevLink. The page renders the first 48 cars immediately (fast initial paint, SEO-indexable HTML), then swaps in the filtered list instantly when the React layer hydrates.
+
+### URL structure
 
 ```
-/used-cars/bmw              ← All BMW cars
-/used-cars/bmw/3-series     ← BMW 3 Series only
-/used-cars/bmw/x5           ← BMW X5 only
-/used-cars/audi             ← All Audi cars
-/used-cars/audi/a4          ← Audi A4 only
-...
+/used-cars                       ← existing search (unchanged)
+/used-cars/make/bmw              ← all BMW (scoped)
+/used-cars/make/audi             ← all Audi (scoped)
+/used-cars/model/bmw-3-series    ← BMW 3 Series only
+/used-cars/model/audi-a4         ← Audi A4 only
 ```
 
-Each page uses the existing search widget (`carsa-search.js`) with one small change: the script reads the URL path to determine which make/model to filter by. No per-page configuration needed — the same script works everywhere.
-
-All 522 pages share a **single Webflow component**, so updating the design or layout once updates every page automatically.
+Webflow CMS Collection pages require the collection slug in the URL path — so Make pages live at `/used-cars/make/{slug}` and Model pages at `/used-cars/model/{slug}`, not the cleaner `/used-cars/{slug}` we discussed previously. This is a platform constraint rather than a design choice. In practice it's fine for SEO (AutoTrader and Cinch use similar structures) and we'll set canonical rules + redirects to consolidate authority. See Risks below.
 
 ---
 
 ## How It Works
 
-### Page structure
+### The CMS layer
 
-Every page is a lightweight shell:
+The Makes and Models Collections already exist in Webflow as the filter options on the current `/used-cars` page. I'll:
 
-1. **Unique SEO metadata** — title, meta description, and Open Graph tags tailored to the specific make/model (e.g. "Used BMW 3 Series for Sale | Carsa")
-2. **Shared component body** — the search widget container, heading, breadcrumbs, and any surrounding layout. Built once as a Webflow component, reused on all 522 pages.
-3. **The search script** — reads the URL, filters results to the relevant make/model, and renders the car grid. No changes to per-page code.
+1. Move the Makes and Models Collections under the `/used-cars/` folder so their Collection page URLs become part of the used cars hierarchy.
+2. Build two Collection page templates — one for Makes, one for Models — each duplicated from the current VSRP layout.
+3. Configure each template to scope the search results to its own CMS item (e.g. the BMW Make page shows only BMW cars; the BMW 3 Series Model page shows only that model).
+4. Add a crosslinks block that pulls related Makes/Models from the CMS and links to them for internal link equity.
+5. Set up 301 redirects from any old or moved URLs so Google and bookmarks don't break.
 
-### Script behaviour (Carsa dev team)
+Every make and model that exists in the CMS gets a page automatically — no manual page creation, no publish-time penalty from hundreds of static pages, no sync script to maintain. Adding a new make or model in the CMS publishes a new indexable page within the next Webflow publish.
 
-The search widget needs one modification: on load, parse the URL path and apply filters accordingly.
+### The React filtering layer (via DevLink)
 
-```
-URL: /used-cars/bmw/3-series
-       ↓         ↓      ↓
-   base path   make   model
+Shane's React filtering component already exists in the Carsa codebase. **Webflow DevLink** lets us mount that component inside Webflow pages while keeping it in sync with the Webflow design system — no hand-written duplicates, no design drift between Carsa's React and Webflow.
 
-/used-cars           → show all cars (existing behaviour)
-/used-cars/bmw       → filter to make = BMW
-/used-cars/bmw/x5    → filter to make = BMW, model = X5
-```
+**Loading strategy:**
 
-**Requirements for the script update:**
-- Parse `/used-cars/{make}/{model}` from `window.location.pathname`
-- Map URL slugs to API values (e.g. `3-series` → `3 Series`). Ideally the API provides a slug mapping, or the script builds one from the available inventory.
-- When a make/model filter is active from the URL: apply it as a locked/pre-selected filter, hide the make/model dropdowns (redundant), keep all other filters (price, year, mileage, fuel, etc.) interactive.
-- Handle edge cases: unknown slugs show a "No cars found" message with a link back to `/used-cars`. Zero results for a valid make/model show "No cars currently available" with suggested alternatives.
-- Render the page `<h1>` dynamically (e.g. "Used BMW 3 Series for Sale") so each page has a unique, keyword-rich heading without manual Webflow text entry.
+- **Initial paint (server-rendered):** Webflow renders the first 48 cars from the CMS Collection directly in HTML. Fast, SEO-indexable, no JS required to see content.
+- **Interactive layer (hydration):** Shane's React filtering component mounts and takes over, swapping in the filtered list instantly when the user interacts with filters or the URL specifies a make/model.
 
-I'll pair with your dev team on the implementation and handle any debugging or design tweaks needed on the React car card once the URL parsing lands.
+This hybrid gives us:
+
+- Fast first paint (static HTML with 48 cars)
+- Strong SEO (real server-rendered content per make/model)
+- Full interactivity once the React layer hydrates
+- Design consistency via DevLink
+- No duplicate car card implementations to maintain
+
+### SEO audit + polish
+
+Once the structure is in place, I'll run a full SEO audit on the new pages — meta titles, descriptions, canonicals, internal linking, structured data, indexability — and implement the recommendations. UI tweaks and debugging across the new pages roll into this phase.
 
 ---
 
@@ -77,21 +88,26 @@ I'll pair with your dev team on the implementation and handle any debugging or d
 
 ### SEO
 
-- **522 indexable pages** with unique titles, descriptions, and URLs — each targeting a specific make/model search query.
-- **Clean URL hierarchy** (`/used-cars/bmw/3-series`) that search engines understand and users can share.
-- **Internal linking opportunities** — make pages link to their models, model pages link back to the make.
-- **Sitemap expansion** — 522 new entries for Google to crawl and index.
+- **Every make and model becomes an indexable landing page** — dynamically generated from the CMS, no manual work per page, auto-updates as inventory changes.
+- **Scoped server-rendered content** — Google sees real car listings on each page at first paint, not an empty shell waiting for JS.
+- **Internal link equity** — crosslinks section on every page boosts crawl depth and distributes authority across the catalogue.
+- **Sitemap expansion** — every Make and Model Collection item becomes a sitemap entry automatically.
 
 ### Performance
 
-- **Faster perceived load** — the widget fetches a filtered dataset per page instead of loading everything then filtering client-side.
-- **Smaller API payload** — each page requests only the relevant cars from the API.
+- **Massively reduced initial load times**, especially on model pages — each page fetches only the relevant subset of inventory instead of the entire catalogue.
+- **Progressive enhancement** — users see 48 cars immediately, the React filtering layer hydrates in the background.
 
 ### Marketing
 
-- **Dedicated landing pages** for Google Ads, social campaigns, and email links.
-- **Shareable URLs** — customers can share a specific search with friends.
-- **Analytics granularity** — track traffic and conversions per make/model, not just the aggregate `/used-cars` page.
+- **Dedicated landing pages per make and model** for Google Ads, email campaigns, and partner links.
+- **Shareable URLs** that persist and rank.
+- **Per-make/model analytics** — track traffic, conversion, and intent by segment, not just aggregate `/used-cars` traffic.
+
+### Engineering
+
+- **DevLink keeps the React car card synced** between the Webflow design system and Carsa's React codebase — single source of truth, no more design drift.
+- **Zero page-creation debt** — new makes or models in the CMS get pages automatically. No sync scripts, no manual page creation, no maintenance burden.
 
 ---
 
@@ -99,11 +115,11 @@ I'll pair with your dev team on the implementation and handle any debugging or d
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| **Slug mismatch** — URL slug doesn't match API value, page shows zero results | Medium | Medium | Script uses the API's own inventory to build the slug→name mapping. Detailed slug specification provided. |
-| **Thin content** — pages for makes/models with zero current inventory | Medium | Low | Script shows "No cars currently available" with alternatives and links to similar makes/models. Pages stay published to preserve Google indexation — they're ready when stock returns. |
-| **Publish time** — 522 extra pages will make Webflow publishes slower | Low | Low | Adds ~30–60s to publish time. No functional impact. |
-| **Special characters** — makes/models like "Mercedes-Benz", "Cupra León", "DS 3" need careful slugification | Low | Medium | Slug rules defined upfront and tested before page creation. |
-| **New makes/models** — when a new make or model enters inventory, a page needs to be created manually | Medium | Low | Handled by optional sync automation (see add-on below), or flagged during periodic review. |
+| **URL path constraint** — Webflow forces Collection pages to `/used-cars/make/{slug}` and `/used-cars/model/{slug}` rather than the cleaner `/used-cars/{slug}`. | High (platform constraint) | Low-Medium | Run a full SEO audit on the new structure. Set canonical rules to consolidate authority. 301 redirect any legacy URLs. In practice Google ranks Collection-style URLs fine when the content is strong — AutoTrader and Cinch use similar structures. |
+| **DevLink integration is unproven on this project** — Shane's React filtering component hasn't been mounted via DevLink before, and DevLink setup in the Carsa React codebase needs to be confirmed. | Medium | Medium | The ~4h estimate for the DevLink integration block is provisional pending a short research spike. I'll scope firmly before starting the block. Fallback: if DevLink proves too fiddly, mount Shane's component via a standard embed + Webflow symbol. |
+| **First-paint vs filter-layer mismatch** — the initial 48-car server render and the React-hydrated filtered list could briefly show different content during hydration. | Low | Low | Swap is atomic once React mounts. If any flicker appears, add a short crossfade on swap. Negligible user impact. |
+| **Collection URL move affects existing references** — moving Makes/Models Collections under `/used-cars/` may break any existing URLs, internal links, or campaigns pointing at the old Collection paths. | Low | Medium | Audit all existing references before the move. Set up 301 redirects from the old Collection URLs to the new ones. |
+| **Redirect UX on make selection** — redirecting users from VSRP to a Make page when they pick a make filter may feel jarring vs. filtering in place. | Low | Low | Test the UX before committing. Default to filtering in place; treat the redirect as an optional enhancement. |
 
 ---
 
@@ -113,20 +129,20 @@ I'll pair with your dev team on the implementation and handle any debugging or d
 
 | # | Task | Detail |
 |---|------|--------|
-| 1 | **CMS data mapping** | Pull all 47 makes and 475 models from Carsa's CMS. Build the definitive slug mapping (URL slug ↔ display name) with rules for special characters. |
-| 2 | **Webflow component** | Build a shared page body component containing the search widget container, dynamic heading area, breadcrumbs, and layout. Update once → updates all 522 pages. |
-| 3 | **Page creation automation** | Create 47 make folders and 522 pages (47 make-level + 475 model-level) via Webflow's API, each with the shared component. |
-| 4 | **SEO metadata** | Generate unique meta title, meta description, and Open Graph tags for every page using templates (e.g. "Used {Make} {Model} for Sale | Carsa"). |
-| 5 | **QA & verification** | Verify all pages are live, slugs are correct, component renders properly, and metadata is unique. Spot-check across makes/models. |
-| 6 | **React car card debugging + design tweaks** | Pair with Carsa's dev team on the URL-parsing implementation. Debug and polish the React car card component as it renders on the new programmatic pages (2 hours allocated). |
+| 1 | **Make + Model CMS page templates** | Duplicate the existing VSRP into two Webflow Collection page templates (Make and Model). Scope each template's search results to the relevant CMS item. |
+| 2 | **URL structure + redirects** | Move the Makes and Models Collections under `/used-cars/make/` and `/used-cars/model/`. Set up 301 redirects from any old or legacy URLs. |
+| 3 | **Crosslinks section** | Add a CMS-driven crosslinks block to the Make and Model templates for internal link equity (Make → Models, Model → Make + related Models). |
+| 4 | **Shane's React filter integration via DevLink** | Integrate Shane's existing React filtering component on the VSRP via Webflow DevLink. Render the first 48 cars server-side, swap in the filtered list on hydration. Set up DevLink sync for the car card component. |
+| 5 | **SEO audit + recommendations** | Full SEO audit on the new pages (meta titles, descriptions, canonicals, structured data, internal linking, indexability) and implement the findings. |
+| 6 | **UI tweaks + debugging** | Polish the new pages, fix issues surfaced during QA, and roll fixes out to all Make/Model pages as needed. |
 
 ### What's not included
 
-- **Core search widget script modification** — Carsa's dev team owns the URL-parsing implementation in the React bundle. I'll pair on the work and handle card-level debugging + design tweaks, but the core script logic is theirs.
-- **Design changes** — the page uses the existing search-demo layout. Any design updates to the component are separate.
-- **Ongoing page maintenance** — adding/removing pages when inventory changes (see optional add-on below).
-- **Google Search Console setup** — submitting the new sitemap or monitoring indexation.
-- **Content writing** — meta descriptions are template-generated. Custom copy per make/model is not included.
+- **Shane's React filtering component itself** — owned by Carsa's dev team. This proposal integrates it, not builds it.
+- **New VSRP design work** — uses the existing VSRP layout. Significant design changes to the VSRP itself are separate scope.
+- **Custom copy per make/model** — meta titles, descriptions, and headings are templated. Hand-written unique copy per page is not included.
+- **Google Search Console setup** — submitting the new sitemap or monitoring indexation. Happy to advise.
+- **Content marketing pages** (buyer guides, comparison posts, editorial) — separate scope if wanted.
 
 ---
 
@@ -134,55 +150,36 @@ I'll pair with your dev team on the implementation and handle any debugging or d
 
 | Phase | Duration | Deliverable |
 |-------|----------|-------------|
-| CMS mapping + slug rules | 1 day | Slug mapping document |
-| Component build | 1 day | Shared Webflow component |
-| Page creation + SEO metadata | 1–2 days | 522 pages live on staging |
-| QA + verification | 1 day | All pages verified |
-| React car card polish + dev team pairing | ~2h | Polished car card on new pages, dev team aligned |
-| **Total** | **~1 week** | Ready for Carsa's script update |
+| MVP Make + Model CMS pages | ~4h | Make and Model Collection templates live on staging, scoped search results, crosslinks, redirects in place |
+| DevLink research spike | ~1h (folded into the next block) | Confirmed integration approach for Shane's React filter via DevLink |
+| Shane's filter integration + car card DevLink sync | ~3h | React filter mounted on VSRP, 48-car server render + filtered-list swap working, car card synced |
+| SEO audit + UI polish | folded into the above | New pages audited, recommendations applied, UI polished |
+| **Total** | **~8h (~1–1.5 working days)** | MVP live, ready for QA and rollout |
 
-**Note:** Pages can go live on staging immediately. They'll show the unfiltered search widget until Carsa's dev team deploys the script update. No downtime or disruption to the existing `/used-cars` page.
+**Note:** The MVP CMS pages can go live on staging within the first 4h — before the DevLink integration lands. They'll be indexable and functional immediately; the DevLink layer enhances interactivity but isn't a blocker for publishing.
 
-**Estimated start date:** Upon approval
-**Estimated completion:** 1 week from start
+**Estimated start:** Upon approval
+**Estimated completion:** Within ~1 week of start
 
 ---
 
 ## Investment
 
-| Item | Cost |
-|------|------|
-| CMS data mapping + slug rules | £100 |
-| Webflow component build | £100 |
-| Page creation automation (47 folders + 522 pages, 4h) | £400 |
-| SEO metadata (522 unique titles + descriptions + OG) | £100 |
-| QA & verification | £200 |
-| React car card debugging + design tweaks (2h) | £200 |
-| **Total** | **£1,100** |
+| Item | Hours | Cost |
+|------|-------|------|
+| MVP Make + Model CMS pages (templates, URL structure, redirects, crosslinks, SEO audit, UI polish) | 4h | £400 |
+| Shane's React filtering component integration via DevLink (includes research spike + car card sync) | ~4h (TBC) | ~£400 |
+| **Total** | **~8h** | **~£800** |
 
-All prices in GBP. Valid for 30 days from proposal date.
+All prices in GBP. Rate: £100/hr. Valid for 30 days from proposal date.
 
----
-
-### Optional Add-on: Sync Automation
-
-A CLI script that keeps pages in sync with Carsa's inventory:
-
-- Reads the API to detect new makes/models → creates pages automatically (folder + page + SEO metadata + shared component)
-- Reports which existing pages currently have zero inventory (for awareness — pages are **not** removed, so Google keeps them indexed and they're ready when stock returns)
-- Run on-demand whenever inventory changes (e.g. `node sync-pages.js`)
-
-| Item | Cost |
-|------|------|
-| Sync automation script (create/archive/report) | £300 |
-
-This eliminates the manual maintenance cost of 522 pages long-term.
+**Note on the DevLink block:** The 4h estimate for integrating Shane's React filtering component is provisional pending a short research spike into DevLink setup on the Carsa React codebase. If it proves more involved than expected, I'll flag and revise the estimate before committing the block.
 
 ---
 
 ### Future Phase: Algolia Integration
 
-Once the programmatic pages are earning traffic and the SEO strategy is validated, the search layer can be upgraded to Algolia — a hosted search platform that would replace the current React widget's filtering logic with instant, server-rendered results at any scale.
+Once the MVP pages are earning traffic and the SEO strategy is validated, the search layer can be upgraded to Algolia — a hosted search platform that would replace Shane's current React filtering logic with instant, server-rendered results at any scale.
 
 **What Algolia delivers:**
 - Instant ~50ms search across the full inventory
@@ -196,7 +193,7 @@ Once the programmatic pages are earning traffic and the SEO strategy is validate
 | Algolia integration build (indexing pipeline, React integration, ranking config, migration) | ~£3,200 |
 | Ongoing Algolia platform fees | ~£90/month |
 
-**Why not now?** The Webflow + React programmatic approach in this proposal is cheaper, faster to ship, and validates whether the SEO strategy earns traffic before committing to a recurring platform cost. Worth revisiting Algolia once the programmatic pages are pulling meaningful organic traffic.
+**Why not now?** The Webflow CMS + DevLink approach in this proposal is cheaper, faster to ship, and validates whether the SEO strategy earns traffic before committing to a recurring platform cost. Worth revisiting Algolia once the new pages are pulling meaningful organic traffic.
 
 ---
 
@@ -204,8 +201,8 @@ Once the programmatic pages are earning traffic and the SEO strategy is validate
 
 | Milestone | Amount | When |
 |-----------|--------|------|
-| Deposit | £550 (50%) | On approval |
-| Completion | £550 (50%) | All pages live and verified |
+| Deposit | £400 (50%) | On approval |
+| Completion | £400 (50%) | MVP pages live, DevLink integration working, verified on staging |
 
 Payment by bank transfer, due within 7 days of invoice.
 
@@ -215,10 +212,11 @@ Payment by bank transfer, due within 7 days of invoice.
 
 To keep the project on track, I'll need:
 
-- [ ] **Webflow MCP access** — authorise the Carsa site in the Webflow MCP bridge so I can read CMS data and create pages programmatically.
-- [ ] **Confirmation of make/model list** — verify the 47 makes and 475 models are current and correct before page creation begins.
-- [ ] **Script update commitment** — Carsa's dev team implements the URL-parsing logic in the search widget following the specification I provide. Pages will show unfiltered results until this is done.
-- [ ] **Search widget API** — confirm the search widget's API supports filtering by make/model slug, or provide the slug↔name mapping the API uses.
+- [ ] **Webflow MCP access** — authorise the Carsa site in the Webflow MCP bridge so I can read CMS structure and build Collection templates programmatically.
+- [ ] **CMS access + confirmation** — confirm the Makes and Models Collections are current and correctly structured before the move under `/used-cars/`.
+- [ ] **Short sync with Shane** — a 30-minute call to confirm what his React filtering component can do and validate the DevLink integration approach. My working assumption is the component handles server-side + client-side filtering in one, which would make the integration straightforward.
+- [ ] **DevLink setup confirmation** — Shane to confirm whether DevLink is already set up in the Carsa React codebase, or whether that's part of the research spike.
+- [ ] **Staging environment access** — to verify the new pages and DevLink integration before going live.
 
 ---
 
@@ -227,6 +225,7 @@ To keep the project on track, I'll need:
 1. Review this proposal
 2. Confirm scope and timeline
 3. Authorise the Carsa Webflow site in the MCP bridge
-4. Pay deposit to begin
+4. Schedule the 30-minute sync with Shane
+5. Pay deposit to begin
 
 Questions? Reply to this document or reach out directly.

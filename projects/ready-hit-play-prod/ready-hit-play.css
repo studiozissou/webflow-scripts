@@ -378,7 +378,12 @@
 .section_home-intro {
   display: none;
 }
-[data-barba="container"][data-barba-namespace="home"] .section_home-intro {
+/* Scope via :has() so the section can live as a sibling of .section_home inside
+   main.main-wrapper (keeps the Webflow page layout clean) instead of being
+   forced inside the Barba container. When Barba swaps the container namespace
+   to about/case, the :has() check stops matching and the section reverts to
+   display: none — no cross-namespace leak. */
+main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .section_home-intro {
   display: flex;
   align-items: center;
   justify-content: center;

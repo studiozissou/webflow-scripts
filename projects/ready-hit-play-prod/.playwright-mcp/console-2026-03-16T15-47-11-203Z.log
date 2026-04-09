@@ -1,8 +1,0 @@
-[     304ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://rhpcircle.webflow.io/case-studies/overland-ai:0
-[     748ms] Uncaught Error: [@barba/core] No Barba wrapper found
-    at i.init (https://unpkg.com/@barba/core:0:26887)
-    at initBarba (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.3.12.1:1446:10)
-    at <anonymous> (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.3.12.1:1645:4)
-    at ready (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.3.12.1:342:6)
-    at <anonymous> (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.3.12.1:1644:2)
-    at <anonymous> (https://localhost:8080/projects/ready-hit-play-prod/orchestrator.js?v=2026.3.12.1:1648:2)

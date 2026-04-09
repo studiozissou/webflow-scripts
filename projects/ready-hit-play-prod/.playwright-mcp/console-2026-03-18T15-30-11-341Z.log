@@ -1,2 +1,0 @@
-[    6415ms] TypeError: Cannot read properties of undefined (reading 'go')
-    at eval (eval at evaluate (:301:30), <anonymous>:4:20)

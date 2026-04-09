@@ -1,0 +1,30 @@
+Hi Tomek, here is an outline and estimate of the Rishi self-serve build plan:
+
+*Context*
+Rishi wants to ship new content sections on carsa-v2.webflow.io without waiting on me for every one.
+
+*Problem*
+Every new section routes through me, bottlenecking Rishi's roadmap and costing my hourly rate on work that doesn't need my hands.
+
+*Solution*
+A dedicated Claude Code setup on Rishi's Mac that lets him build new sections without me.
+•  `/carsa-build` asks 3 questions (where/why/who) and generates 2–3 candidate sections with brand-voiced copy and concept images
+•  Rishi picks one → Claude builds it in Webflow staging with automated contrast, accessibility, and touch-target checks
+•  Staging-only hardcoded; live publishes still go through me. I test 5 sandbox sections myself before handover.
+
+*Benefits*
+•  Rishi ships on his own schedule instead of waiting on me
+•  Each section costs ~£2–3 of Claude runtime vs my hourly rate
+•  Pre-loaded brand voice + ~20 design laws + live Webflow tokens keep quality on-brand without me in the loop
+•  Every build logged to a password-protected /changelog page for audit trail
+
+*Risks*
+•  Generative design quality can vary — mitigated by 2–3 options per run + my 5-section sandbox test before handover
+•  Copy tone drift through the humanizer — mitigated by a "paste my own copy" escape hatch in every run
+
+*Timing & pricing*
+•  Scope: flat £1,600 one-time — covers build, sandbox test, Loom walkthrough, 30-min handoff
+•  Rate: fixed fee (Rishi covers Claude runtime ~£2–3/build)
+•  Start: as soon as you green-light
+
+Let me know if this works. Happy to walk through any of it in more detail.

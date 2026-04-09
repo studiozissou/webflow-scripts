@@ -1,6 +1,8 @@
 .DS_Store
 .cursor/
 .claude/logs/
+.claude/worktrees/
+.superpowers/
 node_modules/
 .env
 .env.test

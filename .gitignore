@@ -3,6 +3,7 @@
 .claude/logs/
 .claude/worktrees/
 .superpowers/
+.playwright-mcp/
 node_modules/
 .env
 .env.test

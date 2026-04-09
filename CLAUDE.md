@@ -15,5 +15,12 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - Follow the `queue-tasks` skill for all queue.json formatting and Notion sync
 
 ## Code Style
-- Named exports only (no default exports in `shared/`)2
+- Named exports only (no default exports in `shared/`)
 - No `console.log` in committed code — use `DEBUG && console.log(...)` pattern
+
+## Project knowledge (on-demand)
+Past-session knowledge, RHP gotchas, work-dial bug history, patterns, and
+infrastructure notes live in `~/.claude/projects/-Users-willmorley-Library-Mobile-Documents-com-apple-CloudDocs-Projects-Webflow-Scripts-webflow-scripts/memory/MEMORY.md`.
+**Do not preload.** Read it only when you need specific context (e.g. before
+touching RHP's work-dial.js, when investigating a Barba issue, or when a
+pattern question comes up). Auto-injection is disabled via `autoMemoryEnabled: false`.

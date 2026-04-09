@@ -1,0 +1,31 @@
+Hi Tomek, here is the outline and estimate for the used cars SEO pages plan — we've pivoted to a leaner Webflow CMS approach.
+
+*Context*
+Carsa's `/used-cars` is a single page with client-side filtering across the entire inventory, with no dedicated search pages per make or model.
+
+*Problem*
+Google can't index individual makes or models, there's no landing pages for paid campaigns, and initial loads are slow because every car gets fetched up front — capping both SEO reach and paid conversion on filtered traffic.
+
+*Solution*
+Use Webflow's CMS Collections to spin up native make and model search pages, scope each page's results, and integrate Shane's React filtering component via Webflow DevLink.
+•  Duplicate VSRP to Make + Model CMS pages, scoped per make/model
+•  Add a crosslinks section across all makes and models for internal link equity
+•  Host Collections at `/used-cars/make/{slug}` and `/used-cars/model/{slug}` with redirects from the old URLs
+•  Integrate Shane's React filtering component via DevLink — show the first 48 cars initially, swap in the filtered list instantly when ready
+•  SEO audit + UI polish across the new pages
+
+*Benefits*
+•  Every make and model becomes an indexable SEO landing page + Google Ads destination
+•  Scoped search cuts initial load times massively, especially on model pages
+•  DevLink keeps the car card synced between Webflow design and your React codebase (no more design drift)
+
+*Risks*
+•  Webflow forces Collection URLs to `/used-cars/make/{slug}` not `/used-cars/{slug}` — slightly longer path than ideal. Mitigation: canonical rules to consolidate authority, plus the redirects already in scope.
+•  DevLink integration with Shane's React codebase is unproven on this project — the 4h estimate for that block is TBC pending a short research spike.
+
+*Timing & pricing*
+•  Scope: ~8h total — 4h MVP CMS pages (£400) + ~4h DevLink integration (£400, TBC)
+•  Rate: £100/hr
+•  Start: upon approval
+
+Let me know if this works. Happy to walk through any of it in more detail.

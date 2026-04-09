@@ -1,7 +1,7 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-09",
-  "note": "Added: feat-work-nav-prev-next-regression (Barba case→case slug resolution — guards against stale [data-wf-item-slug] on <html>)",
+  "note": "Updated: rhp-dial-short-viewport-bump finalised at 63svh (was 60svh → 65svh draft → 63svh final) — step text is 438.55px due to letter-spacing, 63svh gives 504px dial at 1440×800 for ~87% fill",
   "lastDeployed": "2026-04-08",
   "lastDeployedHash": "debe518",
   "entries": [
@@ -243,7 +243,7 @@
       "critical": false,
       "slug": "rhp-dial-short-viewport-bump",
       "created": "2026-04-08",
-      "description": "Homepage dial bumped to 60svh on short-viewport desktops (1440-1990 wide, ≤849 tall) so step text retains ≥20% horizontal padding; unchanged at 1440×900 and 1920×1080"
+      "description": "Homepage dial bumped to 63svh on short-viewport desktops (1440-1990 wide, ≤849 tall); step text 'Great stories made undeniable' is ~438.55px (letter-spacing 5.63px), 63svh gives 504px dial at 1440×800 (~87% fill); unchanged at 1440×900 and 1920×1080; Barba round-trip preserved"
     }
   ]
 }

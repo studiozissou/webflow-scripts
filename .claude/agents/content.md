@@ -42,6 +42,19 @@ When **competitor URLs** are provided in the inspiration references:
 - Avoid jargon unless the client's audience expects it
 - Accessibility first: all interactive elements need meaningful labels
 
+## AEO writing rules
+
+For any copy that will live on a public page where AI-search visibility matters, also apply the `ai-search-aeo` skill. Structural rules from that skill include:
+
+- **Answer-first leads** — the first sentence rephrases the likely query in statement form
+- **Question-shaped H2s** — use "What is", "How to", "Why does" where the content genuinely answers those questions
+- **Short extractable paragraphs** — max 2–3 sentences, max 3 paragraphs per heading
+- **Flesch 80+** target (90+ on flagship content)
+- **Lists introduced by a sentence** so they don't orphan when extracted
+- **Freshness signals + no time-sensitive hedge words** ("new", "recently", "this year")
+
+Apply AEO structure first; then layer brand voice from the Design Context Block on top. Structure defines what gets cited; voice defines how it sounds when it lands.
+
 ## Review checklist
 - [ ] Heading hierarchy makes sense read aloud
 - [ ] CTAs are action-oriented ("View the work" not "Click here")

@@ -65,7 +65,8 @@ Each subagent receives:
 
 ### Stream 1 — Copy quality (content agent)
 
-Review all copy against the brand voice framework:
+Hand the content agent the `ai-search-aeo` skill alongside the Design Context Block so the review applies AEO structural rules + brand voice together. Review all copy against both lenses:
+
 - **Tone match**: does every piece of copy match the stated tone adjectives?
 - **Audience calibration**: vocabulary, complexity, and assumed knowledge — right for the audience?
 - **Do/don't compliance**: scan for forbidden words; suggest replacements from the "do" list
@@ -75,6 +76,7 @@ Review all copy against the brand voice framework:
 - **Accessibility**: aria-labels, alt text quality, button labels
 - **Meta**: title tag, meta description (150-160 chars, keyword-inclusive)
 - **Competitor voice comparison**: if competitor copy available, compare positioning, messaging gaps, differentiation
+- **AEO scoring** (from `ai-search-aeo` skill): answer-first lead, question-shaped H2s, paragraph length, extractable chunks, freshness signals, Flesch 80+ target. Surface any failing AEO checks in the issue list alongside voice issues.
 
 ### Stream 2 — Content UX (ux-researcher agent)
 

@@ -70,20 +70,21 @@ Write to `intake.json` under `checks`.
 
 ### Step 2 — Parallelisation gate
 
-Reference the `parallelisation` skill. Present the gate with 3 independent streams:
+Reference the `parallelisation` skill. Present the gate with 4 independent streams:
 
 | # | Stream | Agent type | Est. tokens | Est. wall time |
 |---|--------|-----------|-------------|----------------|
 | 1 | Technical + Analytics | Explore | ~18k | ~15s |
 | 2 | SEO | seo (Explore) | ~18k | ~15s |
 | 3 | Content + Code inventory | Explore | ~14k | ~12s |
+| 4 | AEO / AI-search | Explore + `ai-search-aeo` skill | ~16k | ~15s |
 
-Sequential: ~45s / ~50k tokens. Parallel: ~25s / ~55k tokens (~1.8x faster, +1.1x cost).
+Sequential: ~60s / ~66k tokens. Parallel: ~25s / ~72k tokens (~2.4x faster, +1.1x cost).
 Medium risk (WebFetch can be flaky on some checks).
 
 **Recommendation: Parallel** (independent check domains, read-only).
 
-If user approves parallel, spawn 3 subagents simultaneously. If sequential, run in order.
+If user approves parallel, spawn 4 subagents simultaneously. If sequential, run in order.
 
 ### Stream A — Technical + Analytics
 | Check | What to look for |
@@ -117,6 +118,19 @@ If user approves parallel, spawn 3 subagents simultaneously. If sequential, run 
 | Viewport | Mobile meta viewport present |
 
 Also list all site-wide and per-page head/body embeds and third-party scripts.
+
+### Stream D — AEO / AI-search
+Load the `ai-search-aeo` skill and run the 20-check audit rubric against the homepage + 2–3 top traffic pages (if analytics available) or otherwise the 2–3 most linked pages.
+
+| Check | What to look for |
+|---|---|
+| Schema (A1–A4) | JSON-LD present, FAQPage on Q&A content, HowTo on tutorials |
+| Answer structure (B5–B10) | Answer-first lead, question H2s, paragraph and section length, list intros, active voice |
+| Freshness (C11–C13) | Visible "last updated" timestamp, recent update, no time-sensitive hedge words |
+| Authority (D14–D17) | Original data/stats, author/entity signals, external citations, cite-magnet archetype |
+| Technical (E18–E20) | Descriptive alt text, 2+ internal links, AI bot rules in `robots.txt` |
+
+Save findings to `.claude/audits/<client>/aeo.md` with a scorecard per page and a prioritised fix list (schema + freshness first).
 
 ### Step 3 — Merge results
 Merge all stream outputs into `intake.json` under `checks`.

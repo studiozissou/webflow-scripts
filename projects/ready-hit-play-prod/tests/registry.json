@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-09",
-  "note": "Added rhp-home-intro-dial-flip-lock entry (2026-04-09): refined home intro with locked dial + Flip.fit scrubbed morph + step text reveal. Deployed: .section_home-intro scoped via main.main-wrapper:has([data-barba-namespace=\"home\"]) so the section can live as a sibling of .section_home outside the Barba container. Tests skipped by user at deploy time, manual verification.",
-  "lastDeployed": "2026-04-09",
-  "lastDeployedHash": "08c0558",
+  "lastUpdated": "2026-04-10",
+  "note": "Deploy 3d5c534 (2026-04-10): home intro scroll morph — dial locked through intro, nav/step animate on scroll lock. Tests skipped by user.",
+  "lastDeployed": "2026-04-10",
+  "lastDeployedHash": "3d5c534",
   "entries": [
     {
       "id": "smoke",

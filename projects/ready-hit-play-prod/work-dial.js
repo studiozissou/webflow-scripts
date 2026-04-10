@@ -10,9 +10,9 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.4.8.2';
+  const WORK_DIAL_VERSION = '2026.4.10.1';
 
-  const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=4c9f59a80eb73bfb63fbb583702ad948afb7ca16fe99d5c12a85733e282f76bc';
+  const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&log_user=0&signature=cfa8c2f7dc5136f23bd196386794855c956b1c6c645a667820705c8c9d0bae14';
 
   const DIAL_STATES = { IDLE: 'idle', ACTIVE: 'active', ENGAGED: 'engaged' };
 
@@ -281,10 +281,23 @@
       genericVideo.setAttribute('playsinline', '');
       genericVideo.setAttribute('preload', 'auto');
       genericVideo.setAttribute('aria-hidden', 'true');
-      // Starts hidden; home-intro fades it in via getIntroVideoEl(), or setDialState shows it instantly
+      // Starts hidden; fades in as soon as a frame is decoded so the user sees
+      // video inside the dial during the intro scroll morph (not just after it).
       genericVideo.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;z-index:0;';
       comp.appendChild(genericVideo);
       cleanup.push(() => { genericVideo?.remove(); genericVideo = null; });
+
+      // Fade in generic video as soon as a frame is ready — don't wait for intro to finish.
+      const _earlyFadeIn = () => {
+        if (!genericVideo || !alive) return;
+        if (window.gsap && !prefersReduced()) {
+          window.gsap.to(genericVideo, { opacity: 1, duration: 0.4, ease: 'linear', overwrite: true });
+        } else {
+          genericVideo.style.opacity = '1';
+        }
+      };
+      if (genericVideo.readyState >= 2) { _earlyFadeIn(); }
+      else { genericVideo.addEventListener('loadeddata', _earlyFadeIn, { once: true }); }
 
       // White dot indicator (sector position at 6 o'clock — CSS handles visibility per breakpoint)
       let sectorDot = document.createElement('div');
@@ -1428,6 +1441,19 @@
         window.gsap.to(sectorDotRef, { opacity: 1, duration: 0.4, ease: 'power2.out' });
       } else if (sectorDotRef) {
         sectorDotRef.style.opacity = '1';
+      }
+      // Fade in generic video now — on fresh load it was at opacity:0 waiting for intro to finish.
+      // Show immediately if a frame is ready; otherwise wait for loadeddata then fade in.
+      if (dialState === DIAL_STATES.IDLE && genericVideo) {
+        const _fadeIn = () => {
+          if (window.gsap && !prefersReduced()) {
+            window.gsap.to(genericVideo, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: true });
+          } else {
+            genericVideo.style.opacity = '1';
+          }
+        };
+        if (genericVideo.readyState >= 2) { _fadeIn(); }
+        else { genericVideo.addEventListener('loadeddata', _fadeIn, { once: true }); }
       }
     }
 

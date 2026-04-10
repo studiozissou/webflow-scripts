@@ -424,13 +424,15 @@
         if (active) return;
         active = true;
 
-        // ❌ No Lenis on home until the intro sequence completes.
-        // home-intro.js will start it once RHP.homeIntro.done flips true.
-        RHP.lenis?.stop();
+        // Show the custom cursor from the first frame — no more hide-until-intro.
+        const wrapper = document.querySelector('[data-barba="wrapper"]');
+        if (wrapper) wrapper.classList.add('rhp-cursor-ready');
 
-        // 🔒 Lock scroll (home-scroll-morph will lock again after morph)
-        RHP.scroll.unlock(); // defensive reset
-        RHP.scroll.lock();
+        // Scroll stays UNLOCKED during the intro so the scroll-morph scrub
+        // timeline can run. home-scroll-morph will call scroll.lock() itself
+        // once the morph reaches its completion state (_applyCompleteState).
+        // Lenis is started so wheel/touch scroll feels smooth during the scrub.
+        RHP.lenis?.start();
 
         // Init dial (introMode when fresh load - home intro runs separately)
         RHP.workDial?.init?.(container, { introMode: options.introMode === true });

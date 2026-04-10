@@ -7,17 +7,18 @@
 
   // FOUC prevention: inject critical hide rules synchronously before first paint.
   // ready-hit-play.css loads later (after deps); these inline styles cover the gap.
+  // Hide on home until home-scroll-morph completes and sets .rhp-home-ready:
+  //   • nav items (logo, about, contact) — fade in via CSS cascade
+  //   • dial step text — home-scroll-morph tweens opacity 0 → 1 in last 10% of scrub
   (function() {
     var s = document.createElement('style');
     s.textContent =
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_logo-link,' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_about-link,' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .nav_contact-link,' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_layer-ui,' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) [data-text="step"],' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .heading-style-h7.is-step,' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_layer-ticks,' +
-      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready):not(.rhp-intro-started) .dial_bg-canvas' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .nav_logo-link,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .nav_about-link,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .nav_contact-link' +
+      '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .dial_component[data-dial-ns="home"] .heading-style-h7.is-step,' +
+      '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .dial_component[data-dial-ns="home"] [data-text="step"]' +
       '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}';
     document.head.appendChild(s);
   })();
@@ -42,7 +43,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.4.9.2', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.4.10.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)

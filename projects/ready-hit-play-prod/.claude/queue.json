@@ -1,18 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-09",
+  "updated": "2026-04-10",
   "queue": [
     {
       "id": "fix-fg-video-case-to-case-barba",
       "project": "ready-hit-play-prod",
       "type": "fix",
       "priority": "P1",
-      "status": "Backlog",
+      "status": "Ready to Build",
       "title": "FG video not updating on case→case Barba transitions",
-      "spec": null,
+      "spec": ".claude/specs/fix-fg-video-case-to-case-barba.md",
       "agent": "code-writer",
       "created": "2026-04-09",
-      "note": "Discovered while building feat-work-nav-prev-next. When navigating case→case via the new work-nav prev/next buttons, the foreground video does not update to the target case's FG video. Root cause hypothesis: the FG video element lives OUTSIDE the Barba [data-barba=container] (same as the dial namespace restructure shipped 2026-03-12), so Barba doesn't swap it on case→case. Need to: (1) confirm which element holds the FG video on case pages, (2) determine whether it should be moved inside the barba container or programmatically updated via an afterEnter hook that reads the new case's video src from the CMS list / DOM, (3) check interaction with work-dial pool + case-video-controls. Repro: /work/overland-ai → click work-next → /work/remote — FG video still shows overland-ai footage. No console errors observed."
+      "updated": "2026-04-10",
+      "note": "Root cause confirmed: (1) bootCurrentView():1504 has !fgVideo.src guard — one-shot on direct load; (2) runAfterEnter():1669 never sets fgVideo.src on Barba transitions. Fix: add FG video population with URL equality check to runAfterEnter() case/work block, replace guard in bootCurrentView() for consistency. BG mirroring is free — startCaseBgDraw() draws from FG video via ctx.drawImage(). 1 file, ~20 LOC. Acceptance tests at tests/acceptance/fix-fg-video-case-to-case-barba.spec.js."
     },
     {
       "id": "rhp-dial-short-viewport-bump",

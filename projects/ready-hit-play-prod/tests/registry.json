@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-10",
-  "note": "Deploy 3d5c534 (2026-04-10): home intro scroll morph — dial locked through intro, nav/step animate on scroll lock. Tests skipped by user.",
+  "note": "Deploy e2e685a (2026-04-10): idle video 720p + early fade-in on first frame. Tests skipped by user.",
   "lastDeployed": "2026-04-10",
-  "lastDeployedHash": "3d5c534",
+  "lastDeployedHash": "e2e685a",
   "entries": [
     {
       "id": "smoke",

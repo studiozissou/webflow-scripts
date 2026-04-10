@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-09",
+  "lastUpdated": "2026-04-10",
   "note": "Updated: rhp-dial-short-viewport-bump finalised at 63svh (was 60svh → 65svh draft → 63svh final) — step text is 438.55px due to letter-spacing, 63svh gives 504px dial at 1440×800 for ~87% fill",
   "lastDeployed": "2026-04-09",
   "lastDeployedHash": "1d4aabf",
@@ -244,6 +244,16 @@
       "slug": "rhp-dial-short-viewport-bump",
       "created": "2026-04-08",
       "description": "Homepage dial bumped to 63svh on short-viewport desktops (1440-1990 wide, ≤849 tall); step text 'Great stories made undeniable' is ~438.55px (letter-spacing 5.63px), 63svh gives 504px dial at 1440×800 (~87% fill); unchanged at 1440×900 and 1920×1080; Barba round-trip preserved"
+    },
+    {
+      "id": "fix-fg-video-case-to-case-barba",
+      "file": "tests/acceptance/fix-fg-video-case-to-case-barba.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-fg-video-case-to-case-barba",
+      "created": "2026-04-10",
+      "description": "FG video src updates on work→work Barba transition — URL equality check, currentTime reset, same-case skip, round-trip regression"
     }
   ]
 }

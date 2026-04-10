@@ -4,7 +4,7 @@
    - Barba-aware (re-init on enter, cleanup on leave)
    ========================================= */
 (() => {
-  const CURSOR_VERSION = '2026.4.9.1'; // bump when you deploy; check in console: RHP.cursor.version
+  const CURSOR_VERSION = '2026.4.10.1'; // bump when you deploy; check in console: RHP.cursor.version
   const CURSOR_TRANSITION_DURATION = 0.25; // seconds for state changes; check in console: RHP.cursor.transitionDuration
 
   window.RHP = window.RHP || {};
@@ -35,6 +35,7 @@
     let lockedToDot = false; // When true, cursor stays white dot (until video plays on home intro)
     let lastMouseX = -9999;
     let lastMouseY = -9999;
+    let nativeCursorHidden = false; // Flipped on first real mousemove so the native cursor stays usable on load
 
     function stop() {
       if (!alive) return;
@@ -50,6 +51,7 @@
       });
       cleanup = [];
       externalControl = false;
+      nativeCursorHidden = false;
     }
 
     function init(container = document, options = {}) {
@@ -96,6 +98,17 @@
         if (e.clientX === lastMouseX && e.clientY === lastMouseY) return;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
+        // First real mousemove: hide the native cursor and reveal the custom dot.
+        // Keeping the native cursor visible until here means the page is never
+        // cursor-less on load — users can see and use their system cursor the
+        // moment the page paints, and we only swap to the custom cursor once
+        // we actually know where to draw it.
+        if (!nativeCursorHidden) {
+          nativeCursorHidden = true;
+          document.body.style.cursor = 'none';
+          if (cursorWrapper) cursorWrapper.style.opacity = '';
+          else if (cursorDot) cursorDot.style.opacity = '';
+        }
         // If cursor node was replaced by Barba, re-query so we update the visible one
         if (!cursorDot || !document.body.contains(cursorDot)) {
           cursorWrapper = document.querySelector('.cursor_dot-wrapper');
@@ -255,10 +268,19 @@
         currentHoveredElement = null;
       });
 
-      // Hide default cursor
-      document.body.style.cursor = 'none';
+      // Do NOT hide the native cursor here — we defer that until the first real
+      // mousemove so the user always has a visible cursor on page load. In the
+      // meantime, keep the custom cursor dot invisible so it doesn't paint at
+      // its off-screen parking spot (-9999, -9999) before we know where to
+      // position it. The mousemove handler sets opacity back to '' on first move.
+      if (lastMouseX <= -9999 || lastMouseY <= -9999) {
+        if (cursorWrapper) cursorWrapper.style.opacity = '0';
+        else if (cursorDot) cursorDot.style.opacity = '0';
+      }
       cleanup.push(() => {
         document.body.style.cursor = '';
+        if (cursorWrapper) cursorWrapper.style.opacity = '';
+        else if (cursorDot) cursorDot.style.opacity = '';
       });
     }
 

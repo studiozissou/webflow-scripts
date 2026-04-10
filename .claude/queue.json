@@ -1,7 +1,29 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-08",
+  "updated": "2026-04-10",
   "queue": [
+    {
+      "id": "ai-search-aeo-skill",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "AI search and AEO skill — audit rubric, copywriting rules, page structure patterns, agent and command integration",
+      "description": "Create a new monorepo skill ai-search-aeo combining insights from Webflow AEO and AI search blog posts into a single reference the seo, content, and schema agents plus /copy-review and /intake commands can pull from. Contains a 20-check audit rubric across 5 categories (schema, answer structure, freshness, authority, technical), answer-first copywriting rules with design-context hook for brand voice, page structure patterns (cite-magnet archetypes, anchor and cluster architecture, FAQ blocks), and an optional 5-level content maturity assessment for site-wide strategic reviews. Integration: seo agent adds AEO bullet under Scope, content agent adds AEO writing rules section, schema agent adds FAQPage and HowTo priority note, /copy-review loads the skill in the content context block, /intake Phase 4 adds a fourth AEO stream that saves findings to .claude/audits/<client>/aeo.md.",
+      "spec": ".claude/specs/ai-search-aeo-skill.md",
+      "created": "2026-04-10"
+    },
+    {
+      "id": "rhp-home-intro-dial-flip-lock",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Home intro refined: dial locked idle at start slot, Flip-fit scrubbed morph to middle slot, step text reveal, nav visibility via class toggle",
+      "description": "Refine the in-progress home intro flow so the dial begins in a fully locked idle state at a new .home_dial-start slot (small size, no foreground video, no tick growth, no colour shift, no project switching). Intro logo fades in on load to avoid flash before scripts run. Step text (data text step and is step) is hidden until morph completes. As the user scrolls the 100vh intro section, a GSAP Flip fit scrubbed timeline fits the dial from .home_dial-start to .home_dial-middle and fits the intro logo to the .nav_logo-wrapper-2 is-nav nav target, both linked to scroll progress (0 to 100 percent). At morph complete, the dial live CSS vars are committed to dial large, the rhp-home-ready class is added on the wrapper (revealing nav items via the existing FOUC CSS), the intro logo is hidden, the real nav logo takes over, step text animates in via a new RHP homeIntro revealStep API, and the dial is fully unlocked via set intro complete, set attraction enabled true and on intro complete. The existing animate nav in gsap tween on .nav_logo-wrapper is removed. Barba re-entry and case-to-home handoff paths continue via homeScrollMorph skipToEnd. Reduced motion bypasses the scrub and lands at the completed state immediately. Touches home-intro.js, home-scroll-morph.js, init.js, ready-hit-play.css, and optionally work-dial.js. Requires new Webflow Designer slot divs .home_dial-start and .home_dial-middle with sizes matching dial small and dial large. Follows Flip fit scrubbed approach selected during planning.",
+      "spec": ".claude/specs/rhp-home-intro-dial-flip-lock.md",
+      "created": "2026-04-09"
+    },
     {
       "id": "rhp-home-intro-scroll-morph",
       "project": "ready-hit-play-prod",

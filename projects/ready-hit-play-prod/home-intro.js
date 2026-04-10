@@ -1,37 +1,23 @@
 /* =========================================
-   RHP — Homepage Intro Animation
-   Only runs on fresh load of homepage (not when transitioning from case studies or about)
-   Sequence: step text → dial ticks → generic video fade in → nav + dial_layer-ui
+   RHP — Homepage Intro (dial stays LOCKED through intro)
+   The visual intro is owned by home-scroll-morph.js. On fresh load the dial
+   is locked idle in .home_dial-start (dial-small, no fg video, no project
+   switching). run() only marks the scope classes + fires the event so the
+   scroll morph can init — it does NOT unlock the dial. The dial is unlocked
+   by home-scroll-morph on morph-complete (after the user has scrolled the
+   100vh intro section and the scroll has locked).
+   skip() is the Barba re-entry fast-path: jumps straight to the unlocked
+   state without the scroll morph.
    ========================================= */
 (() => {
-  const HOME_INTRO_VERSION = '2026.4.9.1';
+  const HOME_INTRO_VERSION = '2026.4.10.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
-  const T = {
-    bars: 96,
-    tickDuration: 0.7,
-    dialTotalDuration: 3.5,
-    tickStagger: 0 // computed
-  };
-  T.tickStagger = (T.dialTotalDuration - T.tickDuration) / Math.max(1, T.bars - 1);
-
-  // 12 o'clock = first tick in clockwise order (canvas: i=0 is 3 o'clock; 12 o'clock = 3/4 around)
-  const TWELVE_OCLOCK_INDEX = Math.floor((3 / 4) * T.bars); // 72 for 96 bars
-
-  const prefersReduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isMobile = () => window.matchMedia('(hover: none), (pointer: coarse)').matches;
-
   RHP.homeIntro = (() => {
-    let splitInstance = null;
     let hasRun = false;
-    let _tapAbort = null; // AbortController for tap-to-play listener
-    let _tapStepEl = null; // step element ref for destroy() restore
-    let _tapOrigText = ''; // original step text for restore
-    let _tapOrigLabel = ''; // original aria-label for restore
 
     function _markIntroComplete() {
-      // Flip the `done` flag, notify listeners, start Lenis so scroll-morph can scrub.
       if (RHP.homeIntro) RHP.homeIntro.done = true;
       try {
         window.dispatchEvent(new CustomEvent('rhp:home-intro:complete'));
@@ -39,256 +25,7 @@
       // Only start Lenis if we're still on the home namespace — guards against
       // the intro throwing and completing after the user has navigated away.
       const onHome = !!document.querySelector('[data-barba-namespace="home"]');
-      if (onHome && window.RHP?.lenis?.start) window.RHP.lenis.start();
-    }
-
-    async function tryPlay(video) {
-      try {
-        await video.play();
-        return { ok: true };
-      } catch (e) {
-        return { ok: false, error: e };
-      }
-    }
-
-    function getStepEl(container) {
-      return container?.querySelector('[data-text="step"]') ||
-        container?.querySelector('.heading-style-h7.is-step') ||
-        document.querySelector('[data-text="step"]') ||
-        document.querySelector('.heading-style-h7.is-step');
-    }
-
-    /** .dial_bg-canvas may be inside .dial_component or elsewhere in container */
-    function getBgCanvas(container) {
-      return container?.querySelector('.dial_bg-canvas') || document.querySelector('.dial_bg-canvas');
-    }
-
-    function setInitialState(container) {
-      const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
-      const comp = container?.querySelector('.dial_component') || document.querySelector('.dial_component');
-      const dialUi = comp?.querySelector('.dial_layer-ui');
-      const nav = scope?.querySelector('.nav');
-      const dialTicks = comp?.querySelector('.dial_layer-ticks');
-      const dialFg = comp?.querySelector('.dial_layer-fg');
-      const bgCanvas = getBgCanvas(container);
-      const stepEl = getStepEl(container);
-
-      // Dial and nav hidden
-      if (nav) {
-        nav.style.opacity = '0';
-        nav.style.visibility = 'hidden';
-        nav.style.pointerEvents = 'none';
-      }
-      if (dialTicks) dialTicks.style.opacity = '0';
-      if (dialFg) dialFg.style.opacity = '0';
-      // BG canvas starts hidden; draw loop populates it but opacity keeps it invisible
-      if (bgCanvas && window.gsap) window.gsap.set(bgCanvas, { opacity: 0 });
-
-      // .dial_layer-ui opacity 0
-      if (dialUi) window.gsap?.set(dialUi, { opacity: 0 });
-
-      // Background black - overlay or set dial_layer-bg
-      const bgLayer = comp?.querySelector('.dial_layer-bg');
-      if (bgLayer) window.gsap?.set(bgLayer, { backgroundColor: '#000' });
-
-      // Step text hidden initially (will be revealed via SplitText)
-      if (stepEl) window.gsap?.set(stepEl, { opacity: 0 });
-    }
-
-    function revealStepText(container, gsap, SplitText) {
-      const stepEl = getStepEl(container);
-      if (!stepEl || !SplitText) return Promise.resolve();
-
-      return new Promise((resolve) => {
-        try {
-          const split = new SplitText(stepEl, { type: 'words,lines', linesClass: 'home-intro-line', wordsClass: 'home-intro-word' });
-          splitInstance = split;
-
-          if (split.lines) {
-            split.lines.forEach((line) => { line.style.overflow = 'hidden'; });
-          }
-          if (split.words && split.words.length) {
-            gsap.set(split.words, { yPercent: 100, opacity: 0 });
-          }
-
-          gsap.to(stepEl, { opacity: 1, duration: 0.4, ease: 'power4.out' });
-          gsap.to(split.words, {
-            yPercent: 0,
-            duration: 0.8,
-            ease: 'expo.out',
-            stagger: 0.15,
-            onComplete: resolve
-          });
-          gsap.to(split.words, { opacity: 1, duration: 0.8, ease: 'linear', stagger: 0.15 }, '<');
-        } catch (e) {
-          stepEl.style.opacity = '1';
-          resolve();
-        }
-      });
-    }
-
-    /** Called only after circle (tick) animation is complete. Fades in generic video (IDLE state). */
-    function fadeInIntroVideo(container) {
-      // Use the generic video element during fresh-load intro (IDLE state)
-      const introVideo = RHP.workDial?.getIntroVideoEl?.();
-      if (!introVideo || !window.gsap) return Promise.resolve();
-
-      return new Promise((resolve) => {
-        const onReady = async () => {
-          introVideo.removeEventListener('canplay', onReady);
-          introVideo.removeEventListener('loadeddata', onReady);
-          const gsap = window.gsap;
-          gsap.to(introVideo, { opacity: 1, duration: 0.2, ease: 'linear' });
-
-          const result = await tryPlay(introVideo);
-          if (result.ok) {
-            resolve();
-            return;
-          }
-
-          // Autoplay blocked — show tap-to-play on step text
-          const stepEl = getStepEl(container);
-          if (!stepEl) { resolve(); return; }
-
-          // Capture original text BEFORE SplitText (revert first to get clean text)
-          if (splitInstance) { try { splitInstance.revert(); } catch (e) {} }
-          _tapOrigText = stepEl.textContent || '';
-          _tapOrigLabel = stepEl.getAttribute('aria-label') || '';
-          _tapStepEl = stepEl;
-
-          stepEl.textContent = 'Tap here to play';
-          stepEl.setAttribute('aria-label', 'Tap here to play');
-          stepEl.classList.add('is-tap-to-play');
-
-          _tapAbort = new AbortController();
-          const dialFg = document.querySelector('.dial_layer-fg');
-          const tapTarget = dialFg || stepEl;
-
-          tapTarget.addEventListener('click', async () => {
-            await tryPlay(introVideo);
-            stepEl.textContent = _tapOrigText;
-            stepEl.setAttribute('aria-label', _tapOrigLabel);
-            stepEl.classList.remove('is-tap-to-play');
-            _tapStepEl = null;
-            window.dispatchEvent(new CustomEvent('rhp:autoplay:unlocked'));
-            _tapAbort = null;
-          }, { once: true, signal: _tapAbort.signal });
-
-          // Resolve immediately so ticks + nav proceed regardless of tap
-          resolve();
-        };
-        if (introVideo.readyState >= 2) {
-          onReady();
-        } else {
-          introVideo.addEventListener('canplay', onReady, { once: true });
-          introVideo.addEventListener('loadeddata', onReady, { once: true });
-        }
-      });
-    }
-
-    function runDialTickAnimation(container) {
-      const comp = container?.querySelector('.dial_component') || document.querySelector('.dial_component');
-      const dialTicks = comp?.querySelector('.dial_layer-ticks');
-      const dialFg = comp?.querySelector('.dial_layer-fg');
-      if (!dialTicks || !window.gsap || !RHP.workDial) return Promise.resolve();
-
-      // Make dial visible so tick scale animation can be seen
-      dialTicks.style.opacity = '1';
-      if (dialFg && !isMobile()) dialFg.style.opacity = '0'; // keep fg at 0 until hover enabled
-
-      // Ensure work-dial has intro progress object
-      RHP._dialIntroProgress = RHP._dialIntroProgress || { time: 0 };
-
-      const gsap = window.gsap;
-      const reduced = prefersReduced();
-      const dur = reduced ? 0 : T.dialTotalDuration;
-      const ease = reduced ? 'linear' : 'power4.out';
-
-      return new Promise((resolve) => {
-        gsap.to(RHP._dialIntroProgress, {
-          time: T.dialTotalDuration,
-          duration: dur,
-          ease,
-          overwrite: true,
-          onComplete: () => {
-            RHP.workDial.setIntroComplete?.();
-            resolve();
-          }
-        });
-      });
-    }
-
-    function runNavAnimation(scope) {
-      const gsap = window.gsap;
-      if (!gsap) return Promise.resolve();
-
-      const logoLink = scope?.querySelector('.nav_logo-link');
-      const aboutLink = scope?.querySelector('.nav_about-link');
-      const contactLink = scope?.querySelector('.nav_contact-link');
-      const dialUi = document.querySelector('.dial_layer-ui');
-
-      const nav = scope?.querySelector('.nav');
-      if (nav) {
-        nav.style.visibility = '';
-        nav.style.opacity = '1';
-        nav.style.pointerEvents = '';
-      }
-
-      const DUR = 0.7;
-      const EASE_TRANSLATE = 'power3.out';
-      const EASE_OPACITY = 'linear';
-
-      // Logo: from above (y -100% -> 0)
-      if (logoLink) {
-        gsap.set(logoLink, { yPercent: -100, opacity: 0 });
-      }
-      // About: from left (x -100% -> 0)
-      if (aboutLink) {
-        gsap.set(aboutLink, { xPercent: -100, opacity: 0 });
-      }
-      // Contact: from right (x 100% -> 0)
-      if (contactLink) {
-        gsap.set(contactLink, { xPercent: 100, opacity: 0 });
-      }
-
-      // Stagger: each begins when previous has finished (sequential)
-      const tl = gsap.timeline();
-      tl.to(logoLink, { yPercent: 0, duration: DUR, ease: EASE_TRANSLATE })
-        .to(logoLink, { opacity: 1, duration: DUR, ease: EASE_OPACITY }, '<')
-        .to(aboutLink, { xPercent: 0, duration: DUR, ease: EASE_TRANSLATE })
-        .to(aboutLink, { opacity: 1, duration: DUR, ease: EASE_OPACITY }, '<')
-        .to(contactLink, { xPercent: 0, duration: DUR, ease: EASE_TRANSLATE })
-        .to(contactLink, { opacity: 1, duration: DUR, ease: EASE_OPACITY }, '<');
-
-      return tl.then ? tl.then() : new Promise((r) => tl.eventCallback('onComplete', r));
-    }
-
-    function resetToVisible(container) {
-      const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
-      const comp = container?.querySelector('.dial_component') || document.querySelector('.dial_component');
-      const nav = scope?.querySelector('.nav');
-      const dialUi = comp?.querySelector('.dial_layer-ui');
-      const dialTicks = comp?.querySelector('.dial_layer-ticks');
-      const dialFg = comp?.querySelector('.dial_layer-fg');
-      const stepEl = getStepEl(container);
-
-      if (nav) {
-        nav.style.display = '';
-        nav.style.visibility = '';
-        nav.style.opacity = '';
-        nav.style.pointerEvents = '';
-      }
-      if (dialUi) window.gsap?.set(dialUi, { opacity: 1 });
-      if (dialTicks) dialTicks.style.opacity = '1';
-      if (dialFg && isMobile()) window.gsap?.set(dialFg, { opacity: 1 });
-      if (stepEl) window.gsap?.set(stepEl, { opacity: 1 });
-
-      const logoLink = scope?.querySelector('.nav_logo-link');
-      const aboutLink = scope?.querySelector('.nav_about-link');
-      const contactLink = scope?.querySelector('.nav_contact-link');
-      if (logoLink) window.gsap?.set(logoLink, { yPercent: 0, opacity: 1 });
-      if (aboutLink) window.gsap?.set(aboutLink, { xPercent: 0, opacity: 1 });
-      if (contactLink) window.gsap?.set(contactLink, { xPercent: 0, opacity: 1 });
+      if (onHome && RHP.lenis?.start) RHP.lenis.start();
     }
 
     return {
@@ -297,96 +34,39 @@
 
       run(container) {
         if (hasRun) return;
-        const gsap = window.gsap;
-        const SplitText = window.SplitText;
-        if (!gsap) {
-          if (RHP.views?.home?.init) RHP.views.home.init(container);
-          return;
-        }
-
         hasRun = true;
+
         const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
+        // rhp-cursor-ready: custom cursor can render. rhp-intro-started:
+        // intro logo / dial-start CSS can fade in via :has() transitions.
+        // NOTE: .rhp-home-ready is NOT added here — the dial, step text,
+        // and nav items all stay hidden/locked until the scroll morph fires
+        // onMorphComplete after the 100vh scrub completes.
+        scope.classList.add('rhp-intro-started', 'rhp-cursor-ready');
 
-        RHP.cursor?.setLockedToDot?.(true);
+        // Dial stays LOCKED: do NOT call setIntroComplete / setAttractionEnabled
+        // / setInteractionUnlocked here. home-scroll-morph unlocks the dial on
+        // morph complete.
 
-        // Ensure work-dial has intro progress for tick scale animation (starts at 0)
-        RHP._dialIntroProgress = { time: 0 };
-
-        setInitialState(container);
-        scope.classList.add('rhp-intro-started');
-
-        // Wait for scripts to be ready (init has already run by the time orchestrator calls us)
-        const scriptsReady = () => RHP.scriptsOk === true;
-
-        const run = async () => {
-          await revealStepText(container, gsap, SplitText);
-
-          await new Promise((r) => setTimeout(r, 500));
-
-          // When scripts ready, animate dial ticks
-          if (!scriptsReady()) {
-            await new Promise((r) => {
-              const check = () => {
-                if (scriptsReady()) return r();
-                requestAnimationFrame(check);
-              };
-              check();
-            });
-          }
-
-          await runDialTickAnimation(container);
-          RHP.workDial?.setAttractionEnabled?.(true);
-          await Promise.race([
-            fadeInIntroVideo(container),
-            new Promise(r => setTimeout(r, 5000))
-          ]);
-          (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-cursor-ready');
-          RHP.cursor?.setLockedToDot?.(false);
-          RHP.workDial?.onIntroComplete?.();
-          await runNavAnimation(scope);
-          RHP.workDial?.onNavAnimationComplete?.();
-          (document.querySelector('[data-barba="wrapper"]') || document.body).classList.add('rhp-home-ready');
-          _markIntroComplete();
-        };
-
-        run().catch(() => {
-          // Defensive: even if the sequence throws, flip the done flag so
-          // downstream modules (home-scroll-morph, orchestrator) aren't blocked.
-          _markIntroComplete();
-        });
-      },
-
-      skip(container) {
-        hasRun = true;
-        const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
-        scope.classList.add('rhp-intro-started', 'rhp-cursor-ready', 'rhp-home-ready');
-        resetToVisible(container);
-        RHP.cursor?.setLockedToDot?.(false);
-        RHP.workDial?.setIntroComplete?.();
-        RHP.workDial?.setAttractionEnabled?.(true);
+        // Notify listeners — home-scroll-morph will init its ScrollTrigger here.
         _markIntroComplete();
       },
 
-      version: HOME_INTRO_VERSION,
+      skip(container) {
+        // Barba re-entry fast-path: user has already seen the intro, jump to
+        // the unlocked state. home-scroll-morph.skipToEnd() does the actual
+        // dial-large + nav-visible state; we just flag the scope classes here.
+        hasRun = true;
+        const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
+        scope.classList.add('rhp-intro-started', 'rhp-cursor-ready', 'rhp-home-ready');
+        RHP.workDial?.setIntroComplete?.();
+        RHP.workDial?.setAttractionEnabled?.(true);
+        RHP.workDial?.setInteractionUnlocked?.(true);
+        _markIntroComplete();
+      },
 
       destroy() {
-        if (_tapAbort) {
-          _tapAbort.abort();
-          _tapAbort = null;
-        }
-        // Restore step text if user never tapped
-        if (_tapStepEl) {
-          _tapStepEl.textContent = _tapOrigText;
-          _tapStepEl.setAttribute('aria-label', _tapOrigLabel);
-          _tapStepEl.classList.remove('is-tap-to-play');
-          _tapStepEl = null;
-        }
-        if (splitInstance) {
-          try {
-            if (splitInstance.revert) splitInstance.revert();
-          } catch (e) {}
-          splitInstance = null;
-        }
+        // Nothing to tear down — no listeners or timelines owned by this module.
       }
     };
   })();

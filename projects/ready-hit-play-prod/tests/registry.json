@@ -1,7 +1,7 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-09",
-  "note": "Deployed: .section_home-intro scoped via main.main-wrapper:has([data-barba-namespace=\"home\"]) so the section can live as a sibling of .section_home outside the Barba container. Tests skipped by user at deploy time, manual verification.",
+  "note": "Added rhp-home-intro-dial-flip-lock entry (2026-04-09): refined home intro with locked dial + Flip.fit scrubbed morph + step text reveal. Deployed: .section_home-intro scoped via main.main-wrapper:has([data-barba-namespace=\"home\"]) so the section can live as a sibling of .section_home outside the Barba container. Tests skipped by user at deploy time, manual verification.",
   "lastDeployed": "2026-04-09",
   "lastDeployedHash": "08c0558",
   "entries": [
@@ -244,6 +244,16 @@
       "slug": "rhp-dial-short-viewport-bump",
       "created": "2026-04-08",
       "description": "Homepage dial bumped to 63svh on short-viewport desktops (1440-1990 wide, ≤849 tall); step text 'Great stories made undeniable' is ~438.55px (letter-spacing 5.63px), 63svh gives 504px dial at 1440×800 (~87% fill); unchanged at 1440×900 and 1920×1080; Barba round-trip preserved"
+    },
+    {
+      "id": "rhp-home-intro-dial-flip-lock",
+      "file": "tests/acceptance/rhp-home-intro-dial-flip-lock.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-home-intro-dial-flip-lock",
+      "created": "2026-04-09",
+      "description": "Homepage intro refined — dial locked idle at .home_dial-start (small, no fg video, step text hidden, intro logo fades in), GSAP Flip.fit scrubbed morph over 100vh to .home_dial-middle + .nav_logo-wrapper-2.is-nav, .rhp-home-ready toggle replaces _animateNavIn, step text reveal via RHP.homeIntro.revealStep, Barba re-entry skip, reduced motion fast-path"
     }
   ]
 }

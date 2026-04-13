@@ -443,17 +443,15 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   }
 }
 
-/* Short-viewport desktop laptops: bump dial so step text fits with breathing
-   room. Targets vh ≤ 849 in the 1440–1990 width range. The live step text
-   ("Great stories made undeniable") measures ~438px due to letter-spacing,
-   so at the default 50svh (400px at 800h) it would overflow the dial. 63svh
-   gives 504px at 1440×800 (≈87% text-fill) and ~535px at the 849 upper bound. */
+/* REMOVED 2026-04-13: short-viewport laptop dial bump no longer needed.
+   Leaving commented out for reference until next deploy confirms no regression.
 @media (min-width: 1440px) and (max-width: 1990px) and (max-height: 849px) {
   :root {
     --dial-large-width: 63svh;
     --dial-large-height: 63svh;
   }
 }
+*/
 
 /* CSS Custom Properties for GSAP animations (responsive) */
 :root {

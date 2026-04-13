@@ -209,22 +209,65 @@
       // Falls back to direct textContent swap when reduced-motion is on or the
       // plugin failed to load. `revert` cleans up any residual SplitText wrappers
       // from the home intro sequence before the first scramble runs.
+      // Characters used for the scramble noise.
+      const SCRAMBLE_CHARS = 'readyhitplay';
+      // Build a noise string that mirrors the word structure and case of the
+      // target text — same word count, same char count per word, same
+      // upper/lower per position so glyph widths stay consistent.
+      function buildNoise(target) {
+        const words = target.split(' ');
+        const noiseWords = words.map(w => {
+          let out = '';
+          for (let i = 0; i < w.length; i++) {
+            const c = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+            out += w[i] === w[i].toUpperCase() ? c.toUpperCase() : c;
+          }
+          return out;
+        });
+        // For 4+ word targets, merge the 3rd and 4th noise words (no space
+        // between) so the scrambled text sits on fewer lines.
+        if (noiseWords.length >= 4) {
+          noiseWords[2] = noiseWords[2] + noiseWords[3];
+          noiseWords.splice(3, 1);
+        }
+        return noiseWords.join(' ');
+      }
+
       function scrambleStep(text, { duration, speed, revert }) {
         if (!stepEl) return;
         if (revert) revertStepSplit();
         const gsapLib = window.gsap;
         const reduced = prefersReduced();
-        if (gsapLib && !reduced && window.ScrambleTextPlugin) {
+        if (gsapLib && !reduced) {
           // Allow break-anywhere wrapping during scramble so the random char
           // string doesn't overflow the dial when scrambling between texts of
           // different word-break shapes. Class is removed on complete so the
           // final clean text wraps on word boundaries again.
           stepEl.classList.add('is-scrambling');
-          gsapLib.to(stepEl, {
+          // Custom scramble: noise mirrors the target's word structure (same
+          // word count + lengths). `progress` 0→1 reveals the final text
+          // left to right. Unresolved positions show patterned noise that
+          // refreshes every ~4 frames for a flickering effect.
+          const tweenObj = { progress: 0 };
+          let frameCount = 0;
+          let cachedNoise = buildNoise(text);
+          gsapLib.killTweensOf(tweenObj);
+          gsapLib.to(tweenObj, {
+            progress: 1,
             duration,
-            scrambleText: { text, chars: 'upperCase', speed },
+            ease: 'none',
             overwrite: true,
-            onComplete: () => stepEl.classList.remove('is-scrambling'),
+            onUpdate: () => {
+              frameCount++;
+              if (frameCount % 4 === 0) cachedNoise = buildNoise(text);
+              const revealed = Math.floor(tweenObj.progress * text.length);
+              stepEl.textContent = text.slice(0, revealed) +
+                cachedNoise.slice(revealed);
+            },
+            onComplete: () => {
+              stepEl.textContent = text;
+              stepEl.classList.remove('is-scrambling');
+            },
             onInterrupt: () => stepEl.classList.remove('is-scrambling')
           });
         } else {

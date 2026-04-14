@@ -4,13 +4,13 @@
    - Desktop: sector hover switching + tick attraction (ticks DO NOT rotate)
    - Mobile: dial rotation (ticks rotate ONLY) + Variant B stepping (updates on boundary)
    - Sector highlight: active sector ticks show orange→teal gradient, 0.1s linear transition
-   - CMS order: first 8 items in rendered order
+   - CMS order: all items in rendered order (no cap)
    - Poster support: reads <img class="dial_cms-poster" ...> inside each .dial_cms-item
    - Barba-safe: init(container) / destroy()
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.4.10.1';
+  const WORK_DIAL_VERSION = '2026.4.14.1';
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';
 
@@ -277,7 +277,7 @@
 
       const cmsItems = Array.from(container.querySelectorAll(SEL.cmsItem));
       const items = cmsItems.length ? cmsItems : Array.from(document.querySelectorAll(SEL.cmsItem));
-      const N = Math.min(8, items.length);
+      const N = items.length;
 
       if (!N) {
         alive = false;
@@ -483,6 +483,8 @@
           const gsap = window.gsap;
           const reduced = prefersReduced();
           const dialFgEl = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
+          // Kill residual ENGAGED attractionEase tween on rapid ENGAGED→ACTIVE oscillation
+          if (gsap) gsap.killTweensOf(state);
           // Kill any running tweens on bgCanvas — the IDLE branch tweens both
           // opacity + filter together, and a rapid IDLE→ACTIVE transition would
           // let the old tween overwrite filter back to blur(0px) after our set().
@@ -517,8 +519,15 @@
           if (visibleVideo) playFg(visibleVideo);
           setDialUiOpacity(1);
         } else if (newState === DIAL_STATES.ENGAGED) {
-          // Dial UI remains visible in ENGAGED state
           setDialUiOpacity(1);
+          // Smoothly disable tick attraction so ticks return to base length
+          const gsap = window.gsap;
+          const reduced = prefersReduced();
+          if (gsap && !reduced) {
+            gsap.to(state, { attractionEase: 0, duration: 0.3, ease: 'power2.out', overwrite: true });
+          } else {
+            state.attractionEase = 0;
+          }
         }
       }
 
@@ -574,7 +583,8 @@
 
       // Gradient mix (0=teal, 1=orange). Middle 8 ticks fully orange, sharp falloff to teal at sector borders.
       const TICKS_PER_SECTOR = T.bars / N;
-      const FLAT_TICKS = 8;
+      // ~2/3 of sector ticks fully orange; matches 8-tick flat zone at N=8, T.bars=96
+      const FLAT_TICKS = Math.round(TICKS_PER_SECTOR * 0.67);
       const flatZoneHalfAngle = (FLAT_TICKS / TICKS_PER_SECTOR) * (sectorSize / 2);
       const edgeZoneAngle = (sectorSize / 2) - flatZoneHalfAngle;
       function sectorGradientMix(tickI, sectorIdx) {
@@ -1221,7 +1231,7 @@
         const dToOuter = Math.abs(state.rDist - OUTER_R_BASE);
         const dEdge = Math.min(dToInner, dToOuter);
 
-        const hasAttraction = hasPointer && !reduced && attractionEnabled;
+        const hasAttraction = hasPointer && !reduced && attractionEnabled && dialState !== DIAL_STATES.ENGAGED;
         state.attractionEase += hasAttraction ? 0.04 : -0.06;
         state.attractionEase = Math.max(0, Math.min(1, state.attractionEase));
 
@@ -1542,6 +1552,8 @@
       RHP.workDial._ready = false;
 
       stop();
+      // Kill any in-flight GSAP tweens on the state object (e.g. attractionEase from ENGAGED)
+      if (window.gsap) window.gsap.killTweensOf(state);
       cleanup.forEach(fn => { try { fn(); } catch(e){} });
       cleanup = [];
       suspendCleanup = [];

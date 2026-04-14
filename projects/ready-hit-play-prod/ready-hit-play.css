@@ -13,8 +13,8 @@
    Cursor + dial ticks are visible from the first frame; nav items + step text
    stay hidden until the 100vh scroll-morph scrub completes and the wrapper
    gets .rhp-home-ready (home-scroll-morph._applyCompleteState). Until then
-   the page shows the intro logo in .home-intro_logo-slot and the small
-   locked dial in .home_dial-start. */
+   the page shows #interactive-logo in .home-intro_middle and the small
+   .home-transition-dial in .home-intro_bottom. */
 [data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .nav_logo-link,
 [data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .nav_about-link,
 [data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .nav_contact-link {
@@ -130,17 +130,17 @@
    otherwise auto resolves to ~0 and the logo collapses). */
 .section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1),
 .about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1),
-.home-intro_logo-slot .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1) { flex: 602 1 0%; }
+#interactive-logo > .about-hero_ready:nth-child(1) { flex: 602 1 0%; }
 .section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2),
 .about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2),
-.home-intro_logo-slot .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2) { flex: 316 1 0%; }
+#interactive-logo > .about-hero_ready:nth-child(2) { flex: 316 1 0%; }
 .section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3),
 .about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3),
-.home-intro_logo-slot .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3) { flex: 494 1 0%; }
+#interactive-logo > .about-hero_ready:nth-child(3) { flex: 494 1 0%; }
 
 .section_about-hero .nav_logo-wrapper-2 svg,
 .about-transition_logo-middle .nav_logo-wrapper-2 svg,
-.home-intro_logo-slot .nav_logo-wrapper-2 svg {
+#interactive-logo svg {
   width: 100%;
   height: auto;
 }
@@ -325,6 +325,20 @@
   z-index: 3;
 }
 
+/* Initial intro state: dial sized small, ticks hidden. Applied as a class
+   so it survives any inline-style clearing by GSAP/IX2 at page load. Removed
+   by home-scroll-morph.js once the scrub completes. The transition dial in
+   .home-transition provides the visible teal ticks during the intro.
+   Only the ticks canvas is hidden — the generic (idle) video stays visible
+   as a background behind the intro overlay. */
+.dial_component.is-intro-small {
+  --dial-live-width: var(--dial-small-width);
+  --dial-live-height: var(--dial-small-height);
+}
+.dial_component.is-intro-small #dial_ticks-canvas {
+  opacity: 0 !important;
+}
+
 /* Desktop: home starts at opacity 0; GSAP animates to 1 on .dial_layer-fg hover.
    Case/about: always opacity 1 from click-through until return to home. */
 @media (hover: hover) {
@@ -400,47 +414,43 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   pointer-events: auto;
 }
 
-/* Intro logo slot — hosts the real .nav_logo-wrapper-2 (about-hero-style,
-   no .is-nav). The wrapper inherits --logo-large-* sizing from the global
-   .nav_logo-wrapper-2 rule. GSAP scrubs transform toward the nav target. */
-.home-intro_logo-slot {
+/* New: intro layout slots (home-scroll-morph.js uses Flip.fit to animate
+   #interactive-logo from .home-intro_middle → .home-intro_top and
+   .home-transition-dial from .home-intro_bottom → .home-intro_middle) */
+.home-intro_top {
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--logo-small-width, 16rem);
+}
+
+.home-intro_middle {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+}
+
+.home-intro_bottom {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-transition-dial {
+  width: var(--dial-small-width, 6rem);
+  height: var(--dial-small-height, 6rem);
+}
+
+#interactive-logo {
   width: var(--logo-large-width, 90vw);
   max-width: var(--logo-large-max-width, 93rem);
-  height: auto;
-  /* Same override as .section_home-intro above — the legacy CDN CSS disables
-     pointer events on this slot, which kills the hover interaction. */
-  pointer-events: auto;
-}
-
-/* Safari height-attr override for the intro logo children (same pattern
-   as .about-transition_logo-middle). The intro logo here is the large
-   about-hero-style one, so children need height:auto to fill the flex row. */
-.home-intro_logo-slot .nav_logo-wrapper-2 .about-hero_ready,
-.home-intro_logo-slot .nav_logo-wrapper-2 .nav_logo-embed {
-  height: auto;
-}
-
-/* Hover text reveal baseline — CSS owns the masked initial state (overflow
-   hidden + opacity:0 on the upper/lower text) so there's no FOUC before the
-   GSAP context wires up. home-scroll-morph.js tweens upper/lower to visible
-   on mouseenter (desktop) or scroll progress (mobile). */
-.home-intro_logo-slot .about-hero_ready {
-  overflow: hidden;
-  position: relative;
-}
-.home-intro_logo-slot .about-hero_ready .heading-style-h3.is-about-upper,
-.home-intro_logo-slot .about-hero_ready .heading-style-h3.is-about-lower {
-  opacity: 0;
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .home-intro_logo-slot .about-hero_ready .heading-style-h3.is-about-upper,
-  .home-intro_logo-slot .about-hero_ready .heading-style-h3.is-about-lower {
-    opacity: 1;
-  }
+  opacity: 0; /* FOUC guard — JS fades in after init */
 }
 
 /* REMOVED 2026-04-13: short-viewport laptop dial bump no longer needed.
@@ -513,6 +523,7 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 
 /* Fallback: namespace-based (for initial load before JS runs) */
 .dial_component[data-dial-ns="home"] #fg-video-wrap {
+  position: relative;
   width: 100%;
   height: 100%;
   aspect-ratio: 1 / 1;
@@ -543,20 +554,9 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   object-fit: cover;
 }
 
-/* ====== Labels (home only; fixed, never rotate) ====== */
-/* Position below dial: center + half dial height + gap (matches clamp(180px, min(50svh, 70vw))) */
-.dial_component[data-dial-ns="home"] .dial_layer-ui {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(50% + clamp(90px, min(25svh, 35vw), 9999px) + 8rem);
-  z-index: 4;
-  display: flex;
-  justify-content: center;
-}
-
-/* ScrambleText takes over: step text shows project name in ACTIVE state, dial_layer-ui no longer needed.
-   Scoped to home namespace — equal specificity cascades over the labels rule above. */
+/* ====== Labels (home only) ====== */
+/* ScrambleText takes over: step text shows project name in ACTIVE state,
+   dial_layer-ui no longer needed. Hidden on home. */
 .dial_component[data-dial-ns="home"] .dial_layer-ui {
   display: none;
 }
@@ -1119,4 +1119,18 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 /* Step text tap-to-play state */
 [data-text="step"].is-tap-to-play {
   cursor: pointer;
+}
+
+/* ====== Video overlays ====== */
+
+/* FG overlay: 15% black on homepage only */
+.dial_component[data-dial-ns="home"] #fg-video-wrap::after {
+  content: '';
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  opacity: var(--fg-overlay-opacity, 1);
+  z-index: 1;
+  pointer-events: none;
 }

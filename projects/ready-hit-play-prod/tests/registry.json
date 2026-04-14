@@ -1,6 +1,7 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-10",
+  "lastUpdated": "2026-04-14",
+  "note": "Added rhp-dial-engaged-ticks-dynamic-sectors entry (2026-04-13).",
   "note": "Deploy e2e685a (2026-04-10): idle video 720p + early fade-in on first frame. Tests skipped by user.",
   "lastDeployed": "2026-04-10",
   "lastDeployedHash": "e2e685a",
@@ -254,6 +255,36 @@
       "slug": "rhp-home-intro-dial-flip-lock",
       "created": "2026-04-09",
       "description": "Homepage intro refined — dial locked idle at .home_dial-start (small, no fg video, step text hidden, intro logo fades in), GSAP Flip.fit scrubbed morph over 100vh to .home_dial-middle + .nav_logo-wrapper-2.is-nav, .rhp-home-ready toggle replaces _animateNavIn, step text reveal via RHP.homeIntro.revealStep, Barba re-entry skip, reduced motion fast-path"
+    },
+    {
+      "id": "rhp-video-overlays",
+      "file": "tests/acceptance/rhp-video-overlays.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-video-overlays",
+      "created": "2026-04-13",
+      "description": "Video overlays — 45% BG ::after on all namespaces, 15% FG ::after on home only, GSAP custom prop fade during Barba transitions, reduced motion"
+    },
+    {
+      "id": "rhp-dial-engaged-ticks-dynamic-sectors",
+      "file": "tests/acceptance/rhp-dial-engaged-ticks-dynamic-sectors.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-dial-engaged-ticks-dynamic-sectors",
+      "created": "2026-04-13",
+      "description": "Dial engaged mode disables tick lengthening, dynamic sector count from CMS items, proportional FLAT_TICKS"
+    },
+    {
+      "id": "rhp-home-intro-scroll-choreography",
+      "file": "tests/acceptance/rhp-home-intro-scroll-choreography.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-home-intro-scroll-choreography",
+      "created": "2026-04-14",
+      "description": "Homepage intro scroll choreography — large logo + small transition dial animate via GSAP Flip.fit scrubbed by ScrollTrigger, morph complete swaps to work-dial, nav animate-in, scroll lock, Barba re-entry skip, replay on nav logo click, reduced motion"
     }
   ]
 }

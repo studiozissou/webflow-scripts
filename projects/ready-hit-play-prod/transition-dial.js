@@ -7,12 +7,13 @@
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
-  const TRANSITION_DIAL_VERSION = '2026.3.17.1';
+  const TRANSITION_DIAL_VERSION = '2026.4.14.2';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
   const SEL = {
-    container: '.transition-dial'
+    container: '.home-transition-dial',
+    containerFallback: '.transition-dial' // TODO: remove after confirming .transition-dial is gone from Webflow Designer
   };
 
   // Tick config — matches work-dial.js (96 bars, teal #05EFBF)
@@ -24,7 +25,8 @@
     gapRatio: 24 / REF_R,
     teal: { r: 5, g: 239, b: 191 }
   };
-  const TICK_RING_EXPAND = 1 + T.gapRatio + T.baseLenRatio;
+  // Extra padding (barW + lineCap rounding) so outer tick tips aren't clipped
+  const TICK_RING_EXPAND = 1 + T.gapRatio + T.baseLenRatio + T.barWRatio;
 
   RHP.transitionDial = (() => {
     let alive = false;
@@ -39,17 +41,22 @@
       cleanup.push(() => el.removeEventListener(evt, fn, opts));
     }
 
+    let lastPxSize = 0; // track to skip no-op redraws during scroll
+
     function resize() {
       if (!canvas || !canvas.parentElement) return;
       const dpr = window.devicePixelRatio || 1;
       geom.dpr = dpr;
 
-      // Always size the backing buffer at the large (viewport) target so the ticks
-      // stay crisp when the dial grows during about→home. CSS 100% handles display
-      // scaling to the actual wrapper size (small on about, large on home).
-      const dialLargeBase = Math.max(180, Math.min(window.innerHeight * 0.5, window.innerWidth * 0.7));
-      const size = Math.round(dialLargeBase * 1.184);
+      // Size the backing buffer to match the wrapper's visual size (includes
+      // CSS transforms like GSAP scale). Called on every scroll frame during
+      // the home-scroll-morph scrub — skip if backing size hasn't changed.
+      const parent = canvas.parentElement;
+      const r = parent.getBoundingClientRect();
+      const size = Math.round(Math.min(r.width, r.height)) || 96;
       const pxSize = Math.round(size * dpr);
+      if (pxSize === lastPxSize && canvas.width === pxSize) return;
+      lastPxSize = pxSize;
       canvas.width = pxSize;
       canvas.height = pxSize;
       canvas.style.width = '100%';
@@ -105,7 +112,8 @@
     function init(container = document) {
       if (alive) return;
 
-      const wrapper = container.querySelector(SEL.container) || document.querySelector(SEL.container);
+      const wrapper = container.querySelector(SEL.container) || document.querySelector(SEL.container) ||
+        container.querySelector(SEL.containerFallback) || document.querySelector(SEL.containerFallback);
       if (!wrapper) return;
 
       // Create canvas if not present
@@ -121,8 +129,7 @@
       if (!ctx) return;
 
       alive = true;
-      resize();
-      draw();
+      resize(); // resize() calls draw() internally
       on(window, 'resize', resize, { passive: true });
       on(document, 'visibilitychange', onVis, { passive: true });
     }
@@ -136,6 +143,7 @@
       cleanup = [];
       canvas = null;
       ctx = null;
+      lastPxSize = 0;
     }
 
     return { init, destroy, resize, version: TRANSITION_DIAL_VERSION };

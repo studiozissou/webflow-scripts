@@ -1,7 +1,29 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-10",
+  "updated": "2026-04-14",
   "queue": [
+    {
+      "id": "rhp-dial-engaged-ticks-dynamic-sectors",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Dial engaged tick lock + dynamic sector count from CMS items",
+      "description": "Two changes to work-dial.js: (1) When dial enters ENGAGED state, smoothly tween attractionEase to 0 so ticks return to base length, communicating that project switching is locked. Gate hasAttraction on dialState !== ENGAGED. (2) Remove Math.min(8, N) cap so sector count matches actual CMS items. Make FLAT_TICKS proportional at ~67% of ticks per sector. Single file, ~15 LOC. Low complexity.",
+      "spec": ".claude/specs/rhp-dial-engaged-ticks-dynamic-sectors.md",
+      "created": "2026-04-13"
+    },
+    {
+      "id": "rhp-video-overlays",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Building",
+      "title": "Video overlays — 45% BG dark overlay on all pages, 15% FG overlay on homepage with Barba transition fade",
+      "description": "Add CSS ::after pseudo-element overlays to the dial videos. BG overlay (rgba(0,0,0,0.45)) on .dial_layer-bg across all namespaces. FG overlay (rgba(0,0,0,0.15)) on #fg-video-wrap scoped to data-dial-ns=home, with GSAP --fg-overlay-opacity custom property tween during home↔work Barba transitions. ~40 LOC across ready-hit-play.css and orchestrator.js.",
+      "spec": ".claude/specs/rhp-video-overlays.md",
+      "created": "2026-04-13"
+    },
     {
       "id": "ai-search-aeo-skill",
       "project": "webflow-scripts",
@@ -14,26 +36,39 @@
       "created": "2026-04-10"
     },
     {
+      "id": "rhp-home-intro-scroll-choreography",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Home intro scroll choreography — logo + transition dial GSAP Flip.fit scrubbed morph, swap to work-dial, nav animate-in",
+      "description": "Choreograph the homepage intro scroll animation. On load: large #interactive-logo in .home-intro_middle, small transition-dial in .home-intro_bottom, main work-dial opacity 0, nav hidden. As user scrolls .section_home-intro (100vh), GSAP Flip.fit scrubbed via ScrollTrigger moves dial from bottom→middle (grows to large) and logo from middle→top (shrinks to small). At morph complete: hide intro section, show main work-dial, animate nav items in (except nav logo), step text SplitText entrance, unlock dial, lock scroll. Replay on nav logo click. Barba re-entry via skipToEnd. Reduced motion fast-path. Supersedes rhp-home-intro-scroll-morph and rhp-home-intro-dial-flip-lock.",
+      "spec": ".claude/specs/rhp-home-intro-scroll-choreography.md",
+      "created": "2026-04-14"
+    },
+    {
       "id": "rhp-home-intro-dial-flip-lock",
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Superseded",
       "title": "Home intro refined: dial locked idle at start slot, Flip-fit scrubbed morph to middle slot, step text reveal, nav visibility via class toggle",
-      "description": "Refine the in-progress home intro flow so the dial begins in a fully locked idle state at a new .home_dial-start slot (small size, no foreground video, no tick growth, no colour shift, no project switching). Intro logo fades in on load to avoid flash before scripts run. Step text (data text step and is step) is hidden until morph completes. As the user scrolls the 100vh intro section, a GSAP Flip fit scrubbed timeline fits the dial from .home_dial-start to .home_dial-middle and fits the intro logo to the .nav_logo-wrapper-2 is-nav nav target, both linked to scroll progress (0 to 100 percent). At morph complete, the dial live CSS vars are committed to dial large, the rhp-home-ready class is added on the wrapper (revealing nav items via the existing FOUC CSS), the intro logo is hidden, the real nav logo takes over, step text animates in via a new RHP homeIntro revealStep API, and the dial is fully unlocked via set intro complete, set attraction enabled true and on intro complete. The existing animate nav in gsap tween on .nav_logo-wrapper is removed. Barba re-entry and case-to-home handoff paths continue via homeScrollMorph skipToEnd. Reduced motion bypasses the scrub and lands at the completed state immediately. Touches home-intro.js, home-scroll-morph.js, init.js, ready-hit-play.css, and optionally work-dial.js. Requires new Webflow Designer slot divs .home_dial-start and .home_dial-middle with sizes matching dial small and dial large. Follows Flip fit scrubbed approach selected during planning.",
+      "description": "Superseded by rhp-home-intro-scroll-choreography (2026-04-14). Original: Refine the in-progress home intro flow so the dial begins in a fully locked idle state at a new .home_dial-start slot.",
       "spec": ".claude/specs/rhp-home-intro-dial-flip-lock.md",
-      "created": "2026-04-09"
+      "created": "2026-04-09",
+      "supersededBy": "rhp-home-intro-scroll-choreography"
     },
     {
       "id": "rhp-home-intro-scroll-morph",
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Superseded",
       "title": "Home intro section: scroll-driven logo morph, dial small to large expand, about slide transitions, nav logo replay",
-      "description": "Add an intro section on home with the large interactive logo (moved from about) over the IDLE background video with the dial rendered small. On 100vh scroll, Flip-reparent the logo into the nav slot and morph the dial from small to large via a ScrollTrigger scrub timeline, then lock scroll and hand control back to work-dial. Rebuild home to about and about to home Barba transitions as a simple container slide (translate minus one hundred percent to zero, opacity zero to one, power three out, zero point seven five seconds). On about to home the dial returns to IDLE. On Barba re-entry to home, skip the intro and land directly in the dial-large state. Case to home handoff still keeps dial ACTIVE with the previous project. Clicking the nav logo on home scrolls to top and replays the morph in reverse. Three cooperating modules: refactor home-intro.js (keep autoplay fallback), add home-scroll-morph.js (Flip plus ScrollTrigger scrub plus scroll lock plus canvas redraw plus replay API), add home-about-slide.js (slide transitions). Wire into orchestrator.js, init.js, and ready-hit-play.css. Prereq: Webflow Designer adds the home intro section container and moves the logo markup into a symbol. Follows Approach C (hybrid decomposition) from the plan.",
+      "description": "Superseded by rhp-home-intro-scroll-choreography (2026-04-14). Original: Add an intro section on home with the large interactive logo.",
       "spec": ".claude/specs/rhp-home-intro-scroll-morph.md",
-      "created": "2026-04-08"
+      "created": "2026-04-08",
+      "supersededBy": "rhp-home-intro-scroll-choreography"
     },
     {
       "id": "carsa-webflow-skill-v2",

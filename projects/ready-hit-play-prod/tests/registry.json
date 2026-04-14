@@ -1,10 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-14",
-  "note": "Added rhp-dial-engaged-ticks-dynamic-sectors entry (2026-04-13).",
-  "note": "Deploy e2e685a (2026-04-10): idle video 720p + early fade-in on first frame. Tests skipped by user.",
-  "lastDeployed": "2026-04-10",
-  "lastDeployedHash": "e2e685a",
+  "note": "Deploy cdc0f70 (2026-04-14): Flip.fit home intro scroll morph, transition-dial dynamic resize, text scramble, 540p video. Tests skipped by user.",
+  "lastDeployed": "2026-04-14",
+  "lastDeployedHash": "cdc0f70",
   "entries": [
     {
       "id": "smoke",

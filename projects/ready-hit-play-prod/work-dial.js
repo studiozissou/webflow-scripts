@@ -12,7 +12,7 @@
 (() => {
   const WORK_DIAL_VERSION = '2026.4.10.1';
 
-  const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&log_user=0&signature=cfa8c2f7dc5136f23bd196386794855c956b1c6c645a667820705c8c9d0bae14';
+  const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';
 
   const DIAL_STATES = { IDLE: 'idle', ACTIVE: 'active', ENGAGED: 'engaged' };
 

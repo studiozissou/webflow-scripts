@@ -17,7 +17,7 @@
   'use strict';
   const VERSION = '2026.4.14.1';
   const DEBUG = false;
-  const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY';
+  const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
 
   let ctx = null;
   let scrubTL = null;
@@ -180,9 +180,50 @@
     logoHoverCleanup = [];
   }
 
+  /** Gracefully tear down logo hover: plays a fast hover-out animation first
+      so there's no visual jump, then hides the upper/lower text elements from
+      flex layout and reverts SplitText. Called on first scroll frame. */
   function _destroyLogoText() {
     _destroyLogoHover();
-    _revertLogoText();
+    const gsap = window.gsap;
+    if (gsap && logoSplitData.length) {
+      const DUR = 0.25;
+      // Play hover-out on every ready group, then hide + revert when done.
+      let pending = logoSplitData.length;
+      const afterAll = () => {
+        if (--pending > 0) return;
+        // All hover-out anims done — hide text + spacers, revert splits.
+        // With the scale approach, internal structure differences don't matter
+        // (the whole element scales uniformly), but hiding text/spacers keeps
+        // the visual clean during the shrink.
+        logoSplitData.forEach(({ ready, upper, lower }) => {
+          [upper, lower].filter(Boolean).forEach(t => { t.style.display = 'none'; });
+          if (ready) ready.querySelectorAll('.about_logo-spacer').forEach(s => { s.style.display = 'none'; });
+        });
+        _revertLogoText();
+      };
+      logoSplitData.forEach(({ ready, upper, lower, allWords }) => {
+        const targets = [upper, lower].filter(Boolean);
+        // Kill any in-flight hover tweens so overwrite doesn't conflict
+        gsap.killTweensOf(ready);
+        gsap.killTweensOf(allWords);
+        targets.forEach(t => gsap.killTweensOf(t));
+        // Hover-out: words slide down + fade, container resets y
+        gsap.to(allWords, {
+          yPercent: 100, opacity: 0,
+          duration: DUR, ease: 'power3.in', overwrite: true
+        });
+        targets.forEach(t => gsap.to(t, {
+          opacity: 0, duration: DUR, overwrite: true
+        }));
+        gsap.to(ready, {
+          y: 0, duration: DUR, ease: 'power3.out', overwrite: true,
+          onComplete: afterAll
+        });
+      });
+    } else {
+      _revertLogoText();
+    }
   }
 
   function init(container) {
@@ -283,16 +324,59 @@
         const dx = (midRect.left + midRect.width / 2) - (dialRect.left + dialRect.width / 2);
         const dy = (midRect.top + midRect.height / 2) - (dialRect.top + dialRect.height / 2);
 
+        // Animate #interactive-logo via GSAP scale to shrink to nav logo size.
+        // Both logos share .nav_logo-wrapper-2 with responsive CSS scale
+        // (0.8 @ 1280, 0.9 @ 1440, 1 @ 1920). Using GSAP scale (which compounds
+        // with the CSS scale) avoids all internal flex-structure mismatches —
+        // the entire element shrinks uniformly to match the nav wrapper's visual width.
+        const navWrapper = document.querySelector('.nav_logo-wrapper-2.is-nav');
+        const navLink = document.querySelector('.nav_logo-link') || topSlot;
+        const navWrapperRect = navWrapper ? navWrapper.getBoundingClientRect() : navLink.getBoundingClientRect();
         const logoRect = logoEl.getBoundingClientRect();
-        // Target the nav logo directly so the animated logo lands exactly
-        // where the nav logo appears after the swap.
-        const navLogo = document.querySelector('.nav_logo-link');
-        const lTarget = navLogo ? navLogo.getBoundingClientRect() : topSlot.getBoundingClientRect();
-        const lTargetMax = Math.max(lTarget.width, lTarget.height) || 1;
-        const lSourceMax = Math.max(logoRect.width, logoRect.height) || 1;
-        const lScale = lTargetMax / lSourceMax;
-        const lx = (lTarget.left + lTarget.width / 2) - (logoRect.left + logoRect.width / 2);
-        const ly = (lTarget.top + lTarget.height / 2) - (logoRect.top + logoRect.height / 2);
+
+        // Scale factor: GSAP scale replaces the CSS transform (which includes
+        // a responsive scale: 0.8 @ 1280px, 0.9 @ 1440px, 1 @ 1920px).
+        // The nav logo SVGs overflow their flex container (flex:0 1 auto lets
+        // intrinsic SVG sizes exceed the wrapper), while the interactive logo
+        // SVGs are constrained (flex:N 1 0%). So we measure the actual nav SVG
+        // visual span, not the wrapper width, as the target.
+        const navSvgs = navWrapper.querySelectorAll ? [...navWrapper.querySelectorAll('svg')] : [];
+        let navSvgSpan = navWrapperRect.width; // fallback
+        if (navSvgs.length) {
+          const rects = navSvgs.map(s => s.getBoundingClientRect());
+          navSvgSpan = Math.max(...rects.map(r => r.right)) - Math.min(...rects.map(r => r.left));
+        }
+        const lScale = navSvgSpan / (logoEl.offsetWidth || logoRect.width);
+
+        // Position: align on the FIRST SVG ("READY") so it doesn't jump on swap.
+        // GSAP `translate(lx) scale(s)` transforms from the layout center, so the
+        // first SVG's visual offset changes with scale. We compute where the first
+        // SVG center will land AFTER scaling, then solve for lx.
+        //
+        // Math: at rest, CSS scale = cssScale. First SVG offset from logo center
+        // (visual) = ilSvgCenter - ilLogoCenter. After GSAP scale(lScale), this
+        // offset scales by (lScale / cssScale). So:
+        //   lx = navSvgCenter - ilLogoCenter - offset * (lScale / cssScale)
+        const cssScale = logoEl.offsetWidth > 0 ? logoRect.width / logoEl.offsetWidth : 1;
+        const ilFirstSvg = logoEl.querySelector('svg');
+        const navFirstSvg = navWrapper.querySelector ? navWrapper.querySelector('svg') : null;
+        const ilLogoCenterX = logoRect.left + logoRect.width / 2;
+        const ilLogoCenterY = logoRect.top + logoRect.height / 2;
+        let lx, ly;
+        if (ilFirstSvg && navFirstSvg && cssScale > 0) {
+          const ilSvgRect = ilFirstSvg.getBoundingClientRect();
+          const navSvgRect = navFirstSvg.getBoundingClientRect();
+          const scaleRatio = lScale / cssScale;
+          // Horizontal: align first SVG center after scale
+          const offsetX = (ilSvgRect.left + ilSvgRect.width / 2) - ilLogoCenterX;
+          lx = (navSvgRect.left + navSvgRect.width / 2) - ilLogoCenterX - offsetX * scaleRatio;
+          // Vertical: align on nav wrapper center after scale
+          const offsetY = ilLogoCenterY - ilLogoCenterY; // 0 — center stays center
+          ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
+        } else {
+          lx = (navWrapperRect.left + navWrapperRect.width / 2) - ilLogoCenterX;
+          ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
+        }
 
         scrubTL = gsap.timeline({
           scrollTrigger: {
@@ -303,10 +387,15 @@
             onLeave: onMorphComplete,
             onEnterBack: onMorphReverse,
             invalidateOnRefresh: true,
-            onUpdate: () => {
+            onUpdate: (self) => {
+              // On first scroll frame, destroy the hover text animation so the
+              // upper/lower text elements no longer affect flex layout. This lets
+              // the SVGs fill their containers at the same proportions as the nav logo.
+              if (self.progress > 0 && logoSplitData.length) {
+                _destroyLogoText();
+              }
               // Redraw transition dial canvas at current visual size so ticks
-              // stay crisp as GSAP scale grows the wrapper. getBoundingClientRect
-              // inside resize() includes the transform, giving the right px count.
+              // stay crisp as GSAP scale grows the wrapper.
               if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
             }
           }
@@ -318,7 +407,10 @@
           ease: 'power3.inOut', duration: 1
         }, 0);
 
-        // Logo: move to top slot center + shrink (uniform scale)
+        // Logo: shrink via uniform scale + move to nav position.
+        // GSAP scale compounds with the CSS transform scale, so the visual
+        // result is cssScale × gsapScale. At lScale the logo visually matches
+        // the nav wrapper exactly.
         scrubTL.to(logoEl, {
           x: lx, y: ly, scale: lScale,
           ease: 'power3.inOut', duration: 1

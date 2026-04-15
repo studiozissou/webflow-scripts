@@ -141,7 +141,9 @@
     const dur = reduced ? 0 : 0.8;
 
     return new Promise((resolve) => {
+      const videoWrap = document.getElementById('fg-video-wrap');
       gsap.killTweensOf(dialFg);
+      if (videoWrap) gsap.killTweensOf(videoWrap);
 
       if (dialUI) {
         gsap.to(dialUI, { opacity: 0, duration: dur * 0.4, ease: 'power2.out' });
@@ -153,7 +155,6 @@
       const rect = dialFg.getBoundingClientRect();
 
       // Pin #fg-video-wrap dimensions before ns change
-      const videoWrap = document.getElementById('fg-video-wrap');
       const vRect = videoWrap?.getBoundingClientRect();
       if (videoWrap && vRect) {
         const caseBR = _parseSize(v.caseBR);
@@ -186,6 +187,15 @@
               borderBottomRightRadius: 0
             });
           }
+        });
+      }
+
+      // Fade out FG overlay (home → work)
+      if (videoWrap) {
+        gsap.to(videoWrap, {
+          '--fg-overlay-opacity': 0,
+          duration: reduced ? 0 : 0.3,
+          ease: 'power1.out'
         });
       }
 
@@ -235,7 +245,9 @@
     const dur = reduced ? 0 : 0.8;
 
     return new Promise((resolve) => {
+      const videoWrap = document.getElementById('fg-video-wrap');
       gsap.killTweensOf(dialFg);
+      if (videoWrap) gsap.killTweensOf(videoWrap);
 
       if (dialTicks) gsap.set(dialTicks, { opacity: 0 });
 
@@ -253,6 +265,16 @@
 
       setDialNs('home');
       dialFg.classList.remove('is-case-study', 'no-scrollbar');
+
+      // Fade in FG overlay (work → home)
+      if (videoWrap) {
+        gsap.to(videoWrap, {
+          '--fg-overlay-opacity': 1,
+          duration: reduced ? 0 : 0.3,
+          ease: 'power1.out',
+          delay: dur * 0.5
+        });
+      }
 
       if (dialTicks) {
         gsap.to(dialTicks, { opacity: 1, duration: dur * 0.6, ease: 'power2.in', delay: dur * 0.2 });
@@ -291,6 +313,8 @@
 
     if (gsap) {
       gsap.set(dialFg, { clearProps: 'all' });
+      const videoWrap = document.getElementById('fg-video-wrap');
+      if (videoWrap) gsap.set(videoWrap, { '--fg-overlay-opacity': 0 });
       if (dialUI) gsap.set(dialUI, { opacity: 0 });
     } else {
       dialFg.style.cssText = '';
@@ -312,6 +336,8 @@
       gsap.set(dialFg, { clearProps: 'all' });
       // Assert centering — defensive against stale inline styles on mobile
       gsap.set(dialFg, { position: 'absolute', inset: 0, margin: 'auto' });
+      const videoWrap = document.getElementById('fg-video-wrap');
+      if (videoWrap) gsap.set(videoWrap, { '--fg-overlay-opacity': 1 });
       if (dialUI) gsap.set(dialUI, { clearProps: 'opacity' });
     } else {
       dialFg.style.cssText = '';
@@ -1398,7 +1424,11 @@
       }
       var videoWrap = document.getElementById('fg-video-wrap');
       if (videoWrap && window.gsap) {
+        window.gsap.killTweensOf(videoWrap);
         window.gsap.set(videoWrap, { clearProps: 'all' });
+        // Re-assert FG overlay opacity (clearProps wipes CSS variables).
+        // 1 on home (overlay visible), 0 on work/about/case (overlay hidden).
+        window.gsap.set(videoWrap, { '--fg-overlay-opacity': ns === 'home' ? 1 : 0 });
       }
 
       if (ns === 'case' || ns === 'work') {

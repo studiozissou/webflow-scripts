@@ -108,18 +108,18 @@
   height: auto;
 }
 
-/* Safari: SVG height="162" attribute overrides flex container sizing.
-   Cascade height:100% from .is-nav (which has --logo-small-height) through
-   .about-hero_ready and .nav_logo-embed so the SVG inherits the constrained
-   height instead of using its 162px presentation attribute. width:auto
-   preserves each glyph's viewBox aspect ratio. */
+/* Nav logo: use the same width-driven flex layout as the interactive logo
+   so a uniform GSAP scale produces a pixel-perfect match. The nav wrapper's
+   fixed width (--logo-small-width) constrains the flex children; height
+   follows from SVG aspect ratio. Removing height:100% avoids Safari's
+   SVG height="162" attribute override — the proportional flex handles sizing. */
 .nav_logo-wrapper-2.is-nav .about-hero_ready,
 .nav_logo-wrapper-2.is-nav .nav_logo-embed {
-  height: 100%;
+  height: auto;
 }
 .nav_logo-wrapper-2.is-nav svg {
-  height: 100%;
-  width: auto;
+  width: 100%;
+  height: auto;
 }
 
 /* Logo proportional flex: distribute widths by each SVG's viewBox width
@@ -128,18 +128,14 @@
    (GSAP animates the transition logo to height:auto — SVGs need
    CSS height:auto to override the HTML height="100%" attribute,
    otherwise auto resolves to ~0 and the logo collapses). */
-.section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1),
-.about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(1),
+.nav_logo-wrapper-2 > .about-hero_ready:nth-child(1),
 #interactive-logo > .about-hero_ready:nth-child(1) { flex: 602 1 0%; }
-.section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2),
-.about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(2),
+.nav_logo-wrapper-2 > .about-hero_ready:nth-child(2),
 #interactive-logo > .about-hero_ready:nth-child(2) { flex: 316 1 0%; }
-.section_about-hero .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3),
-.about-transition_logo-middle .nav_logo-wrapper-2 > .about-hero_ready:nth-child(3),
+.nav_logo-wrapper-2 > .about-hero_ready:nth-child(3),
 #interactive-logo > .about-hero_ready:nth-child(3) { flex: 494 1 0%; }
 
-.section_about-hero .nav_logo-wrapper-2 svg,
-.about-transition_logo-middle .nav_logo-wrapper-2 svg,
+.nav_logo-wrapper-2 svg,
 #interactive-logo svg {
   width: 100%;
   height: auto;
@@ -452,6 +448,9 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   max-width: var(--logo-large-max-width, 93rem);
   opacity: 0; /* FOUC guard — JS fades in after init */
 }
+/* Spacers are only needed during the hover text reveal animation.
+   Hidden by default so the interactive logo matches the nav logo structure. */
+#interactive-logo .about_logo-spacer { display: none; }
 
 /* REMOVED 2026-04-13: short-viewport laptop dial bump no longer needed.
    Leaving commented out for reference until next deploy confirms no regression.

@@ -148,7 +148,10 @@
     logoSplitData.forEach(({ ready, upper, lower, allWords }) => {
       const targets = [upper, lower].filter(Boolean);
 
+      const spacers = ready.querySelectorAll('.about_logo-spacer');
+
       const onEnter = () => {
+        spacers.forEach(s => { s.style.display = 'block'; }); // inline overrides CSS none
         targets.forEach(t => gsap.to(t, { opacity: 1, duration: 0.3, overwrite: true }));
         gsap.to(allWords, {
           yPercent: 0, opacity: 1,
@@ -163,7 +166,9 @@
           duration: 0.4, ease: 'power3.in', stagger: 0.03, overwrite: true
         });
         targets.forEach(t => gsap.to(t, { opacity: 0, duration: 0.3, delay: 0.15, overwrite: true }));
-        gsap.to(ready, { y: 0, duration: 0.5, ease: 'power3.out', overwrite: true });
+        gsap.to(ready, { y: 0, duration: 0.5, ease: 'power3.out', overwrite: true,
+          onComplete: () => { spacers.forEach(s => { s.style.display = 'none'; }); }
+        });
       };
 
       ready.addEventListener('mouseenter', onEnter);
@@ -192,13 +197,11 @@
       let pending = logoSplitData.length;
       const afterAll = () => {
         if (--pending > 0) return;
-        // All hover-out anims done — hide text + spacers, revert splits.
-        // With the scale approach, internal structure differences don't matter
-        // (the whole element scales uniformly), but hiding text/spacers keeps
-        // the visual clean during the shrink.
+        // All hover-out anims done — hide text, reset spacers to CSS default
+        // (display:none via #interactive-logo .about_logo-spacer rule), revert splits.
         logoSplitData.forEach(({ ready, upper, lower }) => {
           [upper, lower].filter(Boolean).forEach(t => { t.style.display = 'none'; });
-          if (ready) ready.querySelectorAll('.about_logo-spacer').forEach(s => { s.style.display = 'none'; });
+          if (ready) ready.querySelectorAll('.about_logo-spacer').forEach(s => { s.style.display = ''; });
         });
         _revertLogoText();
       };
@@ -334,49 +337,34 @@
         const navWrapperRect = navWrapper ? navWrapper.getBoundingClientRect() : navLink.getBoundingClientRect();
         const logoRect = logoEl.getBoundingClientRect();
 
-        // Scale factor: GSAP scale replaces the CSS transform (which includes
-        // a responsive scale: 0.8 @ 1280px, 0.9 @ 1440px, 1 @ 1920px).
-        // The nav logo SVGs overflow their flex container (flex:0 1 auto lets
-        // intrinsic SVG sizes exceed the wrapper), while the interactive logo
-        // SVGs are constrained (flex:N 1 0%). So we measure the actual nav SVG
-        // visual span, not the wrapper width, as the target.
-        const navSvgs = navWrapper.querySelectorAll ? [...navWrapper.querySelectorAll('svg')] : [];
-        let navSvgSpan = navWrapperRect.width; // fallback
-        if (navSvgs.length) {
-          const rects = navSvgs.map(s => s.getBoundingClientRect());
-          navSvgSpan = Math.max(...rects.map(r => r.right)) - Math.min(...rects.map(r => r.left));
-        }
-        const lScale = navSvgSpan / (logoEl.offsetWidth || logoRect.width);
-
-        // Position: align on the FIRST SVG ("READY") so it doesn't jump on swap.
-        // GSAP `translate(lx) scale(s)` transforms from the layout center, so the
-        // first SVG's visual offset changes with scale. We compute where the first
-        // SVG center will land AFTER scaling, then solve for lx.
-        //
-        // Math: at rest, CSS scale = cssScale. First SVG offset from logo center
-        // (visual) = ilSvgCenter - ilLogoCenter. After GSAP scale(lScale), this
-        // offset scales by (lScale / cssScale). So:
-        //   lx = navSvgCenter - ilLogoCenter - offset * (lScale / cssScale)
-        const cssScale = logoEl.offsetWidth > 0 ? logoRect.width / logoEl.offsetWidth : 1;
+        // Scale factor: GSAP scale replaces the CSS transform. Match the first
+        // SVG width ("READY") exactly — it's the most visually prominent word.
+        // Matching per-SVG width avoids gap% differences (the interactive logo's
+        // 2.5% gap is computed on a larger layout width than the nav's).
         const ilFirstSvg = logoEl.querySelector('svg');
         const navFirstSvg = navWrapper.querySelector ? navWrapper.querySelector('svg') : null;
+        let lScale;
+        if (ilFirstSvg && navFirstSvg) {
+          const ilSvgWidth = ilFirstSvg.getBoundingClientRect().width;
+          const navSvgWidth = navFirstSvg.getBoundingClientRect().width;
+          // ilSvgWidth is visual (post-CSS-scale). GSAP replaces the transform,
+          // so we need: layoutSvgWidth * gsapScale = navSvgWidth.
+          // layoutSvgWidth = ilSvgWidth / cssScale, so:
+          // gsapScale = navSvgWidth * cssScale / ilSvgWidth
+          const cssScale2 = logoEl.offsetWidth > 0 ? logoRect.width / logoEl.offsetWidth : 1;
+          lScale = (navSvgWidth / ilSvgWidth) * cssScale2;
+        } else {
+          lScale = navWrapperRect.width / (logoEl.offsetWidth || logoRect.width);
+        }
+
+        // Position: align wrapper centers. GSAP scale transforms from the
+        // element's layout center, so translate = navCenter - ilCenter.
+        // The ~1px/gap drift from percentage gap resolution is distributed
+        // evenly across all words (~0.67px each — sub-pixel, invisible).
         const ilLogoCenterX = logoRect.left + logoRect.width / 2;
         const ilLogoCenterY = logoRect.top + logoRect.height / 2;
-        let lx, ly;
-        if (ilFirstSvg && navFirstSvg && cssScale > 0) {
-          const ilSvgRect = ilFirstSvg.getBoundingClientRect();
-          const navSvgRect = navFirstSvg.getBoundingClientRect();
-          const scaleRatio = lScale / cssScale;
-          // Horizontal: align first SVG center after scale
-          const offsetX = (ilSvgRect.left + ilSvgRect.width / 2) - ilLogoCenterX;
-          lx = (navSvgRect.left + navSvgRect.width / 2) - ilLogoCenterX - offsetX * scaleRatio;
-          // Vertical: align on nav wrapper center after scale
-          const offsetY = ilLogoCenterY - ilLogoCenterY; // 0 — center stays center
-          ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
-        } else {
-          lx = (navWrapperRect.left + navWrapperRect.width / 2) - ilLogoCenterX;
-          ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
-        }
+        const lx = (navWrapperRect.left + navWrapperRect.width / 2) - ilLogoCenterX;
+        const ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
 
         scrubTL = gsap.timeline({
           scrollTrigger: {
@@ -408,9 +396,9 @@
         }, 0);
 
         // Logo: shrink via uniform scale + move to nav position.
-        // GSAP scale compounds with the CSS transform scale, so the visual
-        // result is cssScale × gsapScale. At lScale the logo visually matches
-        // the nav wrapper exactly.
+        // Gap drift (~1px/gap from CSS 2.5% resolving against different layout
+        // widths) is absorbed by center-to-center alignment — distributed evenly
+        // across all words at sub-pixel level.
         scrubTL.to(logoEl, {
           x: lx, y: ly, scale: lScale,
           ease: 'power3.inOut', duration: 1

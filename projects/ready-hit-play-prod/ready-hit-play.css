@@ -1122,14 +1122,19 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 
 /* ====== Video overlays ====== */
 
-/* FG overlay: 15% black on homepage only */
-.dial_component[data-dial-ns="home"] #fg-video-wrap::after {
+/* Ensure ::after has a positioning context at all times (including during clearProps) */
+#fg-video-wrap {
+  position: relative;
+}
+
+/* FG overlay: 15% black, opacity driven by JS via --fg-overlay-opacity */
+#fg-video-wrap::after {
   content: '';
   display: block;
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.15);
-  opacity: var(--fg-overlay-opacity, 1);
+  opacity: var(--fg-overlay-opacity, 0);
   z-index: 1;
   pointer-events: none;
 }

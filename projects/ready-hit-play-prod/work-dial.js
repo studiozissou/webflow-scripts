@@ -202,8 +202,10 @@
           stepEl.textContent = stepEl.textContent.trim();
         }
       }
+      let _scrambleTween = null;
       // Kill any in-flight scramble tween on Barba destroy so it can't write to a detached node
       cleanup.push(() => {
+        if (_scrambleTween) { _scrambleTween.kill(); _scrambleTween = null; }
         if (stepEl && window.gsap) window.gsap.killTweensOf(stepEl);
         if (stepEl) stepEl.classList.remove('is-scrambling');
       });
@@ -255,8 +257,8 @@
           const tweenObj = { progress: 0 };
           let frameCount = 0;
           let cachedNoise = buildNoise(text);
-          gsapLib.killTweensOf(tweenObj);
-          gsapLib.to(tweenObj, {
+          if (_scrambleTween) _scrambleTween.kill();
+          _scrambleTween = gsapLib.to(tweenObj, {
             progress: 1,
             duration,
             ease: 'none',
@@ -516,9 +518,10 @@
             if (gsap && !reduced) gsap.to(dialFgEl, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: 'auto' });
             else dialFgEl.style.opacity = '1';
           }
-          // Scramble step text to active project name
-          const projectName = items[state.activeIndex]?.getAttribute('data-title') || '';
-          scrambleStep(projectName, { duration: 0.85, speed: 0.4, revert: true });
+          // Reset lastIndex so the next applyActive (mouse-position driven) always
+          // fires, even if the cursor is over the same sector as before IDLE.
+          // Use -2 (not -1) so applyActive doesn't treat this as the initial load.
+          state.lastIndex = -2;
           // Play fg video
           if (visibleVideo) playFg(visibleVideo);
           setDialUiOpacity(1);

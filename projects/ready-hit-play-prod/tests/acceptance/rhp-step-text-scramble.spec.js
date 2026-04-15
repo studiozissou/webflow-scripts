@@ -144,6 +144,58 @@ test.describe(`${SLUG} — Reduced motion`, () => {
   });
 });
 
+test.describe(`${SLUG} — Rapid sector switch`, () => {
+  test.beforeEach(async ({ page }) => {
+    await loadHome(page);
+  });
+
+  test('step text matches current sector after rapid switches, never reverts to previous', async ({ page }) => {
+    await activateDial(page);
+
+    // Get all CMS item titles
+    const titles = await page.$$eval('.dial_cms-item', els =>
+      els.map(el => el.getAttribute('data-title')).filter(Boolean)
+    );
+    expect(titles.length).toBeGreaterThanOrEqual(2);
+
+    // Rapidly switch sectors by dispatching pointer events at different angles
+    const finalIdx = titles.length - 1;
+    await page.evaluate((targetIdx) => {
+      const comp = document.querySelector('.dial_component');
+      if (!comp) return;
+      const r = comp.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const radius = r.width * 0.35;
+      // Sweep through all sectors rapidly, ending at targetIdx
+      for (let i = 0; i <= targetIdx; i++) {
+        const angle = (i / (targetIdx + 1)) * Math.PI * 2 - Math.PI / 2;
+        const ev = new PointerEvent('pointermove', {
+          clientX: cx + Math.cos(angle) * radius,
+          clientY: cy + Math.sin(angle) * radius,
+          bubbles: true, pointerType: 'mouse'
+        });
+        comp.dispatchEvent(ev);
+      }
+    }, finalIdx);
+
+    // Wait for scramble to complete (0.65s animation + buffer)
+    await page.waitForTimeout(1200);
+
+    // The step text must match the LAST sector, not any previous one
+    const result = await page.evaluate(() => {
+      const idx = window.RHP?.workDial?.getActiveIndex?.() ?? -1;
+      const items = document.querySelectorAll('.dial_cms-item');
+      const activeTitle = items[idx]?.getAttribute('data-title') || '';
+      const stepText = document.querySelector('[data-text="step"]')?.textContent?.trim() || '';
+      return { activeTitle, stepText };
+    });
+    if (result.activeTitle) {
+      expect(result.stepText).toBe(result.activeTitle);
+    }
+  });
+});
+
 test.describe(`${SLUG} — Barba re-entry`, () => {
   test('step text re-initialises cleanly on home → about → home', async ({ page }) => {
     await loadHome(page);

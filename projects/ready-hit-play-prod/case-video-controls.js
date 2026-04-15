@@ -7,7 +7,7 @@
    + Auto-hide controls + cursor on mouse inactivity
    ========================================= */
 (() => {
-  const VERSION = '2026.3.27.1';
+  const VERSION = '2026.4.15.1';
   window.RHP = window.RHP || {};
 
   const cleanups = [];
@@ -296,6 +296,13 @@
       section.addEventListener('mouseleave', onSectionMouseLeave);
 
       /* No idle timer at init — starts on first mousemove inside section */
+
+      /* Autoplay after Barba transition — browser only processes the HTML
+         autoplay attribute on initial parse, not for dynamically inserted
+         elements.  tryPlay() is harmless on direct load (already playing). */
+      tryPlay(video).then(result => {
+        if (result.ok) video._rhpGestureUnlocked = true;
+      });
 
       cleanups.push(() => {
         section.removeEventListener('mousemove', onSectionMouseMove);

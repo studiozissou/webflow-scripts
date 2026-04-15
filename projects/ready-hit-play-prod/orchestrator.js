@@ -1253,27 +1253,89 @@
     const bgCanvas = document.querySelector('.dial_bg-canvas');
     const caseFgEl = document.querySelector('#fg-video-wrap > .dial_fg-video');
     if (!bgCanvas || !caseFgEl) return;
-    // Size canvas to half-res of parent (work-dial resize() is suspended on case pages)
-    const parent = bgCanvas.parentElement;
-    if (parent) {
+    const bgCtx = bgCanvas.getContext('2d');
+    let sized = false;
+    function sizeCanvas() {
+      // Size canvas to half-res of parent (work-dial resize() is suspended on case pages)
+      const parent = bgCanvas.parentElement;
+      if (!parent) return false;
       const pw = parent.offsetWidth;
       const ph = parent.offsetHeight;
       if (pw > 0 && ph > 0) {
         bgCanvas.width = Math.round(pw * 0.5);
         bgCanvas.height = Math.round(ph * 0.5);
+        return true;
       }
+      return false;
     }
-    const bgCtx = bgCanvas.getContext('2d');
     function tick() {
-      if (caseFgEl.readyState >= 2) {
+      // Retry sizing until parent has layout (may be 0 on first frames after transition)
+      if (!sized) sized = sizeCanvas();
+      if (sized && caseFgEl.readyState >= 2) {
         try { bgCtx.drawImage(caseFgEl, 0, 0, bgCanvas.width, bgCanvas.height); } catch(e) {}
       }
       _caseBgRafId = requestAnimationFrame(tick);
     }
+    sized = sizeCanvas();
     _caseBgRafId = requestAnimationFrame(tick);
   }
   function stopCaseBgDraw() {
     if (_caseBgRafId) { cancelAnimationFrame(_caseBgRafId); _caseBgRafId = null; }
+  }
+
+  /**
+   * Update persistent FG video from .dial_cms-item CMS data.
+   * Matches the current page slug to data-url on the CMS item, reads
+   * data-video / data-video-mobile for src and .dial_cms-poster for poster.
+   * Restarts the BG canvas rAF draw loop so it mirrors the new video.
+   * @param {boolean} [force=true] - false on direct-land to skip if src already set
+   */
+  function _updateCaseVideos(force) {
+    if (force === undefined) force = true;
+    // Extract slug from URL (e.g. /work/overland-ai → overland-ai)
+    const slug = window.location.pathname.replace(/\/$/, '').split('/').pop() || '';
+    if (!slug) return;
+    // Find matching CMS item (persists outside Barba container)
+    const item = document.querySelector('.dial_cms-item[data-url="' + slug + '"]');
+    if (!item) return;
+    const isMobile = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    const fgSrc = (isMobile && item.getAttribute('data-video-mobile'))
+                  || item.getAttribute('data-video') || '';
+    // #fg-video-wrap lives outside the Barba container — document query is intentional
+    const fgVideo = document.querySelector('#fg-video-wrap > .dial_fg-video');
+    if (!fgSrc || !fgVideo) return;
+    if (!force && fgVideo.src) return;
+
+    // Skip reload if current src already matches target (e.g. home→work, video unchanged)
+    if (fgVideo.src && fgVideo.src.indexOf(fgSrc) !== -1) return;
+
+    // Capture current frame as overlay so the user sees the old video while new loads
+    const fgWrap = document.getElementById('fg-video-wrap');
+    let frameOverlay = null;
+    if (fgWrap && fgVideo.readyState >= 2 && fgVideo.videoWidth > 0) {
+      const cvs = document.createElement('canvas');
+      cvs.width = fgVideo.videoWidth;
+      cvs.height = fgVideo.videoHeight;
+      try { cvs.getContext('2d').drawImage(fgVideo, 0, 0); } catch (e) {}
+      frameOverlay = document.createElement('img');
+      frameOverlay.src = cvs.toDataURL('image/jpeg', 0.85);
+      frameOverlay.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;pointer-events:none;';
+      frameOverlay.setAttribute('aria-hidden', 'true');
+      fgWrap.appendChild(frameOverlay);
+    }
+
+    // Load + play immediately — lets browser fire natural waiting/playing events for spinner
+    fgVideo.preload = 'auto';
+    fgVideo.src = fgSrc;
+    fgVideo.load();
+    fgVideo.play().catch(function() {});
+
+    // Remove frame overlay once new video starts playing
+    fgVideo.addEventListener('playing', function() {
+      if (frameOverlay && frameOverlay.parentNode) {
+        frameOverlay.parentNode.removeChild(frameOverlay);
+      }
+    }, { once: true });
   }
 
   function bootCurrentView() {
@@ -1288,20 +1350,13 @@
       setDialNs('work');
       RHP.scroll.unlock();
 
-      // Populate persistent FG video from data attributes on .case-studies_wrapper
-      var caseWrapper = container?.querySelector('.case-studies_wrapper');
-      var isMobile = window.matchMedia('(hover: none), (pointer: coarse)').matches;
-      var fgSrc = (isMobile && caseWrapper?.getAttribute('fg-video-mobile')) || caseWrapper?.getAttribute('fg-video') || '';
-      var fgVideo = document.querySelector('#fg-video-wrap > .dial_fg-video');
-      if (fgSrc && fgVideo && !fgVideo.src) {
-        fgVideo.src = fgSrc;
-        fgVideo.play().catch(function() {});
-      }
-      // BG canvas: set blur + opacity, start rAF draw loop
+      // BG canvas: set blur + opacity, start draw loop
       const bgCanvas = document.querySelector('.dial_bg-canvas');
       if (bgCanvas && window.gsap) {
         window.gsap.set(bgCanvas, { filter: 'blur(40px)', opacity: 1 });
       }
+      _updateCaseVideos(false);
+      // Ensure BG draw runs even if _updateCaseVideos skipped (video already loaded)
       startCaseBgDraw();
 
       RHP.views.case?.init?.(container);
@@ -1384,7 +1439,8 @@
       stopCaseBgDraw();
       currentNs = data.next ? (data.next.namespace || '') : '';
       const ns = currentNs;
-      setDialNs(ns);
+      // CSS dial rules only target home/work/about — 'case' uses 'work' layout
+      setDialNs(ns === 'case' ? 'work' : ns);
 
       var wrapper = document.querySelector('[data-barba="wrapper"]') || document.body;
       if (ns === 'home') {
@@ -1436,9 +1492,12 @@
         if (dialFg && window.gsap) {
           window.gsap.set(dialFg, { opacity: 1 });
         }
-        // BG canvas: set blur + opacity, start rAF draw loop (mirrors case fg video)
+        // BG canvas: set blur + opacity, start draw loop
         const bgCanvas = document.querySelector('.dial_bg-canvas');
         if (bgCanvas && window.gsap) window.gsap.set(bgCanvas, { filter: 'blur(40px)', opacity: 1 });
+        // Update persistent FG video to new case page's teaser
+        _updateCaseVideos();
+        // Ensure BG draw starts immediately (draws old frame until new video loads)
         startCaseBgDraw();
       } else if (ns === 'home') {
         // Defensive: ensure dial is at home state after clearProps

@@ -1,18 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-09",
+  "updated": "2026-04-15",
   "queue": [
     {
       "id": "fix-fg-video-case-to-case-barba",
       "project": "ready-hit-play-prod",
       "type": "fix",
       "priority": "P1",
-      "status": "Backlog",
+      "status": "Ready to Build",
       "title": "FG video not updating on case→case Barba transitions",
-      "spec": null,
+      "spec": ".claude/specs/fix-fg-video-case-to-case-barba.md",
       "agent": "code-writer",
       "created": "2026-04-09",
-      "note": "Discovered while building feat-work-nav-prev-next. When navigating case→case via the new work-nav prev/next buttons, the foreground video does not update to the target case's FG video. Root cause hypothesis: the FG video element lives OUTSIDE the Barba [data-barba=container] (same as the dial namespace restructure shipped 2026-03-12), so Barba doesn't swap it on case→case. Need to: (1) confirm which element holds the FG video on case pages, (2) determine whether it should be moved inside the barba container or programmatically updated via an afterEnter hook that reads the new case's video src from the CMS list / DOM, (3) check interaction with work-dial pool + case-video-controls. Repro: /work/overland-ai → click work-next → /work/remote — FG video still shows overland-ai footage. No console errors observed."
+      "updated": "2026-04-15",
+      "note": "Extract _updateCaseVideos(container) helper in orchestrator.js. Reads .case-studies_wrapper fg-video/fg-video-mobile attrs, sets persistent #fg-video-wrap > .dial_fg-video src + load + play. Called from bootCurrentView (direct-land) and runAfterEnter (Barba nav). BG canvas updates automatically via startCaseBgDraw rAF loop. ~15 LOC, 1 file."
     },
     {
       "id": "rhp-dial-short-viewport-bump",
@@ -28,18 +29,6 @@
       "note": "CSS-only. One @media (min-width: 1440px) and (max-width: 1990px) and (max-height: 849px) block added after the default :root dial-size block in ready-hit-play.css, overriding --dial-large-width/height to 63svh. Step text 'Great stories made undeniable' actually measures 438.55px due to letter-spacing 5.63px (not the 376px the original spec assumed). At default 50svh this overflows (110% fill at 1440×800); at 63svh the dial grows to 504px and fill drops to ~87.0%. Shipped 65svh first, user requested slightly smaller on live 13\" MBP review — settled on 63svh. Verify loop at 1440×800, 1440×849, 1440×850, 1440×900, 1920×1080, and 375×812 all PASS. Barba round-trip preserved via programmatic barba.go. 9 lines, one file. Barba impact: N/A (pure CSS)."
     },
     {
-      "id": "feat-work-nav-prev-next",
-      "project": "ready-hit-play-prod",
-      "type": "feature",
-      "priority": "P1",
-      "status": "Ready to Build",
-      "title": "Work page prev/next navigation: wire published buttons to CMS list with cyclic wrap",
-      "spec": ".claude/specs/feat-work-nav-prev-next.md",
-      "agent": "code-writer",
-      "created": "2026-04-08",
-      "note": "New work-nav.js IIFE module. On RHP.views.case.init: query .dial_cms-list .w-dyn-item, resolve current slug via [data-wf-item-slug] with location.pathname fallback, compute prev/next indices with modulo wrap, populate href on a[data-button='work-previous'] and a[data-button='work-next'] as /work/<slug>. Barba handles clicks natively. 3 files: new work-nav.js (~90 LOC), orchestrator.js (+2 lines in views.case.init/destroy), init.js (+3 lines: modules list, health check, version row). Acceptance test covers hrefs populated, cyclic wrap, Barba navigation, re-entry. Confidence 92%, Low complexity, sequential build."
-    },
-    {
       "id": "perf-fg-video-preload-on-transition",
       "project": "ready-hit-play-prod",
       "type": "perf",
@@ -50,42 +39,6 @@
       "agent": "code-writer",
       "created": "2026-03-26",
       "note": "Add _preloadFgVideos() helper in orchestrator.js. Creates hidden <video preload=auto/metadata> elements during beforeLeave for case→home. Prioritised: handoff sector + ±1 get auto, rest get metadata. Connection-gated: skip on 2g, limit on 3g. Cleanup in runAfterEnter. ~30 LOC, orchestrator.js only."
-    },
-    {
-      "id": "refactor-about-team-scroll-reveal",
-      "project": "ready-hit-play-prod",
-      "type": "refactor",
-      "priority": "P1",
-      "status": "Ready to Build",
-      "title": "About team scroll reveal: replace rAF mobile animation with per-element ScrollTrigger scrub",
-      "spec": ".claude/specs/refactor-about-team-scroll-reveal.md",
-      "agent": "code-writer",
-      "created": "2026-03-26",
-      "note": "Remove mobile team CSS layout overrides (rebuilt in Webflow), remove --team-photo-slide vars. Replace manual rAF+Lenis.onScroll mobile branch with per-element ScrollTrigger scrub (opacity:0+translateX:100% → opacity:1+translateX:0, image scale:1→1.05). Wire setupScrollTriggerProxy for about page. Add ScrollTrigger.refresh() to about boot path. Desktop hover unchanged. 4 tasks: CSS removal, proxy wiring, animation replacement, test updates."
-    },
-    {
-      "id": "feat-dev-cdn-source-switch",
-      "project": "ready-hit-play-prod",
-      "type": "feature",
-      "priority": "P1",
-      "status": "Ready to Build",
-      "title": "Dev/CDN source switch: URL param + localStorage toggle in init.js",
-      "spec": ".claude/specs/feat-dev-cdn-source-switch.md",
-      "agent": "code-writer",
-      "created": "2026-03-25",
-      "note": "~12 LOC in init.js only. ?rhp=local writes localStorage, ?rhp=cdn clears it. getBaseUrl() early-returns localhost when override active. Console indicator shows active source. One CDN deploy enables permanent dev/presentation switching."
-    },
-    {
-      "id": "fix-memory-leak-cleanup",
-      "project": "ready-hit-play-prod",
-      "type": "bug",
-      "priority": "P0",
-      "status": "Ready to Build",
-      "title": "Memory leak fixes: video cleanup on destroy, orphaned listener prevention, static canvas draw-once",
-      "spec": ".claude/specs/fix-memory-leak-cleanup.md",
-      "agent": "code-writer",
-      "created": "2026-03-17",
-      "note": "5 fixes: (1) pause+src-clear all videos in work-dial destroy(), (2) remove enforceVideoPolicy from applyActive(), (3) draw-once for about-dial-ticks + transition-dial RAF loops, (4) AbortController for canplay listeners, (5) null module-level refs. Root cause: videos not released on Barba transitions, accumulating decode contexts until browser caps out."
     },
     {
       "id": "rhp-about-page-cluster",
@@ -336,18 +289,6 @@
       "created": "2026-02-27"
     },
     {
-      "id": "fix-dial-bgvideo-barba",
-      "project": "ready-hit-play-prod",
-      "type": "bug",
-      "priority": "P0",
-      "status": "Ready to Build",
-      "title": "Move dial_layer-fg outside Barba container — fix dial breaking after navigation",
-      "spec": ".claude/specs/feat-dial-fg-outside-barba.md",
-      "note": "Root cause: dial_layer-fg lives inside [data-barba='container'] and gets destroyed on every transition. Fix: move it outside (sibling of dial_layer-bg), then update ~13 CSS selectors (namespace→:has() wrapper), fix fgWrap query in work-dial.js, fix 2 orchestrator querySelector calls, add 3 document fallbacks in home-intro.js, remove homeIntro.skip() call, fix bgVisible cleanup on destroy. Requires Webflow Designer change first (move element, publish).",
-      "agent": "code-writer",
-      "created": "2026-02-27"
-    },
-    {
       "id": "fix-autoplay-fallback-mobile",
       "project": "ready-hit-play-prod",
       "type": "bug",
@@ -359,18 +300,6 @@
       "created": "2026-02-24",
       "updated": "2026-03-27",
       "note": "Inline detection per module (no new file). Homepage: swap step text to 'Tap here to play', revert after tap. Case with controls: keep UI visible until play tapped. Case without controls: SVG play overlay. Viewport auto-pause preserved, auto-resume after gesture unlock. 8 tasks across home-intro.js, work-dial.js, case-video-controls.js, orchestrator.js, CSS. Streams A+B+C parallelisable."
-    },
-    {
-      "id": "feat-flip-transition",
-      "project": "ready-hit-play-prod",
-      "type": "feature",
-      "priority": "P1",
-      "status": "Ready to Build",
-      "title": "GSAP Flip-based about transition: logo + dial reparenting, forward-only easing, overlay hold",
-      "spec": ".claude/specs/feat-flip-transition.md",
-      "agent": "code-writer",
-      "created": "2026-03-17",
-      "note": "Replace manual pixel calculations with GSAP Flip for logo + dial positioning during home↔about transitions. Logo flips between .about-transition_logo-start ↔ .about-transition_logo-middle, dial between .about-transition_logo-middle ↔ .about_dial-wrapper. About→home plays forward (not reversed) with same power3.out easing. Overlay stays visible until work-dial ready on about→home. Add Flip.min.js to init.js deps. 9 steps: add Flip dep, remove manual helpers, rewrite transition functions, overlay hold logic, direct-land pre-positioning, remove resize invalidation, CSS cleanup, transition-dial resize, logo opacity. Supersedes feat-transition-layer-gsap-flip."
     },
     {
       "id": "fix-about-logo-animation",
@@ -399,19 +328,6 @@
       "created": "2026-02-27",
       "completed": "2026-02-27",
       "qa": "approved"
-    },
-    {
-      "id": "feat-about-team-hover",
-      "project": "ready-hit-play-prod",
-      "type": "feature",
-      "priority": "P2",
-      "status": "Ready to Build",
-      "title": "About team hover: image scale, name shift, mobile tap toggle, scroll reveal exclusion",
-      "spec": ".claude/specs/feat-about-team-hover.md",
-      "agent": "code-writer",
-      "created": "2026-02-25",
-      "updated": "2026-03-17",
-      "note": "Rewrite initAboutTeamHover: scale .image-cover to 1.1 (0.3s), shift .about-team_name ±2rem (0.5s), reverse on leave, overwrite:true for rapid hover. Mobile tap-to-toggle with mutual exclusion. Exclude .about-team_member from about-text-lines scroll reveal. 3 files: about-text-lines.js, orchestrator.js, ready-hit-play.css."
     },
     {
       "id": "feat-orange-button-hover",
@@ -583,18 +499,6 @@
       "created": "2026-03-10"
     },
     {
-      "id": "feat-case-title-entrance",
-      "project": "ready-hit-play-prod",
-      "type": "feature",
-      "priority": "P1",
-      "status": "Ready to Build",
-      "title": "Case title entrance animation: container slide-up + word-level SplitText stagger on H1/H6",
-      "spec": ".claude/specs/feat-case-title-entrance.md",
-      "note": "Animate .section_case-title on case page entry (Barba afterEnter + direct land). Container slides up (opacity 0→1, y 40→0, 0.8s power3.out). H1/H6 words stagger in (yPercent -100→0, 0.6s power4.out, 0.225s stagger) overlapping container by 0.3s. Reset on destroy for clean re-entry. Added to orchestrator.js views.case IIFE. CSS word class in ready-hit-play.css.",
-      "agent": "code-writer",
-      "created": "2026-03-17"
-    },
-    {
       "id": "refactor-case-to-work-namespace",
       "project": "ready-hit-play-prod",
       "type": "refactor",
@@ -617,16 +521,16 @@
       "note": "Superseded by feat-video-buffering-ux which consolidates spinner, seek-mask, and BG sync."
     },
     {
-      "id": "feat-video-buffering-ux",
+      "id": "feat-fg-overlay-transition-fade",
       "project": "ready-hit-play-prod",
       "type": "feature",
       "priority": "P1",
       "status": "Ready to Build",
-      "title": "Video buffering UX: loading spinner, seek-mask on pool swap, BG frame-locked to FG",
-      "spec": ".claude/specs/feat-video-buffering-ux.md",
+      "title": "FG overlay transition fade: 0.3s fade out on home→work, stay hidden on work, fade in on work→home",
+      "spec": ".claude/specs/feat-fg-overlay-transition-fade.md",
       "agent": "code-writer",
-      "created": "2026-03-17",
-      "note": "Consolidates feat-video-loading-spinner + fix-pool-swap-reverse-frames + new BG sync during buffering. Part A: Lottie spinner on FG + all work page videos. Part B: poster/opacity mask during backwards seeks in applyActive(). Part C: FG waiting/playing/seeking events pause+snap BG. New video-loader.js module + work-dial.js + orchestrator.js changes. 8 tasks, sequential build."
+      "created": "2026-04-15",
+      "note": "CSS selector change (remove namespace scoping, default opacity 0) + GSAP --fg-overlay-opacity tweens in runDialExpandAnimation, runDialShrinkAnimation, setDialToWorkState, setDialToHomeState, runAfterEnter. 2 files, <20 LOC. 0.3s power1.out, prefers-reduced-motion: instant."
     }
   ]
 }

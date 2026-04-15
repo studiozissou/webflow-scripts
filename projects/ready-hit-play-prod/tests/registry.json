@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-14",
+  "lastUpdated": "2026-04-15",
   "note": "Deploy 3425102 (2026-04-14): GSAP scale logo shrink, animated hover-out teardown, engaged tick lock, dynamic sector count. Tests skipped by user.",
   "lastDeployed": "2026-04-14",
   "lastDeployedHash": "3425102",
@@ -284,6 +284,26 @@
       "slug": "rhp-home-intro-scroll-choreography",
       "created": "2026-04-14",
       "description": "Homepage intro scroll choreography — large logo + small transition dial animate via GSAP Flip.fit scrubbed by ScrollTrigger, morph complete swaps to work-dial, nav animate-in, scroll lock, Barba re-entry skip, replay on nav logo click, reduced motion"
+    },
+    {
+      "id": "fix-fg-video-case-to-case-barba",
+      "file": "tests/acceptance/fix-fg-video-case-to-case-barba.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-fg-video-case-to-case-barba",
+      "created": "2026-04-15",
+      "description": "FG video src update on case→case Barba nav — src matches new page, autoplay, no console errors, direct-land regression, home→case regression, multi-nav cycle"
+    },
+    {
+      "id": "feat-fg-overlay-transition-fade",
+      "file": "tests/acceptance/feat-fg-overlay-transition-fade.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-fg-overlay-transition-fade",
+      "created": "2026-04-15",
+      "description": "FG overlay 15% black — fade out on home→work, stay hidden on work, fade in on work→home, reduced motion instant"
     }
   ]
 }

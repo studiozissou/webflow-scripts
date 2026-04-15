@@ -304,6 +304,16 @@
       "slug": "feat-fg-overlay-transition-fade",
       "created": "2026-04-15",
       "description": "FG overlay 15% black — fade out on home→work, stay hidden on work, fade in on work→home, reduced motion instant"
+    },
+    {
+      "id": "fix-case-video-autoplay-barba",
+      "file": "tests/acceptance/fix-case-video-autoplay-barba.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-case-video-autoplay-barba",
+      "created": "2026-04-15",
+      "description": "Controlled video sections autoplay after Barba transition — home→work, about→work, direct-load regression, no console errors"
     }
   ]
 }

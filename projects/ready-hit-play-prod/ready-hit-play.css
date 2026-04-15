@@ -671,6 +671,8 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   display: flex;
   flex-flow: column;
   align-items: stretch;
+  /* Dark bg prevents flash of .is-step text during Barba container swap */
+  background-color: #221a2c;
   /* Hide scrollbar at namespace level (no-scrollbar class can be lost during Barba transitions) */
   scrollbar-width: none;
   -ms-overflow-style: none;

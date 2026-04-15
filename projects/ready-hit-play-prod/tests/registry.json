@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-15",
-  "note": "Deploy 3425102 (2026-04-14): GSAP scale logo shrink, animated hover-out teardown, engaged tick lock, dynamic sector count. Tests skipped by user.",
-  "lastDeployed": "2026-04-14",
-  "lastDeployedHash": "3425102",
+  "note": "Deploy 453144c (2026-04-15): case video autoplay fix, FG overlay fade, tick glow. Tests skipped by user.",
+  "lastDeployed": "2026-04-15",
+  "lastDeployedHash": "453144c",
   "entries": [
     {
       "id": "smoke",

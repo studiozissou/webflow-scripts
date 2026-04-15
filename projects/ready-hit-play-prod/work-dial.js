@@ -185,6 +185,10 @@
       enforceVideoPolicy(comp);
 
       const ctx = canvas.getContext('2d');
+
+      // Offscreen canvas for tick glow — one blur composite per frame, not per tick
+      const glowCanvas = document.createElement('canvas');
+      const glowCtx = glowCanvas.getContext('2d');
       const titleEl = container.querySelector(SEL.title) || document.querySelector(SEL.title);
       const metaEl  = container.querySelector(SEL.meta)  || document.querySelector(SEL.meta);
 
@@ -1166,7 +1170,15 @@
 
         const w = canvas.clientWidth;
         const h = canvas.clientHeight;
+        if (glowCanvas.width !== w || glowCanvas.height !== h) {
+          glowCanvas.width = w; glowCanvas.height = h;
+        }
         ctx.clearRect(0, 0, w, h);
+        glowCtx.clearRect(0, 0, w, h);
+
+        // Track max intro opacity this frame for glow fade-in
+        let maxTickOpacity = 1;
+        const inIntro = introMode && !introComplete && RHP._dialIntroProgress;
 
         // Mobile: rotate ticks ONLY (labels are separate DOM)
         if (isMobile()) {
@@ -1178,19 +1190,21 @@
           const MOBILE_ATTR_EASE = 0.6;
           const attractionTarget = mod(180 - state.rotationDeg, 360);
 
+          if (inIntro) maxTickOpacity = 0;
           // draw ticks — intro scale + opacity when in intro mode; sector highlight gradient
           const ease = state.sectorHighlightEase ?? 1;
           for (let i = 0; i < T.bars; i++) {
             const a = (i / T.bars) * Math.PI * 2;
             let tickScale = 1;
             let tickOpacity = 1;
-            if (introMode && !introComplete && RHP._dialIntroProgress) {
+            if (inIntro) {
               const t = RHP._dialIntroProgress.time || 0;
               const clockPos = (i - TWELVE_OCLOCK_IDX + T.bars) % T.bars;
               const startT = clockPos * TICK_INTRO.stagger;
               const raw = Math.max(0, Math.min(1, (t - startT) / TICK_INTRO.tickDur));
               tickScale = prefersReduced() ? raw : 1 - Math.pow(1 - raw, 4);
               tickOpacity = raw;
+              if (tickOpacity > maxTickOpacity) maxTickOpacity = tickOpacity;
             }
             let mobileInf = 0;
             if (hasAttrMobile) {
@@ -1202,19 +1216,33 @@
             const len = (geom.baseLen + (geom.maxLen - geom.baseLen) * mobileInf) * tickScale;
 
             // Mobile: all ticks stay teal (no orange — sector highlight + attraction color disabled)
-            ctx.globalAlpha = tickOpacity;
-            ctx.strokeStyle = mix(T.teal, T.orange, 0);
-            ctx.lineWidth = geom.barW;
-            ctx.lineCap = 'round';
+            const mobileColor = mix(T.teal, T.orange, 0);
+
+            // Draw to both main and glow canvases
+            for (const c of [ctx, glowCtx]) {
+              c.globalAlpha = tickOpacity;
+              c.strokeStyle = mobileColor;
+              c.lineWidth = geom.barW;
+              c.lineCap = 'round';
+            }
 
             const x0 = geom.cx + Math.cos(a) * geom.innerR;
             const y0 = geom.cy + Math.sin(a) * geom.innerR;
             const x1 = geom.cx + Math.cos(a) * (geom.innerR + len);
             const y1 = geom.cy + Math.sin(a) * (geom.innerR + len);
 
-            ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-            ctx.globalAlpha = 1;
+            for (const c of [ctx, glowCtx]) {
+              c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+              c.globalAlpha = 1;
+            }
           }
+
+          // Composite glow layer — single blur op
+          ctx.save();
+          ctx.filter = 'blur(12px)';
+          ctx.globalAlpha = maxTickOpacity;
+          ctx.drawImage(glowCanvas, 0, 0);
+          ctx.restore();
 
           rafId = requestAnimationFrame(draw);
           return;
@@ -1235,23 +1263,26 @@
         state.attractionEase += hasAttraction ? 0.04 : -0.06;
         state.attractionEase = Math.max(0, Math.min(1, state.attractionEase));
 
+        if (inIntro) maxTickOpacity = 0;
+
         for (let i = 0; i < T.bars; i++) {
           const a = (i / T.bars) * Math.PI * 2;
           const deg = (i / T.bars) * 360;
 
           let tickScale = 1;
           let tickOpacity = 1;
-          if (introMode && !introComplete && RHP._dialIntroProgress) {
+          if (inIntro) {
             const t = RHP._dialIntroProgress.time || 0;
             const clockPos = (i - TWELVE_OCLOCK_IDX + T.bars) % T.bars;
             const startT = clockPos * TICK_INTRO.stagger;
             const raw = Math.max(0, Math.min(1, (t - startT) / TICK_INTRO.tickDur));
             tickScale = reduced ? raw : 1 - Math.pow(1 - raw, 4);
             tickOpacity = raw;
+            if (tickOpacity > maxTickOpacity) maxTickOpacity = tickOpacity;
           }
 
           let inf = 0;
-          if (hasAttraction) {
+          if (hasAttraction || state.attractionEase > 0) {
             const degTop0 = (deg + 90) % 360;
             const dAng = Math.min(Math.abs(degTop0 - state.angDeg), 360 - Math.abs(degTop0 - state.angDeg));
             const iAng = Math.max(0, 1 - dAng / T.angFalloff);
@@ -1269,19 +1300,33 @@
           const sectorMix = (prevMix + (currMix - prevMix) * (state.sectorHighlightEase ?? 1));
           const finalWarm = Math.max(warm, sectorMix);
 
-          ctx.globalAlpha = tickOpacity;
-          ctx.strokeStyle = mix(T.teal, T.orange, finalWarm);
-          ctx.lineWidth = geom.barW;
-          ctx.lineCap = 'round';
+          const tickColor = mix(T.teal, T.orange, finalWarm);
+
+          // Draw to both main and glow canvases
+          for (const c of [ctx, glowCtx]) {
+            c.globalAlpha = tickOpacity;
+            c.strokeStyle = tickColor;
+            c.lineWidth = geom.barW;
+            c.lineCap = 'round';
+          }
 
           const x0 = crisp(geom.cx + Math.cos(a) * geom.innerR);
           const y0 = crisp(geom.cy + Math.sin(a) * geom.innerR);
           const x1 = crisp(geom.cx + Math.cos(a) * (geom.innerR + len));
           const y1 = crisp(geom.cy + Math.sin(a) * (geom.innerR + len));
 
-          ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-          ctx.globalAlpha = 1;
+          for (const c of [ctx, glowCtx]) {
+            c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+            c.globalAlpha = 1;
+          }
         }
+
+        // Composite glow layer — single blur op, fades in with intro
+        ctx.save();
+        ctx.filter = 'blur(12px)';
+        ctx.globalAlpha = maxTickOpacity;
+        ctx.drawImage(glowCanvas, 0, 0);
+        ctx.restore();
 
         rafId = requestAnimationFrame(draw);
       }

@@ -314,6 +314,16 @@
       "slug": "fix-case-video-autoplay-barba",
       "created": "2026-04-15",
       "description": "Controlled video sections autoplay after Barba transition — home→work, about→work, direct-load regression, no console errors"
+    },
+    {
+      "id": "rhp-home-intro-mobile",
+      "file": "tests/acceptance/rhp-home-intro-mobile.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-home-intro-mobile",
+      "created": "2026-04-15",
+      "description": "Mobile home intro — fg hidden on load, 250svh section, logo fade-out, auto-engage ACTIVE, dial position, bg canvas visibility, desktop regression"
     }
   ]
 }

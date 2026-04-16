@@ -347,6 +347,15 @@
   }
 }
 
+/* Mobile: hide fg layer on home until ACTIVE state (JS sets opacity:1 via setDialState).
+   Desktop uses @media (hover: hover) above; mobile needs an explicit rule because
+   hover:none devices don't match the desktop media query. */
+@media (hover: none), (pointer: coarse) {
+  .dial_component[data-dial-ns="home"] .dial_layer-fg {
+    opacity: 0;
+  }
+}
+
 .dial_component[data-dial-ns="work"] .dial_layer-fg,
 .dial_component[data-dial-ns="about"] .dial_layer-fg {
   position: absolute;
@@ -410,6 +419,13 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   pointer-events: auto;
 }
 
+@media (max-width: 991px) {
+  main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .section_home-intro {
+    height: 250svh;
+    min-height: 250svh;
+  }
+}
+
 /* New: intro layout slots (home-scroll-morph.js uses Flip.fit to animate
    #interactive-logo from .home-intro_middle → .home-intro_top and
    .home-transition-dial from .home-intro_bottom → .home-intro_middle) */
@@ -436,6 +452,16 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Fixed so the dial stays in view during 250svh scroll; absolute would scroll off-screen */
+@media (max-width: 991px) {
+  .home-intro_bottom {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .home-transition-dial {

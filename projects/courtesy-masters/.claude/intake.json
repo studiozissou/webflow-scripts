@@ -1,0 +1,205 @@
+{
+  "client": "CourtesyMasters",
+  "project": {
+    "name": "CourtesyMasters v2025",
+    "id": "6788fae1f779eb0b670ca09b",
+    "workspaceId": "649d8571f5c7aa41f528e4fe",
+    "shortName": "staging-cm",
+    "createdOn": "2025-01-16",
+    "lastPublished": "2026-04-09",
+    "timezone": "Europe/Amsterdam"
+  },
+  "urls": {
+    "staging": "https://staging-cm.webflow.io",
+    "live": "https://www.courtesymasters.com",
+    "customDomains": ["www.courtesymasters.com", "courtesymasters.com"]
+  },
+  "locales": {
+    "primary": "en",
+    "secondary": ["it", "es", "fr", "de", "nl"]
+  },
+  "pages": {
+    "total": 88,
+    "published": 82,
+    "drafts": 6,
+    "archived": 0,
+    "published_pages": [
+      { "title": "Home", "slug": "/", "seoDesc": true },
+      { "title": "For Candidates", "slug": "/for-candidates", "seoDesc": true },
+      { "title": "For Employers", "slug": "/for-employers", "seoDesc": true },
+      { "title": "For Royals, UHNWI & Family Offices", "slug": "/for-royals-uhnwi-family-offices", "seoDesc": true },
+      { "title": "Jobs [CMS]", "slug": "/jobs", "seoDesc": true },
+      { "title": "Insights [CMS]", "slug": "/insights", "seoDesc": true },
+      { "title": "Case Studies [CMS]", "slug": "/case-studies", "seoDesc": true },
+      { "title": "Vision and Mission", "slug": "/vision-mission", "seoDesc": true },
+      { "title": "Story & History", "slug": "/story-history", "seoDesc": true },
+      { "title": "Raison d'etre", "slug": "/raison-d-etre", "seoDesc": true },
+      { "title": "Methodology", "slug": "/methodology", "seoDesc": true },
+      { "title": "Our Expertise", "slug": "/our-expertise", "seoDesc": true },
+      { "title": "Corporate Social Responsibility", "slug": "/corporate-social-responsibility", "seoDesc": true },
+      { "title": "Locations [CMS]", "slug": "/locations", "seoDesc": true },
+      { "title": "Contact", "slug": "/contact", "seoDesc": true },
+      { "title": "Contact for Candidates", "slug": "/contact/candidates", "seoDesc": true },
+      { "title": "Contact for Employers", "slug": "/contact/employers", "seoDesc": true },
+      { "title": "Feedback", "slug": "/contact/feedback", "seoDesc": true },
+      { "title": "Submit your Curriculum Vitae", "slug": "/contact/submit-your-curriculum-vitae", "seoDesc": true },
+      { "title": "Submit a Job Vacancy", "slug": "/contact/submit-job-vacancy", "seoDesc": true },
+      { "title": "Request for Proposal (RFP)", "slug": "/contact/request-for-proposal", "seoDesc": true },
+      { "title": "Fraud Alert", "slug": "/contact/fraud-alert", "seoDesc": true },
+      { "title": "Press", "slug": "/contact/press", "seoDesc": true },
+      { "title": "Referral", "slug": "/contact/referral", "seoDesc": true },
+      { "title": "Tips", "slug": "/contact/tips", "seoDesc": true },
+      { "title": "Webmaster", "slug": "/contact/webmaster", "seoDesc": true },
+      { "title": "Whistleblower", "slug": "/contact/whistleblower", "seoDesc": true },
+      { "title": "Personal Career Management", "slug": "/personal-career-management", "seoDesc": true },
+      { "title": "Professional Development & Personal Growth", "slug": "/professional-development-personal-growth", "seoDesc": true },
+      { "title": "Membership", "slug": "/membership", "seoDesc": true },
+      { "title": "Register for Candidates", "slug": "/register-for-candidates", "seoDesc": true },
+      { "title": "Process for Candidates", "slug": "/process-for-candidates", "seoDesc": true },
+      { "title": "Future of Work", "slug": "/future-of-work", "seoDesc": true },
+      { "title": "Pricing", "slug": "/pricing", "seoDesc": true },
+      { "title": "Services", "slug": "/services", "seoDesc": true },
+      { "title": "Confidentiality", "slug": "/confidentiality", "seoDesc": true },
+      { "title": "Businesspartners", "slug": "/businesspartners", "seoDesc": true },
+      { "title": "Portfolio", "slug": "/portfolio", "seoDesc": true },
+      { "title": "Our People", "slug": "/team/our-people", "seoDesc": true },
+      { "title": "Work at CourtesyMasters [CMS]", "slug": "/work-at-courtesymasters", "seoDesc": true },
+      { "title": "Departments for Candidates", "slug": "/departments-candidates", "seoDesc": true },
+      { "title": "Departments for Employers", "slug": "/departments-for-employers", "seoDesc": true },
+      { "title": "Industry Segments for Candidates", "slug": "/industry-segments-candidates", "seoDesc": true },
+      { "title": "Industry Segments for Employers", "slug": "/industry-segments-employers", "seoDesc": true },
+      { "title": "Industries in Hospitaility", "slug": "/industries-in-hospitaility", "seoDesc": true },
+      { "title": "Levels for Candidates", "slug": "/levels", "seoDesc": true },
+      { "title": "Search Results", "slug": "/search", "seoDesc": false },
+      { "title": "Privacy Policy", "slug": "/legal/privacy-policy", "seoDesc": true },
+      { "title": "Cookie Policy", "slug": "/legal/cookie-policy", "seoDesc": true },
+      { "title": "Employer Terms", "slug": "/legal/client-terms", "seoDesc": true },
+      { "title": "Candidate Terms", "slug": "/legal/candidate-terms", "seoDesc": true },
+      { "title": "Disclaimer", "slug": "/legal/disclaimer", "seoDesc": true },
+      { "title": "GDPR", "slug": "/legal/gdpr", "seoDesc": true },
+      { "title": "Password", "slug": "/401", "seoDesc": true },
+      { "title": "404", "slug": "/404", "seoDesc": true }
+    ],
+    "dev_pages_published": [
+      { "title": "Components", "slug": "/dev/components", "note": "Should be unpublished or draft" },
+      { "title": "Department CMS Item - Test", "slug": "/dev/department-cms-item---test", "note": "Test page, should be removed" },
+      { "title": "Insight CMS Item - Test", "slug": "/dev/insight-cms-item---test", "note": "Test page, should be removed" },
+      { "title": "Job CMS Item - Test", "slug": "/dev/job-cms-item---test", "note": "Test page, should be removed" },
+      { "title": "BUILD MODE DEMO", "slug": "/untitled", "note": "Demo page, should be removed" },
+      { "title": "Components", "slug": "/styles/components", "note": "Style guide, should be draft" },
+      { "title": "Styles", "slug": "/styles/styles", "note": "Style guide, should be draft" }
+    ],
+    "drafts": [
+      { "title": "Build Mode Page", "slug": "static-template-slug-1738228436562-copy" },
+      { "title": "Standard Page", "slug": "static-template-slug-1738228436562" },
+      { "title": "Insight CMS Item", "slug": "static-template-slug-1738156622559" },
+      { "title": "Job CMS Item", "slug": "static-template-slug-1738080512192" },
+      { "title": "Location CMS Item", "slug": "static-template-slug-1738080393555" },
+      { "title": "Department CMS Item", "slug": "static-template-slug-1738076973154" }
+    ]
+  },
+  "collections": [
+    { "name": "Jobs (Client Placement)s", "id": "67a32eb3ca3400970bd5265b", "slug": "jobs", "items": 22, "templatePath": "/jobs", "needsTemplatePage": true },
+    { "name": "Teammembers", "id": "67a32f3a64295f583f9a10e5", "slug": "teammember", "items": 16, "templatePath": "/teammember", "needsTemplatePage": true },
+    { "name": "Quotes", "id": "67a330a51b3d32a4ccf6d5b5", "slug": "quotes", "items": 8, "templatePath": "/quotes", "needsTemplatePage": false, "bloatNote": "Inline display only — disable template page" },
+    { "name": "Testimonials", "id": "67a3310159eb6bc1c28a4828", "slug": "testimonials", "items": 5, "templatePath": "/testimonials", "needsTemplatePage": false, "bloatNote": "Inline display only — disable template page" },
+    { "name": "Insights Posts", "id": "67a332125d83ceed1415e57f", "slug": "insights", "items": 19, "templatePath": "/insights", "needsTemplatePage": true },
+    { "name": "Work at CourtesMasters", "id": "67a33537030eb4f44afc7809", "slug": "working-at", "items": 3, "templatePath": "/working-at", "needsTemplatePage": true, "typoNote": "Collection name has typo: CourtesMasters (missing y)" },
+    { "name": "Candidates Levels", "id": "67ab46841daea28a7beccd46", "slug": "levels", "items": 9, "templatePath": "/levels", "needsTemplatePage": "debatable", "bloatNote": "Has listing page — template pages may be thin content" },
+    { "name": "Candidates Departments", "id": "67ab47174e5c25a26d11db51", "slug": "departments-candidates", "items": 15, "templatePath": "/departments-candidates", "needsTemplatePage": "debatable" },
+    { "name": "Employer Departments", "id": "67ab472750e12fd6c62d6cb1", "slug": "employer-departments", "items": 15, "templatePath": "/employer-departments", "needsTemplatePage": false, "bloatNote": "Taxonomy only — disable template page" },
+    { "name": "Candidates Industry Segments", "id": "67ab473d66bfa98823c261fa", "slug": "industry-segments-candidates", "items": 16, "templatePath": "/industry-segments-candidates", "needsTemplatePage": "debatable" },
+    { "name": "Employer Industry Segments", "id": "67ab4745a68333503aae51ee", "slug": "employer-industry-segments", "items": 3, "templatePath": "/employer-industry-segments", "needsTemplatePage": false, "bloatNote": "Taxonomy only — disable template page" },
+    { "name": "Candidates Industries in Hospitaility sectors", "id": "67ab474f67f10e24e8737bcb", "slug": "industries-in-hospitaility-sector", "items": 8, "templatePath": "/industries-in-hospitaility-sector", "needsTemplatePage": false, "typoNote": "Hospitaility (extra i)", "bloatNote": "Taxonomy only — disable template page" },
+    { "name": "Employer Services", "id": "67ab4765fa98d788157dd3e2", "slug": "services", "items": 11, "templatePath": "/services", "needsTemplatePage": false, "bloatNote": "Taxonomy only — disable template page" },
+    { "name": "Case Studies", "id": "67ade35174ba1f0de2e9f7c7", "slug": "case-studies", "items": 4, "templatePath": "/case-studies", "needsTemplatePage": true },
+    { "name": "Case Study Tags", "id": "67ade36be27b0e7f746d0be1", "slug": "case-study-tags", "items": 5, "templatePath": "/case-study-tags", "needsTemplatePage": false, "bloatNote": "Tag taxonomy — disable template page" },
+    { "name": "Frequently Asked Questions", "id": "67ae061d3f5c2eaf09cc275d", "slug": "faq", "items": 30, "templatePath": "/faq", "needsTemplatePage": false, "bloatNote": "FAQ items displayed inline — individual FAQ pages are thin content" },
+    { "name": "[TAGS] Frequently Asked Questions", "id": "67ae062ff11b86414d381e8d", "slug": "tags-frequently-asked-questions", "items": 3, "templatePath": "/tags-frequently-asked-questions", "needsTemplatePage": false, "bloatNote": "Tag taxonomy — disable template page" },
+    { "name": "Office Locations", "id": "67b5aa0237157cae4d8a7f10", "slug": "office", "items": 8, "templatePath": "/office", "needsTemplatePage": true },
+    { "name": "Hotelschool Countries", "id": "67f4e6bda5726f26d90c4101", "slug": "hotelschool-locations", "items": 17, "templatePath": "/hotelschool-locations", "needsTemplatePage": false, "bloatNote": "Country taxonomy — disable template page" },
+    { "name": "Hotelschools", "id": "67f4e7865d8b234480cb5b06", "slug": "hotelschools", "items": 52, "templatePath": "/hotelschools", "needsTemplatePage": true }
+  ],
+  "checks": {
+    "technical": {
+      "robots_txt": { "status": "NEEDS ATTENTION", "note": "Present but has malformed LLMS directive (bare URL, not a valid robots.txt instruction)" },
+      "sitemap_xml": { "status": "NEEDS ATTENTION", "note": "Present (114 URLs = 19 pages x 6 languages) but missing all CMS item URLs (jobs, insights, case studies)" },
+      "custom_404": { "status": "PASS", "note": "Custom 404 page configured" },
+      "favicon": { "status": "NEEDS VERIFY", "note": "Not checked" },
+      "ssl": { "status": "PASS", "note": "HTTPS active" },
+      "canonical_domain": { "status": "PASS", "note": "www.courtesymasters.com and courtesymasters.com both configured" },
+      "analytics": { "status": "PASS", "note": "GTM (GTM-52WXPM23) + Google Ads (AW-1058961670) + Instantly/Leadsy pixel" },
+      "cookie_consent": { "status": "NEEDS ATTENTION", "note": "Cookiekot in use — client questioning whether to keep (item 14)" },
+      "search_console": { "status": "NEEDS VERIFY", "note": "Bing + Yandex verification present; Google Search Console access not confirmed" },
+      "norton_safeweb": { "status": "PASS", "note": "Norton SafeWeb verification tag present" }
+    },
+    "seo": {
+      "meta_titles": { "status": "NEEDS ATTENTION", "note": "Set on most pages via Webflow but some may not render in HTML — needs crawler verification" },
+      "meta_descriptions": { "status": "NEEDS ATTENTION", "note": "Set in Webflow for most pages (confirmed via MCP) but crawler found none — possible rendering issue" },
+      "og_tags": { "status": "FAIL", "note": "og:url via JS only (invisible to crawlers), og:image absent, og:title/description missing" },
+      "twitter_cards": { "status": "FAIL", "note": "No twitter:card, twitter:title, twitter:description, or twitter:image on any page" },
+      "canonical_tags": { "status": "NEEDS ATTENTION", "note": "Not detected on interior pages — may be Webflow default disabled" },
+      "h1_tags": { "status": "FAIL", "note": "Multiple H1s on homepage, /for-candidates, /for-royals page. Heading hierarchy broken (H2→H4→H5 jumps)" },
+      "hreflang": { "status": "NEEDS ATTENTION", "note": "Present in sitemap with x-default. Needs verification in page <head> too" },
+      "schema_json_ld": { "status": "NEEDS ATTENTION", "note": "Organization schema partial (homepage only). BreadcrumbList JS-only. No JobPosting, FAQPage, Article, or Person schema" },
+      "llms_txt": { "status": "PASS", "note": "Present and well-structured. Lists company info, services, active jobs" }
+    },
+    "content": {
+      "alt_text": { "status": "FAIL", "note": "All images missing alt text site-wide. WCAG 2.1 Level A failure" },
+      "viewport_meta": { "status": "NEEDS VERIFY", "note": "Webflow default, likely present but not confirmed in crawler output" },
+      "forms": { "status": "NEEDS ATTENTION", "note": "Multiple contact forms exist. Client wants simplification (item 1g). Form labels not audited for accessibility" }
+    },
+    "code_inventory": {
+      "sitewide_head": [
+        "GTM (GTM-52WXPM23)",
+        "Google Ads (AW-1058961670) — should be consolidated into GTM",
+        "Norton SafeWeb verification",
+        "Bing Webmaster verification",
+        "Yandex verification",
+        "Tawk.to — COMMENTED OUT (empty script tags left behind)",
+        "Instantly/Leadsy pixel (r2.leadsy.ai)",
+        "GSAP 3.12.5 (jsDelivr CDN)",
+        "ScrollTrigger 3.11.4 (cdnflare CDN) — VERSION MISMATCH with GSAP",
+        "Egenix custom JS (cdn.jsdelivr.net/gh/egenix-ops/cm@88d4b83d.../main.js) — DEPENDENCY RISK: hosted on previous developer's GitHub",
+        "Lenis 1.1.18 CSS (unpkg)",
+        "Lenis 1.1.18 JS (unpkg) + init script",
+        "Lenis inline styles"
+      ],
+      "sitewide_body": [
+        "GTM noscript fallback (correctly placed)",
+        "DUPLICATE Lenis — offbrand version loaded from foreign Webflow project assets (645e0e1ff7fdb6dc8c85f3a2) — CRITICAL DEPENDENCY RISK",
+        "Noopener script — redundant (Webflow handles natively since 2023)"
+      ],
+      "issues": [
+        "GSAP version mismatch: 3.12.5 vs ScrollTrigger 3.11.4",
+        "Two conflicting Lenis smooth scroll instances (head + body)",
+        "Egenix JS on their GitHub — if they delete repo, site breaks",
+        "Offbrand Lenis loaded from different Webflow project's assets CDN",
+        "Google Ads tag should be fired via GTM, not loaded separately",
+        "Tawk.to empty script tags should be cleaned up"
+      ]
+    }
+  },
+  "designer_comments": {
+    "total": 57,
+    "resolved": 57,
+    "unresolved": 0,
+    "authors": [
+      { "name": "Gijs van Loon", "email": "gijs@egenix.nl", "count": "~25" },
+      { "name": "Egenix - Premium Webflow Development Agency", "email": "devops@egenix.nl", "count": "~32" }
+    ],
+    "note": "All comments resolved. Previous developer was Egenix agency. Comments span Jan 2025 — Jul 2025."
+  },
+  "aeo_score": {
+    "homepage": {
+      "schema": "1/4",
+      "answer_structure": "0/6",
+      "freshness": "0/3",
+      "authority": "1/4",
+      "technical": "1/3",
+      "total": "3/20",
+      "flesch_estimate": 58,
+      "maturity_level": "L1"
+    }
+  }
+}

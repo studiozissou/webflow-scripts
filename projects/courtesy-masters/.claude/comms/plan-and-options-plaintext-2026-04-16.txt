@@ -1,0 +1,190 @@
+CourtesyMasters — Remediation Plan & Pricing
+==============================================
+
+Date:  16 April 2026
+To:    Menno-Paul Dekker (CourtesyMasters)
+From:  Will
+Rate:  EUR 120 / hour
+
+
+Hi Menno-Paul,
+
+The audit is wrapped. Full plan below, split into four priority bands.
+P0-P3 run as a fixed-scope Phase 0 over roughly three weeks.
+P4 sits on a monthly retainer because it's discovery-led and
+content-driven. All work billed at EUR 120 / hour.
+
+
+----------------------------------------------------------------------
+P0 - WEEK 1 - Easy wins + signal-quality
+----------------------------------------------------------------------
+
+Top tasks:
+  - Shorten 27 truncated page titles (direct SERP CTR uplift)
+  - Fix 3 duplicate H1s on insights posts, hreflang typo on /jobs,
+    aria-labels on 5 icon-only links
+  - Image + font optimisation (80% of bandwidth today is oversized
+    PNGs; LCP drops to <1.2s on /for-employers)
+  - Clean 28 pages with broken outbound links, fix Cookiebot
+    contrast, unpublish 7 dev/test pages
+  - File Webflow Support ticket to remove partnercode (stops Egenix
+    earning ongoing affiliate commission on your hosting)
+
+Wins:     SEO, trust, accessibility, performance, GDPR alignment
+          -- all visible in the first sprint.
+
+Pricing:  7 hours  ->  EUR 840
+
+
+----------------------------------------------------------------------
+P1 - WEEK 1 - Critical de-risk + core schema
+----------------------------------------------------------------------
+
+Top tasks:
+  - Migrate Egenix custom JS to client-owned GitHub
+    (this is the single biggest site-continuity risk today -- the
+    code currently lives on the previous developer's GitHub)
+  - Clean duplicate Lenis + align GSAP/ScrollTrigger versions
+    (handled inside the migration)
+  - JobPosting schema on the 19 jobs missing it -- unlocks Google
+    for Jobs eligibility
+  - Replace Webflow-default "Product snippet" with proper
+    Organization schema site-wide
+
+Wins:     Removes the #1 business-continuity risk + unlocks Google
+          for Jobs on 19 more listings.
+
+Pricing:  7 hours  ->  EUR 840
+
+
+----------------------------------------------------------------------
+P2 - WEEK 2 - Rich results + client-visible design
+----------------------------------------------------------------------
+
+Top tasks:
+  - Kick-ass footer redesign -- brief + 2 Figma directions for
+    sign-off
+  - URL structure rewrite -- /insights/news/, /insights/blog/,
+    /insights/video/ with a complete 301 redirect map
+  - FAQPage schema on 30 FAQs, Article schema on 16 insights + 3
+    case studies, BreadcrumbList schema as static HTML
+  - Padding and spacing consistency pass on the 5 top pages
+    (pixelperfect)
+
+Wins:     The visible wins for the client + the schema trio that
+          unlocks rich results in Google and citations in ChatGPT /
+          Perplexity / SGE.
+
+Pricing:  ~13-16 hours  ->  EUR 1,560 - 1,920
+
+
+----------------------------------------------------------------------
+P3 - WEEK 2-3 - Editorial foundation + operational stability
+----------------------------------------------------------------------
+
+Top tasks:
+  - Sitewide typography/layout standards (center column under mega
+    header, 1.5 line-height minimum, left-align, hyphens off for
+    Dutch, bullet/list token styling)
+  - Body text colour demo (2-3 values around 75-85% grey on
+    staging, you pick)
+  - Form simplification -- consolidate 12 contact sub-pages to one
+    form per audience with a topic dropdown
+  - Replace Zapier + reCAPTCHA with Klaviyo API + Microsoft Power
+    Automate + Webflow's built-in AI spam filter
+  - CMS field explainers, CSS documentation, auto-generated
+    architecture diagram, Webflow billing walkthrough
+
+Wins:     The site looks, reads, and runs the way you want.
+          Editors work independently without a manual. Two
+          third-party dependencies gone.
+
+Pricing:  ~19-29 hours  ->  EUR 2,280 - 3,480
+
+
+======================================================================
+PHASE 0 TOTAL (P0 - P3)
+======================================================================
+
+  Band                                Timeline    Hours      EUR
+  ----------------------------------  ----------  ---------  ---------------
+  P0 - Easy wins + signal-quality     Week 1      7h      840
+  P1 - De-risk + core schema          Week 1      7h      840
+  P2 - Rich results + design          Week 2      ~13-16h    1,560 - 1,920
+  P3 - Editorial + ops                Week 2-3    ~19-29h    2,280 - 3,480
+  ----------------------------------  ----------  ---------  ---------------
+  TOTAL                               ~3 weeks    ~44-59h    5,280 - 7,080
+
+Paid 30% deposit / 40% mid-project / 30% on delivery.
+
+
+----------------------------------------------------------------------
+P4 - ONGOING (retainer) - Growth
+----------------------------------------------------------------------
+
+Top areas:
+  - AEO remediation L1 -> L3 (answer-first copy, authority signals)
+    -- currently invisible to ChatGPT / Perplexity / SGE
+  - Candidate + employer funnel automation (Powerpath / Dynamics
+    -- discovery session first)
+  - Klaviyo end-to-end (segmented marketing + transactional flows)
+  - AI agents (human-in-the-loop) -- SEO monitoring, content
+    creation, brand-voice check
+  - Content programme targeting Dutch money keywords (#2-5 -> #1)
+    + review of the 5 dormant non-NL locales
+
+Retainer tiers (all at EUR 120 / hour):
+
+  Tier                   Hours/mo    EUR/mo     Best for
+  ---------------------  ----------  ---------  ---------------------------
+  Maintenance            4           480        Small fixes, nothing
+                                                strategic
+  Light                  8           960        SEO monitoring + throughput
+                                                on the change-list
+  Standard (recommended) 12          1,440      Steady AEO progress +
+                                                content velocity
+  Active growth          16          1,920      Funnels + AEO content +
+                                                international SEO
+
+Unused hours roll over 1 month. Minimum term 6 months, then
+month-to-month with 30 days' notice.
+
+
+======================================================================
+TO MOVE FORWARD I NEED
+======================================================================
+
+  1. Your go-ahead on Phase 0 (P0-P3) and your preferred retainer
+     tier.
+
+  2. Answers on four remaining clarifications:
+       - Item 1c  - body text colour
+       - Item 11  - Zapier direction (recommend Power Automate)
+       - Item 12  - Klaviyo scope (replacement vs addition)
+       - Item 14  - Cookiebot decision (recommend keep + fix
+                    contrast)
+
+
+----------------------------------------------------------------------
+OUTSIDE THIS QUOTE
+----------------------------------------------------------------------
+
+  - ESI Global (esiglobal.com) -- sister company, parallel SOW.
+    Same programme shape, separate intake + quote.
+
+  - Funnel implementation (items 15 + 16) -- discovery session
+    required first (1-2 weeks). Implementation quoted post-
+    discovery and sits on the retainer.
+
+  - Translation of net-new content into the 5 non-NL locales --
+    audit only; translation separate.
+
+  - Cookiebot replacement decision -- direction locked to "keep +
+    fix contrast" on 2026-04-16.
+
+
+Happy to jump on 30 minutes to walk through, otherwise looking
+forward to your answers.
+
+Best,
+Will

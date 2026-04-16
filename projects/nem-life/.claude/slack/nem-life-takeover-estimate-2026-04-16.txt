@@ -1,0 +1,38 @@
+Hi Alex, here is an outline and estimate of the NEM Life takeover plan:
+
+*Context*
+I've audited nem-life-1.webflow.io against your briefing — desktop is roughly 30% there with a solid component library, but mobile, two CMS item templates, the Blog Insights logic, localization, and SEO/schema all still need building.
+
+*Problem*
+The site can't launch as-is: mobile home renders broken, CMS is 100% Lorem Ipsum, nav links are unwired, localization is off despite the brief saying it's on, and the Insights/Experiences item pages don't exist yet.
+
+*Solution*
+A phased fixed-scope takeover covering every page in the brief:
+•  Finish Home, NEM Methode, Blog Insights system, Experiences, Link-in-bio
+•  Full mobile responsive pass across all pages
+•  Build the two missing Item page templates
+•  Enable NL localization, add schema, meta, sitemap, 301s from the old site
+SEO, analytics, accessibility and handoff are included as standard — not extras.
+
+*Benefits*
+•  Launch-ready Dutch site with every brief item ticked, plus AI-search-friendly DOM and Article/Organization/FAQ schema
+•  Clean Client-First class system, documented so it's maintainable without me
+•  Daily Slack check-ins and Loom walkthroughs — no repeat of the last handover
+
+*Risks*
+•  Mobile rebuild is larger than the brief implies — I've priced a full responsive pass, not just alignment
+•  Real Dutch copy isn't supplied yet — if it slips past week 3, Phase 6/7 slip with it. Mitigation: content deadline locked at kickoff
+
+*Timing & pricing*
+•  Recommended quote: *€4,800 fixed* (40 hours at €120/hr) — sits inside your €5k ceiling, full brief delivered
+•  Flex option: Core-only at *€4,080* — defers 4 low-risk items (NEM Methode polish, CMS taxonomy, Christel link-in-bio, nav submenu) to a post-launch care package
+•  Payment: 50% deposit / 25% on desktop sign-off / 25% on launch
+•  Start: Monday after deposit; 5-week delivery to launch
+
+*Ongoing care (optional, after launch)*
+•  Insights — €120/mo: monthly performance + SEO report, no dev hours
+•  Care — €480/mo: 4h/mo + monthly report + quarterly AEO audit (recommended)
+•  Grow — €960/mo: 8h/mo + monthly AEO audit + content strategy check-in
+Month 1 of Care absorbs the deferred flex items if you take the €4,080 build option.
+
+Full plan, audit screenshots and the 10 kickoff questions are ready to share. Happy to walk through on a 30-min call whenever suits.

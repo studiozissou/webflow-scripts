@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-15",
-  "note": "Deploy 462d2d0 (2026-04-15): race-safe scramble tween, rapid-switch fix. Tests skipped by user.",
-  "lastDeployed": "2026-04-15",
-  "lastDeployedHash": "462d2d0",
+  "lastUpdated": "2026-04-16",
+  "note": "Deploy f47a1a8 (2026-04-16): mobile home intro — fg hidden, 250svh section, auto-engage ACTIVE, logo fade. Tests skipped by user.",
+  "lastDeployed": "2026-04-16",
+  "lastDeployedHash": "f47a1a8",
   "entries": [
     {
       "id": "smoke",

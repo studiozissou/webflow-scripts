@@ -1,7 +1,52 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-14",
+  "updated": "2026-04-15",
   "queue": [
+    {
+      "id": "cm-custom-code-migration",
+      "project": "courtesy-masters",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Migrate custom code to client-owned GitHub repo — fork Egenix JS, remove duplicate Lenis, align GSAP versions",
+      "description": "Move all custom JS off third-party dependencies into a client-owned GitHub repo served via jsDelivr. 5 phases: (1) Download and audit Egenix main.js from pinned jsDelivr commit. (2) Create courtesymasters/cm-webflow repo with cleaned code. (3) Replace Webflow head/body embed URLs — swap Egenix jsDelivr to client repo, remove duplicate Lenis from body, align ScrollTrigger to 3.12.5 from same CDN as GSAP, remove redundant noopener script, move Google Ads tag into GTM. (4) Verify on staging — test all interactions, forms, smooth scroll, CMS filtering. (5) Publish, monitor 48h, contact Egenix to inform migration complete. See intake report for full migration plan.",
+      "spec": null,
+      "created": "2026-04-15"
+    },
+    {
+      "id": "cm-dev-pages-unpublish",
+      "project": "courtesy-masters",
+      "type": "bug",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Unpublish 7 dev and test pages currently live and indexable",
+      "description": "Set to draft: /dev/components, /dev/department-cms-item---test, /dev/insight-cms-item---test, /dev/job-cms-item---test, /untitled (BUILD MODE DEMO), /styles/components, /styles/styles. All are indexable and contribute to crawl budget waste.",
+      "spec": null,
+      "created": "2026-04-15"
+    },
+    {
+      "id": "cm-seo-foundation",
+      "project": "courtesy-masters",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "SEO foundation — OG and Twitter tags, heading hierarchy, alt text, JobPosting schema, sitemap fix, thin template pages",
+      "description": "6 items: (1) Add OG + Twitter meta tags on all key pages using Webflow built-in fields, add og:image 1200x630. (2) Fix heading hierarchy — one H1 per page, sequential H2-H3-H4 (homepage, /for-candidates, /for-royals confirmed broken). (3) Add image alt text site-wide — prioritise homepage, service pages, team photos (WCAG 2.1 Level A). (4) Add JobPosting JSON-LD schema to 22 live job listings for Google for Jobs. (5) Fix sitemap to include CMS item URLs (jobs, insights, case studies). (6) Disable template pages for 7 taxonomy-only collections generating thin content.",
+      "spec": null,
+      "created": "2026-04-15"
+    },
+    {
+      "id": "cm-aeo-remediation",
+      "project": "courtesy-masters",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Plan",
+      "title": "AEO remediation — move from L1 to L3 with structured FAQ blocks, answer-first copy, and schema coverage",
+      "description": "Homepage scored 3/20 (L1 Invisible) on AEO audit. Target L3 (Extractable): add FAQPage schema to 30 FAQs, restructure key pages with answer-first lead paragraphs and question-format H2s, add freshness signals (last updated dates), add author/entity attribution. Depends on SEO foundation completion. Full audit at .claude/audits/aeo.md.",
+      "spec": null,
+      "blockedOn": "cm-seo-foundation",
+      "created": "2026-04-15"
+    },
     {
       "id": "rhp-dial-engaged-ticks-dynamic-sectors",
       "project": "ready-hit-play-prod",
@@ -34,6 +79,17 @@
       "description": "Create a new monorepo skill ai-search-aeo combining insights from Webflow AEO and AI search blog posts into a single reference the seo, content, and schema agents plus /copy-review and /intake commands can pull from. Contains a 20-check audit rubric across 5 categories (schema, answer structure, freshness, authority, technical), answer-first copywriting rules with design-context hook for brand voice, page structure patterns (cite-magnet archetypes, anchor and cluster architecture, FAQ blocks), and an optional 5-level content maturity assessment for site-wide strategic reviews. Integration: seo agent adds AEO bullet under Scope, content agent adds AEO writing rules section, schema agent adds FAQPage and HowTo priority note, /copy-review loads the skill in the content context block, /intake Phase 4 adds a fourth AEO stream that saves findings to .claude/audits/<client>/aeo.md.",
       "spec": ".claude/specs/ai-search-aeo-skill.md",
       "created": "2026-04-10"
+    },
+    {
+      "id": "rhp-home-intro-mobile",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Home intro mobile — fg hidden, 250svh section, logo fade, auto-engage ACTIVE, dial position fix, bg canvas fix",
+      "description": "Fix 6 mobile home intro issues (≤991px): (1) CSS hide dial_layer-fg on touch devices, (2) section_home-intro 250svh on mobile, (3) logo fade-out as section exits viewport, (4) auto-engage ACTIVE on morph complete via new RHP.workDial.forceActive(), (5) dial position fix for 250svh layout, (6) bg canvas visible when ACTIVE auto-engages. Approach B: fork buildTimeline() with buildMobileTimeline() in home-scroll-morph.js. 3 files: CSS, home-scroll-morph.js, work-dial.js. ~200 LOC.",
+      "spec": ".claude/specs/rhp-home-intro-mobile.md",
+      "created": "2026-04-15"
     },
     {
       "id": "rhp-home-intro-scroll-choreography",

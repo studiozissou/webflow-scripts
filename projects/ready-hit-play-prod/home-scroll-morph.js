@@ -443,11 +443,123 @@
         scrollTrigger = scrubTL.scrollTrigger || null;
       };
 
-      buildTimeline();
+      const buildMobileTimeline = () => {
+        _killScrub();
+
+        // Reset transforms
+        gsap.set(dialWrapper, { clearProps: FLIP_CLEAR });
+        gsap.set(logoEl, { clearProps: FLIP_CLEAR });
+
+        if (prefersReduced()) {
+          scrollTrigger = ScrollTrigger.create({
+            trigger: sectionEl,
+            start: 'top top',
+            end: 'bottom top',
+            onLeave: onMorphComplete,
+            onEnterBack: onMorphReverse,
+            invalidateOnRefresh: true
+          });
+          return;
+        }
+
+        // --- Mobile scrub timeline ---
+        scrubTL = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionEl,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 0.5,
+            onLeave: onMorphComplete,
+            onEnterBack: onMorphReverse,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              if (self.progress > 0 && logoSplitData.length) {
+                _destroyLogoText();
+              }
+              if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
+            }
+          }
+        });
+
+        // --- Dial: grow from small to large (centered, no position change) ---
+        const dialRect = dialWrapper.getBoundingClientRect();
+        const REF_R = 253;
+        const TICK_RING_EXPAND = 1 + 24 / REF_R + 22.51 / REF_R + 1.686 / REF_R;
+        const dialComp = document.querySelector('.dial_component[data-dial-ns="home"]');
+        let dTargetSize = 0;
+        if (dialComp) {
+          const raw = getComputedStyle(dialComp).getPropertyValue('--dial-large-width').trim();
+          if (raw) {
+            const tmp = document.createElement('div');
+            tmp.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;width:' + raw;
+            dialComp.appendChild(tmp);
+            dTargetSize = tmp.offsetWidth * TICK_RING_EXPAND;
+            dialComp.removeChild(tmp);
+          }
+        }
+        // Move dial from bottom slot to middle slot center
+        const midRect = middleSlot.getBoundingClientRect();
+        if (!dTargetSize) dTargetSize = Math.max(midRect.width, midRect.height) || 1;
+        const dSourceMax = Math.max(dialRect.width, dialRect.height) || 1;
+        const dScale = dTargetSize / dSourceMax;
+        const dx = (midRect.left + midRect.width / 2) - (dialRect.left + dialRect.width / 2);
+        const dy = (midRect.top + midRect.height / 2) - (dialRect.top + dialRect.height / 2);
+
+        scrubTL.to(dialWrapper, {
+          x: dx, y: dy, scale: dScale,
+          ease: 'power3.inOut', duration: 1
+        }, 0);
+
+        // --- Logo: fade out as section exits viewport ---
+        scrubTL.to(logoEl, {
+          opacity: 0,
+          ease: 'none',
+          duration: 0.4
+        }, 0.6);
+
+        // --- Step text: fade in during last 10% ---
+        if (stepTextEl) {
+          scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, 0.9);
+        }
+
+        // --- Mobile word reveal (bell curve per word) ---
+        if (logoSplitData.length) {
+          logoSplitData.forEach(d => {
+            const tgts = [d.upper, d.lower].filter(Boolean);
+            gsap.set(tgts, { opacity: 0 });
+            gsap.set(d.allWords, { yPercent: 100, opacity: 0 });
+          });
+
+          const SEG = 0.28;
+          logoSplitData.forEach((data, i) => {
+            const start = i * SEG;
+            const mid = start + SEG / 2;
+            const tgts = [data.upper, data.lower].filter(Boolean);
+
+            scrubTL.to(tgts, { opacity: 1, duration: SEG / 2 }, start);
+            scrubTL.to(data.allWords, {
+              yPercent: 0, opacity: 1, duration: SEG / 2, ease: 'none'
+            }, start);
+
+            scrubTL.to(data.allWords, {
+              yPercent: -100, opacity: 0, duration: SEG / 2, ease: 'none'
+            }, mid);
+            scrubTL.to(tgts, { opacity: 0, duration: SEG / 2 }, mid);
+          });
+        }
+
+        scrollTrigger = scrubTL.scrollTrigger || null;
+      };
+
+      if (_isDesktop()) {
+        buildTimeline();
+      } else {
+        buildMobileTimeline();
+      }
 
       // Rebuild on resize. Stored outside the ctx so destroy() can remove it
       // and replay() can call it.
-      _resizeHandler = buildTimeline;
+      _resizeHandler = () => (_isDesktop() ? buildTimeline : buildMobileTimeline)();
       window.addEventListener('resize', _resizeHandler);
     }, container || document);
   }
@@ -582,6 +694,11 @@
 
     // Unlock dial + scroll lock + add .rhp-home-ready + animate nav/step in.
     _applyCompleteState(true);
+
+    // Auto-engage ACTIVE state on mobile (no tap needed)
+    if (!_isDesktop() && RHP.workDial?.forceActive) {
+      RHP.workDial.forceActive();
+    }
 
     DEBUG && console.log('[home-scroll-morph] complete');
     window.dispatchEvent(new CustomEvent('rhp:home-scroll-morph:complete'));

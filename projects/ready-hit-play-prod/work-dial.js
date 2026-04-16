@@ -117,6 +117,8 @@
     let cleanup = [];
     let suspendCleanup = [];
     let suspended = false;
+    let _mobileActiveLocked = false; // once ACTIVE, never revert to IDLE until destroy
+    let _setDialStateFn = null; // closure set inside init(); used by forceActive()
     let _suspendFn = null;  // closure set inside init(), called by suspend()
     let _resumeFn = null;   // closure set inside init(), called by resume()
     let rafId = 0;
@@ -537,6 +539,7 @@
           }
         }
       }
+      _setDialStateFn = setDialState;
 
       function readPosterFromItem(item) {
         // Prefer the actual rendered <img> (Webflow CMS image)
@@ -1038,7 +1041,7 @@
       // Mobile dial: vertical drag rotates ticks only; update index per snap step (Variant B)
       const ROTATE_PER_PX = 0.22; // deg per px (tune)
       let _justActivatedMobile = false; // suppress click-to-navigate on activation tap
-      let _mobileActiveLocked = false; // once ACTIVE, never revert to IDLE until destroy
+      _mobileActiveLocked = false; // reset on each init
       function onPointerDown(e) {
         if (!isMobile()) return;
         // Kill in-flight snap tween so dragStartRot captures a stable value
@@ -1608,6 +1611,7 @@
       _suspendFn = null;
       _resumeFn = null;
       _mobileActiveLocked = false;
+      _setDialStateFn = null;
       refs = null;
       genericVideoComp = null;
     }
@@ -1625,6 +1629,15 @@
       if (g && g.videoR) g.deadzoneR = g.videoR * ratio;
     }
 
-    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, setDeadzoneRatio, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, _ready: false, version: WORK_DIAL_VERSION };
+    /** Force the dial into ACTIVE state (mobile: skip tap requirement). */
+    function forceActive() {
+      if (!alive || !interactionUnlocked || !_setDialStateFn) return;
+      _mobileActiveLocked = true;
+      if (dialState !== DIAL_STATES.ACTIVE) {
+        _setDialStateFn(DIAL_STATES.ACTIVE);
+      }
+    }
+
+    return { init, destroy, suspend, resume, isSuspended, getActiveIndex, setIntroComplete, setAttractionEnabled, setDeadzoneRatio, onIntroComplete, onNavAnimationComplete, setInteractionUnlocked, getIntroVideoEl, forceActive, _ready: false, version: WORK_DIAL_VERSION };
   })();
 })();

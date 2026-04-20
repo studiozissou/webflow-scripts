@@ -15,11 +15,11 @@ Intake & proposal workspace for taking over the NEM Life Webflow build (30 % com
 - **Brand principal:** Christel Reus
 - **Staging:** [nem-life-1.webflow.io](https://nem-life-1.webflow.io)
 - **Live (old):** nemlife.com — Webflow site `NEMLife.com TEMP`, needs 301 migration
-- **Figma:** access not yet granted (blocker — request Day 1)
+- **Figma:** file `8jRJkSvjuMQzYkA1gXc646` + PNG exports in `designs/`
 - **Budget indicated:** [redacted]
-- **Recommended quote:** [redacted]
-- **Flex option:** [redacted]
-- **Proposed delivery:** 5 weeks from deposit
+- **Quote:** [redacted]
+- **Out of scope:** Doe de zelftest (Phase 2 — Alex has dedicated brief), quiz block in Blog Item, Therapy/Couples therapy service pages (Alex building himself)
+- **Proposed delivery:** 2–3 weeks from deposit to launch
 - **Rate:** [redacted]
 - **Ongoing care options:** [redacted]
 
@@ -43,7 +43,7 @@ Previous developer was unreliable and hard to contact. Client is looking for som
 
 ## Next actions (once client signs)
 
-1. Kickoff call — resolve the 10 gaps listed in `takeover-plan.md`
+1. Kickoff call — resolve remaining open questions (newsletter provider, Share & Care scope)
 2. Get Figma + Webflow collaborator + Notion + Slack access
 3. Request final copy & asset drive
 4. Deposit 50 % → start Phase 1

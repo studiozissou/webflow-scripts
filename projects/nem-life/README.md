@@ -5,7 +5,7 @@ Intake & proposal workspace for taking over the NEM Life Webflow build (30 % com
 ## Contents
 
 - **`briefing.md`** — verbatim-ish extract of the client's Notion briefing (captured 2026-04-16 via Chrome DevTools because the Notion public API was down and the page is a JS SPA)
-- **`takeover-plan.md`** — 14-phase scoped plan with hours, pricing (€3,825 – €5,100), risks, opportunities, gaps, and engagement structure
+- **`takeover-plan.md`** — 5-phase scoped plan with hours, pricing (€3,240), risks, opportunities, and engagement structure
 - **`slack-message.md`** — short client-facing summary, formatted for Slack
 - **`audit/screenshots/`** — full-page screenshots of every audited page (desktop + mobile) from `nem-life-1.webflow.io`
 
@@ -15,11 +15,11 @@ Intake & proposal workspace for taking over the NEM Life Webflow build (30 % com
 - **Brand principal:** Christel Reus
 - **Staging:** [nem-life-1.webflow.io](https://nem-life-1.webflow.io)
 - **Live (old):** nemlife.com — Webflow site `NEMLife.com TEMP`, needs 301 migration
-- **Figma:** access not yet granted (blocker — request Day 1)
+- **Figma:** file `8jRJkSvjuMQzYkA1gXc646` + PNG exports in `designs/`
 - **Budget indicated:** €2,000 – €5,000
-- **Recommended quote:** **€4,800 fixed** (40 hours at €120/hr) — full brief, sits inside €5k ceiling
-- **Flex option:** **€4,080** core-only (defers 5.5hr of low-risk items to Care package)
-- **Proposed delivery:** 5 weeks from deposit
+- **Quote:** **€3,240 fixed** (27 hours at €120/hr) — confirmed by Alex 2026-04-20
+- **Out of scope:** Doe de zelftest (Phase 2 — Alex has dedicated brief), quiz block in Blog Item, Therapy/Couples therapy service pages (Alex building himself)
+- **Proposed delivery:** 2–3 weeks from deposit to launch
 - **Rate:** €120/hr (per house `rate-card.md`)
 - **Ongoing care options:** Insights €120/mo · Care €480/mo (recommended) · Grow €960/mo
 
@@ -43,7 +43,7 @@ Previous developer was unreliable and hard to contact. Client is looking for som
 
 ## Next actions (once client signs)
 
-1. Kickoff call — resolve the 10 gaps listed in `takeover-plan.md`
+1. Kickoff call — resolve remaining open questions (newsletter provider, Share & Care scope)
 2. Get Figma + Webflow collaborator + Notion + Slack access
 3. Request final copy & asset drive
 4. Deposit 50 % → start Phase 1

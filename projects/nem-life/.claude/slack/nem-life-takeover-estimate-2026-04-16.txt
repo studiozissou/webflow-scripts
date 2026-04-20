@@ -1,38 +1,38 @@
-Hi Alex, here is an outline and estimate of the NEM Life takeover plan:
+Hi Alex, here's the updated estimate after going through the audit and diffing the designs against the live site:
 
 *Context*
-I've audited nem-life-1.webflow.io against your briefing — desktop is roughly 30% there with a solid component library, but mobile, two CMS item templates, the Blog Insights logic, localization, and SEO/schema all still need building.
+Desktop is substantially built and close to the Figma designs. Our Mission = Over ons (nav submenu just points there). Footer has a "Services" link which points to Therapy / Couples therapy — adding those as an optional addon below.
 
 *Problem*
-The site can't launch as-is: mobile home renders broken, CMS is 100% Lorem Ipsum, nav links are unwired, localization is off despite the brief saying it's on, and the Insights/Experiences item pages don't exist yet.
+Blog Insights Item page isn't built (sidebar + modular body + checklist is real work), home mobile is effectively a rebuild from the design, every nav/footer link still points to `#`, and there's no SEO/schema/a11y/performance baseline yet.
 
 *Solution*
-A phased fixed-scope takeover covering every page in the brief:
-•  Finish Home, NEM Methode, Blog Insights system, Experiences, Link-in-bio
-•  Full mobile responsive pass across all pages
-•  Build the two missing Item page templates
-•  Enable NL localization, add schema, meta, sitemap, 301s from the old site
-SEO, analytics, accessibility and handoff are included as standard — not extras.
+5 core phases covering every remaining launch item:
+•  Blog Insights Item page (6h) + Experiences Item page (1h)
+•  Mobile responsive across all pages (8h)
+•  Debug + plumbing: wire nav, enable NL locale, home interactions, Experiences filter + load-more (4h)
+•  Performance, SEO, AEO, accessibility + launch with 301s and Loom handover (8h)
+Optional addon:
+•  Therapy + Couples therapy service landing pages (4h) — fills the footer "Services" slot, SEO/AEO-targeted
 
 *Benefits*
-•  Launch-ready Dutch site with every brief item ticked, plus AI-search-friendly DOM and Article/Organization/FAQ schema
-•  Clean Client-First class system, documented so it's maintainable without me
-•  Daily Slack check-ins and Loom walkthroughs — no repeat of the last handover
+•  Launch-ready NL site — every brief item ticked
+•  AI-search-friendly DOM + Article/Organization/FAQ/Person schema, sitemap, hreflang
+•  Clean plumbing: every link works, NL locale live, EN parked for Phase B
+•  Daily Slack check-ins and Loom walkthroughs throughout
 
 *Risks*
-•  Mobile rebuild is larger than the brief implies — I've priced a full responsive pass, not just alignment
-•  Real Dutch copy isn't supplied yet — if it slips past week 3, Phase 6/7 slip with it. Mitigation: content deadline locked at kickoff
+•  Home mobile is effectively a rebuild from the design — priced for that, not just alignment
+•  Zelftest scope unclear (see question below) — need your answer before we start
 
 *Timing & pricing*
-•  Recommended quote: *€4,800 fixed* (40 hours at €120/hr) — sits inside your €5k ceiling, full brief delivered
-•  Flex option: Core-only at *€4,080* — defers 4 low-risk items (NEM Methode polish, CMS taxonomy, Christel link-in-bio, nav submenu) to a post-launch care package
-•  Payment: 50% deposit / 25% on desktop sign-off / 25% on launch
-•  Start: Monday after deposit; 5-week delivery to launch
+•  Core: *€3,240 fixed* (27 hours at €120/hr)
+•  With Therapy + Couples therapy addon: *€3,720* (31 hours) — still inside your €5k ceiling
+•  *2-3 weeks* from deposit to launch
+•  Payment: 50% deposit / 25% at desktop sign-off / 25% on launch
 
-*Ongoing care (optional, after launch)*
-•  Insights — €120/mo: monthly performance + SEO report, no dev hours
-•  Care — €480/mo: 4h/mo + monthly report + quarterly AEO audit (recommended)
-•  Grow — €960/mo: 8h/mo + monthly AEO audit + content strategy check-in
-Month 1 of Care absorbs the deferred flex items if you take the €4,080 build option.
+Two quick questions to close before I send a formal proposal:
+1. *Doe de zelftest* — is that an external form/link, or a tool you want me to build? (Keeping it out of scope until we know — if bespoke we'd write a change order before starting)
+2. *Any other pages I've missed for the launch version?* I've scoped Home, NEM Methode content template, Our Mission, Link-in-bio, Blank (T&C / Privacy / Cookie), Blog Insights main/category/item, Experiences main/item — plus Therapy + Couples therapy as the optional addon. Anything else you expect live on day one?
 
-Full plan, audit screenshots and the 10 kickoff questions are ready to share. Happy to walk through on a 30-min call whenever suits.
+Post-launch Care package (€480/mo, 4h + monthly SEO/AEO report) details are in the full plan. Happy to jump on a 30-min call whenever suits.

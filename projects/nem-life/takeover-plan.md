@@ -5,6 +5,7 @@
 **Staging site:** [nem-life-1.webflow.io](https://nem-life-1.webflow.io)
 **Current live site:** nemlife.com (Webflow project `NEMLife.com TEMP` — to be migrated)
 **Source briefing:** `briefing.md` (captured 2026-04-16 from Alex's Notion)
+**Designs:** Figma file `8jRJkSvjuMQzYkA1gXc646` + PNG exports in `designs/` (reviewed 2026-04-16)
 **Rate:** €120/hr (standard, per house rate card)
 **Budget indicated:** €2,000 – €5,000
 **Proposal date:** 2026-04-16
@@ -14,54 +15,33 @@
 
 ## TL;DR
 
-Previous developer delivered ~30 % of the scope, substantially on **desktop only**, with placeholder content across all CMS collections and a partially wired component system. Mobile needs a full responsive pass across every page. Two CMS item templates (Insights Item, Experiences Item) are not yet built. Localization is configured but disabled. No SEO/schema work is in place yet.
+Previous developer delivered substantial **desktop** work: Home, NEM Methode, Our Mission, Blog Insights main, Experiences, Link-in-bio, and Blank page are all built and close enough to the Figma designs to keep. The real remaining work splits into 5 clean phases.
 
-**Recommended quote: €4,800 fixed (40 hours at €120/hr).** Sits inside the stated €5k ceiling and covers the full brief.
+**Quote: €3,240 fixed (27 hours at €120/hr).** Inside your €5k ceiling with €1,760 headroom.
+**Timeline: 2–3 weeks from deposit to launch.**
 
-If we need to trim, there's a clearly-flagged **Flex Items list (~€720)** we can defer to an ongoing care package after launch — bringing the build quote to **€4,080**.
+**Scope confirmed with Alex (2026-04-20):**
+- **Our Mission = Over ons** — no separate page; nav "Over" submenu points to Our Mission
+- **Therapy + Couples therapy (Services page)** — Alex will build himself using existing components. Removed from scope.
+- **Doe de zelftest** — out of scope for this phase. Alex has a dedicated brief for a separate Phase 2 engagement.
+- **Quiz block in Blog Item body** — out of scope for this phase. Blog Item will include the modular Rich Text blocks (H2/H3, paragraph, image, quote, mid-page CTA) but not the interactive quiz component.
 
-**Post-launch care package: €480/mo** (4 hours + monthly performance report) — handles the flex items in month 1, then picks up small iterations and SEO/AEO reports thereafter.
+**Post-launch care package: €480/mo** (4h + monthly SEO/AEO report) — handles small iterations and ongoing AEO visibility after launch.
 
 ---
 
-## What I'm seeing vs. what the brief says
+## What the design diff confirms
 
-### Built well enough to keep (✅)
-- Home page layout & structure (desktop)
-- NEM Methode layout
-- Our Mission / Missie page
-- Blank page (T&C / Privacy / Cookie)
-- Nav & footer component scaffolding
-- Notification bar component
-- FAQ accordion markup
-- CMS collections exist: **Insights**, **Insights categories**, **Testimonials**, **Testimonials Categories**
-- 43 registered components — component library is non-trivial and mostly sensibly named
-- No console errors on any audited page
+Diffed the Figma exports in `designs/` against the live audit screenshots in `audit/screenshots/`:
 
-### Prepared but incomplete (⚠️)
-- **Home page:** 3-image hover sequence not wired; "123" card fade-in on scroll not wired; Insights category-based card logic (1 Essential + 2 latest per category) not implemented — currently just shows 5 Lorem items
-- **NEM Methode:** card fade-in missing; FAQ same treatment as home
-- **Blog Insights main:** sticky category bar not sticky; Essentieel/Selected/Popular/category-based logic not implemented
-- **Ervaringen (Experiences):** journey-type filter not wired; load-more not wired; Story cards use Lorem
-- **Link-in-bio /lp/christel:** placeholder, needs CMS-driven blog card sections
-- **Nav:** About/Over submenu not refined
-- **Large + Medium headers:** styling + right-side images incomplete
-
-### Not yet built (📋)
-- **Blog Insights Category page** (needs to be cloned/templated across 5 categories)
-- **Blog Insights Item page** (two-column, sticky side panel, modular content blocks)
-- **Experiences Item page** (single-column text-only)
-
-### Real problems I found (not in brief, but matter)
-1. **Mobile is broken across the board** — home mobile renders as stripped-down skeleton; other pages largely untested at 390×844. The scale of the rebuild is larger than the brief implies.
-2. **CMS is populated entirely with Lorem Ipsum** — 5 Insights items, 7 Testimonials items, all placeholder. Only Insights Categories has real Dutch content.
-3. **Localization is OFF** — brief says "Localization ACTIVATED" but Webflow API shows both NL and EN locales with `enabled: false`. NL needs to be switched on; EN needs to be hidden at launch per brief.
-4. **Nav links are all `#`** — no page wiring.
-5. **No tag taxonomy for Insights** — brief requires tag-based "Veel gelezen: [tag]" blocks on Category pages. Only categories exist. Needs a new reference collection.
-6. **Two Webflow projects exist** — `NEMLife.com TEMP` (live on nemlife.com) and `NEMLife.com NEW` (the one we're finishing). Needs DNS cutover + 301 map at launch.
-7. **Mobile nav + notification bar stacking rule** ("no navbar overlap on mobile") — needs CSS validation.
-8. **No schema, no metadata strategy, no preload hints** — brief requires Article / Organization / FAQPage schema.
-9. **GEO requirement (all essential text in DOM at load)** — needs explicit review of any JS-injected copy. FAQ must use CSS-only collapsing.
+- **Home desktop** — structurally matches design. Needs interaction polish (3-image hover, 123 fade-in, FAQ single-open) and content wiring. Not a rebuild.
+- **Home mobile** — design shows a rich, fully composed mobile layout. Live is a stripped skeleton. **Effective rebuild from the design.**
+- **Blog Insights main desktop** — built. Needs CMS wiring (Essentieel / Selected / Popular / category-based logic) and real content. Not a rebuild.
+- **Blog Insights Item page** — not built. Design is substantial (sticky side panel + 5 sub-components, modular body, "De essentie" checklist, 3-card CTA). Real build work.
+- **Experiences** — built. Needs journey-type filter logic, dynamic CTA copy, load-more wiring.
+- **Experiences Item page** — no design (brief says pure text single column). Simple template.
+- **Our Mission, Link-in-bio, Blank** — built and close to design. Need mobile pass only.
+- **Plumbing** — every nav/footer link points to `#`. Locales configured but disabled. Notification bar built but per-page show/hide needs verification.
 
 ---
 
@@ -69,45 +49,33 @@ If we need to trim, there's a clearly-flagged **Flex Items list (~€720)** we c
 
 **Rate: €120/hr.** All phases below are hourly line items — totals are fixed on sign-off.
 
-Standard add-ons (SEO setup, analytics, accessibility pass, cookie consent, handoff documentation) are **included at no extra charge** per house rate card — the hours shown below are the realistic build time for each phase.
+Standard add-ons (SEO setup, analytics, accessibility pass, cookie consent, handoff documentation) are **included at no extra charge** per house rate card.
 
-### Core scope (non-negotiable — required to launch)
+Discovery, kickoff call, and Loom walkthroughs are absorbed into Phase 4 — not billed separately.
 
-| # | Phase | Hours | EUR |
-|---|---|---:|---:|
-| 1 | **Discovery & handover** — Figma/Webflow/Notion/Slack access, Loom walkthrough of audit findings back to you, kickoff call to resolve the 10 open questions (see below) | 2.0 | €240 |
-| 2 | **Foundation audit & tech debt** — Client-First compliance sweep, component reuse audit, nav link wiring, locale config fix, responsive strategy lock | 4.0 | €480 |
-| 3 | **Home page completion** — 3-image hover fade, 123 card scroll-in, FAQ single-open behaviour, Insights category-based cards, header right images | 4.0 | €480 |
-| 5 | **Mobile responsive — ALL pages** — full mobile pass across every page; fix nav+notification stacking; typography scale; image sets | 6.0 | €720 |
-| 6 | **Blog Insights system** — sticky bar, Essentieel/Selected/Popular logic, Category page template (5 live), tag-based "Veel gelezen" blocks, Item page build (sticky side panel, modular body, Related 3) | 6.0 | €720 |
-| 7 | **Experiences system** — journey-type filter, responsive grid, dynamic CTA by sex, load-more, Item page build (single-column text-only) | 4.0 | €480 |
-| 9 | **Webflow localization** — NL enabled as primary, EN hidden/ready for Phase B, `/nl/…` URL scheme, hreflang | 1.5 | €180 |
-| 10 | **SEO, schema & performance** — meta editable in CMS, OG images, Article/Organization/FAQPage JSON-LD, robots.txt, sitemap, preload hero, WebP pass, Lighthouse baseline | 3.0 | €360 |
-| 13 | **QA — cross-browser & a11y** — Chrome/Safari/Firefox/iOS/Android spot-checks, axe-core pass on every template, keyboard nav, reduced-motion respect | 2.0 | €240 |
-| 14 | **Launch prep** — 301 map from `NEMLife.com TEMP`, DNS cutover plan, final publish, smoke test, Loom handover | 1.5 | €180 |
-| | **Core total** | **34.0** | **€4,080** |
+| # | Phase | What's in it | Hours | EUR |
+|---|---|---|---:|---:|
+| 1 | **Blog Insights Item page** | New template from scratch. Sticky side panel (Share & Care, Kerninzichten, Essentie quote, Zelftest CTA card, Gerelateerde inzichten). Modular body (H2/paragraph/image/quote/mid-page CTA via Rich Text). "De essentie" checklist. Full "Zet de volgende stap" 3-card CTA. Desktop + mobile. | 6.0 | €720 |
+| 2 | **Experiences Item page** | Single-column text-only template per brief. H1 + intro + paragraph body. No images, no quote styling. | 1.0 | €120 |
+| 3 | **Mobile responsive — all pages** | Home (biggest — effective rebuild from design), NEM Methode content template, Blog Insights main/Category/Item, Experiences main/Item, Our Mission, Link-in-bio, Blank. Fix nav+notification stacking, typography scale, image sets. | 8.0 | €960 |
+| 4 | **Debug, plumbing & interactions** | Wire all nav + footer links. Enable NL locale, hide EN. Home 3-image hover sequence. 123 card fade-in on scroll. FAQ single-open. Sticky category bar (Blog Insights). Journey-type filter + dynamic CTA + load-more (Experiences). Tag-based "Veel gelezen" blocks. Shrink-on-scroll nav. Notification bar per-page show/hide. Console-clean pass. | 4.0 | €480 |
+| 5 | **Performance, SEO, AEO, accessibility + launch** | Preload hero, WebP conversion pass, responsive image sets. Meta + OG + Article/Organization/FAQPage/Person schema. robots.txt, sitemap, hreflang. GEO/AEO DOM audit (essential text in DOM at load). axe-core pass on every template. Keyboard nav + reduced-motion. Lighthouse baseline + targeted fixes. 301 map from TEMP site, DNS cutover plan, final publish, smoke test, Loom handover. | 8.0 | €960 |
+| | **Total** | | **27.0** | **€3,240** |
 
-### Flex items (can be deferred to care package if budget is tight)
+---
 
-Each item below can be pulled from scope and picked up in the post-launch care package (at 4hr/€480/month, all four fit inside month 1).
+## Out of scope (flagged, scoped separately if needed)
 
-| # | Phase | Hours | EUR | Risk if deferred |
-|---|---|---:|---:|---|
-| 4 | **NEM Methode card fade-in + FAQ parity** | 1.5 | €180 | Low — page still works, just less polished |
-| 8 | **CMS cleanup & taxonomy** (add Insight Tags collection, wire multi-ref, replace Lorem once content arrives) | 1.5 | €180 | Medium — "Veel gelezen" blocks won't render until tags exist. Client can populate content manually |
-| 11 | **Link-in-bio (Christel)** — activate Methode section + 2 manually-selected blog cards × 2 | 1.0 | €120 | Low — can go live post-launch |
-| 12 | **Nav / footer polish** — shrink-on-scroll, About/Over submenu, footer form wiring | 1.5 | €180 | Medium — nav feels unfinished without submenu |
-| | **Flex total** | **5.5** | **€660** | |
-
-### Totals
-
-| Scope | Hours | EUR |
-|---|---:|---:|
-| **Core only** (launches, no flex) | 34.0 | **€4,080** |
-| **Core + all flex** (recommended — full brief delivered) | 39.5 | **€4,740** |
-| **Recommended quote (rounded)** | 40.0 | **€4,800** |
-
-> **€4,800 fixed** is the proposed number. Sits inside the €5k ceiling. Delivers the full brief.
+- **Doe de zelftest** — Alex has a dedicated brief for this. Separate Phase 2 engagement once this launch is complete.
+- **Quiz block in Blog Item body** — the interactive question/answer component visible in the design. Excluded per Alex's confirmation.
+- **Therapy + Couples therapy service pages** — Alex will build using existing components.
+- Copywriting in Dutch (I'll place supplied copy)
+- Photography / illustration (stock sourcing available as upsell)
+- Logo / brand identity work (done, per brief)
+- Webflow Ecommerce
+- EN locale activation (structure ready at launch, activation is Phase B — ~€720–€1,200)
+- Post-launch content entry beyond first 5 articles + 7 testimonials to prove templates
+- Hosting management (not offered)
 
 ---
 
@@ -117,9 +85,9 @@ Per house rate card:
 
 | Stage | Amount | When |
 |---|---|---|
-| Deposit | 50 % (€2,400) | On sign-off, before work starts |
-| Milestone — design approval | 25 % (€1,200) | After Phase 3/4 desktop sign-off |
-| Final | 25 % (€1,200) | On launch |
+| Deposit | 50 % (€1,620) | On sign-off, before work starts |
+| Milestone — desktop sign-off | 25 % (€810) | After Phases 1–2 complete |
+| Final | 25 % (€810) | On launch |
 
 - Bank transfer, 7-day payment terms
 - Estimate valid 30 days
@@ -131,7 +99,7 @@ Per house rate card:
 
 ## Post-launch: ongoing care packages
 
-Picking up the flex items plus keeping the site healthy, the site secure, and the SEO/AEO story working over time. All three tiers are on the house rate card's retainer structure.
+Keeping the site healthy, iterated, and visible in AI search over time. All three tiers match the house rate card.
 
 ### Insights — €120 / month
 Report-only. No dev hours.
@@ -157,88 +125,68 @@ Report-only. No dev hours.
 - A/B test recommendations on CTAs
 - Priority response < 12h weekdays
 
-**What the AEO audit actually does** — once a quarter (or monthly on Grow), I run your key pages through AI search engines to see how they rank, what's being cited, what's missed. Then I apply structural/copy fixes to the pages so they get quoted more often. This is the single best SEO investment for a psychology brand in 2026 — more searches now start in ChatGPT than Google Images.
+**Why AEO matters for NEM Life** — a psychology brand with Christel as the named expert is a textbook case for AI search. ChatGPT and Perplexity quote sources that have (a) structured schema, (b) clear answer-first copy, and (c) named expertise. Quarterly audit + targeted fixes compound over 6–12 months into materially more inbound.
+
+---
+
+## Resolved questions (2026-04-20)
+
+1. **Doe de zelftest** — out of scope. Alex has a dedicated brief; separate Phase 2 engagement.
+2. **Quiz block in Blog Item** — out of scope per Alex.
+3. **Therapy + Couples therapy service pages** — Alex will build himself using existing components.
+
+## Still open before kickoff
+
+1. **Newsletter provider** — Mailchimp? ActiveCampaign? Klaviyo? Mailerlite? (Affects form wiring time inside Phase 4)
+2. **Share & Care** (Insights Item) — simple social share icons, or custom bookmark/save with persistence?
 
 ---
 
 ## Risks
 
-1. **Mobile rebuild is larger than brief suggests** — the brief calls it "alignment", but home mobile looks substantially stripped. Build-out risk concentrated in Phase 5. *Mitigation:* fix at component level so every page inherits the fix.
-2. **Previous dev's Client-First compliance unknown** — deep audit may surface non-conforming class systems. *Mitigation:* budgeted in Phase 2; flag early if it balloons.
-3. **Figma designs not yet verified for Item pages** — brief lists them as 📋 but I haven't confirmed designs exist. *Mitigation:* request Figma access Day 1; re-estimate Phase 6/7 if designs are missing.
-4. **Real content timing** — CMS is 100 % Lorem. If copy isn't supplied before Phase 6/7, we either build against Lorem (carries layout risk) or slip. *Mitigation:* content deadline locked in Phase 1 kickoff.
-5. **Localization contradiction** — brief says ACTIVATED, Webflow shows disabled. *Mitigation:* confirm in kickoff.
-6. **Tag collection missing** — "Veel gelezen: [tag]" blocks can't function without it. Adding one is in Flex Phase 8.
-7. **Two Webflow sites** — if the TEMP site has content to migrate (URLs, metadata), that's additional scope. *Mitigation:* Phase 14 covers 301s; deeper content migration is out of scope unless flagged.
-8. **Previous dev reliability** — no handover doc, no changelog. Assume zero knowledge transfer; everything reverse-engineered. Already priced in Phase 1 + 2.
-9. **Self-test CTA** — brief mentions it on Insights Item pages. No tool spec. Assuming link-out to an external form; bespoke in-page tool is separate scope.
+1. **Home mobile is effectively a rebuild** — the design is richer than a pure "alignment" pass implies. Phase 3 is tight; priced for the real shape.
+2. **Insights Item side panel is 5 mini-components in one sidebar** — built to spec this is ~4.5hr of the 6hr Phase 1 budget. Tight but doable.
+3. **Figma MCP was hanging during audit** — designs were reviewed via PNG exports. If pixel-exact values or variable tokens are needed, I'll re-try Figma or request a fresh share link.
+4. **Previous dev's Client-First compliance** — spot-checked and looks reasonable; full audit happens inside Phase 4. If a big cleanup is needed, flag early.
+5. **Real Dutch content** — CMS is 100% Lorem. If copy slips, templates build against Lorem and need a content-pass revision (small risk, folded into revisions).
+6. **Two Webflow sites** — TEMP site still lives on nemlife.com. 301 map + DNS in Phase 5; deeper content migration (if any) out of scope unless flagged.
+7. **2–3 week timeline is tight** — feasible if Alex is responsive on Slack and content is supplied on time. If blockers stack, we slip to 3.5 weeks before rushing.
 
 ---
 
-## Opportunities (future / upsell)
+## Engagement structure (2–3 weeks)
 
-- **Phase B: EN locale activation** — once NL is stable, unlock EN (~6–10 hrs for wiring, translation excluded)
-- **Content population service** — place real copy + source stock photography per brief (separate quote, ~€600–€1,200 depending on volume)
-- **Alex link-in-bio** — parallel to Christel's; trivial clone (~1–2 hrs) if wanted
-- **Blog automation** — Notion → Webflow pipeline via Make.com (~6–8 hrs; strong fit for a psychology content brand that publishes regularly)
-- **Email capture + Mailchimp/ActiveCampaign/Klaviyo integration** — not in current scope; brief doesn't name a provider
-- **Subtle GSAP choreography** — brief explicitly says "no dramatic animation" so stays restrained, but a tasteful pass adds perceived quality (~3–5 hrs)
-- **Person schema (Christel)** — beyond the required schema; strong AEO signal for a personal brand
-- **NEM Methode as a self-paced intro module** — lead-magnet-shaped product, captures emails pre-therapy
-
----
-
-## Gaps & clarifications needed before kickoff
-
-1. **Figma access** — confirm link to final designs; verify Item page templates exist
-2. **"Over ons" page** — nav lists it, page list doesn't. Out of scope, existing, or implied under "Our Mission"?
-3. **Newsletter provider** — Mailchimp? ActiveCampaign? Klaviyo? Needed for footer form wiring
-4. **Self-test CTA destination** — external form URL, or build a bespoke tool?
-5. **NEM WISE waitlist** — mentioned in brief; destination/form unknown
-6. **Legal copy** — Privacy / T&C / Cookie — finalised and Dutch-law reviewed?
-7. **Browser support targets** — assuming latest 2 versions of Chrome/Safari/Firefox/Edge + iOS 16+ Safari
-8. **Previous developer transition** — work-in-progress not in Webflow? Custom code deployed via CDN not in the project?
-9. **Go-live date** — when does NL need to be public?
-10. **Analytics** — GA4? Plausible? Needs installing before launch; 15-min task but needs the ID
-
----
-
-## Engagement structure
-
-- **Discovery call (30 min)** — align on scope, confirm Figma, resolve the 10 gaps above
-- **Deposit: 50 %** — on sign-off of fixed scope
-- **Week 1:** Phases 1–2 (discovery + foundation)
-- **Week 2:** Phases 3–4 + start Phase 5 (desktop polish + start responsive)
-- **Week 3:** Phase 5 + 6 (finish responsive, Blog Insights system)
-- **Milestone invoice: 25%** at end of Week 3 (desktop sign-off)
-- **Week 4:** Phases 7–10 (Experiences, CMS, localization, SEO)
-- **Week 5:** Phases 11–14 (polish, QA, launch)
-- **Final payment: 25 %** — on launch + Loom handover
-- **Optional: start Care retainer month 1 = absorbs Flex items**
+- **Kickoff call (30 min)** — resolve remaining open questions; confirm scope + start date
+- **Deposit 50 %** — on sign-off (€1,620)
+- **Week 1:** Phase 1 (Blog Insights Item page build) + Phase 2 (Experiences Item page)
+- **Milestone invoice 25 %** — at desktop sign-off end of Week 1 / early Week 2 (€810)
+- **Week 2:** Phase 3 mobile responsive + Phase 4 debug/plumbing
+- **Week 2–3:** Phase 5 performance/SEO/AEO/a11y + launch
+- **Final payment 25 %** — on launch + Loom handover (€810)
 
 Daily Slack check-ins, Loom for any decision needing client input. No surprises.
 
 ---
 
-## What I will NOT do under this quote
+## Opportunities (not in quote — future upsell)
 
-- Logo / brand identity work (done, per brief)
-- Copywriting in Dutch (I'll place supplied copy — writing it is separate)
-- Photography / illustration (stock sourcing available as upsell)
-- Email marketing setup beyond embedding a form
-- Webflow Ecommerce
-- Bespoke in-page tools (Self-test, quizzes) unless separately scoped
-- Post-launch content entry beyond first 5 articles + 7 testimonials to prove templates
-- Hosting management (not offered)
+- **Phase 2: Doe de zelftest** — Alex has a dedicated brief. Scope separately once launch is complete.
+- **Phase B: EN locale activation** — once NL is stable, unlock EN (~6–10 hrs, translation excluded)
+- **Content population + stock photography** — place real copy per brief, source imagery (~€600–€1,200)
+- **Alex link-in-bio** — trivial clone of Christel's page if wanted (~1–2 hrs)
+- **Blog automation** — Notion → Webflow pipeline via Make.com (~6–8 hrs; strong fit for a content-led psychology brand)
+- **Quiz block in Blog Item** — interactive question/answer component for articles. Scope with Phase 2 or separately.
+- **Subtle animation polish** — restrained GSAP pass for premium feel (~3–5 hrs)
+- **Care package** (monthly retainer) — see options above
 
 ---
 
 ## Decision points for Alex
 
-1. **Scope:** Core + Flex (€4,800) or Core only (€4,080)?
+1. ~~**Scope:** lock at €3,240 as-quoted?~~ **Confirmed 2026-04-20** — €3,240 / 27hr, no Services addon.
 2. **Care package:** Insights (€120/mo), Care (€480/mo, recommended), Grow (€960/mo), or none?
 3. **Start date:** Monday after deposit clears — confirm target go-live window
-4. **Kickoff call:** 30 min to walk through the 10 gaps + this plan — when works?
+4. **Kickoff call:** 30 min to resolve remaining open questions — when works?
 
 ---
 

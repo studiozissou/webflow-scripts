@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-21",
-  "note": "Deploy f47a1a8 (2026-04-16): mobile home intro — fg hidden, 250svh section, auto-engage ACTIVE, logo fade. Tests skipped by user.",
-  "lastDeployed": "2026-04-16",
-  "lastDeployedHash": "f47a1a8",
+  "note": "Deploy 99e2adc (2026-04-21): about-slider-autoheight module, scroll-accordions spec, queue local SEO pipeline. Tests skipped by user.",
+  "lastDeployed": "2026-04-21",
+  "lastDeployedHash": "99e2adc",
   "entries": [
     {
       "id": "smoke",

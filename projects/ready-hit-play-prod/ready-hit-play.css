@@ -601,6 +601,14 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   z-index: 5;
 }
 
+/* Webflow work pages set [data-text="step"]{opacity:0} as custom CSS to prevent
+   flash on load. The dial persists outside Barba, so that rule sticks after
+   navigating back to home. Override it here — the FOUC rule above (line 30)
+   keeps step text hidden until .rhp-home-ready is added. */
+.dial_component[data-dial-ns="home"] [data-text="step"] {
+  opacity: 1;
+}
+
 /* While ScrambleText is animating, the random char string has no whitespace
    and cannot wrap on word boundaries. Allow break-anywhere wrapping for the
    duration of the scramble so the text never overflows the dial. The class

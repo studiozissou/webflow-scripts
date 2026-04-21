@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.4.9.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.4.21.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -785,6 +785,7 @@
         RHP.aboutDialTicks?.init?.(container);
         RHP.aboutTextLines?.init?.(container);
         RHP.aboutSliderAutoheight?.init?.(container);
+        RHP.aboutScrollAccordions?.init?.(container);
         initAboutTeamHover(container); // handles desktop vs mobile internally
       },
       destroy() {
@@ -794,6 +795,7 @@
         RHP.aboutDialTicks?.destroy?.();
         RHP.aboutTextLines?.destroy?.();
         RHP.aboutSliderAutoheight?.destroy?.();
+        RHP.aboutScrollAccordions?.destroy?.();
         destroyAboutTeamHover();
       }
     };

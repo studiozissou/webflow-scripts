@@ -783,7 +783,8 @@
         active = true;
         // Note: scroll.unlock + lenis.start/resize handled by runAfterEnter (Barba) or bootCurrentView (direct-land)
         RHP.aboutDialTicks?.init?.(container);
-        RHP.aboutTextLines?.init?.(container);
+        // DISABLED: scroll-linked text opacity reveal — module intact, just disconnected
+        // RHP.aboutTextLines?.init?.(container);
         RHP.aboutSliderAutoheight?.init?.(container);
         initAboutTeamHover(container); // handles desktop vs mobile internally
       },
@@ -792,7 +793,8 @@
         active = false;
         RHP.lenis?.stop();
         RHP.aboutDialTicks?.destroy?.();
-        RHP.aboutTextLines?.destroy?.();
+        // DISABLED: scroll-linked text opacity reveal — module intact, just disconnected
+        // RHP.aboutTextLines?.destroy?.();
         RHP.aboutSliderAutoheight?.destroy?.();
         destroyAboutTeamHover();
       }

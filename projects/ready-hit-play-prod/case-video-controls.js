@@ -7,7 +7,7 @@
    + Auto-hide controls + cursor on mouse inactivity
    ========================================= */
 (() => {
-  const VERSION = '2026.4.15.1';
+  const VERSION = '2026.4.21.1';
   window.RHP = window.RHP || {};
 
   const cleanups = [];
@@ -28,6 +28,10 @@
       await video.play();
       return { ok: true };
     } catch (e) {
+      /* AbortError = play() interrupted by pause() (IO race) — autoplay IS allowed,
+         the observer just paused before the promise settled.  Treat as success so
+         gestureUnlocked is set and the IO resume path will play on scroll-in. */
+      if (e.name === 'AbortError') return { ok: true, interrupted: true };
       return { ok: false, error: e };
     }
   }
@@ -110,6 +114,7 @@
     const video      = section.querySelector('video.video-cover');
     const playPause  = section.querySelector('.play-pause');
     const muteUnmute = section.querySelector('.mute-unmute');
+    const restart    = section.querySelector('.restart');
 
     if (!video || !playPause || !muteUnmute || !controlWrapper) return;
 
@@ -135,11 +140,19 @@
       syncIcons(video, playPause, muteUnmute);
     };
 
+    const onRestartClick = async () => {
+      video.currentTime = 0;
+      video._rhpUserPaused = false;
+      const result = await tryPlay(video);
+      if (result.ok) video._rhpGestureUnlocked = true;
+    };
+
     const onPlayPause    = () => syncIcons(video, playPause, muteUnmute);
     const onVolumeChange = () => syncIcons(video, playPause, muteUnmute);
 
     playPause.addEventListener('click', onPlayPauseClick);
     muteUnmute.addEventListener('click', onMuteUnmuteClick);
+    if (restart) restart.addEventListener('click', onRestartClick);
     video.addEventListener('play',         onPlayPause);
     video.addEventListener('pause',        onPlayPause);
     video.addEventListener('volumechange', onVolumeChange);
@@ -360,6 +373,7 @@
       /* Event listeners */
       playPause.removeEventListener('click', onPlayPauseClick);
       muteUnmute.removeEventListener('click', onMuteUnmuteClick);
+      if (restart) restart.removeEventListener('click', onRestartClick);
       video.removeEventListener('play',         onPlayPause);
       video.removeEventListener('pause',        onPlayPause);
       video.removeEventListener('volumechange', onVolumeChange);

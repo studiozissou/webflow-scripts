@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-21",
-  "note": "Deploy 99e2adc (2026-04-21): about-slider-autoheight module, scroll-accordions spec, queue local SEO pipeline. Tests skipped by user.",
+  "note": "Deploy 06f7ce1 (2026-04-21): case video restart + AbortError fix, about scroll-accordions, about-slider-autoheight fix, barba container detection. Tests skipped by user.",
   "lastDeployed": "2026-04-21",
-  "lastDeployedHash": "99e2adc",
+  "lastDeployedHash": "06f7ce1",
   "entries": [
     {
       "id": "smoke",

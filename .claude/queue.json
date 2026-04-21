@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-15",
+  "updated": "2026-04-21",
   "queue": [
     {
       "id": "cm-custom-code-migration",
@@ -46,6 +46,28 @@
       "spec": null,
       "blockedOn": "cm-seo-foundation",
       "created": "2026-04-15"
+    },
+    {
+      "id": "rhp-about-scroll-accordions",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "About page scroll accordions — ScrollTrigger height auto reveal on .accordion-content, 35% from bottom trigger, reverse on scroll-back",
+      "description": "New module about-scroll-accordions.js. One ScrollTrigger per .accordion-title in .section_about-hero. When title scrolls to 35% from bottom of viewport (start: 'top 65%'), GSAP tweens sibling .accordion-content from height:0/opacity:0 to height:auto/opacity:1 over 0.75s power3.out. toggleActions 'play none none reverse' handles scroll-back. Multiple open simultaneously. Standard RHP IIFE pattern with gsap.context, init/destroy. Orchestrator wires via views.about. ~50 LOC, 3 files.",
+      "spec": ".claude/specs/rhp-about-scroll-accordions.md",
+      "created": "2026-04-21"
+    },
+    {
+      "id": "rhp-about-slider-autoheight",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "About slider auto-height — MutationObserver on .about-slider to match active slide height",
+      "description": "Standalone module about-slider-autoheight.js. Scopes to .about-slider elements on the about page. MutationObserver watches .w-slide aria-hidden attribute changes, sets closest .w-slider height to active slide's clientHeight. Follows standard RHP module pattern (IIFE, window.RHP, init/destroy). Orchestrator integration in RHP.views.about. ~50 LOC, 3 files.",
+      "spec": ".claude/specs/rhp-about-slider-autoheight.md",
+      "created": "2026-04-20"
     },
     {
       "id": "rhp-dial-engaged-ticks-dynamic-sectors",
@@ -651,6 +673,65 @@
       "spec": ".claude/specs/site-review-stage-8-a11y-tier2.md",
       "blockedOn": "wf-site-review-csv-importers-screaming-frog-se-ranking",
       "created": "2026-03-11"
+    },
+    {
+      "id": "lseo-foundation-config-semrush-client",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Local SEO foundation — config module and SEMRush HTTP API client",
+      "description": "Create tools/local-seo/ directory. Build config.js (dotenv, API key management for SEMRUSH_API_KEY, ANTHROPIC_API_KEY, HUNTER_API_KEY) and lib/semrush.js (HTTP client wrapping SEMRush API endpoints: domain_rank, domain_organic, backlinks_overview, phrase_this, tracking_position_organic). Follow tools/site-review/ patterns: named exports, createLogger, error handling. Unit tests for config loading and mocked API responses.",
+      "spec": ".claude/specs/local-seo-automation.md",
+      "created": "2026-04-20"
+    },
+    {
+      "id": "lseo-report-generator",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Local SEO monthly report generator — Claude narrative + HTML template",
+      "description": "Build lib/report-gen.js (feeds SEMRush data + site health metrics to Claude, generates plain-English narrative with wins/issues/recommendations) and lib/templates/monthly-report.html (branded HTML report template). Claude prompt emphasises jargon-free language, specific numbers, and actionable next steps. Unit tests with fixture data.",
+      "spec": ".claude/specs/local-seo-automation.md",
+      "blockedOn": "lseo-foundation-config-semrush-client",
+      "created": "2026-04-20"
+    },
+    {
+      "id": "lseo-report-cli",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Local SEO report CLI — index-report.js orchestrator with --client and --all flags",
+      "description": "Build index-report.js CLI entry point. Reads client config from clients/<slug>.json, pulls SEMRush data (parallel: domain_rank + keyword positions + backlinks_overview), optionally runs site-review subset (meta-tags, psi), feeds all data to report-gen.js, renders HTML report to output/<slug>/reports/YYYY-MM.html. Flags: --client <slug>, --all, --verbose, --skip-site-review. Add npm script to package.json.",
+      "spec": ".claude/specs/local-seo-automation.md",
+      "blockedOn": "lseo-report-generator",
+      "created": "2026-04-20"
+    },
+    {
+      "id": "lseo-prospect-scorer",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Local SEO lead gen — prospect discovery and scoring algorithm",
+      "description": "Build lib/prospect-scorer.js (opportunity scoring: authority score, missing keywords, review rating, technical issues, GBP gaps) and index-prospect.js CLI (--location, --niche, --limit flags). Uses Google Places API for business discovery, SEMRush for domain analysis, and site-review quick scan for technical issues. Saves scored prospects to prospects/<location>-<niche>.json. Email discovery via website scraping — mailto: links, JSON-LD LocalBusiness schema, contact page regex (lib/email-finder.js). No third-party email lookup API needed.",
+      "spec": ".claude/specs/local-seo-automation.md",
+      "blockedOn": "lseo-foundation-config-semrush-client",
+      "created": "2026-04-20"
+    },
+    {
+      "id": "lseo-outreach-drafts",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Local SEO outreach — personalised email drafting via Claude",
+      "description": "Build multi-channel outreach system. index-outreach.js CLI with --prospect <slug> --channel email|gbp|whatsapp|social|all. Claude generates personalised messages per channel with tone/length adapted: email (150-250 words, professional), GBP message (50-80 words, customer-tone), WhatsApp (30-50 words, ultra-short), Instagram/Facebook DM (50-100 words, friendly). Each references specific prospect weaknesses tactfully + free mini-audit hook from site-review. Templates in lib/templates/outreach-{channel}-cold.md. Saves drafts to output/outreach/<prospect-slug>/{channel}.md. Multi-touch sequence: Day 0 best channel → Day 3 second channel → Day 7 follow-up → Day 14 final soft touch.",
+      "spec": ".claude/specs/local-seo-automation.md",
+      "blockedOn": "lseo-prospect-scorer",
+      "created": "2026-04-20"
     }
   ]
 }

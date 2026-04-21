@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-16",
+  "lastUpdated": "2026-04-21",
   "note": "Deploy f47a1a8 (2026-04-16): mobile home intro — fg hidden, 250svh section, auto-engage ACTIVE, logo fade. Tests skipped by user.",
   "lastDeployed": "2026-04-16",
   "lastDeployedHash": "f47a1a8",
@@ -324,6 +324,26 @@
       "slug": "rhp-home-intro-mobile",
       "created": "2026-04-15",
       "description": "Mobile home intro — fg hidden on load, 250svh section, logo fade-out, auto-engage ACTIVE, dial position, bg canvas visibility, desktop regression"
+    },
+    {
+      "id": "rhp-about-slider-autoheight",
+      "file": "tests/acceptance/rhp-about-slider-autoheight.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-about-slider-autoheight",
+      "created": "2026-04-20",
+      "description": "About slider auto-height — MutationObserver on .about-slider .w-slide, height update on slide change, Barba re-entry, no console errors"
+    },
+    {
+      "id": "rhp-about-scroll-accordions",
+      "file": "tests/acceptance/rhp-about-scroll-accordions.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-about-scroll-accordions",
+      "created": "2026-04-21",
+      "description": "About page scroll accordions — ScrollTrigger open/close at 35% from bottom, height auto, reverse on scroll-back, multiple open, Barba re-entry, reduced motion"
     }
   ]
 }

@@ -784,6 +784,7 @@
         // Note: scroll.unlock + lenis.start/resize handled by runAfterEnter (Barba) or bootCurrentView (direct-land)
         RHP.aboutDialTicks?.init?.(container);
         RHP.aboutTextLines?.init?.(container);
+        RHP.aboutSliderAutoheight?.init?.(container);
         initAboutTeamHover(container); // handles desktop vs mobile internally
       },
       destroy() {
@@ -792,6 +793,7 @@
         RHP.lenis?.stop();
         RHP.aboutDialTicks?.destroy?.();
         RHP.aboutTextLines?.destroy?.();
+        RHP.aboutSliderAutoheight?.destroy?.();
         destroyAboutTeamHover();
       }
     };

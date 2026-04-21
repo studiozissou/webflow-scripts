@@ -6,12 +6,20 @@
   let observers = [];
   let trackedSliders = [];
 
+  function measureContentHeight(slide) {
+    let h = 0;
+    for (let i = 0; i < slide.children.length; i++) {
+      h += slide.children[i].offsetHeight;
+    }
+    return h;
+  }
+
   function updateSliderHeight(slider) {
     const slides = slider.querySelectorAll('.w-slide');
     for (let i = 0; i < slides.length; i++) {
       // Webflow removes aria-hidden from active slide or sets it to "false"
       if (slides[i].getAttribute('aria-hidden') !== 'true') {
-        slider.style.height = slides[i].clientHeight + 'px';
+        slider.style.height = measureContentHeight(slides[i]) + 'px';
         break;
       }
     }

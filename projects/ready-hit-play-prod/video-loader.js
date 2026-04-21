@@ -7,7 +7,7 @@
    - prefers-reduced-motion: CSS-only fallback spinner
    ========================================= */
 (() => {
-  const VIDEO_LOADER_VERSION = '2026.3.17.1';
+  const VIDEO_LOADER_VERSION = '2026.4.21.1';
   const DEBUG = false;
 
   const LOTTIE_URL = 'https://cdn.prod.website-files.com/641ab9fdf6e779f347e7e659/642558fa09463525f4cc1053_spinner1-white.json';
@@ -178,7 +178,11 @@
     }
 
     // Pass 2: Container videos (case/work pages)
-    const barbaContainer = root.querySelector ? root.querySelector('[data-barba="container"]') : null;
+    // root may BE the barba container (Barba passes it to afterEnter);
+    // querySelector only searches descendants, so check self first.
+    const barbaContainer = root.querySelector
+      ? (root.matches?.('[data-barba="container"]') ? root : root.querySelector('[data-barba="container"]'))
+      : null;
     if (barbaContainer) {
       const videos = barbaContainer.querySelectorAll('video');
       videos.forEach(v => {

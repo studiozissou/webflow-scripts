@@ -73,6 +73,7 @@
       'transition-dial.js',
       'about-dial-ticks.js',
       'about-text-lines.js',
+      'about-slider-autoheight.js',
       'home-intro.js',
       'home-scroll-morph.js',
       'home-about-slide.js',

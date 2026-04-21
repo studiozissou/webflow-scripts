@@ -932,7 +932,7 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   bottom: 0;
   left: 0;
   right: 0;
-  height: 0.5rem;
+  height: 1rem;
   z-index: 10;
   cursor: none;
 }

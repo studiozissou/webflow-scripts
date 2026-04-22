@@ -791,6 +791,28 @@
       "spec": ".claude/specs/news-digest.md",
       "blockedOn": "news-digest-writer-cli",
       "created": "2026-04-22"
+    },
+    {
+      "id": "rhp-nav-logo-replay-fix",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Fix replay() bugs: display:none not cleared, missing destroyLogoHover, no ScrollTrigger refresh",
+      "description": "Patch replay() in home-scroll-morph.js: (1) call _destroyLogoHover() before _splitLogoText() to prevent duplicate listeners, (2) clear inline display:none on upper/lower containers after _splitLogoText() so hover text is visible, (3) add ScrollTrigger.refresh() after _resizeHandler().",
+      "spec": ".claude/specs/rhp-nav-logo-replay-and-dial-click.md",
+      "created": "2026-04-22"
+    },
+    {
+      "id": "rhp-dial-click-to-scroll",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Add click-to-scroll on .home-transition-dial during intro morph",
+      "description": "Add initDialClickToScroll() in orchestrator.js: clicking .home-transition-dial smooth-scrolls to the bottom of .section_home-intro so the morph plays through naturally. Works on initial load and after replay(). Guarded by data-dial-click-bound to prevent duplicate listeners.",
+      "spec": ".claude/specs/rhp-nav-logo-replay-and-dial-click.md",
+      "created": "2026-04-22"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-21",
+  "lastUpdated": "2026-04-22",
   "note": "Deploy 06f7ce1 (2026-04-21): case video restart + AbortError fix, about scroll-accordions, about-slider-autoheight fix, barba container detection. Tests skipped by user.",
   "lastDeployed": "2026-04-21",
   "lastDeployedHash": "06f7ce1",
@@ -344,6 +344,16 @@
       "slug": "rhp-about-scroll-accordions",
       "created": "2026-04-21",
       "description": "About page scroll accordions — ScrollTrigger open/close at 35% from bottom, height auto, reverse on scroll-back, multiple open, Barba re-entry, reduced motion"
+    },
+    {
+      "id": "rhp-about-icon-viewport-fill",
+      "file": "tests/acceptance/rhp-about-icon-viewport-fill.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-about-icon-viewport-fill",
+      "created": "2026-04-22",
+      "description": "About page icon viewport fill — CSS var sizing, viewport fit, module registration, Barba re-entry, responsive, reduced motion"
     }
   ]
 }

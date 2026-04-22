@@ -786,7 +786,9 @@
         // DISABLED: scroll-linked text opacity reveal — module intact, just disconnected
         // RHP.aboutTextLines?.init?.(container);
         RHP.aboutSliderAutoheight?.init?.(container);
-        RHP.aboutScrollAccordions?.init?.(container);
+        RHP.aboutIconScale?.init?.(container);
+        // DISABLED: scroll-open accordions — conflicts with about-icon-scale.js fixed-height calculation (see spec rhp-about-icon-viewport-fill.md)
+        // RHP.aboutScrollAccordions?.init?.(container);
         initAboutTeamHover(container); // handles desktop vs mobile internally
       },
       destroy() {
@@ -797,7 +799,9 @@
         // DISABLED: scroll-linked text opacity reveal — module intact, just disconnected
         // RHP.aboutTextLines?.destroy?.();
         RHP.aboutSliderAutoheight?.destroy?.();
-        RHP.aboutScrollAccordions?.destroy?.();
+        RHP.aboutIconScale?.destroy?.();
+        // DISABLED: scroll-open accordions — conflicts with about-icon-scale.js fixed-height calculation (see spec rhp-about-icon-viewport-fill.md)
+        // RHP.aboutScrollAccordions?.destroy?.();
         destroyAboutTeamHover();
       }
     };

@@ -131,6 +131,7 @@
     let genericVideo = null;
     let genericVideoComp = null; // comp ref for setDialState (set during init)
     let sectorDotRef = null; // module-level ref for fade-in after intro
+    let _state = null; // module-level ref to init()'s state object (for destroy)
     const _canPlayAborts = new WeakMap();
     const _poolReadyAborts = new WeakMap();
 
@@ -440,6 +441,7 @@
         // attraction ease (smooth in/out when pointer enters)
         attractionEase: 0
       };
+      _state = state; // expose to module-level destroy()
 
       function setCursorPlay(isPlay) {
         if (isMobile()) return;
@@ -1604,7 +1606,8 @@
 
       stop();
       // Kill any in-flight GSAP tweens on the state object (e.g. attractionEase from ENGAGED)
-      if (window.gsap) window.gsap.killTweensOf(state);
+      if (window.gsap && _state) window.gsap.killTweensOf(_state);
+      _state = null;
       cleanup.forEach(fn => { try { fn(); } catch(e){} });
       cleanup = [];
       suspendCleanup = [];

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-22",
-  "note": "Deploy d97751d (2026-04-22): about-icon-scale module, work-dial destroy fix, scrollY reset after intro morph on mobile, work-page step text opacity fix. Tests skipped by user.",
+  "note": "Deploy 34292a8 (2026-04-22): nav logo reverse-morph replay + dial click-to-scroll, about icon viewport fill fix, transition fixes (about transform cleanup, work CSS scoping, morph skip). Tests skipped by user.",
   "lastDeployed": "2026-04-22",
-  "lastDeployedHash": "d97751d",
+  "lastDeployedHash": "34292a8",
   "entries": [
     {
       "id": "smoke",

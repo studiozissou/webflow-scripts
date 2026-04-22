@@ -1,22 +1,22 @@
 /* =========================================
    RHP — About Icon Viewport Fill
    - Scales .icon-embed-r to fill remaining viewport height
-   - Measures: viewport - .about_header - accordion titles - section padding (10vw)
-   - Sets --icon-max-height CSS custom property
+   - Formula: 100svh - top-offset - header - (title × 4)
+   - Sets --top-offset, --header-height, --titles-height; CSS does the calc
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
   'use strict';
 
-  const VERSION = '2026.4.22.1';
+  const VERSION = '2026.4.22.6';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
   const SEL = {
     section: '.section_about-hero',
+    iconLink: '.about_r-link',
     header: '.about_header',
-    accordionTitle: '.accordion-title',
-    icon: '.icon-embed-r'
+    accordionTitle: '.accordion-title'
   };
 
   RHP.aboutIconScale = (() => {
@@ -24,6 +24,7 @@
     let cleanup = [];
     let rafId = 0;
     let sectionEl = null;
+    let iconLinkEl = null;
     let headerEl = null;
     let titleEls = [];
 
@@ -36,25 +37,16 @@
     function measure() {
       if (!alive || !sectionEl) return;
 
-      // Viewport height (safe for iOS)
-      const vh = window.visualViewport?.height ?? window.innerHeight;
-
-      // Section vertical padding: 5vw top + 5vw bottom = 10vw
-      const vw = window.innerWidth;
-      const sectionPadding = vw * 0.05 * 2;
-
-      // .about_header height
+      // offsetTop of the icon link = padding + line-height strut above it
+      const topOffset = iconLinkEl ? iconLinkEl.offsetTop : 0;
       const headerH = headerEl ? headerEl.offsetHeight : 0;
 
-      // Sum of all .accordion-title heights within the section
       let titlesH = 0;
       titleEls.forEach(t => { titlesH += t.offsetHeight; });
 
-      // Remaining height for icon
-      const remaining = vh - sectionPadding - headerH - titlesH;
-      const iconMaxH = Math.max(0, remaining);
-
-      sectionEl.style.setProperty('--icon-max-height', iconMaxH + 'px');
+      sectionEl.style.setProperty('--top-offset', topOffset + 'px');
+      sectionEl.style.setProperty('--header-height', headerH + 'px');
+      sectionEl.style.setProperty('--titles-height', titlesH + 'px');
     }
 
     function measureDebounced() {
@@ -71,6 +63,7 @@
 
       alive = true;
       sectionEl = section;
+      iconLinkEl = section.querySelector(SEL.iconLink);
       headerEl = section.querySelector(SEL.header);
       titleEls = Array.from(section.querySelectorAll(SEL.accordionTitle));
 
@@ -78,6 +71,10 @@
       // has been laid out before reading offsetHeight values
       requestAnimationFrame(() => requestAnimationFrame(measure));
       on(window, 'resize', measureDebounced, { passive: true });
+
+      // Re-measure after fonts load (heights shift with web fonts)
+      document.fonts.ready.then(measureDebounced);
+      on(window, 'load', measureDebounced);
     }
 
     function destroy() {
@@ -87,9 +84,13 @@
       rafId = 0;
       cleanup.forEach(fn => { try { fn(); } catch (e) {} });
       cleanup = [];
-      // Clean up CSS custom property
-      if (sectionEl) sectionEl.style.removeProperty('--icon-max-height');
+      if (sectionEl) {
+        sectionEl.style.removeProperty('--top-offset');
+        sectionEl.style.removeProperty('--header-height');
+        sectionEl.style.removeProperty('--titles-height');
+      }
       sectionEl = null;
+      iconLinkEl = null;
       headerEl = null;
       titleEls = [];
     }

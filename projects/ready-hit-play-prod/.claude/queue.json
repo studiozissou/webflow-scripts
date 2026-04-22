@@ -521,6 +521,18 @@
       "note": "Superseded by feat-video-buffering-ux which consolidates spinner, seek-mask, and BG sync."
     },
     {
+      "id": "rhp-about-icon-viewport-fill",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "About page icon viewport fill: scale .icon-embed-r to remaining viewport height",
+      "spec": ".claude/specs/rhp-about-icon-viewport-fill.md",
+      "agent": "code-writer",
+      "created": "2026-04-22",
+      "note": "New module about-icon-scale.js measures .about_header + 4x .accordion-title + 5vw padding, sets --icon-max-height CSS var on .section_about-hero. CSS applies max-height with aspect-ratio preservation. rAF-debounced resize. 4 files: new module + orchestrator wire + init.js registration + CSS rule. ~80 LOC total."
+    },
+    {
       "id": "feat-fg-overlay-transition-fade",
       "project": "ready-hit-play-prod",
       "type": "feature",

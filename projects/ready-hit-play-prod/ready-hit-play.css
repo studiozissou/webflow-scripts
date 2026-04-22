@@ -1182,3 +1182,15 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   z-index: 1;
   pointer-events: none;
 }
+
+/* About icon: fill remaining viewport height (set by about-icon-scale.js) */
+.section_about-hero .icon-embed-r {
+  max-height: var(--icon-max-height, none);
+  width: auto;
+  height: auto;
+}
+.section_about-hero .icon-embed-r svg {
+  max-height: var(--icon-max-height, none);
+  width: auto;
+  height: auto;
+}

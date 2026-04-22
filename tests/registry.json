@@ -1,4 +1,5 @@
 {
+  "lastUpdated": "2026-04-22",
   "lastDeployed": "2026-04-07",
   "lastDeployedHash": "e94a877",
   "testPages": [
@@ -22,6 +23,18 @@
       "spec": "tests/acceptance/carsa-rishi-self-serve.spec.js",
       "description": "Validates /carsa-build Phase 6 verification scripts (contrast, touch targets, analytics soft check) and skill trigger narrowing.",
       "created": "2026-04-08"
+    },
+    {
+      "slug": "news-digest",
+      "spec": "tests/news-digest/news-digest.test.js",
+      "description": "Unit tests for weekly news digest CLI tool — RSS/Atom parsing, HTML scraping, Claude API scoring, markdown output, dedup state",
+      "created": "2026-04-22"
+    },
+    {
+      "slug": "rhp-nav-logo-replay-and-dial-click",
+      "spec": "projects/ready-hit-play-prod/tests/acceptance/rhp-nav-logo-replay-and-dial-click.spec.js",
+      "description": "Nav logo replay fixes (display:none bug, destroyLogoHover, ST refresh) and transition dial click-to-scroll through morph",
+      "created": "2026-04-22"
     }
   ]
 }

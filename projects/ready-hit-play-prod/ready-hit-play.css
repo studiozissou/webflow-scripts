@@ -1183,14 +1183,14 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   pointer-events: none;
 }
 
-/* About icon: fill remaining viewport height (set by about-icon-scale.js) */
+/* About icon: fill remaining viewport height (about-icon-scale.js sets vars) */
+/* Formula: 100svh - top-offset - header - titles */
+/* --top-offset measured from .about_r-link offsetTop (padding + line-height strut) */
 .section_about-hero .icon-embed-r {
-  max-height: var(--icon-max-height, none);
+  height: calc(100svh - var(--top-offset, 0px) - var(--header-height, 0px) - var(--titles-height, 0px));
   width: auto;
-  height: auto;
 }
 .section_about-hero .icon-embed-r svg {
-  max-height: var(--icon-max-height, none);
+  height: 100%;
   width: auto;
-  height: auto;
 }

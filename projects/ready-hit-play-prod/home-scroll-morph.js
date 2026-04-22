@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.4.14.1';
+  const VERSION = '2026.4.22.1';
   const DEBUG = false;
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
 
@@ -657,6 +657,10 @@
     if (window.RHP?.workDial?.setInteractionUnlocked) window.RHP.workDial.setInteractionUnlocked(true);
 
     if (window.RHP?.lenis?.stop) window.RHP.lenis.stop();
+    // Reset scroll to top — on mobile the intro section is 250svh; hiding it
+    // (display:none) collapses the content but the viewport stays at the old
+    // scrollY, pushing the dial off-center. Must happen before scroll.lock().
+    window.scrollTo(0, 0);
     if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
     redrawDialCanvas();
   }

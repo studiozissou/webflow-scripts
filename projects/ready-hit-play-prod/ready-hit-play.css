@@ -5,6 +5,16 @@
    - Shared dial styles for home + work
    ========================================= */
 
+/* Always hide scrollbar — Lenis/CSS scroll lock toggles overflow:auto/hidden
+   which causes layout jumps when the scrollbar appears/disappears. */
+html, body {
+  scrollbar-width: none;          /* Firefox */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;                  /* Chrome, Safari, Edge */
+}
+
    html { font-size: calc(0.7416576964477932rem + 0.21528525296017226vw); }
    @media screen and (max-width:1920px) { html { font-size: calc(0.7416576964477933rem + 0.21528525296017226vw); } }
    @media screen and (max-width:991px) { html { font-size: calc(0.85rem + 0.25vw); } }
@@ -299,6 +309,12 @@
   display: none;
 }
 
+/* About: hide fg-video (persists from home visit; prevents flash during about→home slide) */
+.dial_component[data-dial-ns="about"] #fg-video-wrap {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* Canvas ticks — full size; tick radius comes from fgWrap in JS (max 50svh × 70vw via video wrap) */
 /* Scope to dial_component only — about page uses .about_dial-wrapper with different layout */
 .dial_component[data-dial-ns="home"] .dial_layer-ticks,
@@ -574,8 +590,8 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   flex-shrink: 0;
 }
 
-/* Other video wraps on case pages: no border-radius (reset from base .dial_video-wrap) */
-.dial_component[data-dial-ns="work"] .dial_video-wrap {
+/* Work namespace: video wraps inside Barba container get no border-radius (reset from base .dial_video-wrap) */
+[data-barba-namespace="work"] .dial_video-wrap {
   border-radius: 0;
 }
 
@@ -636,7 +652,7 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 }
 
 /* ====== Work/case-studies specific ====== */
-.dial_component[data-dial-ns="work"] .video-cover {
+[data-barba-namespace="work"] .video-cover {
   height: 100%;
   width: 100%;
   object-fit: cover;
@@ -647,24 +663,25 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   left: 1px;
 }
 
-/* Work page: first-screen proportions — video fills, title visible above fold (desktop only) */
+/* Work page: first-screen proportions — video fills, title visible above fold (desktop only).
+   Applies on initial paint via [data-barba-namespace] — no JS guard needed. */
 @media (min-width: 992px) {
-  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video.is-header {
+  [data-barba-namespace="work"] .section_case-video.is-header {
     min-height: calc(var(--dial-case-height) - var(--dial-case-title-gap));
     display: flex;
     flex-direction: column;
   }
-  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video .dial_video-wrap,
-  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video .video-cover,
-  .dial_component[data-dial-ns="work"] .dial_layer-fg.is-case-study .section_case-video video {
+  [data-barba-namespace="work"] .section_case-video .dial_video-wrap,
+  [data-barba-namespace="work"] .section_case-video .video-cover,
+  [data-barba-namespace="work"] .section_case-video video {
     flex: 1;
     min-height: 0;
     object-fit: cover;
   }
 
   /* Override aspect-ratio so video in first section can grow vertically */
-  .dial_component[data-dial-ns="work"] .section_case-video .dial_video-wrap,
-  .dial_component[data-dial-ns="work"] .section_case-video .video-cover {
+  [data-barba-namespace="work"] .section_case-video .dial_video-wrap,
+  [data-barba-namespace="work"] .section_case-video .video-cover {
     aspect-ratio: auto;
     height: 100%;
   }
@@ -713,8 +730,7 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   display: flex;
   flex-flow: column;
   align-items: stretch;
-  /* Dark bg prevents flash of .is-step text during Barba container swap */
-  background-color: #221a2c;
+  background-color: transparent;
   /* Hide scrollbar at namespace level (no-scrollbar class can be lost during Barba transitions) */
   scrollbar-width: none;
   -ms-overflow-style: none;

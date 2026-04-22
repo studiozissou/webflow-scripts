@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-21",
+  "updated": "2026-04-22",
   "queue": [
     {
       "id": "cm-custom-code-migration",
@@ -732,6 +732,65 @@
       "spec": ".claude/specs/local-seo-automation.md",
       "blockedOn": "lseo-prospect-scorer",
       "created": "2026-04-20"
+    },
+    {
+      "id": "news-digest-scaffold",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "News digest: scaffold tools/news-digest/ with config, sources.json, and feed fetcher",
+      "description": "Create tools/news-digest/ directory. Build config.js (dotenv, ANTHROPIC_API_KEY), sources.json (configurable feed list with RSS/HTML types, relevance context), and lib/fetch-feeds.js (fetch with AbortController timeout). Follow tools/site-review/ patterns exactly.",
+      "spec": ".claude/specs/news-digest.md",
+      "created": "2026-04-22"
+    },
+    {
+      "id": "news-digest-parsers",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "News digest: RSS/Atom parser and HTML scraper with date filtering and dedup",
+      "description": "Build lib/parse-feed.js (fast-xml-parser RSS/Atom parsing, 7-day date filter, URL dedup) and lib/html-scraper.js (CSS selector extraction for sources without RSS feeds). Add fast-xml-parser to package.json dependencies.",
+      "spec": ".claude/specs/news-digest.md",
+      "blockedOn": "news-digest-scaffold",
+      "created": "2026-04-22"
+    },
+    {
+      "id": "news-digest-scorer",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "News digest: Claude API relevance scorer with batched scoring and 3-part summary",
+      "description": "Build lib/scorer.js — batch entries (chunks of 20) to Claude API for relevance scoring (0-1) and 3-part summary (what/why/workflow impact). Uses @anthropic-ai/sdk with temperature:0. Follow code-review.js Anthropic pattern.",
+      "spec": ".claude/specs/news-digest.md",
+      "blockedOn": "news-digest-scaffold",
+      "created": "2026-04-22"
+    },
+    {
+      "id": "news-digest-writer-cli",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "News digest: markdown digest writer, CLI orchestration, and state dedup",
+      "description": "Build lib/digest-writer.js (markdown output grouped by relevance tier: High/Notable/Watching) and index.js (CLI entry point orchestrating fetch→parse→score→write pipeline). State file (state.json) tracks seen URLs to prevent cross-week duplicates. Add npm script to root package.json.",
+      "spec": ".claude/specs/news-digest.md",
+      "blockedOn": ["news-digest-parsers", "news-digest-scorer"],
+      "created": "2026-04-22"
+    },
+    {
+      "id": "news-digest-ci",
+      "project": "webflow-scripts",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "News digest: GitHub Actions weekly cron and local launchd documentation",
+      "description": "Create .github/workflows/news-digest.yml — weekly Monday 8am UTC cron, workflow_dispatch manual trigger, ANTHROPIC_API_KEY from secrets, auto-commit output. Document macOS launchd plist setup as backup scheduler.",
+      "spec": ".claude/specs/news-digest.md",
+      "blockedOn": "news-digest-writer-cli",
+      "created": "2026-04-22"
     }
   ]
 }

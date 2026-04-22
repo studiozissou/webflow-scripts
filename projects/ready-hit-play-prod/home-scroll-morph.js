@@ -33,8 +33,10 @@
   let dialEl = null;           // .dial_component[data-dial-ns="home"]
   let stepTextEl = null;       // step text element
   let _resizeHandler = null;   // stored bound ref so destroy() can remove it
+  let _replaying = false;      // true during the reverse-morph tween in replay()
   let logoHoverCleanup = [];   // mouseenter/mouseleave removers
   let logoSplitData = [];      // { ready, upper, lower, splits: SplitText[], allWords: Element[] }
+  let _logoTextGen = 0;        // generation counter — incremented by _splitLogoText, checked by stale _destroyLogoText callbacks
 
   function _isDesktop() {
     return window.matchMedia?.('(hover: hover)').matches === true;
@@ -66,6 +68,13 @@
   /** Returns the Barba wrapper (or body as fallback) for class-toggle scope. */
   function _getScope() {
     return document.querySelector('[data-barba="wrapper"]') || document.body;
+  }
+
+  /** Clear Flip-related inline transforms on dial and logo. */
+  function _clearFlipProps() {
+    if (!window.gsap) return;
+    if (dialWrapper) window.gsap.set(dialWrapper, { clearProps: FLIP_CLEAR });
+    if (logoEl) window.gsap.set(logoEl, { clearProps: FLIP_CLEAR });
   }
 
   /** Re-queries module-scoped DOM refs. Called by init() and skipToEnd()
@@ -100,6 +109,7 @@
       Sets words to yPercent:100, opacity:0 (hidden below the mask line). */
   function _splitLogoText() {
     _revertLogoText();
+    _logoTextGen++;
     const gsap = window.gsap;
     const SplitText = window.SplitText;
     if (!gsap || !SplitText || !logoEl) return;
@@ -195,8 +205,12 @@
       const DUR = 0.25;
       // Play hover-out on every ready group, then hide + revert when done.
       let pending = logoSplitData.length;
+      const gen = _logoTextGen;
       const afterAll = () => {
         if (--pending > 0) return;
+        // Guard: if replay() already called _splitLogoText() (incrementing the
+        // generation), this stale callback must not touch the fresh elements.
+        if (gen !== _logoTextGen) return;
         // All hover-out anims done — hide text, reset spacers to CSS default
         // (display:none via #interactive-logo .about_logo-spacer rule), revert splits.
         logoSplitData.forEach(({ ready, upper, lower }) => {
@@ -743,11 +757,7 @@
     if (homeTransition) homeTransition.style.display = 'none';
     if (sectionEl) sectionEl.style.display = 'none';
 
-    // Clear any Flip transforms on dialWrapper and logoEl
-    if (window.gsap) {
-      if (dialWrapper) window.gsap.set(dialWrapper, { clearProps: FLIP_CLEAR });
-      if (logoEl) window.gsap.set(logoEl, { clearProps: FLIP_CLEAR });
-    }
+    _clearFlipProps();
 
     // Step text was inline-opacity-0 on first load — clear any leftover
     // inline style so the class toggle / CSS owns the final state.
@@ -761,38 +771,36 @@
   }
 
   function replay() {
-    // Nav logo click on home: scroll to top, reverse timeline, re-show intro section.
-    if (!_resizeHandler) return;
-    complete = false;
+    // Nav logo click on home: reverse-play the morph, then re-arm scroll for
+    // the next forward pass. Scroll stays locked during the reverse tween —
+    // the visual reversal is driven by tweening scrubTL.progress from 1→0.
+    if (_replaying || !_resizeHandler) return;
+    const gsap = window.gsap;
+    if (!gsap) return;
+    _replaying = true;
 
-    // Re-show the intro overlay and section
+    // Tear down hover listeners (re-init after reverse completes)
+    _destroyLogoHover();
+
+    // Re-show the intro overlay and section so they have layout
     const homeTransition = document.querySelector('.home-transition');
     if (homeTransition) homeTransition.style.display = '';
     if (sectionEl) sectionEl.style.display = '';
 
-    // Remove .rhp-home-ready so nav items + step text cascade back to hidden
-    _getScope().classList.remove('rhp-home-ready');
-
-    // Re-apply small-state class (hides main dial via CSS opacity: 0)
+    // Re-apply small-state class (makes work-dial opacity:0 so transition dial
+    // is the only visible dial — same as initial intro state)
     if (dialEl) dialEl.classList.add('is-intro-small');
 
-    // Reset dial/logo to start positions
-    if (window.gsap) {
-      if (dialWrapper) window.gsap.set(dialWrapper, { clearProps: FLIP_CLEAR });
-      if (logoEl) window.gsap.set(logoEl, { clearProps: FLIP_CLEAR });
-    }
+    // Re-hide step text (scrub reveals it at 90% progress on forward play)
+    if (stepTextEl) gsap.set(stepTextEl, { opacity: 0 });
 
-    // Re-hide step text immediately — the rebuilt scrub will fade it back in.
-    if (stepTextEl && window.gsap) window.gsap.set(stepTextEl, { opacity: 0 });
-
-    // Re-init logo text animation and fade logo back in
+    // Re-init logo text split for the next forward play
     _splitLogoText();
-    if (window.gsap && logoEl) window.gsap.to(logoEl, { opacity: 1, duration: 0.6, ease: 'power2.out' });
-    if (_isDesktop()) _initLogoHover();
+    logoSplitData.forEach(({ upper, lower }) => {
+      [upper, lower].filter(Boolean).forEach(t => { t.style.display = ''; });
+    });
 
-    // Rebuild the scrub timeline so new rects reflect current layout.
-    _resizeHandler();
-
+    // Lock dial during reverse
     if (window.RHP?.workDial?.setInteractionUnlocked) {
       window.RHP.workDial.setInteractionUnlocked(false);
     }
@@ -800,12 +808,69 @@
       window.RHP.workDial.setAttractionEnabled(false);
     }
 
-    if (window.RHP?.scroll?.unlock) window.RHP.scroll.unlock();
-    if (window.RHP?.lenis?.start) window.RHP.lenis.start();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Rebuild the scrub timeline (clears transforms, measures fresh, creates scrub)
+    _resizeHandler();
+    if (!scrubTL) { _replaying = false; return; }
+
+    // Seek to end state immediately — GSAP transforms at progress=1 match the
+    // current visual (transition dial at large size). No browser paint yet.
+    scrubTL.progress(1);
+
+    // Disable ScrollTrigger so it doesn't fight the reverse tween
+    const st = scrubTL.scrollTrigger;
+    if (st) st.disable();
+
+    // Hide nav logo immediately to avoid duplicate logos (the interactive logo
+    // in .home-intro_middle is about to grow back to center)
+    const scope = _getScope();
+    const navLogo = scope.querySelector('.nav_logo-link');
+    const navAbout = scope.querySelector('.nav_about-link');
+    const navContact = scope.querySelector('.nav_contact-link');
+    if (navLogo) gsap.set(navLogo, { opacity: 0, visibility: 'hidden' });
+    if (navAbout) gsap.to(navAbout, { xPercent: -100, opacity: 0, duration: 0.4, ease: 'power2.in' });
+    if (navContact) gsap.to(navContact, { xPercent: 100, opacity: 0, duration: 0.4, ease: 'power2.in' });
+
+    // Reverse the morph: tween scrub progress from 1→0
+    const DUR = prefersReduced() ? 0.01 : 1.2;
+    gsap.to(scrubTL, {
+      progress: 0,
+      duration: DUR,
+      ease: 'power2.inOut',
+      onUpdate: () => {
+        // Keep transition dial ticks crisp as it scales
+        if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
+      },
+      onComplete: () => {
+        _replaying = false;
+        complete = false;
+
+        // Remove .rhp-home-ready (hides nav via CSS cascade)
+        scope.classList.remove('rhp-home-ready');
+        // Clear nav inline styles from the slide-out / hide animation
+        [navLogo, navAbout, navContact].filter(Boolean).forEach(el => {
+          gsap.set(el, { clearProps: 'xPercent,opacity,visibility' });
+        });
+
+        // Fade logo in and re-init hover
+        if (logoEl) gsap.to(logoEl, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+        if (_isDesktop()) _initLogoHover();
+
+        // Re-enable ScrollTrigger for the next forward play
+        if (st) st.enable();
+        if (window.ScrollTrigger?.refresh) window.ScrollTrigger.refresh();
+
+        // Unlock scroll so user can scroll forward through the morph
+        if (window.RHP?.scroll?.unlock) window.RHP.scroll.unlock();
+        if (window.RHP?.lenis?.start) window.RHP.lenis.start();
+        window.scrollTo(0, 0);
+      }
+    });
   }
 
   function destroy() {
+    // Kill any in-flight reverse tween from replay()
+    if (_replaying && scrubTL && window.gsap) window.gsap.killTweensOf(scrubTL);
+    _replaying = false;
     _destroyLogoText();
     if (_resizeHandler) {
       window.removeEventListener('resize', _resizeHandler);
@@ -813,11 +878,7 @@
     }
     // Remove intro-small class if still present
     if (dialEl) dialEl.classList.remove('is-intro-small');
-    // Clear Flip transforms on dialWrapper and logoEl if they exist
-    if (window.gsap) {
-      if (dialWrapper) window.gsap.set(dialWrapper, { clearProps: FLIP_CLEAR });
-      if (logoEl) window.gsap.set(logoEl, { clearProps: FLIP_CLEAR });
-    }
+    _clearFlipProps();
     _killScrub();
     if (ctx) { ctx.revert(); ctx = null; }
     initialised = false;

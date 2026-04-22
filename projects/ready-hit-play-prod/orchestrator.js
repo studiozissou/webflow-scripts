@@ -1208,25 +1208,62 @@
   }
 
   /* -----------------------------
+     Transition dial click-to-scroll
+     When the intro/morph section is visible, clicking .home-transition-dial
+     smooth-scrolls the page so the morph plays out naturally.
+     ----------------------------- */
+  function initDialClickToScroll() {
+    const dial = document.querySelector('.home-transition-dial');
+    const section = document.querySelector('.section_home-intro');
+    if (!dial || !section) return;
+
+    // Prevent duplicate listeners
+    if (dial.dataset.dialClickBound) return;
+    dial.dataset.dialClickBound = 'true';
+    dial.style.cursor = 'pointer';
+    dial.setAttribute('role', 'button');
+    dial.setAttribute('aria-label', 'Scroll through intro');
+    dial.setAttribute('tabindex', '0');
+
+    const scrollThroughMorph = () => {
+      // getBoundingClientRect gives document-absolute position regardless of
+      // positioned ancestors (offsetTop is relative to offsetParent).
+      const target = section.getBoundingClientRect().bottom + window.scrollY;
+      window.scrollTo({ top: target, behavior: 'smooth' });
+    };
+
+    dial.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); scrollThroughMorph(); }
+    });
+    dial.addEventListener('click', scrollThroughMorph);
+  }
+
+  /* -----------------------------
      Nav logo → homepage (Webflow renders .nav_logo-link as <div>, not <a>)
      When already on home and the scroll-morph is complete, calling it
      triggers homeScrollMorph.replay() instead of a Barba round-trip —
      so the intro section re-appears and the dial scrubs back to small.
      ----------------------------- */
   function initNavLogoLink() {
-    var navLogo = document.querySelector('.nav_logo-link');
+    const navLogo = document.querySelector('.nav_logo-link');
     if (!navLogo) return;
     navLogo.style.cursor = 'pointer';
     navLogo.setAttribute('role', 'link');
+    navLogo.setAttribute('aria-label', 'Ready Hit Play — return to home');
     navLogo.setAttribute('tabindex', '0');
-    navLogo.addEventListener('click', function(e) {
+    navLogo.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navLogo.click(); }
+    });
+    navLogo.addEventListener('click', (e) => {
       e.preventDefault();
-      var container = document.querySelector('[data-barba="container"]');
-      var ns = container && container.getAttribute('data-barba-namespace');
-      var morph = window.RHP && window.RHP.homeScrollMorph;
+      const container = document.querySelector('[data-barba="container"]');
+      const ns = container?.getAttribute('data-barba-namespace');
+      const morph = window.RHP?.homeScrollMorph;
       // On home post-morph: replay the intro section scroll-up.
-      if (ns === 'home' && morph && morph.complete === true && typeof morph.replay === 'function') {
+      if (ns === 'home' && morph?.complete === true && typeof morph.replay === 'function') {
         morph.replay();
+        // initDialClickToScroll() not needed here — the boot-time binding on
+        // .home-transition-dial persists (element is outside Barba container).
         return;
       }
       if (window.barba && typeof window.barba.go === 'function') {
@@ -1922,5 +1959,6 @@
     initBarba();
     initContactPullout();
     initNavLogoLink();
+    initDialClickToScroll();
   });
 })();

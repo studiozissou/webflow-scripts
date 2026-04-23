@@ -1,0 +1,19 @@
+{
+  "siteId": "",
+  "stagingUrl": "",
+  "liveUrl": "",
+  "breakpoints": ["xxl", "xl", "large", "main", "medium", "small", "tiny"],
+  "pages": {},
+  "specialPages": {
+    "styleGuide": null,
+    "allComponents": null,
+    "changelog": null
+  },
+  "cms": {
+    "collections": []
+  },
+  "constraints": {
+    "noCodeEmbeds": false,
+    "stagingOnly": true
+  }
+}

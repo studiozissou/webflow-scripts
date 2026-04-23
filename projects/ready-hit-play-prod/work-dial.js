@@ -10,7 +10,8 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.4.14.1';
+  const WORK_DIAL_VERSION = '2026.4.22.1';
+  const debugGeom = () => !!window.__DEBUG_GEOM;
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';
 
@@ -439,7 +440,10 @@
         startedInInner: false,
 
         // attraction ease (smooth in/out when pointer enters)
-        attractionEase: 0
+        attractionEase: 0,
+
+        // frame counter for throttled self-healing geometry check
+        frameCount: 0
       };
       _state = state; // expose to module-level destroy()
 
@@ -909,6 +913,7 @@
       function crisp(x) { return Math.round(x * 2) / 2; }
 
       function resize() {
+        if (!alive) return;
         canvas.style.width  = '';
         canvas.style.height = '';
         const r = canvas.getBoundingClientRect();
@@ -952,6 +957,20 @@
             bgCanvas.width = Math.round(bgR.width * 0.5);
             bgCanvas.height = Math.round(bgR.height * 0.5);
           }
+        }
+
+        if (debugGeom()) {
+          console.log('[dial-geom] resize:', {
+            canvas: `${r.width}×${r.height}`,
+            fgWrap: `${fr.width}×${fr.height}`,
+            videoR: geom.videoR,
+            cx_cy: `${geom.cx}/${geom.cy}`,
+            fgCenter: `${geom.fgCX}/${geom.fgCY}`,
+            dvh: window.innerHeight,
+            svh: window.visualViewport?.height ?? 'n/a',
+            dialNs: comp?.getAttribute('data-dial-ns') ?? 'none',
+            scrollY: window.scrollY
+          });
         }
       }
 
@@ -1166,6 +1185,18 @@
 
       function draw() {
         if (!alive) return;
+        if (state.frameCount >= 1e9) state.frameCount = 0;
+        state.frameCount++;
+
+        // Self-healing: check geometry drift every 60 frames (~1/sec) and auto-resize
+        if (fgWrap && state.frameCount % 60 === 0) {
+          const fr = fgWrap.getBoundingClientRect();
+          const liveR = (Math.min(fr.width, fr.height) / 2) || 0;
+          if (liveR > 0 && Math.abs(liveR - geom.videoR) > 4) {
+            debugGeom() && console.warn('[dial-geom] DRIFT', { cached: geom.videoR, live: liveR, delta: liveR - geom.videoR });
+            resize();
+          }
+        }
 
         // BG canvas mirror: draw current fg video frame (pixel-perfect sync under blur)
         // Skip in IDLE — canvas is at opacity:0 so drawing is invisible work
@@ -1367,6 +1398,12 @@
 
       // Boot
       resize();
+
+      // visualViewport resize listener — catches Safari address bar show/hide
+      if (window.visualViewport) {
+        on(window.visualViewport, 'resize', resize, { passive: true }, true);
+      }
+
       applyActive(0);
       // Boot opacity: bg canvas starts hidden in IDLE (draw loop populates it but it should not be visible)
       if (dialState === DIAL_STATES.IDLE && bgCanvas) {

@@ -1,0 +1,383 @@
+/* ==============================================
+   NEM Life — Reconciled Global CSS
+   ============================================== */
+
+
+/* ==============================================
+   1. BASE RESETS & FONT RENDERING
+   ============================================== */
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  user-select: none;
+  transition-property: opacity, box-shadow, background-color, border, transform, color;
+  transition-timing-function: ease;
+  transition-duration: 0.35s;
+}
+
+a:not([class]) {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+/* Webflow widget color/size inheritance */
+.w-input,
+.w-select,
+.w-tab-link,
+.w-nav-link,
+.w-nav-brand,
+.w-dropdown-btn,
+.w-dropdown-toggle,
+.w-slider-arrow-left,
+.w-slider-arrow-right,
+.w-dropdown-link {
+  color: inherit;
+  text-decoration: inherit;
+  font-size: inherit;
+}
+
+button {
+  background-color: unset;
+  padding: unset;
+  text-align: inherit;
+  transition-property: opacity, box-shadow, background-color, border, transform, color, border-radius;
+  transition-timing-function: ease;
+  transition-duration: 0.35s;
+}
+
+div:has(> a, > button) {
+  transition-property: opacity, box-shadow, background-color, border, transform, color, border-radius;
+  transition-timing-function: ease;
+  transition-duration: 0.35s;
+}
+
+input {
+  margin: unset;
+  padding: unset;
+  transition-property: opacity, box-shadow, background-color, border, color, border-radius;
+  transition-timing-function: ease;
+  transition-duration: 0.35s;
+}
+
+input, textarea, select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0;
+  background-image: none;
+}
+
+ul {
+  list-style: "";
+}
+
+
+/* ==============================================
+   2. ACCESSIBILITY — FOCUS STATES
+   ============================================== */
+
+*[tabindex]:focus-visible,
+input[type="file"]:focus-visible {
+  outline: 0.125rem solid #4d65ff;
+  outline-offset: 0.125rem;
+}
+
+
+/* ==============================================
+   3. LAYOUT — SECTIONS & CONTAINERS
+   ============================================== */
+
+section {
+  position: relative;
+  max-width: 100vw;
+  overflow: clip;
+  z-index: 5;
+}
+
+.section-overflow {
+  max-width: 100vw;
+  position: relative;
+  overflow-y: visible;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  .section-overflow {
+    overflow-x: hidden;
+  }
+}
+
+.container-medium,
+.container-small,
+.container-large {
+  margin-right: auto !important;
+  margin-left: auto !important;
+}
+
+
+/* ==============================================
+   4. FLUID TYPOGRAPHY
+   ============================================== */
+
+:root {
+  --font-from: 18;
+  --font-to: 18;
+  --vw-from: calc(1920 / 100);
+  --vw-to: calc(2400 / 100);
+  --coefficient: calc((var(--font-to) - var(--font-from)) / (var(--vw-to) - var(--vw-from)));
+  --base: calc((var(--font-from) - var(--vw-from) * var(--coefficient)) / 16);
+}
+
+html {
+  font-size: calc(var(--base) * 1rem + var(--coefficient) * 1vw);
+}
+
+@media screen and (max-width: 1920px) {
+  :root {
+    --font-from: 16;
+    --font-to: 18;
+    --vw-from: calc(1440 / 100);
+    --vw-to: calc(1920 / 100);
+  }
+}
+
+@media screen and (max-width: 1440px) {
+  :root {
+    --font-from: 12;
+    --font-to: 16;
+    --vw-from: calc(991 / 100);
+    --vw-to: calc(1440 / 100);
+  }
+}
+
+@media screen and (max-width: 991px) {
+  :root {
+    --font-from: 14;
+    --font-to: 16;
+    --vw-from: calc(479 / 100);
+    --vw-to: calc(991 / 100);
+  }
+}
+
+@media screen and (max-width: 479px) {
+  :root {
+    --font-from: 12;
+    --font-to: 16;
+    --vw-from: calc(1 / 100);
+    --vw-to: calc(479 / 100);
+  }
+}
+
+
+/* ==============================================
+   5. RICH TEXT
+   ============================================== */
+
+.w-richtext > :not(div):first-child,
+.w-richtext > div:first-child > :first-child {
+  margin-top: 0 !important;
+}
+
+.w-richtext > :last-child,
+.w-richtext ol li:last-child,
+.w-richtext ul li:last-child {
+  margin-bottom: 0 !important;
+}
+
+.text-block_rt ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.text-block_rt li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.text-block_rt li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.01rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-image: url('https://cdn.prod.website-files.com/69bfba56f3622791a798b816/69d6457aeff223e407955b64_li%20check.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+
+/* ==============================================
+   6. NEM COMPONENT STYLES
+   ============================================== */
+
+.button:hover .circle-active {
+  width: 0em;
+  opacity: 0;
+}
+
+.button:hover .button-spacer {
+  width: var(--size--0);
+}
+
+.button:hover .circle-hover {
+  width: 2.6em;
+  opacity: 1;
+}
+
+.h2_block--info-wrap .h2-block {
+  margin: 0;
+  align-items: start;
+  text-align: start;
+}
+
+.pain-card:hover .pain-card_info-wrap {
+  opacity: 1;
+}
+
+.section-dark .h2_subheading {
+  color: var(--_token---text-white);
+  opacity: 0.7;
+}
+
+.method_pagination-card:hover .pagination-card_arrow-icon.is--hover {
+  transform: translateX(0rem);
+}
+
+.method_pagination-card:hover .pagination-card_arrow-icon.is--active {
+  transform: translateX(3rem);
+}
+
+.method-learn_card:hover .pagination-card_arrow-icon.is--hover {
+  transform: translateX(0rem);
+}
+
+.method-learn_card:hover .pagination-card_arrow-icon.is--active {
+  transform: translateX(3rem);
+}
+
+.blog-navigation_dropdown-navigation.w-dropdown-list {
+  min-width: auto !important;
+}
+
+.article_preview-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.testimonial-card:hover .button {
+  background-color: var(--_token---bg-main);
+  color: var(--_token---text-main);
+}
+
+.w-form-formradioinput.w--redirected-checked ~ .testimonial_radio-text {
+  color: var(--_token---text-white);
+}
+
+
+/* ==============================================
+   7. UTILITY CLASSES
+   ============================================== */
+
+.pointer-events-off {
+  pointer-events: none;
+}
+
+.pointer-events-on {
+  pointer-events: auto;
+}
+
+.div-square::after {
+  content: "";
+  display: block;
+  padding-bottom: 100%;
+}
+
+.display-inlineflex {
+  display: inline-flex;
+}
+
+.text-style-3lines {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.text-style-2lines {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.truncate-width {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  overflow: -moz-scrollbars-none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide {
+  display: none !important;
+}
+
+@media screen and (max-width: 991px) {
+  .hide, .hide-tablet {
+    display: none !important;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .hide-mobile-landscape {
+    display: none !important;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+
+/* ==============================================
+   8. SPACING UTILITIES
+   ============================================== */
+
+.margin-0 { margin: 0rem !important; }
+.padding-0 { padding: 0rem !important; }
+.spacing-clean { padding: 0rem !important; margin: 0rem !important; }
+
+.margin-top { margin-right: 0rem !important; margin-bottom: 0rem !important; margin-left: 0rem !important; }
+.padding-top { padding-right: 0rem !important; padding-bottom: 0rem !important; padding-left: 0rem !important; }
+.margin-right { margin-top: 0rem !important; margin-bottom: 0rem !important; margin-left: 0rem !important; }
+.padding-right { padding-top: 0rem !important; padding-bottom: 0rem !important; padding-left: 0rem !important; }
+.margin-bottom { margin-top: 0rem !important; margin-right: 0rem !important; margin-left: 0rem !important; }
+.padding-bottom { padding-top: 0rem !important; padding-right: 0rem !important; padding-left: 0rem !important; }
+.margin-left { margin-top: 0rem !important; margin-right: 0rem !important; margin-bottom: 0rem !important; }
+.padding-left { padding-top: 0rem !important; padding-right: 0rem !important; padding-bottom: 0rem !important; }
+.margin-horizontal { margin-top: 0rem !important; margin-bottom: 0rem !important; }
+.padding-horizontal { padding-top: 0rem !important; padding-bottom: 0rem !important; }
+.margin-vertical { margin-right: 0rem !important; margin-left: 0rem !important; }
+.padding-vertical { padding-right: 0rem !important; padding-left: 0rem !important; }

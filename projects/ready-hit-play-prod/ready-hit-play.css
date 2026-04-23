@@ -237,9 +237,11 @@ body::-webkit-scrollbar {
   }
 }
 
-/* Hide native cursor on the entire dial when custom cursor is active */
+/* Hide native cursor everywhere when custom cursor is active */
+[data-barba="wrapper"].rhp-cursor-ready,
+[data-barba="wrapper"].rhp-cursor-ready *,
 [data-barba="wrapper"].rhp-cursor-ready .dial_component {
-  cursor: none;
+  cursor: none !important;
 }
 
 /* ====== Stage (shared home + work + about) ====== */

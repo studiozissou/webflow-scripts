@@ -11,6 +11,17 @@ full-engagement version — same Phase 1-2 logic, deeper Phase 3+.
 
 ---
 
+## Re-entry check
+
+Before starting, check the project's existing state:
+
+1. If `reports/intake-report-*.md` exists AND effort columns are filled in → skip to Phase 7.
+2. If `reports/intake-report-*.md` exists but effort columns still show `TBD` → remind user
+   to fill in estimates, then stop. User can re-invoke when ready.
+3. If no report exists → proceed from Phase 1.
+
+---
+
 ## Phase 1 — Pre-flight + client context
 
 If `client.md` already exists, read it and confirm context. Skip questions.
@@ -106,13 +117,11 @@ Do not create directories that already exist.
 
 ### Custom code discovery (before parallelisation)
 
-Custom code embeds are not exposed by Webflow MCP. Use this fallback chain:
-
-1. **Chrome DevTools MCP** (if connected): navigate to live site, `evaluate_script` to extract
-   all `<script>` and `<link>` tags, identify CDN sources, version pins, and inline code blocks.
-2. **Manual input:** Ask: "Can you copy the custom code from Webflow Settings → Custom Code
-   (head + body) and paste it here? Also check any per-page custom code on key pages."
-   Parse the pasted code to build the inventory.
+Custom code embeds are not exposed by Webflow MCP. Fallback chain:
+1. **Chrome DevTools MCP** (if connected): `evaluate_script` to extract all `<script>` and
+   `<link>` tags with CDN sources, version pins, and inline code blocks.
+2. **Manual input:** Ask user to paste custom code from Webflow Settings → Custom Code
+   (head + body) + any per-page custom code on key pages.
 
 Record the code inventory for Stream C.
 
@@ -125,7 +134,7 @@ Reference the `parallelisation` skill. Present the gate with 5 independent strea
 | A | Technical + Analytics | Explore | WebFetch, Webflow MCP (or Chrome DevTools fallback) | ~18k |
 | B | SEO + Schema | seo | WebFetch, SEMRush site-audit (if connected) | ~20k |
 | C | Content + Code inventory | Explore | Webflow MCP (or Chrome DevTools fallback), Read | ~16k |
-| D | AEO | Explore + `ai-search-aeo` skill | WebFetch | ~16k |
+| D | AEO | general-purpose (loads `ai-search-aeo` skill) | WebFetch | ~16k |
 | E | Brand voice + ICP inference | content | WebFetch | ~12k |
 
 Sequential: ~80s / ~82k tokens. Parallel: ~30s / ~90k tokens (~2.7x faster, +1.1x cost).
@@ -233,7 +242,7 @@ business). From the copy, infer:
 If `brand-voice.md` or `ideal-customer-profiles.md` already exist, read and confirm rather
 than overwriting. Only regenerate if user requests it.
 
-Write to `brand-voice.md` and `ideal-customer-profiles.md`.
+Write to `.claude/brand-voice.md` and `.claude/ideal-customer-profiles.md`.
 
 ### Merge results
 
@@ -242,7 +251,10 @@ After all streams complete, confirm all 5 output files exist:
 - `audits/seo.md`
 - `audits/content.md`
 - `audits/aeo.md`
-- `brand-voice.md` + `ideal-customer-profiles.md`
+- `.claude/brand-voice.md` + `.claude/ideal-customer-profiles.md`
+
+If a stream failed (e.g. WebFetch timeout), note the failure in the merge summary and proceed
+with available data. The missing stream can be re-run separately.
 
 ---
 
@@ -289,124 +301,9 @@ Merge all outputs into `reports/intake-report-YYYY-MM-DD.md`.
 
 ### Report structure
 
-```markdown
-# Site Intake Report — [Client Name]
-
-**Date:** YYYY-MM-DD | **Live URL:** | **Staging URL:**
-
-## Summary
-(2-3 paragraph executive summary: what the site is, who it serves, what's working,
-what the material issues are, and a one-line verdict.)
-
-## Passing
-(Table: Check | Status | Notes — everything that's working well.)
-
-## Needs Attention
-
-### SEO — Meta & Open Graph
-### SEO — Structure & Schema
-### Technical — Custom Code
-### Content & Accessibility
-### CMS Hygiene
-
-(Each subsection: Issue | Severity | Detail table.)
-
-## Missing or Broken
-(Table: Check | Detail — things that are absent or non-functional.)
-
-## Lighthouse Audits
-(If Chrome DevTools MCP was available. Subsections: Accessibility, Performance.
-Include scores table + recurring issues table.)
-(If not available: "Lighthouse audits require Chrome DevTools MCP. Run `/test-page`
-separately to generate these.")
-
-## SEMRush Organic Intelligence
-(If Layer A ran. Include: Domain overview table, top keywords table, top pages table,
-12-month trend table, analysis paragraphs.)
-(If not run: "Section not yet run. Re-invoke `/site-audit` with Layer A to populate.")
-
-## Competitor Benchmark
-(If Layer B ran. Include: competitor comparison table, keyword overlap, positioning analysis.)
-(If not run: "Section not yet run. Requires Layer A+B.")
-
-## AEO Score
-(Category | Score | Detail table. Overall score /20 with maturity level.)
-
-## Recommended Next Steps
-```
-
-### Recommended Next Steps structure
-
-Explain the justification tag system:
-
-- **SEO** — search ranking, crawlability, SERP CTR
-- **AEO** — AI answer engine citations (ChatGPT, Perplexity, SGE)
-- **Perf** — page speed, Core Web Vitals, LCP
-- **De-risk** — business continuity, dependency removal, compliance
-- **Trust** — credibility signals
-- **A11y** — accessibility, WCAG
-- **Conv** — conversion (forms, funnels)
-- **Ops** — operational efficiency, CMS hygiene, handover quality
-
-If Layer C ran (client change-list), reference the mapped change list and link to
-`client-requests/change-list-mapped-YYYY-MM-DD.md`.
-
-### Priority-band tables
-
-```markdown
-### P0 — Week 1 — [summary phrase]
-
-[1-2 sentence description of the band's character.]
-
-| # | Task | Effort | Justification | Client item |
-|---|------|--------|---------------|-------------|
-| 1 | **[Task description]** | TBD | **[Tag]** — [why] | [Item # or —] |
-
-**P0 total: TBD hours.**
-
----
-
-### P1 — Week 1-2 — [summary phrase]
-### P2 — Week 2-3 — [summary phrase]
-### P3 — Week 3-4 — [summary phrase]
-### P4 — Ongoing (retainer) — [summary phrase]
-```
-
-**Priority-band assignment rules:**
-- **P0:** <1h per task, high impact, no design decisions needed
-- **P1:** Critical risk or highest-ROI items (schema, de-risk)
-- **P2:** Client-visible design changes + rich results
-- **P3:** Editorial foundation + operational stability
-- **P4:** Growth, content, retainer-territory
-
-**Effort column is BLANK.** Every task row uses `TBD` as the effort placeholder.
-The user fills these in manually. Never guess hours.
-
-If client change-list was mapped (Layer C), include a `Client item` column referencing
-the original item number. If no change-list, use `—` in that column.
-
-### Remaining report sections
-
-```markdown
-## Custom Code Inventory
-(Full table: Script | Source | Risk — from Stream C.)
-
-## Custom Code Migration Plan
-(Only if third-party hosted code was detected. Full migration plan with repo structure,
-CDN pattern, version-pinning rules, purge workflow, and risk mitigations.)
-
-## Asset Optimisation
-(Only if asset CSV was provided AND PNGs are >50% of bandwidth. Include:
-bandwidth-by-filetype table, top offenders table, why it's happening, remediation phases,
-expected impact table.)
-
-## Sub-audits
-(Links to all audit files: audits/structure.md, audits/seo.md, audits/content.md,
-audits/aeo.md, competitor benchmark if run, brand-voice.md, ideal-customer-profiles.md,
-client change-list files if created.)
-```
-
-End with: `*Report generated by automated site audit. Manual verification recommended for items marked "NEEDS VERIFY".*`
+Read and follow the template at `.claude/templates/site-audit-report.md`. The template defines
+the full section order, justification tags, priority-band table format, assignment rules,
+and conditional sections (Lighthouse, SEMRush, Asset Optimisation, Migration Plan).
 
 ---
 
@@ -429,59 +326,75 @@ The agent appends an `Automation` column to each P-band table in the report:
 | 1 | Unpublish 7 dev pages | TBD | SEO | — | AUTO |
 ```
 
-Also append an automation summary at the bottom of the report (before Sub-audits):
-
-```markdown
-## Automation Summary
-
-- **AUTO:** N tasks — can be executed immediately with `/build`
-- **SEMI:** N tasks — need user input before automation
-- **MANUAL:** N tasks — require human action
-```
+Also append an `## Automation Summary` section to the report (before Sub-audits) with
+counts per category — see template for format.
 
 ---
 
-## Phase 7 — Pricing + proposal bridge (optional, gated)
+## Phase 6c — Narrative (auto-generated)
 
-After report is written, tell the user:
+Immediately after Phase 6b, spawn a **content agent** that reads the completed internal
+report and generates `proposals/narrative-YYYY-MM-DD.md`.
 
-> "Report generated with blank effort columns. Fill in your estimates, then come back
-> and say 'price it' — I'll calculate totals and generate client comms."
+Read and follow the template at `.claude/templates/site-audit-narrative.md`. The narrative
+synthesizes findings into the three-beat story (where the site is, what's holding it back,
+what the work unlocks), key phrases, and pillar mapping.
+
+Source files: `reports/intake-report-YYYY-MM-DD.md`, `audits/*.md`, `brand-voice.md`,
+`ideal-customer-profiles.md`, and `client-requests/change-list-mapped-*.md` if it exists.
+
+Present the narrative to the user for review before proceeding.
+
+---
+
+## Phase 7 — Pricing + client-facing report (gated)
+
+After report + narrative are written, tell the user:
+
+> "Internal report and narrative generated. The effort columns are blank — fill in your
+> estimates, then come back and say 'price it'."
 
 When re-invoked (user says "price it", "calculate pricing", or similar):
+
+### Step 1 — Pricing
 
 1. Re-read the report, detect filled-in effort values in the P-band tables
 2. If any tasks still have `TBD`, list them and ask user to fill in before proceeding
 3. Ask: "What's your hourly rate?" (or read from `.claude/reference/rate-card.md` if it exists)
 4. Calculate per-band totals and overall total
-5. Generate pricing summary table:
+5. Append a `## Pricing Summary` to the internal report with the per-band table
 
-```markdown
-## Pricing Summary
+### Step 2 — Client-facing report
 
-| Band | Hours | Cost |
-|------|-------|------|
-| P0 | ___ | ___ |
-| P1 | ___ | ___ |
-| P2 | ___ | ___ |
-| P3 | ___ | ___ |
-| P4 | ___ | ___ |
-| **Total** | **___** | **___** |
+Generate `comms/site-report-YYYY-MM-DD.md` — the plain-language document the client sees.
 
-**Rate:** [rate]/hour
-```
+Read and follow the template at `.claude/templates/site-audit-client-report.md`. Key rules:
+- No technical jargon — translate everything to business language
+- Concrete numbers over abstractions
+- Opportunity framing, not blame
+- Pricing is per-phase, not per-task
+- Option A (fixed project) vs Option B (retainer) always presented
+- Load the `humanizer` skill and apply it to the final draft
 
-6. Ask: "Generate client comms?" — if yes, produce all 4 formats:
-   - `comms/plan-and-options-slack-YYYY-MM-DD.md` — Slack mrkdwn format (single-asterisk bold, bullet points, blockquotes)
-   - `comms/plan-and-options-email-YYYY-MM-DD.md` — Email format (professional, paragraph-based)
-   - `comms/plan-and-options-notion-YYYY-MM-DD.md` — Notion format (toggles, callouts, database-ready tables)
-   - `comms/plan-and-options-plaintext-YYYY-MM-DD.txt` — Plain text (no formatting, copy-pasteable anywhere)
+Source files: `reports/intake-report-YYYY-MM-DD.md`, `proposals/narrative-YYYY-MM-DD.md`,
+`client.md`, `.claude/reference/about-me.md` (if available), `.claude/reference/rate-card.md`.
 
-   Each format includes: per-band summary with cost, key highlights, outstanding clarifications,
-   and a call-to-action. Source: the report + pricing summary. Tone: match `brand-voice.md` of
-   the consultant (from `.claude/reference/about-me.md` if available), not the client's brand voice.
+Present to user for review. Iterate until approved.
 
-7. Ask: "Generate a full proposal?" — if yes, bridge to `/proposal`
+### Step 3 — Multi-format comms (optional)
+
+Ask: "Generate comms in other formats?" — if yes, produce:
+- `comms/plan-and-options-slack-YYYY-MM-DD.md` — Slack mrkdwn format
+- `comms/plan-and-options-email-YYYY-MM-DD.md` — Email format
+- `comms/plan-and-options-notion-YYYY-MM-DD.md` — Notion format
+- `comms/plan-and-options-plaintext-YYYY-MM-DD.txt` — Plain text
+
+Each derived from the client-facing report, not the internal report.
+Load the `slack-message` skill for the Slack format.
+
+### Step 4 — Proposal bridge (optional)
+
+Ask: "Generate a full proposal with scope tables?" — if yes, bridge to `/proposal`
 
 ---
 
@@ -492,15 +405,18 @@ When re-invoked (user says "price it", "calculate pricing", or similar):
 3. `intake.json` exists with `urls`, `pages`, `collections`, `checks` keys
 4. All scaffold directories exist
 5. Phase 2 fallback chain works: Webflow MCP → Chrome DevTools → WebFetch + manual
-6. 5 audit output files produced: `audits/structure.md`, `audits/seo.md`, `audits/content.md`, `audits/aeo.md`, `brand-voice.md` + `ideal-customer-profiles.md`
+6. 5 audit output files produced: `audits/structure.md`, `audits/seo.md`, `audits/content.md`, `audits/aeo.md`, `.claude/brand-voice.md` + `.claude/ideal-customer-profiles.md`
 7. Phase 5 layers are skippable and re-runnable later
-8. Report matches the section structure above (Summary through Sub-audits)
+8. Internal report matches template structure (Summary through Sub-audits)
 9. Priority-band tables have blank effort columns with `TBD` placeholders
 10. Justification tags used: SEO, AEO, Perf, De-risk, Trust, A11y, Conv, Ops
 11. Phase 6b automation triage adds `Automation` column (AUTO/SEMI/MANUAL) to every P-band table
 12. Automation Summary section present in report
-13. Phase 7 correctly reads user-filled estimates and calculates pricing
-14. Multi-format comms match the 4-format set (Slack/Email/Notion/Plain text)
-15. Asset CSV parsing produces bandwidth tables when provided and PNGs >50%
-16. Custom code migration plan included when third-party hosted code detected
-17. Existing `/intake` command is unchanged
+13. Phase 6c narrative follows three-beat structure with key phrases and pillar mapping
+14. Phase 7 correctly reads user-filled estimates and calculates pricing
+15. Client-facing report uses plain language, no jargon, per-phase pricing, Option A/B
+16. `humanizer` skill loaded and applied to client-facing report
+17. Multi-format comms derived from client-facing report (not internal report)
+18. Asset CSV parsing produces bandwidth tables when provided and PNGs >50%
+19. Custom code migration plan included when third-party hosted code detected
+20. Existing `/intake` command is unchanged

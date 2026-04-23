@@ -1,7 +1,18 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-22",
+  "updated": "2026-04-23",
   "queue": [
+    {
+      "id": "rhp-fix-fg-video-transition-flash",
+      "project": "ready-hit-play",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Fix fg-video flash during work to home and work to work transitions",
+      "description": "FG video briefly disappears during Barba transitions. Work→Home: clearProps removes inline opacity, CSS opacity:0 takes effect for 1 frame before resume sets it back. Work→Work: default fallback destroys everything. Fix: re-assert opacity:1 after clearProps, remove mobile guard, add dedicated work→work transition.",
+      "spec": ".claude/specs/fix-fg-video-transition-flash.md",
+      "created": "2026-04-23"
+    },
     {
       "id": "cm-custom-code-migration",
       "project": "courtesy-masters",

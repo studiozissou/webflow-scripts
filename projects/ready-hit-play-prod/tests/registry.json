@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-23",
-  "note": "Deploy 34292a8 (2026-04-22): nav logo reverse-morph replay + dial click-to-scroll, about icon viewport fill fix, transition fixes (about transform cleanup, work CSS scoping, morph skip). Tests skipped by user.",
-  "lastDeployed": "2026-04-22",
-  "lastDeployedHash": "34292a8",
+  "note": "Deploy 8dde0f7 (2026-04-23): about curtain transition, dial self-healing geometry, global cursor:none. Tests skipped by user.",
+  "lastDeployed": "2026-04-23",
+  "lastDeployedHash": "8dde0f7",
   "entries": [
     {
       "id": "smoke",

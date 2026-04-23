@@ -1611,6 +1611,11 @@
         }
       }
 
+      // Curtain exit + content reveal for about-entering transitions
+      if (ns === 'about' && data.current?.namespace && data.current.namespace !== 'about') {
+        RHP.homeAboutSlide?.revealAboutContent?.(data.next?.container);
+      }
+
       // Case study: apply video handoff from home
       if ((ns === 'case' || ns === 'work') && RHP.videoState && RHP.videoState.caseHandoff && data.next && data.next.container) {
         var handoff = RHP.videoState.caseHandoff;
@@ -1805,6 +1810,7 @@
           from: { namespace: ['home'] },
           to: { namespace: ['about'] },
           beforeLeave(data) {
+            RHP.homeAboutSlide?.resetCurtain?.();
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             RHP.videoLoader?.destroy?.();
@@ -1831,6 +1837,8 @@
           from: { namespace: ['about'] },
           to: { namespace: ['home'] },
           beforeLeave(data) {
+            // resetCurtain() not needed here — Barba discards the about container;
+            // entering transitions (home→about, work→about) handle curtain reset.
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             RHP.videoLoader?.destroy?.();
@@ -1859,6 +1867,7 @@
           from: { namespace: ['case', 'work'] },
           to: { namespace: ['about'] },
           beforeLeave(data) {
+            RHP.homeAboutSlide?.resetCurtain?.();
             // Stop Lenis before scrollTop reset so rAF doesn't override it
             RHP.lenis?.stop();
             // Scroll case content to top before leaving (dialFg persists across transitions)

@@ -1,0 +1,41 @@
+{
+  "siteId": "69bfba56f3622791a798b816",
+  "stagingUrl": "https://nem-life-1.design.webflow.com",
+  "liveUrl": "https://nemlife.com",
+  "breakpoints": ["xxl", "xl", "large", "main", "medium", "small", "tiny"],
+  "pages": {
+    "home": "69bfba56f3622791a798b814",
+    "nemMethod": "69d3d3e689822adf018b4877",
+    "ourMission": "69d52dceddef777559651883",
+    "blogInsights": "69d759788cc49dfcb458eb87",
+    "experiences": "69d7ce37730dc092d7790a8d",
+    "christelBio": "69d66fe958b47c4036b0eab9",
+    "terms": "69e086d3a5a4f33bc81adc91",
+    "pageStarter": "69d3d416bce73e26819fd586",
+    "insightsTemplate": "69d78963446a916ce78bfca3",
+    "insightsCategoryTemplate": "69d7896a784024881c06fd32",
+    "testimonialsTemplate": "69d7d36ecf475c28e32fc108",
+    "testimonialsCategoryTemplate": "69d7d3aae83b621c2dbc823d"
+  },
+  "specialPages": {
+    "styleGuide": "69bfba56f3622791a798b815",
+    "allComponents": null,
+    "changelog": null
+  },
+  "cms": {
+    "collections": [
+      { "name": "Insights", "id": "69d78962446a916ce78bfc8a", "slug": "inzichten", "items": 5 },
+      { "name": "Insights categories", "id": "69d7896a784024881c06fd32", "slug": "themas", "items": 5 },
+      { "name": "Testimonials", "id": "69d7d36dcf475c28e32fc101", "slug": "testimonials", "items": 7 },
+      { "name": "Testimonials Categories", "id": "69d7d3aae83b621c2dbc8236", "slug": "testimonials-category", "items": 2 }
+    ]
+  },
+  "locales": {
+    "primary": { "tag": "nl", "id": "69d78962ff7875c3adf066b5", "cmsLocaleId": "69d78962ff7875c3adf066a9", "enabled": false },
+    "secondary": [{ "tag": "en", "id": "69de093e5863e6db9eeeb1c4", "cmsLocaleId": "69de093e5863e6db9eeeb1c9", "enabled": false }]
+  },
+  "constraints": {
+    "noCodeEmbeds": true,
+    "stagingOnly": true
+  }
+}

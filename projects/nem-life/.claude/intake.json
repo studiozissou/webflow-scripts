@@ -1,0 +1,118 @@
+{
+  "client": "NEM Life",
+  "project": {
+    "name": "NEMLife.com NEW",
+    "siteId": "69bfba56f3622791a798b816",
+    "shortName": "nem-life-1",
+    "workspace": "63beadd900a95d178b51dcc8",
+    "timezone": "Europe/Amsterdam",
+    "lastPublished": "2026-04-16T08:27:59.474Z"
+  },
+  "urls": {
+    "staging": "https://nem-life-1.design.webflow.com",
+    "live": "https://nemlife.com",
+    "liveNote": "Live URL is on sibling project NEMLife.com TEMP (687204088df2ae8cbea5eb5f) — needs 301 migration"
+  },
+  "locales": {
+    "primary": { "tag": "nl", "enabled": false },
+    "secondary": [{ "tag": "en", "enabled": false, "subdirectory": "en" }]
+  },
+  "pages": [
+    { "title": "Home", "slug": "/", "id": "69bfba56f3622791a798b814", "draft": false },
+    { "title": "NEM Method", "slug": "/nem-methode", "id": "69d3d3e689822adf018b4877", "draft": false },
+    { "title": "Our Mission", "slug": "/missie-nem-life", "id": "69d52dceddef777559651883", "draft": false },
+    { "title": "Blog Insights", "slug": "/blog-insights", "id": "69d759788cc49dfcb458eb87", "draft": false },
+    { "title": "Experiences (Testimonials)", "slug": "/ervaringen", "id": "69d7ce37730dc092d7790a8d", "draft": false },
+    { "title": "Link in bio Christel", "slug": "/lp/christel", "id": "69d66fe958b47c4036b0eab9", "draft": false },
+    { "title": "Terms & Conditions", "slug": "/voorwaarden", "id": "69e086d3a5a4f33bc81adc91", "draft": false },
+    { "title": "Page Starter", "slug": "/page-starter", "id": "69d3d416bce73e26819fd586", "draft": false },
+    { "title": "Insights Template", "slug": "/inzichten", "id": "69d78963446a916ce78bfca3", "draft": false, "cms": true },
+    { "title": "Insights categories Template", "slug": "/themas", "id": "69d7896a784024881c06fd32", "draft": false, "cms": true },
+    { "title": "Testimonials Template", "slug": "/testimonials", "id": "69d7d36ecf475c28e32fc108", "draft": false, "cms": true },
+    { "title": "Testimonials Categories Template", "slug": "/testimonials-category", "id": "69d7d3aae83b621c2dbc823d", "draft": false, "cms": true },
+    { "title": "Blank Page for Texts", "slug": "(unpublished)", "id": "69d66e9eecda7c1f49c0b37d", "draft": true },
+    { "title": "Style Guide", "slug": "/style-guide", "id": "69bfba56f3622791a798b815", "draft": true }
+  ],
+  "collections": [
+    { "name": "Insights", "id": "69d78962446a916ce78bfc8a", "slug": "inzichten", "itemCount": 5 },
+    { "name": "Insights categories", "id": "69d7896a784024881c06fd32", "slug": "themas", "itemCount": 5 },
+    { "name": "Testimonials", "id": "69d7d36dcf475c28e32fc101", "slug": "testimonials", "itemCount": 7 },
+    { "name": "Testimonials Categories", "id": "69d7d3aae83b621c2dbc8236", "slug": "testimonials-category", "itemCount": 2 }
+  ],
+  "ecommerce": false,
+  "checks": {
+    "technical": {
+      "robotsTxt": { "status": "needs_attention", "detail": "Present but Disallow: / blocks all crawlers (expected for staging)" },
+      "sitemapXml": { "status": "missing", "detail": "404 — not generated yet" },
+      "custom404": { "status": "pass", "detail": "Returns 404 correctly, generic Webflow page" },
+      "favicon": { "status": "pass", "detail": "Shortcut icon + Apple touch icon set" },
+      "ssl": { "status": "pass", "detail": "HTTPS via CloudFlare" },
+      "canonicalDomain": { "status": "needs_attention", "detail": "No canonical tag in page source" },
+      "analytics": { "status": "missing", "detail": "No GA4/GTM detected, no Google Tag IDs configured" },
+      "cookieConsent": { "status": "missing", "detail": "No consent mechanism present" },
+      "consentAlignment": { "status": "na", "detail": "No analytics to align" }
+    },
+    "content": {
+      "forms": { "status": "needs_attention", "detail": "1 form detected, confirmation/redirect needs verification in Designer" },
+      "images": { "status": "needs_attention", "detail": "All 26 homepage images have empty alt text" },
+      "viewport": { "status": "pass", "detail": "width=device-width, initial-scale=1" }
+    },
+    "codeInventory": {
+      "registeredScripts": "none",
+      "cdnScripts": [
+        "Google WebFont Loader 1.6.26",
+        "jQuery 3.5.1",
+        "Swiper 12",
+        "Webflow runtime (3 chunks + main)"
+      ],
+      "inlineScripts": 4,
+      "stylesheets": ["Webflow shared CSS", "Google Fonts (Lato + Montserrat)", "Swiper CSS"],
+      "thirdParty": "none (no analytics, no chat, no tracking)"
+    },
+    "aeo": {
+      "overallScore": "5/20",
+      "homepage": "6/20",
+      "nemMethod": "5/20",
+      "blogInsights": "4/20",
+      "ourMission": "5/20",
+      "schema": "0/4 — CRITICAL: no JSON-LD on any page",
+      "answerStructure": "3/6 — FAQ sections not answer-first; H3 instead of H2",
+      "freshness": "0.5/3 — CRITICAL: no timestamps anywhere",
+      "authority": "0.5/4 — WEAK: founders mentioned but no credentials/citations",
+      "technical": "1/3 — CRITICAL: robots.txt blocks all crawlers; no alt text",
+      "blocker": "robots.txt Disallow: / blocks all crawlers — AEO impossible until fixed"
+    },
+    "seo": {
+      "metaTitles": {
+        "status": "needs_attention",
+        "detail": "Home missing (shows 'Webflow - NEMLife.com NEW'); Blog Insights and Experiences have generic English titles; NEM Methode + Our Mission + Christel OK"
+      },
+      "metaDescriptions": {
+        "status": "needs_attention",
+        "detail": "Home, Blog Insights, Experiences, Voorwaarden missing; NEM Methode + Our Mission + Christel OK"
+      },
+      "ogTags": {
+        "status": "missing",
+        "detail": "No OG title/description/image confirmed on any page"
+      },
+      "canonicalTags": {
+        "status": "needs_attention",
+        "detail": "Not verifiable on staging; Webflow auto-generates but needs confirmation"
+      },
+      "h1Tags": {
+        "status": "pass",
+        "detail": "Homepage H1 confirmed: 'Doorbreek het patroon dat je steeds weer terugtrekt'; other pages need verification in Designer"
+      },
+      "jsonLd": {
+        "status": "missing",
+        "detail": "No structured data on any page — need Organization, Article (blog), FAQPage"
+      },
+      "llmsTxt": {
+        "status": "missing",
+        "detail": "404 at /llms.txt — recommend creating"
+      }
+    }
+  },
+  "brandContext": "captured",
+  "designSystem": "extracted"
+}

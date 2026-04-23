@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-22",
+  "lastUpdated": "2026-04-23",
   "note": "Deploy 34292a8 (2026-04-22): nav logo reverse-morph replay + dial click-to-scroll, about icon viewport fill fix, transition fixes (about transform cleanup, work CSS scoping, morph skip). Tests skipped by user.",
   "lastDeployed": "2026-04-22",
   "lastDeployedHash": "34292a8",
@@ -354,6 +354,36 @@
       "slug": "rhp-about-icon-viewport-fill",
       "created": "2026-04-22",
       "description": "About page icon viewport fill — CSS var sizing, viewport fit, module registration, Barba re-entry, responsive, reduced motion"
+    },
+    {
+      "id": "rhp-about-entrance-curtain",
+      "file": "tests/acceptance/rhp-about-entrance-curtain.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-about-entrance-curtain",
+      "created": "2026-04-23",
+      "description": "About entrance curtain — fullscreen overlay slide-in, SplitText content reveal, re-entry cycle, reduced motion, work→about path"
+    },
+    {
+      "id": "rhp-mobile-home-intro-flip",
+      "file": "tests/acceptance/rhp-mobile-home-intro-flip.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-mobile-home-intro-flip",
+      "created": "2026-04-23",
+      "description": "Mobile home intro — 300svh section, word reveal over 250svh, logo shrink+translate to nav over last 50svh, desktop regression, reduced motion, Barba re-entry"
+    },
+    {
+      "id": "fix-fg-video-transition-flash",
+      "file": "tests/acceptance/fix-fg-video-transition-flash.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-fg-video-transition-flash",
+      "created": "2026-04-23",
+      "description": "FG video transition flash — opacity gap after clearProps on work→home, video teardown on work→work, rAF monitoring for flash detection"
     }
   ]
 }

@@ -52,6 +52,8 @@ Write to `.claude/client.md`. Confirm before proceeding.
 │   └── content/
 ├── reports/
 ├── briefs/
+├── brand/
+├── build/
 ├── client.md
 └── intake.json
 ```
@@ -161,6 +163,103 @@ If yes, trigger `/qa-check`.
 
 ---
 
+## Phase 6 — Brand context (opt-in)
+
+Ask: "Capture brand context for building? This lets `/client-build` design and
+write copy in the client's voice. You can skip this and add it later."
+
+If user skips, record `"brandContext": "skipped"` in `intake.json` and proceed to Phase 7.
+
+If yes, ask all of the following in a single conversational block:
+
+1. **Voice & tone** — How does this brand talk? Formal/casual? Technical/accessible?
+   Any words they always/never use? Can you give me an example sentence in their voice?
+2. **ICP** — Who is the ideal customer? Demographics, pain points, buying triggers,
+   objections? Are there multiple segments?
+3. **Design state** — What's the visual spirit? Minimal/maximal? Playful/serious?
+   Any reference sites or brands they admire? Design principles they follow?
+
+Write using templates from `.claude/templates/brand-context/`:
+- `brand/voice.md` — tone ladder, vocabulary do/don't, example sentences, content principles
+- `brand/icp.md` — persona cards per segment
+- `brand/design-state.md` — visual principles, aesthetic descriptors, references, personality
+
+Confirm with user before proceeding.
+
+---
+
+## Phase 7 — Design system extraction (opt-in)
+
+Ask: "Extract the design system for building? This pulls variables, styles, and
+components so `/client-build` can use the client's design system."
+
+If user skips, record `"designSystem": "skipped"` in `intake.json` and stop.
+
+If yes, ask which source(s) via AskUserQuestion:
+
+1. **Existing Webflow site** (recommended if MCP connected) — extract from the site connected in Phase 2
+2. **Figma file** — provide a Figma URL
+3. **Reference screenshots** — provide URLs or file paths
+4. **Manual entry** — describe the design system verbally
+
+### Webflow extraction (when MCP connected)
+
+1. Read all variables via `variable_tool` → write to `design/figma-tokens.json`
+   with `"source": "webflow"` on each token. Use the token format from `/figma-audit`:
+   ```json
+   {
+     "figma_name": null,
+     "converted_name": "color-brand-primary",
+     "type": "color",
+     "value": "#1A4FDB",
+     "cf_mapping": "brand-primary",
+     "source": "webflow",
+     "webflow_variable_id": "var-id-here"
+   }
+   ```
+2. Read all styles via `style_tool` → write to `build/class-reference.md`
+   documenting every class with its properties, organised by category
+   (typography, buttons, spacing, layout, colours)
+3. Read site structure → write to `build/site-config.json` using template from
+   `.claude/templates/site-config.json`. Fill in siteId, URLs, pages, CMS collections.
+   Identify Style Guide and All Components pages by name and record their IDs.
+4. Snapshot home page and 2-3 key pages via `element_snapshot_tool` → write to
+   `design/references/`
+5. Read components via Webflow MCP (use `element_snapshot_tool` on the All
+   Components page if it exists, or list components from the site structure)
+   → note reusable components in `build/workflows.md`
+6. Copy `.claude/templates/design-laws.md` → `build/design-laws.md`
+
+### Figma extraction
+
+Run `/figma-audit` inline (load the figma-audit command and execute it).
+After it completes, also generate `build/site-config.json` from the connected
+Webflow project if MCP is available.
+
+### Screenshot extraction
+
+1. Read each screenshot via Read tool (multimodal image support)
+2. Extract: colour palette, typography (font family, sizes, weights),
+   spacing patterns, border radius, shadow styles
+3. Map extracted values to Client First variable names
+4. Write partial `design/figma-tokens.json` (with `"source": "screenshot"`)
+5. Save screenshots to `design/references/`
+6. Warn: "Screenshot tokens are approximate — verify during `/webflow-connect`"
+7. Note: font family identification from screenshots is approximate. Record as
+   descriptive (e.g. "sans-serif geometric") rather than specific font names.
+   Confirm exact fonts with the client.
+
+### Manual entry
+
+Ask the user to describe their design system. Write tokens to
+`design/figma-tokens.json` with `"source": "manual"`.
+
+---
+
+Confirm all extracted data with user. Record `"designSystem": "extracted"` in `intake.json`.
+
+---
+
 ## Verification tests
 
 1. `client.md` exists with all 10 questions answered
@@ -169,3 +268,6 @@ If yes, trigger `/qa-check`.
 4. Webflow `site-audit`, `link-checker`, `accessibility-audit` skills invoked
 5. Both URLs confirmed before audit ran
 6. Report written if requested
+7. If Phase 6 ran: `brand/` directory exists with voice.md, icp.md, design-state.md
+8. If Phase 7 ran: `build/site-config.json` exists with siteId populated
+9. `intake.json` records `brandContext` and `designSystem` status

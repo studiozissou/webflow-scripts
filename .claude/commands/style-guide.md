@@ -102,6 +102,41 @@ Use `element_snapshot_tool` on the style guide page (or any page with these clas
 visually confirm the styles are applied correctly. Compare against reference screenshots
 from `.claude/design/references/`.
 
+### Also write build/class-reference.md
+
+After applying variables to CF classes, write `build/class-reference.md`
+documenting every class that was configured, organised by category:
+
+```markdown
+# Class Reference — [Client Name]
+
+## Typography
+| Class | Properties | Variable |
+|-------|-----------|----------|
+| .heading-style-h1 | font-size: var(--font-size-h1); ... | font-size-h1 |
+...
+
+## Buttons
+| Class | Properties | Variable |
+...
+
+## Colours
+| Class | Properties | Variable |
+...
+
+## Spacing
+| Class | Properties | Variable |
+...
+```
+
+Include:
+- All typography classes (.heading-style-h1 through h6, .text-size-*)
+- All colour classes (.text-color-*, .background-color-*)
+- All button classes
+- Any custom classes created during the style guide setup
+
+This file is consumed by `/client-build` to know which classes are available.
+
 ---
 
 ## Phase C — Visual reference page (optional)
@@ -161,6 +196,7 @@ Phase B — Base CF classes:
   Typography:  [N] classes updated
   Colours:     [N] classes updated
   Buttons:     [N] classes updated
+  Class ref:   build/class-reference.md written
 
 Phase C — Visual reference:
   [Created / Updated / Skipped]
@@ -184,3 +220,4 @@ Next: build loop — /plan → /build → publish to staging → /qa-check
 10. Page remains in draft/hidden state — not published (if Phase C ran)
 11. `style-guide-populate` task added to `queue.json`
 12. No other Webflow pages or content modified
+13. `build/class-reference.md` exists and lists all configured classes grouped by category

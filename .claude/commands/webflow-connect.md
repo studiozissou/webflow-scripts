@@ -29,6 +29,20 @@ variables to kebab-case, and creates new variables from approved Figma tokens.
 4. Show the user what was found and ask: "Does this look like the right project?"
 5. Wait for confirmation before proceeding
 
+### Also write build/site-config.json
+
+After reading the project structure, write `build/site-config.json` using the
+template from `.claude/templates/site-config.json`:
+
+1. Set `siteId` from the connected project
+2. Set `stagingUrl` and `liveUrl` from project settings
+3. Set `pages` from the page list retrieved in Step 1
+4. Identify Style Guide and All Components pages by name — set their IDs in `specialPages`
+5. Set `cms.collections` from the CMS collection list
+6. Carry over any existing `constraints` if `site-config.json` already exists
+
+This file is consumed by `/client-build` at runtime.
+
 ---
 
 ## Step 2 — Rename existing template variables to kebab-case
@@ -161,6 +175,7 @@ Files updated:
   .claude/client.md (project ID, URLs)
   .claude/design/figma-tokens.json (variable IDs added)
   .claude/design/design-decisions.md (conflict resolutions)
+  build/site-config.json (site metadata for /client-build)
 
 Next: run /dev-queue to generate queue.json and CLAUDE.md.
 ```
@@ -178,3 +193,4 @@ Next: run /dev-queue to generate queue.json and CLAUDE.md.
 7. No variables created or renamed without explicit user confirmation
 8. All conflicts and flagged tokens resolved and recorded in `design-decisions.md`
 9. Command did not run if arch-review was not `Signed off`
+10. `build/site-config.json` exists with correct `siteId`, `stagingUrl`, `liveUrl`, `pages`, `specialPages`, and `cms.collections`

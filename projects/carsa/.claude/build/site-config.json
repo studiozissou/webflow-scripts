@@ -1,0 +1,47 @@
+{
+  "siteId": "68348ea61096b37caacd2f95",
+  "workspaceId": "67caba0c5c72084908790f0b",
+  "stagingUrl": "https://carsa-v2.webflow.io",
+  "liveUrl": "https://www.carsa.co.uk",
+  "customDomains": ["www.carsa.co.uk", "carsa.co.uk"],
+  "breakpoints": ["xxl", "xl", "large", "main", "medium", "small", "tiny"],
+  "pages": {
+    "home": "68348ea61096b37caacd2f96",
+    "vehicleSearch": "683966e6b1e1153fbbb7f98c",
+    "carFinance": "68768862854a7905d1883339",
+    "financeCalculator": "68cc228bf2bd5a841aa4a4bc",
+    "stores": "684295960de21f7c1c3bba1c",
+    "contact": "687f80db2ecb4fc595155864",
+    "faq": "686d7f12c35891979d86e6b5",
+    "blog": "6842ccfe2be78e9bdd49ef2d",
+    "partExchange": "6880c6ff825dc00d03c471c1",
+    "valueCar": "696d4bc23b6f59c51ea50927",
+    "allModels": "68a878c27b87c9487b3f1d24",
+    "getStarted": "68ee10dd90ef42b566d39e81",
+    "aboutCarsa": "687fc4386d3a7199b8618f88",
+    "carPreparation": "687fbe978a47ec9b3daeba5d",
+    "careers": "687e3e2650b8b4f37b172812",
+    "deals": "6908c85ca243cb45503e0755",
+    "404": "68348ea61096b37caacd2f99"
+  },
+  "specialPages": {
+    "styleGuide": "68348ea61096b37caacd2f9a",
+    "allComponents": "688a0ccdc27ff993d907ec83",
+    "extendedLibrary": "6847dada6d8dfaa1a672a814"
+  },
+  "sitewideComponents": {
+    "navigation": "df8548a1-8eb2-55a6-6943-6b2e4c5aed83",
+    "cookieConsent": "fef43efa-87bf-8e1d-b168-6cf4fe4d324f",
+    "globalStyles": "ab488b17-f25a-fbf8-5f54-4a3955eb57e5"
+  },
+  "constraints": {
+    "noCodeEmbeds": true,
+    "stagingOnly": true
+  },
+  "analytics": {
+    "ga4": "G-6WQDNZH59K",
+    "gtm": "GTM-MM5N6CP8"
+  },
+  "createdOn": "2025-05-26",
+  "lastPublished": "2026-03-03"
+}

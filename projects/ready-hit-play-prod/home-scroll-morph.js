@@ -18,16 +18,6 @@
   const VERSION = '2026.4.28.3';
   const DEBUG = false;
 
-  // DEBUG indicator — confirms this module loaded from ngrok (remove after testing)
-  requestAnimationFrame(() => {
-    const d = document.querySelector('.dev-indicator') || (() => {
-      const el = document.createElement('div');
-      el.className = 'dev-indicator';
-      el.style.cssText = 'position:fixed;top:8px;left:24px;width:10px;height:10px;background:#ffffff;border-radius:50%;z-index:99999;pointer-events:none;opacity:0.9;border:1px solid #333';
-      document.body.appendChild(el);
-      return el;
-    })();
-  });
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
 
   let ctx = null;
@@ -728,7 +718,7 @@
     if (!_isDesktop() && dialEl) {
       const h = window.innerHeight;
       dialEl.style.height = h + 'px';
-      console.log('[morph-debug] froze height:', h, 'visualVP:', window.visualViewport?.height);
+      DEBUG && console.log('[morph-debug] froze height:', h, 'visualVP:', window.visualViewport?.height);
     }
 
     redrawDialCanvas();

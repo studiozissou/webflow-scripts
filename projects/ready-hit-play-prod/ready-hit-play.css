@@ -258,10 +258,14 @@ body::-webkit-scrollbar {
   touch-action: none; /* we manage gestures for the dial */
 }
 
-/* Mobile: use lvh so the dial fills the full viewport when browser bars hide.
-   dvh causes the dial to shrink when bars show, leaving a gap at the bottom. */
+/* Mobile: dvh during intro (browser bar visible, page matches viewport),
+   lvh after morph complete (bar hidden from scrolling, fill full screen).
+   .rhp-home-ready on the wrapper is the switch point. about/work always lvh. */
 @media (max-width: 991px) {
-  .dial_component[data-dial-ns="home"],
+  .dial_component[data-dial-ns="home"] {
+    height: 100dvh;
+  }
+  .rhp-home-ready .dial_component[data-dial-ns="home"],
   .dial_component[data-dial-ns="work"],
   .dial_component[data-dial-ns="about"] {
     height: 100lvh;

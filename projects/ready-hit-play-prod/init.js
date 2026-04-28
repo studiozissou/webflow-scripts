@@ -5,6 +5,9 @@
 (function() {
   'use strict';
 
+  // Bail out on pages that don't use the RHP app (privacy, 404, etc.)
+  if (/\/(privacy|404)(\/|$|\?)/.test(window.location.pathname)) return;
+
   // FOUC prevention: inject critical hide rules synchronously before first paint.
   // ready-hit-play.css loads later (after deps); these inline styles cover the gap.
   // Hide on home until home-scroll-morph completes and sets .rhp-home-ready:

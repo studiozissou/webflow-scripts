@@ -1812,17 +1812,17 @@
 
         /* ---- Home -> About ----
            Container-slide transition owned by home-about-slide.js.
-           The About container slides over a fixed home/dial; no Flip logo
-           morph, no .about-transition overlay. */
+           Curtain covers screen over the live home BG video, then reveals
+           about content behind it. Home view destroyed in afterEnter once
+           the curtain fully covers the viewport. */
         {
           name: 'home-to-about',
           from: { namespace: ['home'] },
           to: { namespace: ['about'] },
-          beforeLeave(data) {
+          beforeLeave() {
             RHP.homeAboutSlide?.resetCurtain?.();
-            const ns = data.current?.namespace || currentNs;
-            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
-            RHP.videoLoader?.destroy?.();
+            // Don't destroy home view here — BG video should keep playing
+            // behind the curtain. Destroyed in afterEnter below.
           },
           // No leave animation — home container stays put; About slides IN on top.
           leave() {},
@@ -1833,21 +1833,21 @@
               : undefined;
           },
           afterEnter(data) {
+            // Now the curtain covers the viewport — safe to tear down home
+            RHP.views.home?.destroy?.();
+            RHP.videoLoader?.destroy?.();
             runAfterEnter(data);
           }
         },
 
         /* ---- About -> Home ----
-           About container slides OUT to the left, revealing the fixed home/dial
-           underneath. On re-entry home-scroll-morph.skipToEnd() lands in
-           dial-large state so there's no second intro morph. */
+           Curtain covers about page, Barba swaps, home inits behind curtain,
+           curtain slides out to reveal home. */
         {
           name: 'about-to-home',
           from: { namespace: ['about'] },
           to: { namespace: ['home'] },
           beforeLeave(data) {
-            // resetCurtain() not needed here — Barba discards the about container;
-            // entering transitions (home→about, work→about) handle curtain reset.
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             RHP.videoLoader?.destroy?.();
@@ -1859,7 +1859,6 @@
           },
           enter() {
             window.scrollTo(0, 0);
-            // Skip directly to the post-morph dial-large state; no replay on re-entry.
             RHP.homeScrollMorph?.skipToEnd?.();
           },
           afterEnter(data) {

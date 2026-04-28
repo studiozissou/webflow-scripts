@@ -2,7 +2,7 @@
 
 **Slug:** `fix-fg-video-transition-flash`
 **Client:** Ready Hit Play
-**Status:** Ready to Build
+**Status:** Partial — work→work fixed, work→home unsolved
 **Created:** 2026-04-23
 
 ## Problem

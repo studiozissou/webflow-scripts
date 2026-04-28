@@ -1,0 +1,36 @@
+name: Zissou Archive — Friday Price Drops
+
+on:
+  schedule:
+    # Every Friday at 8am UTC
+    - cron: '0 8 * * 5'
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug logging'
+        type: boolean
+        default: false
+
+jobs:
+  drop-prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install project dependencies
+        working-directory: projects/zissou-archive
+        run: npm ci
+
+      - name: Run price drops
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          DEBUG: ${{ inputs.debug && '1' || '' }}
+        run: node projects/zissou-archive/drop-prices.js

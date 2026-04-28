@@ -54,8 +54,14 @@
     const g = window.gsap;
     if (!g) return Promise.resolve();
 
+    // Hide the incoming about container so its background doesn't cover
+    // the BG video while the curtain slides in. Made visible once curtain
+    // fully covers the viewport.
+    var nextContainer = data?.next?.container;
+    if (nextContainer) g.set(nextContainer, { visibility: 'hidden' });
+
     if (prefersReduced()) {
-      // No curtain, no animation — content will be made visible in revealAboutContent
+      if (nextContainer) g.set(nextContainer, { visibility: 'visible' });
       return Promise.resolve();
     }
 
@@ -68,7 +74,11 @@
           x: 0,
           duration: 1.5,
           ease: 'power4.out',
-          onComplete: resolve
+          onComplete: function () {
+            // Curtain covers viewport — safe to show about container behind it
+            if (nextContainer) g.set(nextContainer, { visibility: 'visible' });
+            resolve();
+          }
         }
       );
     });
@@ -187,26 +197,25 @@
     });
   }
 
-  /* ── About → Home (UNCHANGED) ── */
+  /* ── About → Home: about container slides out left ── */
   function leaveAboutToHome(data) {
-    // current = about container, next = home container
     const g = window.gsap;
     const current = data?.current;
     if (!g || !current?.container) return Promise.resolve();
     if (prefersReduced()) {
-      g.set(current.container, { xPercent: -100, opacity: 0 });
-      // Note: work-dial IDLE state is restored by work-dial's own resume/init
-      // flow during Barba re-entry. setDialState is not a public API.
+      g.set(current.container, { xPercent: -100 });
       return Promise.resolve();
     }
-    return new Promise((resolve) => {
-      g.to(current.container, {
-        xPercent: -100,
-        opacity: 0,
-        duration: 0.75,
-        ease: 'power3.out',
-        onComplete: resolve
-      });
+    return new Promise(function (resolve) {
+      g.fromTo(current.container,
+        { xPercent: 0 },
+        {
+          xPercent: -100,
+          duration: 1,
+          ease: 'power3.out',
+          onComplete: resolve
+        }
+      );
     });
   }
 

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vinted-listing-output",
+  "description": "Structured output from the vinted-listing skill when used programmatically by Zissou Archive. The 'full_text' field is the ONLY thing pasted into Vinted's description box (max 2000 chars). Other fields populate separate Vinted form inputs (title, category, size, colour, brand) or are used internally by the automation (price logic, photo audit trail).",
+  "type": "object",
+  "required": ["title", "price", "full_text", "condition", "keywords"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Listing title — brand, garment type, key detail, size. Goes in Vinted's title field."
+    },
+    "price": {
+      "type": "object",
+      "required": ["amount", "currency", "justification"],
+      "properties": {
+        "amount": { "type": "number", "description": "Suggested price. Goes in Vinted's price field." },
+        "currency": { "type": "string", "default": "EUR" },
+        "justification": { "type": "string", "description": "1-2 sentences referencing comparable sales and original retail. Internal — not shown on Vinted." },
+        "price_audit": { "type": "string", "description": "Detailed pricing audit. Must include: (1) 2-3 comparable SOLD listings on Vinted/eBay with actual sale prices, not asking prices, (2) how condition rating affects the price vs mint examples, (3) if condition is 7/10 or below, explain the specific discount applied and why, (4) flag if the suggested price is in the top 25% of comparable sales. Be conservative — items sell faster at fair prices. Internal field, not shown on Vinted." },
+        "original_retail": { "type": ["number", "null"], "description": "Original retail price if known" },
+        "original_retail_estimated": { "type": "boolean", "description": "True if original retail is an estimate" },
+        "floor_price": { "type": "number", "description": "Minimum price before donating/bundling. Used by price-drop automation." },
+        "purchase_price": { "type": ["number", "null"], "description": "What the seller paid for the item. Extract from notes if mentioned (e.g. 'got it for free' = 0, 'paid £8' = 8). Null if not mentioned." }
+      }
+    },
+    "full_text": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "The ENTIRE Vinted description field. Must be ≤2000 chars. Structure in this exact order: (1) 1-2 sentence opinionated opener, (2) 'Key details:' with • bullets, (3) 'Cut & fit:' with • bullets, (4) 'Condition: X/10' with honest paragraph, (5) 'Retail: approx. €XXX', (6) 'Measurements (cm):' with flat measurements, (7) 1-2 sentence styling paragraph with specific pairings, (8) optional upsell, (9) 'From a trusted seller:' footer, (10) 'Keywords:' comma-separated. Use • bullets not dashes. Use en dashes (–) not em dashes (—). Voice: opinionated, specific, knowledgeable friend not product listing."
+    },
+    "parsed_fields": {
+      "type": "object",
+      "description": "Structured extraction of content from full_text. Used by automation to populate Vinted form fields and for internal querying. These are NOT separate from the description — they are parsed out of full_text.",
+      "properties": {
+        "intro": { "type": "string", "description": "2-3 sentence introduction extracted from full_text" },
+        "fabric": { "type": "string" },
+        "cut_and_fit": { "type": "string" },
+        "construction": { "type": "string" },
+        "colour_and_pattern": { "type": "string" },
+        "notable_features": { "type": ["string", "null"] },
+        "versatility": { "type": "string" },
+        "condition_rating": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "condition_notes": { "type": "string" },
+        "original_retail_text": { "type": "string", "description": "As written in full_text, e.g. 'Original retail: ~€350 (estimated)'" },
+        "measurements": {
+          "type": "object",
+          "description": "All measurements in cm, taken flat. Extracted from full_text.",
+          "properties": {
+            "chest": { "type": ["number", "null"] },
+            "shoulders": { "type": ["number", "null"] },
+            "length": { "type": ["number", "null"] },
+            "sleeve": { "type": ["number", "null"] },
+            "waist": { "type": ["number", "null"] },
+            "inseam": { "type": ["number", "null"] },
+            "rise": { "type": ["number", "null"] }
+          }
+        },
+        "styling_notes": { "type": "string" }
+      }
+    },
+    "vinted_condition": {
+      "type": "string",
+      "enum": ["New with tags", "New without tags", "Very good", "Good", "Satisfactory"],
+      "description": "Maps to Vinted's condition dropdown. Separate form field."
+    },
+    "category": {
+      "type": "string",
+      "description": "Vinted category path e.g. 'Men > Jackets > Blazers'. Separate form field."
+    },
+    "brand": {
+      "type": ["string", "null"],
+      "description": "Vinted brand selector. Separate form field."
+    },
+    "size": {
+      "type": ["string", "null"],
+      "description": "Vinted size selector. Separate form field."
+    },
+    "colour": {
+      "type": "string",
+      "description": "Primary colour for Vinted's colour filter. Separate form field."
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Search terms, adjacent brands, discovery phrases. Included at the bottom of full_text as a comma-separated 'Keywords:' line. Also extracted here as an array for automation use."
+    },
+    "photo_observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "photo_index": { "type": "integer" },
+          "observations": { "type": "string" },
+          "inferences": { "type": "string" },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      },
+      "description": "Per-photo analysis log — what was seen vs inferred. Internal audit trail, not shown on Vinted."
+    },
+    "questions_for_seller": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Questions the system needs answered before the listing is complete. Empty array if no gaps."
+    }
+  }
+}

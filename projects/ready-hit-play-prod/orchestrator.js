@@ -1720,7 +1720,7 @@
 
     barba.init({
       preventRunning: true,
-      prevent: ({ href }) => /\/(privacy|404)(\/|$|\?)/.test(href),
+      prevent: ({ href }) => /\/(privacy-policy|404)(\/|$|\?)/.test(href),
       transitions: [
         /* ---- Home -> Work ---- */
         {

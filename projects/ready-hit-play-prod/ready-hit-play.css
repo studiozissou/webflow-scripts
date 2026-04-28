@@ -258,6 +258,16 @@ body::-webkit-scrollbar {
   touch-action: none; /* we manage gestures for the dial */
 }
 
+/* Mobile: use lvh so the dial fills the full viewport when browser bars hide.
+   dvh causes the dial to shrink when bars show, leaving a gap at the bottom. */
+@media (max-width: 991px) {
+  .dial_component[data-dial-ns="home"],
+  .dial_component[data-dial-ns="work"],
+  .dial_component[data-dial-ns="about"] {
+    height: 100lvh;
+  }
+}
+
 @supports not (height: 100dvh) {
   .dial_component[data-dial-ns="home"],
   .dial_component[data-dial-ns="work"],
@@ -600,10 +610,13 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 
 /* CSS transitions removed - using GSAP for animations */
 
-.dial_fg-video {
+.dial_fg-video,
+.dial_generic-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* iOS Safari shows a ? placeholder on empty/loading video elements */
+  color: transparent;
 }
 
 /* ====== Labels (home only) ====== */

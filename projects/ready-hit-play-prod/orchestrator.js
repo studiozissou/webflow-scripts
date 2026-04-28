@@ -1356,20 +1356,38 @@
     // Skip reload if current src already matches target (e.g. home→work, video unchanged)
     if (fgVideo.src && fgVideo.src.indexOf(fgSrc) !== -1) return;
 
-    // Capture current frame as overlay so the user sees the old video while new loads
+    // Read the NEW case's poster from CMS (shows immediately while video buffers)
+    const posterImg = item.querySelector('.dial_cms-poster');
+    const newPoster = posterImg ? (posterImg.currentSrc || posterImg.src || '') : '';
+
+    // Capture current frame as overlay so the user sees the old video while new loads.
+    // Fallback to the new CMS poster if canvas capture fails (readyState < 2).
     const fgWrap = document.getElementById('fg-video-wrap');
     let frameOverlay = null;
-    if (fgWrap && fgVideo.readyState >= 2 && fgVideo.videoWidth > 0) {
-      const cvs = document.createElement('canvas');
-      cvs.width = fgVideo.videoWidth;
-      cvs.height = fgVideo.videoHeight;
-      try { cvs.getContext('2d').drawImage(fgVideo, 0, 0); } catch (e) {}
-      frameOverlay = document.createElement('img');
-      frameOverlay.src = cvs.toDataURL('image/jpeg', 0.85);
-      frameOverlay.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;pointer-events:none;';
-      frameOverlay.setAttribute('aria-hidden', 'true');
-      fgWrap.appendChild(frameOverlay);
+    if (fgWrap) {
+      var overlaySrc = '';
+      if (fgVideo.readyState >= 2 && fgVideo.videoWidth > 0) {
+        try {
+          const cvs = document.createElement('canvas');
+          cvs.width = fgVideo.videoWidth;
+          cvs.height = fgVideo.videoHeight;
+          cvs.getContext('2d').drawImage(fgVideo, 0, 0);
+          overlaySrc = cvs.toDataURL('image/jpeg', 0.85);
+        } catch (e) {}
+      }
+      // Fallback: use new CMS poster if canvas capture unavailable
+      if (!overlaySrc && newPoster) overlaySrc = newPoster;
+      if (overlaySrc) {
+        frameOverlay = document.createElement('img');
+        frameOverlay.src = overlaySrc;
+        frameOverlay.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;pointer-events:none;';
+        frameOverlay.setAttribute('aria-hidden', 'true');
+        fgWrap.appendChild(frameOverlay);
+      }
     }
+
+    // Set the new poster so the browser shows it while video buffers
+    if (newPoster) fgVideo.poster = newPoster;
 
     // Load + play immediately — lets browser fire natural waiting/playing events for spinner
     fgVideo.preload = 'auto';
@@ -1547,16 +1565,7 @@
         // Ensure BG draw starts immediately (draws old frame until new video loads)
         startCaseBgDraw();
       } else if (ns === 'home') {
-        // Defensive: ensure dial is at home state after clearProps
         setDialToHomeState();
-        // Mobile: prevent stale suspended video flash for one rAF frame.
-        // Desktop is protected by CSS opacity:0 on .dial_layer-fg in home state
-        // (media: hover:hover). On mobile that CSS rule doesn't apply, so the
-        // suspended fg video would be visible until resume()'s setDialState(ACTIVE)
-        // runs. Hide dialFg now so that fade-in is a proper 0→1 transition.
-        if (dialFg && window.gsap && RHP.workDial?.isSuspended?.()) {
-          window.gsap.set(dialFg, { opacity: 0 });
-        }
       }
 
       // Scroll mode
@@ -1916,6 +1925,40 @@
             } else {
               setDialToWorkState();
             }
+          },
+
+          enter() {
+            window.scrollTo(0, 0);
+          },
+
+          afterEnter(data) {
+            runAfterEnter(data);
+          }
+        },
+
+        /* ---- Work -> Work (case to case) ---- */
+        {
+          name: 'work-to-work',
+          from: { namespace: ['case', 'work'] },
+          to: { namespace: ['case', 'work'] },
+
+          beforeLeave(data) {
+            RHP.lenis?.stop();
+            // Scroll case content to top before leaving (dialFg persists across transitions)
+            const dialFg = document.querySelector('.dial_layer-fg');
+            if (dialFg) dialFg.scrollTop = 0;
+
+            const ns = data.current?.namespace || currentNs;
+            // Destroy outgoing case view (ScrollTrigger, Lenis, controls).
+            // work-dial is not active during case views — no cleanup needed here.
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            RHP.videoLoader?.destroy?.();
+            // Clear any stale handoff from a prior home→work transition
+            if (RHP.videoState) RHP.videoState.caseHandoff = null;
+          },
+
+          leave() {
+            // No animation — instant swap, fg-video persists in #fg-video-wrap
           },
 
           enter() {

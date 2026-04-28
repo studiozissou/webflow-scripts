@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.4.21.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.4.28.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -454,10 +454,13 @@
         const wrapper = document.querySelector('[data-barba="wrapper"]');
         if (wrapper) wrapper.classList.add('rhp-cursor-ready');
 
-        // Scroll stays UNLOCKED during the intro so the scroll-morph scrub
-        // timeline can run. home-scroll-morph will call scroll.lock() itself
-        // once the morph reaches its completion state (_applyCompleteState).
-        // Lenis is started so wheel/touch scroll feels smooth during the scrub.
+        // Scroll must be UNLOCKED during the intro so the scroll-morph scrub
+        // timeline can run (mobile needs native touch scroll through the 300svh
+        // section). home-scroll-morph will call scroll.lock() itself once the
+        // morph reaches its completion state (_applyCompleteState).
+        // Webflow body has overflow:hidden — explicitly unlock so the page is
+        // scrollable during the intro phase.
+        if (options.introMode) RHP.scroll.unlock();
         RHP.lenis?.start();
 
         // Init dial (introMode when fresh load - home intro runs separately)

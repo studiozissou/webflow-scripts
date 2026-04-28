@@ -13,7 +13,9 @@
     "test:sz:a11y": "playwright test --config=tests/acceptance/playwright.config.js a11y",
     "test:sz:acceptance": "playwright test --config=tests/acceptance/playwright.config.js acceptance",
     "test:report": "playwright show-report",
-    "site-review": "node tools/site-review/index.js"
+    "site-review": "node tools/site-review/index.js",
+    "test:za": "node --test 'tests/zissou-archive/*.test.js'",
+    "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"

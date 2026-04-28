@@ -1,0 +1,11 @@
+{
+  "name": "zissou-archive",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@notionhq/client": "^2.2.0",
+    "dotenv": "^16.4.0"
+  }
+}

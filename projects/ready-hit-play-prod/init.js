@@ -8,6 +8,12 @@
   // Bail out on pages that don't use the RHP app (privacy, 404, etc.)
   if (/\/(privacy|404)(\/|$|\?)/.test(window.location.pathname)) return;
 
+  // Force full reload when restored from bfcache (back-nav from privacy/404).
+  // The cached DOM has stale Barba/GSAP/Lenis state that can't recover.
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) window.location.reload();
+  });
+
   // FOUC prevention: inject critical hide rules synchronously before first paint.
   // ready-hit-play.css loads later (after deps); these inline styles cover the gap.
   // Hide on home until home-scroll-morph completes and sets .rhp-home-ready:

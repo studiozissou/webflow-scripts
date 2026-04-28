@@ -103,8 +103,14 @@
   const setVideoSourceAndPoster = (videoEl, src, poster) => {
     if (!videoEl) return;
 
-    // poster first (prevents black flash)
-    if (poster && videoEl.poster !== poster) videoEl.poster = poster;
+    // poster first (prevents black flash) — skip on mobile because iOS Safari
+    // renders a native "?" icon on <video poster> that CSS can't suppress.
+    // Mobile uses an <img> overlay instead (see applyActive poster branch).
+    if (isMobile()) {
+      if (videoEl.hasAttribute('poster')) { videoEl.removeAttribute('poster'); console.log('[dial-debug] stripped poster from', videoEl.className); }
+    } else {
+      if (poster && videoEl.poster !== poster) videoEl.poster = poster;
+    }
 
     // src swap (only if changed)
     if (src && videoEl.currentSrc !== src && videoEl.src !== src) {
@@ -304,7 +310,7 @@
         el.setAttribute('loop', '');
         el.setAttribute('preload', 'auto');
         el.muted = true;
-        el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
+        el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;visibility:hidden;pointer-events:none;left:-9999px;';
         comp.appendChild(el);
       });
       cleanup.push(function () { poolPrev.remove(); poolNext.remove(); });
@@ -336,13 +342,14 @@
       genericVideo.setAttribute('aria-hidden', 'true');
       // Starts hidden; fades in as soon as a frame is decoded so the user sees
       // video inside the dial during the intro scroll morph (not just after it).
-      genericVideo.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;z-index:0;';
+      genericVideo.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;visibility:hidden;z-index:0;';
       comp.appendChild(genericVideo);
       cleanup.push(() => { genericVideo?.remove(); genericVideo = null; });
 
       // Fade in generic video as soon as a frame is ready — don't wait for intro to finish.
       const _earlyFadeIn = () => {
         if (!genericVideo || !alive) return;
+        genericVideo.style.visibility = 'visible';
         if (window.gsap && !prefersReduced()) {
           window.gsap.to(genericVideo, { opacity: 1, duration: 0.4, ease: 'linear', overwrite: true });
         } else {
@@ -473,6 +480,7 @@
           const dialFgEl = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
           // Resume and fade in generic video
           if (genericVideo) {
+            genericVideo.style.visibility = 'visible';
             try { genericVideo.play().catch(() => {}); } catch(e) {}
             if (gsap && !reduced) gsap.to(genericVideo, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: true });
             else genericVideo.style.opacity = '1';
@@ -505,12 +513,16 @@
           if (bgCanvas && gsap) gsap.killTweensOf(bgCanvas);
           // Remove generic spinner (it's about to hide)
           if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; }
-          if (genericVideo) {
+          // Mobile: keep generic video visible as backdrop if fg hasn't decoded yet
+          // (prevents iOS "?" icon flash). _revealFg callback below hides it later.
+          const _fgReady = !isMobile() || (visibleVideo && visibleVideo.readyState >= 2);
+          if (genericVideo && _fgReady) {
             if (gsap && !reduced) {
               gsap.to(genericVideo, { opacity: 0, duration: 0.3, ease: 'linear', overwrite: true,
-                onComplete: () => { try { genericVideo.pause(); } catch(e) {} } });
+                onComplete: () => { genericVideo.style.visibility = 'hidden'; try { genericVideo.pause(); } catch(e) {} } });
             } else {
               genericVideo.style.opacity = '0';
+              genericVideo.style.visibility = 'hidden';
               try { genericVideo.pause(); } catch(e) {}
             }
           }
@@ -522,9 +534,33 @@
             else bgCanvas.style.opacity = '1';
           }
           // Fade in fg layer (reveals fg video inside it) — 0.3s linear
-          if (dialFgEl) {
-            if (gsap && !reduced) gsap.to(dialFgEl, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: 'auto' });
-            else dialFgEl.style.opacity = '1';
+          // Mobile: if the fg video hasn't decoded a frame yet, keep it hidden
+          // to prevent iOS Safari's native "?" no-media icon from flashing.
+          // The generic video stays visible as backdrop until fg is ready.
+          if (isMobile() && visibleVideo && visibleVideo.readyState < 2) {
+            visibleVideo.style.opacity = '0';
+            visibleVideo.style.visibility = 'hidden';
+            const _v = visibleVideo;
+            const _revealFg = () => {
+              if (_v) { _v.style.opacity = ''; _v.style.visibility = 'visible'; }
+              if (dialFgEl) {
+                if (gsap && !reduced) gsap.to(dialFgEl, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: 'auto' });
+                else dialFgEl.style.opacity = '1';
+              }
+              // Now safe to hide generic
+              if (genericVideo) {
+                if (gsap && !reduced) gsap.to(genericVideo, { opacity: 0, duration: 0.3, ease: 'linear', overwrite: true, onComplete: () => { genericVideo.style.visibility = 'hidden'; try { genericVideo.pause(); } catch(e) {} } });
+                else { genericVideo.style.opacity = '0'; genericVideo.style.visibility = 'hidden'; try { genericVideo.pause(); } catch(e) {} }
+              }
+            };
+            _v.addEventListener('loadeddata', _revealFg, { once: true });
+            setTimeout(_revealFg, 3000); // fallback: reveal after 3s max
+            // Don't hide generic yet — it's the visible backdrop
+          } else {
+            if (dialFgEl) {
+              if (gsap && !reduced) gsap.to(dialFgEl, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: 'auto' });
+              else dialFgEl.style.opacity = '1';
+            }
           }
           // Reset lastIndex so the next applyActive (mouse-position driven) always
           // fires, even if the cursor is over the same sector as before IDLE.
@@ -719,7 +755,12 @@
           scrambleStep(t, { duration: 0.65, speed: 0.6, revert: true });
         }
 
-        if (!visibleVideo) visibleVideo = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
+        if (!visibleVideo) {
+          visibleVideo = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
+          // iOS Safari shows a native "?" icon on any <video> with a poster attribute.
+          // Strip it on mobile — the <img> overlay handles poster display instead.
+          if (isMobile() && visibleVideo) visibleVideo.removeAttribute('poster');
+        }
 
         // Before switching: save current video playback state and pause
         if (prevIndex >= 0 && visibleVideo) {
@@ -742,7 +783,7 @@
         const poolNextHasUrl = sameUrl(v, poolNext.currentSrc || poolNext.src);
         let didSwap = false;
 
-        const poolHiddenStyle = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
+        const poolHiddenStyle = 'position:absolute;width:1px;height:1px;opacity:0;visibility:hidden;pointer-events:none;left:-9999px;';
         const fgVideoBaseStyle = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;';
         // Pool videos only need to buffer (preload="auto" handles download).
         // Do NOT play — saves bandwidth (was 4 extra concurrent streams).
@@ -774,7 +815,7 @@
             poolPrev.classList.add('dial_fg-video');
             poolPrev.style.cssText = fgVideoBaseStyle + 'opacity:1;'; // instant — no seek-mask on mobile
             poolPrev.removeAttribute('aria-hidden');
-            poolPrev.poster = '';
+            poolPrev.removeAttribute('poster');
             restoreVideoStateFromIndex(poolPrev, idx);
             // Now remove old (new video is already visible on top)
             fgWrap.removeChild(oldVisible);
@@ -785,7 +826,7 @@
             // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
             poolPrev.style.cssText = fgVideoBaseStyle + 'opacity:0;';
             poolPrev.removeAttribute('aria-hidden');
-            poolPrev.poster = '';
+            poolPrev.removeAttribute('poster');
             seekMaskReveal(poolPrev);
             // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
             restoreVideoStateFromIndex(poolPrev, idx);
@@ -800,7 +841,7 @@
           try { poolNext.pause(); } catch(e) {} // pause demoted video
           // poolNext.src stays as-is (items[newNext] URL, already buffered — ready for instant forward switch)
           poolPrev = freeElPrev;
-          if (urlPrev && poolPrev.src !== urlPrev) { poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} ensurePoolBuffered(poolPrev); }
+          if (urlPrev && poolPrev.src !== urlPrev) { if (!isMobile()) poolPrev.poster = readPosterFromItem(items[newPrev]) || ''; poolPrev.src = urlPrev; try { poolPrev.load(); } catch (e) {} ensurePoolBuffered(poolPrev); }
           didSwap = true;
         } else if (idx === loadWindowIndices.next && poolNextReady && poolNextHasUrl && fgWrap.contains(visibleVideo)) {
           const oldVisible = visibleVideo;
@@ -811,7 +852,7 @@
             poolNext.classList.add('dial_fg-video');
             poolNext.style.cssText = fgVideoBaseStyle + 'opacity:1;'; // instant — no seek-mask on mobile
             poolNext.removeAttribute('aria-hidden');
-            poolNext.poster = '';
+            poolNext.removeAttribute('poster');
             restoreVideoStateFromIndex(poolNext, idx);
             // Now remove old (new video is already visible on top)
             fgWrap.removeChild(oldVisible);
@@ -822,7 +863,7 @@
             // Seek-mask: keep opacity:0 until seeked fires to prevent reverse-frame jerk
             poolNext.style.cssText = fgVideoBaseStyle + 'opacity:0;';
             poolNext.removeAttribute('aria-hidden');
-            poolNext.poster = '';
+            poolNext.removeAttribute('poster');
             seekMaskReveal(poolNext);
             // Seek AFTER seekMaskReveal so the seeked listener is registered before the event fires
             restoreVideoStateFromIndex(poolNext, idx);
@@ -837,7 +878,7 @@
           try { poolPrev.pause(); } catch(e) {} // pause demoted video
           // poolPrev.src stays as-is (items[newPrev] URL, already buffered — ready for instant back-switch)
           poolNext = freeElNext;
-          if (urlNext && poolNext.src !== urlNext) { poolNext.poster = readPosterFromItem(items[newNext]) || ''; poolNext.src = urlNext; try { poolNext.load(); } catch (e) {} ensurePoolBuffered(poolNext); }
+          if (urlNext && poolNext.src !== urlNext) { if (!isMobile()) poolNext.poster = readPosterFromItem(items[newNext]) || ''; poolNext.src = urlNext; try { poolNext.load(); } catch (e) {} ensurePoolBuffered(poolNext); }
           didSwap = true;
         }
 
@@ -847,6 +888,7 @@
             // Overlay a poster <img> so the circle isn't blank while the new video loads.
             // Skip on isInitial (Barba resume) — video was suspended mid-play, no load gap.
             var posterImg = document.createElement('img');
+            posterImg.alt = '';  // prevent iOS broken-image "?" icon
             posterImg.src = poster;
             posterImg.style.cssText = fgVideoBaseStyle + 'opacity:1;z-index:1;';
             posterImg.setAttribute('aria-hidden', 'true');
@@ -894,13 +936,13 @@
         playFg(visibleVideo);
 
         if (urlPrev && poolPrev.src !== urlPrev) {
-          poolPrev.poster = readPosterFromItem(items[newPrev]) || '';
+          if (!isMobile()) poolPrev.poster = readPosterFromItem(items[newPrev]) || '';
           poolPrev.src = urlPrev;
           try { poolPrev.load(); } catch (e) {}
           ensurePoolBuffered(poolPrev);
         }
         if (urlNext && poolNext.src !== urlNext) {
-          poolNext.poster = readPosterFromItem(items[newNext]) || '';
+          if (!isMobile()) poolNext.poster = readPosterFromItem(items[newNext]) || '';
           poolNext.src = urlNext;
           try { poolNext.load(); } catch (e) {}
           ensurePoolBuffered(poolNext);
@@ -1396,6 +1438,21 @@
         cleanup.push(function() { if (bgCanvas && bgCanvas.parentNode) bgCanvas.remove(); bgCanvas = null; bgCtx = null; });
       }
 
+      // Prevent iOS broken-image "?" icon on CMS placeholder images (403 SVGs)
+      comp.querySelectorAll('img').forEach(function (img) {
+        if (!img.alt) img.alt = '';
+        img.addEventListener('error', function () { img.style.display = 'none'; }, { once: true });
+      });
+
+      // iOS Safari: forcefully strip native controls from all video elements in dial
+      comp.querySelectorAll('video').forEach(function (v) {
+        v.removeAttribute('controls');
+        v.setAttribute('playsinline', '');
+        v.setAttribute('webkit-playsinline', '');
+        // Force iOS to recalculate media controls layer
+        v.style.webkitAppearance = 'none';
+      });
+
       // Boot
       resize();
 
@@ -1413,6 +1470,7 @@
       // Intro-skipped boot (about→home): fade in genericVideo and dismiss spinner when ready
       if (dialState === DIAL_STATES.IDLE && introComplete && genericVideo) {
         var _dismissGenericSpinner = function () {
+          genericVideo.style.visibility = 'visible';
           if (window.gsap) window.gsap.to(genericVideo, { opacity: 1, duration: 0.3, ease: 'linear', overwrite: true,
             onComplete: function () { if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; } } });
           else { genericVideo.style.opacity = '1'; if (_genericSpinner) { _genericSpinner.remove(); _genericSpinner = null; } }

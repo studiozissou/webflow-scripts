@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-23",
-  "note": "Deploy 8dde0f7 (2026-04-23): about curtain transition, dial self-healing geometry, global cursor:none. Tests skipped by user.",
-  "lastDeployed": "2026-04-23",
-  "lastDeployedHash": "8dde0f7",
+  "lastUpdated": "2026-04-28",
+  "note": "Deploy daece92 (2026-04-28): Barba prevent on privacy/404, fg-video transition flash fix, mobile home intro, home-about slide. Tests skipped by user.",
+  "lastDeployed": "2026-04-28",
+  "lastDeployedHash": "daece92",
   "entries": [
     {
       "id": "smoke",

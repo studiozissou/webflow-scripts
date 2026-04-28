@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-04-28",
   "lastRegistered": "fix-dial-tick-centering-drift",
-  "note": "Deploy 00c0f4f (2026-04-28): privacy/404 scroll unlock, bfcache reload, Barba prevent. Tests skipped by user.",
+  "note": "Deploy 0575f3a (2026-04-28): mobile scroll unlock, morph finalization defer, iOS video icon fix, dvh→lvh. Tests skipped by user.",
   "lastDeployed": "2026-04-28",
-  "lastDeployedHash": "00c0f4f",
+  "lastDeployedHash": "0575f3a",
   "entries": [
     {
       "id": "smoke",

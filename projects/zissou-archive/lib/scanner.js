@@ -92,11 +92,12 @@ export function parseScanResponse(response) {
 export function mapToNotionProperties(data) {
   const today = new Date().toISOString().slice(0, 10);
 
-  const photoObsText = Array.isArray(data.photo_observations)
+  const photoObsRaw = Array.isArray(data.photo_observations)
     ? data.photo_observations
         .map((obs, i) => `Photo ${obs.photo_index ?? i}: ${obs.observations} (${obs.inferences}) [${obs.confidence}]`)
         .join('\n')
     : '';
+  const photoObsText = photoObsRaw.slice(0, 2000);
 
   const questionsText = Array.isArray(data.questions_for_seller)
     ? data.questions_for_seller.join('\n')

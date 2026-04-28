@@ -1,7 +1,18 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-23",
+  "updated": "2026-04-28",
   "queue": [
+    {
+      "id": "fix-dial-tick-centering-drift",
+      "project": "ready-hit-play",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Fix dial tick centering drift on mobile after Barba transitions",
+      "description": "Canvas tick ring drifts off-centre on mobile after Barba return to home. Root fix: derive geom.cx/cy from fgWrap position (CSS source of truth) instead of canvas center. Backstop: extend self-healing to validate center coordinates, not just radius.",
+      "spec": ".claude/specs/fix-dial-tick-centering-drift.md",
+      "created": "2026-04-28"
+    },
     {
       "id": "rhp-fix-fg-video-transition-flash",
       "project": "ready-hit-play",

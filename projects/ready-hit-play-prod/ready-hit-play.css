@@ -445,10 +445,11 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   pointer-events: auto;
 }
 
+/* 300svh = mobile scrub track — if changed, update REVEAL/FLIP in home-scroll-morph.js buildMobileTimeline */
 @media (max-width: 991px) {
   main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .section_home-intro {
-    height: 250svh;
-    min-height: 250svh;
+    height: 300svh;
+    min-height: 300svh;
   }
 }
 
@@ -480,7 +481,7 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   justify-content: center;
 }
 
-/* Fixed so the dial stays in view during 250svh scroll; absolute would scroll off-screen */
+/* Fixed so the dial stays in view during 300svh scroll; absolute would scroll off-screen */
 @media (max-width: 991px) {
   .home-intro_bottom {
     position: fixed;

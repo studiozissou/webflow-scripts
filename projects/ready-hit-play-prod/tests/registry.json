@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-28",
-  "note": "Deploy 159fa5f (2026-04-28): init.js bail-out on privacy/404, Barba prevent rule. Tests skipped by user.",
+  "note": "Deploy 41c7664 (2026-04-28): bfcache reload on back-nav from privacy/404. Tests skipped by user.",
   "lastDeployed": "2026-04-28",
-  "lastDeployedHash": "159fa5f",
+  "lastDeployedHash": "41c7664",
   "entries": [
     {
       "id": "smoke",

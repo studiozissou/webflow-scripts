@@ -19,6 +19,11 @@ body::-webkit-scrollbar {
    @media screen and (max-width:1920px) { html { font-size: calc(0.7416576964477933rem + 0.21528525296017226vw); } }
    @media screen and (max-width:991px) { html { font-size: calc(0.85rem + 0.25vw); } }
 
+/* Hide Webflow CMS empty-field placeholder images (403 SVG → iOS "?" icon) */
+.w-dyn-bind-empty {
+  display: none !important;
+}
+
 /* Hide nav items on home until home-scroll-morph completes and sets .rhp-home-ready.
    Cursor + dial ticks are visible from the first frame; nav items + step text
    stay hidden until the 100vh scroll-morph scrub completes and the wrapper
@@ -258,19 +263,9 @@ body::-webkit-scrollbar {
   touch-action: none; /* we manage gestures for the dial */
 }
 
-/* Mobile: dvh during intro (browser bar visible, page matches viewport),
-   lvh after morph complete (bar hidden from scrolling, fill full screen).
-   .rhp-home-ready on the wrapper is the switch point. about/work always lvh. */
-@media (max-width: 991px) {
-  .dial_component[data-dial-ns="home"] {
-    height: 100dvh;
-  }
-  .rhp-home-ready .dial_component[data-dial-ns="home"],
-  .dial_component[data-dial-ns="work"],
-  .dial_component[data-dial-ns="about"] {
-    height: 100lvh;
-  }
-}
+/* Mobile: JS freezes height to window.innerHeight after morph complete
+   (immune to dvh/lvh browser-bar fluctuations). During intro, 100dvh
+   matches the visible viewport with browser bar showing. */
 
 @supports not (height: 100dvh) {
   .dial_component[data-dial-ns="home"],
@@ -619,8 +614,28 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* iOS Safari shows a ? placeholder on empty/loading video elements */
+  /* iOS Safari shows a ? placeholder on empty/loading video elements.
+     color:transparent hides text-based placeholders; the pseudo-element
+     selectors hide the native WebKit play/poster overlay icon. */
   color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+/* Nuclear iOS Safari: suppress ALL native video chrome (the "?" no-media icon) */
+.dial_component video::-webkit-media-controls,
+.dial_component video::-webkit-media-controls-panel,
+.dial_component video::-webkit-media-controls-container,
+.dial_component video::-webkit-media-controls-start-playback-button,
+.dial_component video::-webkit-media-controls-play-button,
+.dial_component video::-webkit-media-controls-overlay-play-button,
+.dial_component video::-webkit-media-text-track-display {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  overflow: hidden !important;
 }
 
 /* ====== Labels (home only) ====== */

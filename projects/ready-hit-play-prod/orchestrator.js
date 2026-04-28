@@ -1264,6 +1264,11 @@
       const morph = window.RHP?.homeScrollMorph;
       // On home post-morph: replay the intro section scroll-up.
       if (ns === 'home' && morph?.complete === true && typeof morph.replay === 'function') {
+        // Touch devices (tablet & below): full reload to restart morph cleanly
+        if (!window.matchMedia?.('(hover: hover)').matches) {
+          window.location.reload();
+          return;
+        }
         morph.replay();
         // initDialClickToScroll() not needed here — the boot-time binding on
         // .home-transition-dial persists (element is outside Barba container).

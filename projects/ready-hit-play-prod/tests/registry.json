@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-28",
-  "note": "Deploy 41c7664 (2026-04-28): bfcache reload on back-nav from privacy/404. Tests skipped by user.",
+  "note": "Deploy 7be76c3 (2026-04-28): correct /privacy-policy slug in Barba prevent + init bail-out. Tests skipped by user.",
   "lastDeployed": "2026-04-28",
-  "lastDeployedHash": "41c7664",
+  "lastDeployedHash": "7be76c3",
   "entries": [
     {
       "id": "smoke",

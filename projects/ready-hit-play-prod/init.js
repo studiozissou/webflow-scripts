@@ -6,13 +6,18 @@
   'use strict';
 
   // Bail out on pages that don't use the RHP app (privacy, 404, etc.)
-  if (/\/(privacy-policy|404)(\/|$|\?)/.test(window.location.pathname)) return;
+  // Unlock scroll first — Webflow body has overflow:hidden for the main SPA pages.
+  if (/\/(privacy-policy|404)(\/|$|\?)/.test(window.location.pathname)) {
+    document.body.style.overflow = 'auto';
+    return;
+  }
 
   // Force full reload when restored from bfcache (back-nav from privacy/404).
   // The cached DOM has stale Barba/GSAP/Lenis state that can't recover.
+  // { once: true } prevents any possibility of a reload loop.
   window.addEventListener('pageshow', function(e) {
     if (e.persisted) window.location.reload();
-  });
+  }, { once: true });
 
   // FOUC prevention: inject critical hide rules synchronously before first paint.
   // ready-hit-play.css loads later (after deps); these inline styles cover the gap.

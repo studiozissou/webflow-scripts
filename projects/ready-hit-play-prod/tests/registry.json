@@ -1,6 +1,7 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-28",
+  "lastRegistered": "fix-dial-tick-centering-drift",
   "note": "Deploy 00c0f4f (2026-04-28): privacy/404 scroll unlock, bfcache reload, Barba prevent. Tests skipped by user.",
   "lastDeployed": "2026-04-28",
   "lastDeployedHash": "00c0f4f",
@@ -384,6 +385,16 @@
       "slug": "fix-fg-video-transition-flash",
       "created": "2026-04-23",
       "description": "FG video transition flash — opacity gap after clearProps on work→home, video teardown on work→work, rAF monitoring for flash detection"
+    },
+    {
+      "id": "fix-dial-tick-centering-drift",
+      "file": "tests/acceptance/fix-dial-tick-centering-drift.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-dial-tick-centering-drift",
+      "created": "2026-04-28",
+      "description": "Dial tick centering — fgWrap-derived center, center drift self-healing, Barba round-trip, mobile 375px, reduced motion"
     }
   ]
 }

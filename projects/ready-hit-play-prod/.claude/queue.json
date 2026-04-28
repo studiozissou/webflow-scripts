@@ -1,7 +1,20 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-15",
+  "updated": "2026-04-28",
   "queue": [
+    {
+      "id": "rhp-mobile-nav-logo-reload",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P2",
+      "status": "Done",
+      "title": "Mobile nav logo tap reloads page instead of replay on homepage",
+      "spec": ".claude/specs/rhp-mobile-nav-logo-reload.md",
+      "agent": "code-writer",
+      "created": "2026-04-28",
+      "updated": "2026-04-28",
+      "note": "Add !(hover:hover) check before morph.replay() in orchestrator.js initNavLogoLink(). Touch devices get window.location.reload() for clean morph restart. Desktop replay unchanged. 3 LOC, 1 file."
+    },
     {
       "id": "fix-fg-video-case-to-case-barba",
       "project": "ready-hit-play-prod",

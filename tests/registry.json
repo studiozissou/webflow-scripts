@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-22",
+  "lastUpdated": "2026-04-28",
   "lastDeployed": "2026-04-22",
   "lastDeployedHash": "4774b7e",
   "testPages": [
@@ -35,6 +35,12 @@
       "spec": "projects/ready-hit-play-prod/tests/acceptance/rhp-nav-logo-replay-and-dial-click.spec.js",
       "description": "Nav logo replay fixes (display:none bug, destroyLogoHover, ST refresh) and transition dial click-to-scroll through morph",
       "created": "2026-04-22"
+    },
+    {
+      "slug": "rhp-mobile-nav-logo-reload",
+      "spec": "projects/ready-hit-play-prod/tests/acceptance/rhp-mobile-nav-logo-reload.spec.js",
+      "description": "Mobile/tablet nav logo tap triggers full page reload instead of replay on homepage post-morph",
+      "created": "2026-04-28"
     }
   ]
 }

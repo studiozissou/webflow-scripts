@@ -107,7 +107,7 @@
     // renders a native "?" icon on <video poster> that CSS can't suppress.
     // Mobile uses an <img> overlay instead (see applyActive poster branch).
     if (isMobile()) {
-      if (videoEl.hasAttribute('poster')) { videoEl.removeAttribute('poster'); console.log('[dial-debug] stripped poster from', videoEl.className); }
+      if (videoEl.hasAttribute('poster')) videoEl.removeAttribute('poster');
     } else {
       if (poster && videoEl.poster !== poster) videoEl.poster = poster;
     }

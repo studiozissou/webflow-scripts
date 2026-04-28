@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.4.22.1';
+  const VERSION = '2026.4.23.1';
   const DEBUG = false;
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
 
@@ -460,6 +460,11 @@
       const buildMobileTimeline = () => {
         _killScrub();
 
+        // 300svh section: words occupy first ~70%, then dial + logo animate together to nav
+        // If CSS height changes, update WORDS_END to taste
+        const WORDS_END = 0.7;   // all 3 words done by 70% of scroll
+        const MORPH     = 1 - WORDS_END;  // 0.3 — dial grow + logo shrink + translate
+
         // Reset transforms
         gsap.set(dialWrapper, { clearProps: FLIP_CLEAR });
         gsap.set(logoEl, { clearProps: FLIP_CLEAR });
@@ -486,10 +491,9 @@
             onLeave: onMorphComplete,
             onEnterBack: onMorphReverse,
             invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              if (self.progress > 0 && logoSplitData.length) {
-                _destroyLogoText();
-              }
+            onUpdate: () => {
+              // No _destroyLogoText() here — mobile never inits hover, and
+              // calling it would kill the scrubTL word-reveal tweens.
               if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
             }
           }
@@ -521,19 +525,43 @@
 
         scrubTL.to(dialWrapper, {
           x: dx, y: dy, scale: dScale,
-          ease: 'power3.inOut', duration: 1
-        }, 0);
+          ease: 'power3.inOut', duration: MORPH
+        }, WORDS_END);
 
-        // --- Logo: fade out as section exits viewport ---
+        // --- Logo shrink + translate to nav (replaces fade-out) ---
+        const navWrapper = document.querySelector('.nav_logo-wrapper-2.is-nav');
+        const navLink = document.querySelector('.nav_logo-link') || topSlot;
+        const navWrapperRect = navWrapper
+          ? navWrapper.getBoundingClientRect()
+          : navLink.getBoundingClientRect();
+        const logoRect = logoEl.getBoundingClientRect();
+
+        const ilFirstSvg = logoEl.querySelector('svg');
+        // navWrapper is visibility:hidden until .rhp-home-ready; getBoundingClientRect() still returns layout rect
+        const navFirstSvg = navWrapper && navWrapper.querySelector ? navWrapper.querySelector('svg') : null;
+        let lScale;
+        if (ilFirstSvg && navFirstSvg) {
+          const ilSvgWidth = ilFirstSvg.getBoundingClientRect().width;
+          const navSvgWidth = navFirstSvg.getBoundingClientRect().width;
+          const cssScale2 = logoEl.offsetWidth > 0 ? logoRect.width / logoEl.offsetWidth : 1;
+          lScale = (navSvgWidth / ilSvgWidth) * cssScale2;
+        } else {
+          lScale = navWrapperRect.width / (logoEl.offsetWidth || logoRect.width);
+        }
+
+        const ilLogoCenterX = logoRect.left + logoRect.width / 2;
+        const ilLogoCenterY = logoRect.top + logoRect.height / 2;
+        const lx = (navWrapperRect.left + navWrapperRect.width / 2) - ilLogoCenterX;
+        const ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
+
         scrubTL.to(logoEl, {
-          opacity: 0,
-          ease: 'none',
-          duration: 0.4
-        }, 0.6);
+          x: lx, y: ly, scale: lScale,
+          ease: 'power3.inOut', duration: MORPH
+        }, WORDS_END);
 
-        // --- Step text: fade in during last 10% ---
+        // --- Step text: fade in near the end of the morph phase ---
         if (stepTextEl) {
-          scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, 0.9);
+          scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, WORDS_END + MORPH * 0.6);
         }
 
         // --- Mobile word reveal (bell curve per word) ---
@@ -544,21 +572,31 @@
             gsap.set(d.allWords, { yPercent: 100, opacity: 0 });
           });
 
-          const SEG = 0.28;
+          const SEG = WORDS_END / 3;  // each word's total segment
+          const IN_F  = 0.35;   // 35% of SEG: words slide in
+          const HOLD_F = 0.25;  // 25% of SEG: words hold on screen
+          const OUT_F  = 0.40;  // 40% of SEG: words slide out
+
           logoSplitData.forEach((data, i) => {
-            const start = i * SEG;
-            const mid = start + SEG / 2;
+            const segStart = i * SEG;
+            const inDur    = SEG * IN_F;
+            const outStart = segStart + SEG * (IN_F + HOLD_F);
+            const outDur   = SEG * OUT_F;
             const tgts = [data.upper, data.lower].filter(Boolean);
 
-            scrubTL.to(tgts, { opacity: 1, duration: SEG / 2 }, start);
+            // IN: words slide up into mask
+            scrubTL.to(tgts, { opacity: 1, duration: inDur }, segStart);
             scrubTL.to(data.allWords, {
-              yPercent: 0, opacity: 1, duration: SEG / 2, ease: 'none'
-            }, start);
+              yPercent: 0, opacity: 1, duration: inDur, ease: 'none'
+            }, segStart);
 
+            // HOLD: words stay visible (no tween — implicit plateau)
+
+            // OUT: words slide out above
             scrubTL.to(data.allWords, {
-              yPercent: -100, opacity: 0, duration: SEG / 2, ease: 'none'
-            }, mid);
-            scrubTL.to(tgts, { opacity: 0, duration: SEG / 2 }, mid);
+              yPercent: -100, opacity: 0, duration: outDur, ease: 'none'
+            }, outStart);
+            scrubTL.to(tgts, { opacity: 0, duration: outDur }, outStart);
           });
         }
 
@@ -671,7 +709,7 @@
     if (window.RHP?.workDial?.setInteractionUnlocked) window.RHP.workDial.setInteractionUnlocked(true);
 
     if (window.RHP?.lenis?.stop) window.RHP.lenis.stop();
-    // Reset scroll to top — on mobile the intro section is 250svh; hiding it
+    // Reset scroll to top — on mobile the intro section is 300svh; hiding it
     // (display:none) collapses the content but the viewport stays at the old
     // scrollY, pushing the dial off-center. Must happen before scroll.lock().
     window.scrollTo(0, 0);

@@ -15,8 +15,19 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.4.28.2';
+  const VERSION = '2026.4.28.3';
   const DEBUG = false;
+
+  // DEBUG indicator — confirms this module loaded from ngrok (remove after testing)
+  requestAnimationFrame(() => {
+    const d = document.querySelector('.dev-indicator') || (() => {
+      const el = document.createElement('div');
+      el.className = 'dev-indicator';
+      el.style.cssText = 'position:fixed;top:8px;left:24px;width:10px;height:10px;background:#ffffff;border-radius:50%;z-index:99999;pointer-events:none;opacity:0.9;border:1px solid #333';
+      document.body.appendChild(el);
+      return el;
+    })();
+  });
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
 
   let ctx = null;
@@ -709,11 +720,17 @@
     if (window.RHP?.workDial?.setInteractionUnlocked) window.RHP.workDial.setInteractionUnlocked(true);
 
     if (window.RHP?.lenis?.stop) window.RHP.lenis.stop();
-    // Reset scroll to top — on mobile the intro section is 300svh; hiding it
-    // (display:none) collapses the content but the viewport stays at the old
-    // scrollY, pushing the dial off-center. Must happen before scroll.lock().
     window.scrollTo(0, 0);
     if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
+
+    // Mobile: freeze component height to window.innerHeight so the layout
+    // is immune to dvh/lvh fluctuations when iOS browser bars show/hide.
+    if (!_isDesktop() && dialEl) {
+      const h = window.innerHeight;
+      dialEl.style.height = h + 'px';
+      console.log('[morph-debug] froze height:', h, 'visualVP:', window.visualViewport?.height);
+    }
+
     redrawDialCanvas();
   }
 
@@ -766,8 +783,9 @@
     } else {
       // Mobile: momentum scroll may still be in-flight when onLeave fires.
       // Lock scroll + stop Lenis immediately to halt momentum, then defer
-      // scrollTo(0,0) + dial unlock + nav animations by two frames so the
-      // browser fully settles before we apply the final state.
+      // finalize by two frames so the browser settles before we apply the
+      // final state. scroll.lock() also ensures the browser bar stays
+      // visible consistently (scrollTo(0,0) in finalize reinforces this).
       if (window.RHP?.lenis?.stop) window.RHP.lenis.stop();
       if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
       requestAnimationFrame(() => requestAnimationFrame(finalize));
@@ -833,6 +851,9 @@
 
     // Tear down hover listeners (re-init after reverse completes)
     _destroyLogoHover();
+
+    // Clear frozen height from morph-complete (mobile)
+    if (dialEl) dialEl.style.removeProperty('height');
 
     // Re-show the intro overlay and section so they have layout
     const homeTransition = document.querySelector('.home-transition');
@@ -930,6 +951,8 @@
     }
     // Remove intro-small class if still present
     if (dialEl) dialEl.classList.remove('is-intro-small');
+    // Clear frozen height from morph-complete (mobile)
+    if (dialEl) dialEl.style.removeProperty('height');
     _clearFlipProps();
     _killScrub();
     if (ctx) { ctx.revert(); ctx = null; }

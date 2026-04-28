@@ -6,7 +6,7 @@
   'use strict';
 
   // Bail out on pages that don't use the RHP app (privacy, 404, etc.)
-  if (/\/(privacy|404)(\/|$|\?)/.test(window.location.pathname)) return;
+  if (/\/(privacy-policy|404)(\/|$|\?)/.test(window.location.pathname)) return;
 
   // Force full reload when restored from bfcache (back-nav from privacy/404).
   // The cached DOM has stale Barba/GSAP/Lenis state that can't recover.

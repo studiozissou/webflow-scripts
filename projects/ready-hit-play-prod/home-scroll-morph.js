@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.4.23.1';
+  const VERSION = '2026.4.28.2';
   const DEBUG = false;
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
 
@@ -748,16 +748,30 @@
       if (logoEl) window.gsap.set(logoEl, { clearProps: FLIP_CLEAR });
     }
 
-    // Unlock dial + scroll lock + add .rhp-home-ready + animate nav/step in.
-    _applyCompleteState(true);
+    const finalize = () => {
+      // Unlock dial + scroll lock + add .rhp-home-ready + animate nav/step in.
+      _applyCompleteState(true);
 
-    // Auto-engage ACTIVE state on mobile (no tap needed)
-    if (!_isDesktop() && RHP.workDial?.forceActive) {
-      RHP.workDial.forceActive();
+      // Auto-engage ACTIVE state on mobile (no tap needed)
+      if (!_isDesktop() && RHP.workDial?.forceActive) {
+        RHP.workDial.forceActive();
+      }
+
+      DEBUG && console.log('[home-scroll-morph] complete');
+      window.dispatchEvent(new CustomEvent('rhp:home-scroll-morph:complete'));
+    };
+
+    if (_isDesktop()) {
+      finalize();
+    } else {
+      // Mobile: momentum scroll may still be in-flight when onLeave fires.
+      // Lock scroll + stop Lenis immediately to halt momentum, then defer
+      // scrollTo(0,0) + dial unlock + nav animations by two frames so the
+      // browser fully settles before we apply the final state.
+      if (window.RHP?.lenis?.stop) window.RHP.lenis.stop();
+      if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
+      requestAnimationFrame(() => requestAnimationFrame(finalize));
     }
-
-    DEBUG && console.log('[home-scroll-morph] complete');
-    window.dispatchEvent(new CustomEvent('rhp:home-scroll-morph:complete'));
   }
 
   function onMorphReverse() {

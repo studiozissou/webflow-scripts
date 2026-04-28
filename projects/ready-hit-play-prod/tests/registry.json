@@ -1,9 +1,9 @@
 {
   "version": 1,
   "lastUpdated": "2026-04-28",
-  "note": "Deploy 7be76c3 (2026-04-28): correct /privacy-policy slug in Barba prevent + init bail-out. Tests skipped by user.",
+  "note": "Deploy 00c0f4f (2026-04-28): privacy/404 scroll unlock, bfcache reload, Barba prevent. Tests skipped by user.",
   "lastDeployed": "2026-04-28",
-  "lastDeployedHash": "7be76c3",
+  "lastDeployedHash": "00c0f4f",
   "entries": [
     {
       "id": "smoke",

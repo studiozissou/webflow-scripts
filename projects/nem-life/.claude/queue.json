@@ -1,0 +1,160 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-04-29",
+  "queue": [
+    {
+      "id": "nem-blog-insights-item-page",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "In Progress",
+      "title": "Blog Insights: item page template (sticky side panel, modular body, CTA section)",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 1. Two-column layout: sticky side panel (category badge, tags, Share & Care, key insights, quote, self-test CTA, related insights) + main content (H1, intro, feature image, modular Rich Text body, De essentie checklist). Bottom CTA section reusable from content template. Desktop + mobile. First version built 2026-04-24."
+    },
+    {
+      "id": "nem-experiences-item-page",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "In Progress",
+      "title": "Experiences: item page template (single-column text-only testimonial)",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 2. H1 (essence of testimonial, max 2 lines) + intro quote + pure text body + subtle author name at end. No images, no embeds. Fully in DOM at load. First version built 2026-04-24."
+    },
+    {
+      "id": "nem-hero-header-styling-images",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Home: hero header styling and right-side images not matching design",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Briefing section 4.3 flags large hero header as needing styling + right images. Uses Swiper (not native Webflow slider — w-slider classes in global.css are just resets). Compare against Figma design and fix layout, image placement, and any broken Swiper behaviour."
+    },
+    {
+      "id": "nem-home-three-image-hover",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Home: three-image hover sequence (muted-to-colour fade on hover)",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Section 5.1 Wat als je blijft wachten? — 3 images with muted/lightened default state, hover restores original colour, smooth fade only (no scale/move). Mobile: no hover. After sequence or page load + delay: Maar het hoeft niet zover te komen fades in below images."
+    },
+    {
+      "id": "nem-home-123-card-fade-in",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Home: 123 cards sequential fade-in on scroll into view",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Section 5.2 — 3 cards fade in sequentially on scroll-into-view. No slide, no scale, just fade. After last card: supporting line fades in. CSS-only or minimal JS with IntersectionObserver."
+    },
+    {
+      "id": "nem-home-faq-single-open",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Home: FAQ accordion single-open behaviour (one item open at a time)",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Section 5.3 — item 01 open by default, one item open at a time (other closes when you open another). +/- icons. All answers in DOM at load, CSS-based collapsing only."
+    },
+    {
+      "id": "nem-mobile-responsive-all-pages",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Mobile responsive: all pages (Home rebuild from design, all templates aligned)",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 3. Home mobile is effectively a rebuild from design. Also: NEM Methode, Blog Insights main/category/item, Experiences main/item, Our Mission, Link-in-bio, Blank. Fix nav + notification stacking, typography scale, responsive image sets. 8 hours budgeted."
+    },
+    {
+      "id": "nem-navigation-footer-wiring",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Navigation and footer: wire all links (currently all point to #)",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Every nav and footer link currently points to #. Wire to correct pages. About/Over submenu points to Our Mission page. Enable NL locale, hide EN."
+    },
+    {
+      "id": "nem-shrink-on-scroll-navigation",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Navigation: subtle shrink-on-scroll sticky behaviour",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Briefing section 4.2 — nav is prepared/sticky but shrink-on-scroll not implemented. Subtle size reduction on scroll down."
+    },
+    {
+      "id": "nem-blog-insights-sticky-category-bar",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Blog Insights: sticky categories bar with navigation to category pages",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Section 10.1 — horizontal nav below navbar. Navigation-based (not filter-based). Clicking category takes to that category page. Active category bold on category pages."
+    },
+    {
+      "id": "nem-blog-insights-CMS-wiring",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Blog Insights: CMS wiring (essential, selected, popular, category-based logic)",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Sections 10.2–10.5. Feature item (Essentieel inzicht, 1 manual toggle). Selected Insights (3 manual). Per-category latest 3 + CTA. Populaire inzichten (3 manual). Also category page logic (11.1–11.7) including tag-based Veel gelezen blocks and load-more."
+    },
+    {
+      "id": "nem-experiences-filter-dynamic-CTA-load-more",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Experiences: journey-type filter, dynamic CTA copy by sex, load-more",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Section 13. Single-select filter by journey type (Therapy / Couples therapy). Dynamic CTA: Lees haar verhaal (F) / Lees zijn verhaal (M). Lees meer verhalen text-link reveals more (no pagination). Hover: subtle olive-green tint on card (desktop only)."
+    },
+    {
+      "id": "nem-notification-bar-per-page",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Notification bar: per-page show/hide verification and fix",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 4. Briefing section 4.2 — notification bar is built but per-page show/hide needs verification. Editable text + CTA, no CLS, no navbar overlap on mobile."
+    },
+    {
+      "id": "nem-performance-SEO-AEO-accessibility-launch",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Performance, SEO, AEO, accessibility and launch preparation",
+      "created": "2026-04-29",
+      "updated": "2026-04-29",
+      "note": "Phase 5. Preload hero, WebP conversion, responsive images. Meta + OG + Article/Organization/FAQPage/Person schema. robots.txt (currently Disallow: /), sitemap, hreflang. GEO/AEO DOM audit. axe-core on every template. Keyboard nav + reduced-motion. Lighthouse baseline. 301 map from TEMP site, DNS cutover, final publish, smoke test, Loom handover. 8 hours budgeted."
+    }
+  ]
+}

@@ -8,7 +8,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '2026.4.22.6';
+  const VERSION = '2026.4.29.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -47,6 +47,7 @@
       sectionEl.style.setProperty('--top-offset', topOffset + 'px');
       sectionEl.style.setProperty('--header-height', headerH + 'px');
       sectionEl.style.setProperty('--titles-height', titlesH + 'px');
+      sectionEl.style.setProperty('--icon-scale-ready', '1');
     }
 
     function measureDebounced() {
@@ -88,6 +89,7 @@
         sectionEl.style.removeProperty('--top-offset');
         sectionEl.style.removeProperty('--header-height');
         sectionEl.style.removeProperty('--titles-height');
+        sectionEl.style.removeProperty('--icon-scale-ready');
       }
       sectionEl = null;
       iconLinkEl = null;

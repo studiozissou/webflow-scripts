@@ -1447,6 +1447,8 @@
       const aboutDialWrapper = document.querySelector('.about_dial-wrapper');
       if (aboutDialWrapper && window.gsap) window.gsap.set(aboutDialWrapper, { clearProps: 'visibility' });
       RHP.views.about?.init?.(container);
+      // Content reveal for direct-land — curtain is hidden so _runReveal skips it, content still staggers in
+      RHP.homeAboutSlide?.revealAboutContent?.(container);
     } else {
       // Home or unknown: normal dial boot
       setDialToHomeState();
@@ -1628,10 +1630,8 @@
         }
       }
 
-      // Curtain exit + content reveal for about-entering transitions
-      if (ns === 'about' && data.current?.namespace && data.current.namespace !== 'about') {
-        RHP.homeAboutSlide?.revealAboutContent?.(data.next?.container);
-      }
+      // NOTE: revealAboutContent moved to after _reinitWebflow() below
+      // so the 2-rAF delay starts after IX2 has been re-initialized.
 
       // Case study: apply video handoff from home
       if ((ns === 'case' || ns === 'work') && RHP.videoState && RHP.videoState.caseHandoff && data.next && data.next.container) {
@@ -1698,6 +1698,14 @@
 
       // Re-init Webflow IX2 + ScrollTrigger
       _reinitWebflow();
+
+      // Curtain exit + content reveal for about-entering transitions
+      // Placed after _reinitWebflow() so the 2-rAF delay in revealAboutContent
+      // starts after IX2 re-initialization (IX2 may schedule its own rAFs that
+      // could override GSAP inline styles if they race with our reveal)
+      if (ns === 'about' && data.current?.namespace && data.current.namespace !== 'about') {
+        RHP.homeAboutSlide?.revealAboutContent?.(data.next?.container);
+      }
 
       // Re-assert UI hidden after _reinitWebflow() (IX2 may reset it)
       if (ns === 'case' || ns === 'work') {
@@ -1857,8 +1865,7 @@
           from: { namespace: ['about'] },
           to: { namespace: ['home'] },
           beforeLeave(data) {
-            const ns = data.current?.namespace || currentNs;
-            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            // Don't destroy about view here — CSS vars must persist during slide-out
             RHP.videoLoader?.destroy?.();
           },
           leave(data) {
@@ -1871,6 +1878,10 @@
             RHP.homeScrollMorph?.skipToEnd?.();
           },
           afterEnter(data) {
+            // Destroy about view after slide-out completes (CSS vars persisted during animation)
+            // Note: about container is detached from DOM at this point — removeProperty calls are safe no-ops
+            const prevNs = data.current?.namespace;
+            if (prevNs && RHP.views[prevNs]?.destroy) RHP.views[prevNs].destroy();
             runAfterEnter(data);
           }
         },

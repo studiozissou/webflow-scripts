@@ -7,7 +7,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.4.23.2';
+  const VERSION = '2026.4.29.2';
   const DEBUG = false;
 
   function prefersReduced() {
@@ -36,9 +36,11 @@
 
   /* ── State ── */
   let revealCtx = null;
+  let safetyTimer = null;
 
   /* ── Reset (called by orchestrator beforeLeave) ── */
   function resetCurtain() {
+    if (safetyTimer) { clearTimeout(safetyTimer); safetyTimer = null; }
     if (revealCtx) {
       revealCtx.revert();
       revealCtx = null;
@@ -125,6 +127,21 @@
       return;
     }
 
+    // Safety net: if timeline hasn't made targets visible within 3s, force them visible.
+    // Guards against IX2 race conditions or stalled timelines.
+    if (safetyTimer) clearTimeout(safetyTimer);
+    safetyTimer = setTimeout(function () {
+      safetyTimer = null;
+      for (var s = 0; s < allTargets.length; s++) {
+        if (getComputedStyle(allTargets[s]).opacity === '0') {
+          g.set(allTargets[s], { opacity: 1, y: 0 });
+        }
+      }
+      if (curtainEl && getComputedStyle(curtainEl).display !== 'none') {
+        g.set(curtainEl, { display: 'none', x: '-100vw' });
+      }
+    }, 3000);
+
     revealCtx = g.context(function () {
       // Pre-hide all targets
       g.set(allTargets, { opacity: 0, y: 30 });
@@ -144,24 +161,28 @@
         }
       }
 
-      // Curtain exit animation
       var tl = g.timeline();
 
-      tl.to(curtainEl, {
-        x: '100vw',
-        duration: 0.6,
-        ease: 'power2.in',
-        onComplete: function () {
-          g.set(curtainEl, { display: 'none' });
-        }
-      }, 0);
+      // Only animate curtain if it's currently visible (Barba transition path)
+      var curtainVisible = curtainEl && getComputedStyle(curtainEl).display !== 'none';
+      if (curtainVisible) {
+        tl.to(curtainEl, {
+          x: '100vw',
+          duration: 0.6,
+          ease: 'power2.in',
+          onComplete: function () {
+            g.set(curtainEl, { display: 'none' });
+          }
+        }, 0);
+      }
 
-      // Content stagger (starts 0.2s after curtain begins leaving)
+      // Content stagger (starts 0.2s after curtain begins leaving, or immediately on direct-land)
       var interElementDelay = allTargets.length > 1 ? 2.0 / allTargets.length : 0;
+      var staggerStart = curtainVisible ? 0.2 : 0;
 
       for (var k = 0; k < splits.length; k++) {
         var entry = splits[k];
-        var offset = 0.2 + (k * interElementDelay);
+        var offset = staggerStart + (k * interElementDelay);
 
         // Animate the element wrapper (opacity + y)
         tl.to(entry.el, {

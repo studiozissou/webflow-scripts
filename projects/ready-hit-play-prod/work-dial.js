@@ -993,7 +993,7 @@
         geom.deadzoneR  = geom.videoR * SWITCH_DEADZONE_RATIO;
 
         // Idle threshold: 200px beyond outer tick ring edge at 3000px viewport, scaled by dial width
-        geom.idleThreshold = (geom.innerR + geom.baseLen) + (200 * (r.width / 3000)) * 0.6;
+        geom.idleThreshold = (geom.innerR + geom.baseLen) + (200 * (w / 3000)) * 0.6;
 
         // BG canvas: half-resolution (blur hides detail, saves GPU)
         if (bgCanvas) {

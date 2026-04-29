@@ -1241,6 +1241,10 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   height: calc(100svh - var(--top-offset, 0px) - var(--header-height, 0px) - var(--titles-height, 0px));
   width: auto;
 }
+/* FOUC guard: cap height until JS sets --icon-scale-ready */
+.section_about-hero:not([style*="--icon-scale-ready"]) .icon-embed-r {
+  max-height: 50svh;
+}
 .section_about-hero .icon-embed-r svg {
   height: 100%;
   width: auto;

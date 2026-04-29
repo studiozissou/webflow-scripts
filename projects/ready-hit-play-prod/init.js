@@ -33,7 +33,8 @@
       '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .dial_component[data-dial-ns="home"] .heading-style-h7.is-step,' +
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .dial_component[data-dial-ns="home"] [data-text="step"]' +
-      '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}';
+      '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
+      '.section_about-hero:not([style*="--icon-scale-ready"]) .icon-embed-r{max-height:50svh}';
     document.head.appendChild(s);
   })();
 

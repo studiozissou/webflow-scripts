@@ -1713,6 +1713,13 @@
         if (dialUI && window.gsap) window.gsap.set(dialUI, { opacity: 0 });
       }
 
+      // Re-assert step text visible after _reinitWebflow() on home
+      // (IX2 may re-apply opacity:0 inline on [data-text="step"])
+      if (ns === 'home') {
+        var stepText = document.querySelector('[data-text="step"]');
+        if (stepText && window.gsap) window.gsap.set(stepText, { opacity: 1 });
+      }
+
       // Re-init transition-dial
       RHP.transitionDial?.init?.();
 

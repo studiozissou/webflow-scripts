@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-28",
-  "lastRegistered": "fix-dial-tick-centering-drift",
+  "lastUpdated": "2026-04-29",
+  "lastRegistered": "fix-about-slider-and-icon-fouc",
   "note": "Deploy 0575f3a (2026-04-28): mobile scroll unlock, morph finalization defer, iOS video icon fix, dvh→lvh. Tests skipped by user.",
   "lastDeployed": "2026-04-28",
   "lastDeployedHash": "0575f3a",
@@ -395,6 +395,26 @@
       "slug": "fix-dial-tick-centering-drift",
       "created": "2026-04-28",
       "description": "Dial tick centering — fgWrap-derived center, center drift self-healing, Barba round-trip, mobile 375px, reduced motion"
+    },
+    {
+      "id": "fix-ios-mobile-dial-video-question-mark",
+      "file": "tests/acceptance/fix-ios-mobile-dial-video-question-mark.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-ios-mobile-dial-video-question-mark",
+      "created": "2026-04-29",
+      "description": "iOS mobile dial — no video ? icon, fg-video visibility gate, height freeze with visualViewport re-freeze, Barba re-entry, desktop regression"
+    },
+    {
+      "id": "fix-about-slider-and-icon-fouc",
+      "file": "tests/acceptance/fix-about-slider-and-icon-fouc.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-about-slider-and-icon-fouc",
+      "created": "2026-04-29",
+      "description": "About slider autoheight timing fix + R icon FOUC guard + direct-load content reveal + about→home fade-out"
     }
   ]
 }

@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.4.22.1';
+  const WORK_DIAL_VERSION = '2026.4.28.1';
   const debugGeom = () => !!window.__DEBUG_GEOM;
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';
@@ -958,18 +958,21 @@
         if (!alive) return;
         canvas.style.width  = '';
         canvas.style.height = '';
-        const r = canvas.getBoundingClientRect();
+        // Use offsetWidth/Height — ignores CSS transforms (mobile rotation)
+        // getBoundingClientRect() returns the rotated AABB, inflating dimensions
+        const w = canvas.offsetWidth  || canvas.getBoundingClientRect().width;
+        const h = canvas.offsetHeight || canvas.getBoundingClientRect().height;
         const dpr = window.devicePixelRatio || 1;
         geom.dpr = dpr;
 
-        canvas.width = r.width * dpr;
-        canvas.height = r.height * dpr;
-        canvas.style.width = r.width + 'px';
-        canvas.style.height = r.height + 'px';
+        canvas.width  = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.width  = w + 'px';
+        canvas.style.height = h + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        geom.cx = r.width / 2;
-        geom.cy = r.height / 2;
+        geom.cx = w / 2;
+        geom.cy = h / 2;
 
         const fr = fgWrap.getBoundingClientRect();
         geom.videoR = (Math.min(fr.width, fr.height) / 2) || REF_R;
@@ -1003,7 +1006,7 @@
 
         if (debugGeom()) {
           console.log('[dial-geom] resize:', {
-            canvas: `${r.width}×${r.height}`,
+            canvas: `${w}×${h}`,
             fgWrap: `${fr.width}×${fr.height}`,
             videoR: geom.videoR,
             cx_cy: `${geom.cx}/${geom.cy}`,

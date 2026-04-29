@@ -1,7 +1,30 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-28",
+  "updated": "2026-04-29",
+  "note": "fix-about-slider-and-icon-fouc added 2026-04-29",
   "queue": [
+    {
+      "id": "fix-about-slider-and-icon-fouc",
+      "project": "ready-hit-play",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Building",
+      "title": "Fix about slider autoheight timing and R icon FOUC on reload",
+      "description": "Slider autoheight measures before Webflow reinits on Barba transition. R icon is 100svh before JS sets CSS vars. Fix: double-rAF + fonts.ready/load guards in slider, max-height:50svh CSS fallback with sentinel var, revealAboutContent on direct load, defer about view destroy to after slide-out on about→home.",
+      "spec": ".claude/specs/fix-about-slider-and-icon-fouc.md",
+      "created": "2026-04-29"
+    },
+    {
+      "id": "fix-ios-mobile-dial-video-question-mark",
+      "project": "ready-hit-play",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Fix iOS mobile dial video question mark icon and browser bar displacement",
+      "description": "iOS Safari shows native ? icon on sourceless fg-video before JS sets src. Fix: CSS visibility:hidden on mobile, early src preload from CMS, reveal gate after readyState >= 2. Browser bar: use visualViewport.height for freeze, re-freeze on VP resize.",
+      "spec": ".claude/specs/fix-ios-mobile-dial-video-question-mark.md",
+      "created": "2026-04-29"
+    },
     {
       "id": "fix-dial-tick-centering-drift",
       "project": "ready-hit-play",
@@ -835,6 +858,17 @@
       "description": "Add initDialClickToScroll() in orchestrator.js: clicking .home-transition-dial smooth-scrolls to the bottom of .section_home-intro so the morph plays through naturally. Works on initial load and after replay(). Guarded by data-dial-click-bound to prevent duplicate listeners.",
       "spec": ".claude/specs/rhp-nav-logo-replay-and-dial-click.md",
       "created": "2026-04-22"
+    },
+    {
+      "id": "vinted-scan-local",
+      "project": "zissou-archive",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Replace API scan with local Claude Code slash command",
+      "description": "Create /vinted-scan slash command that reads photos + notes.md from inbox/ subfolders, applies vinted-listing skill for vision analysis, self-reviews for AI patterns, writes to Notion via MCP, and moves processed items to inbox/processed/. Eliminates ANTHROPIC_API_KEY dependency.",
+      "spec": ".claude/specs/vinted-scan-local.md",
+      "created": "2026-04-28"
     }
   ]
 }

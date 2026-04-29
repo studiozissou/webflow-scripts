@@ -694,14 +694,20 @@
       }
     } else {
       // Skip path (Barba re-entry): land in final state instantly.
+      // Explicitly set opacity:1 rather than just clearProps — IX2 re-init
+      // in runAfterEnter may re-apply opacity:0 inline if we only clear.
       if (gsap) {
         [navAbout, navContact].filter(Boolean).forEach(el => {
           gsap.set(el, { clearProps: 'xPercent,opacity,visibility' });
         });
       }
       if (stepTextEl) {
-        if (gsap) gsap.set(stepTextEl, { clearProps: 'opacity,visibility' });
-        else stepTextEl.style.opacity = '1';
+        if (gsap) {
+          gsap.set(stepTextEl, { clearProps: 'opacity,visibility' });
+          gsap.set(stepTextEl, { opacity: 1 });
+        } else {
+          stepTextEl.style.opacity = '1';
+        }
       }
     }
 

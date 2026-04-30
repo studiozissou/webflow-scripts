@@ -41,6 +41,13 @@
       "spec": "projects/ready-hit-play-prod/tests/acceptance/rhp-mobile-nav-logo-reload.spec.js",
       "description": "Mobile/tablet nav logo tap triggers full page reload instead of replay on homepage post-morph",
       "created": "2026-04-28"
+    },
+    {
+      "slug": "nem-mobile-qa-automated-fixes",
+      "url": "https://nem-life-1.webflow.io",
+      "spec": "tests/acceptance/nem-mobile-qa-automated-fixes.spec.js",
+      "description": "NEM Life mobile QA fixes — page titles, ervaringen heading, Christel card stacking, NEM Methode spacing, footer links",
+      "created": "2026-04-30"
     }
   ]
 }

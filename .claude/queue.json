@@ -1,8 +1,30 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-29",
-  "note": "fix-about-slider-and-icon-fouc added 2026-04-29",
+  "updated": "2026-04-30",
+  "note": "carsa-make-model-prefill added 2026-04-30",
   "queue": [
+    {
+      "id": "carsa-model-redirect",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Redirect model dropdown selection to model sub-page on used-cars",
+      "description": "When user selects a model from the dropdown on /used-cars, redirect to /used-cars/model/{slug} with other active filters preserved as query params. Inline update to existing make/model script embed — add helpers + replace empty onChange stub. Also add model-slug CMS attribute to .model-data items.",
+      "spec": ".claude/specs/carsa-model-redirect.md",
+      "created": "2026-04-30"
+    },
+    {
+      "id": "carsa-make-model-prefill",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Pre-fill dropdowns on make/model pages with redirect on change",
+      "description": "On make pages, pre-fill make dropdown and redirect on model selection or make change. On model pages, pre-fill both and redirect on any change. Show Finsweet tags for pre-filled values. Add make-slug attribute to .model-data CMS items.",
+      "spec": ".claude/specs/carsa-make-model-prefill.md",
+      "created": "2026-04-30"
+    },
     {
       "id": "fix-about-slider-and-icon-fouc",
       "project": "ready-hit-play",

@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-05-04",
   "lastRegistered": "fix-dial-step-text-and-work-to-about",
-  "note": "Deploy 06d5b4d (2026-05-04): about-swipers + accordion-scroll modules, Carsa prefill, Nem Life multi-swiper. Tests skipped by user.",
+  "note": "Deploy 44a7dee (2026-05-04): swiper slide height via flexbox, remove autoHeight. Tests skipped by user.",
   "lastDeployed": "2026-05-04",
-  "lastDeployedHash": "06d5b4d",
+  "lastDeployedHash": "44a7dee",
   "entries": [
     {
       "id": "smoke",

@@ -1,0 +1,40 @@
+<!--
+  CAR FINANCE PAGE — JSON-LD Schema
+  Paste into: /car-finance → Page Settings → Custom Code → Head Code
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.carsa.co.uk/car-finance#webpage",
+      "url": "https://www.carsa.co.uk/car-finance",
+      "name": "Car Finance — Used Car Finance Options | Carsa",
+      "description": "Flexible car finance options including PCP and HP. Representative 8.9% APR. Apply online with no impact on your credit score.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [".section_hero h1", ".finance_intro"]
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/car-finance#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Car Finance"
+        }
+      ]
+    }
+  ]
+}
+</script>

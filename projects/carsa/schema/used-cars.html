@@ -1,0 +1,40 @@
+<!--
+  USED CARS LISTING PAGE — JSON-LD Schema
+  Paste into: /used-cars → Page Settings → Custom Code → Head Code
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://www.carsa.co.uk/used-cars#webpage",
+      "url": "https://www.carsa.co.uk/used-cars",
+      "name": "Used Cars for Sale | Carsa",
+      "description": "Browse thousands of quality used cars. All with 90-day warranty, free delivery, and flexible finance.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [".section_hero h1", ".section_hero p"]
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/used-cars#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Used Cars"
+        }
+      ]
+    }
+  ]
+}
+</script>

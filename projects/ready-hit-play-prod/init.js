@@ -58,7 +58,7 @@
 
   // Configuration - Use pinned commit in your Webflow script URL (e.g. ...@cbbef90/.../init.js). Init will load modules from the same commit.
   const CONFIG = {
-    version: '2026.4.28.1', // bump when you deploy – new ?v= busts cache so modules reload
+    version: '2026.5.4.1', // bump when you deploy – new ?v= busts cache so modules reload
     baseUrlTemplate: 'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT/projects/ready-hit-play-prod',
 
     // CSS dependencies (loaded first)
@@ -88,9 +88,10 @@
       'transition-dial.js',
       'about-dial-ticks.js',
       'about-text-lines.js',
-      'about-slider-autoheight.js',
+      'about-swipers.js',
       'about-scroll-accordions.js',
       'about-icon-scale.js',
+      'about-accordion-scroll.js',
       'home-intro.js',
       'home-scroll-morph.js',
       'home-about-slide.js',
@@ -240,6 +241,7 @@
       const RHP = window.RHP || {};
       RHP.version = CONFIG.version || '0';
       RHP.loadScript = loadScript;
+      RHP.loadStylesheet = loadStylesheet;
       RHP.getScriptBaseUrl = getBaseUrl;
       RHP.configVersion = CONFIG.version || '0';
       window.RHP = RHP;
@@ -250,8 +252,10 @@
         { module: 'transition-dial.js', ok: typeof RHP.transitionDial !== 'undefined', detail: RHP.transitionDial?.version || '' },
         { module: 'about-dial-ticks.js', ok: typeof RHP.aboutDialTicks !== 'undefined', detail: RHP.aboutDialTicks?.version || '' },
         { module: 'about-text-lines.js', ok: typeof RHP.aboutTextLines !== 'undefined', detail: RHP.aboutTextLines?.version || '' },
+        { module: 'about-swipers.js', ok: typeof RHP.aboutSwipers !== 'undefined', detail: RHP.aboutSwipers?.version || '' },
         { module: 'about-scroll-accordions.js', ok: typeof RHP.aboutScrollAccordions !== 'undefined', detail: RHP.aboutScrollAccordions?.version || '' },
         { module: 'about-icon-scale.js', ok: typeof RHP.aboutIconScale !== 'undefined', detail: RHP.aboutIconScale?.version || '' },
+        { module: 'about-accordion-scroll.js', ok: typeof RHP.aboutAccordionScroll !== 'undefined', detail: RHP.aboutAccordionScroll?.version || '' },
         { module: 'home-intro.js', ok: typeof RHP.homeIntro !== 'undefined', detail: RHP.homeIntro?.version || '(no version)' },
         { module: 'home-scroll-morph.js', ok: typeof RHP.homeScrollMorph !== 'undefined', detail: RHP.homeScrollMorph?.version || '' },
         { module: 'home-about-slide.js', ok: typeof RHP.homeAboutSlide !== 'undefined', detail: RHP.homeAboutSlide?.version || '' },
@@ -277,8 +281,10 @@
         'transition-dial.js': RHP.transitionDial?.version || '—',
         'about-dial-ticks.js': RHP.aboutDialTicks?.version || '—',
         'about-text-lines.js': RHP.aboutTextLines?.version || '—',
+        'about-swipers.js': RHP.aboutSwipers?.version || '—',
         'about-scroll-accordions.js': RHP.aboutScrollAccordions?.version || '—',
         'about-icon-scale.js': RHP.aboutIconScale?.version || '—',
+        'about-accordion-scroll.js': RHP.aboutAccordionScroll?.version || '—',
         'home-intro.js': RHP.homeIntro?.version || '—',
         'home-scroll-morph.js': RHP.homeScrollMorph?.version || '—',
         'home-about-slide.js': RHP.homeAboutSlide?.version || '—',

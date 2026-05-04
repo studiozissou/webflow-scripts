@@ -1,0 +1,22 @@
+Make/Model Dropdown v2 — How it works
+
+Runs on /used-cars, /used-cars/make/{slug}, /used-cars/models/{slug}. Dropdowns prefill with current make/model on make and model pages (VSRP starts at "Any").
+
+Desktop (>991px)
+- VSRP (/used-cars): No redirect — dropdowns are pure Finsweet filters. Selecting a make populates the model dropdown, that's it.
+- Make page: Change make → immediate redirect to new make page. Change model → stays on page (filters in place). Set make to "Any" → redirect to /used-cars.
+- Model page: Change make → redirect to that make page. Change model → redirect to new model page. Selecting the current make/model does nothing (same-page guard).
+
+Mobile (≤991px) — all pages
+- Select make/model → destination page is prefetched in the background
+- No redirect until #mobile-search-submit is tapped
+- On make/model pages, setting both to "Any" → redirects to /used-cars
+
+Filter preservation
+- All active filters (price, fuel, mileage, etc.) are carried through as query params on every redirect URL
+- On mobile, filter changes also update the prefetch URL (300ms debounce to let Finsweet sync to URL first)
+
+Other details
+- Facet wrappers are hidden when a non-current make/model is selected (counts would be wrong for the destination page)
+- Slug maps rebuilt on every Finsweet render hook
+- Single inline script embed, depends on jQuery + Finsweet Attributes CMS List

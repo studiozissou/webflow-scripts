@@ -132,7 +132,7 @@ Reference the `parallelisation` skill. Present the gate with 5 independent strea
 | # | Stream | Agent type | Tools | Est. tokens |
 |---|--------|-----------|-------|-------------|
 | A | Technical + Analytics | Explore | WebFetch, Webflow MCP (or Chrome DevTools fallback) | ~18k |
-| B | SEO + Schema | seo | WebFetch, SEMRush site-audit (if connected) | ~20k |
+| B | SEO + Schema | seo | Playwright or Chrome DevTools (required for `<head>` checks), WebFetch (body content only), SEMRush site-audit (if connected) | ~20k |
 | C | Content + Code inventory | Explore | Webflow MCP (or Chrome DevTools fallback), Read | ~16k |
 | D | AEO | general-purpose (loads `ai-search-aeo` skill) | WebFetch | ~16k |
 | E | Brand voice + ICP inference | content | WebFetch | ~12k |
@@ -164,13 +164,34 @@ Write to `audits/structure.md`.
 
 ### Stream B — SEO + Schema
 
+**CRITICAL: WebFetch strips `<head>` content during HTML-to-markdown conversion.** This causes
+false negatives for meta descriptions, canonical tags, OG tags, and can misreport heading levels.
+
+For ALL checks involving `<head>` metadata or heading tag counts, you MUST use Playwright
+`browser_evaluate` or Chrome DevTools `evaluate_script` with direct DOM queries:
+
+```js
+() => ({
+  title: document.title,
+  titleLength: document.title.length,
+  h1s: Array.from(document.querySelectorAll('h1')).map(el => el.textContent.trim()),
+  metaDescription: document.querySelector('meta[name="description"]')?.content,
+  canonical: document.querySelector('link[rel="canonical"]')?.href,
+  ogTitle: document.querySelector('meta[property="og:title"]')?.content,
+  ogDesc: document.querySelector('meta[property="og:description"]')?.content,
+  ogImage: document.querySelector('meta[property="og:image"]')?.content,
+})
+```
+
+WebFetch is acceptable ONLY for reading body content (e.g. checking text quality, link hrefs).
+
 | Check | What to look for |
 |---|---|
 | Meta titles | Present and unique on all pages |
 | Meta descriptions | Present on all pages |
 | OG title + image | Set on key pages |
 | Canonical tags | Present, no duplicates |
-| H1 tags | Exactly one per page |
+| H1 tags | Exactly one per page (watch for third-party widgets injecting extra H1s) |
 | Heading hierarchy | No jumps (H2→H4) |
 | Schema.org JSON-LD | Present on homepage, type check (Organization vs Product default) |
 | JSON-LD coverage | Count pages with/without across site |

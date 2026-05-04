@@ -339,9 +339,13 @@
       const videoWrap = document.getElementById('fg-video-wrap');
       if (videoWrap) gsap.set(videoWrap, { '--fg-overlay-opacity': 1 });
       if (dialUI) gsap.set(dialUI, { clearProps: 'opacity' });
+      const dialTicks = document.querySelector('.dial_layer-ticks');
+      if (dialTicks) gsap.set(dialTicks, { clearProps: 'opacity' });
     } else {
       dialFg.style.cssText = '';
       if (dialUI) dialUI.style.cssText = '';
+      const dialTicks = document.querySelector('.dial_layer-ticks');
+      if (dialTicks) dialTicks.style.opacity = '';
     }
   }
 
@@ -1896,32 +1900,33 @@
         },
 
         /* ---- Work -> About ----
-           Case pages live inside the dial_layer-fg scroll wrapper. We shrink
-           the dial back to small, then let the About container slide IN on
-           top via homeAboutSlide.leaveHomeToAbout (same visual as home→about). */
+           Case content lives inside the Barba container (inside dial_layer-fg).
+           sync:true keeps the old container visible while the curtain slides in,
+           preventing a flash of empty dial before the about page appears. */
         {
           name: 'work-to-about',
+          sync: true,
           from: { namespace: ['case', 'work'] },
           to: { namespace: ['about'] },
           beforeLeave(data) {
             RHP.homeAboutSlide?.resetCurtain?.();
-            // Stop Lenis before scrollTop reset so rAF doesn't override it
             RHP.lenis?.stop();
-            // Scroll case content to top before leaving (dialFg persists across transitions)
             const dialFg = document.querySelector('.dial_layer-fg');
             if (dialFg) dialFg.scrollTop = 0;
 
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
-            // If work-dial was suspended (home→case→about path), fully destroy it now
             RHP.workDial?.destroy?.();
             RHP.videoLoader?.destroy?.();
-            // Reset dial-ns so about CSS rules (dial_layer-fg overflow/placement) apply
-            setDialNs('home');
+
+            // Snap dial to home-idle state (invisible behind curtain);
+            // inline styles cleared later by runAfterEnter — CSS [data-dial-ns="home"] owns final layout
+            setDialToHomeState();
           },
-          async leave() {
-            // Shrink dial back to small BEFORE About slides in.
-            await runDialShrinkAnimation();
+          leave({ current }) {
+            // Keep old container alive until curtain covers viewport (1.5s)
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            return new Promise(resolve => setTimeout(resolve, reduced ? 0 : 1500));
           },
           enter(data) {
             window.scrollTo(0, 0);

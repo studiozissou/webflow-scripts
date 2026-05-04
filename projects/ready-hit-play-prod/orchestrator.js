@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.5.4.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.5.4.2'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -1270,6 +1270,11 @@
       const morph = window.RHP?.homeScrollMorph;
       // On home post-morph: replay the intro section scroll-up.
       if (ns === 'home' && morph?.complete === true && typeof morph.replay === 'function') {
+        // After Barba re-entry: always reload (all devices)
+        if (morph.arrivedViaBarba) {
+          window.location.reload();
+          return;
+        }
         // Touch devices (tablet & below): full reload to restart morph cleanly
         if (!window.matchMedia?.('(hover: hover)').matches) {
           window.location.reload();
@@ -1901,33 +1906,21 @@
 
         /* ---- Work -> About ----
            Case content lives inside the Barba container (inside dial_layer-fg).
-           sync:true keeps the old container visible while the curtain slides in,
-           preventing a flash of empty dial before the about page appears. */
+           Destructive state changes (destroy, setDialToHomeState) are deferred
+           to afterEnter so the work content stays visible while the curtain
+           slides in — same pattern as home→about. */
         {
           name: 'work-to-about',
-          sync: true,
           from: { namespace: ['case', 'work'] },
           to: { namespace: ['about'] },
-          beforeLeave(data) {
+          beforeLeave() {
             RHP.homeAboutSlide?.resetCurtain?.();
             RHP.lenis?.stop();
+            // Scroll case content to top (dialFg persists across transitions)
             const dialFg = document.querySelector('.dial_layer-fg');
             if (dialFg) dialFg.scrollTop = 0;
-
-            const ns = data.current?.namespace || currentNs;
-            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
-            RHP.workDial?.destroy?.();
-            RHP.videoLoader?.destroy?.();
-
-            // Snap dial to home-idle state (invisible behind curtain);
-            // inline styles cleared later by runAfterEnter — CSS [data-dial-ns="home"] owns final layout
-            setDialToHomeState();
           },
-          leave({ current }) {
-            // Keep old container alive until curtain covers viewport (1.5s)
-            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            return new Promise(resolve => setTimeout(resolve, reduced ? 0 : 1500));
-          },
+          leave() {},
           enter(data) {
             window.scrollTo(0, 0);
             return RHP.homeAboutSlide?.leaveHomeToAbout
@@ -1935,6 +1928,12 @@
               : undefined;
           },
           afterEnter(data) {
+            // Curtain now covers viewport — safe to tear down work state
+            const prevNs = data.current?.namespace || currentNs;
+            if (prevNs && RHP.views[prevNs]?.destroy) RHP.views[prevNs].destroy();
+            RHP.workDial?.destroy?.();
+            RHP.videoLoader?.destroy?.();
+            setDialToHomeState();
             runAfterEnter(data);
           }
         },

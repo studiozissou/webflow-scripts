@@ -3,6 +3,18 @@
   "updated": "2026-05-04",
   "queue": [
     {
+      "id": "fix-dial-step-text-and-work-to-about",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Dial step text stale after Barba re-entry + work-to-about double transition",
+      "spec": "../../.claude/specs/fix-dial-step-text-and-work-to-about.md",
+      "agent": "code-writer",
+      "created": "2026-05-04",
+      "note": "Bug 1: Store default step text on RHP._stepDefault at first init, reset stepEl.textContent in destroy(). Bug 2: Rewrite work-to-about to use curtain-only (like home-to-about) — remove runDialShrinkAnimation(), call setDialToHomeState() in beforeLeave. 2 files, ~20 LOC."
+    },
+    {
       "id": "rhp-about-accordion-scroll",
       "project": "ready-hit-play-prod",
       "type": "feature",

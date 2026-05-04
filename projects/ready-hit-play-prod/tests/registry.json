@@ -1,7 +1,7 @@
 {
   "version": 1,
   "lastUpdated": "2026-05-04",
-  "lastRegistered": "fix-dial-step-text-and-work-to-about",
+  "lastRegistered": "rhp-mobile-intro-timed-words",
   "note": "Deploy 44a7dee (2026-05-04): swiper slide height via flexbox, remove autoHeight. Tests skipped by user.",
   "lastDeployed": "2026-05-04",
   "lastDeployedHash": "44a7dee",
@@ -445,6 +445,26 @@
       "slug": "rhp-about-accordion-scroll",
       "created": "2026-05-04",
       "description": "About page accordion-title click-to-scroll — Lenis scrollTo content with title offset, bottom-of-page cap, Barba re-entry, reduced motion fallback"
+    },
+    {
+      "id": "fix-nav-logo-reload-and-replay-bugs",
+      "file": "tests/acceptance/fix-nav-logo-reload-and-replay-bugs.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-nav-logo-reload-and-replay-bugs",
+      "created": "2026-05-04",
+      "description": "Nav logo reload after Barba re-entry + replay SplitText space fix + double dial fix on fresh visit"
+    },
+    {
+      "id": "rhp-mobile-intro-timed-words",
+      "file": "tests/acceptance/rhp-mobile-intro-timed-words.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-mobile-intro-timed-words",
+      "created": "2026-05-04",
+      "description": "Mobile home intro — timed word cycle (not scroll-driven), 100svh section, scroll morph identical to desktop, reduced motion, Barba re-entry"
     }
   ]
 }

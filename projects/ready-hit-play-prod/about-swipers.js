@@ -31,16 +31,47 @@
     // Set sentinel immediately — prevents double-init during async load
     active = true;
 
+    // Measure accordion titles and image max-width to cap slide height
+    const section = container.querySelector('.section_about-hero');
+    if (section) {
+      const titles = section.querySelectorAll('.accordion-title');
+      let titlesH = 0;
+      titles.forEach(t => { titlesH += t.offsetHeight; });
+      section.style.setProperty('--accordion-titles-height', titlesH + 'px');
+
+      // Cap slide height: min(viewport - titles, image-max-width + caption)
+      const viewportCap = window.innerHeight - titlesH;
+      const firstSlide = section.querySelector('[data-slider] .swiper-slide');
+      const imgWrap = firstSlide?.querySelector('.about_image-wrapper');
+      const caption = firstSlide?.querySelector('.spacer-medium');
+      if (imgWrap) {
+        const imgMaxW = parseFloat(getComputedStyle(imgWrap).maxWidth) || Infinity;
+        const captionH = caption?.offsetHeight || 0;
+        const contentCap = imgMaxW + captionH;
+        const slideH = Math.min(viewportCap, contentCap);
+        section.style.setProperty('--slide-max-height', slideH + 'px');
+      }
+    }
+
     // Lazy-load Swiper if not yet available
     if (typeof Swiper === 'undefined') {
+      const base = 'https://cdn.jsdelivr.net/npm/swiper@11';
       try {
-        const base = 'https://cdn.jsdelivr.net/npm/swiper@11';
-        if (typeof RHP?.loadStylesheet === 'function') {
-          await RHP.loadStylesheet(base + '/swiper-bundle.min.css');
-        }
-        if (typeof RHP?.loadScript === 'function') {
-          await RHP.loadScript(base + '/swiper-bundle.min.js');
-        }
+        // Inline loaders — RHP.loadScript may not exist yet (init.js sets it after modules)
+        await new Promise((res, rej) => {
+          if (document.querySelector('link[href*="swiper-bundle"]')) { res(); return; }
+          const l = document.createElement('link');
+          l.rel = 'stylesheet'; l.href = base + '/swiper-bundle.min.css';
+          l.onload = res; l.onerror = rej;
+          document.head.appendChild(l);
+        });
+        await new Promise((res, rej) => {
+          if (document.querySelector('script[src*="swiper-bundle"]')) { res(); return; }
+          const s = document.createElement('script');
+          s.src = base + '/swiper-bundle.min.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
       } catch (e) {
         active = false;
         DEBUG && console.log('[about-swipers] Failed to load Swiper:', e.message);

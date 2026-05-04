@@ -1250,25 +1250,37 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   width: auto;
 }
 
-/* Swiper sliders: slide height = remaining viewport after accordion titles.
-   Content (image + caption) scales to fit within this height. */
+/* Swiper sliders: max height = viewport minus 4 accordion titles.
+   Fade mode uses position:absolute slides, so height lives on the container.
+   Images keep natural aspect ratio, capped so they don't blow up on tall screens. */
+/* --slide-max-height is the smaller of viewport-minus-titles and image-max-width+caption,
+   set by JS after measuring .about_image-wrapper max-width + caption height. */
+.section_about-hero [data-slider] {
+  height: var(--slide-max-height, calc(100svh - var(--accordion-titles-height, 256px)));
+}
 .section_about-hero [data-slider] .swiper-slide {
-  height: calc(100svh - var(--top-offset, 0px) - var(--header-height, 0px) - var(--titles-height, 0px));
+  height: 100%;
+}
+.section_about-hero [data-slider] .slide-caption {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-}
-/* FOUC guard: cap slide height until about-icon-scale.js sets --icon-scale-ready */
-.section_about-hero:not([style*="--icon-scale-ready"]) [data-slider] .swiper-slide {
-  height: 50svh;
-}
-.section_about-hero [data-slider] .about_image-wrapper {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-.section_about-hero [data-slider] img {
-  width: 100%;
+  align-items: center;
+  justify-content: center;
   height: 100%;
-  object-fit: cover;
+}
+.section_about-hero [data-slider] .slide-caption .about_image-wrapper {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.section_about-hero [data-slider] .slide-caption .about_image-wrapper img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.section_about-hero [data-slider] .slide-caption .spacer-medium {
+  flex-shrink: 0;
 }

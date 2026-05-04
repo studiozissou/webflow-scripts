@@ -24,16 +24,17 @@
       const titles = root.querySelectorAll('.section_about-hero .accordion-title');
       if (!titles.length) return;
 
-      titles.forEach(title => {
+      titles.forEach((title, i) => {
         const handler = () => {
           const content = title.nextElementSibling;
           if (!content || !content.classList.contains('accordion-content')) return;
 
           const titleHeight = title.offsetHeight;
-          DEBUG && console.log('[about-accordion-scroll] titleHeight', titleHeight);
+          const offset = -(titleHeight * (i + 1));
+          DEBUG && console.log('[about-accordion-scroll] titleHeight', titleHeight, 'index', i, 'offset', offset);
 
           if (typeof RHP.lenis?.scrollTo === 'function') {
-            RHP.lenis.scrollTo(content, { offset: -titleHeight });
+            RHP.lenis.scrollTo(content, { offset });
           } else {
             content.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }

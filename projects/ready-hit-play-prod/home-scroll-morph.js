@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.4.28.3';
+  const VERSION = '2026.5.4.1';
   const DEBUG = false;
 
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
@@ -35,9 +35,11 @@
   let stepTextEl = null;       // step text element
   let _resizeHandler = null;   // stored bound ref so destroy() can remove it
   let _replaying = false;      // true during the reverse-morph tween in replay()
+  let _arrivedViaBarba = false; // true after skipToEnd() (Barba re-entry), false on fresh load
   let logoHoverCleanup = [];   // mouseenter/mouseleave removers
   let logoSplitData = [];      // { ready, upper, lower, splits: SplitText[], allWords: Element[] }
   let _logoTextGen = 0;        // generation counter — incremented by _splitLogoText, checked by stale _destroyLogoText callbacks
+  let _logoOriginalHTML = new Map(); // innerHTML snapshot before first SplitText split
 
   function _isDesktop() {
     return window.matchMedia?.('(hover: hover)').matches === true;
@@ -103,6 +105,10 @@
     logoSplitData.forEach(d => {
       d.splits.forEach(s => { try { s.revert(); } catch (_) {} });
     });
+    // Restore original HTML to fix SplitText whitespace loss
+    _logoOriginalHTML.forEach((html, el) => {
+      if (el && el.isConnected) el.innerHTML = html;
+    });
     logoSplitData = [];
   }
 
@@ -121,6 +127,12 @@
       const lower = ready.querySelector('.is-about-lower');
       const targets = [upper, lower].filter(Boolean);
       if (!targets.length) return;
+
+      targets.forEach(t => {
+        if (!_logoOriginalHTML.has(t)) {
+          _logoOriginalHTML.set(t, t.innerHTML);
+        }
+      });
 
       const splits = [];
       const allWords = [];
@@ -270,6 +282,7 @@
     }
 
     initialised = true;
+    _arrivedViaBarba = false;
 
     // Lock the dial — on fresh load it must stay idle at dial-small
     // with no fg video / no project switching / no attraction.
@@ -808,6 +821,7 @@
 
   function skipToEnd(container) {
     // Called on Barba re-entry to home. Land in dial-large state without animation.
+    _arrivedViaBarba = true;
     _queryDOMRefs(container);
 
     // Ensure no small-state class lingers
@@ -859,6 +873,12 @@
     // Re-apply small-state class (makes work-dial opacity:0 so transition dial
     // is the only visible dial — same as initial intro state)
     if (dialEl) dialEl.classList.add('is-intro-small');
+
+    // Explicitly hide work-dial visuals that is-intro-small doesn't cover
+    const ticksCanvas = dialEl?.querySelector('#dial_ticks-canvas');
+    const genericVideo = dialEl?.querySelector('.dial_generic-video');
+    if (ticksCanvas) gsap.set(ticksCanvas, { opacity: 0 });
+    if (genericVideo) gsap.set(genericVideo, { opacity: 0 });
 
     // Re-hide step text (scrub reveals it at 90% progress on forward play)
     if (stepTextEl) gsap.set(stepTextEl, { opacity: 0 });
@@ -913,6 +933,10 @@
         _replaying = false;
         complete = false;
 
+        // Restore work-dial visuals hidden at replay start
+        if (ticksCanvas) gsap.set(ticksCanvas, { clearProps: 'opacity' });
+        if (genericVideo) gsap.set(genericVideo, { clearProps: 'opacity' });
+
         // Remove .rhp-home-ready (hides nav via CSS cascade)
         scope.classList.remove('rhp-home-ready');
         // Clear nav inline styles from the slide-out / hide animation
@@ -940,6 +964,14 @@
     // Kill any in-flight reverse tween from replay()
     if (_replaying && scrubTL && window.gsap) window.gsap.killTweensOf(scrubTL);
     _replaying = false;
+    // Clear inline opacity on work-dial visuals set during replay() — if Barba
+    // navigates away mid-replay, onComplete never fires and these would persist.
+    if (dialEl && window.gsap) {
+      const c = dialEl.querySelector('#dial_ticks-canvas');
+      const v = dialEl.querySelector('.dial_generic-video');
+      if (c) window.gsap.set(c, { clearProps: 'opacity' });
+      if (v) window.gsap.set(v, { clearProps: 'opacity' });
+    }
     _destroyLogoText();
     if (_resizeHandler) {
       window.removeEventListener('resize', _resizeHandler);
@@ -954,6 +986,8 @@
     if (ctx) { ctx.revert(); ctx = null; }
     initialised = false;
     complete = false;
+    _arrivedViaBarba = false;
+    _logoOriginalHTML.clear();
   }
 
   window.RHP = window.RHP || {};
@@ -963,6 +997,7 @@
     skipToEnd,
     replay,
     get complete() { return complete; },
+    get arrivedViaBarba() { return _arrivedViaBarba; },
     version: VERSION
   };
 })();

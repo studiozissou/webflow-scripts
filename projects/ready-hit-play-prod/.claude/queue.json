@@ -3,6 +3,30 @@
   "updated": "2026-05-04",
   "queue": [
     {
+      "id": "rhp-mobile-intro-timed-words",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Mobile intro: timed word cycle replaces scroll-driven reveal, 100svh section, scroll morph matches desktop",
+      "spec": ".claude/specs/rhp-mobile-intro-timed-words.md",
+      "agent": "code-writer",
+      "created": "2026-05-04",
+      "note": "Replace buildMobileTimeline() 300svh scroll-driven words with timed GSAP timeline (desktop hover timing). Scroll triggers morph only (same as desktop). CSS: 300svh→100svh, fixed→absolute on .home-intro_bottom. New helpers: _buildWordCycleTL(), _interruptWordCycle(). 2 files, ~150 LOC."
+    },
+    {
+      "id": "fix-nav-logo-reload-and-replay-bugs",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Nav logo reload after Barba re-entry + replay SplitText space fix + double dial fix",
+      "spec": ".claude/specs/fix-nav-logo-reload-and-replay-bugs.md",
+      "agent": "code-writer",
+      "created": "2026-05-04",
+      "note": "Bug 1: Add _arrivedViaBarba flag in skipToEnd(), check in initNavLogoLink() → window.location.reload(). Bug 2: Store original innerHTML before SplitText split, restore on revert. Bug 3: Hide #dial_ticks-canvas + .dial_generic-video in replay(), restore in onComplete. 2 files, ~40 LOC."
+    },
+    {
       "id": "fix-dial-step-text-and-work-to-about",
       "project": "ready-hit-play-prod",
       "type": "fix",

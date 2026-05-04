@@ -19,7 +19,7 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 - Cookie consent mechanism now live
 - JSON-LD schema in progress (Product schema live on vehicle pages)
 - Reserve page and Reviews page added
-- llms.txt was present in March but appears removed/broken now
+- llms.txt confirmed present and working
 
 **Key stats:**
 - 74 pages (53 published, 21 drafts, 17 CMS templates)
@@ -50,6 +50,7 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 - **Forms** — Success/error messages confirmed on contact, finance, valuation
 - **Blog content quality** — Strong AEO: answer-first leads, original data, question H2s
 - **Vehicle schema** — Product JSON-LD live on VDPs (price, condition, VIN, specs)
+- **llms.txt** — Present at root
 
 ---
 
@@ -92,10 +93,9 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 | 19 | Rewrite /car-finance opening to answer "How does car finance work?" | TBD | AEO | — | MANUAL |
 | 20 | Add outbound links to authoritative sources (FCA, DVLA, Thatcham) | TBD | AEO, Trust | — | MANUAL |
 | 21 | Add explicit favicon references in head | TBD | Perf | — | AUTO |
-| 22 | Restore/create llms.txt at root | TBD | AEO | — | AUTO |
-| 23 | Verify www redirect from naked domain (carsa.co.uk → www) | TBD | SEO | — | MANUAL |
-| 24 | Remove time-sensitive hedge words from blog posts | TBD | AEO | — | SEMI |
-| 25 | Investigate slow load on store pages (Mapbox + script bundle — 15 pages flagged) | TBD | Perf | SEMRush | SEMI |
+| 22 | Verify www redirect from naked domain (carsa.co.uk → www) | TBD | SEO | — | MANUAL |
+| 23 | Remove time-sensitive hedge words from blog posts | TBD | AEO | — | SEMI |
+| 24 | Investigate slow load on store pages (Mapbox + script bundle — 15 pages flagged) | TBD | Perf | SEMRush | SEMI |
 
 ---
 
@@ -103,16 +103,16 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 
 | # | Task | Effort | Justification | Client item | Automation |
 |---|------|--------|---------------|-------------|------------|
-| 26 | Add HowTo schema to /car-finance "How it works" section | TBD | AEO | — | AUTO |
-| 27 | Promote FAQ questions to H2 level on /faq page | TBD | AEO | — | SEMI |
-| 28 | Add question-format H2s to homepage sections | TBD | AEO, Conv | — | MANUAL |
-| 29 | Add sitemap lastmod/changefreq metadata | TBD | SEO | — | SEMI |
-| 30 | Investigate sitemap vehicle coverage (~250 vs 4,639 CMS items) | TBD | SEO | — | MANUAL |
-| 31 | Set up N8N chat fallback UX for webhook unavailability | TBD | Conv | — | SEMI |
-| 32 | Add descriptive alt text pattern to vehicle images via CMS binding | TBD | A11y, SEO | — | SEMI |
-| 33 | Strengthen author signals with Person schema + credentials | TBD | AEO, Trust | — | SEMI |
-| 34 | Shorten /car-care/carsacover title (81 chars → ≤60) | TBD | SEO | SEMRush | AUTO |
-| 35 | Shorten VDP title template (98 chars on sample — ≤60 target) | TBD | SEO | SEMRush | SEMI |
+| 25 | Add HowTo schema to /car-finance "How it works" section | TBD | AEO | — | AUTO |
+| 26 | Promote FAQ questions to H2 level on /faq page | TBD | AEO | — | SEMI |
+| 27 | Add question-format H2s to homepage sections | TBD | AEO, Conv | — | MANUAL |
+| 28 | Add sitemap lastmod/changefreq metadata | TBD | SEO | — | SEMI |
+| 29 | Investigate sitemap vehicle coverage (~250 vs 4,639 CMS items) | TBD | SEO | — | MANUAL |
+| 30 | Set up N8N chat fallback UX for webhook unavailability | TBD | Conv | — | SEMI |
+| 31 | Add descriptive alt text pattern to vehicle images via CMS binding | TBD | A11y, SEO | — | SEMI |
+| 32 | Strengthen author signals with Person schema + credentials | TBD | AEO, Trust | — | SEMI |
+| 33 | Shorten /car-care/carsacover title (81 chars → ≤60) | TBD | SEO | SEMRush | AUTO |
+| 34 | Shorten VDP title template (98 chars on sample — ≤60 target) | TBD | SEO | SEMRush | SEMI |
 
 ---
 
@@ -120,10 +120,10 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 
 | # | Task | Effort | Justification | Client item | Automation |
 |---|------|--------|---------------|-------------|------------|
-| 36 | Split sitemap into sub-sitemaps (vehicles, blog, stores) | TBD | SEO | — | SEMI |
-| 37 | Build quarterly original data content (Iran war template) | TBD | AEO | — | MANUAL |
-| 38 | Implement anchor + cluster content architecture | TBD | AEO | — | MANUAL |
-| 39 | Set up consent mode v2 in GTM for full compliance verification | TBD | Ops | — | MANUAL |
+| 35 | Split sitemap into sub-sitemaps (vehicles, blog, stores) | TBD | SEO | — | SEMI |
+| 36 | Build quarterly original data content (Iran war template) | TBD | AEO | — | MANUAL |
+| 37 | Implement anchor + cluster content architecture | TBD | AEO | — | MANUAL |
+| 38 | Set up consent mode v2 in GTM for full compliance verification | TBD | Ops | — | MANUAL |
 
 ---
 
@@ -131,10 +131,10 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 
 | Category | Count | % |
 |----------|-------|---|
-| AUTO | 9 | 23.1% |
-| SEMI | 21 | 53.8% |
-| MANUAL | 9 | 23.1% |
-| **Total** | **39** | 100% |
+| AUTO | 8 | 21.1% |
+| SEMI | 21 | 55.3% |
+| MANUAL | 9 | 23.7% |
+| **Total** | **38** | 100% |
 
 ---
 

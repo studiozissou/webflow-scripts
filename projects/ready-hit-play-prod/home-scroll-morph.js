@@ -285,12 +285,12 @@
 
       // IN: show spacers, fade containers, reveal words, lift SVG
       tl.call(() => { spacers.forEach(s => { s.style.display = 'block'; }); }, null, label);
-      tl.to(targets, { opacity: 1, duration: 0.3, overwrite: true }, label);
+      tl.to(targets, { opacity: 1, duration: 0.3 }, label);
       tl.to(allWords, {
         yPercent: 0, opacity: 1,
-        duration: 0.5, ease: 'power3.out', stagger: 0.05, overwrite: true
+        duration: 0.5, ease: 'power3.out', stagger: 0.05
       }, label);
-      tl.to(ready, { y: '-1.5rem', duration: 0.5, ease: 'power3.out', overwrite: true }, label);
+      tl.to(ready, { y: '-0.5rem', duration: 0.5, ease: 'power3.out' }, label);
 
       // HOLD: 1s gap (empty tween to advance the playhead)
       tl.to({}, { duration: 1 }, '>');
@@ -300,11 +300,11 @@
       tl.addLabel(outLabel);
       tl.to(allWords, {
         yPercent: 100, opacity: 0,
-        duration: 0.4, ease: 'power3.in', stagger: 0.03, overwrite: true
+        duration: 0.4, ease: 'power3.in', stagger: 0.03
       }, outLabel);
-      tl.to(targets, { opacity: 0, duration: 0.3, delay: 0.15, overwrite: true }, outLabel);
+      tl.to(targets, { opacity: 0, duration: 0.3, delay: 0.15 }, outLabel);
       tl.to(ready, {
-        y: 0, duration: 0.5, ease: 'power3.out', overwrite: true,
+        y: 0, duration: 0.5, ease: 'power3.out',
         onComplete: () => { spacers.forEach(s => { s.style.display = 'none'; }); }
       }, outLabel);
 

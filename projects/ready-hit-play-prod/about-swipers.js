@@ -68,7 +68,6 @@
         },
         loop: useLoop,
         slidesPerView: 1,
-        autoHeight: true,
         grabCursor: true,
         allowTouchMove: true,
       });

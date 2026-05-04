@@ -1250,17 +1250,22 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   width: auto;
 }
 
-/* Swiper sliders: max-height = viewport minus accordion titles (vars from about-icon-scale.js) */
-.section_about-hero [data-slider] {
-  max-height: calc(100svh - var(--top-offset, 0px) - var(--header-height, 0px) - var(--titles-height, 0px));
+/* Swiper sliders: slide height = remaining viewport after accordion titles.
+   Content (image + caption) scales to fit within this height. */
+.section_about-hero [data-slider] .swiper-slide {
+  height: calc(100svh - var(--top-offset, 0px) - var(--header-height, 0px) - var(--titles-height, 0px));
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
-/* FOUC guard: cap slider height until about-icon-scale.js sets --icon-scale-ready */
-.section_about-hero:not([style*="--icon-scale-ready"]) [data-slider] {
-  max-height: 50svh;
+/* FOUC guard: cap slide height until about-icon-scale.js sets --icon-scale-ready */
+.section_about-hero:not([style*="--icon-scale-ready"]) [data-slider] .swiper-slide {
+  height: 50svh;
 }
-.section_about-hero [data-slider] .swiper-slide {
-  height: auto;
+.section_about-hero [data-slider] .about_image-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 .section_about-hero [data-slider] img {
   width: 100%;

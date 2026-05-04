@@ -203,7 +203,8 @@
       const metaEl  = container.querySelector(SEL.meta)  || document.querySelector(SEL.meta);
 
       const stepEl = comp.querySelector('[data-text="step"]') || document.querySelector('[data-text="step"]');
-      const origStepText = stepEl ? stepEl.textContent.trim() : '';
+      if (typeof RHP._stepDefault === 'undefined') RHP._stepDefault = stepEl ? stepEl.textContent.trim() : '';
+      const origStepText = RHP._stepDefault;
       let splitReverted = false;
       function revertStepSplit() {
         if (splitReverted) return;
@@ -218,6 +219,7 @@
         if (_scrambleTween) { _scrambleTween.kill(); _scrambleTween = null; }
         if (stepEl && window.gsap) window.gsap.killTweensOf(stepEl);
         if (stepEl) stepEl.classList.remove('is-scrambling');
+        if (stepEl && typeof RHP._stepDefault === 'string') stepEl.textContent = RHP._stepDefault;
       });
 
       // ScrambleText helper for [data-text="step"] — single source of truth for

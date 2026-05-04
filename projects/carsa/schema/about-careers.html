@@ -1,0 +1,43 @@
+<!--
+  ABOUT CAREERS PAGE — JSON-LD Schema
+  Paste into: /about/careers → Page Settings → Custom Code → Head Code
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "AboutPage",
+      "@id": "https://www.carsa.co.uk/about/careers#webpage",
+      "url": "https://www.carsa.co.uk/about/careers",
+      "name": "Careers | Carsa",
+      "description": "Join the Carsa team. Explore career opportunities across our UK showrooms and head office.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "mainEntity": { "@id": "https://www.carsa.co.uk/#organization" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/about/careers#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "About",
+          "item": "https://www.carsa.co.uk/about/carsa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Careers"
+        }
+      ]
+    }
+  ]
+}
+</script>

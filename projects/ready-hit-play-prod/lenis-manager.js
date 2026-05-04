@@ -97,6 +97,10 @@
     lenis.on('scroll', window.ScrollTrigger.update);
   }
 
+  function scrollTo(target, opts) {
+    lenis?.scrollTo?.(target, opts);
+  }
+
   function onScroll(callback) {
     if (lenis && typeof callback === 'function') {
       lenis.on('scroll', callback);
@@ -109,5 +113,5 @@
     }
   }
 
-  RHP.lenis = { start, stop, resize, onScroll, offScroll, setupScrollTriggerProxy, version: LENIS_MANAGER_VERSION };
+  RHP.lenis = { start, stop, resize, scrollTo, onScroll, offScroll, setupScrollTriggerProxy, version: LENIS_MANAGER_VERSION };
 })();

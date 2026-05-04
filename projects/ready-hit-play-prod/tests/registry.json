@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-29",
-  "lastRegistered": "fix-about-slider-and-icon-fouc",
+  "lastUpdated": "2026-05-04",
+  "lastRegistered": "rhp-about-accordion-scroll",
   "note": "Deploy 115b530 (2026-04-29): fix stale r→w ref in resize() that broke IDLE→ACTIVE dial transition. Tests skipped by user.",
   "lastDeployed": "2026-04-29",
   "lastDeployedHash": "115b530",
@@ -415,6 +415,26 @@
       "slug": "fix-about-slider-and-icon-fouc",
       "created": "2026-04-29",
       "description": "About slider autoheight timing fix + R icon FOUC guard + direct-load content reveal + about→home fade-out"
+    },
+    {
+      "id": "rhp-about-swipers",
+      "file": "tests/acceptance/rhp-about-swipers.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-about-swipers",
+      "created": "2026-05-04",
+      "description": "About page Swiper.js crossfade sliders — init, autoplay, Barba re-entry, reduced motion, max-height constraint"
+    },
+    {
+      "id": "rhp-about-accordion-scroll",
+      "file": "tests/acceptance/rhp-about-accordion-scroll.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-about-accordion-scroll",
+      "created": "2026-05-04",
+      "description": "About page accordion-title click-to-scroll — Lenis scrollTo content with title offset, bottom-of-page cap, Barba re-entry, reduced motion fallback"
     }
   ]
 }

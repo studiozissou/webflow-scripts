@@ -1,0 +1,37 @@
+<!--
+  CONTACT PAGE — JSON-LD Schema
+  Paste into: /contact → Page Settings → Custom Code → Head Code
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ContactPage",
+      "@id": "https://www.carsa.co.uk/contact#webpage",
+      "url": "https://www.carsa.co.uk/contact",
+      "name": "Contact Us | Carsa",
+      "description": "Get in touch with Carsa. Call, email, or visit one of our UK showrooms.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "mainEntity": { "@id": "https://www.carsa.co.uk/#organization" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/contact#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Contact"
+        }
+      ]
+    }
+  ]
+}
+</script>

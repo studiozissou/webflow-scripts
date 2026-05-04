@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.4.28.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.5.4.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -788,8 +788,9 @@
         RHP.aboutDialTicks?.init?.(container);
         // DISABLED: scroll-linked text opacity reveal — module intact, just disconnected
         // RHP.aboutTextLines?.init?.(container);
-        RHP.aboutSliderAutoheight?.init?.(container);
+        RHP.aboutSwipers?.init?.(container);
         RHP.aboutIconScale?.init?.(container);
+        RHP.aboutAccordionScroll?.init?.(container);
         // DISABLED: scroll-open accordions — conflicts with about-icon-scale.js fixed-height calculation (see spec rhp-about-icon-viewport-fill.md)
         // RHP.aboutScrollAccordions?.init?.(container);
         initAboutTeamHover(container); // handles desktop vs mobile internally
@@ -801,8 +802,9 @@
         RHP.aboutDialTicks?.destroy?.();
         // DISABLED: scroll-linked text opacity reveal — module intact, just disconnected
         // RHP.aboutTextLines?.destroy?.();
-        RHP.aboutSliderAutoheight?.destroy?.();
+        RHP.aboutSwipers?.destroy?.();
         RHP.aboutIconScale?.destroy?.();
+        RHP.aboutAccordionScroll?.destroy?.();
         // DISABLED: scroll-open accordions — conflicts with about-icon-scale.js fixed-height calculation (see spec rhp-about-icon-viewport-fill.md)
         // RHP.aboutScrollAccordions?.destroy?.();
         destroyAboutTeamHover();
@@ -1131,7 +1133,7 @@
       const pullout = getPullout();
       if (!pullout) return;
       const inPullout = pullout.contains(e.target);
-      const isCloseBtn = e.target.closest('.nav_contact-close') || e.target.closest('[class*="nav_contact-close"]');
+      const isCloseBtn = e.target.closest('.nav_contact-close') || e.target.closest('[class*="nav_contact-close"]') || e.target.closest('[data-button="contact-close"]');
       const isOverlayClick = e.target.closest('.contact_overlay') || e.target.closest('[class*="contact_overlay"]');
       if (isOverlayClick || !inPullout || isCloseBtn) closePullout();
     }, true);

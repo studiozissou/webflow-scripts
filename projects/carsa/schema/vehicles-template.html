@@ -1,0 +1,99 @@
+<!--
+  VEHICLES TEMPLATE — JSON-LD Schema
+  Paste into: Vehicles CMS Collection Template → Page Settings → Custom Code → Head Code
+  Uses Webflow CMS binding syntax with &quot; entities and : for ref sub-fields.
+  CMS fields: slug, name, meta-description, make:name, make:slug, model, year,
+  body-type, fuel-type, transmission, drive-type, colour, doors, seats,
+  mileage, vrm, hero-image, price, registration-date
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": ["Product", "Vehicle"],
+      "@id": "https://www.carsa.co.uk/vehicles/used/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#product",
+      "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "description": "{{wf {&quot;path&quot;:&quot;meta-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "brand": {
+        "@type": "Brand",
+        "name": "{{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      },
+      "model": "{{wf {&quot;path&quot;:&quot;model&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "vehicleModelDate": "{{wf {&quot;path&quot;:&quot;year&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "bodyType": "{{wf {&quot;path&quot;:&quot;body-type&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "fuelType": "{{wf {&quot;path&quot;:&quot;fuel-type&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "vehicleTransmission": "{{wf {&quot;path&quot;:&quot;transmission&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "driveWheelConfiguration": "{{wf {&quot;path&quot;:&quot;drive-type&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "color": "{{wf {&quot;path&quot;:&quot;colour&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "numberOfDoors": "{{wf {&quot;path&quot;:&quot;doors&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "seatingCapacity": "{{wf {&quot;path&quot;:&quot;seats&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "mileageFromOdometer": {
+        "@type": "QuantitativeValue",
+        "value": "{{wf {&quot;path&quot;:&quot;mileage&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "unitCode": "SMI"
+      },
+      "image": "{{wf {&quot;path&quot;:&quot;hero-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+      "offers": {
+        "@type": "Offer",
+        "url": "https://www.carsa.co.uk/vehicles/used/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "priceCurrency": "GBP",
+        "price": "{{wf {&quot;path&quot;:&quot;price&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "itemCondition": "https://schema.org/UsedCondition",
+        "availability": "https://schema.org/InStock",
+        "seller": { "@id": "https://www.carsa.co.uk/#organization" }
+      },
+      "additionalProperty": [
+        {
+          "@type": "PropertyValue",
+          "name": "VRM",
+          "value": "{{wf {&quot;path&quot;:&quot;vrm&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Registration Date",
+          "value": "{{wf {&quot;path&quot;:&quot;registration-date&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Warranty",
+          "value": "90 days included free"
+        }
+      ],
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [".vehicle_title", ".vehicle_price", ".vehicle_key-specs"]
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/vehicles/used/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Used Cars",
+          "item": "https://www.carsa.co.uk/used-cars"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+          "item": "https://www.carsa.co.uk/used-cars/make/{{wf {&quot;path&quot;:&quot;make:slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        }
+      ]
+    }
+  ]
+}
+</script>

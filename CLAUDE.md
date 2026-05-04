@@ -14,6 +14,17 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 ## Queue Tasks
 - Follow the `queue-tasks` skill for all queue.json formatting and Notion sync
 
+## Client File Organisation
+- IMPORTANT: All client-related docs, specs, research, comms, and assets MUST live inside
+  the client's project directory: `projects/{client}/.claude/`. Never store client files in
+  the top-level `.claude/` directory.
+- Specs go in `projects/{client}/.claude/specs/`
+- Research/screenshots go in `projects/{client}/.claude/research/`
+- Slack messages go in `projects/{client}/.claude/slack/`
+- Audits go in `projects/{client}/.claude/audits/`
+- Reports go in `projects/{client}/.claude/reports/`
+- Proposals go in `projects/{client}/.claude/proposals/`
+
 ## Code Style
 - Named exports only (no default exports in `shared/`)
 - No `console.log` in committed code — use `DEBUG && console.log(...)` pattern

@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.5.4.2'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.5.4.3'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -1876,31 +1876,19 @@
         },
 
         /* ---- About -> Home ----
-           Curtain covers about page, Barba swaps, home inits behind curtain,
-           curtain slides out to reveal home. */
+           Force full page reload. Direct-land on about sets DOM state
+           that doesn't fully clean up during Barba transition, causing
+           downstream namespace issues (e.g. about → home → work breaks
+           work layout). A clean server-rendered home avoids the problem. */
         {
           name: 'about-to-home',
           from: { namespace: ['about'] },
           to: { namespace: ['home'] },
           beforeLeave(data) {
-            // Don't destroy about view here — CSS vars must persist during slide-out
-            RHP.videoLoader?.destroy?.();
-          },
-          leave(data) {
-            return RHP.homeAboutSlide?.leaveAboutToHome
-              ? RHP.homeAboutSlide.leaveAboutToHome(data)
-              : undefined;
-          },
-          enter() {
-            window.scrollTo(0, 0);
-            RHP.homeScrollMorph?.skipToEnd?.();
-          },
-          afterEnter(data) {
-            // Destroy about view after slide-out completes (CSS vars persisted during animation)
-            // Note: about container is detached from DOM at this point — removeProperty calls are safe no-ops
-            const prevNs = data.current?.namespace;
-            if (prevNs && RHP.views[prevNs]?.destroy) RHP.views[prevNs].destroy();
-            runAfterEnter(data);
+            var target = data.next?.url?.href || data.next?.url?.path || '/';
+            window.location.href = target;
+            // Return a never-resolving promise so Barba waits while the browser navigates
+            return new Promise(function() {});
           }
         },
 

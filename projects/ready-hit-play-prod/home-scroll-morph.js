@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.5.4.1';
+  const VERSION = '2026.5.4.2';
   const DEBUG = false;
 
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
@@ -40,6 +40,8 @@
   let logoSplitData = [];      // { ready, upper, lower, splits: SplitText[], allWords: Element[] }
   let _logoTextGen = 0;        // generation counter — incremented by _splitLogoText, checked by stale _destroyLogoText callbacks
   let _logoOriginalHTML = new Map(); // innerHTML snapshot before first SplitText split
+  let wordTL = null;              // standalone timed word cycle timeline (mobile only)
+  let _wordInterrupted = false;   // true once scroll detected during word cycle
 
   function _isDesktop() {
     return window.matchMedia?.('(hover: hover)').matches === true;
@@ -66,6 +68,7 @@
       scrollTrigger.kill();
       scrollTrigger = null;
     }
+    if (wordTL) { wordTL.kill(); wordTL = null; _wordInterrupted = false; }
   }
 
   /** Returns the Barba wrapper (or body as fallback) for class-toggle scope. */
@@ -132,6 +135,14 @@
         if (!_logoOriginalHTML.has(t)) {
           _logoOriginalHTML.set(t, t.innerHTML);
         }
+      });
+
+      // Always restore original HTML before re-splitting — SplitText.revert()
+      // loses inter-word whitespace, and _destroyLogoText()'s async afterAll
+      // may not have fired yet. Belt-and-suspenders: force clean HTML here.
+      targets.forEach(t => {
+        const orig = _logoOriginalHTML.get(t);
+        if (orig !== undefined) t.innerHTML = orig;
       });
 
       const splits = [];
@@ -253,6 +264,74 @@
       });
     } else {
       _revertLogoText();
+    }
+  }
+
+  /** Mobile: build a standalone timed timeline that cycles through all 3 logo
+      SVGs with eased word animations. Returns paused timeline. */
+  function _buildWordCycleTL() {
+    const gsap = window.gsap;
+    if (!gsap || !logoSplitData.length) return null;
+
+    const tl = gsap.timeline({ paused: true, delay: 0.5 });
+
+    logoSplitData.forEach((data, i) => {
+      const { ready, upper, lower, allWords } = data;
+      const targets = [upper, lower].filter(Boolean);
+      const spacers = ready.querySelectorAll('.about_logo-spacer');
+      const label = 'word_' + i;
+
+      tl.addLabel(label);
+
+      // IN: show spacers, fade containers, reveal words, lift SVG
+      tl.call(() => { spacers.forEach(s => { s.style.display = 'block'; }); }, null, label);
+      tl.to(targets, { opacity: 1, duration: 0.3, overwrite: true }, label);
+      tl.to(allWords, {
+        yPercent: 0, opacity: 1,
+        duration: 0.5, ease: 'power3.out', stagger: 0.05, overwrite: true
+      }, label);
+      tl.to(ready, { y: '-1.5rem', duration: 0.5, ease: 'power3.out', overwrite: true }, label);
+
+      // HOLD: 1s gap (empty tween to advance the playhead)
+      tl.to({}, { duration: 1 }, '>');
+
+      // OUT: words slide down + fade, containers fade, SVG returns
+      const outLabel = label + '_out';
+      tl.addLabel(outLabel);
+      tl.to(allWords, {
+        yPercent: 100, opacity: 0,
+        duration: 0.4, ease: 'power3.in', stagger: 0.03, overwrite: true
+      }, outLabel);
+      tl.to(targets, { opacity: 0, duration: 0.3, delay: 0.15, overwrite: true }, outLabel);
+      tl.to(ready, {
+        y: 0, duration: 0.5, ease: 'power3.out', overwrite: true,
+        onComplete: () => { spacers.forEach(s => { s.style.display = 'none'; }); }
+      }, outLabel);
+
+      // Small gap before next word
+      if (i < logoSplitData.length - 1) tl.to({}, { duration: 0.1 }, '>');
+    });
+
+    // On complete: clean up SplitText
+    tl.call(() => { _destroyLogoText(); }, null, '>');
+
+    return tl;
+  }
+
+  /** Called on first scroll frame during mobile word cycle. Kills the
+      timed word animation and plays a fast OUT so there's no visual jump. */
+  function _interruptWordCycle() {
+    if (_wordInterrupted) return;
+    _wordInterrupted = true;
+
+    if (wordTL && wordTL.isActive()) {
+      wordTL.kill();
+      wordTL = null;
+      // Fast OUT on all word groups (same pattern as _destroyLogoText)
+      _destroyLogoText();
+    } else {
+      if (wordTL) { wordTL.kill(); wordTL = null; }
+      _destroyLogoText();
     }
   }
 
@@ -437,47 +516,12 @@
           scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, 0.9);
         }
 
-        // Mobile: scroll-driven text reveal (bell curve per word).
-        // Each .about-hero_ready gets a segment: words slide in then out.
-        if (!_isDesktop() && logoSplitData.length) {
-          // Reset word positions (buildTimeline may be called on resize)
-          logoSplitData.forEach(d => {
-            const tgts = [d.upper, d.lower].filter(Boolean);
-            gsap.set(tgts, { opacity: 0 });
-            gsap.set(d.allWords, { yPercent: 100, opacity: 0 });
-          });
-
-          const SEG = 0.28;  // each word: 28% of scroll
-          logoSplitData.forEach((data, i) => {
-            const start = i * SEG;
-            const mid = start + SEG / 2;
-            const tgts = [data.upper, data.lower].filter(Boolean);
-
-            // IN: text opacity 0→1, words slide up into mask
-            scrubTL.to(tgts, { opacity: 1, duration: SEG / 2 }, start);
-            scrubTL.to(data.allWords, {
-              yPercent: 0, opacity: 1, duration: SEG / 2, ease: 'none'
-            }, start);
-
-            // OUT: words slide out above, text fades
-            scrubTL.to(data.allWords, {
-              yPercent: -100, opacity: 0, duration: SEG / 2, ease: 'none'
-            }, mid);
-            scrubTL.to(tgts, { opacity: 0, duration: SEG / 2 }, mid);
-          });
-        }
-
         // Capture for explicit cleanup on next rebuild / destroy.
         scrollTrigger = scrubTL.scrollTrigger || null;
       };
 
       const buildMobileTimeline = () => {
         _killScrub();
-
-        // 300svh section: words occupy first ~70%, then dial + logo animate together to nav
-        // If CSS height changes, update WORDS_END to taste
-        const WORDS_END = 0.7;   // all 3 words done by 70% of scroll
-        const MORPH     = 1 - WORDS_END;  // 0.3 — dial grow + logo shrink + translate
 
         // Reset transforms
         gsap.set(dialWrapper, { clearProps: FLIP_CLEAR });
@@ -487,7 +531,7 @@
           scrollTrigger = ScrollTrigger.create({
             trigger: sectionEl,
             start: 'top top',
-            end: 'bottom top',
+            end: '+=100%',
             onLeave: onMorphComplete,
             onEnterBack: onMorphReverse,
             invalidateOnRefresh: true
@@ -495,26 +539,9 @@
           return;
         }
 
-        // --- Mobile scrub timeline ---
-        scrubTL = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionEl,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 0.5,
-            onLeave: onMorphComplete,
-            onEnterBack: onMorphReverse,
-            invalidateOnRefresh: true,
-            onUpdate: () => {
-              // No _destroyLogoText() here — mobile never inits hover, and
-              // calling it would kill the scrubTL word-reveal tweens.
-              if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
-            }
-          }
-        });
-
-        // --- Dial: grow from small to large (centered, no position change) ---
+        // --- Morph geometry (identical to desktop buildTimeline) ---
         const dialRect = dialWrapper.getBoundingClientRect();
+        const midRect = middleSlot.getBoundingClientRect();
         const REF_R = 253;
         const TICK_RING_EXPAND = 1 + 24 / REF_R + 22.51 / REF_R + 1.686 / REF_R;
         const dialComp = document.querySelector('.dial_component[data-dial-ns="home"]');
@@ -529,29 +556,18 @@
             dialComp.removeChild(tmp);
           }
         }
-        // Move dial from bottom slot to middle slot center
-        const midRect = middleSlot.getBoundingClientRect();
         if (!dTargetSize) dTargetSize = Math.max(midRect.width, midRect.height) || 1;
         const dSourceMax = Math.max(dialRect.width, dialRect.height) || 1;
         const dScale = dTargetSize / dSourceMax;
         const dx = (midRect.left + midRect.width / 2) - (dialRect.left + dialRect.width / 2);
         const dy = (midRect.top + midRect.height / 2) - (dialRect.top + dialRect.height / 2);
 
-        scrubTL.to(dialWrapper, {
-          x: dx, y: dy, scale: dScale,
-          ease: 'power3.inOut', duration: MORPH
-        }, WORDS_END);
-
-        // --- Logo shrink + translate to nav (replaces fade-out) ---
         const navWrapper = document.querySelector('.nav_logo-wrapper-2.is-nav');
         const navLink = document.querySelector('.nav_logo-link') || topSlot;
-        const navWrapperRect = navWrapper
-          ? navWrapper.getBoundingClientRect()
-          : navLink.getBoundingClientRect();
+        const navWrapperRect = navWrapper ? navWrapper.getBoundingClientRect() : navLink.getBoundingClientRect();
         const logoRect = logoEl.getBoundingClientRect();
 
         const ilFirstSvg = logoEl.querySelector('svg');
-        // navWrapper is visibility:hidden until .rhp-home-ready; getBoundingClientRect() still returns layout rect
         const navFirstSvg = navWrapper && navWrapper.querySelector ? navWrapper.querySelector('svg') : null;
         let lScale;
         if (ilFirstSvg && navFirstSvg) {
@@ -568,53 +584,54 @@
         const lx = (navWrapperRect.left + navWrapperRect.width / 2) - ilLogoCenterX;
         const ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
 
+        // --- Morph-only scrub timeline (100svh, same as desktop) ---
+        scrubTL = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionEl,
+            start: 'top top',
+            end: '+=100%',
+            scrub: 0.5,
+            onLeave: onMorphComplete,
+            onEnterBack: onMorphReverse,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              // Interrupt word cycle on first scroll frame
+              if (self.progress > 0 && !_wordInterrupted) {
+                _interruptWordCycle();
+              }
+              if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
+            }
+          }
+        });
+
+        // Dial: move to middle slot + grow
+        scrubTL.to(dialWrapper, {
+          x: dx, y: dy, scale: dScale,
+          ease: 'power3.inOut', duration: 1
+        }, 0);
+
+        // Logo: shrink + move to nav
         scrubTL.to(logoEl, {
           x: lx, y: ly, scale: lScale,
-          ease: 'power3.inOut', duration: MORPH
-        }, WORDS_END);
+          ease: 'power3.inOut', duration: 1
+        }, 0);
 
-        // --- Step text: fade in near the end of the morph phase ---
+        // Step text: fade in at 90%
         if (stepTextEl) {
-          scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, WORDS_END + MORPH * 0.6);
-        }
-
-        // --- Mobile word reveal (bell curve per word) ---
-        if (logoSplitData.length) {
-          logoSplitData.forEach(d => {
-            const tgts = [d.upper, d.lower].filter(Boolean);
-            gsap.set(tgts, { opacity: 0 });
-            gsap.set(d.allWords, { yPercent: 100, opacity: 0 });
-          });
-
-          const SEG = WORDS_END / 3;  // each word's total segment
-          const IN_F  = 0.35;   // 35% of SEG: words slide in
-          const HOLD_F = 0.25;  // 25% of SEG: words hold on screen
-          const OUT_F  = 0.40;  // 40% of SEG: words slide out
-
-          logoSplitData.forEach((data, i) => {
-            const segStart = i * SEG;
-            const inDur    = SEG * IN_F;
-            const outStart = segStart + SEG * (IN_F + HOLD_F);
-            const outDur   = SEG * OUT_F;
-            const tgts = [data.upper, data.lower].filter(Boolean);
-
-            // IN: words slide up into mask
-            scrubTL.to(tgts, { opacity: 1, duration: inDur }, segStart);
-            scrubTL.to(data.allWords, {
-              yPercent: 0, opacity: 1, duration: inDur, ease: 'none'
-            }, segStart);
-
-            // HOLD: words stay visible (no tween — implicit plateau)
-
-            // OUT: words slide out above
-            scrubTL.to(data.allWords, {
-              yPercent: -100, opacity: 0, duration: outDur, ease: 'none'
-            }, outStart);
-            scrubTL.to(tgts, { opacity: 0, duration: outDur }, outStart);
-          });
+          scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, 0.9);
         }
 
         scrollTrigger = scrubTL.scrollTrigger || null;
+
+        // --- Timed word cycle (auto-plays independently of scroll) ---
+        logoSplitData.forEach(d => {
+          const tgts = [d.upper, d.lower].filter(Boolean);
+          gsap.set(tgts, { opacity: 0 });
+          gsap.set(d.allWords, { yPercent: 100, opacity: 0 });
+        });
+
+        wordTL = _buildWordCycleTL();
+        if (wordTL) wordTL.play();
       };
 
       if (_isDesktop()) {
@@ -884,10 +901,16 @@
     if (stepTextEl) gsap.set(stepTextEl, { opacity: 0 });
 
     // Re-init logo text split for the next forward play
+    // Restore text element visibility BEFORE splitting — SplitText needs
+    // layout measurements to compute inter-word whitespace. Elements were
+    // set to display:none + opacity:0 by _destroyLogoText()'s afterAll.
+    if (logoEl) {
+      logoEl.querySelectorAll('.is-about-upper, .is-about-lower').forEach(t => {
+        t.style.display = '';
+        t.style.opacity = '';
+      });
+    }
     _splitLogoText();
-    logoSplitData.forEach(({ upper, lower }) => {
-      [upper, lower].filter(Boolean).forEach(t => { t.style.display = ''; });
-    });
 
     // Lock dial during reverse
     if (window.RHP?.workDial?.setInteractionUnlocked) {
@@ -972,6 +995,8 @@
       if (c) window.gsap.set(c, { clearProps: 'opacity' });
       if (v) window.gsap.set(v, { clearProps: 'opacity' });
     }
+    if (wordTL) { wordTL.kill(); wordTL = null; }
+    _wordInterrupted = false;
     _destroyLogoText();
     if (_resizeHandler) {
       window.removeEventListener('resize', _resizeHandler);

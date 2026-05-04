@@ -454,13 +454,8 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   pointer-events: auto;
 }
 
-/* 300svh = mobile scrub track — if changed, update REVEAL/FLIP in home-scroll-morph.js buildMobileTimeline */
-@media (max-width: 991px) {
-  main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .section_home-intro {
-    height: 300svh;
-    min-height: 300svh;
-  }
-}
+/* Reverted 2026-05-04: was 300svh + fixed positioning for scroll-driven word reveal.
+   Now 100svh with timed word cycle. See git history to restore. */
 
 /* New: intro layout slots (home-scroll-morph.js uses Flip.fit to animate
    #interactive-logo from .home-intro_middle → .home-intro_top and
@@ -490,15 +485,6 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   justify-content: center;
 }
 
-/* Fixed so the dial stays in view during 300svh scroll; absolute would scroll off-screen */
-@media (max-width: 991px) {
-  .home-intro_bottom {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
 
 .home-transition-dial {
   width: var(--dial-small-width, 6rem);

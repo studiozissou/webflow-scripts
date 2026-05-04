@@ -1,7 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-28",
+  "updated": "2026-05-04",
   "queue": [
+    {
+      "id": "rhp-about-accordion-scroll",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "About page accordion-title click scrolls to accordion-content",
+      "spec": "../../.claude/specs/rhp-about-accordion-scroll.md",
+      "agent": "code-writer",
+      "created": "2026-05-04",
+      "note": "Click .accordion-title → Lenis scrollTo next sibling .accordion-content with offset = -titleHeight. Expose scrollTo on RHP.lenis API. New module about-accordion-scroll.js + lenis-manager.js tweak + orchestrator wire + init.js registration. ~49 LOC, 4 files."
+    },
     {
       "id": "rhp-mobile-nav-logo-reload",
       "project": "ready-hit-play-prod",
@@ -556,6 +568,18 @@
       "agent": "code-writer",
       "created": "2026-04-15",
       "note": "CSS selector change (remove namespace scoping, default opacity 0) + GSAP --fg-overlay-opacity tweens in runDialExpandAnimation, runDialShrinkAnimation, setDialToWorkState, setDialToHomeState, runAfterEnter. 2 files, <20 LOC. 0.3s power1.out, prefers-reduced-motion: instant."
+    },
+    {
+      "id": "rhp-about-swipers",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Replace Webflow sliders with Swiper.js crossfade on about page",
+      "spec": ".claude/specs/rhp-about-swipers.md",
+      "agent": "code-writer",
+      "created": "2026-05-04",
+      "note": "New about-swipers.js module (lazy-loads Swiper CDN via RHP.loadScript). Replaces about-slider-autoheight.js. Two instances: [data-slider=\"1\"] (4 CMS slides) and [data-slider=\"2\"] (3 CMS slides). Crossfade 750ms, autoplay 4s, pause-on-hover, swipe, no nav. Max-height via about-icon-scale.js CSS vars. 4 files: new module + init.js + orchestrator.js + CSS. ~135 LOC."
     }
   ]
 }

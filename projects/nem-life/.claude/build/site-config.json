@@ -37,5 +37,14 @@
   "constraints": {
     "noCodeEmbeds": true,
     "stagingOnly": true
+  },
+  "cdn": {
+    "repo": "studiozissou/nem-life",
+    "branch": "main",
+    "lastDeployedHash": "ed4f4b0",
+    "lastDeployed": "2026-04-30",
+    "entryPoint": "src/init.js",
+    "scriptTag": "<script src=\"https://cdn.jsdelivr.net/gh/studiozissou/nem-life@HASH/src/init.js?v=VERSION\"></script>",
+    "note": "init.js is a loader that pulls all modules from the same repo+hash. Deploy by pushing to studiozissou/nem-life, NOT webflow-scripts. The monorepo projects/nem-life/ is the working directory; copy changed files to a /tmp clone of nem-life for deploy."
   }
 }

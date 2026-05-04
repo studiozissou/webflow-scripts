@@ -1,0 +1,90 @@
+<!--
+  STORES TEMPLATE — JSON-LD Schema
+  Paste into: Stores CMS Collection Template → Page Settings → Custom Code → Head Code
+  Uses Webflow CMS binding syntax with &quot; entities and : for ref sub-fields.
+  CMS fields: slug, name, phone, email, store-image, street-address, city,
+  county, postcode, latitude, longitude, rating, review-count
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "AutoDealer",
+      "@id": "https://www.carsa.co.uk/stores/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#localbusiness",
+      "name": "Carsa — {{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "url": "https://www.carsa.co.uk/stores/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "telephone": "{{wf {&quot;path&quot;:&quot;phone&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "email": "{{wf {&quot;path&quot;:&quot;email&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "image": "{{wf {&quot;path&quot;:&quot;store-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "{{wf {&quot;path&quot;:&quot;street-address&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "addressLocality": "{{wf {&quot;path&quot;:&quot;city&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "addressRegion": "{{wf {&quot;path&quot;:&quot;county&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "postalCode": "{{wf {&quot;path&quot;:&quot;postcode&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "addressCountry": "GB"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "{{wf {&quot;path&quot;:&quot;latitude&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "longitude": "{{wf {&quot;path&quot;:&quot;longitude&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "opens": "09:00",
+          "closes": "19:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Saturday",
+          "opens": "09:00",
+          "closes": "18:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Sunday",
+          "opens": "10:00",
+          "closes": "17:00"
+        }
+      ],
+      "parentOrganization": { "@id": "https://www.carsa.co.uk/#organization" },
+      "priceRange": "$$",
+      "currenciesAccepted": "GBP",
+      "paymentAccepted": "Cash, Credit Card, Finance",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "{{wf {&quot;path&quot;:&quot;rating&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "reviewCount": "{{wf {&quot;path&quot;:&quot;review-count&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/stores/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Stores",
+          "item": "https://www.carsa.co.uk/stores"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        }
+      ]
+    }
+  ]
+}
+</script>

@@ -1,0 +1,40 @@
+<!--
+  VALUE CAR PAGE — JSON-LD Schema
+  Paste into: /value-car → Page Settings → Custom Code → Head Code
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.carsa.co.uk/value-car#webpage",
+      "url": "https://www.carsa.co.uk/value-car",
+      "name": "Value Your Car | Carsa",
+      "description": "Get a free online car valuation in seconds. See what your car is worth with Carsa's instant valuation tool.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [".section_hero h1", ".section_hero p"]
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/value-car#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Value Your Car"
+        }
+      ]
+    }
+  ]
+}
+</script>

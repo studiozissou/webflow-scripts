@@ -1,0 +1,154 @@
+<!--
+  MODELS TEMPLATE — JSON-LD Schema
+  Paste into head custom code on the Models CMS template page.
+  Uses Webflow CMS binding syntax with &quot; entities and : for ref sub-fields.
+  Models FAQ slugs: faq-1, faq-2, faq-3 ... faq-10
+  Make reference sub-fields: make:name, make:slug
+-->
+
+<!-- WebPage + BreadcrumbList — always present -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://www.carsa.co.uk/used-cars/models/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#webpage",
+      "url": "https://www.carsa.co.uk/used-cars/models/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "name": "Used {{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }} for Sale | Carsa",
+      "description": "{{wf {&quot;path&quot;:&quot;meta-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "image": "{{wf {&quot;path&quot;:&quot;photo&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "publisher": { "@id": "https://www.carsa.co.uk/#organization" },
+      "breadcrumb": { "@id": "https://www.carsa.co.uk/used-cars/models/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb" },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [".section_hero h1", ".section_hero p"]
+      },
+      "mainEntity": { "@id": "https://www.carsa.co.uk/used-cars/models/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#faq" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/used-cars/models/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Used Cars",
+          "item": "https://www.carsa.co.uk/used-cars"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+          "item": "https://www.carsa.co.uk/used-cars/make/{{wf {&quot;path&quot;:&quot;make:slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<!-- FAQPage — all 10 FAQ ref slots MUST be populated in Webflow CMS.
+     Empty slots will output blank Question nodes which Google rejects.
+     If a model has fewer than 10 FAQs, fill remaining slots with placeholder content. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "@id": "https://www.carsa.co.uk/used-cars/models/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#faq",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-1:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-1:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-2:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-2:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-3:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-3:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-4:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-4:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-5:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-5:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-6:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-6:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-7:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-7:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-8:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-8:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-9:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-9:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{wf {&quot;path&quot;:&quot;faq-10:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{wf {&quot;path&quot;:&quot;faq-10:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    }
+  ]
+}
+</script>

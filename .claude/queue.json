@@ -4,6 +4,17 @@
   "note": "carsa-make-model-switch-v2 added, supersedes model-redirect + prefill",
   "queue": [
     {
+      "id": "carsa-sitewide-schema",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Sitewide JSON-LD structured data for all Carsa page types",
+      "description": "27 HTML template files with JSON-LD schema for every page type on carsa.co.uk — Organization, WebSite, Product/Vehicle, Article, AutoDealer, Service, FAQPage, BreadcrumbList, and more. Optimised for Google Rich Results and AEO.",
+      "spec": ".claude/specs/carsa-sitewide-schema.md",
+      "created": "2026-05-04"
+    },
+    {
       "id": "carsa-model-redirect",
       "project": "carsa",
       "type": "feature",

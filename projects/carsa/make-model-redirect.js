@@ -215,6 +215,39 @@
       });
     }
 
+    // --- Prefill from page context (same-page guards prevent redirect loops) ---
+    var ctx = getPageContext();
+    if (ctx.type === 'make') {
+      // Find make name from slug
+      var prefillMake = Object.keys(_makeSlugMap).find(function (name) {
+        return _makeSlugMap[name] === ctx.slug;
+      }) || uniqueMakes.find(function (name) { return slugify(name) === ctx.slug; });
+      if (prefillMake) {
+        $makeDropdown.val(prefillMake);
+        populateModels(prefillMake);
+      }
+    } else if (ctx.type === 'model') {
+      // Find model name from slug
+      var prefillModel = Object.keys(_modelSlugMap).find(function (name) {
+        return _modelSlugMap[name] === ctx.slug;
+      }) || items.map(function (i) { return i.model; }).find(function (name) { return slugify(name) === ctx.slug; });
+      // Find its make
+      var prefillMake2 = null;
+      if (prefillModel) {
+        var modelItem = items.find(function (i) { return i.model === prefillModel; });
+        if (modelItem) prefillMake2 = modelItem.make;
+      }
+      // Fall back to URL param
+      if (!prefillMake2) prefillMake2 = new URLSearchParams(location.search).get('cars_make_equal');
+      if (prefillMake2) {
+        $makeDropdown.val(prefillMake2);
+        populateModels(prefillMake2);
+      }
+      if (prefillModel) {
+        $modelDropdown.val(prefillModel);
+      }
+    }
+
     // Bind mobile submit once
     bindMobileSubmit();
 
@@ -241,10 +274,28 @@
 
       // Always populate models
       populateModels(selectedMake);
-      $modelDropdown.val('').trigger('input');
+      $modelDropdown.val('');
+      $modelDropdown[0].dispatchEvent(new Event('input', { bubbles: true }));
+      $modelDropdown[0].dispatchEvent(new Event('change', { bubbles: true }));
       updateFacetVisibility();
 
       if (mobile) {
+        // On model page, selecting a different make → strip cars_model_equal from URL
+        if (ctx.type === 'model' && selectedMake) {
+          var currentPageMake = new URLSearchParams(location.search).get('cars_make_equal');
+          if (!currentPageMake) {
+            var pageModelItems = items.filter(function (i) {
+              return (_modelSlugMap[i.model] || slugify(i.model)) === ctx.slug;
+            });
+            if (pageModelItems.length) currentPageMake = pageModelItems[0].make;
+          }
+          if (selectedMake !== currentPageMake) {
+            var cleanParams = new URLSearchParams(location.search);
+            cleanParams.delete('cars_model_equal');
+            var cleanUrl = location.pathname + (cleanParams.toString() ? '?' + cleanParams.toString() : '');
+            history.replaceState(null, '', cleanUrl);
+          }
+        }
         // Mobile (all pages): compute + prefetch, defer redirect
         pendingRedirectURL = computeRedirectURL();
         prefetchURL(pendingRedirectURL);

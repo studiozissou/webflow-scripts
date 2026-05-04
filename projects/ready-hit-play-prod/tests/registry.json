@@ -1,10 +1,10 @@
 {
   "version": 1,
   "lastUpdated": "2026-05-04",
-  "lastRegistered": "rhp-about-accordion-scroll",
-  "note": "Deploy 115b530 (2026-04-29): fix stale r→w ref in resize() that broke IDLE→ACTIVE dial transition. Tests skipped by user.",
-  "lastDeployed": "2026-04-29",
-  "lastDeployedHash": "115b530",
+  "lastRegistered": "fix-dial-step-text-and-work-to-about",
+  "note": "Deploy 06d5b4d (2026-05-04): about-swipers + accordion-scroll modules, Carsa prefill, Nem Life multi-swiper. Tests skipped by user.",
+  "lastDeployed": "2026-05-04",
+  "lastDeployedHash": "06d5b4d",
   "entries": [
     {
       "id": "smoke",
@@ -425,6 +425,16 @@
       "slug": "rhp-about-swipers",
       "created": "2026-05-04",
       "description": "About page Swiper.js crossfade sliders — init, autoplay, Barba re-entry, reduced motion, max-height constraint"
+    },
+    {
+      "id": "fix-dial-step-text-and-work-to-about",
+      "file": "tests/acceptance/fix-dial-step-text-and-work-to-about.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-dial-step-text-and-work-to-about",
+      "created": "2026-05-04",
+      "description": "Dial step text reset on Barba re-entry + work→about curtain-only transition — round-trip text content, console errors, reduced motion"
     },
     {
       "id": "rhp-about-accordion-scroll",

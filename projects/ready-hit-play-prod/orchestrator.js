@@ -1868,7 +1868,10 @@
               : undefined;
           },
           afterEnter(data) {
-            // Now the curtain covers the viewport — safe to tear down home
+            // Guard: ensure about container is visible even if curtain tween was killed
+            if (data.next?.container && window.gsap) {
+              window.gsap.set(data.next.container, { visibility: 'visible' });
+            }
             RHP.views.home?.destroy?.();
             RHP.videoLoader?.destroy?.();
             runAfterEnter(data);
@@ -1916,7 +1919,10 @@
               : undefined;
           },
           afterEnter(data) {
-            // Curtain now covers viewport — safe to tear down work state
+            // Guard: ensure about container is visible even if curtain tween was killed
+            if (data.next?.container && window.gsap) {
+              window.gsap.set(data.next.container, { visibility: 'visible' });
+            }
             const prevNs = data.current?.namespace || currentNs;
             if (prevNs && RHP.views[prevNs]?.destroy) RHP.views[prevNs].destroy();
             RHP.workDial?.destroy?.();

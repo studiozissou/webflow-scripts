@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.5.5.3';
+  const VERSION = '2026.5.5.4';
   const DEBUG = false;
 
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
@@ -34,6 +34,7 @@
   let dialEl = null;           // .dial_component[data-dial-ns="home"]
   let stepTextEl = null;       // step text element
   let _resizeHandler = null;   // stored bound ref so destroy() can remove it
+  let _vpResizeHandler = null;  // visualViewport resize listener for iOS bar sync
   let _mobileScrollSnap = null; // iOS toolbar scroll-snap cleanup function
   let _replaying = false;      // true during the reverse-morph tween in replay()
   let _arrivedViaBarba = false; // true after skipToEnd() (Barba re-entry), false on fresh load
@@ -362,6 +363,16 @@
       return;
     }
 
+    // Barba re-entry guard: if .section_home-intro is hidden (display:none from
+    // a previous morph completion), the ScrollTrigger scrub can't function (0-height
+    // trigger). Redirect to skipToEnd() which lands in the final state instantly.
+    // This handles the case where rhp-core fallback runs about→home instead of the
+    // named about-to-home transition (which does a full page reload).
+    if (sectionEl && getComputedStyle(sectionEl).display === 'none') {
+      skipToEnd(container);
+      return;
+    }
+
     initialised = true;
     _arrivedViaBarba = false;
 
@@ -618,6 +629,13 @@
         });
 
         const morphTL = scrubTL; // capture ref
+        const skipToMorph = () => {
+          if (complete) return;
+          if (wordTL) { wordTL.kill(); wordTL = null; }
+          _destroyLogoText();
+          morphTL.play();
+        };
+
         wordTL = _buildWordCycleTL();
         if (wordTL) {
           // After word cycle finishes, play the morph automatically
@@ -629,6 +647,19 @@
         } else {
           // No word cycle (no logo splits) — play morph immediately
           morphTL.play();
+        }
+
+        // Tap dial to skip word cycle and snap straight to morph
+        const onDialTap = () => {
+          dialEl.removeEventListener('click', onDialTap);
+          skipToMorph();
+        };
+        if (dialEl) {
+          dialEl.addEventListener('click', onDialTap);
+          _mobileScrollSnap = () => {
+            dialEl.removeEventListener('click', onDialTap);
+            _mobileScrollSnap = null;
+          };
         }
       };
 
@@ -747,12 +778,20 @@
     window.scrollTo(0, 0);
     if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
 
-    // Mobile: clear any inline height so CSS 100dvh on .dial_component
-    // takes over. The scroll lock (body/html 100dvh + overflow:hidden)
-    // ensures the parent chain fills the dynamic viewport.
+    // Mobile: freeze component height to current viewport so the layout
+    // is immune to dvh/lvh fluctuations. Also listen for visualViewport
+    // resize so the height updates when iOS hides/shows the browser bar.
     if (!_isDesktop() && dialEl) {
-      dialEl.style.height = '';
-      DEBUG && console.log('[morph-debug] cleared inline height, CSS 100dvh active');
+      const syncHeight = () => {
+        const h = window.visualViewport?.height ?? window.innerHeight;
+        dialEl.style.height = h + 'px';
+        DEBUG && console.log('[morph-debug] synced height:', h);
+      };
+      syncHeight();
+      if (window.visualViewport) {
+        _vpResizeHandler = syncHeight;
+        window.visualViewport.addEventListener('resize', _vpResizeHandler);
+      }
     }
 
     redrawDialCanvas();
@@ -858,6 +897,14 @@
     // inline style so the class toggle / CSS owns the final state.
     if (stepTextEl && window.gsap) {
       window.gsap.set(stepTextEl, { clearProps: 'opacity' });
+    }
+
+    // CSS rule [data-dial-ns="home"] .dial_layer-fg { opacity: 0 } hides the
+    // fg layer by default. After runAfterEnter clears all inline styles, the
+    // layer goes invisible. Assert opacity:1 so the dial is visible immediately.
+    const dialFg = document.querySelector('.dial_layer-fg');
+    if (dialFg && window.gsap) {
+      window.gsap.set(dialFg, { opacity: 1 });
     }
 
     complete = true;
@@ -999,6 +1046,10 @@
     if (_resizeHandler) {
       window.removeEventListener('resize', _resizeHandler);
       _resizeHandler = null;
+    }
+    if (_vpResizeHandler && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', _vpResizeHandler);
+      _vpResizeHandler = null;
     }
     // Remove intro-small class if still present
     if (dialEl) dialEl.classList.remove('is-intro-small');

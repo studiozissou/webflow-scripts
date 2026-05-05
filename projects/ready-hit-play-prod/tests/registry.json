@@ -1,10 +1,10 @@
 {
   "version": 1,
   "lastUpdated": "2026-05-05",
-  "lastRegistered": "fix-about-slider-desktop-only-height",
-  "note": "Deploy 68bf6c4 (2026-05-05): about slider height desktop-only, auto on mobile. Tests skipped by user.",
+  "lastRegistered": "fix-overland-mobile-dropdown-ix2",
+  "note": "Deploy 4594092 (2026-05-05): Overland AI mobile dropdown GSAP animations. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
-  "lastDeployedHash": "68bf6c4",
+  "lastDeployedHash": "4594092",
   "entries": [
     {
       "id": "smoke",

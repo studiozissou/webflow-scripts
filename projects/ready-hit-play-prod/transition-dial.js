@@ -48,9 +48,9 @@
       const dpr = window.devicePixelRatio || 1;
       geom.dpr = dpr;
 
-      // Size the backing buffer to match the wrapper's visual size (includes
-      // CSS transforms like GSAP scale). Called on every scroll frame during
-      // the home-scroll-morph scrub — skip if backing size hasn't changed.
+      // Size the backing buffer to match the wrapper's visual size. Called on
+      // every scroll frame during the home-scroll-morph scrub (which tweens
+      // wrapper width/height) — skip if backing size hasn't changed.
       const parent = canvas.parentElement;
       const r = parent.getBoundingClientRect();
       const size = Math.round(Math.min(r.width, r.height)) || 96;

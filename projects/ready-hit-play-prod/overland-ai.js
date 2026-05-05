@@ -3,7 +3,7 @@
    - Grid hover: dim other items, show cover video (desktop ≥992px) — GSAP
    - Mobile dropdowns: GSAP slide/colour animations + video autoplay
    - Loaded only on /work/overland-ai
-   v2026.5.5.1
+   v2026.5.5.2
    ========================================= */
 (() => {
   window.RHP = window.RHP || {};
@@ -122,6 +122,7 @@
 
   const benefitObservers = [];
   let _mobileCtx = null;
+  let _toggleAbort = null;
 
   function initMobileDropdowns(container) {
     const ctx = container || document;
@@ -130,6 +131,8 @@
     benefitObservers.forEach((o) => o.disconnect());
     benefitObservers.length = 0;
     if (_mobileCtx) { _mobileCtx.revert(); _mobileCtx = null; }
+    if (_toggleAbort) { _toggleAbort.abort(); }
+    _toggleAbort = new AbortController();
 
     const dropdowns = ctx.querySelectorAll('.benefits_dropdown-list-mobile');
     if (!dropdowns.length) return;
@@ -150,6 +153,40 @@
       _mobileCtx = gsap.context(() => {
         // Context scope — GSAP inline styles will be cleaned up on revert
       });
+    }
+
+    /* ── Fallback toggle handler ──
+       Webflow's dropdown module doesn't survive Barba transitions.
+       We manually toggle w--open + display so the MutationObserver fires. */
+    function bindToggleFallback(dropdownEl) {
+      const toggle = dropdownEl.querySelector('.benefits_dropdown-toggle-mobile');
+      const list = dropdownEl.querySelector('.benefits_dropdown-list-mobile');
+      if (!toggle || !list) return;
+
+      toggle.addEventListener('click', (e) => {
+        // If Webflow's dropdown module is active, let it handle the toggle
+        if (window.Webflow?.require?.('dropdown')) return;
+        if (window.innerWidth >= DESKTOP_BP) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isOpen = list.classList.contains('w--open');
+        if (isOpen) {
+          list.classList.remove('w--open');
+          list.style.display = 'none';
+        } else {
+          // Close any other open dropdowns first
+          ctx.querySelectorAll('.benefits_dropdown-list-mobile.w--open').forEach((other) => {
+            if (other !== list) {
+              other.classList.remove('w--open');
+              other.style.display = 'none';
+            }
+          });
+          list.classList.add('w--open');
+          list.style.display = 'block';
+        }
+      }, { signal: _toggleAbort.signal });
     }
 
     function handleClassChange(mutationsList) {
@@ -202,6 +239,11 @@
       }
     }
 
+    // Bind fallback toggle handlers + observers on each dropdown
+    ctx.querySelectorAll('.benefits_dropdown-mobile').forEach((dropdownEl) => {
+      bindToggleFallback(dropdownEl);
+    });
+
     dropdowns.forEach((dropdown) => {
       const observer = new MutationObserver(handleClassChange);
       observer.observe(dropdown, {
@@ -225,11 +267,12 @@
   function destroy() {
     if (_gsapCtx) { _gsapCtx.revert(); _gsapCtx = null; }
     if (_mobileCtx) { _mobileCtx.revert(); _mobileCtx = null; }
+    if (_toggleAbort) { _toggleAbort.abort(); _toggleAbort = null; }
     benefitObservers.forEach((o) => o.disconnect());
     benefitObservers.length = 0;
   }
 
-  RHP.overlandAI = { init, destroy, isOverlandPage, version: '2026.5.5.1' };
+  RHP.overlandAI = { init, destroy, isOverlandPage, version: '2026.5.5.2' };
 
   function onReady() {
     init(document);

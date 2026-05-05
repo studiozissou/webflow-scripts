@@ -1,7 +1,8 @@
 {
   "version": 1,
   "lastUpdated": "2026-05-05",
-  "lastRegistered": "fix-overland-mobile-dropdown-ix2",
+  "lastPlanned": "feat-page-loader",
+  "lastRegistered": "feat-page-loader",
   "note": "Deploy 4594092 (2026-05-05): Overland AI mobile dropdown GSAP animations. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
   "lastDeployedHash": "4594092",
@@ -515,6 +516,26 @@
       "slug": "fix-overland-mobile-dropdown-ix2",
       "created": "2026-05-05",
       "description": "Overland AI mobile dropdown IX2→GSAP migration — open/close animations, colour changes, Barba lifecycle, reduced motion"
+    },
+    {
+      "id": "fix-mobile-dial-skip-and-idle-after-morph",
+      "file": "tests/acceptance/fix-mobile-dial-skip-and-idle-after-morph.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-mobile-dial-skip-and-idle-after-morph",
+      "created": "2026-05-05",
+      "description": "Mobile dial — pointerdown skip during word cycle, IDLE after morph, first-tap-anywhere activation, desktop regression, reduced motion"
+    },
+    {
+      "id": "feat-page-loader",
+      "file": "tests/acceptance/feat-page-loader.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-page-loader",
+      "created": "2026-05-05",
+      "description": "Page loader — dismiss on scriptsOk, DOM removal, no console errors, reduced motion, Barba lifecycle"
     }
   ]
 }

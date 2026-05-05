@@ -530,16 +530,9 @@
         gsap.set(logoEl, { clearProps: FLIP_CLEAR });
 
         if (prefersReduced()) {
-          // Reduced motion: complete immediately on any touch
-          const onTouch = () => {
-            window.removeEventListener('touchstart', onTouch);
-            onMorphComplete();
-          };
-          window.addEventListener('touchstart', onTouch, { passive: true });
-          _mobileScrollSnap = () => {
-            window.removeEventListener('touchstart', onTouch);
-            _mobileScrollSnap = null;
-          };
+          // Reduced motion: skip straight to completion after word cycle
+          if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
+          onMorphComplete();
           return;
         }
 
@@ -614,42 +607,29 @@
           scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, 0.9);
         }
 
-        // --- Detect any downward swipe and play the morph ---
-        let startY = 0;
-        const SWIPE_THRESHOLD = 10; // px — any deliberate downward touch
-        const onTouchStart = (e) => {
-          if (complete) return;
-          startY = e.touches[0].clientY;
-        };
-        const onTouchMove = (e) => {
-          if (complete) return;
-          const dy = startY - e.touches[0].clientY;
-          if (dy > SWIPE_THRESHOLD) {
-            // Downward swipe detected — lock scroll, kill word cycle, play morph
-            window.removeEventListener('touchstart', onTouchStart);
-            window.removeEventListener('touchmove', onTouchMove);
-            if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
-            _interruptWordCycle();
-            scrubTL.play();
-          }
-        };
-        window.addEventListener('touchstart', onTouchStart, { passive: true });
-        window.addEventListener('touchmove', onTouchMove, { passive: true });
-        _mobileScrollSnap = () => {
-          window.removeEventListener('touchstart', onTouchStart);
-          window.removeEventListener('touchmove', onTouchMove);
-          _mobileScrollSnap = null;
-        };
+        // --- Timed word cycle → auto-play morph on completion ---
+        // Lock scroll so the page doesn't move during the word cycle or morph.
+        if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
 
-        // --- Timed word cycle (auto-plays independently of touch) ---
         logoSplitData.forEach(d => {
           const tgts = [d.upper, d.lower].filter(Boolean);
           gsap.set(tgts, { opacity: 0 });
           gsap.set(d.allWords, { yPercent: 100, opacity: 0 });
         });
 
+        const morphTL = scrubTL; // capture ref
         wordTL = _buildWordCycleTL();
-        if (wordTL) wordTL.play();
+        if (wordTL) {
+          // After word cycle finishes, play the morph automatically
+          wordTL.eventCallback('onComplete', () => {
+            _destroyLogoText();
+            if (!complete) morphTL.play();
+          });
+          wordTL.play();
+        } else {
+          // No word cycle (no logo splits) — play morph immediately
+          morphTL.play();
+        }
       };
 
       if (_isDesktop()) {

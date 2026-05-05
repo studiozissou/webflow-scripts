@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.5.4.2';
+  const VERSION = '2026.5.5.1';
   const DEBUG = false;
 
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
@@ -600,6 +600,12 @@
                 _interruptWordCycle();
               }
               if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
+              // iOS dynamic toolbar: hiding the bar increases innerHeight,
+              // shrinking max scroll distance so progress can never reach 1.0
+              // with a slow scroll. Snap to complete when close enough.
+              if (self.progress > 0.97 && !complete) {
+                onMorphComplete();
+              }
             }
           }
         });

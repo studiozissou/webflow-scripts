@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-05-04",
+  "lastUpdated": "2026-05-05",
   "lastRegistered": "rhp-mobile-intro-timed-words",
   "note": "Deploy d62ee5b (2026-05-05): mobile auto-morph after word cycle. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
@@ -465,6 +465,16 @@
       "slug": "rhp-mobile-intro-timed-words",
       "created": "2026-05-04",
       "description": "Mobile home intro — timed word cycle (not scroll-driven), 100svh section, scroll morph identical to desktop, reduced motion, Barba re-entry"
+    },
+    {
+      "id": "fix-about-transition-stuck",
+      "file": "tests/acceptance/fix-about-transition-stuck.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "slug": "fix-about-transition-stuck",
+      "created": "2026-05-05",
+      "description": "Rapid morph→about navigation — Promise resolution safety, container visibility guard, dial namespace, further nav not stuck, reduced motion"
     }
   ]
 }

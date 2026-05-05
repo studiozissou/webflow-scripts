@@ -1,7 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-05-04",
+  "updated": "2026-05-05",
   "queue": [
+    {
+      "id": "fix-about-transition-stuck",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Fix about page stuck after rapid morph completion — Promise never resolves",
+      "spec": ".claude/specs/fix-about-transition-stuck.md",
+      "agent": "code-writer",
+      "created": "2026-05-05",
+      "note": "Add onInterrupt + delayedCall safety to curtain tween Promise in leaveHomeToAbout(). Add visibility guard in orchestrator afterEnter. 2 files, ~15 LOC."
+    },
     {
       "id": "rhp-mobile-intro-timed-words",
       "project": "ready-hit-play-prod",

@@ -68,7 +68,21 @@
     }
 
     return new Promise(function (resolve) {
+      var resolved = false;
+      var safety = null;
+      function safeResolve() {
+        if (resolved) return;
+        resolved = true;
+        if (safety) safety.kill();
+        if (nextContainer) g.set(nextContainer, { visibility: 'visible' });
+        resolve();
+      }
+
       g.set(curtainEl, { display: 'block' });
+
+      // Belt-and-suspenders: resolve after 2s regardless
+      safety = g.delayedCall(2, safeResolve);
+
       g.fromTo(
         curtainEl,
         { x: '-100vw' },
@@ -76,11 +90,9 @@
           x: 0,
           duration: 1.5,
           ease: 'power4.out',
-          onComplete: function () {
-            // Curtain covers viewport — safe to show about container behind it
-            if (nextContainer) g.set(nextContainer, { visibility: 'visible' });
-            resolve();
-          }
+          overwrite: true,
+          onComplete: safeResolve,
+          onInterrupt: safeResolve
         }
       );
     });

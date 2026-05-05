@@ -15,10 +15,10 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.5.5.1';
+  const VERSION = '2026.5.5.2';
   const DEBUG = false;
 
-  const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
+  const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,width,height,maxWidth';
 
   let ctx = null;
   let scrubTL = null;
@@ -496,9 +496,14 @@
           }
         });
 
-        // Dial: move to middle slot center + grow (uniform scale)
+        // Dial: move to middle slot center + grow via width/height (not
+        // transform scale — Safari rasterises the compositing layer at layout
+        // size and scales the bitmap, causing visible pixelation).
+        // As the wrapper grows, flex centering in the bottom-anchored parent
+        // shifts its center upward by half the size delta — compensate in dy.
+        const dyCenterShift = (dTargetSize - dSourceMax) / 2;
         scrubTL.to(dialWrapper, {
-          x: dx, y: dy, scale: dScale,
+          x: dx, y: dy + dyCenterShift, width: dTargetSize, height: dTargetSize,
           ease: 'power3.inOut', duration: 1
         }, 0);
 
@@ -610,9 +615,10 @@
           }
         });
 
-        // Dial: move to middle slot + grow
+        // Dial: move to middle slot + grow (width/height, not scale — Safari fix)
+        const dyCenterShift = (dTargetSize - dSourceMax) / 2;
         scrubTL.to(dialWrapper, {
-          x: dx, y: dy, scale: dScale,
+          x: dx, y: dy + dyCenterShift, width: dTargetSize, height: dTargetSize,
           ease: 'power3.inOut', duration: 1
         }, 0);
 
@@ -755,12 +761,12 @@
     window.scrollTo(0, 0);
     if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
 
-    // Mobile: freeze component height to window.innerHeight so the layout
-    // is immune to dvh/lvh fluctuations when iOS browser bars show/hide.
+    // Mobile: use 100dvh so the component always fills available space,
+    // even after iOS hides the browser bar. Scroll is locked post-morph
+    // so dvh won't fluctuate.
     if (!_isDesktop() && dialEl) {
-      const h = window.innerHeight;
-      dialEl.style.height = h + 'px';
-      DEBUG && console.log('[morph-debug] froze height:', h, 'visualVP:', window.visualViewport?.height);
+      dialEl.style.height = '100dvh';
+      DEBUG && console.log('[morph-debug] set height to 100dvh, innerH:', window.innerHeight);
     }
 
     redrawDialCanvas();

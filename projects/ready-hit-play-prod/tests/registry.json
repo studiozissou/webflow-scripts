@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-05-05",
   "lastRegistered": "fix-about-slider-desktop-only-height",
-  "note": "Deploy 7e96adf (2026-05-05): morph 90% snap, about-to-home leave hook, preconnect. Tests skipped by user.",
+  "note": "Deploy 68bf6c4 (2026-05-05): about slider height desktop-only, auto on mobile. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
-  "lastDeployedHash": "7e96adf",
+  "lastDeployedHash": "68bf6c4",
   "entries": [
     {
       "id": "smoke",

@@ -34,6 +34,7 @@
   let dialEl = null;           // .dial_component[data-dial-ns="home"]
   let stepTextEl = null;       // step text element
   let _resizeHandler = null;   // stored bound ref so destroy() can remove it
+  let _mobileScrollSnap = null; // iOS toolbar scroll-snap cleanup function
   let _replaying = false;      // true during the reverse-morph tween in replay()
   let _arrivedViaBarba = false; // true after skipToEnd() (Barba re-entry), false on fresh load
   let logoHoverCleanup = [];   // mouseenter/mouseleave removers
@@ -69,6 +70,7 @@
       scrollTrigger = null;
     }
     if (wordTL) { wordTL.kill(); wordTL = null; _wordInterrupted = false; }
+    if (_mobileScrollSnap) _mobileScrollSnap();
   }
 
   /** Returns the Barba wrapper (or body as fallback) for class-toggle scope. */
@@ -600,12 +602,6 @@
                 _interruptWordCycle();
               }
               if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
-              // iOS dynamic toolbar: hiding the bar increases innerHeight,
-              // shrinking max scroll distance so progress can never reach 1.0
-              // with a slow scroll. Snap to complete when close enough.
-              if (self.progress > 0.97 && !complete) {
-                onMorphComplete();
-              }
             }
           }
         });
@@ -628,6 +624,33 @@
         }
 
         scrollTrigger = scrubTL.scrollTrigger || null;
+
+        // --- iOS dynamic toolbar scroll-snap ---
+        // The toolbar hiding increases innerHeight, shrinking max scroll
+        // distance so ScrollTrigger's onLeave never fires. Neither onUpdate
+        // nor the scroll event fire once iOS settles at the reduced max.
+        // Fix: on touchend + a short delay (iOS settles ~100ms after lift),
+        // check if we're near the end and force completion.
+        if (_mobileScrollSnap) _mobileScrollSnap();
+        const stRef = scrollTrigger;
+        const onTouchEnd = () => {
+          if (complete || !stRef) return;
+          setTimeout(() => {
+            if (complete) return;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollY = window.scrollY || window.pageYOffset;
+            // If the user has scrolled to within 60px of the page bottom
+            // (or is at the actual bottom), snap to complete.
+            if (maxScroll > 0 && (maxScroll - scrollY) < 60) {
+              onMorphComplete();
+            }
+          }, 150);
+        };
+        window.addEventListener('touchend', onTouchEnd, { passive: true });
+        _mobileScrollSnap = () => {
+          window.removeEventListener('touchend', onTouchEnd);
+          _mobileScrollSnap = null;
+        };
 
         // --- Timed word cycle (auto-plays independently of scroll) ---
         logoSplitData.forEach(d => {

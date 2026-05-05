@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-05-04",
   "lastRegistered": "rhp-mobile-intro-timed-words",
-  "note": "Deploy 29d2bdb (2026-05-05): mobile swipe-triggered morph (no ScrollTrigger). Tests skipped by user.",
+  "note": "Deploy d62ee5b (2026-05-05): mobile auto-morph after word cycle. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
-  "lastDeployedHash": "29d2bdb",
+  "lastDeployedHash": "d62ee5b",
   "entries": [
     {
       "id": "smoke",

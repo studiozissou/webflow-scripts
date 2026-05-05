@@ -3,6 +3,18 @@
   "updated": "2026-05-05",
   "queue": [
     {
+      "id": "fix-mobile-dial-skip-and-idle-after-morph",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Mobile dial: pointerdown skip during word cycle + IDLE after morph with first-tap-anywhere activation",
+      "spec": ".claude/specs/fix-mobile-dial-skip-and-idle-after-morph.md",
+      "agent": "code-writer",
+      "created": "2026-05-05",
+      "note": "Feature 1: Swap click→pointerdown on dialEl tap-to-skip in buildMobileTimeline(). Feature 2: Remove forceActive() call in finalize(), add one-time document pointerdown listener that calls forceActive() on first tap. Cleanup in destroy(). 1 file (home-scroll-morph.js), ~25 LOC."
+    },
+    {
       "id": "fix-overland-mobile-dropdown-ix2",
       "project": "ready-hit-play-prod",
       "type": "fix",

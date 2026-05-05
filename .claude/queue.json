@@ -92,6 +92,17 @@
       "created": "2026-04-23"
     },
     {
+      "id": "feat-page-loader",
+      "project": "ready-hit-play",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Page loader on uncached load — CSS fade on scriptsOk",
+      "description": "Show .loader container on all pages during uncached load. Pure CSS transition + class toggle on <html>. Fades out (0.4s) when RHP.scriptsOk is set, then removed from DOM. Changes: init.js (extend inline style + add class toggle after scriptsOk) + ready-hit-play.css (permanent loader rules). No new module.",
+      "spec": ".claude/specs/feat-page-loader.md",
+      "created": "2026-05-05"
+    },
+    {
       "id": "cm-custom-code-migration",
       "project": "courtesy-masters",
       "type": "feature",

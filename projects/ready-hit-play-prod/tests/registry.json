@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-05-04",
   "lastRegistered": "rhp-mobile-intro-timed-words",
-  "note": "Deploy 44a7dee (2026-05-04): swiper slide height via flexbox, remove autoHeight. Tests skipped by user.",
-  "lastDeployed": "2026-05-04",
-  "lastDeployedHash": "44a7dee",
+  "note": "Deploy 203194b (2026-05-05): timed mobile word cycle, about→home reload, SplitText restore, overwrite cleanup. 228 passed, 8 flaky, pre-existing failures accepted.",
+  "lastDeployed": "2026-05-05",
+  "lastDeployedHash": "203194b",
   "entries": [
     {
       "id": "smoke",

@@ -1,9 +1,9 @@
 /* =========================================
    RHP — Overland AI case study (page-specific)
    - Grid hover: dim other items, show cover video (desktop ≥992px) — GSAP
-   - Benefit video autoplay: play when mobile dropdown opens, pause when closes
+   - Mobile dropdowns: GSAP slide/colour animations + video autoplay
    - Loaded only on /work/overland-ai
-   v2026.3.18.1
+   v2026.5.5.1
    ========================================= */
 (() => {
   window.RHP = window.RHP || {};
@@ -13,10 +13,16 @@
     return /\/work\/overland-ai(\/|$)/.test(window.location.pathname);
   }
 
+  /* ── Constants ── */
+
+  const DESKTOP_BP = 992;
+  const MOBILE_ORANGE = '#F34E0C';
+  const TEAL = 'rgb(98, 116, 111)';
+  const CORNER_DEFAULT_BORDER = 'rgb(217, 229, 231)';
+
   /* ── Desktop grid hover (GSAP) ── */
 
   let _gsapCtx = null;
-  const DESKTOP_BP = 992;
 
   function initGridHover(container) {
     const gsap = window.gsap;
@@ -112,23 +118,47 @@
     DEBUG && console.log('[overland-ai] grid hover init:', wrappers.length, 'items');
   }
 
-  /* ── Mobile benefit video autoplay ── */
+  /* ── Mobile dropdowns (video autoplay + GSAP animations) ── */
 
   const benefitObservers = [];
+  let _mobileCtx = null;
 
-  function initBenefitVideoAutoplay(container) {
+  function initMobileDropdowns(container) {
     const ctx = container || document;
+    const gsap = window.gsap;
+
     benefitObservers.forEach((o) => o.disconnect());
     benefitObservers.length = 0;
+    if (_mobileCtx) { _mobileCtx.revert(); _mobileCtx = null; }
 
     const dropdowns = ctx.querySelectorAll('.benefits_dropdown-list-mobile');
     if (!dropdowns.length) return;
+
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Helper: animate or set instantly based on reduced-motion preference
+    function animate(targets, props) {
+      if (!gsap || !targets) return;
+      if (motionQuery.matches) {
+        gsap.set(targets, props);
+      } else {
+        gsap.to(targets, props);
+      }
+    }
+
+    if (gsap) {
+      _mobileCtx = gsap.context(() => {
+        // Context scope — GSAP inline styles will be cleaned up on revert
+      });
+    }
 
     function handleClassChange(mutationsList) {
       for (let i = 0; i < mutationsList.length; i++) {
         const mutation = mutationsList[i];
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
           const targetElement = mutation.target;
+
+          /* ── Video play/pause (existing logic) ── */
           const video = targetElement.querySelector('.grid_cover-image-mobile > video');
           const button = targetElement.querySelector('.grid_cover-image-mobile > div > button');
 
@@ -138,6 +168,35 @@
             } else if (!targetElement.classList.contains('w--open') && !video.paused) {
               button.click();
             }
+          }
+
+          /* ── GSAP dropdown animations (mobile only) ── */
+          if (!gsap || window.innerWidth >= DESKTOP_BP) continue;
+
+          const dropdown = targetElement.closest('.benefits_dropdown-mobile');
+          const toggle = dropdown?.querySelector('.benefits_dropdown-toggle-mobile');
+          const list = targetElement;
+          const corners = toggle?.querySelectorAll('.grid-corner');
+          const logo = toggle?.querySelector('.key-benefits_logo');
+          const textSmall = toggle?.querySelector('.text-size-small');
+
+          if (_mobileCtx) {
+            _mobileCtx.add(() => {
+              if (targetElement.classList.contains('w--open')) {
+                // OPEN — matches IX2 action list "a"
+                if (!motionQuery.matches) gsap.set(list, { y: '10%', opacity: 0 });
+                animate(corners, { borderColor: MOBILE_ORANGE, duration: 0.3, delay: 0.1, overwrite: true });
+                animate(logo, { color: MOBILE_ORANGE, duration: 0.3, delay: 0.1, overwrite: true });
+                animate(textSmall, { color: '#fff', duration: 0.3, delay: 0.1, overwrite: true });
+                animate(list, { y: '0%', opacity: 1, duration: 0.3, delay: 0.1, ease: 'power1.out', overwrite: true });
+              } else {
+                // CLOSE — matches IX2 action list "a-2"
+                animate(corners, { borderColor: CORNER_DEFAULT_BORDER, duration: 0.3, overwrite: true });
+                animate(logo, { color: TEAL, duration: 0.3, overwrite: true });
+                animate(textSmall, { color: TEAL, duration: 0.3, overwrite: true });
+                animate(list, { y: '10%', opacity: 0, duration: 0.3, ease: 'power1.in', overwrite: true });
+              }
+            });
           }
         }
       }
@@ -151,6 +210,8 @@
       });
       benefitObservers.push(observer);
     });
+
+    DEBUG && console.log('[overland-ai] mobile dropdowns init:', dropdowns.length, 'dropdowns');
   }
 
   /* ── Lifecycle ── */
@@ -158,16 +219,17 @@
   function init(container) {
     if (!isOverlandPage()) return;
     initGridHover(container);
-    initBenefitVideoAutoplay(container);
+    initMobileDropdowns(container);
   }
 
   function destroy() {
     if (_gsapCtx) { _gsapCtx.revert(); _gsapCtx = null; }
+    if (_mobileCtx) { _mobileCtx.revert(); _mobileCtx = null; }
     benefitObservers.forEach((o) => o.disconnect());
     benefitObservers.length = 0;
   }
 
-  RHP.overlandAI = { init, destroy, isOverlandPage, version: '2026.3.18.1' };
+  RHP.overlandAI = { init, destroy, isOverlandPage, version: '2026.5.5.1' };
 
   function onReady() {
     init(document);

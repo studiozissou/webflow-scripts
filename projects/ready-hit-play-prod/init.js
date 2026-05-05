@@ -72,7 +72,7 @@
       'https://cdn.prod.website-files.com/gsap/3.14.2/ScrollTrigger.min.js',
       'https://cdn.prod.website-files.com/gsap/3.14.2/ScrambleTextPlugin.min.js',
       'https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/Flip.min.js',
-      'https://unpkg.com/@barba/core',
+      'https://unpkg.com/@barba/core@2.10.3/dist/barba.umd.js',
       'https://unpkg.com/lenis@1.3.17/dist/lenis.min.js',
       'https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js'
     ],

@@ -35,25 +35,28 @@
     // Set sentinel immediately — prevents double-init during async load
     active = true;
 
-    // Measure accordion titles and image max-width to cap slide height
-    const section = container.querySelector('.section_about-hero');
-    if (section) {
-      const titles = section.querySelectorAll('.accordion-title');
-      let titlesH = 0;
-      titles.forEach(t => { titlesH += t.offsetHeight; });
-      section.style.setProperty('--accordion-titles-height', titlesH + 'px');
+    // Desktop only: measure accordion titles and image max-width to cap slide height
+    const isDesktop = window.matchMedia?.('(min-width: 992px)').matches;
+    if (isDesktop) {
+      const section = container.querySelector('.section_about-hero');
+      if (section) {
+        const titles = section.querySelectorAll('.accordion-title');
+        let titlesH = 0;
+        titles.forEach(t => { titlesH += t.offsetHeight; });
+        section.style.setProperty('--accordion-titles-height', titlesH + 'px');
 
-      // Cap slide height: min(viewport - titles, image-max-width + caption)
-      const viewportCap = window.innerHeight - titlesH;
-      const firstSlide = section.querySelector('[data-slider] .swiper-slide');
-      const imgWrap = firstSlide?.querySelector('.about_image-wrapper');
-      const caption = firstSlide?.querySelector('.spacer-medium');
-      if (imgWrap) {
-        const imgMaxW = parseFloat(getComputedStyle(imgWrap).maxWidth) || Infinity;
-        const captionH = caption?.offsetHeight || 0;
-        const contentCap = imgMaxW + captionH;
-        const slideH = Math.min(viewportCap, contentCap);
-        section.style.setProperty('--slide-max-height', slideH + 'px');
+        // Cap slide height: min(viewport - titles, image-max-width + caption)
+        const viewportCap = window.innerHeight - titlesH;
+        const firstSlide = section.querySelector('[data-slider] .swiper-slide');
+        const imgWrap = firstSlide?.querySelector('.about_image-wrapper');
+        const caption = firstSlide?.querySelector('.spacer-medium');
+        if (imgWrap) {
+          const imgMaxW = parseFloat(getComputedStyle(imgWrap).maxWidth) || Infinity;
+          const captionH = caption?.offsetHeight || 0;
+          const contentCap = imgMaxW + captionH;
+          const slideH = Math.min(viewportCap, contentCap);
+          section.style.setProperty('--slide-max-height', slideH + 'px');
+        }
       }
     }
 
@@ -99,7 +102,7 @@
         autoplay: reduced ? false : {
           delay: 4000,
           disableOnInteraction: false,
-          pauseOnMouseEnter: true
+          pauseOnMouseEnter: false
         },
         loop: useLoop,
         slidesPerView: 1,
@@ -121,6 +124,12 @@
     active = false;
     instances.forEach(s => { try { s.destroy(true, true); } catch (e) { /* ignore */ } });
     instances = [];
+    // Clear JS-set custom properties so Barba re-entry re-evaluates fresh
+    const section = document.querySelector('.section_about-hero');
+    if (section) {
+      section.style.removeProperty('--slide-max-height');
+      section.style.removeProperty('--accordion-titles-height');
+    }
     DEBUG && console.log('[about-swipers] destroyed');
   }
 

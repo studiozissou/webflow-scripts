@@ -1272,3 +1272,19 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 .section_about-hero [data-slider] .slide-caption .spacer-medium {
   flex-shrink: 0;
 }
+
+/* Mobile/tablet: auto height — content determines slider height, no JS cap */
+@media (max-width: 991px) {
+  .section_about-hero [data-slider] {
+    height: auto;
+  }
+  .section_about-hero [data-slider] .swiper-slide {
+    height: auto;
+    position: relative;
+    width: 100% !important;
+    left: 0 !important;
+  }
+  .section_about-hero [data-slider] .slide-caption {
+    height: auto;
+  }
+}

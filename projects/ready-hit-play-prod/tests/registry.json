@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-05-05",
   "lastRegistered": "rhp-mobile-intro-timed-words",
-  "note": "Deploy d62ee5b (2026-05-05): mobile auto-morph after word cycle. Tests skipped by user.",
+  "note": "Deploy 2f46685 (2026-05-05): about transition stuck fix, Barba pin, tap-skip, VP resize. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
-  "lastDeployedHash": "d62ee5b",
+  "lastDeployedHash": "2f46685",
   "entries": [
     {
       "id": "smoke",

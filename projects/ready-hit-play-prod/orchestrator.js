@@ -1879,22 +1879,46 @@
         },
 
         /* ---- About -> Home ----
-           Force full page reload. Direct-land on about sets DOM state
-           that doesn't fully clean up during Barba transition, causing
-           downstream namespace issues (e.g. about → home → work breaks
-           work layout). A clean server-rendered home avoids the problem. */
+           Slide about container out left, land on home main section with
+           dial visible and interactive (skip intro). */
         {
           name: 'about-to-home',
           from: { namespace: ['about'] },
           to: { namespace: ['home'] },
           beforeLeave(data) {
-            var target = data.next?.url?.href || data.next?.url?.path || '/';
-            window.location.href = target;
-            // Return a never-resolving promise so Barba waits while the browser navigates
-            return new Promise(function() {});
+            RHP.lenis?.stop();
+            RHP.homeAboutSlide?.resetCurtain?.();
+            const ns = data.current?.namespace || currentNs;
+            if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
+            RHP.videoLoader?.destroy?.();
           },
-          // Required: Barba skips transitions without a leave hook, falling to rhp-core
-          leave() {}
+          leave(data) {
+            return RHP.homeAboutSlide?.leaveAboutToHome
+              ? RHP.homeAboutSlide.leaveAboutToHome(data)
+              : Promise.resolve();
+          },
+          enter() {
+            window.scrollTo(0, 0);
+          },
+          afterEnter(data) {
+            runAfterEnter(data);
+            // skipToEnd must run AFTER runAfterEnter's clearProps: 'all' on
+            // dialFg (which wipes inline opacity). Defer to rAF so it fires
+            // after views.home.init() and re-asserts opacity: 1 deterministically.
+            if (data.next?.container) {
+              requestAnimationFrame(function() {
+                RHP.homeScrollMorph?.skipToEnd?.(data.next.container);
+                // No caseHandoff on about→home — work-dial starts IDLE but
+                // setDialState(IDLE) won't fire (guard: already IDLE), so
+                // skipToEnd's dialFg opacity:1 leaves fgWrap visible.
+                // Hide it explicitly; setDialState(ACTIVE) on hover restores it.
+                if (!RHP.videoState?.caseHandoff) {
+                  var fw = document.getElementById('fg-video-wrap');
+                  if (fw && window.gsap) window.gsap.set(fw, { opacity: 0 });
+                }
+              });
+            }
+          }
         },
 
         /* ---- Work -> About ----

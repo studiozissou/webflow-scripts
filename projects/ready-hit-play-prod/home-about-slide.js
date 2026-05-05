@@ -68,8 +68,8 @@
     }
 
     return new Promise(function (resolve) {
-      var resolved = false;
-      var safety = null;
+      let resolved = false;
+      let safety = null;
       function safeResolve() {
         if (resolved) return;
         resolved = true;
@@ -240,13 +240,26 @@
       return Promise.resolve();
     }
     return new Promise(function (resolve) {
+      let resolved = false;
+      let safety = null;
+      function safeResolve() {
+        if (resolved) return;
+        resolved = true;
+        if (safety) safety.kill();
+        resolve();
+      }
+
+      safety = g.delayedCall(2, safeResolve);
+
       g.fromTo(current.container,
         { xPercent: 0 },
         {
           xPercent: -100,
           duration: 1,
           ease: 'power3.out',
-          onComplete: resolve
+          overwrite: true,
+          onComplete: safeResolve,
+          onInterrupt: safeResolve
         }
       );
     });

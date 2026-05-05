@@ -3,6 +3,18 @@
   "updated": "2026-05-05",
   "queue": [
     {
+      "id": "fix-overland-mobile-dropdown-ix2",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Overland AI mobile dropdown: migrate IX2 open/close animations to GSAP for Barba compatibility",
+      "spec": ".claude/specs/fix-overland-mobile-dropdown-ix2.md",
+      "agent": "code-writer",
+      "created": "2026-05-05",
+      "note": "IX2 DROPDOWN_OPEN/CLOSE on .benefits_dropdown-mobile doesn't re-bind after Barba. Replace with GSAP tweens in overland-ai.js, driven by existing MutationObserver on w--open. Same colour/slide animation as IX2 action lists a/a-2. 1 file, ~50 LOC. After deploy: remove IX2 events e/e-2 from Webflow Designer."
+    },
+    {
       "id": "fix-morph-scroll-snap",
       "project": "ready-hit-play-prod",
       "type": "fix",

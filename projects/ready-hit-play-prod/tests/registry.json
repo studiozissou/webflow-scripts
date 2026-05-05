@@ -505,6 +505,16 @@
       "slug": "fix-about-slider-desktop-only-height",
       "created": "2026-05-05",
       "description": "About slider height JS desktop-only, auto height on tablet/mobile, no pause on hover, Barba re-entry, reduced motion"
+    },
+    {
+      "id": "fix-overland-mobile-dropdown-ix2",
+      "file": "tests/acceptance/fix-overland-mobile-dropdown-ix2.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-overland-mobile-dropdown-ix2",
+      "created": "2026-05-05",
+      "description": "Overland AI mobile dropdown IX2→GSAP migration — open/close animations, colour changes, Barba lifecycle, reduced motion"
     }
   ]
 }

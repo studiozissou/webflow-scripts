@@ -3,9 +3,9 @@
   "lastUpdated": "2026-05-05",
   "lastPlanned": "feat-page-loader",
   "lastRegistered": "feat-page-loader",
-  "note": "Deploy 4594092 (2026-05-05): Overland AI mobile dropdown GSAP animations. Tests skipped by user.",
+  "note": "Deploy d49bd71 (2026-05-05): Overland dropdown fallback toggle for Barba re-entry. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
-  "lastDeployedHash": "4594092",
+  "lastDeployedHash": "d49bd71",
   "entries": [
     {
       "id": "smoke",

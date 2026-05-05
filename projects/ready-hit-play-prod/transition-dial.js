@@ -50,7 +50,7 @@
 
       // Size the backing buffer to match the wrapper's visual size. Called on
       // every scroll frame during the home-scroll-morph scrub (which tweens
-      // wrapper width/height) — skip if backing size hasn't changed.
+      // wrapper scale) — skip if backing size hasn't changed.
       const parent = canvas.parentElement;
       const r = parent.getBoundingClientRect();
       const size = Math.round(Math.min(r.width, r.height)) || 96;
@@ -59,8 +59,30 @@
       lastPxSize = pxSize;
       canvas.width = pxSize;
       canvas.height = pxSize;
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
+
+      // Safari rasterises compositing layers at layout size, then scales the
+      // bitmap — causing pixelation when the parent has transform: scale().
+      // Fix: set canvas CSS to the visual (post-transform) size and counter-
+      // scale so it still fits inside the layout-sized parent. This forces
+      // Safari to rasterise the canvas layer at the full visual resolution.
+      // Parent needs position:relative + overflow:visible (set in CSS).
+      const layoutSize = parent.offsetWidth || size;
+      const parentScale = layoutSize > 0 ? r.width / layoutSize : 1;
+      if (parentScale > 1.05) {
+        canvas.style.position = 'absolute';
+        canvas.style.left = '50%';
+        canvas.style.top = '50%';
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+        canvas.style.transform = 'translate(-50%,-50%) scale(' + (1 / parentScale) + ')';
+      } else {
+        canvas.style.position = '';
+        canvas.style.left = '';
+        canvas.style.top = '';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.transform = '';
+      }
 
       geom.cx = size / 2;
       geom.cy = size / 2;

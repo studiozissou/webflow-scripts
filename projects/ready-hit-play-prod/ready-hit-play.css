@@ -487,6 +487,8 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 
 
 .home-transition-dial {
+  position: relative;
+  overflow: visible;
   width: var(--dial-small-width, 6rem);
   height: var(--dial-small-height, 6rem);
 }

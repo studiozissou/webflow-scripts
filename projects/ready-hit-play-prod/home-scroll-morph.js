@@ -18,7 +18,7 @@
   const VERSION = '2026.5.5.2';
   const DEBUG = false;
 
-  const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,width,height,maxWidth';
+  const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
 
   let ctx = null;
   let scrubTL = null;
@@ -496,14 +496,9 @@
           }
         });
 
-        // Dial: move to middle slot center + grow via width/height (not
-        // transform scale — Safari rasterises the compositing layer at layout
-        // size and scales the bitmap, causing visible pixelation).
-        // As the wrapper grows, flex centering in the bottom-anchored parent
-        // shifts its center upward by half the size delta — compensate in dy.
-        const dyCenterShift = (dTargetSize - dSourceMax) / 2;
+        // Dial: move to middle slot center + grow (uniform scale)
         scrubTL.to(dialWrapper, {
-          x: dx, y: dy + dyCenterShift, width: dTargetSize, height: dTargetSize,
+          x: dx, y: dy, scale: dScale,
           ease: 'power3.inOut', duration: 1
         }, 0);
 
@@ -615,10 +610,9 @@
           }
         });
 
-        // Dial: move to middle slot + grow (width/height, not scale — Safari fix)
-        const dyCenterShift = (dTargetSize - dSourceMax) / 2;
+        // Dial: move to middle slot + grow
         scrubTL.to(dialWrapper, {
-          x: dx, y: dy + dyCenterShift, width: dTargetSize, height: dTargetSize,
+          x: dx, y: dy, scale: dScale,
           ease: 'power3.inOut', duration: 1
         }, 0);
 
@@ -761,12 +755,12 @@
     window.scrollTo(0, 0);
     if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
 
-    // Mobile: use 100dvh so the component always fills available space,
-    // even after iOS hides the browser bar. Scroll is locked post-morph
-    // so dvh won't fluctuate.
+    // Mobile: clear any inline height so CSS 100dvh on .dial_component
+    // takes over. The scroll lock (body/html 100dvh + overflow:hidden)
+    // ensures the parent chain fills the dynamic viewport.
     if (!_isDesktop() && dialEl) {
-      dialEl.style.height = '100dvh';
-      DEBUG && console.log('[morph-debug] set height to 100dvh, innerH:', window.innerHeight);
+      dialEl.style.height = '';
+      DEBUG && console.log('[morph-debug] cleared inline height, CSS 100dvh active');
     }
 
     redrawDialCanvas();

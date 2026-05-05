@@ -1,7 +1,7 @@
 {
   "version": 1,
   "lastUpdated": "2026-05-05",
-  "lastRegistered": "rhp-mobile-intro-timed-words",
+  "lastRegistered": "fix-about-slider-desktop-only-height",
   "note": "Deploy 2f46685 (2026-05-05): about transition stuck fix, Barba pin, tap-skip, VP resize. Tests skipped by user.",
   "lastDeployed": "2026-05-05",
   "lastDeployedHash": "2f46685",
@@ -475,6 +475,36 @@
       "slug": "fix-about-transition-stuck",
       "created": "2026-05-05",
       "description": "Rapid morph→about navigation — Promise resolution safety, container visibility guard, dial namespace, further nav not stuck, reduced motion"
+    },
+    {
+      "id": "fix-morph-scroll-snap",
+      "file": "tests/acceptance/fix-morph-scroll-snap.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-morph-scroll-snap",
+      "created": "2026-05-05",
+      "description": "Morph auto-complete when scroll stalls at 90%+ progress — debounced onUpdate threshold, no early trigger at 50%, nav visible, dial unlocked, reduced motion"
+    },
+    {
+      "id": "about-to-home-barba-transition",
+      "file": "tests/acceptance/about-to-home-barba-transition.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "slug": "about-to-home-barba-transition",
+      "created": "2026-05-05",
+      "description": "About→home Barba slide-out transition — no hard reload, dial visible+interactive, skipToEnd, safeResolve on leaveAboutToHome, round-trip, reduced motion"
+    },
+    {
+      "id": "fix-about-slider-desktop-only-height",
+      "file": "tests/acceptance/fix-about-slider-desktop-only-height.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-about-slider-desktop-only-height",
+      "created": "2026-05-05",
+      "description": "About slider height JS desktop-only, auto height on tablet/mobile, no pause on hover, Barba re-entry, reduced motion"
     }
   ]
 }

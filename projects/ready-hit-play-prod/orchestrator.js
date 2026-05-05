@@ -1892,7 +1892,9 @@
             window.location.href = target;
             // Return a never-resolving promise so Barba waits while the browser navigates
             return new Promise(function() {});
-          }
+          },
+          // Required: Barba skips transitions without a leave hook, falling to rhp-core
+          leave() {}
         },
 
         /* ---- Work -> About ----

@@ -3,16 +3,40 @@
   "updated": "2026-05-05",
   "queue": [
     {
+      "id": "fix-morph-scroll-snap",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Auto-complete morph when scroll stalls at 90%+ — debounced onUpdate threshold",
+      "spec": ".claude/specs/fix-morph-scroll-snap.md",
+      "agent": "code-writer",
+      "created": "2026-05-05",
+      "note": "Add gsap.delayedCall(0.2) in onUpdate when progress >= 0.9 — calls onMorphComplete() if held for 200ms. Cancel if progress drops below 0.9. Cleanup in _killScrub() and destroy(). 1 file, ~15 LOC."
+    },
+    {
       "id": "fix-about-transition-stuck",
       "project": "ready-hit-play-prod",
       "type": "fix",
       "priority": "P0",
-      "status": "Ready to Build",
+      "status": "Building",
       "title": "Fix about page stuck after rapid morph completion — Promise never resolves",
       "spec": ".claude/specs/fix-about-transition-stuck.md",
       "agent": "code-writer",
       "created": "2026-05-05",
-      "note": "Add onInterrupt + delayedCall safety to curtain tween Promise in leaveHomeToAbout(). Add visibility guard in orchestrator afterEnter. 2 files, ~15 LOC."
+      "note": "Add onInterrupt + delayedCall safety to curtain tween Promise in leaveHomeToAbout(). Add visibility guard in orchestrator afterEnter. 2 files, ~15 LOC. PARTIALLY BUILT: safeResolve + visibility guard shipped. About→home hard reload replaced by about-to-home-barba-transition spec."
+    },
+    {
+      "id": "about-to-home-barba-transition",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Replace about→home hard reload with Barba slide-out transition + skipToEnd",
+      "spec": ".claude/specs/about-to-home-barba-transition.md",
+      "agent": "code-writer",
+      "created": "2026-05-05",
+      "note": "Replace window.location.href with proper Barba leave() slide-out + explicit skipToEnd() in afterEnter. Add safeResolve to leaveAboutToHome. 2 files, ~35 LOC."
     },
     {
       "id": "rhp-mobile-intro-timed-words",
@@ -628,6 +652,18 @@
       "agent": "code-writer",
       "created": "2026-05-04",
       "note": "New about-swipers.js module (lazy-loads Swiper CDN via RHP.loadScript). Replaces about-slider-autoheight.js. Two instances: [data-slider=\"1\"] (4 CMS slides) and [data-slider=\"2\"] (3 CMS slides). Crossfade 750ms, autoplay 4s, pause-on-hover, swipe, no nav. Max-height via about-icon-scale.js CSS vars. 4 files: new module + init.js + orchestrator.js + CSS. ~135 LOC."
+    },
+    {
+      "id": "fix-about-slider-desktop-only-height",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "About slider height calc desktop-only — auto height on tablet and below, remove pause on hover",
+      "spec": ".claude/specs/fix-about-slider-desktop-only-height.md",
+      "agent": "code-writer",
+      "created": "2026-05-05",
+      "note": "matchMedia guard (min-width: 992px) around height calc in about-swipers.js. CSS @media (max-width: 991px) override for auto height with position:relative on slides. Remove pauseOnMouseEnter from Swiper config. Mirror changes in legacy about-slider-autoheight.js. 3 files, ~15 LOC."
     }
   ]
 }

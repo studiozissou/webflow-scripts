@@ -36,6 +36,7 @@
   let _resizeHandler = null;   // stored bound ref so destroy() can remove it
   let _vpResizeHandler = null;  // visualViewport resize listener for iOS bar sync
   let _mobileScrollSnap = null; // iOS toolbar scroll-snap cleanup function
+  let _snapCall = null;          // gsap.delayedCall for auto-complete snap
   let _replaying = false;      // true during the reverse-morph tween in replay()
   let _arrivedViaBarba = false; // true after skipToEnd() (Barba re-entry), false on fresh load
   let logoHoverCleanup = [];   // mouseenter/mouseleave removers
@@ -71,6 +72,7 @@
       scrollTrigger = null;
     }
     if (wordTL) { wordTL.kill(); wordTL = null; _wordInterrupted = false; }
+    if (_snapCall) { _snapCall.kill(); _snapCall = null; }
     if (_mobileScrollSnap) _mobileScrollSnap();
   }
 
@@ -505,6 +507,20 @@
               // Redraw transition dial canvas at current visual size so ticks
               // stay crisp as GSAP scale grows the wrapper.
               if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
+
+              // Auto-complete: if progress stalls above 90% for 200ms, complete the morph.
+              // Handles Safari elastic overscroll that prevents onLeave from firing.
+              if (!complete && self.progress >= 0.9) {
+                if (!_snapCall) {
+                  _snapCall = gsap.delayedCall(0.2, () => {
+                    _snapCall = null;
+                    if (!complete && initialised) onMorphComplete();
+                  });
+                }
+              } else if (_snapCall) {
+                _snapCall.kill();
+                _snapCall = null;
+              }
             }
           }
         });
@@ -1041,6 +1057,7 @@
       if (v) window.gsap.set(v, { clearProps: 'opacity' });
     }
     if (wordTL) { wordTL.kill(); wordTL = null; }
+    if (_snapCall) { _snapCall.kill(); _snapCall = null; }
     _wordInterrupted = false;
     _destroyLogoText();
     if (_resizeHandler) {

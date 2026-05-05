@@ -36,6 +36,14 @@
       '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
       '.section_about-hero:not([style*="--icon-scale-ready"]) .icon-embed-r{max-height:50svh}';
     document.head.appendChild(s);
+    // Preconnect to CDN origins used by deps/modules
+    ['https://cdn.jsdelivr.net', 'https://cdn.prod.website-files.com', 'https://unpkg.com'].forEach(function(origin) {
+      var link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = origin;
+      link.crossOrigin = '';
+      document.head.appendChild(link);
+    });
   })();
 
   // Capture init script URL immediately (currentScript is only set during initial execution; async init() may run after it's cleared)
@@ -235,15 +243,16 @@
       const versionParam = 'v=' + (CONFIG.version || '0');
 
       // Project CSS (loaded after vendor CSS, before JS modules)
-      await loadStylesheet(`${baseUrl}/ready-hit-play.css?${versionParam}`);
+      await loadStylesheet(`${baseUrl}/${isDevMode ? 'ready-hit-play.css' : 'ready-hit-play.min.css'}?${versionParam}`);
 
       for (const module of CONFIG.modules) {
-        await loadScript(`${baseUrl}/${module}?${versionParam}`);
+        var moduleFile = isDevMode ? module : module.replace('.js', '.min.js');
+        await loadScript(`${baseUrl}/${moduleFile}?${versionParam}`);
       }
 
       // Page-specific: Overland AI case study (only on /work/overland-ai)
       if (isOverlandPage) {
-        await loadScript(`${baseUrl}/overland-ai.js?${versionParam}`);
+        await loadScript(`${baseUrl}/${isDevMode ? 'overland-ai.js' : 'overland-ai.min.js'}?${versionParam}`);
       }
 
       const RHP = window.RHP || {};

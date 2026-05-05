@@ -15,7 +15,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.5.5.2';
+  const VERSION = '2026.5.5.3';
   const DEBUG = false;
 
   const FLIP_CLEAR = 'transform,x,y,scale,scaleX,scaleY,maxWidth';
@@ -530,14 +530,16 @@
         gsap.set(logoEl, { clearProps: FLIP_CLEAR });
 
         if (prefersReduced()) {
-          scrollTrigger = ScrollTrigger.create({
-            trigger: sectionEl,
-            start: 'top top',
-            end: '+=100%',
-            onLeave: onMorphComplete,
-            onEnterBack: onMorphReverse,
-            invalidateOnRefresh: true
-          });
+          // Reduced motion: complete immediately on any touch
+          const onTouch = () => {
+            window.removeEventListener('touchstart', onTouch);
+            onMorphComplete();
+          };
+          window.addEventListener('touchstart', onTouch, { passive: true });
+          _mobileScrollSnap = () => {
+            window.removeEventListener('touchstart', onTouch);
+            _mobileScrollSnap = null;
+          };
           return;
         }
 
@@ -586,25 +588,9 @@
         const lx = (navWrapperRect.left + navWrapperRect.width / 2) - ilLogoCenterX;
         const ly = (navWrapperRect.top + navWrapperRect.height / 2) - ilLogoCenterY;
 
-        // --- Morph-only scrub timeline (100svh, same as desktop) ---
-        scrubTL = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionEl,
-            start: 'top top',
-            end: '+=100%',
-            scrub: 0.5,
-            onLeave: onMorphComplete,
-            onEnterBack: onMorphReverse,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              // Interrupt word cycle on first scroll frame
-              if (self.progress > 0 && !_wordInterrupted) {
-                _interruptWordCycle();
-              }
-              if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
-            }
-          }
-        });
+        // --- Touch-triggered morph (no ScrollTrigger) ---
+        // Build paused timeline; any downward swipe plays it and completes.
+        scrubTL = gsap.timeline({ paused: true, onComplete: onMorphComplete });
 
         // Dial: move to middle slot + grow
         scrubTL.to(dialWrapper, {
@@ -618,41 +604,44 @@
           ease: 'power3.inOut', duration: 1
         }, 0);
 
+        // Redraw transition dial ticks as scale grows
+        scrubTL.eventCallback('onUpdate', () => {
+          if (RHP.transitionDial?.resize) RHP.transitionDial.resize();
+        });
+
         // Step text: fade in at 90%
         if (stepTextEl) {
           scrubTL.to(stepTextEl, { opacity: 1, duration: 0.1, ease: 'power1.out' }, 0.9);
         }
 
-        scrollTrigger = scrubTL.scrollTrigger || null;
-
-        // --- iOS dynamic toolbar scroll-snap ---
-        // The toolbar hiding increases innerHeight, shrinking max scroll
-        // distance so ScrollTrigger's onLeave never fires. Neither onUpdate
-        // nor the scroll event fire once iOS settles at the reduced max.
-        // Fix: on touchend + a short delay (iOS settles ~100ms after lift),
-        // check if we're near the end and force completion.
-        if (_mobileScrollSnap) _mobileScrollSnap();
-        const stRef = scrollTrigger;
-        const onTouchEnd = () => {
-          if (complete || !stRef) return;
-          setTimeout(() => {
-            if (complete) return;
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollY = window.scrollY || window.pageYOffset;
-            // If the user has scrolled to within 60px of the page bottom
-            // (or is at the actual bottom), snap to complete.
-            if (maxScroll > 0 && (maxScroll - scrollY) < 60) {
-              onMorphComplete();
-            }
-          }, 150);
+        // --- Detect any downward swipe and play the morph ---
+        let startY = 0;
+        const SWIPE_THRESHOLD = 10; // px — any deliberate downward touch
+        const onTouchStart = (e) => {
+          if (complete) return;
+          startY = e.touches[0].clientY;
         };
-        window.addEventListener('touchend', onTouchEnd, { passive: true });
+        const onTouchMove = (e) => {
+          if (complete) return;
+          const dy = startY - e.touches[0].clientY;
+          if (dy > SWIPE_THRESHOLD) {
+            // Downward swipe detected — lock scroll, kill word cycle, play morph
+            window.removeEventListener('touchstart', onTouchStart);
+            window.removeEventListener('touchmove', onTouchMove);
+            if (window.RHP?.scroll?.lock) window.RHP.scroll.lock();
+            _interruptWordCycle();
+            scrubTL.play();
+          }
+        };
+        window.addEventListener('touchstart', onTouchStart, { passive: true });
+        window.addEventListener('touchmove', onTouchMove, { passive: true });
         _mobileScrollSnap = () => {
-          window.removeEventListener('touchend', onTouchEnd);
+          window.removeEventListener('touchstart', onTouchStart);
+          window.removeEventListener('touchmove', onTouchMove);
           _mobileScrollSnap = null;
         };
 
-        // --- Timed word cycle (auto-plays independently of scroll) ---
+        // --- Timed word cycle (auto-plays independently of touch) ---
         logoSplitData.forEach(d => {
           const tgts = [d.upper, d.lower].filter(Boolean);
           gsap.set(tgts, { opacity: 0 });

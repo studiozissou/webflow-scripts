@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-05-04",
   "lastRegistered": "rhp-mobile-intro-timed-words",
-  "note": "Deploy b194baf (2026-05-05): iOS toolbar touchend snap. Tests skipped by user.",
+  "note": "Deploy 29d2bdb (2026-05-05): mobile swipe-triggered morph (no ScrollTrigger). Tests skipped by user.",
   "lastDeployed": "2026-05-05",
-  "lastDeployedHash": "b194baf",
+  "lastDeployedHash": "29d2bdb",
   "entries": [
     {
       "id": "smoke",

@@ -49,6 +49,47 @@ body::-webkit-scrollbar {
   pointer-events: none;
 }
 
+/* Page loader — visible until init.js adds .rhp-scripts-loaded to <html>.
+   Inline <style> in init.js covers the gap before this CSS loads. */
+.loader4_component {
+  pointer-events: none !important;
+}
+
+.loader4_progress-bar {
+  width: 0;
+  animation: rhp-loader-fill 12s cubic-bezier(0.1, 0.4, 0.2, 1) forwards;
+}
+
+/* Scripts ready: bar snaps to 100%, then loader fades out */
+.rhp-scripts-loaded .loader4_progress-bar {
+  animation: none;
+  width: 100% !important;
+}
+
+.rhp-scripts-loaded .loader,
+.rhp-scripts-loaded .loader4_component {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.1s ease 0.15s; /* delay so bar hits 100% visually first */
+}
+
+@keyframes rhp-loader-fill {
+  0%   { width: 0; }
+  70%  { width: 55%; }
+  90%  { width: 75%; }
+  100% { width: 85%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader4_progress-bar {
+    animation: none;
+  }
+  .rhp-scripts-loaded .loader,
+  .rhp-scripts-loaded .loader4_component {
+    transition: none;
+  }
+}
+
 /* Hide nav completely on About page (not visible, not clickable) */
 [data-barba="wrapper"].rhp-nav-hidden .nav {
   display: none !important;

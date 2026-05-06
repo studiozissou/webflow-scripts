@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-05-04",
+  "status": "in-progress — need to verify IDs via single-brand URL checks",
+  "catalogs": {
+    "suit-jackets-blazers": 1786,
+    "outerwear": 1206,
+    "coats": 1804
+  },
+  "sizes": {
+    "L": 209,
+    "XL": 210,
+    "54": 1598,
+    "52": 1597,
+    "50": 1596,
+    "M": 208
+  },
+  "brands": {
+    "confirmed": {
+      "corneliani": { "id": 277350, "source": "url-order-match", "verified": false },
+      "pal-zileri": { "id": 248826, "source": "url-order-match", "verified": false },
+      "ermenegildo-zegna": { "id": 174480, "source": "url-order-match", "verified": false },
+      "canali": { "id": 238464, "source": "url-order-match", "verified": false },
+      "caruso": { "id": 450062, "source": "url-order-match", "verified": false },
+      "isaia": { "id": 469314, "source": "url-order-match", "verified": false },
+      "lubiam": { "id": 457524, "source": "url-order-match", "verified": false },
+      "brioni": { "id": 360098, "source": "url-order-match", "verified": false },
+      "kiton": { "id": 414476, "source": "url-order-match", "verified": false },
+      "cesare-attolini": { "id": 1042745, "source": "url-order-match", "verified": false },
+      "lab-pal-zileri": { "id": 340001, "source": "url-order-match", "verified": false },
+      "borelli": { "id": 696914, "source": "url-order-match", "verified": false },
+      "borrelli": { "id": 970397, "source": "url-order-match", "verified": false },
+      "luigi-borrelli": { "id": 913676, "source": "url-order-match", "verified": false },
+      "belvest": { "id": 1716665, "source": "url-order-match", "verified": false },
+      "boglioli": { "id": 408013, "source": "url-order-match", "verified": false },
+      "loro-piana": { "id": 219848, "source": "url-order-match", "verified": false },
+      "armani": { "id": 5930015, "source": "url-order-match", "verified": false },
+      "crombie": { "id": 426007, "source": "single-brand-url", "verified": true },
+      "grenfell": { "id": 1457778, "source": "single-brand-url", "verified": true }
+    },
+    "needed": [
+      "barbour",
+      "mackintosh",
+      "aquascutum",
+      "gloverall",
+      "private-white-vc",
+      "chester-barrie",
+      "baracuta",
+      "gimos",
+      "moorer",
+      "herno",
+      "moncler",
+      "allegri",
+      "schneiders",
+      "valstar",
+      "lardini",
+      "tagliatore",
+      "stile-latino",
+      "barba-napoli",
+      "incotex",
+      "pt-torino",
+      "drumohr",
+      "cruciani",
+      "ballantyne",
+      "john-smedley",
+      "sunspel",
+      "churchs",
+      "crockett-and-jones",
+      "edward-green",
+      "alden"
+    ]
+  },
+  "searchTemplates": {
+    "blazers-italian-tailoring": "https://www.vinted.nl/catalog?catalog[]=1786&order=newest_first",
+    "outerwear-browse": "https://www.vinted.nl/catalog?catalog[]=1206&order=newest_first",
+    "coats-browse": "https://www.vinted.nl/catalog?catalog[]=1804&order=newest_first"
+  },
+  "notes": {
+    "strategy": "Heritage/luxury menswear brands with high RRP, bought cheap from sellers with bad photos and missing brand info. Margin target: 3-5x.",
+    "provenFlips": [
+      { "brand": "Zegna", "item": "jacket", "bought": 30, "sold": 150 },
+      { "brand": "Crombie", "item": "raglan coat", "bought": 30, "sold": 150 },
+      { "brand": "Grenfell", "item": "trench", "bought": 20, "sold": 80 },
+      { "brand": "Gimo's", "item": "suede blazer", "bought": 20, "sold": 60 }
+    ],
+    "verificationMethod": "Search single brand on Vinted, apply filter, extract brand_ids[] from URL. IDs marked url-order-match need individual verification."
+  }
+}

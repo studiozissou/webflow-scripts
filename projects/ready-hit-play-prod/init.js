@@ -261,6 +261,13 @@
         await loadScript(`${baseUrl}/${isDevMode ? 'overland-ai.js' : 'overland-ai.min.js'}?${versionParam}`);
       }
 
+      // Dismiss the page loader immediately after all modules are loaded.
+      // Must happen here (not after health checks) because orchestrator.js
+      // starts Barba/intro as soon as it loads — the logo is already visible.
+      document.documentElement.classList.add('rhp-scripts-loaded');
+      var loaderEl = document.querySelector('.loader');
+      if (loaderEl) loaderEl.remove();
+
       const RHP = window.RHP || {};
       RHP.version = CONFIG.version || '0';
       RHP.configVersion = CONFIG.version || '0';
@@ -292,12 +299,6 @@
       RHP.scriptsOk = allOk;
       RHP.scriptsCheck = { total: checks.length, ok: checks.length - failed.length, failed: failed.map(function(c) { return c.module; }) };
       window.RHP = RHP;
-
-      // Dismiss the page loader — CSS hides it via display:none on .rhp-scripts-loaded.
-      // .loader is outside the Barba container — document scope is intentional.
-      document.documentElement.classList.add('rhp-scripts-loaded');
-      var loaderEl = document.querySelector('.loader');
-      if (loaderEl) loaderEl.remove();
 
       var versionsTable = {
         'init (loader)': CONFIG.version,

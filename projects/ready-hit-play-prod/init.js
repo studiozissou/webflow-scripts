@@ -210,7 +210,7 @@
         console.log('%c[RHP] SOURCE: LOCALHOST' + (/ngrok/.test(baseUrl) ? ' (ngrok)' : ''), 'color: #ff8200; font-weight: bold');
         // Visual dev indicator — small orange dot, top-left
         var dot = document.createElement('div');
-        dot.style.cssText = 'position:fixed;top:8px;left:8px;width:10px;height:10px;background:#ff69b4;border-radius:50%;z-index:99999;pointer-events:none;opacity:0.8';
+        dot.style.cssText = 'position:fixed;top:8px;left:8px;width:10px;height:10px;background:#ff8200;border-radius:50%;z-index:99999;pointer-events:none;opacity:0.8';
         document.body.appendChild(dot);
       } else {
         var commitMatch = baseUrl.match(/@([a-f0-9]{7,40})/i);

@@ -53,6 +53,12 @@ body::-webkit-scrollbar {
    Inline <style> in init.js covers the gap before this CSS loads. */
 .loader4_component {
   pointer-events: none !important;
+  opacity: 0;
+  animation: rhp-loader-fadein 0.3s ease 0.5s forwards;
+}
+
+@keyframes rhp-loader-fadein {
+  to { opacity: 1; }
 }
 
 .loader4_progress-bar {
@@ -60,17 +66,10 @@ body::-webkit-scrollbar {
   animation: rhp-loader-fill 12s cubic-bezier(0.1, 0.4, 0.2, 1) forwards;
 }
 
-/* Scripts ready: bar snaps to 100%, then loader fades out */
-.rhp-scripts-loaded .loader4_progress-bar {
-  animation: none;
-  width: 100% !important;
-}
-
+/* Scripts ready: hide loader instantly */
 .rhp-scripts-loaded .loader,
 .rhp-scripts-loaded .loader4_component {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  transition: opacity 0.1s ease 0.15s; /* delay so bar hits 100% visually first */
+  display: none !important;
 }
 
 @keyframes rhp-loader-fill {

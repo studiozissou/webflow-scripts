@@ -3,9 +3,9 @@
   "lastUpdated": "2026-05-05",
   "lastPlanned": "feat-page-loader",
   "lastRegistered": "feat-page-loader",
-  "note": "Deploy d49bd71 (2026-05-05): Overland dropdown fallback toggle for Barba re-entry. Tests skipped by user.",
-  "lastDeployed": "2026-05-05",
-  "lastDeployedHash": "d49bd71",
+  "note": "Deploy d168d0f (2026-05-06): mobile dial skip pointerdown + defer ACTIVE until tap. Tests skipped by user.",
+  "lastDeployed": "2026-05-06",
+  "lastDeployedHash": "d168d0f",
   "entries": [
     {
       "id": "smoke",

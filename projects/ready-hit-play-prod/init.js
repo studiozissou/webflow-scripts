@@ -35,6 +35,7 @@
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .dial_component[data-dial-ns="home"] [data-text="step"]' +
       '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
       '.section_about-hero:not([style*="--icon-scale-ready"]) .icon-embed-r{max-height:50svh}' +
+      '.loader{position:fixed!important;top:0;left:0;width:100%;height:100%;pointer-events:none!important;z-index:9999}' +
       '.loader4_component{pointer-events:none!important;opacity:0;animation:rhp-loader-fadein .3s ease .5s forwards}' +
       '@keyframes rhp-loader-fadein{to{opacity:1}}' +
       '.loader4_progress-bar{width:0;animation:rhp-loader-fill 12s cubic-bezier(.1,.4,.2,1) forwards}' +
@@ -267,6 +268,8 @@
       document.documentElement.classList.add('rhp-scripts-loaded');
       var loaderEl = document.querySelector('.loader');
       if (loaderEl) loaderEl.remove();
+      // Refresh ScrollTrigger positions in case loader removal changed layout
+      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
 
       const RHP = window.RHP || {};
       RHP.version = CONFIG.version || '0';

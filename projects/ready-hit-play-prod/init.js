@@ -34,7 +34,13 @@
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .dial_component[data-dial-ns="home"] .heading-style-h7.is-step,' +
       '[data-barba="wrapper"]:has([data-barba-namespace="home"]):not(.rhp-home-ready) .dial_component[data-dial-ns="home"] [data-text="step"]' +
       '{opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
-      '.section_about-hero:not([style*="--icon-scale-ready"]) .icon-embed-r{max-height:50svh}';
+      '.section_about-hero:not([style*="--icon-scale-ready"]) .icon-embed-r{max-height:50svh}' +
+      '.loader4_component{pointer-events:none!important}' +
+      '.loader4_progress-bar{width:0;animation:rhp-loader-fill 12s cubic-bezier(.1,.4,.2,1) forwards}' +
+      '.rhp-scripts-loaded .loader4_progress-bar{animation:none;width:100%!important}' +
+      '.rhp-scripts-loaded .loader,.rhp-scripts-loaded .loader4_component{opacity:0!important;visibility:hidden!important;transition:opacity .1s ease .15s}' +
+      '@media(prefers-reduced-motion:reduce){.rhp-scripts-loaded .loader,.rhp-scripts-loaded .loader4_component{transition:none}.loader4_progress-bar{animation:none}}' +
+      '@keyframes rhp-loader-fill{0%{width:0}70%{width:55%}90%{width:75%}100%{width:85%}}';
     document.head.appendChild(s);
     // Preconnect to CDN origins used by deps/modules
     ['https://cdn.jsdelivr.net', 'https://cdn.prod.website-files.com', 'https://unpkg.com'].forEach(function(origin) {
@@ -204,7 +210,7 @@
         console.log('%c[RHP] SOURCE: LOCALHOST' + (/ngrok/.test(baseUrl) ? ' (ngrok)' : ''), 'color: #ff8200; font-weight: bold');
         // Visual dev indicator — small orange dot, top-left
         var dot = document.createElement('div');
-        dot.style.cssText = 'position:fixed;top:8px;left:8px;width:10px;height:10px;background:#ff8200;border-radius:50%;z-index:99999;pointer-events:none;opacity:0.8';
+        dot.style.cssText = 'position:fixed;top:8px;left:8px;width:10px;height:10px;background:#ff69b4;border-radius:50%;z-index:99999;pointer-events:none;opacity:0.8';
         document.body.appendChild(dot);
       } else {
         var commitMatch = baseUrl.match(/@([a-f0-9]{7,40})/i);
@@ -286,6 +292,24 @@
       RHP.scriptsOk = allOk;
       RHP.scriptsCheck = { total: checks.length, ok: checks.length - failed.length, failed: failed.map(function(c) { return c.module; }) };
       window.RHP = RHP;
+
+      // Dismiss the page loader — .rhp-scripts-loaded snaps the progress bar
+      // to 100% (CSS) and fades .loader out in 0.1s (CSS transition).
+      // .loader is outside the Barba container — document scope is intentional.
+      var loaderEl = document.querySelector('.loader');
+      document.documentElement.classList.add('rhp-scripts-loaded');
+      if (loaderEl) {
+        var removeLoader = function() {
+          if (loaderEl.parentNode) loaderEl.remove();
+        };
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          removeLoader();
+        } else {
+          loaderEl.addEventListener('transitionend', removeLoader, { once: true });
+          // 300ms = transition (100ms) + 200ms headroom
+          setTimeout(removeLoader, 300);
+        }
+      }
 
       var versionsTable = {
         'init (loader)': CONFIG.version,

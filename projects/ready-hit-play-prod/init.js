@@ -43,6 +43,32 @@
       '@media(prefers-reduced-motion:reduce){.rhp-scripts-loaded .loader,.rhp-scripts-loaded .loader4_component{transition:none}.loader4_progress-bar{animation:none}}' +
       '@keyframes rhp-loader-fill{0%{width:0}70%{width:55%}90%{width:75%}100%{width:85%}}';
     document.head.appendChild(s);
+
+    // Dismiss loader the instant the intro logo becomes visible (home) or
+    // when all modules finish loading (non-home fallback). The MutationObserver
+    // watches for .rhp-intro-started on the Barba wrapper — set by orchestrator
+    // → home-intro.run() — which is the exact moment the logo fades in.
+    var _loaderDismissed = false;
+    function _dismissLoader() {
+      if (_loaderDismissed) return;
+      _loaderDismissed = true;
+      document.documentElement.classList.add('rhp-scripts-loaded');
+      var el = document.querySelector('.loader');
+      if (el) el.remove();
+      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+    }
+    (function() {
+      var wrapper = document.querySelector('[data-barba="wrapper"]');
+      if (!wrapper) return;
+      var obs = new MutationObserver(function() {
+        if (wrapper.classList.contains('rhp-intro-started')) {
+          obs.disconnect();
+          _dismissLoader();
+        }
+      });
+      obs.observe(wrapper, { attributes: true, attributeFilter: ['class'] });
+    })();
+
     // Preconnect to CDN origins used by deps/modules
     ['https://cdn.jsdelivr.net', 'https://cdn.prod.website-files.com', 'https://unpkg.com'].forEach(function(origin) {
       var link = document.createElement('link');
@@ -262,14 +288,9 @@
         await loadScript(`${baseUrl}/${isDevMode ? 'overland-ai.js' : 'overland-ai.min.js'}?${versionParam}`);
       }
 
-      // Dismiss the page loader immediately after all modules are loaded.
-      // Must happen here (not after health checks) because orchestrator.js
-      // starts Barba/intro as soon as it loads — the logo is already visible.
-      document.documentElement.classList.add('rhp-scripts-loaded');
-      var loaderEl = document.querySelector('.loader');
-      if (loaderEl) loaderEl.remove();
-      // Refresh ScrollTrigger positions in case loader removal changed layout
-      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+      // Fallback: dismiss loader after all modules load (non-home pages, or if
+      // the MutationObserver didn't fire). Idempotent — no-op if already dismissed.
+      _dismissLoader();
 
       const RHP = window.RHP || {};
       RHP.version = CONFIG.version || '0';

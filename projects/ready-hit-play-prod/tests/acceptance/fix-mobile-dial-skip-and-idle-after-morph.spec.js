@@ -135,7 +135,7 @@ test.describe(`${SLUG} — IDLE After Morph`, () => {
     const state = await getDialState(page);
 
     // IDLE indicators: generic video visible, step text is default
-    expect(state.stepText.toLowerCase()).toContain('step into the circle');
+    expect(state.stepText.toLowerCase()).toContain('great stories made undeniable');
   });
 });
 
@@ -150,7 +150,7 @@ test.describe(`${SLUG} — First Tap Activates`, () => {
 
     // Verify IDLE state first
     const stateBefore = await getDialState(page);
-    expect(stateBefore.stepText.toLowerCase()).toContain('step into the circle');
+    expect(stateBefore.stepText.toLowerCase()).toContain('great stories made undeniable');
 
     // Tap anywhere on the page (outside dial)
     await page.dispatchEvent('body', 'pointerdown', { clientX: 50, clientY: 50 });
@@ -160,7 +160,7 @@ test.describe(`${SLUG} — First Tap Activates`, () => {
     const stateAfter = await getDialState(page);
     // In ACTIVE state, step text should NOT be the default idle text
     // (it changes to a project title via ScrambleText)
-    expect(stateAfter.stepText.toLowerCase()).not.toContain('step into the circle');
+    expect(stateAfter.stepText.toLowerCase()).not.toContain('great stories made undeniable');
   });
 });
 
@@ -183,7 +183,7 @@ test.describe(`${SLUG} — Locked Active`, () => {
 
     const state = await getDialState(page);
     // Should still show project title, not idle text
-    expect(state.stepText.toLowerCase()).not.toContain('step into the circle');
+    expect(state.stepText.toLowerCase()).not.toContain('great stories made undeniable');
   });
 });
 
@@ -226,7 +226,7 @@ test.describe(`${SLUG} — Reduced Motion`, () => {
 
     // Dial should be in IDLE state
     const state = await getDialState(page);
-    expect(state.stepText.toLowerCase()).toContain('step into the circle');
+    expect(state.stepText.toLowerCase()).toContain('great stories made undeniable');
 
     expect(errors, `JS errors: ${errors.map(e => e.message).join(', ')}`)
       .toHaveLength(0);

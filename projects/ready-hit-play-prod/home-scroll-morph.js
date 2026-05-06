@@ -45,6 +45,7 @@
   let _logoOriginalHTML = new Map(); // innerHTML snapshot before first SplitText split
   let wordTL = null;              // standalone timed word cycle timeline (mobile only)
   let _wordInterrupted = false;   // true once scroll detected during word cycle
+  let _firstTapHandler = null;  // one-time document pointerdown → forceActive after morph (mobile)
 
   function _isDesktop() {
     return window.matchMedia?.('(hover: hover)').matches === true;
@@ -666,14 +667,17 @@
         }
 
         // Tap dial to skip word cycle and snap straight to morph
+        // Use dialWrapper (.home-transition-dial) — that's the visible/tappable
+        // element on mobile during the word cycle, not the full dialEl.
+        const skipTarget = dialWrapper || dialEl;
         const onDialTap = () => {
-          dialEl.removeEventListener('click', onDialTap);
+          skipTarget.removeEventListener('pointerdown', onDialTap);
           skipToMorph();
         };
-        if (dialEl) {
-          dialEl.addEventListener('click', onDialTap);
+        if (skipTarget) {
+          skipTarget.addEventListener('pointerdown', onDialTap);
           _mobileScrollSnap = () => {
-            dialEl.removeEventListener('click', onDialTap);
+            skipTarget.removeEventListener('pointerdown', onDialTap);
             _mobileScrollSnap = null;
           };
         }
@@ -848,9 +852,13 @@
       // Unlock dial + scroll lock + add .rhp-home-ready + animate nav/step in.
       _applyCompleteState(true);
 
-      // Auto-engage ACTIVE state on mobile (no tap needed)
+      // Defer ACTIVE until first tap anywhere (mobile only)
       if (!_isDesktop() && RHP.workDial?.forceActive) {
-        RHP.workDial.forceActive();
+        _firstTapHandler = () => {
+          _firstTapHandler = null;
+          RHP.workDial.forceActive();
+        };
+        document.addEventListener('pointerdown', _firstTapHandler, { once: true });
       }
 
       DEBUG && console.log('[home-scroll-morph] complete');
@@ -1059,6 +1067,10 @@
     if (wordTL) { wordTL.kill(); wordTL = null; }
     if (_snapCall) { _snapCall.kill(); _snapCall = null; }
     _wordInterrupted = false;
+    if (_firstTapHandler) {
+      document.removeEventListener('pointerdown', _firstTapHandler);
+      _firstTapHandler = null;
+    }
     _destroyLogoText();
     if (_resizeHandler) {
       window.removeEventListener('resize', _resizeHandler);

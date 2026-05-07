@@ -1,0 +1,41 @@
+Hi Tomek, had a look at the location pages questions. TL;DR at the top, detail below.
+
+*TL;DR*
+Avoid postcode-swap pages (Google treats them as doorway pages). Store sell pages are fine if each has real unique content, and the buy pages already have the store data to reuse. Split buy and sell into separate pages. Move `/used-cars-for-sale/near/` to `/used-cars/near/` and consolidate all sell pages under `/sell-car/`.
+
+*1. /sell-car/postcode/{location} — avoid*
+
+Google calls these "doorway pages" — near-identical content with just the place name swapped out. If there's no physical store in that area, there's nothing real backing the page up and their quality raters will flag it. Use Google Ads for areas without a store instead.
+
+*2. /sell-car/locations/{store} — yes, with unique content*
+
+Each store has its own details (address, hours, map, reviews, photos, local inventory), so these pages can stand on their own. The buy store pages already have most of this data in the CMS, so the sell pages just pull from the same fields.
+
+Reusing store metadata across buy and sell pages isn't a duplicate content problem. Google cares about the main body copy, not whether the address appears on two pages. As long as the sell page is about selling and the buy page is about buying, you're fine.
+
+*3. Buy and sell — split them*
+
+"Sell my car Birmingham" and "buy used cars near Birmingham" are different people with different needs. One page won't rank for both. Cross-link them so each sell page points to the buy page for the same location and vice versa.
+
+*4. URL consolidation*
+
+Move `/used-cars-for-sale/near/` to `/used-cars/near/` so it matches the rest of the site. Move `/value-car` and `/part-exchange` under `/sell-car/` to group all sell pages together. 301 redirects from the old URLs handle any existing rankings.
+
+*Suggested URL structure*
+
+```
+Buying:
+/used-cars                       (main search)
+/used-cars/make/{make}           (make pages)
+/used-cars/models/{model}        (model pages)
+/used-cars/near/{postcode}       (buy by area)
+/stores/{location}               (buy by store)
+
+Selling:
+/sell-car                        (main landing)
+/sell-car/value                  (valuation)
+/sell-car/part-exchange          (part exchange)
+/sell-car/locations/{store-slug} (sell by store — duplicated Stores CMS)
+```
+
+Give me a shout if you want me to spec any of this out.

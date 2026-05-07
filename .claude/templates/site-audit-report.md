@@ -23,10 +23,28 @@ what the material issues are, and a one-line verdict.)
 (Table: Check | Detail — things that are absent or non-functional.)
 
 ## Lighthouse Audits
-(If Chrome DevTools MCP was available. Subsections: Accessibility, Performance.
-Include scores table + recurring issues table.)
-(If not available: "Lighthouse audits require Chrome DevTools MCP. Run `/test-page`
-separately to generate these.")
+(If Chrome DevTools MCP was available.)
+
+### Score summary
+
+| Page | URL | Performance | Accessibility | Notes |
+|------|-----|-------------|---------------|-------|
+| (one row per audited page) | | | | (CMS sample? Nav-only subset?) |
+
+**Aggregate:** Performance min/max/median: X/Y/Z — Accessibility min/max/median: X/Y/Z
+
+Pages scoring below 50 in either category are flagged with ⚠️ in the table.
+
+### Pages audited
+- Static pages: [count] of [total]
+- CMS template samples: [count] items across [N] collections (5 per collection)
+- If nav-only subset was used: list skipped pages and reason
+
+### Recurring issues
+(Table: Issue | Category | Frequency — issues that appear across 2+ pages, sorted by frequency.)
+
+(If Chrome DevTools MCP was not available: "Lighthouse audits require Chrome DevTools MCP.
+Run `/test-page` separately to generate these.")
 
 ## SEMRush Organic Intelligence
 (If Layer A ran. Include: Domain overview table, top keywords table, top pages table,

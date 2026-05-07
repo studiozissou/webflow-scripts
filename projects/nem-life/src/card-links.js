@@ -2,66 +2,62 @@
  * Card Links — NEM Life
  *
  * For every [data-button="card"]:
- * 1. Find the descendant <a> and grab its href / target
- * 2. Wrap the whole card in a link (or make the card itself clickable)
- * 3. Swap the button element from <a> to <div> (removes nested link)
- * 4. Forward card :hover to the button via a CSS class
+ * 1. Find the descendant <a> and grab its href + all attributes
+ * 2. Wrap the card in an <a> with those attributes
+ * 3. Swap the original button <a> to a <div> (avoids nested links)
+ * 4. Forward card hover to the button via .is-hovered class
  */
 (() => {
   const DEBUG = false;
 
   function init() {
-    const buttons = document.querySelectorAll('[data-button="card"]');
-    if (!buttons.length) return;
+    const cards = document.querySelectorAll('[data-button="card"]');
+    if (!cards.length) return;
 
-    DEBUG && console.log('[card-links] found', buttons.length, 'card buttons');
+    DEBUG && console.log('[card-links] found', cards.length, 'cards');
 
-    buttons.forEach((btn) => {
-      const card = btn.closest('[data-card]') || btn.parentElement;
-      const link = btn.tagName === 'A' ? btn : btn.querySelector('a');
+    cards.forEach((card) => {
+      const link = card.querySelector('a');
       if (!link) return;
 
-      const href = link.href;
-      const target = link.target || '_self';
-
-      /* 1 — Make the card a clickable link */
-      const cardLink = document.createElement('a');
-      /* Copy ALL attributes from the original link (href, target, rel, aria-*, etc.) */
+      /* 1 — Create wrapper <a> with all original link attributes */
+      const wrapper = document.createElement('a');
       Array.from(link.attributes).forEach((attr) => {
-        cardLink.setAttribute(attr.name, attr.value);
+        wrapper.setAttribute(attr.name, attr.value);
       });
-      cardLink.style.textDecoration = 'none';
-      cardLink.style.color = 'inherit';
-      cardLink.style.display = card.style.display || '';
-      /* Copy all classes from the card (overrides any class from the link) */
-      cardLink.className = card.className;
+      /* Use card classes for layout, keep link attrs for behaviour */
+      wrapper.className = card.className;
+      wrapper.style.textDecoration = 'none';
+      wrapper.style.color = 'inherit';
 
-      /* Move card children into the link wrapper */
+      /* 2 — Move card children into the wrapper */
       while (card.firstChild) {
-        cardLink.appendChild(card.firstChild);
+        wrapper.appendChild(card.firstChild);
       }
-      card.parentNode.replaceChild(cardLink, card);
+      card.parentNode.replaceChild(wrapper, card);
 
-      /* 2 — Replace button <a> with a <div> to avoid nested links */
-      const div = document.createElement('div');
-      Array.from(link.attributes).forEach((attr) => {
-        if (attr.name !== 'href' && attr.name !== 'target') {
-          div.setAttribute(attr.name, attr.value);
+      /* 3 — Replace button <a> with a <div> to avoid nested links */
+      const btn = wrapper.querySelector('a');
+      if (btn) {
+        const div = document.createElement('div');
+        Array.from(btn.attributes).forEach((attr) => {
+          if (attr.name !== 'href' && attr.name !== 'target' && attr.name !== 'rel') {
+            div.setAttribute(attr.name, attr.value);
+          }
+        });
+        while (btn.firstChild) {
+          div.appendChild(btn.firstChild);
         }
-      });
-      while (link.firstChild) {
-        div.appendChild(link.firstChild);
-      }
-      link.parentNode.replaceChild(div, link);
+        btn.parentNode.replaceChild(div, btn);
 
-      /* 3 — Forward card hover to button */
-      const newBtn = cardLink.querySelector('[data-button="card"]') || div;
-      cardLink.addEventListener('mouseenter', () => {
-        newBtn.classList.add('is-hovered');
-      });
-      cardLink.addEventListener('mouseleave', () => {
-        newBtn.classList.remove('is-hovered');
-      });
+        /* 4 — Forward card hover to button */
+        wrapper.addEventListener('mouseenter', () => {
+          div.classList.add('is-hovered');
+        });
+        wrapper.addEventListener('mouseleave', () => {
+          div.classList.remove('is-hovered');
+        });
+      }
     });
   }
 

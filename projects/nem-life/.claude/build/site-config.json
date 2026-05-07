@@ -39,12 +39,20 @@
     "stagingOnly": true
   },
   "cdn": {
-    "repo": "studiozissou/nem-life",
+    "repo": "studiozissou/webflow-scripts",
     "branch": "main",
-    "lastDeployedHash": "ed4f4b0",
-    "lastDeployed": "2026-04-30",
-    "entryPoint": "src/init.js",
-    "scriptTag": "<script src=\"https://cdn.jsdelivr.net/gh/studiozissou/nem-life@HASH/src/init.js?v=VERSION\"></script>",
-    "note": "init.js is a loader that pulls all modules from the same repo+hash. Deploy by pushing to studiozissou/nem-life, NOT webflow-scripts. The monorepo projects/nem-life/ is the working directory; copy changed files to a /tmp clone of nem-life for deploy."
+    "lastDeployedHash": "8238d02",
+    "lastDeployed": "2026-05-07",
+    "entryPoint": "projects/nem-life/src/init.js",
+    "scriptTag": "<script src=\"https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@8238d02/projects/nem-life/src/init.js\"></script>",
+    "note": "init.js is a loader that pulls all modules from the same repo+hash via relative paths. Served from the monorepo directly."
+  },
+  "dependencies": {
+    "note": "These CDN libs MUST be loaded BEFORE init.js in Webflow custom code (site-wide, before </body>).",
+    "scripts": [
+      "https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js",
+      "https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js",
+      "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"
+    ]
   }
 }

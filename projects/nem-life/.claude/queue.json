@@ -1,16 +1,16 @@
 {
   "version": "1.0.0",
-  "updated": "2026-05-06",
+  "updated": "2026-05-07",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
       "project": "nem-life",
       "type": "feature",
       "priority": "P0",
-      "status": "In Progress",
+      "status": "Done",
       "title": "Blog Insights: item page template (sticky side panel, modular body, CTA section)",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-07",
       "note": "Phase 1. Two-column layout: sticky side panel (category badge, tags, Share & Care, key insights, quote, self-test CTA, related insights) + main content (H1, intro, feature image, modular Rich Text body, De essentie checklist). Bottom CTA section reusable from content template. Desktop + mobile. First version built 2026-04-24."
     },
     {
@@ -18,10 +18,10 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P0",
-      "status": "In Progress",
+      "status": "Done",
       "title": "Experiences: item page template (single-column text-only testimonial)",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-07",
       "note": "Phase 2. H1 (essence of testimonial, max 2 lines) + intro quote + pure text body + subtle author name at end. No images, no embeds. Fully in DOM at load. First version built 2026-04-24."
     },
     {
@@ -62,10 +62,10 @@
       "project": "nem-life",
       "type": "fix",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Home: FAQ accordion single-open behaviour (one item open at a time)",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-07",
       "note": "Phase 4. Section 5.3 — item 01 open by default, one item open at a time (other closes when you open another). +/- icons. All answers in DOM at load, CSS-based collapsing only."
     },
     {
@@ -73,10 +73,10 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P0",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Mobile responsive: all pages (Home rebuild from design, all templates aligned)",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-07",
       "note": "Phase 3. Home mobile is effectively a rebuild from design. Also: NEM Methode, Blog Insights main/category/item, Experiences main/item, Our Mission, Link-in-bio, Blank. Fix nav + notification stacking, typography scale, responsive image sets. 8 hours budgeted."
     },
     {
@@ -106,10 +106,10 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P1",
-      "status": "In Progress",
+      "status": "Done",
       "title": "Blog Insights: sticky categories bar with in-page anchor navigation on Inzichten page",
       "created": "2026-04-29",
-      "updated": "2026-05-06",
+      "updated": "2026-05-07",
       "note": "Phase 4. Section 10.1 — horizontal nav below navbar. Need to make it link to in-page anchors on Inzichten page instead of category pages."
     },
     {

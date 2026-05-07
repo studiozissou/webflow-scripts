@@ -1,0 +1,98 @@
+{
+  "projectName": "Coconut",
+  "projectId": "6069af2a39978132d0155fd7",
+  "workspaceId": "638793b179342a5eeafd53c5",
+  "urls": {
+    "live": "https://www.getcoconut.com",
+    "staging": "https://getcoconut.webflow.io"
+  },
+  "customDomains": [
+    "www.getcoconut.com",
+    "getcoconut.com",
+    "www.getcoconut.co.uk",
+    "getcoconut.co.uk"
+  ],
+  "lastPublished": "2026-04-28T15:49:19.897Z",
+  "pages": {
+    "total": 155,
+    "published": 82,
+    "drafts": 73,
+    "archived": 0,
+    "styleGuide": 44,
+    "cmsTemplates": 12,
+    "missingMetaDescription": [
+      "/blog-banner-ads",
+      "/documentation",
+      "/feature-highlight",
+      "/integrations",
+      "/jobs (template)",
+      "/speaker-for-webinars-and-events",
+      "/webinars-and-events (template)",
+      "/legal/asto-terms",
+      "/legal/cookies"
+    ],
+    "missingSeoTitle": [
+      "/blog-banner-ads",
+      "/feature-highlight",
+      "/integrations",
+      "/jobs (template)",
+      "/speaker-for-webinars-and-events",
+      "/webinars-and-events (template)"
+    ],
+    "devTestPages": [
+      "/gosimpletax-mp-test",
+      "/mtd-software-copy-1",
+      "/mtd-software-copy-2",
+      "/mtd-software-copy-3",
+      "/mtd-software-old",
+      "/static-template-slug-1746543101443",
+      "/home---embrace"
+    ],
+    "duplicateSoleTraderPages": [
+      "/sole-traders",
+      "/mtd-for-sole-traders",
+      "/mtd-software/sole-traders"
+    ]
+  },
+  "collections": {
+    "total": 19,
+    "list": [
+      { "name": "Feature Highlights", "slug": "feature-highlight", "id": "65afe5d79038933a4ba8d155" },
+      { "name": "Authors", "slug": "author", "id": "65afe5d79038933a4ba8d156" },
+      { "name": "Landing Pages", "slug": "coconut-for", "id": "65afe5d79038933a4ba8d157" },
+      { "name": "2025 Archive Features", "slug": "2025-archive-features", "id": "65afe5d79038933a4ba8d158" },
+      { "name": "Blog Categories", "slug": "blog-categories", "id": "65afe5d79038933a4ba8d159" },
+      { "name": "Tags", "slug": "tags", "id": "65afe5d79038933a4ba8d15a" },
+      { "name": "Reviews", "slug": "reviews", "id": "65afe5d79038933a4ba8d15b" },
+      { "name": "FAQs", "slug": "faq", "id": "65afe5d79038933a4ba8d15c" },
+      { "name": "Jobs", "slug": "jobs", "id": "65afe5d79038933a4ba8d15d" },
+      { "name": "Categories", "slug": "categories", "id": "65afe5d79038933a4ba8d15e" },
+      { "name": "Blog Posts", "slug": "blog", "id": "65afe5d79038933a4ba8d15f" },
+      { "name": "Tools", "slug": "tools", "id": "65afe5d79038933a4ba8d160" },
+      { "name": "Knowledge Hub Articles", "slug": "knowledge-hub", "id": "65afe5d79038933a4ba8d161" },
+      { "name": "Chapters", "slug": "chapters", "id": "65afe5d79038933a4ba8d162" },
+      { "name": "Integrations", "slug": "integrations", "id": "65afe5d79038933a4ba8d163" },
+      { "name": "25 New Features", "slug": "features", "id": "683ebf9571fba472b081c90d" },
+      { "name": "Webinars and events", "slug": "webinars-and-events", "id": "695e35770d14eeb9f306e6e4" },
+      { "name": "Speaker for Webinars and events", "slug": "speaker-for-webinars-and-events", "id": "695e36099481bccafcf2fe3e" },
+      { "name": "Blog Banner Ads", "slug": "blog-banner-ads", "id": "69a1a1a673eab7d4477dd149" }
+    ],
+    "taxonomyOnly": ["Blog Categories", "Tags", "Categories", "Authors", "Speaker for Webinars and events", "Chapters"],
+    "needsTemplatePage": {
+      "Blog Banner Ads": "Has template page but likely only used as referenced content — consider removing template page",
+      "Speaker for Webinars and events": "Taxonomy collection — template page probably unnecessary"
+    }
+  },
+  "comments": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0
+  },
+  "ecommerce": false,
+  "locales": null,
+  "checks": {
+    "webflowMcp": true,
+    "chromeDevtools": true,
+    "semrushExport": true
+  }
+}

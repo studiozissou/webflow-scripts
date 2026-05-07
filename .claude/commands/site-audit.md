@@ -82,6 +82,26 @@ If neither MCP is available:
 2. Ask the user to provide: page list, CMS collection names, staging URL
 3. Record in `intake.json` with a `source: "manual"` flag
 
+### SEMRush site-audit CSV (if available)
+
+Check the project `.claude/` directory for a SEMRush export CSV (e.g. `semrush-export-*.csv`).
+If present, or if the user provides one:
+
+1. **Parse it immediately** — before launching parallel streams.
+2. Extract all flagged issues: multiple H1s, missing meta descriptions, structured data errors,
+   non-descriptive anchor text, orphaned pages, duplicate content, etc.
+3. **SEMRush data has priority over agent scanning when there is a conflict.** SEMRush crawls
+   the rendered DOM like a real browser. WebFetch strips `<head>` content and often miscounts
+   headings, producing false positives. If SEMRush says a page has 0 multiple H1s but your
+   scan says 6, trust SEMRush (and verify with Chrome DevTools if needed).
+4. Feed the parsed SEMRush findings into the relevant streams so they cross-reference rather
+   than duplicate. Specifically:
+   - Stream B receives SEMRush heading, meta, and schema findings as ground truth
+   - Stream C receives SEMRush content-quality flags
+5. When merging into the report, always note the data source for disputed items. If SEMRush
+   and agent scanning disagree, flag the conflict and default to SEMRush unless DevTools
+   verification overrides both.
+
 ### Asset CSV (optional)
 
 Ask: "Do you have the asset bandwidth CSV from Webflow Settings → Hosting → Usage? (optional — enables the Asset Optimisation section)."
@@ -184,6 +204,14 @@ For ALL checks involving `<head>` metadata or heading tag counts, you MUST use P
 ```
 
 WebFetch is acceptable ONLY for reading body content (e.g. checking text quality, link hrefs).
+
+**SEMRush priority rule:** If a SEMRush site-audit CSV was parsed in Phase 2, use it as the
+primary source of truth for heading counts, meta descriptions, structured data errors, and
+other technical SEO checks. Only flag issues that SEMRush confirms OR that Chrome DevTools
+verifies via `evaluate_script`. Do NOT report WebFetch-only findings for these checks — they
+produce frequent false positives (e.g. inflated H1 counts, missing meta descriptions that
+actually exist). When SEMRush and your own scanning conflict, note both values and default to
+SEMRush.
 
 | Check | What to look for |
 |---|---|

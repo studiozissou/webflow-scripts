@@ -1,8 +1,30 @@
 {
   "version": "1.0.0",
-  "updated": "2026-05-04",
-  "note": "carsa-make-model-switch-v2 added, supersedes model-redirect + prefill",
+  "updated": "2026-05-06",
+  "note": "perf-parallel-script-loading added (RHP Phase 1 + Phase 2)",
   "queue": [
+    {
+      "id": "perf-parallel-script-loading-phase1",
+      "project": "ready-hit-play-prod",
+      "type": "perf",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Parallelise init.js script loading with Promise.all",
+      "description": "Rewrite sequential await loops in init.js to use 2-wave Promise.all for vendor deps and batched Promise.all for 18 modules (orchestrator + utils last). Removes ~20 sequential round-trips.",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/perf-parallel-script-loading.md",
+      "created": "2026-05-06"
+    },
+    {
+      "id": "perf-parallel-script-loading-phase2",
+      "project": "ready-hit-play-prod",
+      "type": "perf",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Add terser minification pipeline for RHP modules",
+      "description": "Add terser devDependency, create scripts/minify.js, generate .min.js files for all 20+ modules, commit to repo for jsDelivr serving. Stacks on Phase 1.",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/perf-parallel-script-loading.md",
+      "created": "2026-05-06"
+    },
     {
       "id": "carsa-sitewide-schema",
       "project": "carsa",

@@ -177,8 +177,25 @@ If user approves parallel, spawn 5 subagents simultaneously. If sequential, run 
 | Analytics | GA4 or GTM in page embeds |
 | Cookie consent | Any consent mechanism present |
 | Alignment | Analytics not firing before consent |
-| Lighthouse Performance | If Chrome DevTools MCP available, run Lighthouse audit on homepage + 2 key pages |
-| Lighthouse Accessibility | Same — record scores and recurring issues |
+| Lighthouse Performance | Run Lighthouse on all auditable pages (see page selection rules below) |
+| Lighthouse Accessibility | Same pages — record scores and recurring issues |
+
+**Lighthouse page selection rules:**
+
+Lighthouse requires Chrome DevTools MCP. If not available, skip and note in the report.
+
+1. **Build the page list from `intake.json`** (populated in Phase 2).
+2. **Static pages:** Audit every unique static page (homepage, about, contact, services, etc.).
+3. **CMS template pages:** For each CMS collection that has a template page, audit a sample
+   of **5 representative items** (pick a mix: first, last, longest content, shortest content,
+   and one mid-list). Record which items were sampled.
+4. **Large sites (>20 unique pages after CMS sampling):** Instead of auditing all pages, audit
+   only the pages linked from the **main navigation** (top-level nav + one level of dropdowns).
+   Note which pages were skipped and why.
+5. **Run each page through both Performance and Accessibility categories.** Record per-page
+   scores in a summary table, then list recurring issues across all pages with frequency counts.
+6. **Aggregate:** Calculate min, max, and median scores for Performance and Accessibility
+   across all audited pages. Flag any page scoring below 50 in either category.
 
 Write to `audits/structure.md`.
 
@@ -468,4 +485,5 @@ Ask: "Generate a full proposal with scope tables?" — if yes, bridge to `/propo
 17. Multi-format comms derived from client-facing report (not internal report)
 18. Asset CSV parsing produces bandwidth tables when provided and PNGs >50%
 19. Custom code migration plan included when third-party hosted code detected
-20. Existing `/intake` command is unchanged
+20. Lighthouse audits cover all static pages, sample 5 per CMS collection, and fall back to nav-linked pages when >20 unique pages
+21. Existing `/intake` command is unchanged

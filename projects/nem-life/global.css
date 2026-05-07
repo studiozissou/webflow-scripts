@@ -220,16 +220,19 @@ html {
    6. NEM COMPONENT STYLES
    ============================================== */
 
-.button:hover .circle-active {
+.button:hover .circle-active,
+.button.is-hovered .circle-active {
   width: 0em;
   opacity: 0;
 }
 
-.button:hover .button-spacer {
+.button:hover .button-spacer,
+.button.is-hovered .button-spacer {
   width: var(--size--0);
 }
 
-.button:hover .circle-hover {
+.button:hover .circle-hover,
+.button.is-hovered .circle-hover {
   width: 2.6em;
   opacity: 1;
 }

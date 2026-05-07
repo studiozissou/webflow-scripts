@@ -18,6 +18,7 @@
   ];
 
   const modules = [
+    'card-links.js',
     'method-cars-fade.js',
     'swiper-init.js',
     'blog-share.js',

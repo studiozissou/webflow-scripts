@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "lastUpdated": "2026-05-05",
-  "lastPlanned": "feat-page-loader",
-  "lastRegistered": "feat-page-loader",
+  "lastUpdated": "2026-05-06",
+  "lastPlanned": "perf-parallel-script-loading",
+  "lastRegistered": "perf-parallel-script-loading",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
   "lastDeployed": "2026-05-06",
   "lastDeployedHash": "8904cdd",
@@ -536,6 +536,16 @@
       "slug": "feat-page-loader",
       "created": "2026-05-05",
       "description": "Page loader — dismiss on scriptsOk, DOM removal, no console errors, reduced motion, Barba lifecycle"
+    },
+    {
+      "id": "perf-parallel-script-loading",
+      "file": "tests/acceptance/perf-parallel-script-loading.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "perf-parallel-script-loading",
+      "created": "2026-05-06",
+      "description": "Parallel script loading — module presence, GSAP plugins, Barba transitions, loader dismiss, load timing"
     }
   ]
 }

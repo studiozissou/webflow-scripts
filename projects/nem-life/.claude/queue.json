@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-29",
+  "updated": "2026-05-06",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -29,21 +29,21 @@
       "project": "nem-life",
       "type": "fix",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Done (dev)",
       "title": "Home: hero header styling and right-side images not matching design",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
-      "note": "Briefing section 4.3 flags large hero header as needing styling + right images. Uses Swiper (not native Webflow slider — w-slider classes in global.css are just resets). Compare against Figma design and fix layout, image placement, and any broken Swiper behaviour."
+      "updated": "2026-05-06",
+      "note": "Briefing section 4.3 flags large hero header as needing styling + right images. Uses Swiper (not native Webflow slider — w-slider classes in global.css are just resets). Compare against Figma design and fix layout, image placement, and any broken Swiper behaviour. Dev done — still need to edit/replace images."
     },
     {
       "id": "nem-home-three-image-hover",
       "project": "nem-life",
       "type": "feature",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Home: three-image hover sequence (muted-to-colour fade on hover)",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-06",
       "note": "Phase 4. Section 5.1 Wat als je blijft wachten? — 3 images with muted/lightened default state, hover restores original colour, smooth fade only (no scale/move). Mobile: no hover. After sequence or page load + delay: Maar het hoeft niet zover te komen fades in below images."
     },
     {
@@ -51,10 +51,10 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Home: 123 cards sequential fade-in on scroll into view",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-06",
       "note": "Phase 4. Section 5.2 — 3 cards fade in sequentially on scroll-into-view. No slide, no scale, just fade. After last card: supporting line fades in. CSS-only or minimal JS with IntersectionObserver."
     },
     {
@@ -84,10 +84,10 @@
       "project": "nem-life",
       "type": "fix",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Navigation and footer: wire all links (currently all point to #)",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-06",
       "note": "Phase 4. Every nav and footer link currently points to #. Wire to correct pages. About/Over submenu points to Our Mission page. Enable NL locale, hide EN."
     },
     {
@@ -106,11 +106,11 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P1",
-      "status": "Ready to Build",
-      "title": "Blog Insights: sticky categories bar with navigation to category pages",
+      "status": "In Progress",
+      "title": "Blog Insights: sticky categories bar with in-page anchor navigation on Inzichten page",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
-      "note": "Phase 4. Section 10.1 — horizontal nav below navbar. Navigation-based (not filter-based). Clicking category takes to that category page. Active category bold on category pages."
+      "updated": "2026-05-06",
+      "note": "Phase 4. Section 10.1 — horizontal nav below navbar. Need to make it link to in-page anchors on Inzichten page instead of category pages."
     },
     {
       "id": "nem-blog-insights-CMS-wiring",
@@ -128,21 +128,21 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Experiences: journey-type filter, dynamic CTA copy by sex, load-more",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
-      "note": "Phase 4. Section 13. Single-select filter by journey type (Therapy / Couples therapy). Dynamic CTA: Lees haar verhaal (F) / Lees zijn verhaal (M). Lees meer verhalen text-link reveals more (no pagination). Hover: subtle olive-green tint on card (desktop only)."
+      "updated": "2026-05-06",
+      "note": "Phase 4. Section 13. Filter, load-more, dynamic CTA, and hover tint all done."
     },
     {
       "id": "nem-notification-bar-per-page",
       "project": "nem-life",
       "type": "fix",
       "priority": "P2",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Notification bar: per-page show/hide verification and fix",
       "created": "2026-04-29",
-      "updated": "2026-04-29",
+      "updated": "2026-05-06",
       "note": "Phase 4. Briefing section 4.2 — notification bar is built but per-page show/hide needs verification. Editable text + CTA, no CLS, no navbar overlap on mobile."
     },
     {

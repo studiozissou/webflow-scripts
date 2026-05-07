@@ -19,6 +19,18 @@
     if (e.persisted) window.location.reload();
   }, { once: true });
 
+  // Dismiss loader — called by MutationObserver (home intro) and by init() fallback.
+  // Declared at outer IIFE scope so both can access it.
+  var _loaderDismissed = false;
+  function _dismissLoader() {
+    if (_loaderDismissed) return;
+    _loaderDismissed = true;
+    document.documentElement.classList.add('rhp-scripts-loaded');
+    var el = document.querySelector('.loader');
+    if (el) el.remove();
+    if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+  }
+
   // FOUC prevention: inject critical hide rules synchronously before first paint.
   // ready-hit-play.css loads later (after deps); these inline styles cover the gap.
   // Hide on home until home-scroll-morph completes and sets .rhp-home-ready:
@@ -44,19 +56,9 @@
       '@keyframes rhp-loader-fill{0%{width:0}70%{width:55%}90%{width:75%}100%{width:85%}}';
     document.head.appendChild(s);
 
-    // Dismiss loader the instant the intro logo becomes visible (home) or
-    // when all modules finish loading (non-home fallback). The MutationObserver
-    // watches for .rhp-intro-started on the Barba wrapper — set by orchestrator
+    // MutationObserver: dismiss loader the instant the intro logo becomes visible (home).
+    // Watches for .rhp-intro-started on the Barba wrapper — set by orchestrator
     // → home-intro.run() — which is the exact moment the logo fades in.
-    var _loaderDismissed = false;
-    function _dismissLoader() {
-      if (_loaderDismissed) return;
-      _loaderDismissed = true;
-      document.documentElement.classList.add('rhp-scripts-loaded');
-      var el = document.querySelector('.loader');
-      if (el) el.remove();
-      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
-    }
     (function() {
       var wrapper = document.querySelector('[data-barba="wrapper"]');
       if (!wrapper) return;
@@ -107,22 +109,22 @@
       'https://unpkg.com/lenis@1.3.17/dist/lenis.css'
     ],
 
-    // Dependencies (loaded first): GSAP 3.14.2 + plugins (Webflow CDN), then Barba, Lenis
-    dependencies: [
-      'https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js',
+    // GSAP core — loaded first in Wave 1 (plugins need window.gsap at parse time)
+    gsapCoreUrl: 'https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js',
+
+    // Wave 2: GSAP plugins + vendor deps (all loaded in parallel after gsap core)
+    wave2Dependencies: [
       'https://cdn.prod.website-files.com/gsap/3.14.2/ScrollTrigger.min.js',
       'https://cdn.prod.website-files.com/gsap/3.14.2/ScrambleTextPlugin.min.js',
       'https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/Flip.min.js',
+      'https://cdn.prod.website-files.com/gsap/3.14.2/SplitText.min.js',
       'https://unpkg.com/@barba/core@2.10.3/dist/barba.umd.js',
       'https://unpkg.com/lenis@1.3.17/dist/lenis.min.js',
       'https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js'
     ],
 
-    // SplitText (Club GreenSock) – same CDN, loaded after ScrollTrigger
-    splitTextUrl: 'https://cdn.prod.website-files.com/gsap/3.14.2/SplitText.min.js',
-
-    // Module files (loaded in order)
-    modules: [
+    // Modules loaded in parallel (no parse-time cross-dependencies)
+    parallelModules: [
       'lenis-manager.js',
       'cursor.js',
       'work-dial.js',
@@ -141,8 +143,12 @@
       'case-video-controls.js',
       'video-loader.js',
       'work-nav.js',
-      'orchestrator.js',
       'utils.js'
+    ],
+
+    // Modules that must load after all parallel modules (orchestrator reads RHP.* registrations at parse time)
+    sequentialModules: [
+      'orchestrator.js'
     ]
   };
 
@@ -195,7 +201,9 @@
       }
       var script = document.createElement('script');
       script.src = src;
-      script.async = false;
+      // async=true is the browser default for dynamic scripts; explicit for clarity.
+      // Execution order is controlled by wave-based await, not by the async attribute.
+      script.async = true;
       script.onload = function() { resolve(); };
       script.onerror = function() { reject(new Error('Failed to load: ' + src)); };
       document.head.appendChild(script);
@@ -244,26 +252,19 @@
         console.log('%c[RHP] SOURCE: CDN' + (commitMatch ? ' @' + commitMatch[1] : ''), 'color: #05EFBF; font-weight: bold');
       }
 
-      for (const css of CONFIG.cssDependencies) {
-        await loadStylesheet(css);
-      }
-
-      // Page-specific: Overland AI case study CSS (fonts + typography)
       const isOverlandPage = /\/work\/overland-ai(\/|$)/.test(window.location.pathname);
-      if (isOverlandPage) {
-        const versionParam = 'v=' + (CONFIG.version || '0');
-        await loadStylesheet(`${baseUrl}/overland-ai.css?${versionParam}`);
-      }
+      const versionParam = 'v=' + (CONFIG.version || '0');
 
-      for (const dep of CONFIG.dependencies) {
-        await loadScript(dep);
-      }
+      // Wave 1: GSAP core + all CSS (parallel — no interdependencies)
+      await Promise.all([
+        loadScript(CONFIG.gsapCoreUrl),
+        ...CONFIG.cssDependencies.map(css => loadStylesheet(css)),
+        loadStylesheet(`${baseUrl}/${isDevMode ? 'ready-hit-play.css' : 'ready-hit-play.min.css'}?${versionParam}`),
+        ...(isOverlandPage ? [loadStylesheet(`${baseUrl}/overland-ai.css?${versionParam}`)] : [])
+      ]);
 
-      if (CONFIG.splitTextUrl) {
-        await loadScript(CONFIG.splitTextUrl);
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Wave 2: GSAP plugins + vendor deps (parallel — all need window.gsap from Wave 1)
+      await Promise.all(CONFIG.wave2Dependencies.map(url => loadScript(url)));
 
       // Expose loader helpers before modules run — modules may lazy-load deps
       // (e.g. aboutSwipers lazy-loads Swiper via RHP.loadScript)
@@ -273,13 +274,17 @@
       _rhp.getScriptBaseUrl = getBaseUrl;
       window.RHP = _rhp;
 
-      const versionParam = 'v=' + (CONFIG.version || '0');
+      // All parallel modules (no parse-time cross-dependencies)
+      await Promise.all(
+        CONFIG.parallelModules.map(module => {
+          const moduleFile = isDevMode ? module : module.replace('.js', '.min.js');
+          return loadScript(`${baseUrl}/${moduleFile}?${versionParam}`);
+        })
+      );
 
-      // Project CSS (loaded after vendor CSS, before JS modules)
-      await loadStylesheet(`${baseUrl}/${isDevMode ? 'ready-hit-play.css' : 'ready-hit-play.min.css'}?${versionParam}`);
-
-      for (const module of CONFIG.modules) {
-        var moduleFile = isDevMode ? module : module.replace('.js', '.min.js');
+      // Sequential modules (orchestrator reads all RHP.* registrations at parse time)
+      for (const module of CONFIG.sequentialModules) {
+        const moduleFile = isDevMode ? module : module.replace('.js', '.min.js');
         await loadScript(`${baseUrl}/${moduleFile}?${versionParam}`);
       }
 

@@ -1,0 +1,39 @@
+Hi Tomek, following on from the SEO analysis — here's a plan for the URL restructure and sell location pages:
+
+*Context*
+Carsa's buy pages sit neatly under `/used-cars/` but the sell side is scattered (`/value-car`, `/part-exchange`, no location pages) and `/used-cars-for-sale/near/` doesn't match the rest of the site.
+
+*Problem*
+No way to rank for "sell my car in [location]" queries right now. The inconsistent URL structure also splits link equity between `/used-cars-for-sale/` and `/used-cars/`.
+
+One thing to flag: I'd recommend against the postcode-swap pages (`/sell-car/postcode/{location}`). Pages where the only difference is the place name are what Google calls "doorway pages" — they'll either refuse to index them or suppress them in rankings. Without a physical store in that area there's nothing real backing the page up. The per-store pages below are the safe version of the same idea.
+
+*Solution*
+Group all sell pages under `/sell-car/`, move `/used-cars-for-sale/near/` to `/used-cars/near/`, and create per-store sell pages from a duplicated Stores CMS.
+
+The work:
+•  301 redirects: `/used-cars-for-sale/near/*` → `/used-cars/near/*`, `/value-car` → `/sell-car/value`, `/part-exchange` → `/sell-car/part-exchange`
+•  New `/sell-car` landing page
+•  Duplicate the Stores CMS collection for sell pages
+•  Build `/sell-car/locations/{store}` template with valuation form, process steps, sell-specific reviews, pulling store metadata from CMS
+•  Cross-links between buy and sell pages for each location
+•  AutoDealer JSON-LD schema per store page
+
+*Benefits*
+•  Rankable pages for "sell my car [location]" at every Carsa store
+•  All buy pages under `/used-cars/`, all sell pages under `/sell-car/` — no more orphan URLs
+•  Store metadata already exists in the CMS so sell pages are quick to populate
+
+*Risks*
+•  Redirect traffic dip — 301s can cause a temporary ranking wobble for moved pages, usually recovers in 2-4 weeks
+•  Content depth — each sell store page needs enough unique body copy beyond the shared template to avoid thin content flags
+
+*Timing & pricing*
+•  Page restructure: £100
+•  Set up sell car location pages: £200
+•  Cross-links between buy/sell pages: £100
+•  Testing & polishing: £100
+•  Total: £500
+•  Timeline: Tuesday or Thursday next week
+
+Let me know if this looks right or if anything needs adjusting.

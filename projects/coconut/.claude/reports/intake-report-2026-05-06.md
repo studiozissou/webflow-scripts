@@ -57,7 +57,7 @@ The material issues are: (1) no Organization or WebSite schema on the homepage o
 | /jobs has 2 H1 tags | MEDIUM | DevTools verified: "Careers at Coconut" + "Current vacancies". "Current vacancies" should be H2. |
 | /mtd-software H2→H4 skip | LOW | Pricing tiers jump from H2 to H4, skipping H3. |
 | 3 duplicate sole trader pages | MEDIUM | /sole-traders, /mtd-for-sole-traders, /mtd-software/sole-traders — cannibalisation risk |
-| Duplicate sitemap line in robots.txt | LOW | `Sitemap:` appears twice. |
+| ~~Duplicate sitemap line in robots.txt~~ | ~~LOW~~ | ~~`Sitemap:` appears twice.~~ FIXED |
 | Sitemap includes non-indexable pages | LOW | /tools/*, /search, old content — 6+ pages to exclude. |
 | No llms.txt | LOW | Returns 404. Missing AI-search opportunity. |
 | No AggregateRating on homepage | LOW | /accountant-software has 4.5/5 but homepage doesn't. |
@@ -216,10 +216,10 @@ Fastest, highest-impact changes. No design decisions needed. Each task under 1 h
 | 3 | **Fix /jobs: reduce 2 H1s to 1** — demote "Current vacancies" to H2 | | **SEO** — heading hierarchy (DevTools verified) | — | SEMI |
 | 4 | **Fix /features meta description typo** ("simple our" → "our simple") | | **SEO** — typo in SERP snippet | — | AUTO |
 | 5 | **Fix /pricing hero typo** ("Making Tax Digial" → "Digital") | | **Trust** — visible typo on pricing page | — | AUTO |
-| 6 | **Remove duplicate sitemap line from robots.txt** | | **SEO** — housekeeping | — | AUTO |
-| 7 | **Delete 8 dev/test draft pages** | | **Ops** — CMS clutter | — | SEMI |
+| 6 | **Delete 8 dev/test draft pages** | | **Ops** — CMS clutter | — | SEMI |
+| 7 | **Create llms.txt** at site root | .25 | **AEO** — AI-search discoverability. Currently 404. | — | AUTO |
 
-**P0 total:**
+**P0 total:** 1 hour
 
 ---
 
@@ -229,17 +229,17 @@ Critical risk items and highest-ROI schema additions.
 
 | # | Task | Hours | Justification | Client item | Automation |
 |---|------|-------|---------------|-------------|------------|
-| 8 | **Add FAQPage schema to homepage** (13 Q&As already exist) | | **SEO + AEO** — rich results + AI citation eligibility | Organization schema | AUTO |
-| 9 | **Add FAQPage schema to /pricing** (4 Q&As) | | **SEO** — rich results on pricing page | Organization schema | AUTO |
-| 10 | **Fix BlogPosting schema: add publisher, fix author typing** | | **SEO** — required for valid Article rich results across knowledge hub | Organization schema | AUTO |
-| 11 | **Add BreadcrumbList to /accountant-software and knowledge hub articles** | | **SEO** — consistency + breadcrumb rich results | Organization schema | AUTO |
-| 12 | **Implement Consent Mode v2** — defer analytics until consent granted | | **De-risk** — GDPR/PECR compliance. Analytics fires before consent. | — | SEMI |
-| 13 | **Investigate GoSimpleTax PageSense script** — appears to be GoSimpleTax tracking on Coconut's site | | **De-risk** — third-party tracking that may not belong | — | MANUAL |
-| 14 | **Audit dual Facebook Pixels** — confirm both IDs serve distinct purposes | | **De-risk** — potential redundancy | — | MANUAL |
-| 15 | **Unpublish or noindex 7 archive pages** | | **SEO + Ops** — published archive pages may be indexed | — | SEMI |
-| 16 | **Add AggregateRating to homepage SoftwareApplication** | | **SEO** — /accountant-software has 4.5/5 but homepage doesn't | Organization schema | AUTO |
+| 8 | **Add FAQPage schema to homepage** (13 Q&As already exist) | .5 | **SEO + AEO** — rich results + AI citation eligibility | Organization schema | AUTO |
+| 9 | **Add FAQPage schema to /pricing** (4 Q&As) | .5 | **SEO** — rich results on pricing page | Organization schema | AUTO |
+| 10 | **Fix BlogPosting schema: add publisher, fix author typing** | .25 | **SEO** — required for valid Article rich results across knowledge hub | Organization schema | AUTO |
+| 11 | **Add BreadcrumbList to /accountant-software and knowledge hub articles** | .5 | **SEO** — consistency + breadcrumb rich results | Organization schema | AUTO |
+| 12 | **Implement Consent Mode v2** — defer analytics until consent granted | 2 | **De-risk** — GDPR/PECR compliance. Analytics fires before consent. | — | SEMI |
+| 13 | **Investigate GoSimpleTax PageSense script** — appears to be GoSimpleTax tracking on Coconut's site | ignore | **De-risk** — third-party tracking that may not belong | — | MANUAL |
+| 14 | **Audit dual Facebook Pixels** — confirm both IDs serve distinct purposes | .25 | **De-risk** — potential redundancy | — | MANUAL |
+| 15 | **Unpublish or noindex 7 archive pages** | .25 | **SEO + Ops** — published archive pages may be indexed | — | SEMI |
+| 16 | **Add AggregateRating to homepage SoftwareApplication** | .25 | **SEO** — /accountant-software has 4.5/5 but homepage doesn't | Organization schema | AUTO |
 
-**P1 total:**
+**P1 total:** 4.5 hours
 
 ---
 
@@ -249,20 +249,20 @@ Client-visible improvements. Some need content review.
 
 | # | Task | Hours | Justification | Client item | Automation |
 |---|------|-------|---------------|-------------|------------|
-| 17 | **Fix alt text site-wide** — homepage (81 images), /features (17), /about (7) | | **A11y + AEO** — WCAG A violation. ~105 images need descriptive alt text. | — | SEMI |
-| 18 | **Consolidate 3 sole trader pages** — canonical to /mtd-software/sole-traders, redirect others | | **SEO** — keyword cannibalisation risk | — | SEMI |
-| 19 | **Add external links to HMRC.gov.uk** on /mtd-software and knowledge hub articles | | **AEO + Trust** — zero outbound links to authoritative sources | — | SEMI |
-| 20 | **Add "last updated" timestamps** to homepage, /mtd-software, /features | | **AEO** — freshness signals for AI citation | — | SEMI |
-| 21 | **Fix /mtd-software heading skip** (H2→H4) | | **SEO** — heading hierarchy gap | — | SEMI |
-| 22 | **Clean up sitemap** — exclude /tools/*, /search, old content | | **SEO** — 6+ non-indexable pages in sitemap | — | SEMI |
-| 23 | **Remove unnecessary CMS template pages** (Blog Banner Ads, Speaker) | | **Ops** — taxonomy collections don't need individual pages | — | SEMI |
-| 24 | **Review Hotjar + Zoho PageSense session recording** against privacy policy | | **De-risk** — session recording may capture sensitive data | — | MANUAL |
-| 25 | **Fix non-descriptive anchor text** — 60+ instances of "Read more", "Learn more" across feature sub-pages and homepage | | **SEO** — SEMRush flagged. Anchor text should describe the target page. | — | SEMI |
-| 26 | **Fix links with no anchor text** — 5 instances across 3 knowledge hub articles | | **A11y + SEO** — empty anchor tags | — | SEMI |
-| 27 | **Fix duplicate meta descriptions** on 2 legal partnership pages | | **SEO** — /legal/partnership-with-the-times and /legal/partnership-with-zempler | — | AUTO |
-| 28 | **Fix structured data markup errors** — 8 occurrences flagged by SEMRush across 7 pages | | **SEO** — validate and fix schema errors on homepage, /accountant-software, /features, /pricing, /webinars-and-events | — | SEMI |
+| 17 | **Fix alt text site-wide** — homepage (81 images), /features (17), /about (7) | .5 | **A11y + AEO** — WCAG A violation. ~105 images need descriptive alt text. | — | SEMI |
+| 18 | **Consolidate 3 sole trader pages** — canonical to /mtd-software/sole-traders, redirect others | .25 | **SEO** — keyword cannibalisation risk | — | SEMI |
+| 19 | **Add external links to HMRC.gov.uk** on /mtd-software and knowledge hub articles | .5 | **AEO + Trust** — zero outbound links to authoritative sources | — | SEMI |
+| 20 | **Add "last updated" timestamps** to homepage, /mtd-software, /features | .5 | **AEO** — freshness signals for AI citation | — | SEMI |
+| 21 | **Fix /mtd-software heading skip** (H2→H4) | .25 | **SEO** — heading hierarchy gap | — | SEMI |
+| 22 | **Clean up sitemap** — exclude /tools/*, /search, old content | .25 | **SEO** — 6+ non-indexable pages in sitemap | — | SEMI |
+| 23 | **Remove unnecessary CMS template pages** (Blog Banner Ads, Speaker) | .25 | **Ops** — taxonomy collections don't need individual pages | — | SEMI |
+| 24 | **Review Hotjar + Zoho PageSense session recording** against privacy policy | 0 | **De-risk** — session recording may capture sensitive data | — | MANUAL |
+| 25 | **Fix non-descriptive anchor text** — 60+ instances of "Read more", "Learn more" across feature sub-pages and homepage | 1 | **SEO** — SEMRush flagged. Anchor text should describe the target page. | — | SEMI |
+| 26 | **Fix links with no anchor text** — 5 instances across 3 knowledge hub articles | .25 | **A11y + SEO** — empty anchor tags | — | SEMI |
+| 27 | **Fix duplicate meta descriptions** on 2 legal partnership pages | .25 | **SEO** — /legal/partnership-with-the-times and /legal/partnership-with-zempler | — | AUTO |
+| 28 | **Fix structured data markup errors** — 8 occurrences flagged by SEMRush across 7 pages | 1 | **SEO** — validate and fix schema errors on homepage, /accountant-software, /features, /pricing, /webinars-and-events | — | SEMI |
 
-**P2 total:**
+**P2 total:** 5 hours
 
 ---
 
@@ -272,17 +272,16 @@ Editorial foundation. Requires content writing or review.
 
 | # | Task | Hours | Justification | Client item | Automation |
 |---|------|-------|---------------|-------------|------------|
-| 29 | **Rewrite homepage opening paragraph** to be answer-first | | **AEO** — AI engines grab first passage. Current opening is a brand hook, not an answer. | — | SEMI |
-| 30 | **Rewrite /features opening paragraph** to be answer-first | | **AEO** — same issue | — | SEMI |
-| 31 | **Add question-shaped H2s to homepage** | | **AEO** — zero question H2s currently | — | SEMI |
-| 32 | **Create llms.txt** at site root | | **AEO** — AI-search discoverability. Currently 404. | — | AUTO |
-| 33 | **Add named authors to knowledge hub articles** | | **AEO + Trust** — all articles attributed to "The Coconut Team" | — | MANUAL |
-| 34 | **Add original data/stats to key pages** | | **AEO + Trust** — no original research anywhere. Cite-magnet gap. | — | MANUAL |
-| 35 | **Review /blog and /knowledge-hub listing pages** — currently redirect to homepage | | **SEO** — important for internal linking and topical authority | — | MANUAL |
-| 36 | **Fix 15 orphaned knowledge hub articles** — pages with only 1 internal link (SEMRush) | | **SEO** — orphan pages get less crawl priority and link equity | — | SEMI |
-| 37 | **Shorten 2 over-long title elements** — /christmas-shutdown-checklist, /panicking-self-assessment | | **SEO** — truncated in SERPs | — | AUTO |
+| 29 | **Rewrite homepage opening paragraph** to be answer-first | .25 | **AEO** — AI engines grab first passage. Current opening is a brand hook, not an answer. | — | SEMI |
+| 30 | **Rewrite /features opening paragraph** to be answer-first | .25 | **AEO** — same issue | — | SEMI |
+| 31 | **Add question-shaped H2s to homepage** | .5 | **AEO** — zero question H2s currently | — | SEMI |
+| 32 | **Add named authors to knowledge hub articles** | 2 | **AEO + Trust** — all articles attributed to "The Coconut Team" | — | MANUAL |
+| 33 | **Add original data/stats to key pages** | 2 | **AEO + Trust** — no original research anywhere. Cite-magnet gap. | — | MANUAL |
+| 34 | **Review /blog and /knowledge-hub listing pages** — currently redirect to homepage | 1 | **SEO** — important for internal linking and topical authority | — | MANUAL |
+| 35 | **Fix 15 orphaned knowledge hub articles** — pages with only 1 internal link (SEMRush) | 1 | **SEO** — orphan pages get less crawl priority and link equity | — | SEMI |
+| 36 | **Shorten 2 over-long title elements** — /christmas-shutdown-checklist, /panicking-self-assessment | .25 | **SEO** — truncated in SERPs | — | AUTO |
 
-**P3 total:**
+**P3 total:** 7.25 hours
 
 ---
 
@@ -290,15 +289,15 @@ Editorial foundation. Requires content writing or review.
 
 | # | Task | Hours | Justification | Client item | Automation |
 |---|------|-------|---------------|-------------|------------|
-| 38 | **Landlord-specific landing page** — currently bundled with sole traders, no distinct messaging | | **Conv + SEO** — identified gap in ICP analysis | — | MANUAL |
-| 39 | **Accountant page content audit** — underserved ICP on main pages | | **Conv** — ICP 3 gets nav links but no substantive pitch | — | MANUAL |
-| 40 | **Content freshness programme** — update knowledge hub articles older than 6 months | | **AEO + SEO** — dateModified values are 8+ months old | — | MANUAL |
-| 41 | **Add JobPosting schema** when vacancies are posted | | **SEO** — Google for Jobs eligibility | — | AUTO |
-| 42 | **SEMRush organic intelligence** — domain overview, top keywords, competitor benchmark | | **SEO** — not yet run. Available as optional Layer A+B. | — | SEMI |
-| 43 | **About page content refresh** — thinner and more generic than other pages | | **Trust + AEO** — vision statement uses startup-pitch language that doesn't match brand voice | — | MANUAL |
-| 44 | **Strengthen generic CTAs** — replace "Read more" / "More information" with action-oriented copy | | **Conv** — doesn't match the otherwise action-oriented voice | — | SEMI |
+| 38 | **Landlord-specific landing page** — currently bundled with sole traders, no distinct messaging | 1 | **Conv + SEO** — identified gap in ICP analysis | — | MANUAL |
+| 39 | **Accountant page content audit** — underserved ICP on main pages | 1 | **Conv** — ICP 3 gets nav links but no substantive pitch | — | MANUAL |
+| 40 | **Content freshness programme** — update knowledge hub articles older than 6 months | 1 | **AEO + SEO** — dateModified values are 8+ months old | — | MANUAL |
+| 41 | **Add JobPosting schema** when vacancies are posted | 1 | **SEO** — Google for Jobs eligibility | — | AUTO |
+| 42 | **SEMRush organic intelligence** — domain overview, top keywords, competitor benchmark | 1 | **SEO** — not yet run. Available as optional Layer A+B. | — | SEMI |
+| 43 | **About page content refresh** — thinner and more generic than other pages | 1 | **Trust + AEO** — vision statement uses startup-pitch language that doesn't match brand voice | — | MANUAL |
+| 44 | **Strengthen generic CTAs** — replace "Read more" / "More information" with action-oriented copy | 1 | **Conv** — doesn't match the otherwise action-oriented voice | — | SEMI |
 
-**P4 total:**
+**P4 total:** 7 hours
 
 ---
 

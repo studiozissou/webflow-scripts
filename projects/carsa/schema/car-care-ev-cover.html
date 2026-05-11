@@ -1,0 +1,49 @@
+<!-- CARSACOVER EV — JSON-LD Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Product",
+      "@id": "https://www.carsa.co.uk/car-care/electric-vehicle-cover#product",
+      "name": "carsaCover EV",
+      "description": "Electric vehicle warranty and protection plans. EV extended warranty starting from £999, plus scratch and dent cover and tyre and alloy protection from £449 each.",
+      "url": "https://www.carsa.co.uk/car-care/electric-vehicle-cover",
+      "brand": {
+        "@type": "Brand",
+        "name": "Carsa"
+      },
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "GBP",
+        "lowPrice": "449",
+        "offerCount": "3",
+        "seller": { "@id": "https://www.carsa.co.uk/#organization" }
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/car-care/electric-vehicle-cover#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Car Care",
+          "item": "https://www.carsa.co.uk/car-care/overview"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "carsaCover EV"
+        }
+      ]
+    }
+  ]
+}
+</script>

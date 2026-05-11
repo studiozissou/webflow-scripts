@@ -1,10 +1,4 @@
-<!--
-  STORES TEMPLATE — JSON-LD Schema
-  Paste into: Stores CMS Collection Template → Page Settings → Custom Code → Head Code
-  Uses Webflow CMS binding syntax with &quot; entities and : for ref sub-fields.
-  CMS fields: slug, name, phone, email, store-image, street-address, city,
-  county, postcode, latitude, longitude, rating, review-count
--->
+<!-- STORES TEMPLATE — JSON-LD Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -17,6 +11,7 @@
       "telephone": "{{wf {&quot;path&quot;:&quot;phone&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "email": "{{wf {&quot;path&quot;:&quot;email&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "image": "{{wf {&quot;path&quot;:&quot;store-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+      "priceRange": "£5,000 - £50,000",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "{{wf {&quot;path&quot;:&quot;street-address&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
@@ -30,37 +25,9 @@
         "latitude": "{{wf {&quot;path&quot;:&quot;latitude&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
         "longitude": "{{wf {&quot;path&quot;:&quot;longitude&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
       },
-      "openingHoursSpecification": [
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          "opens": "09:00",
-          "closes": "19:00"
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": "Saturday",
-          "opens": "09:00",
-          "closes": "18:00"
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": "Sunday",
-          "opens": "10:00",
-          "closes": "17:00"
-        }
-      ],
       "parentOrganization": { "@id": "https://www.carsa.co.uk/#organization" },
-      "priceRange": "$$",
       "currenciesAccepted": "GBP",
-      "paymentAccepted": "Cash, Credit Card, Finance",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "{{wf {&quot;path&quot;:&quot;rating&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-        "reviewCount": "{{wf {&quot;path&quot;:&quot;review-count&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-        "bestRating": "5",
-        "worstRating": "1"
-      }
+      "paymentAccepted": "Cash, Credit Card, Finance"
     },
     {
       "@type": "BreadcrumbList",

@@ -14,8 +14,8 @@
 
   gsap.to(items, {
     opacity: 1,
-    duration: 1,
-    stagger: 0.5,
+    duration: 1.5,
+    stagger: 0.75,
     ease: 'power1.out',
     scrollTrigger: {
       trigger: wrap,

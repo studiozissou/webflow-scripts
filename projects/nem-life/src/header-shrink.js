@@ -7,9 +7,8 @@
  * Handles: scroll, resize, back-navigation (page may load mid-scroll).
  */
 
-const DEBUG = false;
-
 (() => {
+  const DEBUG = false;
   const SELECTOR = '.header-logo';
   const CLASS = 'is-small';
   const THRESHOLD = 1; // px — treat anything above this as "not at top"

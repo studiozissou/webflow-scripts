@@ -1,9 +1,4 @@
-<!--
-  MAKES TEMPLATE — JSON-LD Schema
-  Paste into head custom code on the Makes CMS template page.
-  Uses Webflow CMS binding syntax with &quot; entities and : for ref sub-fields.
-  Makes FAQ slugs: faq (1), faq-2, faq-3 ... faq-10
--->
+<!-- MAKES TEMPLATE — JSON-LD Schema -->
 
 <!-- WebPage + BreadcrumbList — always present -->
 <script type="application/ld+json">
@@ -18,11 +13,7 @@
       "description": "{{wf {&quot;path&quot;:&quot;subheading&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
       "publisher": { "@id": "https://www.carsa.co.uk/#organization" },
-      "breadcrumb": { "@id": "https://www.carsa.co.uk/used-cars/make/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb" },
-      "speakable": {
-        "@type": "SpeakableSpecification",
-        "cssSelector": [".section_hero h1", ".section_hero p"]
-      },
+      "breadcrumb": { "@id": "https://www.carsa.co.uk/used-cars/make/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb" }
       "mainEntity": { "@id": "https://www.carsa.co.uk/used-cars/make/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#faq" }
     },
     {

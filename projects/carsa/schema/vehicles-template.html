@@ -1,11 +1,4 @@
-<!--
-  VEHICLES TEMPLATE — JSON-LD Schema
-  Paste into: Vehicles CMS Collection Template → Page Settings → Custom Code → Head Code
-  Uses Webflow CMS binding syntax with &quot; entities and : for ref sub-fields.
-  CMS fields: slug, name, meta-description, make:name, make:slug, model, year,
-  body-type, fuel-type, transmission, drive-type, colour, doors, seats,
-  mileage, vrm, hero-image, price, registration-date
--->
+<!-- VEHICLES TEMPLATE — JSON-LD Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -14,31 +7,31 @@
       "@type": ["Product", "Vehicle"],
       "@id": "https://www.carsa.co.uk/vehicles/used/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#product",
       "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "description": "{{wf {&quot;path&quot;:&quot;meta-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "description": "{{wf {&quot;path&quot;:&quot;trim&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "brand": {
         "@type": "Brand",
         "name": "{{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
       },
-      "model": "{{wf {&quot;path&quot;:&quot;model&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "vehicleModelDate": "{{wf {&quot;path&quot;:&quot;year&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "model": "{{wf {&quot;path&quot;:&quot;model:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "vehicleModelDate": "{{wf {&quot;path&quot;:&quot;registration-year-2&quot;,&quot;type&quot;:&quot;Number&quot;\} }}",
       "bodyType": "{{wf {&quot;path&quot;:&quot;body-type&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "fuelType": "{{wf {&quot;path&quot;:&quot;fuel-type&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "vehicleTransmission": "{{wf {&quot;path&quot;:&quot;transmission&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "vehicleTransmission": "{{wf {&quot;path&quot;:&quot;gearbox&quot;,&quot;type&quot;:&quot;Option&quot;\} }}",
       "driveWheelConfiguration": "{{wf {&quot;path&quot;:&quot;drive-type&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "color": "{{wf {&quot;path&quot;:&quot;colour&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "numberOfDoors": "{{wf {&quot;path&quot;:&quot;doors&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "seatingCapacity": "{{wf {&quot;path&quot;:&quot;seats&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "mileageFromOdometer": {
         "@type": "QuantitativeValue",
-        "value": "{{wf {&quot;path&quot;:&quot;mileage&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "value": "{{wf {&quot;path&quot;:&quot;odometer&quot;,&quot;type&quot;:&quot;Number&quot;\} }}",
         "unitCode": "SMI"
       },
-      "image": "{{wf {&quot;path&quot;:&quot;hero-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+      "image": "{{wf {&quot;path&quot;:&quot;main-image-link&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
       "offers": {
         "@type": "Offer",
         "url": "https://www.carsa.co.uk/vehicles/used/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
         "priceCurrency": "GBP",
-        "price": "{{wf {&quot;path&quot;:&quot;price&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "price": "{{wf {&quot;path&quot;:&quot;price&quot;,&quot;type&quot;:&quot;Number&quot;\} }}",
         "itemCondition": "https://schema.org/UsedCondition",
         "availability": "https://schema.org/InStock",
         "seller": { "@id": "https://www.carsa.co.uk/#organization" }
@@ -47,7 +40,7 @@
         {
           "@type": "PropertyValue",
           "name": "VRM",
-          "value": "{{wf {&quot;path&quot;:&quot;vrm&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+          "value": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
         },
         {
           "@type": "PropertyValue",
@@ -59,11 +52,7 @@
           "name": "Warranty",
           "value": "90 days included free"
         }
-      ],
-      "speakable": {
-        "@type": "SpeakableSpecification",
-        "cssSelector": [".vehicle_title", ".vehicle_price", ".vehicle_key-specs"]
-      }
+      ]
     },
     {
       "@type": "BreadcrumbList",
@@ -96,4 +85,82 @@
     }
   ]
 }
+</script>
+
+<!-- Clean Schema + Update if Vehicle Removed -->
+<script>
+(function () {
+  var status = "{{wf {&quot;path&quot;:&quot;status&quot;,&quot;type&quot;:&quot;Option&quot;\} }}".trim().toLowerCase();
+
+  var blocks = document.querySelectorAll('script[type="application/ld+json"]');
+  for (var i = 0; i < blocks.length; i++) {
+    var txt = blocks[i].textContent;
+    if (!txt || txt.indexOf('"Product"') === -1) continue;
+
+    try {
+      var data = JSON.parse(txt);
+      var changed = false;
+
+      var scrub = function (obj) {
+        if (!obj || typeof obj !== 'object') return;
+        var keys = Object.keys(obj);
+        for (var k = 0; k < keys.length; k++) {
+          var key = keys[k];
+          var val = obj[key];
+          if (val === '' || val === null) {
+            delete obj[key];
+            changed = true;
+          } else if (Array.isArray(val)) {
+            for (var j = val.length - 1; j >= 0; j--) {
+              if (val[j] && typeof val[j] === 'object') {
+                scrub(val[j]);
+                if (val[j].value === undefined && val[j]['@type'] === 'PropertyValue') {
+                  val.splice(j, 1);
+                  changed = true;
+                }
+              }
+            }
+          } else if (typeof val === 'object') {
+            scrub(val);
+            var remaining = Object.keys(val).filter(function (v) { return v !== '@type'; });
+            if (remaining.length === 0) {
+              delete obj[key];
+              changed = true;
+            }
+          }
+        }
+      };
+
+      if (data['@graph']) {
+        for (var g = 0; g < data['@graph'].length; g++) {
+          scrub(data['@graph'][g]);
+        }
+      } else {
+        scrub(data);
+      }
+
+      if (status === 'removed') {
+        var touch = function (node) {
+          var o = node && node.offers;
+          if (!o) return;
+          var arr = Array.isArray(o) ? o : [o];
+          for (var a = 0; a < arr.length; a++) {
+            if (!arr[a] || typeof arr[a] !== 'object') continue;
+            arr[a].availability = 'https://schema.org/SoldOut';
+            delete arr[a].price;
+            delete arr[a].priceCurrency;
+            changed = true;
+          }
+        };
+        if (data['@graph']) data['@graph'].forEach(touch);
+        else touch(data);
+      }
+
+      if (changed) {
+        blocks[i].textContent = JSON.stringify(data);
+        break;
+      }
+    } catch (_) {}
+  }
+})();
 </script>

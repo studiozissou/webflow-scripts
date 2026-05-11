@@ -1,22 +1,16 @@
-<!--
-  CAR CARE OVERVIEW PAGE — JSON-LD Schema
-  Paste into: /car-care/overview → Page Settings → Custom Code → Head Code
--->
+<!-- CAR CARE OVERVIEW — JSON-LD Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Service",
-      "@id": "https://www.carsa.co.uk/car-care/overview#service",
-      "name": "Car Care Services",
-      "description": "Professional car care services for your vehicle. Book online or visit any Carsa location.",
-      "provider": { "@id": "https://www.carsa.co.uk/#organization" },
-      "serviceType": "Automotive Service",
-      "areaServed": {
-        "@type": "Country",
-        "name": "United Kingdom"
-      }
+      "@type": "WebPage",
+      "@id": "https://www.carsa.co.uk/car-care/overview#webpage",
+      "url": "https://www.carsa.co.uk/car-care/overview",
+      "name": "Car Care & Protection | Carsa",
+      "description": "Car care and protection products from Carsa. Extended warranties, scratch and dent cover, paint protection, EV cover, accessories, and drive-away insurance.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "about": { "@id": "https://www.carsa.co.uk/#organization" }
     },
     {
       "@type": "BreadcrumbList",

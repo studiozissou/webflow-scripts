@@ -1,9 +1,4 @@
-<!--
-  FAQ PAGE — JSON-LD Schema
-  Paste into: /faq → Page Settings → Custom Code → Head Code
-  Note: The dynamic JS injection handles FAQPage schema separately.
-  This provides the WebPage wrapper + BreadcrumbList.
--->
+<!-- FAQ PAGE — JSON-LD Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -12,13 +7,9 @@
       "@type": "WebPage",
       "@id": "https://www.carsa.co.uk/faq#webpage",
       "url": "https://www.carsa.co.uk/faq",
-      "name": "Frequently Asked Questions | Carsa",
-      "description": "Find answers to common questions about buying a used car from Carsa, finance options, delivery, warranties, and part exchange.",
-      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
-      "speakable": {
-        "@type": "SpeakableSpecification",
-        "cssSelector": [".faq_heading", ".faq_item"]
-      }
+      "name": "Used Cars FAQ | Answers to Common Questions from Carsa",
+      "description": "Find answers to common questions about buying a used car from Carsa, finance options, warranties, part exchange, car care, and vehicle collection.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" }
     },
     {
       "@type": "BreadcrumbList",

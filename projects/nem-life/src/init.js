@@ -45,11 +45,23 @@
     });
   }
 
+  function loadCSS(url) {
+    return new Promise((resolve, reject) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = url;
+      link.onload = resolve;
+      link.onerror = reject;
+      document.head.appendChild(link);
+    });
+  }
+
   async function boot() {
-    /* Load GSAP core + Swiper in parallel (independent of each other) */
+    /* Load GSAP core + Swiper JS & CSS in parallel */
     await Promise.all([
       loadScript(deps[0]),  // gsap
-      loadScript(deps[2]),  // swiper
+      loadScript(deps[2]),  // swiper js
+      loadCSS('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css'),
     ]);
     /* ScrollTrigger needs gsap to exist first */
     await loadScript(deps[1]);

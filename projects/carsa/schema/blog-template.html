@@ -1,36 +1,24 @@
-<!--
-  BLOG TEMPLATE — JSON-LD Schema
-  Paste into: Blog CMS Collection Template → Page Settings → Custom Code → Head Code
-  Uses Webflow CMS binding syntax with &quot; entities and : for ref sub-fields.
-  CMS fields: slug, name, meta-description, featured-image, author:name,
-  published-date, updated-date, category:name
--->
+<!-- BLOG TEMPLATE — JSON-LD Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Article",
+      "@type": "BlogPosting",
       "@id": "https://www.carsa.co.uk/blog/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#article",
       "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "https://www.carsa.co.uk/blog/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
       },
       "headline": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "description": "{{wf {&quot;path&quot;:&quot;meta-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "image": "{{wf {&quot;path&quot;:&quot;featured-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
-      "author": {
-        "@type": "Person",
-        "name": "{{wf {&quot;path&quot;:&quot;author:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
-      },
+      "description": "{{wf {&quot;path&quot;:&quot;summary&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "image": [
+        "{{wf {&quot;path&quot;:&quot;social-share-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}"
+      ],
       "publisher": { "@id": "https://www.carsa.co.uk/#organization" },
-      "datePublished": "{{wf {&quot;path&quot;:&quot;published-date&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "dateModified": "{{wf {&quot;path&quot;:&quot;updated-date&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "articleSection": "{{wf {&quot;path&quot;:&quot;category:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "speakable": {
-        "@type": "SpeakableSpecification",
-        "cssSelector": [".blog_heading", ".blog_intro"]
-      }
+      "datePublished": "{{wf {&quot;path&quot;:&quot;published-on&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+      "dateModified": "{{wf {&quot;path&quot;:&quot;updated-on&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+      "articleSection": "{{wf {&quot;path&quot;:&quot;category:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
     },
     {
       "@type": "BreadcrumbList",

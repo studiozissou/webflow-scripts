@@ -1,0 +1,8 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://www.carsa.co.uk/#website",
+  "url": "https://www.carsa.co.uk",
+  "name": "Carsa",
+  "publisher": { "@id": "https://www.carsa.co.uk/#organization" }
+}

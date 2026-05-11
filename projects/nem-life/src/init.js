@@ -23,6 +23,7 @@
     'swiper-init.js',
     'blog-share.js',
     'back-to-top.js',
+    'header-shrink.js',
   ];
 
   function loadScript(url) {

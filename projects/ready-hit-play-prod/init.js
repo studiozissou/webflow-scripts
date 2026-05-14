@@ -259,7 +259,7 @@
       await Promise.all([
         loadScript(CONFIG.gsapCoreUrl),
         ...CONFIG.cssDependencies.map(css => loadStylesheet(css)),
-        loadStylesheet(`${baseUrl}/${isDevMode ? 'ready-hit-play.css' : 'ready-hit-play.min.css'}?${versionParam}`),
+        loadStylesheet(`${baseUrl}/ready-hit-play.css?${versionParam}`),
         ...(isOverlandPage ? [loadStylesheet(`${baseUrl}/overland-ai.css?${versionParam}`)] : [])
       ]);
 
@@ -277,20 +277,18 @@
       // All parallel modules (no parse-time cross-dependencies)
       await Promise.all(
         CONFIG.parallelModules.map(module => {
-          const moduleFile = isDevMode ? module : module.replace('.js', '.min.js');
-          return loadScript(`${baseUrl}/${moduleFile}?${versionParam}`);
+          return loadScript(`${baseUrl}/${module}?${versionParam}`);
         })
       );
 
       // Sequential modules (orchestrator reads all RHP.* registrations at parse time)
       for (const module of CONFIG.sequentialModules) {
-        const moduleFile = isDevMode ? module : module.replace('.js', '.min.js');
-        await loadScript(`${baseUrl}/${moduleFile}?${versionParam}`);
+        await loadScript(`${baseUrl}/${module}?${versionParam}`);
       }
 
       // Page-specific: Overland AI case study (only on /work/overland-ai)
       if (isOverlandPage) {
-        await loadScript(`${baseUrl}/${isDevMode ? 'overland-ai.js' : 'overland-ai.min.js'}?${versionParam}`);
+        await loadScript(`${baseUrl}/overland-ai.js?${versionParam}`);
       }
 
       // Fallback: dismiss loader after all modules load (non-home pages, or if

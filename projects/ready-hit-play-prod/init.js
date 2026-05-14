@@ -204,6 +204,10 @@
       // async=true is the browser default for dynamic scripts; explicit for clarity.
       // Execution order is controlled by wave-based await, not by the async attribute.
       script.async = true;
+      // crossorigin="anonymous" uses CORS mode, which bypasses Chrome's ORB
+      // (Opaque Resource Blocking). jsDelivr sends access-control-allow-origin: *
+      // so CORS succeeds and the browser can validate content-type properly.
+      script.crossOrigin = 'anonymous';
       script.onload = function() { resolve(); };
       script.onerror = function() { reject(new Error('Failed to load: ' + src)); };
       document.head.appendChild(script);

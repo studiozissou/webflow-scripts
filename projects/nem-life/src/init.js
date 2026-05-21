@@ -22,6 +22,7 @@
     'method-cars-fade.js',
     'swiper-init.js',
     'blog-share.js',
+    'faq-accordion.js',
     'back-to-top.js',
     'header-shrink.js',
   ];

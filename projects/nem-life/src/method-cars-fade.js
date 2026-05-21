@@ -14,17 +14,16 @@
 
   gsap.set(items, { opacity: 0 });
 
-  ScrollTrigger.batch(items, {
-    start: 'top 90%',
-    once: true,
-    onEnter: (batch) => {
-      gsap.to(batch, {
-        opacity: 1,
-        duration: 1.8,
-        stagger: 1,
-        delay: 0.4,
-        ease: 'power2.out',
-      });
-    },
+  items.forEach((item, i) => {
+    gsap.to(item, {
+      opacity: 1,
+      duration: 1.8,
+      delay: i * 1,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: wrap,
+        start: 'top 85%',
+      },
+    });
   });
 })();

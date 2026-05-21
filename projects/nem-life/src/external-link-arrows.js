@@ -4,11 +4,10 @@
  * external URL by -45deg so the arrow indicates "outbound".
  */
 (() => {
-  const DEBUG = false;
   const origin = window.location.origin;
 
-  document.querySelectorAll('a.button, a[class*="button"]').forEach((btn) => {
-    const href = btn.href;
+  document.querySelectorAll('.button').forEach((btn) => {
+    const href = btn.closest('a')?.href || btn.getAttribute('href');
     if (!href) return;
 
     try {
@@ -18,8 +17,6 @@
     } catch (e) {
       return;
     }
-
-    DEBUG && console.log('[ext-arrows] external:', href);
 
     btn.querySelectorAll('.button-arrow').forEach((arrow) => {
       arrow.style.transform = 'rotate(-45deg)';

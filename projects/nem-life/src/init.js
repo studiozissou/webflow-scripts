@@ -23,6 +23,7 @@
     'swiper-init.js',
     'blog-share.js',
     'faq-accordion.js',
+    'external-link-arrows.js',
     'back-to-top.js',
     'header-shrink.js',
   ];

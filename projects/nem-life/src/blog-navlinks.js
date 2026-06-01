@@ -5,7 +5,8 @@
  */
 (() => {
   const DEBUG = false;
-  const OFFSET = 80; // px offset to clear fixed header / navbar
+  const TABLET_BP = 991; // Webflow tablet breakpoint
+  const getOffset = () => window.innerWidth > TABLET_BP ? 128 : 78;
 
   document.querySelectorAll('.blog-navlink').forEach((el) => {
     const targetId = el.getAttribute('data-link');
@@ -19,7 +20,7 @@
         return;
       }
 
-      const top = target.getBoundingClientRect().top + window.scrollY - OFFSET;
+      const top = target.getBoundingClientRect().top + window.scrollY - getOffset();
       window.scrollTo({ top, behavior: 'smooth' });
       DEBUG && console.log('[blog-navlinks] scrolled to', targetId);
     });

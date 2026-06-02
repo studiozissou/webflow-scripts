@@ -9,6 +9,9 @@
   if (!form) return;
 
   form.addEventListener('click', (e) => {
+    /* Ignore the synthetic click the browser fires on the input */
+    if (e.target.tagName === 'INPUT') return;
+
     const label = e.target.closest('label');
     if (!label) return;
 

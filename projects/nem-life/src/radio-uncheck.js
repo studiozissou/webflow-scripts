@@ -1,30 +1,23 @@
 /**
  * NEM Life — Radio Filter Uncheck
- * Allows Finsweet CMS filter radio buttons to be unchecked
- * by clicking them again, clearing the active filter.
+ * Allows Finsweet CMS List radio filters to be unchecked
+ * by clicking them again, clearing all filters.
  */
 
 (() => {
-  const radios = document.querySelectorAll(
-    '[fs-list-element="filters"] input[type="radio"]'
-  );
+  const form = document.querySelector('[fs-list-element="filters"]');
+  if (!form) return;
 
-  radios.forEach((radio) => {
-    const label = radio.closest('label');
+  form.addEventListener('click', (e) => {
+    const label = e.target.closest('label');
     if (!label) return;
 
-    let wasChecked = false;
+    const radio = label.querySelector('input[type="radio"]');
+    if (!radio || !radio.checked) return;
 
-    label.addEventListener('mousedown', () => {
-      wasChecked = radio.checked;
-    });
-
-    label.addEventListener('click', (e) => {
-      if (wasChecked) {
-        e.preventDefault();
-        radio.checked = false;
-        radio.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
-  });
+    /* Radio was already checked — clear filters */
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.replace(window.location.pathname);
+  }, true);
 })();

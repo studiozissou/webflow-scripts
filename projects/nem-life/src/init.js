@@ -27,6 +27,7 @@
     'external-link-arrows.js',
     'back-to-top.js',
     'header-shrink.js',
+    'radio-uncheck.js',
   ];
 
   function loadScript(url) {

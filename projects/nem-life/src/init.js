@@ -28,6 +28,8 @@
     'back-to-top.js',
     'header-shrink.js',
     'radio-uncheck.js',
+    'read-more-expand.js',
+    'quiz-data.js',
   ];
 
   function loadScript(url) {

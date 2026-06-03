@@ -1,7 +1,7 @@
 {
-  "lastUpdated": "2026-04-28",
-  "lastDeployed": "2026-04-28",
-  "lastDeployedHash": "0575f3a",
+  "lastUpdated": "2026-06-03",
+  "lastDeployed": "2026-05-14",
+  "lastDeployedHash": "7d80e5d",
   "testPages": [
     {
       "slug": "getcoconut-thetimes",
@@ -48,6 +48,43 @@
       "spec": "tests/acceptance/nem-mobile-qa-automated-fixes.spec.js",
       "description": "NEM Life mobile QA fixes — page titles, ervaringen heading, Christel card stacking, NEM Methode spacing, footer links",
       "created": "2026-04-30"
+    },
+    {
+      "slug": "nem-life-remediation",
+      "url": "https://nem-life-1.webflow.io",
+      "spec": "tests/acceptance/nem-life-remediation.spec.js",
+      "description": "NEM Life site remediation — 5 phases: SEO metadata, JSON-LD schemas, a11y + headings, CMS + ops, growth + launch",
+      "created": "2026-05-07"
+    },
+    {
+      "slug": "coconut-homepage-refresh",
+      "url": "https://getcoconut.webflow.io/home-v2",
+      "spec": "tests/acceptance/coconut-homepage-refresh.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut homepage refresh — new sections (value props, persona, MTD table), rewritten hero/FAQ/CTA, deleted carousel/bank logos",
+      "created": "2026-06-01"
+    },
+    {
+      "slug": "nem-read-more-expand",
+      "url": "https://nem-life-1.webflow.io/missie-nem-life",
+      "spec": "tests/acceptance/nem-read-more-expand.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "NEM Life read-more expand/collapse — GSAP accordion toggle on data-button/data-block siblings with Dutch text swap",
+      "created": "2026-06-02"
+    },
+    {
+      "slug": "nem-zelftest-quiz-data",
+      "url": "https://nem-life-1.webflow.io/zelftest/test-slug",
+      "spec": "tests/acceptance/nem-zelftest-quiz-data.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "NEM Life zelftest quiz data extraction — reads CMS questions and results into window.__quizData for React component",
+      "created": "2026-06-03"
     }
   ]
 }

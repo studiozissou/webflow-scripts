@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-05-07",
+  "updated": "2026-06-03",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -155,6 +155,28 @@
       "created": "2026-04-29",
       "updated": "2026-04-29",
       "note": "Phase 5. Preload hero, WebP conversion, responsive images. Meta + OG + Article/Organization/FAQPage/Person schema. robots.txt (currently Disallow: /), sitemap, hreflang. GEO/AEO DOM audit. axe-core on every template. Keyboard nav + reduced-motion. Lighthouse baseline. 301 map from TEMP site, DNS cutover, final publish, smoke test, Loom handover. 8 hours budgeted."
+    },
+    {
+      "id": "nem-read-more-expand",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Building",
+      "title": "Read more expand/collapse animation with GSAP and Dutch text toggle",
+      "description": "GSAP-powered read-more accordion. Button data-button=read-more-expand toggles all sibling data-block=read-more-expand elements. Collapsed by default. Button text swaps Lees meer / Lees minder. Works site-wide.",
+      "spec": "projects/nem-life/.claude/specs/nem-read-more-expand.md",
+      "created": "2026-06-02"
+    },
+    {
+      "id": "nem-zelftest-quiz-data",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Zelftest: CMS quiz data extraction module for React component",
+      "description": "Add quiz-data.js module that reads questions and result bands from hidden CMS collection lists and exposes on window.__quizData. React code component consumes via quizDataReady event.",
+      "spec": "projects/nem-life/.claude/specs/nem-zelftest-quiz-data.md",
+      "created": "2026-06-03"
     }
   ]
 }

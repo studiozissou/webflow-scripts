@@ -90,9 +90,9 @@
 
         introTl.to(infos[i], {
           opacity: 1,
-          duration: 0.8,
+          duration: 1.2,
           ease: 'power2.out',
-        }, offset + 0.4);
+        }, offset);
       });
 
       ScrollTrigger.create({
@@ -147,7 +147,7 @@
           });
           gsap.to(infos[j], {
             opacity: 0,
-            duration: 0.3,
+            duration: 0.4,
             ease: 'power2.inOut',
             overwrite: true,
           });
@@ -163,7 +163,7 @@
         });
         gsap.to(infos[index], {
           opacity: 1,
-          duration: 0.4,
+          duration: 0.5,
           ease: 'power2.out',
           overwrite: true,
         });

@@ -83,10 +83,14 @@
       }, 0);
     }
 
-    /* Stagger nav links */
-    const links = wrap.querySelectorAll('.navlink, .menu_button-wrap');
-    if (links.length) {
-      t.fromTo(links, {
+    /* Stagger menu items (direct children of nav + CTA button) */
+    const nav = wrap.querySelector('.menu_navigation-wrap');
+    const items = [
+      ...(nav ? nav.children : []),
+      ...wrap.querySelectorAll('.menu_button-wrap'),
+    ];
+    if (items.length) {
+      t.fromTo(items, {
         opacity: 0,
         y: 12,
       }, {

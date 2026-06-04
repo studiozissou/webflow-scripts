@@ -25,6 +25,7 @@
     'blog-share.js',
     'blog-navlinks.js',
     'faq-accordion.js',
+    'footer-accordion.js',
     'external-link-arrows.js',
     'back-to-top.js',
     'dropdown-anim.js',

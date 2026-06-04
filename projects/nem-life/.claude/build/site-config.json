@@ -1,7 +1,7 @@
 {
   "siteId": "69bfba56f3622791a798b816",
-  "stagingUrl": "https://nem-life-1.design.webflow.com",
-  "liveUrl": "https://nemlife.com",
+  "stagingUrl": "https://nem-life-1.webflow.io",
+  "liveUrl": null,
   "breakpoints": ["xxl", "xl", "large", "main", "medium", "small", "tiny"],
   "pages": {
     "home": "69bfba56f3622791a798b814",
@@ -41,7 +41,7 @@
   "cdn": {
     "repo": "studiozissou/webflow-scripts",
     "branch": "main",
-    "lastDeployedHash": "8238d02",
+    "lastDeployedHash": "a5e8d77",
     "lastDeployed": "2026-05-07",
     "entryPoint": "projects/nem-life/src/init.js",
     "scriptTag": "<script src=\"https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@8238d02/projects/nem-life/src/init.js\"></script>",

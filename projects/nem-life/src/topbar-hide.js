@@ -23,6 +23,7 @@
   }
 
   const navButton = document.querySelector(NAV_BUTTON);
+  const originalHeight = topbar.offsetHeight;
   let hidden = false;
 
   function isMenuOpen() {
@@ -55,7 +56,7 @@
     hidden = false;
     topbar.style.overflow = '';
     gsap.to(topbar, {
-      height: 'auto',
+      height: originalHeight,
       opacity: 1,
       duration: 0.3,
       ease: 'power2.inOut',

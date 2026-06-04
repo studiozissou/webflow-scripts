@@ -18,6 +18,7 @@
   const lineTop = btn.querySelector('.menu-line--top');
   const lineMid = btn.querySelector('.menu-line--middle');
   const lineBot = btn.querySelector('.menu-line--bottom');
+  const blur = document.querySelector('.menu-blur');
 
   let isOpen = false;
   let tl = null;
@@ -69,6 +70,18 @@
       duration: 0.35,
       ease: 'power2.out',
     }, 0.05);
+
+    /* Backdrop blur */
+    if (blur) {
+      t.fromTo(blur, {
+        display: 'block',
+        autoAlpha: 0,
+      }, {
+        autoAlpha: 1,
+        duration: 0.35,
+        ease: 'power2.out',
+      }, 0);
+    }
 
     /* Stagger nav links */
     const links = wrap.querySelectorAll('.navlink, .menu_button-wrap');
@@ -125,6 +138,9 @@
   wrap.addEventListener('click', (e) => {
     if (e.target.closest('a')) close();
   });
+
+  /* Close when clicking the blur overlay */
+  if (blur) blur.addEventListener('click', close);
 
   /* Expose for external use */
   window.__nemMenu = { open, close, toggle, isOpen: () => isOpen };

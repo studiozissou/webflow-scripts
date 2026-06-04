@@ -20,13 +20,10 @@
   const lineBot = btn.querySelector('.menu-line--bottom');
   const blur = document.querySelector('.menu-blur');
 
-  /* Strip IX2 control from the dropdown inside the menu so it doesn't
-     animate independently of our GSAP timeline */
+  /* Clear IX2's inline opacity on the dropdown so our GSAP timeline
+     controls the entrance, but keep data-w-id for dropdown open/close */
   const menuDropdown = wrap.querySelector('.w-dropdown[data-w-id]');
-  if (menuDropdown) {
-    menuDropdown.removeAttribute('data-w-id');
-    menuDropdown.style.removeProperty('opacity');
-  }
+  if (menuDropdown) menuDropdown.style.removeProperty('opacity');
 
   let isOpen = false;
   let tl = null;

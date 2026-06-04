@@ -26,6 +26,7 @@
     'faq-accordion.js',
     'external-link-arrows.js',
     'back-to-top.js',
+    'dropdown-anim.js',
     'menu-toggle.js',
     'header-shrink.js',
     'topbar-hide.js',

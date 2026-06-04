@@ -92,13 +92,11 @@
     if (items.length) {
       t.fromTo(items, {
         opacity: 0,
-        y: 12,
       }, {
         opacity: 1,
-        y: 0,
         duration: 0.3,
         stagger: 0.04,
-        ease: 'power2.out',
+        ease: 'none',
       }, 0.12);
     }
 

@@ -25,10 +25,19 @@
   function buildTimeline() {
     const t = gsap.timeline({ paused: true });
 
+    /* Calculate offsets to center lines for X */
+    const btnH = btn.offsetHeight;
+    const center = btnH / 2;
+    const topY = lineTop.offsetTop + lineTop.offsetHeight / 2;
+    const botY = lineBot.offsetTop + lineBot.offsetHeight / 2;
+    const topDelta = center - topY;
+    const botDelta = center - botY;
+
     /* Hamburger → X */
     t.to(lineTop, {
       rotation: 45,
-      y: '50%',
+      y: topDelta,
+      left: 0,
       width: '100%',
       transformOrigin: 'center center',
       duration: 0.3,
@@ -41,7 +50,8 @@
     }, 0);
     t.to(lineBot, {
       rotation: -45,
-      y: '-50%',
+      y: botDelta,
+      left: 0,
       width: '100%',
       transformOrigin: 'center center',
       duration: 0.3,

@@ -20,10 +20,6 @@
   const lineBot = btn.querySelector('.menu-line--bottom');
   const blur = document.querySelector('.menu-blur');
 
-  /* Clear IX2's inline opacity on the dropdown so our GSAP timeline
-     controls the entrance, but keep data-w-id for dropdown open/close */
-  const menuDropdown = wrap.querySelector('.w-dropdown[data-w-id]');
-  if (menuDropdown) menuDropdown.style.removeProperty('opacity');
 
   let isOpen = false;
   let tl = null;

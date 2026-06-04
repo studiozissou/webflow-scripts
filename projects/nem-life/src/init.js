@@ -20,6 +20,7 @@
   const modules = [
     'card-links.js',
     'method-cars-fade.js',
+    'wat-als-reveal.js',
     'swiper-init.js',
     'blog-share.js',
     'blog-navlinks.js',

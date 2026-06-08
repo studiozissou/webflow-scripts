@@ -10,8 +10,9 @@
   const GRADE_SEL = '.battery-grade';
 
   document.querySelectorAll(TRIGGER).forEach(trigger => {
-    const bar = trigger.querySelector(BAR_SEL);
-    const grade = trigger.querySelector(GRADE_SEL);
+    const scope = trigger.parentElement;
+    const bar = scope.querySelector(BAR_SEL);
+    const grade = scope.querySelector(GRADE_SEL);
 
     if (!bar || !grade) return;
 

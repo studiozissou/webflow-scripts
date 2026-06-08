@@ -8,26 +8,27 @@
   const TRIGGER = '[data-animation="battery"]';
   const BAR_SEL = '.details_battery-health-bar';
   const GRADE_SEL = '.battery-grade';
+  const PANEL_SEL = '.details_accordion-details-wrapper';
 
   document.querySelectorAll(TRIGGER).forEach(trigger => {
     const scope = trigger.parentElement;
     const bar = scope.querySelector(BAR_SEL);
     const grade = scope.querySelector(GRADE_SEL);
+    const panel = scope.querySelector(PANEL_SEL);
 
-    if (!bar || !grade) return;
+    if (!bar || !grade || !panel) return;
 
     const targetWidth = (bar.dataset.width || '0') + '%';
-    let clickCount = 0;
     let isAnimating = false;
 
     trigger.addEventListener('click', () => {
       if (isAnimating) return;
 
-      clickCount++;
-      isAnimating = true;
+      const isOpen = parseFloat(getComputedStyle(panel).height) > 10;
 
-      if (clickCount % 2 === 1) {
-        // Odd click — open
+      if (!isOpen) {
+        // Accordion is closed → opening → play animation
+        isAnimating = true;
         const tl = gsap.timeline({ onComplete: () => { isAnimating = false; } });
         tl.fromTo(bar,
           { width: 0 },
@@ -36,13 +37,12 @@
         tl.fromTo(grade,
           { opacity: 0, scale: 1.5 },
           { opacity: 1, scale: 1, duration: 1, ease: 'power4.out' },
-          1 // start at 1s (matches original delay)
+          1
         );
       } else {
-        // Even click — instant reset
+        // Accordion is open → closing → instant reset
         gsap.set(bar, { width: 0 });
         gsap.set(grade, { opacity: 0, scale: 1.5 });
-        isAnimating = false;
       }
     });
   });

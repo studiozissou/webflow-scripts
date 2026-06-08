@@ -23,28 +23,20 @@
     function reset() {
       gsap.killTweensOf(bar);
       gsap.killTweensOf(grade);
-      gsap.set(bar, { clearProps: 'all' });
-      gsap.set(grade, { clearProps: 'all' });
+      gsap.set(bar, { width: 0 });
+      gsap.set(grade, { opacity: 0, scale: 1.5 });
     }
 
     trigger.addEventListener('click', () => {
       const isOpen = parseFloat(getComputedStyle(panel).height) > 10;
 
       if (!isOpen) {
-        // Accordion is closed → opening → play animation
+        // Accordion is closed → opening → reset then animate
         reset();
-        const tl = gsap.timeline();
-        tl.fromTo(bar,
-          { width: 0 },
-          { width: targetWidth, duration: 2, ease: 'expo.out' }
-        );
-        tl.fromTo(grade,
-          { opacity: 0, scale: 1.5 },
-          { opacity: 1, scale: 1, duration: 1, ease: 'power4.out' },
-          1
-        );
+        gsap.to(bar, { width: targetWidth, duration: 2, ease: 'expo.out' });
+        gsap.to(grade, { opacity: 1, scale: 1, duration: 1, delay: 1, ease: 'power4.out' });
       } else {
-        // Accordion is open → closing → reset
+        // Accordion is open → closing → snap to zero
         reset();
       }
     });

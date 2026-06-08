@@ -39,10 +39,10 @@
           1 // start at 1s (matches original delay)
         );
       } else {
-        // Even click — close
-        const tl = gsap.timeline({ onComplete: () => { isAnimating = false; } });
-        tl.to(grade, { opacity: 0, scale: 1.5, duration: 0.4, ease: 'power2.in' });
-        tl.to(bar, { width: 0, duration: 0.8, ease: 'power2.in' }, 0.2);
+        // Even click — instant reset
+        gsap.set(bar, { width: 0 });
+        gsap.set(grade, { opacity: 0, scale: 1.5 });
+        isAnimating = false;
       }
     });
   });

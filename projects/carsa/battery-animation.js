@@ -19,28 +19,33 @@
     if (!bar || !grade || !panel) return;
 
     const targetWidth = (bar.dataset.width || '0') + '%';
-    let activeTl = null;
+
+    function reset() {
+      gsap.killTweensOf(bar);
+      gsap.killTweensOf(grade);
+      gsap.set(bar, { clearProps: 'all' });
+      gsap.set(grade, { clearProps: 'all' });
+    }
 
     trigger.addEventListener('click', () => {
       const isOpen = parseFloat(getComputedStyle(panel).height) > 10;
 
       if (!isOpen) {
         // Accordion is closed → opening → play animation
-        activeTl = gsap.timeline();
-        activeTl.fromTo(bar,
+        reset();
+        const tl = gsap.timeline();
+        tl.fromTo(bar,
           { width: 0 },
           { width: targetWidth, duration: 2, ease: 'expo.out' }
         );
-        activeTl.fromTo(grade,
+        tl.fromTo(grade,
           { opacity: 0, scale: 1.5 },
           { opacity: 1, scale: 1, duration: 1, ease: 'power4.out' },
           1
         );
       } else {
-        // Accordion is open → closing → kill animation and reset
-        if (activeTl) { activeTl.kill(); activeTl = null; }
-        gsap.set(bar, { width: 0 });
-        gsap.set(grade, { opacity: 0, scale: 1.5 });
+        // Accordion is open → closing → reset
+        reset();
       }
     });
   });

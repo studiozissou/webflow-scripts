@@ -1,5 +1,6 @@
 {
-  "lastUpdated": "2026-06-03",
+  "lastUpdated": "2026-06-09",
+  "version": 1,
   "lastDeployed": "2026-05-14",
   "lastDeployedHash": "7d80e5d",
   "testPages": [
@@ -85,6 +86,36 @@
       "critical": false,
       "description": "NEM Life zelftest quiz data extraction — reads CMS questions and results into window.__quizData for React component",
       "created": "2026-06-03"
+    },
+    {
+      "slug": "carsa-near-location-redirect",
+      "url": "https://carsa-v2.webflow.io/used-cars/near/wakefield",
+      "spec": "tests/acceptance/carsa-near-location-redirect.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Carsa near-page location redirect — hides zero-count facet-wrappers and redirects to /used-cars with filter preservation",
+      "created": "2026-06-09"
+    },
+    {
+      "slug": "nem-123-mobile-trigger-fix",
+      "url": "https://nem-life-1.webflow.io",
+      "spec": "tests/acceptance/nem-123-mobile-trigger-fix.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "NEM Life 123 cards + wat-als — mobile trigger timing fix (bottom 95%) and wat-als desktop/mobile alignment to same stagger pattern",
+      "created": "2026-06-09"
+    },
+    {
+      "slug": "nem-backend-cleanup",
+      "url": "https://nem-life-1.webflow.io",
+      "spec": "tests/acceptance/nem-backend-cleanup.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "NEM Life backend cleanup — English page titles, Dutch slugs, CMS field Title Case, help texts, orphan flagging",
+      "created": "2026-06-09"
     }
   ]
 }

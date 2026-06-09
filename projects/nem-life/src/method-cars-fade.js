@@ -41,6 +41,7 @@
           scrollTrigger: {
             trigger: wrap,
             start: 'top 80%',
+            once: true,
           },
         });
       });
@@ -59,7 +60,7 @@
           ease: 'power2.out',
           scrollTrigger: {
             trigger: item,
-            start: 'top 85%',
+            start: 'bottom 95%',
           },
         });
       });

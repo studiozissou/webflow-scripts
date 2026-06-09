@@ -33,6 +33,7 @@
     'header-shrink.js',
     'topbar-hide.js',
     'radio-uncheck.js',
+    'filter-all-prepend.js',
     'read-more-expand.js',
     'quiz-data.js',
   ];

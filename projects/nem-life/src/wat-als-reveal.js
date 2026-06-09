@@ -43,8 +43,8 @@
         gsap.to(card, {
           opacity: 1,
           y: 0,
-          duration: 1.2,
-          delay: i * 1.5,
+          duration: 0.6,
+          delay: i * 0.75,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: wrap,
@@ -64,7 +64,7 @@
       cards.forEach((card) => {
         gsap.to(card, {
           opacity: 1,
-          duration: 0.8,
+          duration: 0.4,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: card,

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-09",
+  "lastUpdated": "2026-06-18",
   "version": 1,
   "lastDeployed": "2026-05-14",
   "lastDeployedHash": "7d80e5d",
@@ -116,6 +116,17 @@
       "critical": false,
       "description": "NEM Life backend cleanup — English page titles, Dutch slugs, CMS field Title Case, help texts, orphan flagging",
       "created": "2026-06-09"
+    },
+    {
+      "slug": "nem-test-phase-b",
+      "url": "https://nem-life-1.webflow.io/zelftest/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-test-phase-b.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "description": "NEM TEST Phase B — landing page structure, 5-screen quiz flow, scoring logic, pill buttons, form validation, screen transitions, correction flow, i18n (NL+EN), e2e signup via MailerSend API + Gmail API",
+      "created": "2026-06-16",
+      "updated": "2026-06-19"
     }
   ]
 }

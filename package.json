@@ -18,12 +18,14 @@
     "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0"
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@google/genai": "^2.7.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.58.2",
     "dotenv": "^17.3.1",
+    "googleapis": "^173.0.0",
     "playwright": "^1.50.0"
   }
 }

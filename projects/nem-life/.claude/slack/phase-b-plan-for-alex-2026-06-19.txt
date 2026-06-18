@@ -1,0 +1,50 @@
+Hi Alex, here's the full Phase B plan and estimate for NEM TEST:
+
+*Context*
+Phase A is built and working — the generic quiz component with Likert circles, CMS data bridge, and simple form POST. I've spent 3 hours (€360) on that so far.
+
+*Problem*
+Phase A is a proof of concept. It needs to become a conversion tool: personalised scoring per mechanism, email verification flow, AI-generated PDF report, and NL + EN support — with proper spam protection and form validation.
+
+*Solution*
+Rebuild the React component via Webflow AI into a 5-screen flow, with two n8n webhooks handling the backend:
+•  Screen 1-2: 20 hardcoded questions with pill buttons (horizontal desktop, vertical mobile)
+•  Screen 3: instant conclusion from client-side scoring (no API call needed)
+•  Screen 4: opt-in form with inline validation, honeypot anti-spam, rate limiting
+•  Screen 5: confirmation + email correction flow
+•  Backend: `/submit` webhook (store profile + send verification email) → `/verify` webhook (generate PDF report via Anthropic + deliver via MailerSend)
+•  MailerLite subscription only triggered after email verification (keeps list clean)
+•  Full NL + EN internationalisation
+•  Automated test suite (35+ tests) covering the full quiz flow, scoring, form validation, and end-to-end signup — so any future updates to the component or backend can be verified in seconds without manual testing
+
+*Task breakdown*
+
+1. Landing page + verified page in Webflow (NL + EN) — 0.5h
+2. Webflow AI prompt engineering and component development to add new format and scoring logic (all 5 screens, i18n, validation, spam protection, analytics) — 1h
+3. n8n: `/submit` webhook (store profile, token management, verification email, rate limiting) — 2h
+4. n8n: `/verify` webhook (validate token, Anthropic API, PDF, MailerSend, MailerLite) — 2h
+5. PDF design & generation flow — 2h
+6. MailerSend automation and templates (verification + report delivery, NL + EN) — 2.5h
+7. MailerLite integration — 1h
+8. Automated component testing (Playwright) — 1h
+9. E2E automated signup flow testing (MailerSend API + Gmail API) — 1h
+
+*What I need from you*
+•  Conclusion texts for Screen 3 — the copy that maps to each primary/secondary mechanism combination
+•  Scoring system tiebreaker rule (section 1.4 of the system prompt doc) — for equal highest scores
+
+*What's confirmed*
+•  Scoring model: 0-4 per answer, 0-16 per mechanism, primary + secondary (within 3 points), body+situational tiebreaker
+•  20 questions in fixed order with mechanism/dimension mapping
+•  n8n access, MailerSend access — sorted
+•  Verification redirect → static `/zelftest/bevestigd` page
+•  I handle everything. Anthropic system prompt accessed via Notion (I'll pull the latest version at build time)
+
+*Timing & pricing*
+•  Phase A (done): 3h = €360
+•  Phase B: 13h = €1,560
+•  Total: 16h = *€1,920*
+•  Rate: €120/hr
+•  Blocked on: conclusion texts for Screen 3. Everything else can start now.
+
+Let me know if this works. Happy to jump on a call if anything needs discussion.

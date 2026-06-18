@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-06-03",
+  "updated": "2026-06-16",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -177,6 +177,39 @@
       "description": "Add quiz-data.js module that reads questions and result bands from hidden CMS collection lists and exposes on window.__quizData. React code component consumes via quizDataReady event.",
       "spec": "projects/nem-life/.claude/specs/nem-zelftest-quiz-data.md",
       "created": "2026-06-03"
+    },
+    {
+      "id": "nem-123-mobile-trigger-fix",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "123 cards and wat-als: fix mobile trigger timing and align animations",
+      "description": "Fix mobile ScrollTrigger start from 'top 85%' to 'bottom 95%' on 123 cards. Rewrite wat-als-reveal.js to use same simple stagger pattern (desktop: opacity+y, mobile: dim-to-bright). Remove hover behaviour.",
+      "spec": "projects/nem-life/.claude/specs/nem-123-mobile-trigger-fix.md",
+      "created": "2026-06-09"
+    },
+    {
+      "id": "nem-test-phase-b",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Planning",
+      "title": "NEM TEST Phase B: full production build (landing page, 5-screen quiz, AI report, backend integration)",
+      "description": "Phase B of NEM TEST 'Waarom reageer ik zo?' — Webflow AI prompt for React component (5 screens), 2 n8n webhooks (submit, verify), PDF generation, MailerSend + MailerLite, NL+EN i18n. 16.5h total (Will). Alex owns Anthropic prompts. Scoring system TBD.",
+      "spec": "projects/nem-life/.claude/specs/nem-test-phase-b.md",
+      "created": "2026-06-16"
+    },
+    {
+      "id": "nem-backend-cleanup",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Backend cleanup: translate page names and CMS field labels to English Title Case",
+      "description": "Translate all Dutch page names to English, ensure slugs are Dutch, rename CMS field displayNames to English Title Case, add missing help texts, flag orphaned fields. Collection-level names require manual Designer rename.",
+      "spec": "projects/nem-life/.claude/specs/nem-backend-cleanup.md",
+      "created": "2026-06-09"
     }
   ]
 }

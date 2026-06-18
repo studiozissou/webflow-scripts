@@ -1,3 +1,160 @@
+# Carsa — Monthly Site Report
+
+**Month:** June 2026 | **Site:** www.carsa.co.uk | **Pages crawled:** 5,484
+
+---
+
+## Summary
+
+The site is holding steady. The chatbot heading fix landed on nearly every page (42 down to 2), and the blog continues to grow — organic clicks are up from around 10/day to 400/day since we started.
+
+One thing needs immediate attention: structured data errors are back on 1,235 pages. The FAQ section on make/model pages has 10 slots but only 5 are filled — the empty ones are causing validation failures. This is the top priority before Google drops rich results from those pages.
+
+Most other numbers crept up slightly as inventory grew (+86 new vehicle pages). These aren't getting worse per page — there are just more pages.
+
+---
+
+## Key metrics
+
+**SEO health**
+
+| Metric | May | June | Change |
+|--------|-----|------|--------|
+| Pages crawled | 5,398 | 5,484 | +86 (inventory growth) |
+| Structured data errors | 0 | 1,235 | Regression — FAQ slots |
+| Broken internal links | — | 10 | NEW flag |
+| Duplicate titles | 1,862 | 1,950 | +88 (new VDPs) |
+| Multiple H1 tags | 42 | 2 | Fixed |
+| 4xx errors | 35 | 38 | +3 (sold cars, intentional) |
+| Lighthouse perf (mobile avg) | 63 | 52 | -11 (script weight) |
+| Lighthouse a11y (mobile avg) | 95 | 96 | +1 |
+
+**AI search readiness (AEO)**
+
+| Category | May | June | Change |
+|----------|-----|------|--------|
+| Structured data | 4/4 | 3/4 | -1 (schema errors) |
+| Answer structure | 5/6 | 5/6 | — |
+| Freshness | 1/3 | 1/3 | — |
+| Authority | 2/4 | 2/4 | — |
+| Technical | 2/3 | 2/3 | — |
+| **Overall** | **14/20** | **13/20** | **-1** |
+
+---
+
+## What changed and why
+
+**Fixed:**
+- Chatbot H1 resolved on nearly every page (42 → 2 remaining). Two pages were missed: drive-away-car-insurance and free-1-year-warranty-2025.
+
+**Regressed:**
+- 1,235 pages now have structured data errors (was 0 in May). Cause: the FAQ section on make/model template pages has 10 schema slots but only 5 are populated. The empty slots fail validation. Fix is to reduce the schema to match the actual number of FAQs.
+- Mobile performance dropped from 63 to 52 average. Biggest drops on /about/carsa (-28), /contact (-32), /sell-car/value-car (-29). Likely increased script weight from third-party tools.
+
+**Added:**
+- 3 new store pages (bca-bedford, bca-leeds, mansbridge) — but they're missing titles and descriptions.
+- 86 new vehicle pages from inventory growth.
+
+**Removed:**
+- Nothing removed this month.
+
+---
+
+## Top 10 issues to fix
+
+Ranked by impact and ease of fix.
+
+**1. Fix structured data errors on 1,235 pages**
+*Issue:* Make, model, and fuel filter pages are failing schema validation.
+*Explanation:* The FAQ section has 10 slots in the markup but only 5 are filled. Google flags the empty ones as errors and may stop showing rich results.
+*Fix:* Reduce the FAQ schema slots from 10 to 5 to match the actual content.
+*Benefit:* One template change fixes 1,235 pages. Rich results return to search listings.
+
+**2. Add titles and descriptions to 3 new store pages**
+*Issue:* bca-bedford, bca-leeds, and mansbridge have no page title or meta description.
+*Explanation:* Google can't properly index or display these pages without a title.
+*Fix:* Add a title and description in Webflow. Or if these are storage pages not meant for the public, exclude them from the sitemap.
+*Benefit:* Three store pages either become properly searchable or stop cluttering the index.
+
+**3. Fix chatbot H1 on remaining 2 pages**
+*Issue:* Two pages still have duplicate H1 headings after the sitewide fix.
+*Explanation:* The fix landed on 40 pages but missed these two. Two H1s dilute the signal about what the page is about.
+*Fix:* Apply the same heading change to drive-away-car-insurance and free-1-year-warranty-2025.
+*Benefit:* Completes the H1 fix across 100% of the site.
+
+**4. Fix 10 broken internal links** (was #5 last month)
+*Issue:* The BMW i4 model page and 9 vehicle pages link to pages that no longer exist.
+*Explanation:* When a car sells and its page is removed, links to it break. Visitors hit dead ends.
+*Fix:* Remove broken links or redirect to the parent make/model page.
+*Benefit:* 10 fewer dead ends. Visitors always land on a working page.
+
+**5. Remove nofollow from 18 internal links**
+*Issue:* Fuel filter pages and sell-car store pages have nofollow on internal links.
+*Explanation:* Nofollow tells Google not to follow links — useful for external links, but it blocks ranking power from flowing to your own pages.
+*Fix:* Remove the nofollow attribute from all internal links on these 18 pages.
+*Benefit:* Fuel and sell-car pages get the ranking support they should already have.
+
+**6. Fix 50 duplicate meta descriptions**
+*Issue:* 50 pages share identical descriptions with other pages, up from 44 last month.
+*Explanation:* Google may treat pages with the same description as near-duplicates.
+*Fix:* Write unique descriptions, or bind them to CMS fields so they auto-generate.
+*Benefit:* Each page gets its own snippet in search results.
+
+**7. Remove expired promotion from homepage**
+*Issue:* "Ends 31st Dec 25" is still visible on the homepage.
+*Explanation:* Visitors in June 2026 see a 6-month-old expired deal. AI tools check for freshness before citing a page.
+*Fix:* Remove or update the promotion in Webflow.
+*Benefit:* The homepage looks current and maintained.
+
+**8. Pin CDN script versions**
+*Issue:* GSAP, n8n Chat, and JetBoost load with "@latest" — no version pinning.
+*Explanation:* A breaking change from any library hits the site without warning. No rollback possible.
+*Fix:* Pin each script to a specific version number.
+*Benefit:* The site is protected from upstream breaking changes.
+
+**9. Replace placeholder blog author**
+*Issue:* Blog author is "Jane Doe" in the page source.
+*Explanation:* Google and AI tools use author signals for credibility. A placeholder name actively undermines trust, especially when the blog drives 400 clicks/day.
+*Fix:* Replace with a real name and short bio from the Carsa team.
+*Benefit:* Blog content gains author trust signals that match its growing traffic.
+
+**10. Fix HTTP links on 3 terms pages** (unchanged since first scan)
+*Issue:* Privacy, T&Cs, and vehicle purchase pages link to http:// instead of https://.
+*Explanation:* Browsers may show security warnings. On legal pages, this undermines trust.
+*Fix:* Find and replace http:// with https:// in the CMS content.
+*Benefit:* No mixed-content warnings on the pages where trust matters most.
+
+---
+
+## 5 strategic opportunities
+
+1. **Add blog author profiles with real names and credentials.** The blog is driving 400 organic clicks/day — that's real traffic. Adding named authors with short bios and Person schema would lift both the Authority AEO score (2/4 → 3/4) and Google's E-E-A-T assessment of the content.
+
+2. **Build a /sell-car hub page and store index.** The 10 sell-car store pages exist but nothing connects them. A hub page creates a topic cluster around "sell my car" searches and gives Carsa a page that can rank for the head term. This also fixes the /sell-car redirect and the /sell-car/store 404.
+
+3. **Create quarterly original data content.** Carsa sits on data most competitors don't have — most popular models, average prices by region, time-on-forecourt trends. One quarterly report with original data earns links and gives AI tools something to cite. The Iran/Ukraine fuel impact piece is the template.
+
+4. **Restructure VDP titles for uniqueness.** 1,950 vehicle pages have near-identical titles. Adding mileage, price, or registration to the template would make each one unique. More vehicle pages appear in search results, and Google stops skipping duplicates.
+
+5. **Defer non-critical scripts to improve mobile performance.** Mobile performance dropped from 63 to 52. The biggest gains come from deferring VWO, n8n Chat, and JetBoost until after the page renders. This ties into the GitHub repo migration proposal — moving scripts to a CDN with version pinning solves both speed and reliability.
+
+---
+
+## Other notes
+
+- **404s for sold vehicles are intentional** — the 38 VDPs returning 404 are sold cars. These aren't errors to fix, but the internal links pointing to them should still be cleaned up.
+- **Storage pages (bca-bedford, bca-leeds, mansbridge)** may be meant to be hidden rather than given titles. Worth confirming before adding metadata.
+- **Next Lighthouse baseline** will be run in July for month-over-month comparison.
+
+---
+
+*Will*
+
+---
+---
+
+# Full report — June 2026
+
 # Carsa monthly site report
 
 **Prepared for:** Carsa | **Month:** June 2026 | **Site:** www.carsa.co.uk

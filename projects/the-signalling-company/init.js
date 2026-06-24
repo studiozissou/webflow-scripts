@@ -8,7 +8,7 @@
  * and loads project modules once vendor deps are ready.
  */
 (() => {
-  const src = document.currentScript.src;
+  const src = (document.currentScript && document.currentScript.src) || '';
   const BASE = src.substring(0, src.lastIndexOf('/') + 1);
 
   /* ── Vendor deps (loaded first) ────────────────────────── */
@@ -114,8 +114,8 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
+    document.addEventListener('DOMContentLoaded', () => boot().catch(() => {}));
   } else {
-    boot();
+    boot().catch(() => {});
   }
 })();

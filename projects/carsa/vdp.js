@@ -5,13 +5,18 @@
  * Reads CMS values from window.__CARSA_VDP (set by inline config in Webflow body).
  * Preserves all original jQuery dependencies and behaviour.
  *
- * Possible bugs spotted in pasted code (may be paste artifacts — verify
- * against actual Webflow source before fixing in Phase 2):
- * - "creditRting" typo in finance calc (should be creditRating)
- * - $('ta-number="currency-rounded"]') missing opening [ bracket
- * - el.textContnt = val missing 'e' (should be textContent)
- * - document.documentElement.ientHeight missing 'cl' (should be clientHeight)
- * - { passive: true } missing opening brace in draw-line addEventListener
+ * Phase 2: fixed typos and broken selectors from original inline code.
+ *
+ * Remaining issues for Phase 3:
+ * - Hardcoded requestUuid in finance API payload (line ~298) — every call
+ *   shares the same UUID; may cause dedup/caching issues if the API uses it
+ * - MutationObserver on document.body (equal-height cards, §8) fires on every
+ *   DOM mutation without debounce — can thrash on busy pages
+ * - Attribution/UTM logic is duplicated across §1, §6, §9, §11, §14, §15 with
+ *   slight variations (sessionStorage vs localStorage, attribution_session key)
+ *   — should be extracted into a shared helper
+ * - Two different formatCurrency functions (§2 expects string, §3 expects number)
+ *   — works due to IIFE scoping but fragile if refactored
  */
 
 var VDP = window.__CARSA_VDP || {};
@@ -98,8 +103,7 @@ var VDP = window.__CARSA_VDP || {};
       $(this).html($(this).text().replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCurrency));
     });
 
-    // BUG: missing [ bracket — preserved from original
-    $('ta-number="currency-rounded"]').each(function () {
+    $('[data-number="currency-rounded"]').each(function () {
       $(this).html($(this).text().replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCurrencyRounded));
     });
 
@@ -193,8 +197,7 @@ var VDP = window.__CARSA_VDP || {};
     function getAprFromSelection() {
       var creditRating = $('input[type="radio"][data-name="apr"]:checked').val();
       if (creditRating === "excellent") return 8.9;
-      // BUG: "creditRting" typo preserved from original
-      if (creditRting === "very-good" || creditRating === "good") return 10.9;
+      if (creditRating === "very-good" || creditRating === "good") return 10.9;
       if (creditRating === "fair") return 16.9;
       return 10.9;
     }
@@ -335,8 +338,7 @@ var VDP = window.__CARSA_VDP || {};
           var el = document.getElementById(id);
           if (el) el.textContent = val;
 
-          // BUG: "textContnt" typo preserved from original
-          document.querySelectorAll('[data-number="' + id + '"]').forEach(function(el) { el.textContnt = val; });
+          document.querySelectorAll('[data-number="' + id + '"]').forEach(function(el) { el.textContent = val; });
         });
       });
     }
@@ -841,8 +843,7 @@ var VDP = window.__CARSA_VDP || {};
           }
         };
 
-        // BUG: "ientHeight" typo preserved from original (should be clientHeight)
-        var vh = window.innerHeight || document.documentElement.ientHeight;
+        var vh = window.innerHeight || document.documentElement.clientHeight;
         var r0 = svg.getBoundingClientRect();
         var pastOnLoad = (r0.top <= vh * 0.8 && r0.bottom >= 0);
 

@@ -1,0 +1,25 @@
+<!--
+  Carsa VDP — Webflow Body Custom Code
+  Replace ALL existing inline <script> blocks with this.
+  Keep the HEAD code unchanged (canonical, OG, Finsweet, preconnects, CSS).
+  Battery animation is bundled into vdp.js — remove the old separate script tag.
+-->
+
+<!-- CMS data for external VDP scripts -->
+<script>
+window.__CARSA_VDP = {
+  price: {{wf {"path":"price","type":"Number"} }},
+  registrationDate: "{{wf {"path":"registration-date","transformers":[{"name":"date","arguments":["MMM DD, YYYY"]}],"type":"Date"} }}",
+  odometer: {{wf {"path":"odometer","type":"Number"} }},
+  vrm: "{{wf {"path":"name","type":"PlainText"} }}",
+  financeType: "{{wf {"path":"finance-type","type":"Option"} }}",
+  locationName: "{{wf {"path":"location:name","type":"PlainText"} }}",
+  isStorageLocation: "{{wf {"path":"location:is-storage-location","type":"Bool"} }}",
+  makeName: "{{wf {"path":"make:name","type":"PlainText"} }}",
+  modelName: "{{wf {"path":"model:name","type":"PlainText"} }}",
+  status: "{{wf {"path":"status","type":"Option"} }}"
+};
+</script>
+
+<!-- VDP scripts + battery animation (externalized) — UPDATE COMMIT_HASH after push -->
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@COMMIT_HASH/projects/carsa/vdp.js"></script>

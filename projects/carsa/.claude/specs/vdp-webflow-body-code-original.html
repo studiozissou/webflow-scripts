@@ -1,0 +1,1203 @@
+<!--
+  Carsa VDP — ORIGINAL Webflow Body Custom Code (ROLLBACK)
+  If the external vdp.js breaks, paste this back into the VDP template
+  page body custom code to restore all inline scripts.
+-->
+
+<!-- Add UTMs to Build Deal, Book Test Drive, and Eligibility links -->
+<script>
+/* Append UTMs + external referrer domain from localStorage (no self-referrals) */
+$(window).on('load', function(){
+  const HOST = location.hostname.replace(/^www\./,'');
+  const isInternal = d => !!d && (d===HOST || d.endsWith('.'+HOST));
+
+  // Read saved attribution
+  let store = {};
+  try { store = JSON.parse(localStorage.getItem('attribution') || '{}'); } catch(e){}
+  const utms = store.utms || {};
+
+  // Resolve referrer domain safely (prefer stored domain; ensure external)
+  let refDomain = '';
+  if (store.referrerDomain && !isInternal(store.referrerDomain)) {
+    refDomain = store.referrerDomain;
+  } else if (store.referrer) {
+    try {
+      const d = new URL(store.referrer).hostname.replace(/^www\./,'');
+      if(!isInternal(d)) refDomain = d;
+    } catch(e){}
+  } else if (document.referrer) { // final fallback: only if external
+    try {
+      const d = new URL(document.referrer).hostname.replace(/^www\./,'');
+      if(!isInternal(d)) refDomain = d;
+    } catch(e){}
+  }
+
+  // Fallback UTMs from current URL if none stored
+  if (!Object.keys(utms).length) {
+    const qs = new URLSearchParams(location.search);
+    qs.forEach((v,k)=>{ if(/^utm_/i.test(k) && v) utms[k]=v; });
+  }
+
+  // Build params to add
+  const toAdd = {...utms};
+  if (refDomain) toAdd.referrer = refDomain; // only if external + non-empty
+
+  // Append params without duplicating keys
+  function addParams(url, obj){
+    try {
+      const u = new URL(url, location.origin);
+      for (const k in obj) if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]);
+      return u.toString();
+    } catch(_) {
+      const hasQ = url.includes('?'); const parts=[];
+      for (const k in obj)
+        if (!new RegExp('([?&])'+k+'=').test(url)) parts.push(k+'='+encodeURIComponent(obj[k]));
+      return parts.length ? url + (hasQ?'&':'?') + parts.join('&') : url;
+    }
+  }
+
+  // Update target links
+  $('a[href*="quote.carsa.co.uk/build-deal/"],' +
+    'a[href*="quote.carsa.co.uk/book/"],' +
+    'a[href*="quote.carsa.co.uk/eligibility/questions"]').each(function(){
+      this.href = addParams(this.href, toAdd);
+  });
+});
+</script>
+
+<!-- Format numbers into currency, decimal places and commas -->
+<script>
+// Format with £ and commas
+function formatCurrency(num) {
+  return '£' + Number(num.replace(/[^0-9.-]+/g, '')).toLocaleString('en-UK');
+}
+
+// Format to 2 decimal places
+function formatDecimals(num) {
+  return Number(num.replace(/[^0-9.-]+/g, '')).toFixed(2);
+}
+
+// Format with commas only
+function formatCommas(num) {
+  return Number(num.replace(/[^0-9.-]+/g, '')).toLocaleString('en-UK');
+}
+
+function formatCurrencyRounded(num) {
+  const clean = Number(num.replace(/[^0-9.-]+/g, ''));
+  return '£' + Math.round(clean).toLocaleString('en-UK');
+}
+
+$(document).ready(function () {
+  // Currency formatting
+  $('[data-number="currency"]').each(function () {
+    $(this).html($(this).text().replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCurrency));
+  });
+
+    // Currency formatting
+  $('ta-number="currency-rounded"]').each(function () {
+    $(this).html($(this).text().replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCurrencyRounded));
+  });
+
+  // Decimal formatting
+  $('[data-number="decimals"]').each(function () {
+    $(this).html($(this).text().replace(/[-+]?[0-9]*\.?[0-9]+/g, formatDecimals));
+  });
+
+  // Comma formatting
+  $('[data-number="commas"]').each(function () {
+    $(this).html($(this).text().replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCommas));
+  });
+});
+</script>
+
+<!-- Finance calculator -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // --- helper: run input mutations without Safari auto-scrolling ---
+// --- stop Safari auto-scroll + hash jumps on tab switches ---
+function preventSafariJump(fn){
+  const x = window.scrollX, y = window.scrollY;             // save scroll
+  const a = document.activeElement;
+  if (a && /^(input|select|textarea|a|button)$/i.test(a.tagName)) a.blur(); // drop focus
+  fn();                                                      // do DOM mutations
+  requestAnimationFrame(()=>window.scrollTo(x,y));           // restore next frame
+}
+
+// Click a Webflow tab link without scrolling or changing hash
+function switchTabNoScroll($link){
+  const oldHash = location.hash;
+  const x = window.scrollX, y = window.scrollY;
+
+  preventSafariJump(() => { $link[0].click(); });            // real click for Webflow Tabs
+
+  // Undo hash change (prevents browser jump-to-anchor)
+  if (location.hash !== oldHash){
+    // keep same URL (no hash jump)
+    history.replaceState(null, '', oldHash ? oldHash : (location.pathname + location.search));
+  }
+
+  // Extra lock: keep position for a few frames while Webflow lays out
+  let i = 0;
+  (function lock(){
+    if (i++ < 4) requestAnimationFrame(() => { window.scrollTo(x,y); lock(); });
+  })();
+}
+
+  // CMS values
+  var cmsPrice = {{wf {&quot;path&quot;:&quot;price&quot;,&quot;type&quot;:&quot;Number&quot;} }};
+  var rawDateStr = "{{wf {&quot;path&quot;:&quot;registration-date&quot;,&quot;transformers&quot;:[{&quot;name&quot;:&quot;date&quot;,&quot;arguments&quot;:[&quot;MMM DD, YYYY&quot;]}],&quot;type&quot;:&quot;Date&quot;} }}";
+  var rawDate = new Date(rawDateStr);
+
+  // Format registration date
+  function formatDateToYYYYMMDD(date) {
+    var year = date.getFullYear();
+    var month = ("0" + (date.getMonth() + 1)).slice(-2);
+    var day = ("0" + date.getDate()).slice(-2);
+    return `${year}-${month}-${day}`;
+  }
+  var formattedRegistrationDate = formatDateToYYYYMMDD(rawDate);
+
+  // keep in outer scope for later listeners
+  var depositInput = document.getElementById("finance-deposit");
+
+  // --- PRESETS (wrapped to prevent Safari jumping) ---
+
+  preventSafariJump(function () {
+    if (depositInput) depositInput.value = formatCurrency(2000);
+
+//        var financeType = "{{wf {&quot;path&quot;:&quot;finance-type&quot;,&quot;type&quot;:&quot;Option&quot;} }}";
+    if ("{{wf {&quot;path&quot;:&quot;finance-type&quot;,&quot;type&quot;:&quot;Option&quot;} }}" === "HP") {
+      var defaultTerm = document.getElementById("60");
+    } else {
+      var defaultTerm = document.getElementById("48");
+    }
+
+        //var defaultTerm = document.getElementById("48");
+    if (defaultTerm) defaultTerm.checked = true;
+
+    var mileageSelect = document.getElementById("finance-mileage");
+    if (mileageSelect) {
+      for (var i = 0; i < mileageSelect.options.length; i++) {
+        var val = mileageSelect.options[i].value;
+        if (val) { mileageSelect.value = val; break; }
+      }
+    }
+
+    // Default APR selection for all vehicles
+    $('input[type="radio"][data-name="apr"][value="very-good"]').prop("checked", true);
+  });
+
+  function formatCurrency(val) {
+    return "£" + Number(val).toLocaleString("en-UK", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+  }
+
+  function parseCurrency(val) {
+    return Number(val.replace(/[^0-9.]/g, ""));
+  }
+
+  function getAprFromSelection() {
+    var creditRating = $('input[type="radio"][data-name="apr"]:checked').val();
+    if (creditRating === "excellent") return 8.9;
+    if (creditRting === "very-good" || creditRating === "good") return 10.9;
+    if (creditRating === "fair") return 16.9;
+    return 10.9;
+  }
+
+  function updateStaticOutputs(deposit, term) {
+    document.querySelectorAll('[data-number="term"]').forEach(el => el.textContent = term);
+    document.querySelectorAll('[data-number="contract-length"]').forEach(el => el.textContent = Number(term) + 1);
+    var credit = cmsPrice - deposit;
+    document.querySelectorAll('[data-number="total-credit"]').forEach(el => el.textContent = formatCurrency(credit));
+  }
+
+  function callFinanceAPI() {
+    var deposit = parseCurrency(depositInput?.value);
+    var term = $('input[type="radio"][data-name="finance-term"]:checked').val();
+    var mileage = document.getElementById("finance-mileage")?.value;
+    var apr = getAprFromSelection();
+
+    updateStaticOutputs(deposit, term);
+
+    var mapping = {
+      "pcp-price": {
+        path: "pcp.payments.regular",
+        currency: true,
+        localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      },
+      "pcp-term": {
+        path: "pcp.term",
+        currency: false,
+        format: value => value + " monthly payments of"
+      },
+      "pcp-optional": {
+        path: "pcp.residualValue",
+        currency: true,
+        localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      },
+      "pcp-total-amount-payable": {
+        path: "pcp.totalAmountPayable",
+        currency: true,
+        localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      },
+      "pcp-interest-amount": {
+        path: "pcp.totalCharges",
+        currency: true,
+        localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      },
+      "pcp-price-short": {
+        path: "pcp.payments.regular",
+        currency: true,
+        transform: value => Math.floor(parseFloat(value)),
+        localeOptions: { minimumFractionDigits: 0, maximumFractionDigits: 0 }
+      },
+      "hp-price": {
+        path: "hp.payments.regular",
+        currency: true,
+        localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      },
+      "hp-price-short": {
+        path: "hp.payments.regular",
+        currency: true,
+        transform: value => Math.floor(parseFloat(value)),
+        localeOptions: { minimumFractionDigits: 0, maximumFractionDigits: 0 }
+      },
+      "hp-total-amount-payable": {
+        path: "hp.totalAmountPayable",
+        currency: true,
+        localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      },
+      "hp-total-charges": {
+        path: "hp.totalCharges",
+        currency: true,
+        localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      },
+      "hp-term": {
+        path: "hp.term",
+        currency: false,
+        format: value => value + " monthly payments of"
+      },
+      "pcp-excess-mileage": {
+        path: "pcp.excessMileage",
+        currency: false
+      }
+    };
+
+    var payload = {
+      criteria: {
+        annualMileage: Number(mileage),
+        cashDeposit: Number(deposit),
+        outstandingFinance: 0,
+        pxEquity: 0,
+        term: Number(term),
+        apr: apr
+      },
+      vehicle: {
+        mileage: {{wf {&quot;path&quot;:&quot;odometer&quot;,&quot;type&quot;:&quot;Number&quot;} }},
+        price: cmsPrice,
+        registrationDate: formattedRegistrationDate,
+        type: "Car",
+        vrm: "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;} }}"
+      },
+      requestedBy: "manual",
+      requestUuid: "6319f553-726a-4e25-83e6-7b6fd792414a"
+    };
+
+    fetch("https://consumer-finance.carsanet.co.uk/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      // Check for pcp errors
+             var pcpError = data?.pcp?.error;
+            var hasError = pcpError && Object.keys(pcpError).length > 0;
+
+          if (hasError) {
+              // Switch to HP without any scroll
+              switchTabNoScroll($('#hp-tab-link'));
+              $('[data-element="pcp-error"]').css("display", "block");
+              $('[data-element="pcp-available"]').css("display", "none");
+            } else {
+              // Switch to PCP without any scroll
+              switchTabNoScroll($('#pcp-tab-link'));
+              $('[data-element="pcp-error"]').css("display", "none");
+              $('[data-element="pcp-available"]').css("display", "block");
+            }
+      function getNestedValue(obj, path) {
+        return path.split('.').reduce((acc, key) => acc?.[key], obj);
+      }
+
+      Object.keys(mapping).forEach(function(id) {
+        var config = mapping[id];
+        var val = getNestedValue(data, config.path);
+        if (val == null) return;
+
+        if (config.transform) val = config.transform(val);
+        if (config.format) val = config.format(val);
+        else if (config.currency)
+          val = "£" + Number(val).toLocaleString("en-UK", config.localeOptions);
+
+        var el = document.getElementById(id);
+        if (el) el.textContent = val;
+
+        document.querySelectorAll('[data-number="' + id + '"]').forEach(el => el.textContnt = val);
+      });
+    });
+  }
+
+  // Initial call
+  callFinanceAPI();
+
+  // Input + radio triggers
+  document.getElementById("finance-mileage")?.addEventListener("input", callFinanceAPI);
+  $('input[type="radio"][data-name="finance-term"]').on("change", callFinanceAPI);
+  $('input[type="radio"][data-name="apr"]').on("change", callFinanceAPI);
+
+  // Deposit field logic
+    let depositTimeout;
+    depositInput.addEventListener("input", function() {
+      clearTimeout(depositTimeout);
+      var numeric = parseCurrency(depositInput.value);
+      document.querySelectorAll('[data-number="deposit"]').forEach(el => el.textContent = formatCurrency(numeric));
+      depositTimeout = setTimeout(callFinanceAPI, 1000); // wait 1s
+    });
+
+  depositInput.addEventListener("blur", function() {
+    depositInput.value = formatCurrency(parseCurrency(depositInput.value));
+  });
+
+  depositInput.addEventListener("focus", function() {
+    depositInput.value = parseCurrency(depositInput.value) || '';
+  });
+
+  document.getElementById("finance-button")?.addEventListener("click", callFinanceAPI);
+
+  // Prevent Enter key in inputs/radios from submitting form
+  document.querySelectorAll('#finance-deposit, #finance-mileage, input[type="radio"][data-name="finance-term"], input[type="radio"][data-name="apr"]').forEach(function(el) {
+    el.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") e.preventDefault();
+    });
+  });
+});
+</script>
+
+<!-- Update APR of finance calculator -->
+<script>
+// Run when any radio button with data-name="apr" is changed
+$('[data-name="apr"]').on('change', function () {
+  const value = $(this).val(); // get the value of selected radio
+  let apr = '';
+
+  // Determine the APR value based on selected option
+  if (value === 'excellent') apr = 8.9;
+  else if (value === 'very-good' || value === 'good') apr = 10.9;
+  else if (value === 'fair') apr = 16.9;
+
+  // Update all elements with data-number="apr"
+  $('[data-number="apr"]').text(apr);
+});
+</script>
+
+<!-- Update Get Started link -->
+<script>
+// Run after page loads
+$(document).ready(function () {
+  const vrm = "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;} }}".trim().toLowerCase();
+  const location = "{{wf {&quot;path&quot;:&quot;location:name&quot;,&quot;type&quot;:&quot;PlainText&quot;} }}".trim();
+  const isStorage = "{{wf {&quot;path&quot;:&quot;location:is-storage-location&quot;,&quot;type&quot;:&quot;Bool&quot;} }}".trim().toLowerCase() === 'true';
+
+  // --- Build new href ---
+  let newHref = `/get-started?vrm=${encodeURIComponent(vrm)}&location=${encodeURIComponent(location)}`;
+  if (isStorage) newHref += '&storage=true';
+
+  // --- Update button link ---
+  $('[data-button="booking-options"]').attr('href', newHref);
+});
+</script>
+
+<!-- Update and open the link for PX form -->
+<script>
+/* Build valuation links using stored UTMs + external referrer domain (fallback to URL) */
+$(function(){
+  const HOST = location.hostname.replace(/^www\./,''); // your domain sans www
+
+  // Return UTMs + referrer domain from localStorage (fallback to current URL/referrer)
+  function getAttributionParams(){
+    let params = {};
+    // 1) Try localStorage 'attribution'
+    try {
+      const store = JSON.parse(localStorage.getItem('attribution') || '{}');
+      if (store.utms) Object.assign(params, store.utms);
+      if (store.referrerDomain) params.referrer = store.referrerDomain;
+    } catch(e){}
+
+    // 2) Fallback UTMs from current URL if none stored
+    if (!Object.keys(params).some(k=>k.startsWith('utm_'))) {
+      const qs = new URLSearchParams(location.search);
+      qs.forEach((v,k)=>{ if(/^utm_/i.test(k) && v) params[k]=v; });
+    }
+
+    // 3) Fallback referrer domain from document.referrer if external and not already set
+    if (!params.referrer && document.referrer){
+      try{
+        const d = new URL(document.referrer).hostname.replace(/^www\./,'');
+        const isInternal = d===HOST || d.endsWith('.'+HOST);
+        if (!isInternal) params.referrer = d;
+      }catch(e){}
+    }
+    return params;
+  }
+
+  // Build the PX URL with px_vrm and append params (no duplicate keys)
+  function generatePxURL(pxVrm){
+    const base = 'https://quote.carsa.co.uk/get-px-valuation/{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;} }}/?px_vrm=' + encodeURIComponent(pxVrm);
+    const add = getAttributionParams();
+    try {
+      const u = new URL(base);
+      Object.keys(add).forEach(k => { if(!u.searchParams.has(k)) u.searchParams.set(k, add[k]); });
+      return u.toString();
+    } catch(e){
+      // Robust fallback
+      const hasQ = base.includes('?');
+      const extra = Object.keys(add).map(k=>k+'='+encodeURIComponent(add[k])).join('&');
+      return extra ? base + (hasQ?'&':'?') + extra : base;
+    }
+  }
+
+  // Update button href from form value
+  function updateButtonHref($form, $button){
+    const pxVrm = $form.find('[name="px-vrm"]').val();
+    if(!pxVrm) return;
+    const url = generatePxURL(pxVrm);
+    $button.attr('href', url).attr('target','_blank'); // open in new tab
+  }
+
+  // Enter key -> build + click
+  $('#px-form-large input, #px-form-small input').on('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const $form = $(this).closest('form');
+      const $btn  = $form.find('a');
+      updateButtonHref($form, $btn);
+      $btn[0].click();
+    }
+  });
+
+  // Form submit -> build + click
+  $('#px-form-large, #px-form-small').on('submit', function(e){
+    e.preventDefault();
+    const $btn = $(this).find('a');
+    updateButtonHref($(this), $btn);
+    $btn[0].click();
+  });
+
+  // Button clicks -> ensure latest href
+  $('#px-button-large').on('click', function(){
+    updateButtonHref($('#px-form-large'), $(this));
+  });
+  $('#px-button-small').on('click', function(){
+    updateButtonHref($('#px-form-small'), $(this));
+  });
+
+  // Live update on input
+  $('#px-form-large [name="px-vrm"]').on('input', function(){
+    updateButtonHref($('#px-form-large'), $('#px-button-large'));
+  });
+  $('#px-form-small [name="px-vrm"]').on('input', function(){
+    updateButtonHref($('#px-form-small'), $('#px-button-small'));
+  });
+});
+</script>
+
+<!-- Search similar vehicles button -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Set your values (CMS tokens or hardcoded)
+  const make  = "{{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;} }}".trim();
+  const model = "{{wf {&quot;path&quot;:&quot;model:name&quot;,&quot;type&quot;:&quot;PlainText&quot;} }}".trim();
+
+  // Build query parts only if present
+  const params = [];
+  if (make)  params.push("cars_make_equal="  + make.replace(/\s+/g, '+'));
+  if (model) params.push("cars_model_equal=" + model.replace(/\s+/g, '+'));
+
+  // Join them into a query string
+  const query = params.length ? "?" + params.join("&") : "";
+
+  // Apply to all buttons
+  document.querySelectorAll('[data-link="search-similar"]').forEach(btn => {
+    btn.setAttribute("href", "/used-cars" + query);
+  });
+});
+</script>
+
+<!-- Set all Car Cards to the height of tallest -->
+<script>
+    function setEqualHeight() {
+      var cards = document.querySelectorAll('[data-card-height="equal"]');
+      if (!cards.length) return;
+      cards.forEach(function(c) { c.style.height = 'auto'; });
+      var maxH = 0;
+      cards.forEach(function(c) { maxH = Math.max(maxH, c.offsetHeight); });
+      cards.forEach(function(c) { c.style.height = maxH + 'px'; });
+    }
+
+    window.addEventListener('resize', setEqualHeight);
+
+    // Re-equalize whenever Finsweet or Webflow modifies the slider DOM
+    new MutationObserver(setEqualHeight).observe(
+      document.body,
+      { childList: true, subtree: true }
+    );
+  </script>
+
+<!-- Add hidden fields to each form to track conversion pages and UTMs-->
+<script>
+/* Add UTMs + referrer to forms with data-form="add-utms"
+   - Always add standard UTMs + referrer (even if blank)
+   - Add any extra utm_* keys only if present
+   - Prefers stored attribution; falls back to URL */
+$(function () {
+  const HOST = location.hostname.replace(/^www\./,'');
+  const STD = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
+
+  // ---- helpers
+  const getStored = () => { try { return JSON.parse(localStorage.getItem('attribution') || '{}'); } catch { return {}; } };
+  const getURLUtms = () => { const o={}, qs=new URLSearchParams(location.search); qs.forEach((v,k)=>/^utm_/i.test(k)&&v&&(o[k]=v)); return o; };
+  const getUTMs = () => {
+    const s = getStored().utms || {};
+    return Object.keys(s).length ? s : getURLUtms();
+  };
+  const getRefDomain = () => {
+    const s = getStored();
+    if (s.referrerDomain) return s.referrerDomain;
+    if (!document.referrer) return '';
+    try {
+      const d = new URL(document.referrer).hostname.replace(/^www\./,'');
+      return (d===HOST || d.endsWith('.'+HOST)) ? '' : d; // ignore self-referrals
+    } catch { return ''; }
+  };
+  const getCleanPageURL = () => {
+    const keep=[]; const qs=new URLSearchParams(location.search);
+    qs.forEach((v,k)=>{ if(!/^utm_/i.test(k)) keep.push(k+'='+encodeURIComponent(v)); });
+    return location.origin + location.pathname + (keep.length ? '?'+keep.join('&') : '');
+  };
+
+  const utms = getUTMs();
+  const refDomain = getRefDomain();
+  const conversionPage = getCleanPageURL();
+
+  // ---- inject into targeted forms only
+  $('form[data-form="add-utms"]').each(function(){
+    const $f = $(this);
+    // clear previous injections to avoid duplicates
+    $f.find('input[name="conversion_page"], input[name="referrer"], input[name^="utm_"]').remove();
+
+    // always add conversion page
+    $f.append($('<input>', { type:'hidden', name:'conversion_page', value: conversionPage }));
+
+    // always add standard UTM fields (blank if missing)
+    STD.forEach(k => {
+      $f.append($('<input>', { type:'hidden', name:k, value: utms[k] || '' }));
+    });
+
+    // add extra/non-standard utm_* keys only if present
+    Object.keys(utms).forEach(k => {
+      if (/^utm_/i.test(k) && !STD.includes(k)) {
+        $f.append($('<input>', { type:'hidden', name:k, value: utms[k] }));
+      }
+    });
+
+    // always add referrer (domain), even if blank
+    $f.append($('<input>', { type:'hidden', name:'referrer', value: refDomain || '' }));
+  });
+});
+</script>
+
+<!-- Update make/model count on Similar Cars carousel and banner and hide carousel if 0 -->
+<script>
+$(document).ready(function() {
+  // Count all elements with data-count="make-model"
+  const makeModelCount = $('[data-count="make-model"]').length;
+
+  // Update all elements with data-number="make-model"
+  $('[data-number="make-model"]').text(makeModelCount);
+
+  // If 0: hide model section, show make section
+  if (makeModelCount === 0) {
+    $('[data-similar="model"]').hide();   // hide model block
+    $('[data-similar="make"]').show();    // show make block
+  }
+});
+</script>
+
+<!-- Update car card link when finance check is hovered/clicked -->
+<script>
+(() => {
+  const BASE = 'https://quote.carsa.co.uk/eligibility/questions';
+  const SELECTOR = '[data-link="check-finance"]';
+  const ANALYTICS_VALUE = 'check-finance-car-card-click';
+  const HOST = location.hostname.replace(/^www\./, '');
+
+  function getAttributionParams() {
+    const pick = (s) => {
+      try {
+        return JSON.parse(s.getItem('attribution_session') || 'null') ||
+               JSON.parse(s.getItem('attribution') || 'null');
+      } catch (_) { return null; }
+    };
+    const ss = pick(sessionStorage) || {};
+    const ls = pick(localStorage) || {};
+    const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms || {}));
+    let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+    if (!refDomain && document.referrer) {
+      try {
+        const d = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (!(d === HOST || d.endsWith('.' + HOST))) refDomain = d;
+      } catch (_) { /* invalid referrer URL */ }
+    }
+    const params = { ...utms };
+    if (refDomain) params.referrer = refDomain;
+    return params;
+  }
+
+  function addParams(url, obj) {
+    try {
+      const u = new URL(url, location.origin);
+      for (const k in obj) { if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
+      return u.toString();
+    } catch (_) {
+      const hasQ = url.indexOf('?') > -1;
+      const parts = [];
+      for (const k in obj) {
+        if (!new RegExp('([?&])' + k + '=').test(url)) parts.push(k + '=' + encodeURIComponent(obj[k]));
+      }
+      return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
+    }
+  }
+
+  function buildURL(vrm) {
+    let url = BASE;
+    if (vrm) url += '?vrm=' + encodeURIComponent(vrm);
+    return addParams(url, getAttributionParams());
+  }
+
+  // Hover: swap ancestor <a> href so browser status bar shows finance URL
+  document.body.addEventListener('mouseover', (e) => {
+    const el = e.target.closest(SELECTOR);
+    if (!el) return;
+    const anchor = el.closest('a');
+    if (!anchor) return;
+    if (!anchor.dataset.originalHref) anchor.dataset.originalHref = anchor.href;
+    if (!('originalAnalytics' in anchor.dataset)) anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+    anchor.href = buildURL(el.getAttribute('vrm'));
+    anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+  });
+
+  document.body.addEventListener('mouseout', (e) => {
+    const el = e.target.closest(SELECTOR);
+    if (!el) return;
+    if (el.contains(e.relatedTarget)) return;
+    const anchor = el.closest('a');
+    if (!anchor || !anchor.dataset.originalHref) return;
+    anchor.href = anchor.dataset.originalHref;
+    delete anchor.dataset.originalHref;
+    if ('originalAnalytics' in anchor.dataset) {
+      const orig = anchor.dataset.originalAnalytics;
+      if (orig) anchor.setAttribute('data-analytics-event', orig);
+      else anchor.removeAttribute('data-analytics-event');
+      delete anchor.dataset.originalAnalytics;
+    }
+  });
+
+  // Click fallback: if href wasn't swapped yet (keyboard/touch), swap it now
+  document.body.addEventListener('click', (e) => {
+    const el = e.target.closest(SELECTOR);
+    if (!el) return;
+    const anchor = el.closest('a');
+    if (!anchor) return;
+    if (!anchor.dataset.originalHref) {
+      anchor.dataset.originalHref = anchor.href;
+      anchor.href = buildURL(el.getAttribute('vrm'));
+    }
+    if (!('originalAnalytics' in anchor.dataset)) {
+      anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+      anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+    }
+  });
+})();
+</script>
+
+<!-- Clean Schema + Update if Vehicle Removed -->
+<script>
+(function () {
+  var status = "{{wf {&quot;path&quot;:&quot;status&quot;,&quot;type&quot;:&quot;Option&quot;} }}".trim().toLowerCase();
+
+  var blocks = document.querySelectorAll('script[type="application/ld+json"]');
+  for (var i = 0; i < blocks.length; i++) {
+    var txt = blocks[i].textContent;
+    if (!txt || txt.indexOf('"Product"') === -1) continue;
+
+    try {
+      var data = JSON.parse(txt);
+      var changed = false;
+
+      var scrub = function (obj) {
+        if (!obj || typeof obj !== 'object') return;
+        var keys = Object.keys(obj);
+        for (var k = 0; k < keys.length; k++) {
+          var key = keys[k];
+          var val = obj[key];
+          if (val === '' || val === null) {
+            delete obj[key];
+            changed = true;
+          } else if (Array.isArray(val)) {
+            for (var j = val.length - 1; j >= 0; j--) {
+              if (val[j] && typeof val[j] === 'object') {
+                scrub(val[j]);
+                if (val[j].value === undefined && val[j]['@type'] === 'PropertyValue') {
+                  val.splice(j, 1);
+                  changed = true;
+                }
+              }
+            }
+          } else if (typeof val === 'object') {
+            scrub(val);
+            var remaining = Object.keys(val).filter(function (v) { return v !== '@type'; });
+            if (remaining.length === 0) {
+              delete obj[key];
+              changed = true;
+            }
+          }
+        }
+      };
+
+      if (data['@graph']) {
+        for (var g = 0; g < data['@graph'].length; g++) {
+          scrub(data['@graph'][g]);
+        }
+      } else {
+        scrub(data);
+      }
+
+      if (status === 'removed') {
+        var touch = function (node) {
+          var o = node && node.offers;
+          if (!o) return;
+          var arr = Array.isArray(o) ? o : [o];
+          for (var a = 0; a < arr.length; a++) {
+            if (!arr[a] || typeof arr[a] !== 'object') continue;
+            arr[a].availability = 'https://schema.org/SoldOut';
+            delete arr[a].price;
+            delete arr[a].priceCurrency;
+            changed = true;
+          }
+        };
+        if (data['@graph']) data['@graph'].forEach(touch);
+        else touch(data);
+      }
+
+      if (changed) {
+        blocks[i].textContent = JSON.stringify(data);
+        break;
+      }
+    } catch (_) {}
+  }
+})();
+</script>
+
+<!-- SVG Animations -->
+<!-- Draw lines -->
+<script>
+// Unified GSAP "draw-line" (single or multiple paths)
+// Applies ONLY to wrappers: [data-svg="draw-line"]
+// Options: data-svg-start="auto|scroll" (default: auto), data-svg-duration="2" (seconds)
+
+$(function () {
+  if (typeof gsap === "undefined") return;
+  if (typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
+
+  // Track the first user scroll (used when start=scroll AND element is already past on load)
+  let userHasScrolled = false;
+  window.addEventListener('scroll', function onFirstScroll(){
+    userHasScrolled = true;
+    window.removeEventListener('scroll', onFirstScroll);
+  }, { passive: true });
+
+  // Target ONLY draw-line wrappers
+  const wrappers = Array.from(new Set($('[data-svg="draw-line"]').get()));
+  wrappers.forEach(function(wrapper){
+    const $w = $(wrapper);
+    if ($w.data('svgDrawInit')) return; // prevent double init per wrapper
+    $w.data('svgDrawInit', true);
+
+    // Per-wrapper config
+    const startMode = (wrapper.getAttribute('data-svg-start') || 'auto').toLowerCase(); // 'auto' | 'scroll'
+    const totalDur  = Math.max(0.001, parseFloat(wrapper.getAttribute('data-svg-duration')) || 2); // default 2s
+
+    // All descendant SVGs
+    const svgs = Array.from(wrapper.querySelectorAll('svg'));
+    if (!svgs.length) return;
+
+    svgs.forEach(function(svg){
+      // Collect stroked shapes (works for 1 or many)
+      const els = Array.from(svg.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect')).filter(function(el){
+        const cs = getComputedStyle(el);
+        return cs.stroke && cs.stroke !== 'none' && parseFloat(cs.strokeWidth) > 0;
+      });
+      if (!els.length) return;
+
+      // Prime dashes + measure lengths (for proportional timing)
+      let totalLen = 0;
+      els.forEach(function(el){
+        let len = 0;
+        try { len = (typeof el.getTotalLength === 'function') ? el.getTotalLength() : 0; } catch(e){ len = 0; }
+        if (!isFinite(len) || len <= 0) {
+          const b = el.getBBox?.();
+          len = (b && isFinite(b.width) && isFinite(b.height)) ? 2*(b.width + b.height) : 1000;
+        }
+        el.style.strokeDasharray = `${len} ${len}`;
+        el.style.strokeDashoffset = `${len}`;
+        el.__svgDrawLen = len;
+        totalLen += len;
+      });
+      if (totalLen <= 0) totalLen = els.length || 1;
+
+      // Build linear child timeline (each path sequential, duration proportional to length)
+      const tl = gsap.timeline({ paused: true });
+      els.forEach(function(el){
+        const seg = (el.__svgDrawLen / totalLen) * totalDur; // seconds
+        tl.to(el, { strokeDashoffset: 0, duration: seg, ease: "none" }, ">");
+      });
+
+      // Driver tween sets overall duration + smooth in/out
+      const driver = gsap.to(tl, { progress: 1, duration: totalDur, ease: "power1.inOut", paused: true });
+
+      // Helpers
+      const playNow = () => gsap.delayedCall(0.2, () => driver.play()); // +200ms
+      const playAfterFirstScroll = () => {
+        if (userHasScrolled) playNow();
+        else {
+          const handler = () => { window.removeEventListener('scroll', handler); userHasScrolled = true; playNow(); };
+          window.addEventListener('scroll', handler, { passive: true });
+        }
+      };
+
+      // 20% viewport threshold ≈ "top 80%"
+      const vh = window.innerHeight || document.documentElement.ientHeight;
+      const r0 = svg.getBoundingClientRect();
+      const pastOnLoad = (r0.top <= vh * 0.8 && r0.bottom >= 0);
+
+      // IMPORTANT FIX: if already past on load, DO NOT create ScrollTrigger — decide immediately.
+      if (pastOnLoad) {
+        (startMode === 'scroll') ? playAfterFirstScroll() : playNow();
+        return;
+      }
+
+      // Otherwise, normal trigger behavior
+      if (typeof ScrollTrigger !== "undefined") {
+        ScrollTrigger.create({
+          trigger: svg,
+          start: "top 80%",
+          once: true,
+          onEnter: () => playNow()
+        });
+      } else {
+        // Fallback without ScrollTrigger
+        const onScroll = () => {
+          const r = svg.getBoundingClientRect();
+          const enters = r.top <= vh * 0.8 && r.bottom >= 0;
+          if (!enters) return;
+          window.removeEventListener('scroll', onScroll);
+          window.removeEventListener('resize', onScroll);
+          playNow();
+        };
+        window.addEventListener('scroll', onScroll, passive: true });
+        window.addEventListener('resize', onScroll);
+        onScroll(); // initial check
+      }
+    });
+  });
+});
+</script>
+
+<!-- Update and open the link for Instant Valuation form -->
+<script>
+/* Build valuation links using stored UTMs + external referrer domain (fallbacks included) */
+$(function () {
+  const HOST = location.hostname.replace(/^www\./,'');
+
+  function getAttributionParams(){
+    const pick = (s)=>{ try{ return JSON.parse(s.getItem('attribution_session')||'null') || JSON.parse(s.getItem('attribution')||'null'); }catch(_){ return null; } };
+    const ss = pick(sessionStorage) || {};
+    const ls = pick(localStorage)  || {};
+    const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms||{}));
+    let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+    if(!refDomain && document.referrer){
+      try{
+        const d = new URL(document.referrer).hostname.replace(/^www\./,'');
+        if(!(d===HOST || d.endsWith('.'+HOST))) refDomain = d;
+      }catch(_){}
+    }
+    const params = {...utms};
+    if(refDomain) params.referrer = refDomain;
+    return params;
+  }
+
+  function addParams(url, obj){
+    const u = new URL(url, location.origin);
+    for(const k in obj){ if(!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
+    return u.toString();
+  }
+
+  function generateOrderURL(vrm, mileage){
+    const base = 'https://sellcar.carsa.co.uk/new-order?vrm=' + encodeURIComponent(vrm)
+               + '&mileage=' + encodeURIComponent(mileage || '');
+    return addParams(base, getAttributionParams());
+  }
+
+  function getFormValues($form){
+    const vrm = ($form.find('[name="vrm"]').first().val() || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '');
+    const mileage = ($form.find('[name="mileage"]').first().val() || '').trim();
+    return { vrm, mileage };
+  }
+
+  function setHref($trigger){
+    const $form = $trigger.closest('form');
+    if(!$form.length) return null;
+    const { vrm, mileage } = getFormValues($form);
+    if(!vrm) return null;
+    const url = generateOrderURL(vrm, mileage);
+    if($trigger.is('a')) $trigger.attr({ href: url, target: '_blank' });
+    return url;
+  }
+
+  $(document).on('click', '[data-link="valuation"]', function(e){
+    const url = setHref($(this));
+    if(!url) return;
+    if(!$(this).is('a')){
+      e.preventDefault();
+      window.open(url, '_blank', 'noopener');
+    }
+  });
+
+  $(document).on('keydown', 'form input', function(e){
+    if(e.key !== 'Enter') return;
+    const $form = $(this).closest('form');
+    const $trigger = $form.find('[data-link="valuation"]').first();
+    if(!$trigger.length) return;
+    e.preventDefault();
+    const url = setHref($trigger);
+    if(url && !$trigger.is('a')) window.open(url, '_blank', 'noopener');
+    else if(url) $trigger[0].click();
+  });
+
+  $(document).on('input', 'form [name="vrm"], form [name="mileage"]', function(){
+    const $form = $(this).closest('form');
+    $form.find('[data-link="valuation"]').each(function(){ setHref($(this)); });
+  });
+});
+</script>
+
+<!-- Radio CTA: reserve-collect / reserve-test-drive -->
+<script>
+$(function () {
+
+  // --- CMS values ---
+  const VRM = "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;} }}".trim().toUpperCase();
+
+  // --- UTM helper ---
+  const HOST = location.hostname.replace(/^www\./, '');
+  const isInternal = d => !!d && (d === HOST || d.endsWith('.' + HOST));
+
+  function getAttributionParams() {
+    let store = {};
+    try { store = JSON.parse(localStorage.getItem('attribution') || '{}'); } catch (e) {}
+    const utms = store.utms || {};
+
+    if (!Object.keys(utms).length) {
+      new URLSearchParams(location.search).forEach((v, k) => {
+        if (/^utm_/i.test(k) && v) utms[k] = v;
+      });
+    }
+
+    let refDomain = '';
+    if (store.referrerDomain && !isInternal(store.referrerDomain)) {
+      refDomain = store.referrerDomain;
+    } else if (store.referrer) {
+      try {
+        const d = new URL(store.referrer).hostname.replace(/^www\./, '');
+        if (!isInternal(d)) refDomain = d;
+      } catch (e) {}
+    } else if (document.referrer) {
+      try {
+        const d = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (!isInternal(d)) refDomain = d;
+      } catch (e) {}
+    }
+
+    const params = { ...utms };
+    if (refDomain) params.referrer = refDomain;
+    return params;
+  }
+
+  function appendParams(url, params) {
+    try {
+      const u = new URL(url, location.origin);
+      Object.keys(params).forEach(k => {
+        if (!u.searchParams.has(k)) u.searchParams.set(k, params[k]);
+      });
+      return u.toString();
+    } catch (_) {
+      const hasQ = url.includes('?');
+      const parts = Object.keys(params)
+        .filter(k => !new RegExp('([?&])' + k + '=').test(url))
+        .map(k => k + '=' + encodeURIComponent(params[k]));
+      return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
+    }
+  }
+
+  // --- Postcode helper ---
+  function getPostcode() {
+    return ($('[data-field="postcode"]').val() || '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toUpperCase();
+  }
+
+  // --- Build links ---
+  function buildLink(option) {
+    const postcode = getPostcode();
+    let url;
+
+    if (option === 'reserve-test-drive') {
+      url = 'https://quote.carsa.co.uk/book/' + VRM;
+      if (postcode) url += '?postcode=' + encodeURIComponent(postcode);
+    } else {
+      url = 'https://quote.carsa.co.uk/build-deal/' + VRM + '?skip_intro=';
+    }
+
+    return appendParams(url, getAttributionParams());
+  }
+
+  // --- Update all CTA buttons ---
+  function updateCTAs(option) {
+    const isTestDrive = option === 'reserve-test-drive';
+    const label = isTestDrive ? 'Reserve & test drive' : 'Reserve & collect';
+    const href  = buildLink(option);
+    const analyticsEvent = isTestDrive ? 'test-drive-cta' : 'build-deal-cta';
+
+    $('[data-button="cta-option"]')
+      .text(label)
+      .attr('href', href)
+      .attr('data-analytics-event', analyticsEvent);
+  }
+
+  // --- Shared animate open/close ---
+  function animateOpen($el) {
+    const naturalHeight = $el.css({ display: 'block', opacity: 0, overflow: 'hidden', height: 0 })
+                             .get(0).scrollHeight;
+    $el.animate({ height: naturalHeight }, 200, 'linear', function () {
+      $el.css({ height: 'auto', overflow: '' })
+         .animate({ opacity: 1 }, 200, 'linear');
+    });
+  }
+
+  function animateClose($el) {
+    $el.css('overflow', 'hidden')
+       .animate({ opacity: 0 }, 200, 'linear', function () {
+         $el.animate({ height: 0 }, 200, 'linear', function () {
+           $el.css({ display: 'none', overflow: '' });
+         });
+       });
+  }
+
+  // --- Show/hide helpers ---
+  const $postcodeField = $('.form7_field-wrapper.is-postcode');
+
+  function showPostcode(animate) {
+    animate ? animateOpen($postcodeField)
+            : $postcodeField.css({ display: 'block', opacity: 1, height: 'auto', overflow: '' });
+  }
+
+  function hidePostcode() { animateClose($postcodeField); }
+
+  function showContent($label, animate) {
+    const $content = $label.find('.details_radio_content');
+    animate ? animateOpen($content)
+            : $content.css({ display: 'block', opacity: 1, height: 'auto', overflow: '' });
+  }
+
+  function hideContent($label) {
+    animateClose($label.find('.details_radio_content'));
+  }
+
+  // --- Squiggle ---
+  function playSquiggle($label) {
+    const svg = $label.find('[data-svg="draw-line"] svg')[0];
+    if (svg && svg.__svgDrawPlay) svg.__svgDrawPlay();
+  }
+
+  // --- Radio change handler ---
+  $('input[type="radio"][name="Book"]').on('change', function () {
+    if (!this.checked) return;
+    const option = this.id;
+    const $allLabels = $('input[type="radio"][name="Book"]').map(function () {
+      return $(this).closest('.details_radio-field').get(0);
+    }).get();
+
+    updateCTAs(option);
+    playSquiggle($(this).closest('.details_radio-field'));
+
+    $allLabels.forEach(label => {
+      const $label = $(label);
+      const isSelected = $label.find('input[type="radio"]').prop('checked');
+      isSelected ? showContent($label, true) : hideContent($label);
+      $label.toggleClass('is-list-active', isSelected);
+    });
+
+    option === 'reserve-test-drive' ? showPostcode(true) : hidePostcode();
+  });
+
+  // --- Postcode live update ---
+  $(document).on('input', '[data-field="postcode"]', function () {
+    const selected = $('input[type="radio"][name="Book"]:checked').val();
+    if (selected) updateCTAs(selected);
+  });
+
+  // --- Initialise on load ---
+  $('#reserve-test-drive').prop('checked', true);
+
+  // Set initial active class and hide unselected content
+  $('input[type="radio"][name="Book"]').each(function () {
+    const $label = $(this).closest('.details_radio-field');
+    $label.toggleClass('is-list-active', this.checked);
+    if (!this.checked) $label.find('.details_radio_content').css({ display: 'none' });
+  });
+
+  showPostcode(false);
+  updateCTAs('reserve-test-drive');
+
+
+  // --- Prevent Enter submitting postcode field ---
+// --- Enter on postcode field triggers CTA ---
+  document.getElementById('cta-postcode').addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    const selected = $('input[type="radio"][name="Book"]:checked').val();
+    if (selected) {
+      updateCTAs(selected);
+      const href = $('[data-button="cta-option"]').attr('href');
+      if (href) window.location.href = href;
+    }
+  });
+
+});
+</script>
+
+<!-- Battery animation -->
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@main/projects/carsa/battery-animation.js"></script>

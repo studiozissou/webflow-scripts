@@ -10,15 +10,6 @@
 
 Moved 19 inline `<script>` blocks (~45KB) from the Webflow VDP page body code into a single external file (`vdp.js`) hosted on jsDelivr CDN, pinned to a specific commit hash.
 
-## Bug fixes (included in this work)
-
-Four bugs were found and fixed during code review:
-
-1. **`creditRating` typo** — finance calculator APR lookup used an undefined variable. Worked by coincidence (same fallback value) but would throw in strict mode.
-2. **`textContent` typo** — finance API results were silently written to a nonexistent property. All `data-number` elements after the finance API call showed stale values.
-3. **Broken selector** — `$('ta-number="currency-rounded"]')` was missing `[da` prefix. Currency-rounded formatting never ran.
-4. **`clientHeight` typo** — SVG draw-line fallback used `ientHeight`. Dormant on modern browsers but broken in edge-case environments.
-
 ## Performance results
 
 ### Cold load (first visit) — no change
@@ -57,18 +48,13 @@ Google's CWV thresholds are coarse (LCP good < 2.5s, poor > 4s). A 15-30ms chang
 
 **Slightly better for returning visitors and multi-page browsing sessions.** A typical user journey (home > SRP > VDP > back to SRP > different VDP) benefits from cached scripts across pages. After the first page load, all custom JS comes from disk cache.
 
-More significantly, the 4 bug fixes directly improve UX:
-- Finance calculator now correctly updates all output fields
-- Currency-rounded values now display properly
-- APR selection works correctly for all credit rating tiers
-
 ## Primary value: operational stability
 
 The strongest case for this work is not performance — it's **reliability and maintainability**:
 
 1. **Version control** — scripts are in git with full history, diffs, and blame. Previously they were only in the Webflow page settings editor with no history.
 2. **Instant rollback** — change the commit hash in one line to revert to any previous version. Previously, reverting meant manually re-pasting old code.
-3. **Code review** — found 4 bugs that were invisible in the Webflow editor. The review process itself is only possible with externalised code.
+3. **Code review** — the review process is only possible with externalised code.
 4. **Automated testing** — 19 acceptance tests run against live/staging, catching regressions before users see them. Not possible with inline scripts.
 5. **Cross-developer collaboration** — any developer can read, review, and modify the scripts without Webflow Designer access.
 
@@ -115,7 +101,7 @@ Documented in `vdp.js` header comment:
 
 | File | Description |
 |------|-------------|
-| `projects/carsa/vdp.js` | Externalised VDP scripts with bug fixes |
+| `projects/carsa/vdp.js` | Externalised VDP scripts |
 | `projects/carsa/.claude/specs/vdp-webflow-body-code.html` | Webflow body code (paste into Designer) |
 | `tests/acceptance/carsa-vdp-script-externalisation.spec.js` | 19 acceptance tests |
 | `projects/carsa/.claude/audits/lighthouse/staging/` | Performance traces and comparison report |

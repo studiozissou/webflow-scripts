@@ -1,0 +1,81 @@
+{
+  "date": "2026-06-25",
+  "environment": "staging (carsa-v2.webflow.io)",
+  "state": "inline scripts (pre-externalisation)",
+  "throttling": { "cpu": "1x", "network": "none" },
+  "pages": [
+    {
+      "vrm": "gn20phv",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/gn20phv",
+      "lcp_ms": 1007,
+      "cls": 0.03,
+      "ttfb_ms": 44,
+      "lcp_load_delay_ms": 551,
+      "lcp_load_duration_ms": 2,
+      "lcp_render_delay_ms": 410,
+      "trace": "trace-gn20phv-staging-baseline.json.json.gz"
+    },
+    {
+      "vrm": "vk72rzv",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/vk72rzv",
+      "lcp_ms": 915,
+      "cls": 0.01,
+      "ttfb_ms": 39,
+      "lcp_load_delay_ms": 474,
+      "lcp_load_duration_ms": 3,
+      "lcp_render_delay_ms": 400,
+      "trace": "trace-vk72rzv-staging-baseline.json.json.gz"
+    },
+    {
+      "vrm": "bl73dmu",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/bl73dmu",
+      "lcp_ms": 871,
+      "cls": 0.01,
+      "ttfb_ms": 58,
+      "lcp_load_delay_ms": 400,
+      "lcp_load_duration_ms": 2,
+      "lcp_render_delay_ms": 411,
+      "trace": "trace-bl73dmu-staging-baseline.json.json.gz"
+    },
+    {
+      "vrm": "ow74xxv",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/ow74xxv",
+      "lcp_ms": 823,
+      "cls": 0.02,
+      "ttfb_ms": 63,
+      "lcp_load_delay_ms": 372,
+      "lcp_load_duration_ms": 1,
+      "lcp_render_delay_ms": 387,
+      "trace": "trace-ow74xxv-staging-baseline.json.json.gz"
+    },
+    {
+      "vrm": "fd23hgg",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/fd23hgg",
+      "lcp_ms": 916,
+      "cls": 0.02,
+      "ttfb_ms": 55,
+      "lcp_load_delay_ms": 467,
+      "lcp_load_duration_ms": 7,
+      "lcp_render_delay_ms": 387,
+      "trace": "trace-fd23hgg-staging-baseline.json.json.gz"
+    },
+    {
+      "vrm": "oe22lfp",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/oe22lfp",
+      "lcp_ms": 923,
+      "cls": 0.02,
+      "ttfb_ms": 75,
+      "lcp_load_delay_ms": 430,
+      "lcp_load_duration_ms": 1,
+      "lcp_render_delay_ms": 417,
+      "trace": "trace-oe22lfp-staging-baseline.json.json.gz"
+    }
+  ],
+  "averages": {
+    "lcp_ms": 909,
+    "cls": 0.02,
+    "ttfb_ms": 56,
+    "lcp_load_delay_ms": 449,
+    "lcp_render_delay_ms": 402
+  }
+}

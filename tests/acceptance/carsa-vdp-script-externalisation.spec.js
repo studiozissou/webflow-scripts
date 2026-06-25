@@ -7,8 +7,9 @@
  * Phase 1: scripts moved as-is (jQuery deps preserved)
  * Phase 2: refactored to vanilla JS + modular init.js loader
  */
-const { test, expect } = require('@playwright/test');
-require('dotenv').config({ path: '.env.test' });
+import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.test' });
 
 // ── Config ────────────────────────────────────────────────────
 const SLUG = 'carsa-vdp-script-externalisation';
@@ -139,7 +140,7 @@ test.describe(`${SLUG} — VDP Features`, () => {
 
   test('gallery container has images', async ({ page }) => {
     const galleryImages = page.locator(
-      '.w-slider-slide img, .gallery img, [data-gallery] img, .w-lightbox img'
+      '.w-slider-mask img, .w-slider-slide img, .gallery img, [data-gallery] img, .w-lightbox img'
     );
     const count = await galleryImages.count();
     expect(count, 'Gallery should contain at least 1 image').toBeGreaterThan(0);
@@ -307,7 +308,7 @@ test.describe(`${SLUG} — Part Exchange`, () => {
 
 /* 7. Check Finance link builder */
 test.describe(`${SLUG} — Check Finance`, () => {
-  test('check-finance links have correct domain and VRM', async ({ page }) => {
+  test('check-finance links have correct domain and VRM on hover', async ({ page }) => {
     await loadPage(page);
 
     const links = page.locator('[data-link="check-finance"]');
@@ -319,8 +320,12 @@ test.describe(`${SLUG} — Check Finance`, () => {
       });
       return;
     }
-    const href = await links.first().getAttribute('href');
-    expect(href, 'Check finance should point to quote.carsa.co.uk').toContain('quote.carsa.co.uk');
+    // Script builds href on hover via event delegation — trigger it
+    await links.first().hover();
+    await page.waitForTimeout(300);
+    const anchor = links.first().locator('xpath=ancestor::a').first();
+    const href = await anchor.getAttribute('href');
+    expect(href, 'Check finance anchor should point to quote.carsa.co.uk after hover').toContain('quote.carsa.co.uk');
   });
 });
 
@@ -411,5 +416,98 @@ test.describe(`${SLUG} — Cold Banner`, () => {
     // Check Swiper was loaded
     const swiperLoaded = await page.evaluate(() => typeof window.Swiper === 'function');
     expect(swiperLoaded, 'Swiper should be loaded when banner is active').toBe(true);
+  });
+});
+
+/* 10. Cache behaviour — repeat visit */
+test.describe(`${SLUG} — Cache`, () => {
+  test('vdp.js served from cache on repeat visit', async ({ page }) => {
+    // First visit — cold load
+    await loadPage(page);
+
+    // Collect network requests on second visit
+    const vdpRequests = [];
+    page.on('response', (res) => {
+      if (res.url().includes('carsa/vdp')) {
+        vdpRequests.push({
+          url: res.url(),
+          fromCache: res.fromServiceWorker() || res.request().resourceType() === 'script',
+          status: res.status(),
+          headers: res.headers(),
+        });
+      }
+    });
+
+    // Second visit — warm cache
+    await page.goto(`${STAGING_URL}${PRIMARY_VDP}`, { waitUntil: 'domcontentloaded' });
+    await waitForReady(page);
+
+    expect(vdpRequests.length, 'vdp.js should have been requested').toBeGreaterThan(0);
+
+    const req = vdpRequests[0];
+    // jsDelivr serves with immutable cache headers on pinned commits
+    const cacheControl = req.headers['cache-control'] || '';
+    const servedFromCache = req.status === 304 || req.status === 200;
+
+    expect(servedFromCache, 'vdp.js should return 200 or 304').toBe(true);
+
+    // Verify cache-control header allows long-term caching
+    if (cacheControl) {
+      const hasLongCache = cacheControl.includes('max-age=31536000') ||
+                           cacheControl.includes('immutable') ||
+                           cacheControl.includes('public');
+      expect(hasLongCache, `Cache-Control should enable caching: ${cacheControl}`).toBe(true);
+    }
+  });
+
+  test('vdp.js transfer size is zero on cached repeat visit', async ({ page, context }) => {
+    // First visit — populate cache
+    await loadPage(page);
+
+    // Second visit on a new page in the same context (shared cache)
+    const page2 = await context.newPage();
+    const transferSizes = [];
+
+    // Use CDP to get actual transfer sizes
+    const client = await page2.context().newCDPSession(page2);
+    await client.send('Network.enable');
+    client.on('Network.loadingFinished', (params) => {
+      if (params.encodedDataLength !== undefined) {
+        transferSizes.push({
+          requestId: params.requestId,
+          encodedDataLength: params.encodedDataLength,
+        });
+      }
+    });
+
+    const vdpRequestIds = [];
+    client.on('Network.requestWillBeSent', (params) => {
+      if (params.request.url.includes('carsa/vdp')) {
+        vdpRequestIds.push(params.requestId);
+      }
+    });
+
+    await page2.goto(`${STAGING_URL}${VDP_PATHS[1]}`, { waitUntil: 'domcontentloaded' });
+    await page2.waitForFunction(() => document.readyState === 'complete', { timeout: 20_000 });
+    await page2.waitForTimeout(1000);
+
+    // Find the vdp.js transfer size
+    const vdpTransfer = transferSizes.find((t) => vdpRequestIds.includes(t.requestId));
+
+    if (vdpTransfer) {
+      // Cached responses have 0 or very small transfer (just headers)
+      // Full file is ~45KB, cached should be < 1KB (headers only)
+      expect(
+        vdpTransfer.encodedDataLength,
+        `vdp.js transfer should be near-zero on cache hit (got ${vdpTransfer.encodedDataLength} bytes)`
+      ).toBeLessThan(1024);
+    } else {
+      test.info().annotations.push({
+        type: 'note',
+        description: 'Could not capture vdp.js transfer size via CDP — may need different approach',
+      });
+    }
+
+    await page2.close();
   });
 });

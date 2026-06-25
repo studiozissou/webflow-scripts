@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-18",
+  "lastUpdated": "2026-06-25",
   "version": 1,
   "lastDeployed": "2026-05-14",
   "lastDeployedHash": "7d80e5d",
@@ -127,6 +127,36 @@
       "description": "NEM TEST Phase B — landing page structure, 5-screen quiz flow, scoring logic, pill buttons, form validation, screen transitions, correction flow, i18n (NL+EN), e2e signup via MailerSend API + Gmail API",
       "created": "2026-06-16",
       "updated": "2026-06-19"
+    },
+    {
+      "slug": "tsc-brand-colour-variables",
+      "url": "https://tsc-v2.webflow.io",
+      "spec": "tests/acceptance/tsc-brand-colour-variables.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC brand colour variables — updated Base/Light, Lift values, plus 20 new brand scale variables (Cyan, Ink, Steel, Yellow) in Webflow Designer",
+      "created": "2026-06-24"
+    },
+    {
+      "slug": "tsc-cargo-rem-migration",
+      "url": "https://tsc-v2.webflow.io",
+      "spec": "tests/acceptance/tsc-cargo-rem-migration.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC Cargo rem migration — 86 Webflow Variables migrated from px/vw to rem/em across Typography, Layout, Radius, Icon collections with fluid root CSS",
+      "created": "2026-06-24"
+    },
+    {
+      "slug": "carsa-vdp-script-externalisation",
+      "url": "https://www.carsa.co.uk/vehicles/used/gn20phv",
+      "spec": "tests/acceptance/carsa-vdp-script-externalisation.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Carsa VDP script externalisation — verifies 19 inline scripts work correctly when loaded as single external CDN bundle (Phase 1) and modular init.js loader (Phase 2)",
+      "created": "2026-06-25"
     }
   ]
 }

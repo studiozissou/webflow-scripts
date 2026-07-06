@@ -2,20 +2,25 @@
  * Acceptance tests — nem-test-phase-b
  *
  * Comprehensive tests for NEM TEST Phase B: landing page structure,
- * 20-question quiz flow, scoring logic, pill button UX, form validation,
- * screen transitions, correction flow, i18n, and responsive behaviour.
+ * 20-question quiz flow, profile screen, scoring logic, pill button UX,
+ * form validation, screen transitions, correction flow, i18n, and
+ * responsive behaviour.
+ *
+ * 6-screen flow: start -> questions -> profile -> conclusion -> opt-in -> confirmation
  *
  * Tier 1: Component tests (run against staging, no backend needed)
  * Tier 3: E2E signup flow tests marked @e2e-email (require live n8n + MailerSend + Gmail)
  */
-const { test, expect } = require('@playwright/test');
-require('dotenv').config({ path: '.env.test' });
+import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.test' });
 
 // ── Config ────────────────────────────────────────────────────
 const SLUG = 'nem-test-phase-b';
 const STAGING = process.env.STAGING_URL || 'https://nem-life-1.webflow.io';
-const TEST_PAGE_NL = '/zelftest/waarom-reageer-ik-zo';
-const TEST_PAGE_EN = '/en/zelftest/waarom-reageer-ik-zo';
+const TEST_PAGE_NL = '/zelftesten/waarom-reageer-ik-zo';
+const TEST_PAGE_EN = '/en/zelftesten/waarom-reageer-ik-zo';
 
 const ANSWER_LABELS_NL = ['nooit', 'zelden', 'soms', 'regelmatig', 'heel vaak'];
 const ANSWER_LABELS_EN = ['never', 'rarely', 'sometimes', 'regularly', 'very often'];
@@ -24,7 +29,7 @@ const TOTAL_QUESTIONS = 20;
 // Scoring: answer index maps to score value (0-4)
 const ANSWER_SCORES = [0, 1, 2, 3, 4];
 
-// Mechanism → question indices (1-based)
+// Mechanism -> question indices (1-based)
 const MECHANISM_MAP = {
   zelfafwijzing: [1, 2, 7, 17],
   emotioneleVerdoving: [3, 8, 13, 18],
@@ -61,6 +66,21 @@ async function answerAllQuestions(page, answerLabel = 'soms') {
   for (let i = 0; i < TOTAL_QUESTIONS; i++) {
     await answerQuestion(page, answerLabel);
   }
+}
+
+/** Fill the profile screen (Screen 3) — select gender, age category, relationship status */
+async function fillProfileScreen(page) {
+  await page.waitForTimeout(500);
+  // Select all 3 dropdowns (gender, age category, relationship status)
+  const selects = page.locator('select');
+  const selectCount = await selects.count();
+  for (let i = 0; i < selectCount; i++) {
+    await selects.nth(i).selectOption({ index: 1 });
+  }
+  await page.waitForTimeout(300);
+  // Click "Ga verder" to proceed to conclusion
+  await page.getByRole('button', { name: /ga verder/i }).click();
+  await page.waitForTimeout(600);
 }
 
 /** Answer questions with varied answers to produce a known score profile */
@@ -166,7 +186,7 @@ test.describe(`${SLUG} — Screen 1 (Start)`, () => {
   });
 
   test('progress shows "Vraag 1 van 20"', async ({ page }) => {
-    await expect(page.getByText('Vraag 1 van 20')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/vraag 1 van 20/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('5 pill buttons visible with correct NL labels', async ({ page }) => {
@@ -228,7 +248,7 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
 
   test('answering Q1 advances to Q2 with back button', async ({ page }) => {
     await answerQuestion(page, 'soms');
-    await expect(page.getByText('Vraag 2 van 20')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/vraag 2 van 20/i)).toBeVisible({ timeout: 5_000 });
     const back = page.locator('button:has-text("←"), [data-element="back-button"]');
     await expect(back.first()).toBeVisible();
   });
@@ -247,7 +267,7 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
     await page.locator('button:has-text("←"), [data-element="back-button"]').first().click();
     await page.waitForTimeout(600);
 
-    await expect(page.getByText('Vraag 1 van 20')).toBeVisible();
+    await expect(page.getByText(/vraag 1 van 20/i)).toBeVisible();
     // "regelmatig" should have selected state
     const selectedPill = page.locator(
       'button:has-text("regelmatig")[class*="selected"], ' +
@@ -257,7 +277,7 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
     await expect(selectedPill).toBeVisible();
   });
 
-  test('back button pre-fills on deeper question (Q3 → Q2)', async ({ page }) => {
+  test('back button pre-fills on deeper question (Q3 -> Q2)', async ({ page }) => {
     await answerQuestion(page, 'nooit');     // Q1
     await answerQuestion(page, 'heel vaak'); // Q2
 
@@ -265,7 +285,7 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
     await page.locator('button:has-text("←"), [data-element="back-button"]').first().click();
     await page.waitForTimeout(600);
 
-    await expect(page.getByText('Vraag 2 van 20')).toBeVisible();
+    await expect(page.getByText(/vraag 2 van 20/i)).toBeVisible();
     const selectedPill = page.locator(
       'button:has-text("heel vaak")[class*="selected"], ' +
       'button:has-text("heel vaak")[aria-selected="true"], ' +
@@ -276,29 +296,88 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
 
   test('progress updates correctly through Q1-Q5', async ({ page }) => {
     for (let q = 1; q <= 5; q++) {
-      await expect(page.getByText(`Vraag ${q} van 20`)).toBeVisible({ timeout: 5_000 });
+      await expect(page.getByText(new RegExp(`vraag ${q} van 20`, 'i'))).toBeVisible({ timeout: 5_000 });
       await answerQuestion(page, 'soms');
     }
-    await expect(page.getByText('Vraag 6 van 20')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/vraag 6 van 20/i)).toBeVisible({ timeout: 5_000 });
   });
 
   test('all 20 questions are answerable (full run)', async ({ page }) => {
     for (let q = 1; q <= TOTAL_QUESTIONS; q++) {
-      await expect(page.getByText(`Vraag ${q} van 20`)).toBeVisible({ timeout: 5_000 });
+      await expect(page.getByText(new RegExp(`vraag ${q} van 20`, 'i'))).toBeVisible({ timeout: 5_000 });
       await answerQuestion(page, ANSWER_LABELS_NL[q % 5]); // rotate through answers
     }
-    // Should now be on Screen 3 (conclusion)
-    // Verify we're no longer on a question screen
-    await expect(page.getByText('Vraag 20 van 20')).not.toBeVisible({ timeout: 5_000 });
+    // Should now be on Screen 3 (profile) — no longer on a question screen
+    await expect(page.getByText(/vraag 20 van 20/i)).not.toBeVisible({ timeout: 5_000 });
   });
 });
 
-// ── Screen 3 (Conclusion) ────────────────────────────────────
+// ── Screen 3 (Profile) ───────────────────────────────────────
 
-test.describe(`${SLUG} — Screen 3 (Conclusion)`, () => {
-  test('conclusion text appears instantly after Q20 (no loading state)', async ({ page }) => {
+test.describe(`${SLUG} — Screen 3 (Profile)`, () => {
+  test.beforeEach(async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
+    await page.waitForTimeout(500);
+  });
+
+  test('"Nog even over jou" label visible after Q20', async ({ page }) => {
+    await expect(
+      page.getByText(/nog even over jou/i)
+    ).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('3 dropdowns present (gender, age category, relationship status)', async ({ page }) => {
+    // Gender dropdown
+    await expect(
+      page.locator('[data-field="gender"], [data-element="gender-select"]').or(page.getByLabel(/geslacht/i))
+    ).toBeVisible({ timeout: 5_000 });
+    // Age category dropdown
+    await expect(
+      page.locator('[data-field="age-category"], [data-element="age-category-select"]').or(page.getByLabel(/leeftijdscategorie/i))
+    ).toBeVisible();
+    // Relationship status dropdown
+    await expect(
+      page.locator('[data-field="relationship-status"], [data-element="relationship-select"]').or(page.getByLabel(/relatiestatus/i))
+    ).toBeVisible();
+  });
+
+  test('validation: continue without selecting shows Dutch errors', async ({ page }) => {
+    // Click "Ga verder" without selecting any dropdown
+    await page.getByRole('button', { name: /ga verder/i }).click();
+    await page.waitForTimeout(500);
+
+    await expect(page.getByText(/selecteer je geslacht/i)).toBeVisible();
+    await expect(page.getByText(/selecteer je leeftijdscategorie/i)).toBeVisible();
+    await expect(page.getByText(/selecteer je relatiestatus/i)).toBeVisible();
+  });
+
+  test('"Ga verder" transitions to Screen 4 (Conclusion) after filling all dropdowns', async ({ page }) => {
+    // Select all 3 dropdowns
+    const selects = page.locator('select');
+    const selectCount = await selects.count();
+    for (let i = 0; i < selectCount; i++) {
+      await selects.nth(i).selectOption({ index: 1 });
+    }
+    await page.waitForTimeout(300);
+
+    await page.getByRole('button', { name: /ga verder/i }).click();
+    await page.waitForTimeout(600);
+
+    // Should now see conclusion text
+    await expect(
+      page.getByText(/jouw uitkomst/i)
+    ).toBeVisible({ timeout: 5_000 });
+  });
+});
+
+// ── Screen 4 (Conclusion) ────────────────────────────────────
+
+test.describe(`${SLUG} — Screen 4 (Conclusion)`, () => {
+  test('conclusion text appears after profile screen (no loading state)', async ({ page }) => {
+    await loadPage(page);
+    await answerAllQuestions(page, 'soms');
+    await fillProfileScreen(page);
 
     // Conclusion should appear immediately — no loading spinner
     // "Jouw uitkomst" or similar conclusion label
@@ -310,7 +389,7 @@ test.describe(`${SLUG} — Screen 3 (Conclusion)`, () => {
   test('CTA button visible on conclusion screen', async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
 
     await expect(
       page.getByRole('button', { name: /ontvang mijn rapport/i })
@@ -320,17 +399,17 @@ test.describe(`${SLUG} — Screen 3 (Conclusion)`, () => {
   test('bridge line visible on conclusion screen', async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
 
     await expect(
       page.getByText(/persoonlijke rapport/i)
     ).toBeVisible({ timeout: 5_000 });
   });
 
-  test('CTA transitions to Screen 4 (opt-in form)', async ({ page }) => {
+  test('CTA transitions to Screen 5 (opt-in form)', async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
 
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
@@ -348,6 +427,7 @@ test.describe(`${SLUG} — Scoring logic`, () => {
   test('all-soms produces equal scores (2 per question, 8 per mechanism)', async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'soms'); // score 2 each = 8 per mechanism
+    await fillProfileScreen(page);
 
     // Check via window global if exposed, or verify conclusion text
     const scores = await page.evaluate(() => {
@@ -356,7 +436,7 @@ test.describe(`${SLUG} — Scoring logic`, () => {
     });
 
     if (scores) {
-      // All mechanisms should be 8 (4 questions × 2)
+      // All mechanisms should be 8 (4 questions x 2)
       for (const mechanism of Object.keys(MECHANISM_MAP)) {
         expect(scores[mechanism]).toBe(8);
       }
@@ -368,6 +448,7 @@ test.describe(`${SLUG} — Scoring logic`, () => {
   test('all-heel-vaak produces max scores (4 per question, 16 per mechanism)', async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'heel vaak');
+    await fillProfileScreen(page);
 
     const scores = await page.evaluate(() => window.__nemTestScores || null);
     if (scores) {
@@ -381,6 +462,7 @@ test.describe(`${SLUG} — Scoring logic`, () => {
   test('all-nooit produces zero scores', async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'nooit');
+    await fillProfileScreen(page);
 
     const scores = await page.evaluate(() => window.__nemTestScores || null);
     if (scores) {
@@ -392,23 +474,20 @@ test.describe(`${SLUG} — Scoring logic`, () => {
   });
 });
 
-// ── Screen 4 (Opt-in Form) ───────────────────────────────────
+// ── Screen 5 (Opt-in Form) ───────────────────────────────────
 
-test.describe(`${SLUG} — Screen 4 (Opt-in form)`, () => {
+test.describe(`${SLUG} — Screen 5 (Opt-in form)`, () => {
   test.beforeEach(async ({ page }) => {
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
   });
 
-  test('form fields present: voornaam, email, relatiestatus', async ({ page }) => {
+  test('form fields present: voornaam, email, consent checkbox', async ({ page }) => {
     await expect(page.getByPlaceholder(/voornaam/i)).toBeVisible({ timeout: 5_000 });
     await expect(page.getByPlaceholder(/e-mailadres/i)).toBeVisible();
-    await expect(
-      page.locator('select, [data-field="relationship-status"], [data-element="relationship-select"]')
-    ).toBeVisible();
   });
 
   test('NEM Matters consent checkbox visible', async ({ page }) => {
@@ -478,19 +557,6 @@ test.describe(`${SLUG} — Screen 4 (Opt-in form)`, () => {
     await expect(page.getByText('Voer een geldig e-mailadres in')).not.toBeVisible();
   });
 
-  test('inline validation: unselected relationship shows error on submit', async ({ page }) => {
-    // Fill name + email, tick checkbox, but leave relationship empty
-    await page.getByPlaceholder(/voornaam/i).fill('Test');
-    await page.getByPlaceholder(/e-mailadres/i).fill('test@example.com');
-    await page.locator('input[type="checkbox"]').first().check();
-    await page.waitForTimeout(300);
-
-    await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(500);
-
-    await expect(page.getByText(/selecteer je relatiestatus/i)).toBeVisible();
-  });
-
   test('relieve line visible below submit button', async ({ page }) => {
     await expect(page.getByText(/geen spam/i)).toBeVisible();
   });
@@ -500,31 +566,26 @@ test.describe(`${SLUG} — Screen 4 (Opt-in form)`, () => {
   });
 });
 
-// ── Screen 5 (Confirmation) ──────────────────────────────────
+// ── Screen 6 (Confirmation) ──────────────────────────────────
 
-test.describe(`${SLUG} — Screen 5 (Confirmation)`, () => {
+test.describe(`${SLUG} — Screen 6 (Confirmation)`, () => {
   /**
    * These tests require the submit webhook to be live.
    * Skip if NEM_SUBMIT_WEBHOOK_URL is not set.
    */
   const webhookUrl = process.env.NEM_SUBMIT_WEBHOOK_URL;
 
-  // Helper: fill and submit form to reach Screen 5
-  async function reachScreen5(page) {
+  // Helper: fill and submit form to reach Screen 6
+  async function reachScreen6(page) {
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
 
-    // Fill form
+    // Fill form (simplified: just name + email + consent)
     await page.getByPlaceholder(/voornaam/i).fill('TestUser');
     await page.getByPlaceholder(/e-mailadres/i).fill('test@example.com');
-    // Select relationship status
-    const select = page.locator('select').first();
-    if (await select.count()) {
-      await select.selectOption({ index: 1 });
-    }
     await page.locator('input[type="checkbox"]').first().check();
     await page.waitForTimeout(300);
 
@@ -532,13 +593,13 @@ test.describe(`${SLUG} — Screen 5 (Confirmation)`, () => {
     await page.waitForTimeout(2000);
   }
 
-  (webhookUrl ? test : test.skip)('Screen 5 shows "Nog één stap" label', async ({ page }) => {
-    await reachScreen5(page);
+  (webhookUrl ? test : test.skip)('Screen 6 shows "Nog een stap" label', async ({ page }) => {
+    await reachScreen6(page);
     await expect(page.getByText(/nog één stap/i)).toBeVisible({ timeout: 10_000 });
   });
 
-  (webhookUrl ? test : test.skip)('correction link returns to Screen 4', async ({ page }) => {
-    await reachScreen5(page);
+  (webhookUrl ? test : test.skip)('correction link returns to Screen 5 with name pre-filled', async ({ page }) => {
+    await reachScreen6(page);
 
     await page.getByText(/vul het opnieuw in/i).click();
     await page.waitForTimeout(600);
@@ -555,7 +616,7 @@ test.describe(`${SLUG} — Screen 5 (Confirmation)`, () => {
   });
 
   (webhookUrl ? test : test.skip)('correction resubmit works', async ({ page }) => {
-    await reachScreen5(page);
+    await reachScreen6(page);
 
     await page.getByText(/vul het opnieuw in/i).click();
     await page.waitForTimeout(600);
@@ -568,7 +629,7 @@ test.describe(`${SLUG} — Screen 5 (Confirmation)`, () => {
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(2000);
 
-    // Should be back on Screen 5
+    // Should be back on Screen 6
     await expect(page.getByText(/nog één stap/i)).toBeVisible({ timeout: 10_000 });
   });
 });
@@ -578,7 +639,7 @@ test.describe(`${SLUG} — Screen 5 (Confirmation)`, () => {
 test.describe(`${SLUG} — i18n (English)`, () => {
   test('EN page shows English progress text', async ({ page }) => {
     await loadPage(page, TEST_PAGE_EN);
-    await expect(page.getByText('Question 1 of 20')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/question 1 of 20/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('EN page shows English answer labels', async ({ page }) => {
@@ -593,10 +654,19 @@ test.describe(`${SLUG} — i18n (English)`, () => {
     await expect(page.getByText(/no right or wrong/i)).toBeVisible({ timeout: 10_000 });
   });
 
-  test('EN form validation shows English error messages', async ({ page }) => {
+  test('EN profile screen shows "A little about you" label', async ({ page }) => {
     await loadPage(page, TEST_PAGE_EN);
     await answerAllQuestions(page, 'sometimes');
     await page.waitForTimeout(500);
+
+    await expect(page.getByText(/a little about you/i)).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('EN form validation shows English error messages for name and email', async ({ page }) => {
+    await loadPage(page, TEST_PAGE_EN);
+    await answerAllQuestions(page, 'sometimes');
+    // Fill profile screen (EN uses same dropdown structure)
+    await fillProfileScreen(page);
     await page.getByRole('button', { name: /receive my report|get my report/i }).click();
     await page.waitForTimeout(600);
 
@@ -622,15 +692,13 @@ test.describe(`${SLUG} — E2E: MailerSend API check`, () => {
 
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
 
-    // Fill form with test email
+    // Fill form with test email (simplified: name + email + consent)
     await page.getByPlaceholder(/voornaam/i).fill('E2E Test');
     await page.getByPlaceholder(/e-mailadres/i).fill(testEmail);
-    const select = page.locator('select').first();
-    if (await select.count()) await select.selectOption({ index: 1 });
     await page.locator('input[type="checkbox"]').first().check();
     await page.waitForTimeout(300);
 
@@ -670,8 +738,8 @@ test.describe(`${SLUG} — E2E: Gmail inbox check`, () => {
     'Requires Gmail API credentials and NEM_SUBMIT_WEBHOOK_URL'
   );
 
-  test('@e2e-email full flow: submit → Gmail verification email → click verify link', async ({ page }) => {
-    const { google } = require('googleapis');
+  test('@e2e-email full flow: submit -> Gmail verification email -> click verify link', async ({ page }) => {
+    const { google } = await import('googleapis');
     const testEmail = `will+nem-e2e-${Date.now()}@teamzzissou.io`;
 
     // Set up Gmail API client
@@ -682,17 +750,15 @@ test.describe(`${SLUG} — E2E: Gmail inbox check`, () => {
     oauth2Client.setCredentials({ refresh_token: gmailRefreshToken });
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Submit quiz + form
+    // Submit quiz + profile + form
     await loadPage(page);
     await answerAllQuestions(page, 'regelmatig');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
 
     await page.getByPlaceholder(/voornaam/i).fill('Gmail E2E');
     await page.getByPlaceholder(/e-mailadres/i).fill(testEmail);
-    const select = page.locator('select').first();
-    if (await select.count()) await select.selectOption({ index: 1 });
     await page.locator('input[type="checkbox"]').first().check();
     await page.waitForTimeout(300);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
@@ -796,14 +862,14 @@ test.describe(`${SLUG} — General`, () => {
     await expect(h1).toBeVisible({ timeout: 10_000 });
     // Answer a question to verify transitions still work without animation
     await answerQuestion(page, 'soms');
-    await expect(page.getByText('Vraag 2 van 20')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/vraag 2 van 20/i)).toBeVisible({ timeout: 5_000 });
   });
 
   test('mobile responsive: form fields usable at 375px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await loadPage(page);
     await answerAllQuestions(page, 'soms');
-    await page.waitForTimeout(500);
+    await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
 

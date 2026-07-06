@@ -75,6 +75,14 @@
     });
   }
 
+  function moveNavSeeAll() {
+    document.querySelectorAll('.w-dropdown-list').forEach((dropdown) => {
+      const list = dropdown.querySelector('[data-nav="list"]');
+      const seeAll = dropdown.querySelector(':scope [data-nav="see-all"]');
+      if (list && seeAll && !list.contains(seeAll)) list.appendChild(seeAll);
+    });
+  }
+
   /* ── Loader helpers ────────────────────────────────────── */
 
   function loadScript(url) {
@@ -103,6 +111,7 @@
     setExternalLinkRels();
     setFooterYear();
     injectUTMTracking();
+    moveNavSeeAll();
 
     /* Vendor deps (sequential where order matters) */
     for (const url of deps) {

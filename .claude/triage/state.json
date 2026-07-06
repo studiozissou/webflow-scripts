@@ -1,0 +1,18 @@
+{
+  "lastRun": null,
+  "sources": {
+    "gmail": {
+      "lastProcessed": null
+    },
+    "slack": {
+      "channels": {},
+      "dms": {}
+    },
+    "calendar": {
+      "lastProcessed": null
+    },
+    "trello": {
+      "lastProcessed": null
+    }
+  }
+}

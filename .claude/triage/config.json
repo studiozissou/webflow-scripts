@@ -1,0 +1,35 @@
+{
+  "slack": {
+    "channels": [
+      { "id": "C0973LJ2BTJ", "name": "carsa-tomek-rishi", "client": "Carsa" },
+      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa" },
+      { "id": "C09A7MZEK3P", "name": "skye-high-tamsen-fadal", "client": "Tamsen Fadal" }
+    ],
+    "dms": [
+      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa" },
+      { "id": "D049YCR485C", "name": "Yoni", "client": "Tamsen Fadal" }
+    ],
+    "lookbackHours": 24
+  },
+  "gmail": {
+    "queries": [
+      "in:inbox is:unread newer_than:3d",
+      "is:starred -in:sent"
+    ],
+    "lookbackDays": 3
+  },
+  "calendar": {
+    "lookaheadDays": 7
+  },
+  "trello": {
+    "enabled": false,
+    "boards": []
+  },
+  "notion": {
+    "databaseName": "Master Tasks",
+    "databaseId": null,
+    "dataSourceId": null,
+    "clientsDbDataSourceId": "collection://229e1848-bb51-8018-888c-000b6dbead72",
+    "defaultStatus": "Inbox"
+  }
+}

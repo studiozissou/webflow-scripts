@@ -1,0 +1,422 @@
+---
+name: triage
+description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion. Loaded by the /triage command. NEVER sends emails or Slack messages without explicit user approval.
+---
+
+<objective>
+Scan all configured input sources (Gmail, Slack, Calendar, Trello), extract actionable tasks, detect blockers and dependencies, draft replies where needed, and create tasks in the Notion "Master Tasks" database. Notion is the source of truth — never overwrite existing tasks. Always ask the user when anything is unclear.
+</objective>
+
+<hard_rules>
+
+## Ask questions — ALWAYS
+
+This is the most important rule in this skill. When in doubt, ask. Never assume.
+
+- Unclear whether something is a task → ask
+- Can't identify the client → ask
+- Priority ambiguous → ask
+- Due date implied but not explicit ("next week", "soon", "ASAP") → ask to confirm the date
+- Not sure if a reply is needed → ask
+- Task might be a subtask of something existing in Notion → ask
+- Blocked status uncertain → ask
+- Message could be interpreted multiple ways → ask
+- Not sure if this is new work or part of existing scope → ask
+
+Group questions by source at the end of the triage output, not scattered throughout.
+
+## Never auto-send
+
+- NEVER send emails. Only create Gmail drafts via `create_draft`.
+- NEVER send Slack messages without explicit user approval.
+- NEVER create Notion tasks without showing the user first and getting approval.
+- NEVER update existing Notion tasks — only create new ones.
+- NEVER delete anything from Notion.
+
+## Notion is the source of truth
+
+- Do not maintain a local task list. Notion is the only store.
+- Respect manual edits in Notion — if a task exists, do not touch it.
+- Dedup by Source ID before creating — check Notion first.
+
+</hard_rules>
+
+<prerequisites>
+
+Required MCP tools:
+- Gmail: `search_threads`, `get_thread`, `create_draft`, `list_labels`
+- Slack: `read_channel`, `search_public_and_private`, `read_thread`
+- Google Calendar: `list_events`, `get_event`
+- Notion: `notion-search`, `notion-create-pages`, `notion-query-database-view`
+- Trello (optional): `trello_get_tasks`, `trello_analyze_board`
+
+Config files:
+- `.claude/triage/config.json` — source configuration (channels, lookback windows)
+- `.claude/triage/state.json` — last-processed timestamps per source
+
+Skills to load:
+- `gmail-triage` — email classification, priority ranking, reply drafting, tone rules
+
+</prerequisites>
+
+<notion_schema>
+
+## Master Tasks Database
+
+Property names (exact spelling and capitalisation):
+
+| Property | Type | Values / Notes |
+|----------|------|----------------|
+| Task Name | title | Plain English, e.g. "Reply to Alex about Phase B pricing" |
+| Status | status | Inbox, To Do, In Progress, Waiting, Blocked, Done, Cancelled |
+| Priority | select | P0, P1, P2, P3 |
+| Due Date | date | Optional. Only set when explicitly stated or confirmed by user |
+| Source | select | Gmail, Slack, Calendar, Trello, Manual |
+| Source Link | url | Permalink to original message/event |
+| Source Context | rich_text | 2-3 sentences: why this was flagged + key excerpt from the message |
+| Source ID | rich_text | Dedup key: Gmail thread ID, Slack channel:ts, Calendar event ID |
+| Client | relation | Two-way relation to Clients DB (collection://229e1848-bb51-8018-888c-000b6dbead72) |
+| Tags | multi_select | Flexible categorisation |
+| Parent Task | relation | Self-relation for subtask hierarchy |
+| Sub-tasks | relation | Reverse of Parent Task |
+| Blocked By | rich_text | Description of what's blocking + link to blocking task if known |
+| Doer | select | Claude, User, User + Claude, External |
+
+### Doer classification
+
+Every task gets a Doer value. This determines what happens after triage.
+
+| Doer | Meaning | Examples |
+|------|---------|----------|
+| **Claude** | Claude can complete this autonomously via existing commands/skills | Draft a reply, generate schema, run an audit, write code, create a spec, update Notion |
+| **User** | Only the user can do this — requires human judgement, presence, or access Claude doesn't have | Make a phone call, attend a meeting, approve a design, make a business decision, log into a third-party dashboard |
+| **User + Claude** | User drives but Claude assists significantly via MCP or code | Build a page in Webflow (user + /client-build), review a design (user + /design-review), populate CMS items |
+| **External** | Depends on someone else entirely — nothing to do until they respond | Waiting on client reply, third-party DNS setup, pending invoice payment |
+
+### Mapping Doer to commands
+
+When Doer is "Claude", identify the specific command or skill that can execute the task:
+
+| Task pattern | Command/Skill |
+|--------------|--------------|
+| Draft a reply (Gmail) | `create_draft` via gmail-triage |
+| Draft a reply (Slack) | `send_message` via Slack MCP |
+| Generate JSON-LD schema | `/generate-schema` |
+| Run a site audit | `/site-audit` |
+| Run an SEO check | `/site-audit` or seo agent |
+| Write or update code | `/build` |
+| Write a spec or plan | `/plan` |
+| Create a proposal or estimate | `/proposal` or `/estimate` |
+| Review copy or content | `/copy-review` |
+| Run QA checks | `/qa-check` |
+| Scan Vinted inventory | `/zissou-scan` |
+
+If no matching command exists, set Doer to "User + Claude" and note what Claude can help with.
+
+### Status definitions
+
+| Status | Meaning | Set by |
+|--------|---------|--------|
+| Inbox | Just triaged, not yet reviewed by user | /triage auto |
+| To Do | User confirmed it's real, not started | User in Notion |
+| In Progress | Active work | User in Notion |
+| Waiting | Blocked on someone else (e.g. no reply) | /triage auto or user |
+| Blocked | Blocked on another task | /triage auto or user |
+| Done | Complete | User in Notion |
+| Cancelled | Dropped | User in Notion |
+
+### When to set Waiting vs Blocked
+
+- **Waiting**: depends on an external person responding — "waiting on Tomek to confirm calendar IDs"
+- **Blocked**: depends on another task completing — "blocked by CMS collection setup"
+
+</notion_schema>
+
+<task_extraction>
+
+## Deciding what is a task
+
+A message becomes a task when it implies work the user needs to do. Look for:
+
+- Direct requests: "Can you...", "Please...", "We need..."
+- Questions requiring research or a decision before replying
+- Commitments: "I'll send that over", "Let me check"
+- Deadlines: "by Friday", "before the call", "this week"
+- Follow-ups: "Just checking in on...", "Any update on..."
+- Implied work: "The service pages need updating" (even if not directly asked)
+
+A message is NOT a task when:
+- It's purely informational with no action needed
+- It's a thank-you or acknowledgement
+- It's noise (newsletters, receipts, notifications)
+- The action has already been completed
+
+## Task naming
+
+- Plain English, start with a verb: "Reply to...", "Build...", "Review...", "Send..."
+- Include the subject: "Reply to Alex about Phase B pricing" not just "Reply to email"
+- Keep under 80 characters
+
+## Priority assignment
+
+| Priority | Criteria |
+|----------|----------|
+| P0 | Deadline today/tomorrow, or someone is actively blocked by the user |
+| P1 | Deadline this week, or client waiting on a deliverable |
+| P2 | No urgent deadline, but real work that needs doing |
+| P3 | Nice-to-have, low urgency, or speculative |
+
+When priority is ambiguous, **ask the user**.
+
+## Subtask creation
+
+Create subtasks when a task has 3+ distinct deliverables, phases, or pages. Examples:
+
+**Create subtasks:**
+- "Build Carsa service migration" → Hub page, Location template, Winter health check, Schema, Redirects
+- "NEM Life Phase B" → Quiz page, Results logic, CMS setup, Testing
+- "TSC website content update" → Homepage, About, Products, Services
+
+**Keep flat (no subtasks):**
+- "Reply to Tomek about service page ETA"
+- "Review Carsa VDP performance results"
+- "Update DNS records for coconut.com"
+
+When creating subtasks:
+1. Create the parent task first
+2. Create each subtask with Parent Task relation pointing to the parent
+3. Parent task status stays "Inbox" — subtasks drive progress
+4. If some subtasks are blocked, mark those individually, not the parent
+
+## Blocked detection
+
+Look for blocking signals in messages:
+
+- **Explicit**: "waiting on", "can't proceed until", "need X before", "blocked by", "depends on"
+- **Implicit**: user asked a question in a thread, no response received (flag as Waiting)
+- **Cross-task**: new task clearly depends on an existing Notion task
+
+When a task is blocked/waiting:
+1. Set Status to "Waiting" or "Blocked"
+2. Fill the Blocked By field with a description
+3. Include in the Blocked/Waiting summary at the end of triage output
+
+</task_extraction>
+
+<source_scanning>
+
+## Gmail
+
+Handled by the `gmail-triage` skill. Load it and run Steps 1-4 from that skill:
+1. Scan inbox (unread + starred, parallel queries from config)
+2. Classify: REPLY NEEDED / FLAG / ACTION / NOISE
+3. Priority-rank REPLY NEEDED threads
+4. Load project context from `projects/{client}/.claude/`
+
+After gmail-triage classification:
+- REPLY NEEDED threads → extract task + draft reply
+- FLAG / ACTION threads → extract task (no reply needed)
+- NOISE → skip
+
+## Slack
+
+For each channel and DM in config:
+
+1. Load the channel via `read_channel(channel_id, oldest: lastProcessedTimestamp, limit: 100)`
+2. For DMs, use the DM ID directly — same tool, same params
+3. Classify each message/thread using the same REPLY NEEDED / FLAG / ACTION / NOISE buckets
+4. For threads with replies, use `read_thread` to get full context
+5. Extract tasks from actionable messages
+
+### Slack permalink construction
+
+From a message's `channel_id` and `message_ts`:
+```
+https://app.slack.com/archives/{channel_id}/p{ts_without_dot}
+```
+Example: channel `C0973LJ2BTJ`, ts `1720278000.123456` →
+`https://app.slack.com/archives/C0973LJ2BTJ/p1720278000123456`
+
+### Slack client mapping
+
+Use the client field from config.json to auto-assign the Client relation:
+- Messages in `C0973LJ2BTJ` → Client: Carsa
+- Messages in `D049YCR485C` → Client: Tamsen Fadal
+- etc.
+
+## Calendar
+
+1. `list_events` for the next N days (from config lookaheadDays)
+2. Extract tasks from events that imply preparation or follow-up:
+   - Meetings with agendas → "Prepare for meeting with X"
+   - Deadlines in event titles → task with due date
+   - Events with action items in description → individual tasks
+3. Skip recurring events that are routine (standups, etc.) unless they have specific agenda items
+
+## Trello
+
+When enabled in config:
+1. Read boards configured in config
+2. Extract cards assigned to the user or due soon
+3. Map to tasks with Trello card URL as Source Link
+
+</source_scanning>
+
+<reply_drafting>
+
+## Gmail replies
+
+Follow the gmail-triage skill's Step 6 rules exactly:
+- Match the user's voice: professional but warm, concise, no filler
+- "Hi {name}," opening, "Kind regards, Will" sign-off
+- Reference project context from monorepo
+- Flag gaps with `[QUESTION FOR YOU: ...]`
+- Present for approval before calling `create_draft`
+
+## Slack replies
+
+Draft Slack replies following similar principles:
+- Match the user's Slack voice (shorter, more casual than email)
+- No formal sign-off needed
+- Reference specific details from the thread
+- Present as a quoted block for approval
+- If approved, send via Slack MCP `send_message` (with explicit user confirmation)
+- If Slack MCP send is unavailable, present as a copy-paste block
+
+</reply_drafting>
+
+<dedup>
+
+## Preventing duplicate tasks
+
+Before creating any task in Notion:
+
+1. Search Notion for existing tasks with matching Source ID
+   - Gmail: match on thread ID
+   - Slack: match on `channel_id:message_ts`
+   - Calendar: match on event ID
+   - Trello: match on card ID
+2. If found → skip (do not update, do not mention in output)
+3. If not found → include in the "New Tasks" table for approval
+
+Also check for semantic duplicates:
+- If a task with a very similar name exists for the same client, flag it to the user:
+  "This looks similar to existing task 'X' — is this the same thing or separate?"
+
+</dedup>
+
+<output_format>
+
+## Triage output structure
+
+Present the full triage as a single structured report:
+
+```
+── TRIAGE — {date} ──
+
+## Replies Needed
+| # | Source | From | Thread/Channel | What they need | Draft ready? |
+|---|--------|------|----------------|----------------|-------------|
+
+## Draft Replies
+Present each draft in a quoted block with:
+- Source (Gmail/Slack), recipient, thread subject
+- The draft text
+- Any [QUESTION FOR YOU: ...] flags inline
+
+## New Tasks → Notion (approve before creating)
+| # | Task | Priority | Due | Client | Doer | Source | Parent task | Status |
+|---|------|----------|-----|--------|------|--------|-------------|--------|
+
+## Quick Wins (Claude can do now)
+List tasks where Doer is "Claude" with the command that would execute them.
+Offer to run them immediately after task creation:
+- "Task name" → `/command` or action description
+After presenting, ask: "Run all quick wins? / Pick individually? / Skip?"
+
+## Blocked / Waiting Summary
+Surfaces stale blockers and unanswered threads:
+- Task name — status — how long — what's needed
+
+## Flag / Action Items
+Non-reply actions the user needs to take outside this tool.
+
+## Questions for You
+Numbered list, grouped by source. Everything that was unclear during scanning.
+
+## Noise Summary
+Brief counts by category per source. No detail needed.
+```
+
+After presenting, use AskUserQuestion:
+- "Approve all tasks and drafts"
+- "Let me review individually"
+- "Skip tasks, just send the drafts"
+- "Skip everything"
+
+</output_format>
+
+<state_management>
+
+## Updating state.json after each run
+
+After the triage is complete and tasks are created:
+
+1. Update `lastRun` to current ISO timestamp
+2. For Gmail: set `lastProcessed` to the timestamp of the newest processed thread
+3. For each Slack channel/DM: set the channel's `lastProcessed` to the newest `message_ts`
+4. For Calendar: set `lastProcessed` to current ISO timestamp
+5. For Trello: set `lastProcessed` to current ISO timestamp
+6. Write the updated state to `.claude/triage/state.json`
+
+On next run, use these timestamps to only fetch new items since last triage.
+
+If state.json has null timestamps (first run), use the lookback windows from config.json.
+
+</state_management>
+
+<notion_creation>
+
+## Creating tasks in Notion
+
+For each approved task:
+
+1. Search Clients DB for the client name, get the page ID for the relation
+2. If the task has a parent:
+   a. Search Master Tasks DB for the parent by name + client
+   b. If found, use its page ID for the Parent Task relation
+   c. If not found, create the parent first, then link
+3. Create the task page with all properties:
+   - Use the Master Tasks data source ID from config as the parent
+   - Set Source ID for future dedup
+   - Set Source Link for easy reference
+   - Set Source Context with the reasoning
+   - Set Client relation
+   - Set Parent Task relation (if subtask)
+   - Set Blocked By (if blocked/waiting)
+   - Set Status to Inbox (unless Waiting/Blocked detected)
+   - Set Due Date only if explicitly confirmed
+   - Set Priority
+4. Log the created task name + Notion URL
+
+## First-run setup
+
+If `notion.databaseId` is null in config.json:
+1. Tell the user they need to create the Master Tasks database in Notion first
+2. Provide the exact schema from <notion_schema> above
+3. After creation, they should update config.json with the database ID and data source ID
+4. Alternatively, if Notion MCP `create-database` works, offer to create it automatically
+
+</notion_creation>
+
+<success_criteria>
+- All configured sources scanned without errors (skip unavailable sources with a warning)
+- Every actionable message classified and either: extracted as task, flagged for reply, or asked about
+- No duplicate tasks created (Source ID dedup)
+- All questions about unclear items presented to user
+- Draft replies shown for approval before any draft is created
+- Tasks only created in Notion after user approval
+- State.json updated with new timestamps after completion
+- Blocked/Waiting items surfaced in summary
+- Subtasks linked to parent tasks via relation
+</success_criteria>

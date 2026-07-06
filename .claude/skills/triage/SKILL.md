@@ -71,7 +71,7 @@ Property names (exact spelling and capitalisation):
 | Status | status | Inbox, To Do, In Progress, Waiting, Blocked, Done, Cancelled |
 | Priority | select | P0, P1, P2, P3 |
 | Due Date | date | Optional. Only set when explicitly stated or confirmed by user |
-| Source | select | Gmail, Slack, Calendar, Trello, Manual |
+| Source | select | Gmail, Slack, Calendar, Trello, Meeting, Manual |
 | Source Link | url | Permalink to original message/event |
 | Source Context | rich_text | 2-3 sentences: why this was flagged + key excerpt from the message |
 | Source ID | rich_text | Dedup key: Gmail thread ID, Slack channel:ts, Calendar event ID |
@@ -259,6 +259,57 @@ When enabled in config:
 1. Read boards configured in config
 2. Extract cards assigned to the user or due soon
 3. Map to tasks with Trello card URL as Source Link
+
+## Manual input (`/triage add`)
+
+For ad-hoc task creation from conversation, call notes, or free text.
+
+1. Accept any input format — bullet points, free text, pasted call notes, voice-to-text transcripts
+2. Extract tasks using the same rules as automated sources (naming, priority, subtasks, blocked detection, Doer)
+3. Auto-detect client from:
+   - Current working directory (if inside `projects/{client}/`)
+   - Names mentioned in the text ("Tomek" → Carsa, "Yoni" → Tamsen Fadal, "Alex" → NEM Life)
+   - If ambiguous → ask
+4. Set Source to "Manual", Source Context to a summary of the user's input
+5. No Source Link unless the user provides one
+6. No state.json update — nothing to track
+7. Still does: Notion dedup, subtask creation, blocked detection, Doer classification, Quick Wins
+
+### Client name mapping (for auto-detection)
+
+| Name/keyword | Client |
+|--------------|--------|
+| Tomek, Rishi, Carsa, carsa.co.uk | Carsa |
+| Yoni, Tamsen, Skye High, tamsen fadal | Tamsen Fadal |
+| Alex, NEM, nem-life | NEM Life |
+| Romain, TSC, Signalling Company | The Signalling Company |
+| Laura, Coconut, getcoconut | Coconut |
+| Mariann, ulobby, ULobby | ULobby |
+
+When a name appears in the input but isn't in this table → ask: "Who is {name}? Which client?"
+
+## Notion meeting notes (`/triage meeting`)
+
+Process call recordings and meeting notes stored in Notion.
+
+1. Query Notion for meeting notes via `notion-query-meeting-notes`
+   - Filter by date range (default: last 7 days, or `--since` flag)
+   - Filter by client tag if `--client` flag provided
+2. For each meeting note, read full content via `notion-fetch`
+3. Extract from meeting content:
+   - **Action items**: explicit "to do", "action", "will do", "need to" items
+   - **Decisions**: "agreed to", "decided", "confirmed" — store as Source Context, not tasks unless they imply work
+   - **Deadlines**: "by Friday", "next week", "before launch"
+   - **Blockers**: "waiting on", "can't proceed", "need X first"
+   - **Follow-ups**: "check back on", "revisit", "circle back"
+4. Ownership detection — distinguish between:
+   - Tasks for the user: "I'll send the proposal", "Will to set up CMS"
+   - Tasks for the client/others: "Tomek will send FAQ content" → create as a dependency (Doer: External, Status: Waiting), not a task for the user to do
+   - Shared tasks: "We'll review the designs together" → Doer: User + Claude or User
+5. Dedup via Source ID: `notion-meeting:{page-id}` — skip already-processed meetings
+6. For non-task content (decisions, context, background):
+   - Offer to save to `projects/{client}/.claude/notes.md` or relevant spec file
+   - Or add as a comment on an existing related Notion task
 
 </source_scanning>
 

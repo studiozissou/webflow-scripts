@@ -175,8 +175,78 @@ The `/triage` command accepts optional arguments:
 - `/triage slack` — Slack only
 - `/triage calendar` — Calendar only
 - `/triage trello` — Trello only
+- `/triage add` — manually add tasks from conversation, bullet points, or free-text notes (see Manual Input Mode below)
+- `/triage meeting` — process recent Notion call recordings/meeting notes (see Meeting Notes Mode below)
 - `/triage --no-drafts` — extract tasks but skip reply drafting
 - `/triage --dry-run` — scan and classify but don't create anything in Notion or Gmail
+
+## Manual Input Mode (`/triage add`)
+
+For ad-hoc task creation — after a client call, during project work, or any time you have tasks to capture.
+
+### Usage
+
+```
+/triage add
+```
+
+Then provide tasks in any format:
+- Bullet points: "- Build homepage\n- Update CMS\n- Send invoice"
+- Free text: "After the call with Tomek we agreed to migrate the service pages, set up the Acuity embeds, and he'll send the FAQ content by Friday"
+- Pasted call notes, meeting minutes, or voice-to-text transcripts
+
+### Flow
+
+1. Read the user's input (free text, bullets, pasted notes)
+2. Extract tasks using the same triage skill rules (task naming, priority, subtasks, blocked detection, Doer classification)
+3. Auto-detect the client from context (project directory, names mentioned, or ask)
+4. Set Source to "Manual" and Source Context to a summary of the input
+5. Present the same approval table as the full triage:
+   ```
+   | # | Task | Priority | Due | Client | Doer | Parent task | Status |
+   ```
+6. Ask clarifying questions about anything ambiguous (priorities, dates, scope)
+7. On approval, create in Notion
+8. Offer Quick Wins for any Claude-doable tasks
+
+### Key difference from full triage
+
+- No source scanning — works entirely from what the user provides
+- No reply drafting — these aren't messages to respond to
+- No state.json update — nothing to track "last processed"
+- Still does Notion dedup, subtask creation, blocked detection, and Doer classification
+
+## Meeting Notes Mode (`/triage meeting`)
+
+Process Notion call recordings, meeting notes, and AI-generated meeting summaries to extract tasks.
+
+### Usage
+
+```
+/triage meeting                    — process all unprocessed meeting notes
+/triage meeting --client carsa     — only meetings tagged with a specific client
+/triage meeting --since 2026-07-01 — only meetings since a specific date
+```
+
+### Flow
+
+1. Query Notion for recent meeting notes via `notion-query-meeting-notes`
+2. For each meeting note:
+   a. Read the full content via `notion-fetch`
+   b. Extract: action items, decisions, deadlines, blockers, follow-ups
+   c. Identify the client from meeting title, participants, or content
+   d. Check Source ID (`notion-meeting:{page-id}`) against existing tasks to skip already-processed meetings
+3. Present extracted tasks in the standard approval table
+4. Ask clarifying questions — especially about:
+   - Vague action items ("we should look into X" — is this a task?)
+   - Ownership ("Tomek will send FAQ content" — is this a task for you or just a dependency?)
+   - Priority of items not explicitly marked as urgent
+5. On approval, create tasks in Notion with:
+   - Source: "Manual" (meeting notes are a manual input, not an automated scan)
+   - Source Link: Notion URL of the meeting note
+   - Source Context: key excerpt from the meeting note explaining the task
+   - Source ID: `notion-meeting:{page-id}` for dedup
+6. For decisions and non-task items, offer to add them as comments on existing related tasks or as notes in the project's `.claude/` directory
 
 ## Error handling
 

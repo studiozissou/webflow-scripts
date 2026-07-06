@@ -1,8 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-05-06",
-  "note": "perf-parallel-script-loading added (RHP Phase 1 + Phase 2)",
+  "updated": "2026-07-06",
+  "note": "tsc-historic-blog-migration added",
   "queue": [
+    {
+      "id": "tsc-historic-blog-migration",
+      "project": "the-signalling-company",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Migrate 7 historic WordPress blog posts to Webflow CMS",
+      "description": "Extract 7 remaining blog posts (2019-2021) from WordPress SQL dump, optimise 3 featured images to AVIF, upload to Webflow CMS News collection via MCP with correct published dates, categories, and draft status.",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-historic-blog-migration.md",
+      "created": "2026-07-06"
+    },
     {
       "id": "perf-parallel-script-loading-phase1",
       "project": "ready-hit-play-prod",
@@ -946,6 +957,116 @@
       "description": "Create /vinted-scan slash command that reads photos + notes.md from inbox/ subfolders, applies vinted-listing skill for vision analysis, self-reviews for AI patterns, writes to Notion via MCP, and moves processed items to inbox/processed/. Eliminates ANTHROPIC_API_KEY dependency.",
       "spec": ".claude/specs/vinted-scan-local.md",
       "created": "2026-04-28"
+    },
+    {
+      "id": "tsc-brand-colour-variables",
+      "project": "the-signalling-company",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Add TSC brand colours and scales to Webflow base variables",
+      "description": "Add 4 Pantone-matched brand colours (Ink, Cyan, Yellow, Steel) and their full scales (Cyan 7 steps, Ink 6 steps, Steel 8 steps) to the Cargo+ template Color/Base variable collection via Webflow MCP. Update 3 existing base variables (Base/Light, Lift/Light, Lift/Dark) to align with brand palette. 20 new variables + 3 updates = 23 MCP operations.",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-brand-colour-variables.md",
+      "created": "2026-06-24"
+    },
+    {
+      "id": "carsa-vdp-script-externalisation-phase1",
+      "project": "carsa",
+      "type": "perf",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Carsa VDP: externalise inline scripts to single CDN bundle and measure Lighthouse impact",
+      "description": "Baseline 6 VDP pages, concatenate 19 inline scripts into vdp.js, host on jsDelivr, run functional tests, re-run Lighthouse, diff results. Scripts kept as-is with jQuery deps.",
+      "spec": "projects/carsa/.claude/specs/carsa-vdp-script-externalisation.md",
+      "created": "2026-06-25"
+    },
+    {
+      "id": "carsa-vdp-script-externalisation-phase2",
+      "project": "carsa",
+      "type": "perf",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Carsa VDP: refactor to vanilla JS modules with init.js loader",
+      "description": "Review vdp.js, convert jQuery to vanilla ES2022+, deduplicate shared helpers, split into modular files with route-detecting init.js loader. Run acceptance tests on live site.",
+      "spec": "projects/carsa/.claude/specs/carsa-vdp-script-externalisation.md",
+      "created": "2026-06-25"
+    },
+    {
+      "id": "carsa-service-migration",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Migrate service.carsa.co.uk to main Carsa site",
+      "description": "Migrate 8-page service microsite to carsa.co.uk/servicing. New hub page (7 sections), CMS-driven location template (5 locations with Acuity embeds), winter health check page, cross-sell sections on store pages, JSON-LD schema, 301 redirects, SEO checks.",
+      "spec": "projects/carsa/.claude/specs/carsa-service-migration.md",
+      "created": "2026-06-30"
+    },
+    {
+      "id": "carsa-visual-regression-scaffold",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Scaffold Playwright visual regression system on Carsa repo",
+      "description": "Init package.json, playwright.config.js (desktop + mobile projects), .env.example, shared test helpers. Foundation for all subsequent tasks.",
+      "spec": "projects/carsa/.claude/specs/carsa-visual-regression.md",
+      "created": "2026-07-03"
+    },
+    {
+      "id": "carsa-visual-regression-manifest",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Create page manifest with lite and full profiles",
+      "description": "pages.js with ~10 lite pages and ~22 full pages, tier classification (static/cms), mask selectors per CMS page.",
+      "spec": "projects/carsa/.claude/specs/carsa-visual-regression.md",
+      "created": "2026-07-03"
+    },
+    {
+      "id": "carsa-visual-regression-spec",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Write visual.spec.js with toHaveScreenshot and CMS masking",
+      "description": "Playwright visual regression spec iterating page manifest, applying locator-based masks for CMS pages, full-page screenshots at 1% threshold.",
+      "spec": "projects/carsa/.claude/specs/carsa-visual-regression.md",
+      "created": "2026-07-03"
+    },
+    {
+      "id": "carsa-visual-regression-code-checks",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Console error and broken link checks",
+      "description": "console-errors.spec.js (pageerror + console.error with third-party filter) and broken-links.spec.js (HEAD requests, 404/timeout detection).",
+      "spec": "projects/carsa/.claude/specs/carsa-visual-regression.md",
+      "created": "2026-07-03"
+    },
+    {
+      "id": "carsa-visual-regression-ci",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "GitHub Actions workflow and Slack notification",
+      "description": "visual-regression.yml (cron weekdays 7am UTC + workflow_dispatch with profile/baseline inputs), notify-slack.js, update-baselines.sh helper.",
+      "spec": "projects/carsa/.claude/specs/carsa-visual-regression.md",
+      "created": "2026-07-03"
+    },
+    {
+      "id": "carsa-visual-regression-baselines",
+      "project": "carsa",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Generate initial baselines and QA",
+      "description": "Run --update-snapshots for full suite, spot-check baseline screenshots, run comparison pass to confirm green, verify Slack notification format.",
+      "spec": "projects/carsa/.claude/specs/carsa-visual-regression.md",
+      "created": "2026-07-03"
     }
   ]
 }

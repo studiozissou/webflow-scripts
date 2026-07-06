@@ -2,13 +2,13 @@
 
 **Project:** nem-life
 **Created:** 2026-06-16
-**Updated:** 2026-06-19
-**Status:** Planning
+**Updated:** 2026-06-23
+**Status:** Approved (€1,560 fixed price)
 **Slug:** `nem-test-phase-b`
 
 ## Summary
 
-Phase B of NEM TEST "Waarom reageer ik zo?" — full production build. Rebuild the Webflow React code component via Webflow AI prompt into a 5-screen conversion-focused self-test (start → questions → conclusion → opt-in → confirmation) with per-mechanism scoring, client-side conclusion text, opt-in form with inline validation, email verification flow, and PDF report delivery. Will writes the Webflow AI prompt; Alex owns Anthropic prompt engineering.
+Phase B of NEM TEST "Waarom reageer ik zo?" — full production build. Rebuild the Webflow React code component via Webflow AI prompt into a 6-screen conversion-focused self-test (start → questions → profile → conclusion → opt-in → confirmation) with per-mechanism scoring, gender-differentiated client-side conclusion text (30 variants), lightweight opt-in form, email verification flow, and PDF report delivery. Will writes the Webflow AI prompt; Alex owns Anthropic prompt engineering.
 
 ## Background
 
@@ -27,13 +27,14 @@ The existing React code component (`Multi-Step Quiz`) is a generic, reusable qui
 
 | Aspect | Phase A | Phase B |
 |--------|---------|---------|
-| Screens | 3 (intro, quiz, results) | 5 (start, questions, conclusion, opt-in, confirmation) |
+| Screens | 3 (intro, quiz, results) | 6 (start, questions, profile, conclusion, opt-in, confirmation) |
 | Answer UX | Likert circles | Pill buttons (horizontal desktop, vertical mobile) |
 | Answer labels | Helemaal oneens → Helemaal eens | nooit → heel vaak |
-| Questions | CMS-driven or JSON prop | 20 hardcoded questions |
+| Questions | CMS-driven or JSON prop | 20 questions via component props (mechanism mapping fixed in code) |
 | Scoring | Simple sum → band match | Per-mechanism (5 × 4 questions) — details TBD |
-| Results | Static band text | Client-side conclusion from scoring system (no API call) |
-| Form | Name + email | Name + email + relationship dropdown + consent |
+| Profile | N/A | Gender + age category + relationship status collected before conclusion |
+| Results | Static band text | Gender-differentiated client-side conclusion (30 texts, no API call) |
+| Form | Name + email | Name + email + consent only (profile fields captured earlier) |
 | Validation | Browser native (`required`) | Custom inline validation with Dutch error messages on blur |
 | Backend | Simple POST | Two-trigger: submit → verify → report |
 | Width | max-w-[640px] | Wider (Alex: "too narrow") |
@@ -44,31 +45,35 @@ The existing React code component (`Multi-Step Quiz`) is a generic, reusable qui
 [Landing Page (Webflow)]
   ├── Minimal navbar (logo + trust anchor, no nav links)
   ├── Hero (H1 + H2 + promise line)
-  ├── React Quiz Component (5 screens) — built via Webflow AI prompt
+  ├── React Quiz Component (6 screens) — built via Webflow AI prompt
   │     Screen 1: Start (Q1 + reassurance line)
   │     Screen 2: Questions (Q2-Q20, progress bar, back button)
-  │     Screen 3: Conclusion (client-side scoring result → CTA)
-  │     Screen 4: Opt-in form (name, email, relationship, consent)
-  │     Screen 5: Confirmation (check inbox + correction link)
+  │     Screen 3: Profile ("Nog even over jou" — gender, age category, relationship status)
+  │     Screen 4: Conclusion (gender-differentiated client-side scoring result → CTA)
+  │     Screen 5: Opt-in form (name, email, consent only — profile fields captured on Screen 3)
+  │     Screen 6: Confirmation (check inbox + correction link)
   ├── Disclaimer (static, below component)
   └── Minimal footer (logo only)
 
 [Backend Flow — all built by Will]
-  Screen 4 → POST form + scores + token to n8n "submit" webhook
-           → n8n stores profile + sends verification email
-           → React shows Screen 5
+  Screen 5 → POST form + profile + scores + token + locale to n8n "submit" webhook
+           → n8n stores profile + sends verification email via MailerLite
+           → React shows Screen 6
 
   Verification click → n8n "verify" webhook
            → retrieves stored profile
            → calls Anthropic API (prompt by Alex)
-           → generates PDF → sends via MailerSend
+           → generates PDF → sends via MailerSend (PDF attachment)
+           → if consent → adds to MailerLite newsletter
 ```
 
 ## Questions & Scoring
 
-### Questions (hardcoded — confirmed with client)
+### Questions (component props — editable in Designer)
 
-20 fixed questions. All share the same 5 answer options. Hardcoded in the React component — no CMS dependency.
+20 fixed questions. All share the same 5 answer options. Question texts are exposed as component props with Dutch defaults, so Alex can edit wording in the Webflow Designer without touching code. The mechanism mapping (which questions belong to which mechanism) stays fixed in code — Q1-Q4 always = Zelfafwijzing, etc. This prevents accidental scoring breakage from editorial changes.
+
+**Option:** Props can be linked to CMS fields if Alex later wants to manage multiple test variants with different question texts while keeping the same scoring structure. Not in Phase B scope but the prop-based architecture supports it.
 
 **Answer options (replaces current Likert labels):**
 
@@ -143,17 +148,45 @@ Each mechanism score: 0-16. Total score: 0-80.
 
 Interpretation: Valse Hoop (14) is primary. Valse Macht (11) is 3 points behind — exactly at threshold, included as secondary. Report focuses on Valse Hoop with Valse Macht as contributing response.
 
-### Report texts
+### Conclusion texts (Screen 4)
 
-**Status: To be written by Alex.** The scoring model is confirmed but the result texts that map to each primary/secondary combination are not yet written. These are needed for Screen 3 conclusion display.
+**Status: To be written by Alex.** 30 texts total (15 mechanism combinations × 2 genders), using the following identifier convention (confirmed by Alex, extended for gender):
+
+- **Single mechanism** (no secondary): mechanism name, e.g. `valse-hoop`
+- **Dual mechanism** (secondary within 3 points): `dominant_secondary`, e.g. `valse-hoop_valse-macht`
+- All lowercase, hyphenated within mechanism names, underscore between primary and secondary
+- **Gender differentiation:** Texts are nested by gender (`man` / `vrouw`). The component uses the gender captured on Screen 3 (Profile) to select the correct set.
+
+**All 15 mechanism identifiers (× 2 genders = 30 texts):**
+
+| # | Key | Type |
+|---|-----|------|
+| 1 | `zelfafwijzing` | single |
+| 2 | `emotionele-verdoving` | single |
+| 3 | `valse-macht` | single |
+| 4 | `angst` | single |
+| 5 | `valse-hoop` | single |
+| 6 | `zelfafwijzing_emotionele-verdoving` | dual |
+| 7 | `zelfafwijzing_valse-macht` | dual |
+| 8 | `zelfafwijzing_angst` | dual |
+| 9 | `zelfafwijzing_valse-hoop` | dual |
+| 10 | `emotionele-verdoving_valse-macht` | dual |
+| 11 | `emotionele-verdoving_angst` | dual |
+| 12 | `emotionele-verdoving_valse-hoop` | dual |
+| 13 | `valse-macht_angst` | dual |
+| 14 | `valse-macht_valse-hoop` | dual |
+| 15 | `angst_valse-hoop` | dual |
+
+Each of the 15 keys has a `man` and `vrouw` variant. The component builds the key from the scoring result and looks up `conclusions[gender][mechanismKey]`. Placeholders will be used until Alex provides the final copy.
 
 ### What the component needs to know
 
 The React component calculates scores client-side and determines:
 1. Primary mechanism (highest score)
 2. Whether a secondary exists (within 3 points of primary)
-3. Which conclusion text to display on Screen 3 (from a lookup table, once Alex provides the texts)
-4. The full score profile to send to the submit webhook
+3. Gender (captured on Screen 3 Profile, before conclusion is shown)
+4. Conclusion text key (e.g. `valse-hoop` or `valse-hoop_valse-macht`) → looked up from `conclusions[gender][mechanismKey]` (30-text table)
+5. The full score profile + profile fields to send to the submit webhook
 
 ## Internationalisation (NL + EN)
 
@@ -165,9 +198,10 @@ Both Dutch and English versions launch together. Hybrid i18n approach:
 |-------------|---------------|---------------------|
 | **Marketing copy** (H1, H2, promise line, CTA labels, reassurance) | Component props (~10 props) | Webflow locale system — different prop values per locale in Designer |
 | **Structural strings** (answer labels, progress format, error messages, form labels, confirmation copy) | Translations object in component code | Auto-detected from URL path or `document.documentElement.lang` |
-| **Questions** (20 fixed) | Translations object in component code | Same auto-detection |
+| **Questions** (20 fixed) | Component props with defaults in translations object | Props editable per locale in Designer; fallback to translations object |
 | **Landing page copy** (hero, disclaimer, footer) | Webflow native content | Webflow locale system handles this |
-| **Email templates** (verification, report delivery) | MailerSend templates | Locale passed in webhook payload, n8n selects correct template |
+| **Email templates** (verification) | MailerLite automation | Locale passed in webhook payload, n8n selects correct template |
+| **Email templates** (report delivery) | MailerSend templates | Locale passed in webhook payload, n8n selects correct template |
 | **Anthropic prompts** (conclusion + report) | n8n prompt templates | Locale passed in webhook payload, prompt instructs Claude to write in correct language |
 | **PDF report** | Generated by Claude | Prompt specifies language |
 
@@ -193,61 +227,98 @@ const t = {
     answers: ['nooit', 'zelden', 'soms', 'regelmatig', 'heel vaak'],
     // Progress
     progress: (n: number, total: number) => `Vraag ${n} van ${total}`,
-    // Screen 3
+    // Screen 3 (Profile)
+    profileLabel: 'Nog even over jou',
+    genderLabel: 'Geslacht',
+    genderOptions: ['Man', 'Vrouw'],
+    ageCategoryLabel: 'Leeftijdscategorie',
+    ageCategoryOptions: ['18-30', '31-40', '41-50', '51-60', '60+'],
+    relationshipLabel: 'Je relatiestatus',
+    relationshipOptions: ['Alleenstaand', 'In een relatie', 'Gescheiden', 'Anders'],
+    profileContinueButton: 'Ga verder',
+    // Screen 4 (Conclusion)
     conclusionLabel: 'Jouw uitkomst',
     bridgeLine: 'Wil je begrijpen waar dit vandaan komt en wat het jou kost? Je persoonlijke rapport gaat daar dieper op in.',
-    // Screen 4
+    // Screen 5 (Opt-in — simplified, profile fields captured on Screen 3)
     optinLabel: 'Waar sturen we jouw rapport naartoe?',
     optinIntro: 'Vul hieronder je gegevens in. Je ontvangt het binnen enkele minuten in je inbox.',
     firstNamePlaceholder: 'Voornaam',
     emailPlaceholder: 'E-mailadres',
-    relationshipLabel: 'Je relatiestatus',
-    relationshipOptions: ['Alleenstaand', 'In een relatie', 'Gescheiden', 'Anders'],
     consentLabel: 'Je wordt toegevoegd aan NEM Matters - de nieuwsbrief van NEM Life. Je kunt je altijd afmelden.',
     relieveLine: 'Geen spam & je gegevens blijven veilig. Natuurlijk.',
     disclaimer: 'Dit rapport is geen psychologische diagnose. Het is een spiegel op basis van jouw antwoorden - bedoeld als beginpunt voor reflectie, niet als eindoordeel.',
     // Errors
     errors: {
+      // Profile screen (Screen 3)
+      genderEmpty: 'Selecteer je geslacht',
+      ageCategoryEmpty: 'Selecteer je leeftijdscategorie',
+      relationshipEmpty: 'Selecteer je relatiestatus',
+      // Opt-in screen (Screen 5)
       firstNameEmpty: 'Vul je voornaam in',
       emailEmpty: 'Vul je e-mailadres in',
       emailInvalid: 'Voer een geldig e-mailadres in',
-      relationshipEmpty: 'Selecteer je relatiestatus',
       consentRequired: 'Bevestig je aanmelding voor NEM Matters',
       rateLimited: 'Probeer het later opnieuw',
     },
-    // Screen 5
+    // Screen 6
     confirmationLabel: 'Nog één stap',
     confirmationMain: 'Je antwoorden zijn opgeslagen. Zodra je je e-mailadres bevestigt, stellen we jouw persoonlijke rapport samen en sturen we het naar je inbox.',
     confirmationSecondary: 'Controleer je inbox - je ontvangt direct een mail van NEM Life. Klik op de bevestigingslink daarin en je rapport is onderweg.',
     noEmailReceived: 'Geen mail ontvangen? Controleer je spamfolder.',
     wrongEmail: 'Verkeerd e-mailadres opgegeven?',
     wrongEmailLink: 'Vul het opnieuw in.',
-    // Questions (20)
+    // Questions — defaults only; overridden by component props per locale
     questions: [
       'Na een gesprek dat niet lekker liep, blijf ik uren of dagen malen over wat ik fout deed.',
       'Als iets in een relatie of op werk misgaat, ben ik de eerste die denkt dat het aan mij ligt.',
       // ... all 20 (see Questions table above for full list)
     ],
+    // Conclusion texts — gender-nested (see Conclusion texts section)
+    conclusions: {
+      man: {
+        'valse-hoop': '...', // placeholder until Alex provides
+        'valse-hoop_valse-macht': '...', // placeholder
+        // ... all 15 keys
+      },
+      vrouw: {
+        'valse-hoop': '...', // placeholder until Alex provides
+        'valse-hoop_valse-macht': '...', // placeholder
+        // ... all 15 keys
+      },
+    },
   },
   en: {
     answers: ['never', 'rarely', 'sometimes', 'regularly', 'very often'],
     progress: (n: number, total: number) => `Question ${n} of ${total}`,
+    // Screen 3 (Profile)
+    profileLabel: 'A little about you',
+    genderLabel: 'Gender',
+    genderOptions: ['Male', 'Female'],
+    ageCategoryLabel: 'Age category',
+    ageCategoryOptions: ['18-30', '31-40', '41-50', '51-60', '60+'],
+    relationshipLabel: 'Your relationship status',
+    relationshipOptions: ['Single', 'In a relationship', 'Divorced', 'Other'],
+    profileContinueButton: 'Continue',
+    // Screen 4 (Conclusion)
     conclusionLabel: 'Your result',
     bridgeLine: 'Want to understand where this comes from and what it costs you? Your personal report goes deeper.',
+    // Screen 5 (Opt-in)
     optinLabel: 'Where should we send your report?',
     optinIntro: 'Fill in your details below. You\'ll receive it in your inbox within a few minutes.',
     firstNamePlaceholder: 'First name',
     emailPlaceholder: 'Email address',
-    relationshipLabel: 'Your relationship status',
-    relationshipOptions: ['Single', 'In a relationship', 'Divorced', 'Other'],
     consentLabel: 'You\'ll be added to NEM Matters - NEM Life\'s newsletter. You can unsubscribe at any time.',
     relieveLine: 'No spam & your data stays safe. Of course.',
     disclaimer: 'This test is not a psychological diagnosis. It is a mirror based on your answers - intended as a starting point for reflection, not a final verdict.',
     errors: {
+      // Profile screen (Screen 3)
+      genderEmpty: 'Select your gender',
+      ageCategoryEmpty: 'Select your age category',
+      relationshipEmpty: 'Select your relationship status',
+      // Opt-in screen (Screen 5)
       firstNameEmpty: 'Enter your first name',
       emailEmpty: 'Enter your email address',
       emailInvalid: 'Enter a valid email address',
-      relationshipEmpty: 'Select your relationship status',
       consentRequired: 'Confirm your subscription to NEM Matters',
       rateLimited: 'Try again later',
     },
@@ -262,11 +333,23 @@ const t = {
       'When something goes wrong in a relationship or at work, I\'m the first to think it\'s my fault.',
       // ... all 20 (EN translations of the Dutch questions)
     ],
+    conclusions: {
+      man: {
+        'valse-hoop': '...', // placeholder — EN versions of conclusion texts
+        'valse-hoop_valse-macht': '...',
+        // ... all 15 keys
+      },
+      vrouw: {
+        'valse-hoop': '...', // placeholder — EN versions of conclusion texts
+        'valse-hoop_valse-macht': '...',
+        // ... all 15 keys
+      },
+    },
   },
 };
 ```
 
-### Props (marketing copy — editable per locale in Designer)
+### Props (editable per locale in Designer)
 
 ```tsx
 props: {
@@ -279,11 +362,15 @@ props: {
     name: "CTA Button Text",
     defaultValue: "Ontvang mijn rapport",
   }),
-  // ~8-10 total marketing props
+  // Questions — editable text, mechanism mapping stays in code
+  question1: props.Text({ name: "Question 1", defaultValue: "Na een gesprek dat niet lekker liep, blijf ik uren of dagen malen over wat ik fout deed." }),
+  question2: props.Text({ name: "Question 2", defaultValue: "Als iets in een relatie of op werk misgaat, ben ik de eerste die denkt dat het aan mij ligt." }),
+  // ... question3 through question20 (all with Dutch defaults)
+  // ~30 total props (10 marketing + 20 questions)
 }
 ```
 
-Alex edits these per locale in the Webflow Designer. Structural strings (errors, labels, answer options, questions) are handled by the translations object and don't need Designer configuration.
+Alex edits these per locale in the Webflow Designer. The question props can also be linked to CMS fields if Alex later wants to manage variants. Structural strings (errors, labels, answer options) are handled by the translations object and don't need Designer configuration. The mechanism mapping (Q1-Q4 = Zelfafwijzing, etc.) is fixed in code regardless of prop values.
 
 ### Webhook payload includes locale
 
@@ -303,7 +390,7 @@ All webhooks include the locale so n8n can select the correct Anthropic prompt l
 **Maps to:** current `phase === "quiz"` with `currentStep === 0`
 
 - Progress: "Vraag 1 van 20"
-- Question text: Q1 (first question from hardcoded array)
+- Question text: Q1 (from `question1` prop, default Dutch text in translations object)
 - Reassurance line (Screen 1 only): "Kies wat het meest op jou lijkt - er is geen goed of fout antwoord."
 - 5 pill buttons: nooit | zelden | soms | regelmatig | heel vaak
   - Desktop: horizontal row
@@ -322,28 +409,49 @@ All webhooks include the locale so n8n can select the correct Anthropic prompt l
 - No reassurance line
 - Auto-advance on answer selection (current 200ms select + 300ms fade pattern)
 
-### Screen 3 — Conclusion
+### Screen 3 — Profile ("Nog even over jou")
+
+**New screen (no Phase A equivalent).** Inserted between Q20 and the conclusion.
+
+- Label: "Nog even over jou" (NL) / "A little about you" (EN)
+- **Why here:** Gender is needed client-side to select the correct gender-differentiated conclusion text on Screen 4. Capturing these fields before the conclusion — not on the opt-in — also lightens the opt-in form at the highest drop-off point.
+- 3 dropdown fields (same component pattern as Phase A dropdowns):
+  1. **Geslacht** — dropdown: Man / Vrouw
+  2. **Leeftijdscategorie** — dropdown: 18-30 / 31-40 / 41-50 / 51-60 / 60+
+  3. **Je relatiestatus** — dropdown: Alleenstaand / In een relatie / Gescheiden / Anders
+- All fields required — inline validation on blur + on continue
+- Continue button: "Ga verder" (NL) / "Continue" (EN) → transitions to Screen 4
+- These values are stored in component state and included in the `/submit` webhook payload later
+
+**Inline validation (on blur + on continue):**
+
+| Field | Condition | Error message (NL) | Error message (EN) |
+|-------|-----------|--------------------|--------------------|
+| Geslacht | not selected | Selecteer je geslacht | Select your gender |
+| Leeftijdscategorie | not selected | Selecteer je leeftijdscategorie | Select your age category |
+| Relatiestatus | not selected | Selecteer je relatiestatus | Select your relationship status |
+
+### Screen 4 — Conclusion
 
 **Replaces:** current `phase === "results"` score display + band match
 
 - Label: "Jouw uitkomst" (muted, same style as progress indicator)
 - **No API call** — conclusion text is generated client-side from the scoring system
-- Conclusion text: rendered from the scoring result (dominant mechanism → mapped result text)
+- **Gender-differentiated:** Conclusion text is looked up using `conclusions[gender][mechanismKey]`, where `gender` was captured on Screen 3. This doubles the conclusion texts from 15 to 30.
+- Conclusion text: rendered from the scoring result (dominant mechanism + gender → mapped result text)
 - Bridge line: "Wil je begrijpen waar dit vandaan komt en wat het jou kost? Je persoonlijke rapport gaat daar dieper op in." (conversion-weight styling — not visually downplayed)
-- CTA button: "Ontvang mijn rapport" → transitions to Screen 4 (does NOT submit anything)
-- Transition from Q20 → conclusion is instant (no loading state needed)
+- CTA button: "Ontvang mijn rapport" → transitions to Screen 5 (does NOT submit anything)
+- Transition from Screen 3 → conclusion is instant (no loading state needed)
 
-### Screen 4 — Opt-in Form
+### Screen 5 — Opt-in Form
 
-**Replaces:** current mailing list form in results phase
+**Replaces:** current mailing list form in results phase. Simplified — profile fields (gender, age, relationship) already captured on Screen 3.
 
 - Label: "Waar sturen we jouw rapport naartoe?"
 - Intro: "Vul hieronder je gegevens in. Je ontvangt het binnen enkele minuten in je inbox."
 - Form fields:
   1. **Voornaam** — text input
   2. **E-mailadres** — email input, format validation on blur
-  3. **Je relatiestatus** — dropdown: Alleenstaand / In een relatie / Gescheiden / Anders
-- All fields required
 - **NEM Matters opt-in checkbox:** "Je wordt toegevoegd aan NEM Matters - de nieuwsbrief van NEM Life. Je kunt je altijd afmelden."
 - Submit button "Ontvang mijn rapport" — **greyed out and disabled until checkbox is ticked**
 - Relieve line below button: "Geen spam & je gegevens blijven veilig. Natuurlijk."
@@ -356,7 +464,6 @@ All webhooks include the locale so n8n can select the correct Anthropic prompt l
 | Voornaam | empty | "Vul je voornaam in" |
 | E-mailadres | empty | "Vul je e-mailadres in" |
 | E-mailadres | invalid format | "Voer een geldig e-mailadres in" |
-| Relatiestatus | not selected | "Selecteer je relatiestatus" |
 | Checkbox | unticked | "Bevestig je aanmelding voor NEM Matters" |
 
 **Validation behaviour:**
@@ -368,10 +475,10 @@ All webhooks include the locale so n8n can select the correct Anthropic prompt l
 **Submit behaviour:**
 - On errors: button doesn't fire, errors appear inline
 - On valid: button shows loading state (spinner or opacity), prevents double-click
-- On success: transition to Screen 5
+- On success: transition to Screen 6
 - On failure: show generic error, keep form state
 
-### Screen 5 — Confirmation
+### Screen 6 — Confirmation
 
 **New screen (no Phase A equivalent)**
 
@@ -381,10 +488,10 @@ All webhooks include the locale so n8n can select the correct Anthropic prompt l
 - Fallback (smaller, muted):
   - "Geen mail ontvangen? Controleer je spamfolder."
   - "Verkeerd e-mailadres opgegeven? Vul het opnieuw in." ← clickable link
-- **Correction flow:** "Vul het opnieuw in" returns to Screen 4 with:
+- **Correction flow:** "Vul het opnieuw in" returns to Screen 5 (Opt-in) with:
   - Voornaam pre-filled
-  - Relationship status pre-filled
   - Email field cleared
+  - Profile fields (gender, age category, relationship status) remain in state from Screen 3 — unchanged
   - On resubmit: new token generated, previous invalidated
 
 ## Component Refactor Plan
@@ -396,18 +503,19 @@ All webhooks include the locale so n8n can select the correct Anthropic prompt l
 type Phase = "intro" | "quiz" | "results";
 
 // Phase B
-type Phase = "quiz" | "conclusion" | "optin" | "confirmation";
+type Phase = "quiz" | "profile" | "conclusion" | "optin" | "confirmation";
 // No "intro" phase — Screen 1 IS the quiz start
 // "quiz" covers screens 1 + 2 (Q1-Q20)
-// "conclusion" = screen 3
-// "optin" = screen 4
-// "confirmation" = screen 5
+// "profile" = screen 3 (gender, age category, relationship status)
+// "conclusion" = screen 4 (gender-differentiated)
+// "optin" = screen 5 (name + email + consent only)
+// "confirmation" = screen 6
 ```
 
 ### Props changes
 
 **Remove:**
-- `questionsJson` — questions are hardcoded
+- `questionsJson` — questions are now individual props (question1-question20)
 - `scoreBandsJson` — no more score bands
 - `introHeading`, `introBody`, `introButtonText`, `introIcon` — no intro screen
 - `resultsHeading` — replaced by "Jouw uitkomst"
@@ -435,6 +543,8 @@ const [gdprChecked, setGdprChecked] = useState(false);
 // Phase B additions
 const [conclusionText, setConclusionText] = useState<string>(""); // from scoring system, not API
 const [relationshipStatus, setRelationshipStatus] = useState("");
+const [gender, setGender] = useState("");
+const [ageCategory, setAgeCategory] = useState("");
 const [nemMattersConsent, setNemMattersConsent] = useState(false);
 const [submitting, setSubmitting] = useState(false);
 const [token, setToken] = useState<string>("");
@@ -474,8 +584,8 @@ Alex flagged: "The current width of the question module feels too narrow. Please
 **Will builds:**
 - Webflow AI prompt for React component (all 5 screens)
 - 2 n8n webhooks (submit, verify)
-- MailerSend integration (verification email, report delivery email)
-- MailerLite integration (NEM Matters subscription)
+- MailerLite integration (verification email + NEM Matters subscription)
+- MailerSend integration (report delivery email with PDF attachment — MailerLite cannot send attachments)
 - PDF generation
 - Token management + storage
 
@@ -494,7 +604,7 @@ Three layers, zero user friction:
 
 ### Webhook 1: POST `/submit`
 
-**Triggered by:** Screen 4 form submit (valid)
+**Triggered by:** Screen 5 form submit (valid)
 
 **Request:**
 ```json
@@ -503,6 +613,8 @@ Three layers, zero user friction:
   "firstName": "Anna",
   "email": "anna@example.com",
   "relationshipStatus": "in-een-relatie",
+  "gender": "vrouw",
+  "ageCategory": "31-40",
   "honeypot": "",
   "scores": {
     "valseHoop": 14,
@@ -523,10 +635,10 @@ Three layers, zero user friction:
 1. Check `honeypot` field → if not empty, return `{ "status": "ok" }` silently (fake success)
 2. Check IP rate limit → if exceeded, return `{ "status": "rate_limited" }`
 3. Store profile + scores + token + nemMattersConsent in KV/Sheet
-4. Send verification email via MailerSend (NL or EN based on locale)
+4. Send verification email via MailerLite (NL or EN based on locale)
 5. Return `{ "status": "ok" }`
 
-Note: MailerLite subscription is **not** triggered here — moved to `/verify`.
+Note: MailerLite newsletter subscription is **not** triggered here — moved to `/verify`. The verification email is sent via MailerLite (no attachment needed). Profile fields (gender, ageCategory, relationshipStatus) are captured on Screen 3 and included in this payload alongside the opt-in fields from Screen 5.
 
 **Response:**
 ```json
@@ -542,8 +654,8 @@ Note: MailerLite subscription is **not** triggered here — moved to `/verify`.
 2. Retrieve stored profile
 3. Call Anthropic API with Alex's report prompt + score profile + locale
 4. Generate PDF
-5. Send report PDF via MailerSend
-6. If `nemMattersConsent === true` → add to MailerLite (email is now verified)
+5. Send report PDF via MailerSend (only email that requires MailerSend — PDF attachment)
+6. If `nemMattersConsent === true` → add to MailerLite newsletter (email is now verified)
 7. Mark token as consumed
 8. Redirect to `/zelftest/bevestigd` (or `/en/zelftest/bevestigd`)
 
@@ -578,12 +690,12 @@ const EVENTS = {
 | 2 | Write Webflow AI prompt for full component: all 5 screens, pill buttons, progress, back button, inline validation, responsive, i18n, analytics events, correction flow | 1.5 | Claude writes the prompt, Will runs it in Webflow AI |
 | 3 | Scoring logic (per-mechanism calculation + conclusion text mapping) | 1 | TBC — depends on Alex's scoring system answers |
 | **Backend — n8n** | | | |
-| 4 | n8n webhook: `/submit` (store profile + token → MailerSend verification → MailerLite) | 2 | Token management baked in |
+| 4 | n8n webhook: `/submit` (store profile + token → MailerLite verification email) | 2 | Token management baked in |
 | 5 | n8n webhook: `/verify` (validate token → Anthropic API → PDF → MailerSend delivery → redirect) | 2 | Token expiry + invalidation baked in |
 | **Backend — Integrations** | | | |
 | 6 | PDF generation (HTML-to-PDF in n8n) | 2 | PDFMunk or code node |
-| 7 | MailerSend setup (verification email + report delivery templates, NL + EN) | 2.5 | Templates + API integration |
-| 8 | MailerLite integration (NEM Matters subscription) | 1 | Separate from report flow |
+| 7 | MailerLite setup (verification email template + NEM Matters subscription, NL + EN) | 2 | Templates + API integration |
+| 8 | MailerSend setup (report delivery with PDF attachment, NL + EN) | 1.5 | Only email that needs MailerSend |
 | **QA** | | | |
 | 9 | QA: Playwright component tests (all 5 screens, scoring, validation, responsive, i18n) | 2 | Claude writes tests, automated |
 | 10 | QA: E2E signup flow (MailerSend API + Gmail API, plus-alias isolation) | 2 | Requires live webhooks + Gmail OAuth setup |
@@ -607,11 +719,11 @@ const EVENTS = {
 | 1 | Build landing page + verification page in Webflow (NL + EN) | None | 0.5h |
 | 2 | Write Webflow AI prompt for React component (all 5 screens, i18n, analytics) | None (parallel with 1) | 1.5h |
 | 3 | Scoring logic (confirmed) + conclusion text mapping | Report texts from Alex | 1h |
-| 4 | n8n: submit webhook (storage + MailerSend verification + MailerLite) | None (parallel with frontend) | 2h |
+| 4 | n8n: submit webhook (storage + MailerLite verification email) | None (parallel with frontend) | 2h |
 | 5 | n8n: verify webhook (Anthropic API + PDF + MailerSend delivery) | None (prompt available via Notion) | 2h |
 | 6 | PDF generation setup | Task 5 | 2h |
-| 7 | MailerSend templates (verification + report, NL + EN) | None (parallel) | 2.5h |
-| 8 | MailerLite integration | None (parallel) | 1h |
+| 7 | MailerLite setup (verification email + NEM Matters, NL + EN) | None (parallel) | 2h |
+| 8 | MailerSend setup (report delivery + PDF attachment, NL + EN) | None (parallel) | 1.5h |
 | 9 | QA: all screens + responsive + i18n | Tasks 1-3 | 2h |
 | 10 | QA: end-to-end flow | Tasks 4-8 | 2h |
 
@@ -640,13 +752,16 @@ Task 2 produces a comprehensive prompt document that Will pastes into Webflow AI
 - Answer scale (nooit→heel vaak, 0-4 scoring)
 - Mechanism mapping (which questions → which mechanism)
 - Scoring logic: per-mechanism sum, primary/secondary determination (SECONDARY_THRESHOLD = 3), tiebreaker rule
-- 5-screen flow with exact transition logic
+- 6-screen flow with exact transition logic
 - Pill button UX (horizontal desktop, vertical mobile ≤768px)
 - Progress indicator format ("Vraag X van 20" / "Question X of 20")
 - Back button with answer pre-fill
-- Inline form validation (blur + submit, all error messages in both languages)
+- Profile screen (Screen 3): gender, age category, relationship status dropdowns — captured before conclusion
+- Gender-differentiated conclusion texts (30 variants: 15 mechanism keys × 2 genders)
+- Simplified opt-in form (Screen 5): just name + email + consent
+- Inline form validation (blur + submit, all error messages in both languages) — split between Profile and Opt-in screens
 - Submit button disabled state (consent checkbox)
-- Correction flow (Screen 5 → Screen 4, pre-fill name + status, clear email, new token)
+- Correction flow (Screen 6 → Screen 5, pre-fill name, clear email, new token)
 - Webhook POST contract (exact JSON payload shape for `/submit`)
 - Analytics event constants (window.dataLayer push or console stub)
 - i18n: locale detection + translations object + prop-driven marketing copy
@@ -714,22 +829,25 @@ googleapis (for Gmail API)
 6. Back button returns to previous question with answer pre-filled
 7. Back button NOT present on Q1
 8. Reassurance line visible on Q1 only, hidden on Q2+
-9. Screen 3 shows conclusion text instantly (no loading, no API call)
-10. Scoring is correct: per-mechanism sums, primary/secondary determination
-11. CTA "Ontvang mijn rapport" transitions to Screen 4
-12. Screen 4 validates all fields on blur with correct Dutch error messages
-13. Email format validation fires on blur (not just empty check)
-14. Error clears when field is corrected
-15. Submit button greyed out and disabled until consent checkbox ticked
-16. Successful submit transitions to Screen 5
-17. Screen 5 "Vul het opnieuw in" returns to Screen 4 with name + status pre-filled, email cleared
-18. MailerSend receives verification email request with correct payload (API check)
-19. Gmail inbox receives verification email (e2e check)
-20. Verification link triggers report generation + PDF delivery
-21. No console errors on any screen
-22. Minimal footer with logo only
-23. prefers-reduced-motion respected
-24. All strings display correctly in EN locale (/en/ path)
+9. Screen 3 (Profile) shows "Nog even over jou" with gender, age category, relationship dropdowns
+10. Screen 3 validates all profile dropdowns before proceeding
+11. Screen 4 shows gender-differentiated conclusion text instantly (no loading, no API call)
+12. Scoring is correct: per-mechanism sums, primary/secondary determination, gender-keyed lookup
+13. CTA "Ontvang mijn rapport" transitions to Screen 5
+14. Screen 5 has only name + email + consent (no dropdowns — those are on Screen 3)
+15. Screen 5 validates name + email on blur with correct Dutch error messages
+16. Email format validation fires on blur (not just empty check)
+17. Error clears when field is corrected
+18. Submit button greyed out and disabled until consent checkbox ticked
+19. Successful submit transitions to Screen 6
+20. Screen 6 "Vul het opnieuw in" returns to Screen 5 with name pre-filled, email cleared
+21. MailerSend receives verification email request with correct payload (API check)
+22. Gmail inbox receives verification email (e2e check)
+23. Verification link triggers report generation + PDF delivery
+24. No console errors on any screen
+25. Minimal footer with logo only
+26. prefers-reduced-motion respected
+27. All strings display correctly in EN locale (/en/ path)
 
 ### Reproduction steps
 
@@ -740,26 +858,30 @@ googleapis (for Gmail API)
 5. Verify reassurance line is gone on Q2
 6. Use back button, verify Q1 answer pre-filled
 7. Answer all 20 questions (mix of answers for scoring diversity)
-8. Verify Screen 3 shows conclusion text immediately
-9. Click "Ontvang mijn rapport"
-10. Test inline validation: tab through empty fields, verify Dutch errors
-11. Test email validation: enter "bad-email", blur, verify format error
-12. Fix email, verify error clears
-13. Fill all fields, verify submit still disabled (checkbox unticked)
-14. Tick checkbox, verify submit enabled
-15. Submit form
-16. Verify Screen 5 content
-17. Click "Vul het opnieuw in", verify Screen 4 state (name filled, email cleared)
-18. Resubmit with correct email
-19. Check MailerSend API for verification email
-20. Check Gmail for verification email
-21. Click verification link
-22. Check MailerSend API for report delivery
-23. Check Gmail for report PDF
+8. Verify Screen 3 (Profile) shows "Nog even over jou" with 3 dropdowns
+9. Test profile validation: click continue without selecting, verify Dutch errors
+10. Select gender, age category, relationship status → click continue
+11. Verify Screen 4 shows gender-differentiated conclusion text immediately
+12. Click "Ontvang mijn rapport"
+13. Verify Screen 5 shows only name + email + consent (no dropdowns)
+14. Test inline validation: tab through empty fields, verify Dutch errors
+15. Test email validation: enter "bad-email", blur, verify format error
+16. Fix email, verify error clears
+17. Verify submit still disabled (checkbox unticked)
+18. Tick checkbox, verify submit enabled
+19. Submit form
+20. Verify Screen 6 content
+21. Click "Vul het opnieuw in", verify Screen 5 state (name filled, email cleared)
+22. Resubmit with correct email
+23. Check MailerSend API for verification email
+24. Check Gmail for verification email
+25. Click verification link
+26. Check MailerSend API for report delivery
+27. Check Gmail for report PDF
 
 ### Tier mapping
 
-- **Tier 1 (Auto — Playwright):** Landing page structure, all 20 questions flow, pill buttons, progress indicator, back button + pre-fill, reassurance line visibility, scoring calculation, screen transitions, form validation (empty + format + correction), button disabled state, correction flow, no console errors, reduced motion, EN locale
+- **Tier 1 (Auto — Playwright):** Landing page structure, all 20 questions flow, pill buttons, progress indicator, back button + pre-fill, reassurance line visibility, profile screen (3 dropdowns + validation), gender-differentiated scoring, screen transitions, opt-in form validation (name + email + correction), button disabled state, correction flow, no console errors, reduced motion, EN locale
 - **Tier 2 (CDN regression):** Registered in `tests/registry.json`
 - **Tier 3 (E2E — Playwright + APIs, tagged `@e2e-email`):**
   - MailerSend API: verification email sent, report email sent
@@ -774,16 +896,20 @@ googleapis (for Gmail API)
 
 - Other nem-life modules must continue working (init.js unchanged)
 - No GSAP/ScrollTrigger involvement — minimal risk to other page animations
-- `quiz-data.js` remains in init.js module list but Phase B component ignores it (hardcoded questions)
+- `quiz-data.js` remains in init.js module list but Phase B component ignores it (questions via props)
 
 ## Open Questions
 
 1. ~~Scoring system~~ — resolved: 0-4 scoring, 0-16 per mechanism, relative interpretation, 3-point secondary threshold, body+situational tiebreaker
-2. **Conclusion texts for Screen 3** — Alex needs to write the conclusion copy that maps to each primary/secondary mechanism combination
+2. **Conclusion texts for Screen 4** — Alex needs to write the 30 gender-differentiated conclusion texts (15 mechanism keys × 2 genders) using the confirmed identifier convention. Placeholders used until then.
 3. ~~Anthropic report prompt~~ — resolved: Will has access. Source of truth: [Notion: NEM TEST 01 system prompt](https://app.notion.com/p/NEM-TEST-01-Waarom-reageer-ik-zo-system-prompt-382c706b69c081f2b7cec566c49d8647) (may change)
 4. ~~n8n instance~~ — resolved, Will has access
-4. ~~MailerSend account~~ — resolved, Will has access
-5. ~~Verification redirect~~ — resolved: static Webflow page at `/zelftest/bevestigd`
-6. ~~Component width~~ — resolved: Will sets in Webflow
-7. ~~Conclusion webhook~~ — removed; Screen 3 uses client-side scoring (no API call)
-8. ~~Prompt engineering~~ — resolved: Alex owns Anthropic prompts
+5. ~~MailerSend account~~ — resolved, Will has access
+6. ~~Verification redirect~~ — resolved: static Webflow page at `/zelftest/bevestigd`
+7. ~~Component width~~ — resolved: Will sets in Webflow
+8. ~~Conclusion webhook~~ — removed; Screen 3 uses client-side scoring (no API call)
+9. ~~Prompt engineering~~ — resolved: Alex owns Anthropic prompts
+10. ~~Questions hardcoded vs CMS~~ — resolved: component props with Dutch defaults; mechanism mapping fixed in code. Props can be linked to CMS later if needed.
+11. ~~MailerSend vs MailerLite~~ — resolved: MailerLite for verification email + newsletter; MailerSend for report delivery only (PDF attachment). MailerSend free tier = 500 emails/month.
+12. ~~Conclusion text identifiers~~ — resolved: Alex's convention confirmed. Single: `valse-hoop`. Dual: `valse-hoop_valse-macht`. All lowercase, hyphenated. 15 texts total.
+13. ~~Internationalisation~~ — resolved: NL + EN built in from start. Locale auto-detected, passed through to backend for emails + report language.

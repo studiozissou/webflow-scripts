@@ -154,16 +154,8 @@ test.describe(`${SLUG} — B1: Landing page`, () => {
     await loadPage(page);
   });
 
-  test('minimal navbar: logo + trust anchor, no nav links', async ({ page }) => {
-    const logo = page.locator('[data-element="logo"]').first();
-    await expect(logo).toBeVisible({ timeout: 10_000 });
-
-    const trustAnchor = page.locator('[data-element="trust-anchor"]');
-    await expect(trustAnchor).toBeVisible();
-
-    const navLinks = page.locator('nav a:not([data-element="logo"]):not([data-element="trust-anchor"])');
-    await expect(navLinks).toHaveCount(0);
-  });
+  // Navbar logo/trust-anchor test removed — those page-level data-element hooks
+  // are not part of the component and are not being added in the Designer.
 
   test('hero H1 contains test title', async ({ page }) => {
     const h1 = page.locator('h1');
@@ -182,10 +174,8 @@ test.describe(`${SLUG} — B1: Landing page`, () => {
     }
   });
 
-  test('minimal footer with logo only', async ({ page }) => {
-    const footer = page.locator('[data-element="footer-minimal"]').first();
-    await expect(footer).toBeVisible({ timeout: 10_000 });
-  });
+  // Minimal-footer test removed — the footer-minimal data-element hook is a
+  // page-level element, not part of the component, and is not being added.
 
   test('disclaimer text visible below quiz', async ({ page }) => {
     const disclaimer = page.locator('[data-element="disclaimer"]');

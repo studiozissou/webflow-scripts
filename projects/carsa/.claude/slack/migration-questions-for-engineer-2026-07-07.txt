@@ -1,0 +1,11 @@
+Hey [name] — quick context: this is something I'm picking up with Tomek, so it may not be on your radar yet.
+
+Plan my end:
+•  Migrate the Webflow scripts onto my GitHub
+•  Convert them into modules
+•  Deploy to the site as one bundle
+•  Refactor to vanilla JS where I can
+
+Once it's working, I'd hand over the bundle or the modules for you to set up in your deployment pipeline — and any future scripts follow the same route.
+
+Would that work for you?

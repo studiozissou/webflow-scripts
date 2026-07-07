@@ -118,6 +118,7 @@ interface Translations {
   questions: string[];
   progress: (n: number, total: number) => string;
   back: string;
+  reassurance: string;
   profileLabel: string;
   profileContinueButton: string;
   conclusionLabel: string;
@@ -228,6 +229,7 @@ const translations: Record<"nl" | "en", Translations> = {
     ],
     progress: (n, total) => `Vraag ${n} van ${total}`,
     back: "← Terug",
+    reassurance: "Kies wat het meest op jou lijkt - er is geen goed of fout antwoord.",
     profileLabel: "Nog even over jou",
     profileContinueButton: "Ga verder",
     conclusionLabel: "Jouw uitkomst",
@@ -318,6 +320,7 @@ const translations: Record<"nl" | "en", Translations> = {
     ],
     progress: (n, total) => `Question ${n} of ${total}`,
     back: "← Back",
+    reassurance: "Choose what feels most like you — there's no right or wrong answer.",
     profileLabel: "A little about you",
     profileContinueButton: "Continue",
     conclusionLabel: "Your outcome",
@@ -469,18 +472,26 @@ function Quiz({
   const locale = getLocale();
   const t = translations[locale];
 
+  // Webflow code-component props are NOT localizable — a prop holds one value
+  // across every locale (its Dutch default). So the Designer props are honoured
+  // only on the primary NL locale; every other locale uses the code translations.
   const questions = useMemo(
     () => [
       question1, question2, question3, question4, question5,
       question6, question7, question8, question9, question10,
       question11, question12, question13, question14, question15,
       question16, question17, question18, question19, question20,
-    ].map((propText, i) => propText || t.questions[i]),
-    [question1, question2, question3, question4, question5,
+    ].map((propText, i) => (locale === "nl" ? propText || t.questions[i] : t.questions[i])),
+    [locale, question1, question2, question3, question4, question5,
      question6, question7, question8, question9, question10,
      question11, question12, question13, question14, question15,
      question16, question17, question18, question19, question20, t.questions]
   );
+
+  // Same rule for the two marketing-copy props (reassurance line + CTA label):
+  // prop override on NL, code translation elsewhere.
+  const reassurance = locale === "nl" ? (reassuranceText || t.reassurance) : t.reassurance;
+  const ctaLabel = (locale === "nl" ? ctaButtonText : "") || t.submitButtonText;
 
   /* ─── Reduced-motion detection ───
      Note: the answer-pill responsive layout (row on desktop, column on mobile)
@@ -777,7 +788,7 @@ function Quiz({
           </h3>
 
           {/* Reassurance text — only on Q1 */}
-          {currentStep === 0 && reassuranceText && (
+          {currentStep === 0 && reassurance && (
             <p
               style={{
                 color: "var(--_token---text-olive)",
@@ -787,7 +798,7 @@ function Quiz({
                 fontStyle: "italic",
               }}
             >
-              {reassuranceText}
+              {reassurance}
             </p>
           )}
           {currentStep > 0 && <div style={{ marginBottom: 28 }} />}
@@ -1049,7 +1060,7 @@ function Quiz({
               e.currentTarget.style.boxShadow = "none";
             }}
           >
-            {ctaButtonText || t.submitButtonText}
+            {ctaLabel}
           </button>
         </div>
       )}
@@ -1208,7 +1219,7 @@ function Quiz({
                 pointerEvents: submitting ? "none" : "auto",
               }}
             >
-              {submitting ? "..." : (ctaButtonText || t.submitButtonText)}
+              {submitting ? "..." : ctaLabel}
             </button>
 
             {/* Relieve line */}

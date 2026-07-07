@@ -83,6 +83,34 @@ async function fillProfileScreen(page) {
   await page.waitForTimeout(600);
 }
 
+/**
+ * Fill the profile screen choosing a SPECIFIC gender by visible label
+ * (NL: 'Man'/'Vrouw', EN: 'Male'/'Female'); age + relationship default to
+ * the first real option. Used to exercise the gender-differentiated conclusion.
+ */
+async function fillProfileScreenWithGender(page, genderLabel) {
+  await page.waitForTimeout(500);
+  await page.locator('[data-field="gender"]').selectOption({ label: genderLabel });
+  await page.locator('[data-field="age-category"]').selectOption({ index: 1 });
+  await page.locator('[data-field="relationship-status"]').selectOption({ index: 1 });
+  await page.waitForTimeout(300);
+  // Continue button is "Ga verder" (NL) / "Continue" (EN)
+  await page.getByRole('button', { name: /ga verder|continue/i }).click();
+  await page.waitForTimeout(600);
+}
+
+/**
+ * Grab the rendered conclusion paragraph text. Prefers the precise
+ * data-element="conclusion-text" hook; falls back to the whole quiz module
+ * (the label/bridge/CTA around it are gender-invariant, so a diff still
+ * isolates a change in the conclusion copy).
+ */
+async function getConclusionText(page) {
+  const precise = page.locator('[data-element="conclusion-text"]');
+  if (await precise.count()) return (await precise.first().innerText()).trim();
+  return (await page.locator('[data-element="quiz-module"]').first().innerText()).trim();
+}
+
 /** Answer questions with varied answers to produce a known score profile */
 async function answerWithProfile(page) {
   // Answers designed to produce: valseHoop dominant, valseMacht secondary
@@ -418,6 +446,44 @@ test.describe(`${SLUG} — Screen 4 (Conclusion)`, () => {
     await expect(
       page.getByPlaceholder(/voornaam|first name/i)
     ).toBeVisible({ timeout: 5_000 });
+  });
+});
+
+// ── Gender-differentiated conclusion ─────────────────────────
+
+test.describe(`${SLUG} — Gender-differentiated conclusion`, () => {
+  test('same answers produce different conclusion text for Man vs Vrouw (NL)', async ({ page }) => {
+    // Man path
+    await loadPage(page);
+    await answerAllQuestions(page, 'soms');
+    await fillProfileScreenWithGender(page, 'Man');
+    await expect(page.getByText(/jouw uitkomst/i)).toBeVisible({ timeout: 5_000 });
+    const manText = await getConclusionText(page);
+
+    // Vrouw path — identical answers, only the gender selection differs
+    await loadPage(page);
+    await answerAllQuestions(page, 'soms');
+    await fillProfileScreenWithGender(page, 'Vrouw');
+    await expect(page.getByText(/jouw uitkomst/i)).toBeVisible({ timeout: 5_000 });
+    const vrouwText = await getConclusionText(page);
+
+    expect(manText.length).toBeGreaterThan(0);
+    expect(vrouwText.length).toBeGreaterThan(0);
+    // If the gender lookup were ignored, both paths would render identical copy.
+    expect(manText).not.toBe(vrouwText);
+  });
+
+  test('EN male gender resolves a conclusion (male/female normalised to man/vrouw)', async ({ page }) => {
+    await loadPage(page, TEST_PAGE_EN);
+    await answerAllQuestions(page, 'sometimes');
+    await fillProfileScreenWithGender(page, 'Male');
+
+    await expect(page.getByText(/your result/i)).toBeVisible({ timeout: 5_000 });
+    const text = await getConclusionText(page);
+    // A missing normalisation (conclusions['male'] === undefined) renders nothing
+    // or the literal string "undefined".
+    expect(text.length).toBeGreaterThan(0);
+    expect(text.toLowerCase()).not.toContain('undefined');
   });
 });
 

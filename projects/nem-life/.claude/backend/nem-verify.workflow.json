@@ -77,7 +77,7 @@
     {
       "parameters": {
         "respondWith": "redirect",
-        "redirectURL": "={{ $json.locale === 'en' ? 'https://REPLACE_SITE/en/zelftest/bevestigd' : 'https://REPLACE_SITE/zelftest/bevestigd' }}",
+        "redirectURL": "={{ $json.locale === 'en' ? 'https://REPLACE_SITE/en/verificatie/bevestigd' : 'https://REPLACE_SITE/verificatie/bevestigd' }}",
         "options": { "responseCode": 302 }
       },
       "id": "b2000000-0000-4000-8000-000000000005",
@@ -89,7 +89,7 @@
     {
       "parameters": {
         "respondWith": "redirect",
-        "redirectURL": "={{ $json.locale === 'en' ? 'https://REPLACE_SITE/en/zelftest/verlopen' : 'https://REPLACE_SITE/zelftest/verlopen' }}",
+        "redirectURL": "={{ $json.locale === 'en' ? 'https://REPLACE_SITE/en/verificatie/verlopen' : 'https://REPLACE_SITE/verificatie/verlopen' }}",
         "options": { "responseCode": 302 }
       },
       "id": "b2000000-0000-4000-8000-000000000006",
@@ -113,14 +113,17 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, thinking: { type: 'adaptive' }, system: 'REPLACE_WITH_ALEX_SYSTEM_PROMPT_FROM_NOTION', messages: [ { role: 'user', content: 'Locale: ' + $json.locale + '. Write the full report in ' + ($json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $json.firstName + '\\nGender: ' + $json.gender + '\\nAge category: ' + $json.ageCategory + '\\nRelationship status: ' + $json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $json.scoresJson + '\\nPrimary mechanism: ' + $json.primaryMechanism + '\\nSecondary mechanism: ' + ($json.secondaryMechanism || 'none') + '\\nTotal score: ' + $json.totalScore } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, system: 'REPLACE_WITH_ALEX_SYSTEM_PROMPT_FROM_NOTION', messages: [ { role: 'user', content: 'Locale: ' + $json.locale + '. Write the full report in ' + ($json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $json.firstName + '\\nGender: ' + $json.gender + '\\nAge category: ' + $json.ageCategory + '\\nRelationship status: ' + $json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $json.scoresJson + '\\nPrimary mechanism: ' + $json.primaryMechanism + '\\nSecondary mechanism: ' + ($json.secondaryMechanism || 'none') + '\\nTotal score: ' + $json.totalScore } ] }) }}",
         "options": {}
       },
       "id": "b2000000-0000-4000-8000-000000000007",
       "name": "Generate Report",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [900, 360]
+      "position": [900, 360],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -135,7 +138,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "REPLACE_PDF_API_URL",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -249,7 +252,7 @@
       "name": "Mark Consumed",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
-      "position": [2000, 440]
+      "position": [900, 360]
     }
   ],
   "connections": {
@@ -260,6 +263,7 @@
       "main": [
         [
           { "node": "Respond Confirmed", "type": "main", "index": 0 },
+          { "node": "Mark Consumed", "type": "main", "index": 0 },
           { "node": "Generate Report", "type": "main", "index": 0 }
         ],
         [{ "node": "Respond Invalid", "type": "main", "index": 0 }]
@@ -272,10 +276,9 @@
     "Consent?": {
       "main": [
         [{ "node": "Add To Newsletter", "type": "main", "index": 0 }],
-        [{ "node": "Mark Consumed", "type": "main", "index": 0 }]
+        []
       ]
-    },
-    "Add To Newsletter": { "main": [[{ "node": "Mark Consumed", "type": "main", "index": 0 }]] }
+    }
   },
   "active": false,
   "settings": { "executionOrder": "v1" },

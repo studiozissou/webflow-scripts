@@ -7,7 +7,7 @@ email link hits the `/verify` webhook. See the full architecture in
 
 ## Status
 
-**`/submit` is LIVE and verified end-to-end** (2026-07-07). `/verify` is built but not yet wired.
+**`/submit` is LIVE and verified end-to-end** (2026-07-07). **`/verify` validation core is LIVE + verified** (2026-07-07) — token validation, both redirect branches, locale routing, and the `consumed` flip all tested against live n8n. The report branch (Anthropic → PDF → MailerSend → newsletter) is built but **disabled** pending credentials/decisions.
 
 | Piece | File | Status |
 |-------|------|--------|
@@ -18,19 +18,32 @@ email link hits the `/verify` webhook. See the full architecture in
 | MailerLite — double opt-in | account setting | ✅ **Disabled for API/integrations** — subscribers land Active, no MailerLite opt-in email |
 | MailerLite — verification automation + email | `mailerlite-verification.md` | ✅ **Built + verified** — email arrives, `{$nem_verify_url}` resolves to the tokened link |
 | Component prop wiring | `src/nem-test-phase-b.tsx` | ⏳ Paste submit URL into `submitWebhookUrl` in Webflow Designer |
-| `/verify` webhook | `nem-verify.workflow.json` | ⏳ **Built, not wired** — see `/verify` section below; wire in stages |
-| Anthropic report | Generate Report node | ⏳ Needs API key + Alex's prompt |
-| PDF generation | Render PDF node | ⏳ Needs a service chosen (PDFShift / PDF.co / api2pdf) |
+| `/verify` webhook | `nem-verify.workflow.json` | ✅ **Live (validation core)** — workflow id `uKkMgMYoH5nOLoCR`, active; `https://reus.app.n8n.cloud/webhook/nem-verify?token=…`. Redirects → `nem-life-1.webflow.io/verificatie/{bevestigd,verlopen}` (staging; EN under `/en/verificatie/…`); `consumed` flips on validate. Report branch disabled. |
+| Anthropic report | Generate Report node | ✅ **Enabled + verified** (2026-07-07, exec #19) — `Anthropic API` Header Auth cred (`x-api-key`, id `FPiOec7GU6JFfFFf`, Will's own key) wired; `claude-opus-4-8` returns text, locale-correct, profile fields flow through. Retry-on-fail added (3× / 5s) for transient 529s. Running a **clearly-labelled stub** system prompt — swap in Alex's real prompt (one `system:` field on the node) when it lands. |
+| PDF generation | Render PDF node | ✅ **Enabled + verified** (2026-07-07, exec #22) — **PDFShift** (`https://api.pdfshift.io/v3/convert/pdf`), body `{ source: html }`, returns `application/pdf` (~40 kB). ⚠️ **Auth is `X-API-Key` header, NOT Basic auth** — use an *HTTP Header Auth* credential (Name `X-API-Key`, Value `sk_…`), id `9e4Kcyv9XnvbS6zx`. Currently `sandbox: true` in the body (free, watermarked) — remove for production. Free plan = 50 credits/mo, 1 MB/doc. |
 | MailerSend delivery | Send Report node | ⏳ Needs sender + API key |
 | NEM Matters newsletter add | Add To Newsletter node | ⏳ Needs group ID |
 
 ### ⏱ Resume here (next session)
 
-1. **Wire `/verify` validation core** — import `nem-verify.workflow.json`, set the Data Table ID (both Data Table nodes) + `REPLACE_SITE`, temporarily disconnect *Generate Report*, and test: valid token → 302 to `/zelftest/bevestigd` + `consumed` flips true; reused token → 302 to `/zelftest/verlopen`. (Needs those two Webflow pages to exist.)
-2. Then layer in Anthropic → PDF → MailerSend → newsletter, per the staged order in the `/verify` section below.
+1. ~~**Wire `/verify` validation core**~~ ✅ **Done 2026-07-07** — workflow live (id `uKkMgMYoH5nOLoCR`), Data Table `ib5Yh0yEfNpDqeuU` wired into Get Profile + Mark Consumed, `REPLACE_SITE` → `nem-life-1.webflow.io`. All 5 cases pass (valid NL/EN → `/bevestigd`; reused/expired/unknown → `/verlopen`; `consumed` flips only on valid). Confirmation pages live at `/verificatie/bevestigd` + `/verificatie/verlopen` (separate static folder — can't share the `zelftesten` CMS collection slug). EN mirror pages `/en/verificatie/…` still need confirming.
+2. Then layer in Anthropic → PDF → MailerSend → newsletter, per the staged order in the `/verify` section below. The 4 report-branch nodes are currently **disabled** in the live workflow — enable them one stage at a time.
 3. Finally, paste the submit URL into the component's `submitWebhookUrl` prop so the real quiz hits the live backend.
 
-Two open decisions to make first: **do you have an Anthropic API key?** and **which PDF service?**
+### 🔑 Handover — keys to transfer to Alex before go-live
+
+These two credentials currently use **Will's personal accounts** for testing. Before production, Alex must create his own and the n8n credentials must be repointed:
+
+| Service | n8n credential | Currently | Action for handover |
+|---------|---------------|-----------|---------------------|
+| **Anthropic** | `Anthropic API` (id `FPiOec7GU6JFfFFf`, Header Auth `x-api-key`) | Will's own Anthropic API key | Alex creates an Anthropic account + API key → update the credential's Value. Billing then lands on Alex. |
+| **PDFShift** | `PDFShift Header` (id `9e4Kcyv9XnvbS6zx`, Header Auth `X-API-Key`) | Will's PDFShift free account (50 credits/mo) | Alex creates a PDFShift account + API key → update the credential's Value. Free tier is only 50 credits/mo + 1 MB/doc, so Alex likely needs a paid plan for real volume. |
+
+Only the credential **Value** changes — the workflow nodes and credential wiring stay as-is. No node edits needed. (MailerSend, when wired, is a third key Alex owns — see below.)
+
+Open decision remaining: none for PDF (PDFShift chosen). Next stage: **MailerSend** delivery.
+
+**Design note (2026-07-07):** `Mark Consumed` was moved onto the *fast path* — it now fires alongside the confirm redirect, not at the tail of the report chain. Rationale: in the original graph `consumed` only flipped after the newsletter-add, so any failure in the report/PDF/email steps left the token replayable. The workflow JSON in this repo reflects the fix.
 
 ---
 
@@ -246,7 +259,7 @@ which *Send Report* then base64-attaches. The body is currently `{ "source": htm
 
 | Service | Endpoint | Auth | Body key |
 |---------|----------|------|----------|
-| PDFShift | `https://api.pdfshift.io/v3/convert/pdf` | Basic (api key as user) | `source` |
+| PDFShift ✅ **chosen + wired** | `https://api.pdfshift.io/v3/convert/pdf` | **`X-API-Key` header** (HTTP Header Auth cred, Name `X-API-Key`, Value `sk_…`) — *not* Basic auth | `source` |
 | PDF.co | `https://api.pdf.co/v1/pdf/convert/from/html` | `x-api-key` header | `html` |
 | api2pdf | `https://v2.api2pdf.com/chrome/html` | `Authorization` header | `html` |
 

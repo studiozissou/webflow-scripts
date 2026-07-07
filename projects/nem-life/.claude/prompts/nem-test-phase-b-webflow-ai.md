@@ -824,12 +824,7 @@ Disabled and visually greyed out until `nemMattersConsent` is true. Shows loadin
 </p>
 ```
 
-**Disclaimer** below the relieve line:
-```tsx
-<p data-element="disclaimer" style={{ fontSize: '0.75rem', color: 'var(--_token---accent-grey, #9f9c8b)', textAlign: 'center' }}>
-  {t[locale].disclaimer}
-</p>
-```
+> **Do NOT render the disclaimer inside the component.** The disclaimer ("Dit rapport is geen psychologische diagnose…") already appears once on the landing page below the module — rendering it in the component too produces a visible duplicate on the opt-in screen. The `t[locale].disclaimer` string is kept in the translations object (unused) in case it is needed later, but no `<p data-element="disclaimer">` is rendered here.
 
 **Form field styling** (shared across all text inputs and selects):
 ```tsx
@@ -1041,7 +1036,6 @@ These attributes MUST be present for automated testing:
 | `data-field="age-category"` | Age category select (Screen 3, profile) | Test hook: form field |
 | `data-field="relationship-status"` | Relationship status select (Screen 3, profile) | Test hook: form field |
 | `data-element="conclusion-text"` | Conclusion paragraph (Screen 4) | Test hook: verify gender-differentiated copy |
-| `data-element="disclaimer"` | Disclaimer text paragraph (Screen 5, opt-in) | Test hook: locate disclaimer |
 | `aria-selected="true"` | Currently selected pill button | Test hook: verify selection state |
 
 ---

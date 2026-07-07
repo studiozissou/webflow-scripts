@@ -1,0 +1,35 @@
+Hi Tomek, here's the breakdown for the code migration — moving all of Carsa's custom code out of Webflow into a version-controlled repo, served via CDN. Estimates against each line:
+
+*What this gets us*
+Every bit of custom code lives in one place, tested before and after each change, with one-command rollback at every step. No more editing live code inside Webflow.
+
+*Phase 0 — Code capture* ✅ _done, no charge_
+•  All inline code pulled from every page + site-wide — complete
+
+*Phase 1 — Per-page migration (1:1 copy, no rewrites)*
+•  Homepage + test harness setup — _[  ]_
+•  Search results + Deals pages — _[  ]_
+•  Finance Calculator — _[  ]_
+•  Get Started / Part Exchange / Value Car — _[  ]_
+•  FAQ Index / Car Finance / All Models — _[  ]_
+•  VDP repo move (already externalised) — _[  ]_
+•  CMS templates — Models, Makes, Fuel, Near, Blog (5 samples each) — _[  ]_
+•  Verify remaining 24 pages (global scripts) — _[  ]_
+
+*Phase 2 — Site-wide scripts*
+•  8 footer scripts → 1 external file (attribution, UTM, chatbot, etc.) — _[  ]_
+
+*Phase 3 — Single entry point (init.js)*
+•  Route-based loader; zero per-page code left in Webflow — _[  ]_
+
+*Phase 4 — Modularise*
+•  Extract shared modules, remove duplication (6 modules) — _[  ]_
+
+*Phase 5 — Refactor*
+•  jQuery removal, modern JS, performance, reduced-motion, unit tests — _[  ]_
+
+*Notes*
+•  Phases run in order — each is signed off and rollback-safe before the next starts.
+•  One blocker to confirm: is the Carsa GitHub repo public? The CDN needs it public, or we pick an alternative (I have options either way).
+
+Let me know if the split works and I'll firm up the numbers. Happy to walk through any of it.

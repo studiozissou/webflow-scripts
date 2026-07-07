@@ -1,0 +1,2 @@
+token,email,firstName,gender,ageCategory,relationshipStatus,locale,scoresJson,primaryMechanism,secondaryMechanism,totalScore,nemMattersConsent,ip,receivedAt,expiresAt,consumed,verifyUrl
+SAMPLE-DELETE-ME,sample@example.com,Sample,vrouw,31-40,in-een-relatie,nl,"{""valseHoop"":14,""valseMacht"":11,""zelfafwijzing"":9,""angst"":7,""emotioneleVerdoving"":3}",valseHoop,valseMacht,44,true,203.0.113.1,2026-07-07T12:00:00.000Z,2026-07-09T12:00:00.000Z,false,https://example.com/webhook/nem-verify?token=SAMPLE-DELETE-ME

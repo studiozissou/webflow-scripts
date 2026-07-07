@@ -6,6 +6,10 @@
 **Status:** Approved (€1,560 fixed price)
 **Slug:** `nem-test-phase-b`
 
+> **Build status (live tracker):** see `../backend/README.md`. As of 2026-07-07,
+> `/submit` is live + verified end-to-end; `/verify` is built but not yet wired.
+> The hour/task estimates below are the original plan, not current progress.
+
 ## Summary
 
 Phase B of NEM TEST "Waarom reageer ik zo?" — full production build. Rebuild the Webflow React code component via Webflow AI prompt into a 6-screen conversion-focused self-test (start → questions → profile → conclusion → opt-in → confirmation) with per-mechanism scoring, gender-differentiated client-side conclusion text (30 variants), lightweight opt-in form, email verification flow, and PDF report delivery. Will writes the Webflow AI prompt; Alex owns Anthropic prompt engineering.
@@ -633,8 +637,8 @@ Three layers, zero user friction:
 
 **n8n flow:**
 1. Check `honeypot` field → if not empty, return `{ "status": "ok" }` silently (fake success)
-2. Check IP rate limit → if exceeded, return `{ "status": "rate_limited" }`
-3. Store profile + scores + token + nemMattersConsent in KV/Sheet
+2. Check IP rate limit → if exceeded, return `{ "status": "rate_limited" }` (n8n workflow static data, ≤3/IP/hour)
+3. Store profile + scores + token + nemMattersConsent in the n8n `nem_test_profiles` Data Table (built-in, read back by `/verify`)
 4. Send verification email via MailerLite (NL or EN based on locale)
 5. Return `{ "status": "ok" }`
 

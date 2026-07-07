@@ -1,0 +1,27 @@
+Hi Tomek, here is an outline and estimate of the automated regression testing plan for carsa.co.uk:
+
+*Context*
+The site is CMS-heavy and gets published frequently, but there is no automated check that a publish hasn't broken layout, thrown JS errors, or left dead links.
+
+*Problem*
+Right now a broken page, missing CTA, or console error only surfaces when a customer or someone on the team happens to notice — often days later.
+
+*Solution*
+A Playwright suite that screenshots ~21 key pages (desktop + mobile), plus console-error and broken-link checks, run daily via GitHub Actions and alerting to Slack only when something breaks.
+•  CMS content masked out so alerts flag real layout/code regressions, not new stock
+•  Silent on success — no alert fatigue
+
+*Benefits*
+•  Catches broken layouts, JS errors, and 404s within a day instead of by chance
+•  One Slack alert per issue with a direct link to the failing page + viewport
+•  Config-driven, so we can reuse it on other client sites later
+
+*Risks*
+•  Screenshot flakiness on a CMS/Webflow site — mitigated by masking + a stabilisation pass (biggest cost driver)
+•  Mac vs CI screenshot drift — mitigated by generating baselines in CI from the start
+
+*Timing & pricing*
+•  Scope: ~2–3.5 dev days (variance is almost all in baseline stabilisation)
+•  Start: can begin this week; the target repo already exists
+
+Let me know if this works. Happy to walk through any of it in more detail.

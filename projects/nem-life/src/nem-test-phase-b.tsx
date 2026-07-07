@@ -1,6 +1,6 @@
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 declare global {
   interface Window {
@@ -482,25 +482,16 @@ function Quiz({
      question16, question17, question18, question19, question20, t.questions]
   );
 
-  /* ─── Responsive & motion detection ─── */
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false
-  );
+  /* ─── Reduced-motion detection ───
+     Note: the answer-pill responsive layout (row on desktop, column on mobile)
+     is handled purely in CSS via the `.nem-answers` media query below — NOT a
+     JS `isMobile` flag. Webflow server-renders the component with `window`
+     undefined, so a JS breakpoint check is stale on a direct mobile load and
+     the pills stayed in the desktop row. CSS media queries are immune to that. */
   const prefersReducedMotion =
     typeof window !== "undefined"
       ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
       : false;
-
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 768px)");
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    // Sync on mount — the initial useState value can be stale after SSR/hydration
-    // or when the page loads already at a mobile width (no 'change' event fires),
-    // which left the answer pills in the desktop row layout on mobile.
-    setIsMobile(mql.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
 
   /* ─── State ─── */
   const [phase, setPhase] = useState<"quiz" | "profile" | "conclusion" | "optin" | "confirmation">(
@@ -696,6 +687,11 @@ function Quiz({
         @media (prefers-reduced-motion: reduce) {
           .quiz-fade-in, .quiz-fade-out, .quiz-slide-up, .quiz-scale-in { animation: none; }
         }
+        .nem-answers { display: flex; gap: 12px; flex-wrap: nowrap; }
+        @media (max-width: 768px) {
+          .nem-answers { flex-direction: column; }
+          .nem-answers > button { width: 100%; }
+        }
       `}</style>
 
       {/* ═══════════════════════════════════════════
@@ -796,15 +792,8 @@ function Quiz({
           )}
           {currentStep > 0 && <div style={{ marginBottom: 28 }} />}
 
-          {/* Answer pill buttons */}
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              flexWrap: "nowrap",
-              ...(isMobile ? { flexDirection: "column" as const } : {}),
-            }}
-          >
+          {/* Answer pill buttons — layout via .nem-answers CSS (row desktop / column mobile) */}
+          <div className="nem-answers">
             {t.answers.map((label, i) => {
               const isSelected = answers[currentStep] === i;
               return (
@@ -828,7 +817,6 @@ function Quiz({
                     fontFamily: "'Lato', sans-serif",
                     fontSize: "var(--_typography---paragraph--standard, 1rem)",
                     transition: prefersReducedMotion ? "none" : "all 0.15s ease",
-                    ...(isMobile ? { width: "100%" } : {}),
                   }}
                   onMouseEnter={(e) => {
                     if (!isSelected) {

@@ -178,7 +178,7 @@ t[locale].conclusions[conclusionKey]
 t[locale].conclusions[GENDER_TO_CONCLUSION_KEY[gender]][conclusionKey]
 ```
 
-Everything else on the conclusion screen (label, bridge line, CTA → `setPhase('optin')`) is unchanged.
+Also add `data-element="conclusion-text"` to the paragraph that renders this text (test hook for gender differentiation). Everything else on the conclusion screen (label, bridge line, CTA → `setPhase('optin')`) is unchanged.
 
 ## 8. Opt-in form (Screen 5) — remove the three profile dropdowns
 

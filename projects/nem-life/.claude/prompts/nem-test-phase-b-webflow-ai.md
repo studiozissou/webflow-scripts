@@ -702,7 +702,7 @@ function handleProfileContinue() {
 Phase: `"conclusion"`.
 
 - Show the label: `t[locale].conclusionLabel` -- renders "Jouw uitkomst" in NL. Style it in muted text color (`var(--_token---text-olive, #706d56)`), small font size, uppercase or similar to the progress indicator style.
-- Show the **gender-differentiated** conclusion text: `t[locale].conclusions[GENDER_TO_CONCLUSION_KEY[gender]][conclusionKey]`. The `gender` was captured on Screen 3; normalise it via `GENDER_TO_CONCLUSION_KEY` (EN uses `male`/`female`, the conclusion tables nest under `man`/`vrouw`). This is a paragraph of text. No API call, no loading spinner -- it renders instantly from the client-side scoring result.
+- Show the **gender-differentiated** conclusion text: `t[locale].conclusions[GENDER_TO_CONCLUSION_KEY[gender]][conclusionKey]`. The `gender` was captured on Screen 3; normalise it via `GENDER_TO_CONCLUSION_KEY` (EN uses `male`/`female`, the conclusion tables nest under `man`/`vrouw`). Render it in a paragraph carrying `data-element="conclusion-text"` (test hook). No API call, no loading spinner -- it renders instantly from the client-side scoring result.
 - Show the bridge line: `t[locale].bridgeLine`. Style it with normal text weight, visible and prominent (not muted -- this is conversion-weight copy).
 - Show a CTA button with text `{ctaButtonText || t[locale].submitButtonText}` (falls back to the translations value if the prop is empty). Clicking it sets `phase` to `"optin"`.
 
@@ -1040,6 +1040,7 @@ These attributes MUST be present for automated testing:
 | `data-field="gender"` | Gender select (Screen 3, profile) | Test hook: form field |
 | `data-field="age-category"` | Age category select (Screen 3, profile) | Test hook: form field |
 | `data-field="relationship-status"` | Relationship status select (Screen 3, profile) | Test hook: form field |
+| `data-element="conclusion-text"` | Conclusion paragraph (Screen 4) | Test hook: verify gender-differentiated copy |
 | `data-element="disclaimer"` | Disclaimer text paragraph (Screen 5, opt-in) | Test hook: locate disclaimer |
 | `aria-selected="true"` | Currently selected pill button | Test hook: verify selection state |
 

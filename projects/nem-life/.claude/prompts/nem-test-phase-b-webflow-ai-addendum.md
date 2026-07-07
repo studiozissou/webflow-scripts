@@ -190,6 +190,16 @@ The gender, age-category, and relationship-status dropdowns now live on Screen 3
 4. NEM Matters consent checkbox — unchanged
 5. Submit button, relieve line, disclaimer — unchanged
 
+Also **remove the disclaimer paragraph** from the opt-in screen. The disclaimer ("Dit rapport is geen psychologische diagnose…") already appears once on the landing page below the module, so the component copy is a visible duplicate. Delete this block entirely:
+
+```tsx
+<p data-element="disclaimer" style={{ ... }}>
+  {t[locale].disclaimer}
+</p>
+```
+
+Keep the `relieveLine` paragraph above it. Leave the `t[locale].disclaimer` string in the translations object (unused).
+
 In `handleSubmit`, **remove** the gender/ageCategory/relationshipStatus validation lines:
 
 ```tsx

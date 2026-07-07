@@ -21,7 +21,7 @@ email link hits the `/verify` webhook. See the full architecture in
 | `/verify` webhook | `nem-verify.workflow.json` | ✅ **Live (validation core)** — workflow id `uKkMgMYoH5nOLoCR`, active; `https://reus.app.n8n.cloud/webhook/nem-verify?token=…`. Redirects → `nem-life-1.webflow.io/verificatie/{bevestigd,verlopen}` (staging; EN under `/en/verificatie/…`); `consumed` flips on validate. Report branch disabled. |
 | Anthropic report | Generate Report node | ✅ **Enabled + verified** (2026-07-07, exec #19) — `Anthropic API` Header Auth cred (`x-api-key`, id `FPiOec7GU6JFfFFf`, Will's own key) wired; `claude-opus-4-8` returns text, locale-correct, profile fields flow through. Retry-on-fail added (3× / 5s) for transient 529s. Running a **clearly-labelled stub** system prompt — swap in Alex's real prompt (one `system:` field on the node) when it lands. |
 | PDF generation | Render PDF node | ✅ **Enabled + verified** (2026-07-07, exec #22) — **PDFShift** (`https://api.pdfshift.io/v3/convert/pdf`), body `{ source: html }`, returns `application/pdf` (~40 kB). ⚠️ **Auth is `X-API-Key` header, NOT Basic auth** — use an *HTTP Header Auth* credential (Name `X-API-Key`, Value `sk_…`), id `9e4Kcyv9XnvbS6zx`. Currently `sandbox: true` in the body (free, watermarked) — remove for production. Free plan = 50 credits/mo, 1 MB/doc. |
-| MailerSend delivery | Send Report node | ⏳ Needs sender + API key |
+| MailerSend delivery | Send Report node | ✅ **Enabled + verified** (2026-07-07, exec #24) — MailerSend API, `MailerSend API` Header Auth cred (`Authorization: Bearer`, id `699carSHScI1ng0W`). New **Encode PDF** Code node base64-encodes the PDFShift binary before attaching (n8n filesystem binary → base64; `$json.pdfBase64`). **Currently sending from the MailerSend trial domain** `noreply@test-68zxl27ok1k4j905.mlsender.net` (delivers only to the account admin email) — repo template From is `hallo@nemlife.com` for production. Needs a verified sending domain for real users. |
 | NEM Matters newsletter add | Add To Newsletter node | ⏳ Needs group ID |
 
 ### ⏱ Resume here (next session)
@@ -39,7 +39,9 @@ These two credentials currently use **Will's personal accounts** for testing. Be
 | **Anthropic** | `Anthropic API` (id `FPiOec7GU6JFfFFf`, Header Auth `x-api-key`) | Will's own Anthropic API key | Alex creates an Anthropic account + API key → update the credential's Value. Billing then lands on Alex. |
 | **PDFShift** | `PDFShift Header` (id `9e4Kcyv9XnvbS6zx`, Header Auth `X-API-Key`) | Will's PDFShift free account (50 credits/mo) | Alex creates a PDFShift account + API key → update the credential's Value. Free tier is only 50 credits/mo + 1 MB/doc, so Alex likely needs a paid plan for real volume. |
 
-Only the credential **Value** changes — the workflow nodes and credential wiring stay as-is. No node edits needed. (MailerSend, when wired, is a third key Alex owns — see below.)
+| **MailerSend** | `MailerSend API` (id `699carSHScI1ng0W`, Header Auth `Authorization: Bearer`) | Will's MailerSend account, sending from the **trial domain** (`test-68zxl27ok1k4j905.mlsender.net`) which only delivers to Will's admin email | Alex creates a MailerSend account + API token → update the credential's Value, **and verify a real sending domain** (`nemlife.com`) via DNS (SPF/DKIM/return-path). Then change the Send Report `from.email` to `hallo@nemlife.com`. This is the one step that needs **DNS access**. |
+
+Only the credential **Value** changes for Anthropic + PDFShift (no node edits). MailerSend additionally needs a **verified domain** (DNS) + the `from.email` swapped from the trial domain to `hallo@nemlife.com` — that From address is the single node edit for go-live.
 
 Open decision remaining: none for PDF (PDFShift chosen). Next stage: **MailerSend** delivery.
 

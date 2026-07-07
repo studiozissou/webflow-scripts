@@ -154,6 +154,16 @@
     },
     {
       "parameters": {
+        "jsCode": "// Base64-encode the PDFShift binary so MailerSend can attach it.\n// (n8n Cloud stores binary on the filesystem, so $binary.data.data is a ref,\n// not base64 — read the buffer explicitly and encode it here.)\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const buf = await this.helpers.getBinaryDataBuffer(i, 'data');\n  out.push({ json: { ...items[i].json, pdfBase64: buf.toString('base64') } });\n}\nreturn out;"
+      },
+      "id": "b2000000-0000-4000-8000-00000000000e",
+      "name": "Encode PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 520]
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "https://api.mailersend.com/v1/email",
         "authentication": "genericCredentialType",
@@ -167,7 +177,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: { email: 'REPLACE_FROM@nemlife.nl', name: 'NEM Life' }, to: [ { email: $('Validate Token').first().json.email, name: $('Validate Token').first().json.firstName } ], subject: $('Validate Token').first().json.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport', text: $('Validate Token').first().json.locale === 'en' ? 'Your personal report is attached as a PDF.' : 'Je persoonlijke rapport zit als PDF in de bijlage.', attachments: [ { content: $binary.data.data, filename: 'NEM-rapport.pdf', disposition: 'attachment' } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemlife.com', name: 'NEM Life' }, to: [ { email: $('Validate Token').first().json.email, name: $('Validate Token').first().json.firstName } ], subject: $('Validate Token').first().json.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport', text: $('Validate Token').first().json.locale === 'en' ? 'Your personal report is attached as a PDF.' : 'Je persoonlijke rapport zit als PDF in de bijlage.', attachments: [ { content: $json.pdfBase64, filename: 'NEM-rapport.pdf', disposition: 'attachment' } ] }) }}",
         "options": {}
       },
       "id": "b2000000-0000-4000-8000-00000000000a",
@@ -271,7 +281,8 @@
     },
     "Generate Report": { "main": [[{ "node": "Build HTML", "type": "main", "index": 0 }]] },
     "Build HTML": { "main": [[{ "node": "Render PDF", "type": "main", "index": 0 }]] },
-    "Render PDF": { "main": [[{ "node": "Send Report", "type": "main", "index": 0 }]] },
+    "Render PDF": { "main": [[{ "node": "Encode PDF", "type": "main", "index": 0 }]] },
+    "Encode PDF": { "main": [[{ "node": "Send Report", "type": "main", "index": 0 }]] },
     "Send Report": { "main": [[{ "node": "Consent?", "type": "main", "index": 0 }]] },
     "Consent?": {
       "main": [

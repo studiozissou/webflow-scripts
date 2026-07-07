@@ -1329,7 +1329,10 @@ export default declareComponent(Quiz, {
     "NEM emotional pattern quiz: 20 questions → profile → gender-differentiated conclusion → opt-in → confirmation.",
   group: "Interactive",
   props: {
-    submitWebhookUrl: propTypes.Text({ name: "Submit Webhook URL" }),
+    submitWebhookUrl: propTypes.Text({
+      name: "Submit Webhook URL",
+      defaultValue: "https://reus.app.n8n.cloud/webhook/nem-submit",
+    }),
     reassuranceText: propTypes.Text({
       name: "Reassurance Text",
       defaultValue:

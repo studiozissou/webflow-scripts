@@ -933,6 +933,8 @@ test.describe(`${SLUG} — General`, () => {
   });
 
   test('mobile responsive: form fields usable at 375px', async ({ page }) => {
+    test.setTimeout(60_000); // full quiz flow at mobile width — pills stack, so
+    // Playwright auto-scrolls to each answer, pushing the run past the 30s default
     await page.setViewportSize({ width: 375, height: 812 });
     await loadPage(page);
     await answerAllQuestions(page, 'soms');

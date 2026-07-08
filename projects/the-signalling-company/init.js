@@ -83,6 +83,56 @@
     });
   }
 
+  /* ── Project video embeds ──────────────────────────────── */
+  /* Editors paste a plain YouTube URL into a CMS field bound to
+     an element with class .yt-embed. We swap it for a privacy-mode
+     (youtube-nocookie.com) iframe with autoplay + mute + controls. */
+
+  function getYouTubeId(url) {
+    if (!url) return null;
+    const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function mountYouTubeEmbed(el) {
+    if (el.dataset.ytMounted) return;
+
+    /* URL comes from a data attribute or the bound field's text. */
+    const url = el.dataset.ytUrl || el.textContent.trim();
+    const id = getYouTubeId(url);
+    if (!id) return;
+
+    el.dataset.ytMounted = 'true';
+
+    const params = new URLSearchParams({
+      autoplay: el.dataset.autoplay === 'false' ? '0' : '1',
+      mute: el.dataset.mute === 'false' ? '0' : '1',
+      controls: el.dataset.controls === 'false' ? '0' : '1',
+      rel: '0', // limit related videos to same channel
+      playsinline: '1',
+    });
+
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube-nocookie.com/embed/${id}?${params}`;
+    iframe.title = 'YouTube video player';
+    iframe.loading = 'lazy';
+    iframe.allow =
+      'accelerated-autoplay; autoplay; encrypted-media; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.style.cssText =
+      'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+
+    /* Responsive 16:9 wrapper on the host element. */
+    el.style.cssText += ';position:relative;padding-bottom:56.25%;height:0;overflow:hidden;';
+    el.textContent = '';
+    el.appendChild(iframe);
+  }
+
+  function setupProjectVideos() {
+    document.querySelectorAll('.yt-embed, [data-yt-url]').forEach(mountYouTubeEmbed);
+  }
+
   /* ── Loader helpers ────────────────────────────────────── */
 
   function loadScript(url) {
@@ -112,6 +162,7 @@
     setFooterYear();
     injectUTMTracking();
     moveNavSeeAll();
+    setupProjectVideos();
 
     /* Vendor deps (sequential where order matters) */
     for (const url of deps) {

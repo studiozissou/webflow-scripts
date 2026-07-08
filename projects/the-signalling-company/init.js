@@ -84,9 +84,10 @@
   }
 
   /* ── Project video embeds ──────────────────────────────── */
-  /* Editors paste a plain YouTube URL into a CMS field bound to
-     an element with class .yt-embed. We swap it for a privacy-mode
-     (youtube-nocookie.com) iframe with autoplay + mute + controls. */
+  /* Editors paste a plain YouTube URL into a CMS field bound to the
+     data-yt-url attribute of an embed element. We swap it for a
+     privacy-mode (youtube-nocookie.com) iframe with autoplay + mute
+     + controls. */
 
   function getYouTubeId(url) {
     if (!url) return null;
@@ -97,9 +98,8 @@
   function mountYouTubeEmbed(el) {
     if (el.dataset.ytMounted) return;
 
-    /* URL comes from a data attribute or the bound field's text. */
-    const url = el.dataset.ytUrl || el.textContent.trim();
-    const id = getYouTubeId(url);
+    /* URL comes from the CMS-bound data-yt-url attribute. */
+    const id = getYouTubeId(el.dataset.ytUrl);
     if (!id) return;
 
     el.dataset.ytMounted = 'true';
@@ -130,7 +130,7 @@
   }
 
   function setupProjectVideos() {
-    document.querySelectorAll('.yt-embed, [data-yt-url]').forEach(mountYouTubeEmbed);
+    document.querySelectorAll('[data-yt-url]').forEach(mountYouTubeEmbed);
   }
 
   /* ── Loader helpers ────────────────────────────────────── */

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-06-16",
+  "updated": "2026-07-09",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -210,6 +210,37 @@
       "description": "Translate all Dutch page names to English, ensure slugs are Dutch, rename CMS field displayNames to English Title Case, add missing help texts, flag orphaned fields. Collection-level names require manual Designer rename.",
       "spec": "projects/nem-life/.claude/specs/nem-backend-cleanup.md",
       "created": "2026-06-09"
+    },
+    {
+      "id": "nem-verify-report-email-and-pdf-branding",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "NEM Test report delivery: brand the covering email and the PDF report",
+      "description": "In the /verify n8n workflow (nem-verify.workflow.json), style the two visual surfaces of report delivery. (1) Send Report node (MailerSend): the covering email is currently plain text only — add a branded html body using table-based layout and inline styles so it renders across email clients including Outlook, keeping the existing text as the plain-text fallback. (2) Build HTML node: upgrade the report HTML that PDFShift renders into the attached PDF — add NEM logo header, brand colours, and layout for the mechanism scores, using modern CSS (Chromium engine allows flexbox, web fonts, @page margins). Support NL and EN locales for both surfaces. Re-import the workflow into n8n after editing (or apply live via the n8n MCP if deployed).",
+      "created": "2026-07-08"
+    },
+    {
+      "id": "nem-report-prompt-escaping-and-token-limit",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "NEM Test report prompt: make the prompt safe to edit and lift the token limit",
+      "description": "In the live /verify workflow the Anthropic system prompt is a single-quoted JavaScript string literal inside the Generate Report node's jsonBody expression, so the first apostrophe or newline in Alex's real prompt breaks the node silently (the browser already got its 302). Move the prompt into a Report Prompt Set node as a plain fixed-value string so JSON.stringify handles all escaping. Also lift max_tokens from the live value of 1024 to the intended 8000, switch $json references to explicit $('Validate Token') references, and re-sync the repo workflow JSON to live. Prerequisite for any mechanism that lets the client edit the prompt himself.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-prompt-escaping-and-token-limit.md",
+      "created": "2026-07-09"
+    },
+    {
+      "id": "nem-mailersend-trial-account-blocks-report-delivery",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P0",
+      "status": "Blocked",
+      "title": "Report delivery is failing in production: MailerSend is on a trial account",
+      "description": "Executions 30 and 35 on 2026-07-09 both failed at Send Report with 422 'You have reached trial account unique recipients limit. #MS42225'. Report generation, PDF render and encode all succeed; only delivery fails. Because Mark Consumed sits on the fast path, the token is consumed anyway, so the user sees the confirmed page, never receives a report, and cannot retry. Add To Newsletter also never runs, so consenting users are not subscribed. Blocked on Alex upgrading the MailerSend account off trial. Once unblocked, consider whether Mark Consumed should move back behind successful delivery, and add failure alerting to the report branch so silent failures surface. Corrects the backend README, which currently states MailerSend is production and that no credential work blocks go-live.",
+      "created": "2026-07-09"
     }
   ]
 }

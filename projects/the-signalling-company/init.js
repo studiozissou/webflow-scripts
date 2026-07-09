@@ -96,6 +96,11 @@
     return m ? m[1] : null;
   }
 
+  /* Responsive 16:9 wrapper appended to a host element's cssText — shared by
+     the mounted iframe and the click-to-play facade below. */
+  const RESPONSIVE_16_9 =
+    ';position:relative;padding-bottom:56.25%;height:0;overflow:hidden;';
+
   function mountYouTubeEmbed(el) {
     if (el.dataset.ytMounted) return;
 
@@ -125,13 +130,101 @@
       'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
 
     /* Responsive 16:9 wrapper on the host element. */
-    el.style.cssText += ';position:relative;padding-bottom:56.25%;height:0;overflow:hidden;';
+    el.style.cssText += RESPONSIVE_16_9;
     el.textContent = '';
     el.appendChild(iframe);
   }
 
+  /* ── YouTube click-to-play facade (QW2) ────────────────── */
+  /* A below-the-fold embed shouldn't pull the full YT player + Google
+     JS on load. Instead we paint a lightweight poster + play button and
+     only inject the real (privacy-mode) iframe on a genuine click — a
+     user gesture, so autoplay-with-sound is allowed. Opt in per element
+     with data-yt-facade; other [data-yt-url] embeds mount immediately. */
+
+  function mountYouTubeFacade(el) {
+    if (el.dataset.ytFacadeMounted) return;
+
+    const id = getYouTubeId(el.dataset.ytUrl);
+    if (!id) return;
+
+    el.dataset.ytFacadeMounted = 'true';
+    el.textContent = ''; /* replace any authored placeholder, like mountYouTubeEmbed */
+
+    /* Responsive 16:9 box (shared with mountYouTubeEmbed), plus a pointer
+       cursor over the whole poster. */
+    el.style.cssText += RESPONSIVE_16_9 + 'cursor:pointer;';
+
+    /* Poster: caller override, else YouTube maxres with an hq fallback. */
+    const poster = document.createElement('img');
+    poster.src =
+      el.dataset.ytPoster || `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+    poster.alt = ''; /* decorative — the button carries the label */
+    poster.loading = 'lazy';
+    poster.decoding = 'async';
+    poster.style.cssText =
+      'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;';
+    /* maxres is absent for some videos; fall back once, guarded to
+       prevent an onerror loop. */
+    if (!el.dataset.ytPoster) {
+      poster.onerror = () => {
+        poster.onerror = null;
+        poster.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+      };
+    }
+
+    /* Play button — a real, keyboard-focusable <button>. */
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Play video');
+    button.style.cssText =
+      'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'width:68px;height:48px;padding:0;border:0;border-radius:14px;' +
+      'background:rgba(18,18,18,0.8);cursor:pointer;display:flex;' +
+      'align-items:center;justify-content:center;';
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '24');
+    svg.setAttribute('height', '24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    const tri = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tri.setAttribute('d', 'M8 5v14l11-7z');
+    tri.setAttribute('fill', '#fff');
+    svg.appendChild(tri);
+    button.appendChild(svg);
+
+    /* One click handler on the whole box, so a mouse click anywhere on the
+       poster works (matching the pointer cursor). The button stays focusable
+       for keyboard users; its Enter/Space fires a click that bubbles up here,
+       so no separate listener is needed. mountYouTubeEmbed clears el and
+       injects the iframe (poster/button remove themselves); its ytMounted
+       guard prevents double-fire. We then move focus to the iframe so keyboard
+       users aren't dropped to <body>. Default to sound on — a real gesture
+       permits autoplay with audio. preventDefault guards against the host
+       being a Webflow Link Block (<a>). */
+    const activate = (event) => {
+      event.preventDefault();
+      if (el.dataset.mute === undefined) el.dataset.mute = 'false';
+      mountYouTubeEmbed(el);
+      const iframe = el.querySelector('iframe');
+      if (iframe) iframe.focus();
+    };
+    el.addEventListener('click', activate);
+
+    el.appendChild(poster);
+    el.appendChild(button);
+  }
+
   function setupProjectVideos() {
-    document.querySelectorAll('[data-yt-url]').forEach(mountYouTubeEmbed);
+    document.querySelectorAll('[data-yt-url]').forEach((el) => {
+      if (el.hasAttribute('data-yt-facade')) {
+        mountYouTubeFacade(el);
+      } else {
+        mountYouTubeEmbed(el);
+      }
+    });
   }
 
   /* ── Motion preference helper ──────────────────────────── */

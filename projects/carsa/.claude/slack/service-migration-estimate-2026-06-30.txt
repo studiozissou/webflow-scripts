@@ -1,0 +1,39 @@
+Hi Tomek, here's an outline and estimate for migrating service.carsa.co.uk onto the main site:
+
+*Context*
+The service microsite (8 pages) runs on a separate Webflow project at service.carsa.co.uk, branded as Carsa & HiQ, driving ~60 bookings/week across 5 locations.
+
+*Problem*
+Keeping services on a subdomain splits SEO authority and brand presence. HiQ branding is primary when it should be secondary and removing it later means touching a separate site.
+
+*Solution*
+Migrate all content to carsa.co.uk/mot-and-car-servicing using the existing design system. Two new pages (hub includes store locator section), a reusable cross-sell component, and schema markup:
+
+•  */mot-and-car-servicing* — hub page with service cards, locations, trust signals, FAQ (7 sections)
+•  */mot-and-car-servicing/{location}* — CMS template for 5 locations with Acuity booking embeds
+•  *Cross-sell section* on existing store and sell-car pages linking to bookings
+•  *"In partnership with HiQ"* callout designed as a removable component (CMS toggle for easy removal)
+•  *JSON-LD schema* for all new pages + validation
+•  *SEO checks* and acceptance testing
+
+Acuity embeds stay as-is for Phase 1. FAQ structure included — you write the content.
+
+*Benefits*
+•  Consolidates SEO onto the main domain so no more split authority with the subdomain
+•  Structured JSON-LD schema (Service, AutoRepair, LocalBusiness) makes service pages eligible for rich results in Google
+•  Clean URL structure (/mot-and-car-servicing, /mot-and-car-servicing/halesowen) targets high-intent local search terms like "MOT near me" and "car servicing {location}"
+•  HiQ branding removable via a single CMS toggle when you're ready to drop it
+•  Cross-sell sections on store pages capture service customers already browsing car sales
+
+*Risks*
+•  Temporary SEO dip on servicing terms while Google re-indexes the new URLs — 301 redirects will transfer authority but expect 2-4 weeks for rankings to settle
+•  301 redirects from service.carsa.co.uk need setup outside Webflow – Tech team task
+
+*Timing & pricing*
+•  Scope: 8 hours
+•  Rate: £100/hr
+•  Total: £800
+
+I should be able to start this next week with launch the week after or later in the week.
+
+Let me know if this works or if you want to adjust anything before I start.

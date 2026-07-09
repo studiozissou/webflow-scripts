@@ -996,11 +996,13 @@
       "project": "carsa",
       "type": "feature",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Blocked",
+      "blockedBy": "Webflow MCP is authorised to the wrong workspace; cannot see the Carsa site. Re-authorise against workspace 67caba0c5c72084908790f0b. See spec Task 0.",
       "title": "Migrate service.carsa.co.uk to main Carsa site",
-      "description": "Migrate 8-page service microsite to carsa.co.uk/servicing. New hub page (7 sections), CMS-driven location template (5 locations with Acuity embeds), winter health check page, cross-sell sections on store pages, JSON-LD schema, 301 redirects, SEO checks.",
+      "description": "Migrate 8-page service microsite to carsa.co.uk/mot-and-car-servicing. New hub page (7 sections), CMS-driven location template (5 locations with Acuity embeds), winter health check page, cross-sell sections on store pages, JSON-LD schema, 301 redirects, SEO checks. Spec v2 adds an automation map (60-70% scriptable via Webflow Data API), 10 source-site defects not to migrate, and a decision log rejecting Relume MCP and Claude Design.",
       "spec": "projects/carsa/.claude/specs/carsa-service-migration.md",
-      "created": "2026-06-30"
+      "created": "2026-06-30",
+      "updated": "2026-07-09"
     },
     {
       "id": "carsa-visual-regression-scaffold",

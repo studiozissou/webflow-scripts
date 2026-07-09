@@ -4,7 +4,7 @@ description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trel
 ---
 
 <objective>
-Scan all configured input sources (Gmail, Slack, Calendar, Trello), extract actionable tasks, detect blockers and dependencies, draft replies where needed, and create tasks in the Notion "Master Tasks" database. Notion is the source of truth — never overwrite existing tasks. Always ask the user when anything is unclear.
+Scan all configured input sources (Gmail, Slack, Calendar, Trello), extract actionable tasks, detect blockers and dependencies, draft replies where needed, and create tasks in the Notion "Tasks Tracker" database. Notion is the source of truth — never overwrite existing tasks. Always ask the user when anything is unclear.
 </objective>
 
 <hard_rules>
@@ -61,26 +61,40 @@ Skills to load:
 
 <notion_schema>
 
-## Master Tasks Database
+## Tasks Tracker Database
 
-Property names (exact spelling and capitalisation):
+Data source: `collection://226e1848-bb51-80e6-b02b-000bf42f3fca`
+
+Property names below are the **exact** spelling and capitalisation in Notion. Several use
+sentence case (`Task name`, `Due date`, `Parent task`) — do not Title Case them or the write
+will fail.
 
 | Property | Type | Values / Notes |
 |----------|------|----------------|
-| Task Name | title | Plain English, e.g. "Reply to Alex about Phase B pricing" |
-| Status | status | Inbox, To Do, In Progress, Waiting, Blocked, Done, Cancelled |
+| Task name | title | Plain English, e.g. "Reply to Alex about Phase B pricing" |
+| Status | status | Inbox, To Do, In progress, Waiting, Blocked, Done, Cancelled (plus Someday, Awaiting feedback, In Testing — user-managed, never set by triage). Note the lowercase `p` in "In progress" |
 | Priority | select | P0, P1, P2, P3 |
-| Due Date | date | Optional. Only set when explicitly stated or confirmed by user |
+| Due date | date | Optional. Only set when explicitly stated or confirmed by user |
 | Source | select | Gmail, Slack, Calendar, Trello, Meeting, Manual |
 | Source Link | url | Permalink to original message/event |
-| Source Context | rich_text | 2-3 sentences: why this was flagged + key excerpt from the message |
-| Source ID | rich_text | Dedup key: Gmail thread ID, Slack channel:ts, Calendar event ID |
-| Client | relation | Two-way relation to Clients DB (collection://229e1848-bb51-8018-888c-000b6dbead72) |
+| Source Context | text | 2-3 sentences: why this was flagged + key excerpt from the message |
+| Source ID | text | Dedup key: Gmail thread ID, Slack channel:ts, Calendar event ID |
+| Clients | relation | Two-way relation to Clients DB (collection://229e1848-bb51-8018-888c-000b6dbead72) |
 | Tags | multi_select | Flexible categorisation |
-| Parent Task | relation | Self-relation for subtask hierarchy |
-| Sub-tasks | relation | Reverse of Parent Task |
-| Blocked By | rich_text | Description of what's blocking + link to blocking task if known |
+| Parent task | relation | Self-relation for subtask hierarchy. Limit 1 |
+| Sub-task | relation | Reverse of Parent task |
+| Blocked by | relation | Self-relation. Use only when the blocker is another task in this DB |
+| Blocked Reason | text | Free-text blocker that isn't a task — "waiting on Tomek to confirm calendar IDs" |
 | Doer | select | Claude, User, User + Claude, External |
+
+### Properties triage must never write
+
+Tasks Tracker predates this skill and carries fields owned by the user or other workflows.
+Never set: `Description`, `Assignee`, `Person`, `Estimates`, `Hours Estimate`, `Price`,
+`Task type`, `Scheduled for`, `Webflow Link`, `Figma File`, `Google Drive File`, `Notes`,
+`Attach file`, `AI keywords`, `Blocking`.
+
+In particular `Description` is the user's own field — triage context goes in `Source Context`.
 
 ### Doer classification
 
@@ -119,16 +133,22 @@ If no matching command exists, set Doer to "User + Claude" and note what Claude 
 |--------|---------|--------|
 | Inbox | Just triaged, not yet reviewed by user | /triage auto |
 | To Do | User confirmed it's real, not started | User in Notion |
-| In Progress | Active work | User in Notion |
+| In progress | Active work | User in Notion |
 | Waiting | Blocked on someone else (e.g. no reply) | /triage auto or user |
 | Blocked | Blocked on another task | /triage auto or user |
 | Done | Complete | User in Notion |
 | Cancelled | Dropped | User in Notion |
 
+Tasks Tracker also carries `Someday`, `Awaiting feedback`, and `In Testing`. These are the
+user's own workflow states. Triage reads them but never writes them.
+
 ### When to set Waiting vs Blocked
 
-- **Waiting**: depends on an external person responding — "waiting on Tomek to confirm calendar IDs"
-- **Blocked**: depends on another task completing — "blocked by CMS collection setup"
+- **Waiting**: depends on an external person responding — "waiting on Tomek to confirm calendar IDs".
+  Record the reason in `Blocked Reason` (text). Leave `Blocked by` empty — a person is not a task.
+- **Blocked**: depends on another task completing — "blocked by CMS collection setup".
+  Link the blocking task via the `Blocked by` relation. Add `Blocked Reason` only if the
+  relation alone doesn't explain it.
 
 </notion_schema>
 
@@ -184,7 +204,7 @@ Create subtasks when a task has 3+ distinct deliverables, phases, or pages. Exam
 
 When creating subtasks:
 1. Create the parent task first
-2. Create each subtask with Parent Task relation pointing to the parent
+2. Create each subtask with `Parent task` relation pointing to the parent
 3. Parent task status stays "Inbox" — subtasks drive progress
 4. If some subtasks are blocked, mark those individually, not the parent
 
@@ -198,7 +218,7 @@ Look for blocking signals in messages:
 
 When a task is blocked/waiting:
 1. Set Status to "Waiting" or "Blocked"
-2. Fill the Blocked By field with a description
+2. Record the blocker — `Blocked by` relation if it's another task, otherwise `Blocked Reason` text
 3. Include in the Blocked/Waiting summary at the end of triage output
 
 </task_extraction>
@@ -239,7 +259,7 @@ Example: channel `C0973LJ2BTJ`, ts `1720278000.123456` →
 
 ### Slack client mapping
 
-Use the client field from config.json to auto-assign the Client relation:
+Use the client field from config.json to auto-assign the `Clients` relation:
 - Messages in `C0973LJ2BTJ` → Client: Carsa
 - Messages in `D049YCR485C` → Client: Tamsen Fadal
 - etc.
@@ -340,19 +360,48 @@ Draft Slack replies following similar principles:
 
 ## Preventing duplicate tasks
 
-Before creating any task in Notion:
+### Constraint: no exact-match querying
 
-1. Search Notion for existing tasks with matching Source ID
-   - Gmail: match on thread ID
-   - Slack: match on `channel_id:message_ts`
-   - Calendar: match on event ID
-   - Trello: match on card ID
-2. If found → skip (do not update, do not mention in output)
-3. If not found → include in the "New Tasks" table for approval
+`notion-query-data-sources` and `notion-query-database-view` both require a Notion Business
+plan with Notion AI. This workspace is not on that plan — both return HTTP 400. So there is
+**no way to query Notion for `Source ID = X`**. `notion-search` works, but it is a semantic
+search and will not reliably match an opaque ID like a Gmail thread ID.
 
-Also check for semantic duplicates:
-- If a task with a very similar name exists for the same client, flag it to the user:
-  "This looks similar to existing task 'X' — is this the same thing or separate?"
+Dedup therefore runs against a **local ledger** of already-processed Source IDs, with
+Notion search as a fallback safety net.
+
+### The ledger
+
+`.claude/triage/state.json` holds `processedSourceIds` — an append-only array of every
+Source ID that has been turned into a task. This is a dedup ledger, not a task list; it
+stores IDs only, never task state. Notion remains the source of truth for tasks.
+
+### Procedure
+
+Before creating any task:
+
+1. Build the Source ID:
+   - Gmail: thread ID
+   - Slack: `channel_id:message_ts`
+   - Calendar: event ID
+   - Trello: card ID
+   - Meeting notes: `notion-meeting:{page-id}`
+2. If the ID is in `processedSourceIds` → skip (do not update, do not mention in output)
+3. If not → run `notion-search` for the task's likely name, scoped to the Tasks Tracker
+   data source. If a close match exists for the same client, add to the questions list:
+   "This looks similar to existing task 'X' — same thing or separate?"
+4. Otherwise → include in the "New Tasks" table for approval
+5. After the user approves and the task is created, append the Source ID to
+   `processedSourceIds`
+
+Only append IDs for tasks that were **actually created**. If the user skips a task, leave
+its ID out so a later run can surface it again.
+
+### If the ledger is lost
+
+Deleting `state.json` means the next run re-proposes every task in the lookback window.
+Nothing is auto-created — the approval gate still stands — so the failure mode is a noisy
+triage report, not duplicate tasks in Notion.
 
 </dedup>
 
@@ -418,7 +467,8 @@ After the triage is complete and tasks are created:
 3. For each Slack channel/DM: set the channel's `lastProcessed` to the newest `message_ts`
 4. For Calendar: set `lastProcessed` to current ISO timestamp
 5. For Trello: set `lastProcessed` to current ISO timestamp
-6. Write the updated state to `.claude/triage/state.json`
+6. Append the Source ID of every task that was actually created to `processedSourceIds`
+7. Write the updated state to `.claude/triage/state.json`
 
 On next run, use these timestamps to only fetch new items since last triage.
 
@@ -432,30 +482,31 @@ If state.json has null timestamps (first run), use the lookback windows from con
 
 For each approved task:
 
-1. Search Clients DB for the client name, get the page ID for the relation
+1. Search Clients DB for the client name, get the page ID for the `Clients` relation
 2. If the task has a parent:
-   a. Search Master Tasks DB for the parent by name + client
-   b. If found, use its page ID for the Parent Task relation
+   a. Search Tasks Tracker for the parent by name + client
+   b. If found, use its page ID for the `Parent task` relation
    c. If not found, create the parent first, then link
 3. Create the task page with all properties:
-   - Use the Master Tasks data source ID from config as the parent
-   - Set Source ID for future dedup
-   - Set Source Link for easy reference
-   - Set Source Context with the reasoning
-   - Set Client relation
-   - Set Parent Task relation (if subtask)
-   - Set Blocked By (if blocked/waiting)
-   - Set Status to Inbox (unless Waiting/Blocked detected)
-   - Set Due Date only if explicitly confirmed
-   - Set Priority
+   - Use the Tasks Tracker data source ID from config as the parent
+   - Set `Source ID` for future dedup
+   - Set `Source Link` for easy reference
+   - Set `Source Context` with the reasoning — never `Description`
+   - Set `Clients` relation
+   - Set `Parent task` relation (if subtask)
+   - Set `Blocked by` relation and/or `Blocked Reason` (if blocked/waiting)
+   - Set `Status` to Inbox (unless Waiting/Blocked detected)
+   - Set `Due date` only if explicitly confirmed
+   - Set `Priority`
+   - Set `Doer`
 4. Log the created task name + Notion URL
 
 ## First-run setup
 
 If `notion.databaseId` is null in config.json:
-1. Tell the user they need to create the Master Tasks database in Notion first
+1. Tell the user they need to point config.json at a tasks database
 2. Provide the exact schema from <notion_schema> above
-3. After creation, they should update config.json with the database ID and data source ID
+3. After setup, they should update config.json with the database ID and data source ID
 4. Alternatively, if Notion MCP `create-database` works, offer to create it automatically
 
 </notion_creation>

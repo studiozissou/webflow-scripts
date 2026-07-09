@@ -34,10 +34,14 @@ If a required MCP is unavailable, warn the user and skip that source. If Notion 
 
 ### Step 2 — Check Notion database
 
+Config points at the **Tasks Tracker** database
+(`226e1848-bb51-80ab-8c0e-e431e66548d4`, data source
+`collection://226e1848-bb51-80e6-b02b-000bf42f3fca`).
+
 If `config.notion.databaseId` is null:
-1. Tell the user: "The Master Tasks Notion database hasn't been set up yet."
+1. Tell the user the tasks database hasn't been configured yet
 2. Offer to create it via Notion MCP `create-database` with the schema from the triage skill
-3. Or instruct the user to create it manually and update config.json
+3. Or instruct the user to point config.json at an existing DB
 4. Do not proceed with Notion creation until the DB exists — but still run the triage and present results
 
 ### Step 3 — Scan all sources in parallel
@@ -84,10 +88,14 @@ Using the results from all agents:
 
 ### Step 5 — Dedup against Notion
 
+Notion's query tools require a Business plan and are unavailable here, so dedup runs
+against the local `processedSourceIds` ledger in state.json. See the triage skill's
+`<dedup>` section.
+
 For each extracted task:
-1. Search Notion Master Tasks DB for matching Source ID
+1. Check the Source ID against `state.processedSourceIds`
 2. If found → skip (already triaged)
-3. If not found → check for semantic duplicates (similar name + same client)
+3. If not found → check for semantic duplicates via `notion-search` (similar name + same client)
 4. If semantic match → add to questions list: "Is this the same as existing task 'X'?"
 
 ### Step 6 — Present triage report
@@ -122,7 +130,7 @@ Based on user's choice:
 
 **Notion task creation:**
 1. Search Clients DB for each client name → get relation page IDs
-2. Create parent tasks first, then subtasks (so Parent Task relation can be set)
+2. Create parent tasks first, then subtasks (so the `Parent task` relation can be set)
 3. Set all properties per the triage skill schema (including Doer)
 4. Log each created task with Notion URL
 
@@ -155,8 +163,9 @@ After executing approved actions, if any tasks have Doer = "Claude":
 
 ### Step 9 — Update state
 
-1. Write updated timestamps to `.claude/triage/state.json`
-2. Print summary:
+1. Append the Source ID of every task that was actually created to `processedSourceIds`
+2. Write updated timestamps to `.claude/triage/state.json`
+3. Print summary:
    ```
    ── Triage Complete ──
    Sources scanned: Gmail (X threads), Slack (Y messages), Calendar (Z events)

@@ -10,6 +10,7 @@
 (() => {
   const src = (document.currentScript && document.currentScript.src) || '';
   const BASE = src.substring(0, src.lastIndexOf('/') + 1);
+  const DEBUG = false;
 
   /* ── Vendor deps (loaded first) ────────────────────────── */
   const deps = [
@@ -133,6 +134,144 @@
     document.querySelectorAll('[data-yt-url]').forEach(mountYouTubeEmbed);
   }
 
+  /* ── Motion preference helper ──────────────────────────── */
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /* ── Lazy-mount helper ─────────────────────────────────── */
+  /* Observe each element once; when it nears the viewport, fire the
+     callback and stop observing it. Shared by the deferred-load quick
+     wins below. */
+
+  function observeOnce(elements, onEnter, options) {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        obs.unobserve(entry.target);
+        onEnter(entry.target);
+      });
+    }, options);
+    elements.forEach((el) => observer.observe(el));
+  }
+
+  /* ── Deferred Spline runtime (QW1) ─────────────────────── */
+  /* The Spline WebGL runtime is heavy. Instead of loading it on page
+     load, we wait until the host element nears the viewport, then
+     lazy-import the ES module runtime and mount the scene. Hosts are
+     marked in the Designer with data-spline-defer="<sceneUrl>" and carry
+     a reserved height so there's no layout shift. */
+
+  async function mountSpline(el) {
+    const sceneUrl = el.dataset.splineDefer;
+    if (!sceneUrl) return;
+
+    /* Browsers memoise dynamic import() by resolved specifier, so a
+       repeat import of the same pinned URL never re-fetches. */
+    let canvas;
+    try {
+      const { Application } = await import(
+        'https://cdn.jsdelivr.net/npm/@splinetool/runtime@1.9.28/build/runtime.js'
+      );
+      canvas = document.createElement('canvas');
+      el.appendChild(canvas);
+      await new Application(canvas).load(sceneUrl);
+    } catch (error) {
+      /* Restore the static fallback/poster: drop the empty canvas. */
+      if (canvas) canvas.remove();
+      DEBUG && console.warn('[TSC] Spline mount failed', error);
+    }
+  }
+
+  function setupDeferredSpline() {
+    const hosts = document.querySelectorAll('[data-spline-defer]');
+    if (!hosts.length) return;
+
+    /* Respect reduced motion and data-saver: leave the static poster. */
+    const saveData = navigator.connection && navigator.connection.saveData;
+    if (prefersReducedMotion() || saveData) return;
+
+    observeOnce(
+      hosts,
+      (el) => {
+        if (el.dataset.splineMounted) return;
+        el.dataset.splineMounted = 'true';
+        mountSpline(el);
+      },
+      { rootMargin: '600px 0px' }
+    );
+  }
+
+  /* ── Deferred CTA background video (QW3) ───────────────── */
+  /* The bottom CTA background video is a large 1080p MP4 sitting far
+     below the fold. We strip autoplay/preload so nothing is fetched on
+     load, then start playback only when it nears the viewport. */
+
+  function setupDeferredVideos() {
+    const wrappers = document.querySelectorAll('.video_cta');
+    if (!wrappers.length) return;
+
+    const reduce = prefersReducedMotion();
+    const videos = [];
+
+    wrappers.forEach((node) => {
+      const video =
+        node.tagName === 'VIDEO' ? node : node.querySelector('video');
+      if (!video || video.dataset.deferProcessed) return;
+      video.dataset.deferProcessed = 'true';
+
+      video.preload = 'none';
+      video.removeAttribute('autoplay');
+      video.autoplay = false;
+      video.muted = true;
+      video.playsInline = true;
+
+      /* Reduced motion: keep the poster, never auto-start playback. */
+      if (!reduce) videos.push(video);
+    });
+
+    observeOnce(
+      videos,
+      (video) => {
+        video.preload = 'auto';
+        video.play().catch(() => {}); /* swallow autoplay-policy rejection */
+      },
+      { rootMargin: '200px 0px' }
+    );
+  }
+
+  /* ── Hero reveal failsafe (QW4) ────────────────────────── */
+  /* The hero headline (LCP) is held hidden until a GSAP SplitText reveal
+     runs. If GSAP is blocked or never runs, force the headline visible so
+     it's never permanently hidden. SplitText generates .gsap_split_line
+     nodes at runtime, so we query at reveal time (not boot time) and fall
+     back to the authored <h1> if the split hasn't happened. */
+
+  function revealHeroFailsafe() {
+    const reveal = () => {
+      const lines = document.querySelectorAll('.gsap_split_line');
+      const targets = lines.length ? lines : document.querySelectorAll('h1');
+      targets.forEach((el) => {
+        const cs = getComputedStyle(el);
+        if (cs.opacity === '0') el.style.opacity = '1';
+        if (cs.visibility === 'hidden') el.style.visibility = 'visible';
+      });
+    };
+
+    /* Reduced motion: reveal immediately, and again shortly after in case
+       SplitText generates the lines a beat later. */
+    if (prefersReducedMotion()) {
+      reveal();
+      setTimeout(reveal, 300);
+      return;
+    }
+
+    /* Otherwise let the GSAP reveal win; only force visibility as a last
+       resort if it hasn't run within ~1s. */
+    setTimeout(reveal, 1000);
+  }
+
   /* ── Loader helpers ────────────────────────────────────── */
 
   function loadScript(url) {
@@ -163,6 +302,11 @@
     injectUTMTracking();
     moveNavSeeAll();
     setupProjectVideos();
+
+    /* Performance quick-wins — each sets up its own observers/timeouts */
+    setupDeferredSpline();
+    setupDeferredVideos();
+    revealHeroFailsafe();
 
     /* Vendor deps (sequential where order matters) */
     for (const url of deps) {

@@ -177,7 +177,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemlife.com', name: 'NEM Life' }, to: [ { email: $('Validate Token').first().json.email, name: $('Validate Token').first().json.firstName } ], subject: $('Validate Token').first().json.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport', text: $('Validate Token').first().json.locale === 'en' ? 'Your personal report is attached as a PDF.' : 'Je persoonlijke rapport zit als PDF in de bijlage.', attachments: [ { content: $json.pdfBase64, filename: 'NEM-rapport.pdf', disposition: 'attachment' } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemmatters.com', name: 'NEM Life' }, to: [ { email: $('Validate Token').first().json.email, name: $('Validate Token').first().json.firstName } ], subject: $('Validate Token').first().json.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport', text: $('Validate Token').first().json.locale === 'en' ? 'Your personal report is attached as a PDF.' : 'Je persoonlijke rapport zit als PDF in de bijlage.', attachments: [ { content: $json.pdfBase64, filename: 'NEM-rapport.pdf', disposition: 'attachment' } ] }) }}",
         "options": {}
       },
       "id": "b2000000-0000-4000-8000-00000000000a",
@@ -223,7 +223,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ email: $('Validate Token').first().json.email, fields: { name: $('Validate Token').first().json.firstName }, groups: [ 'REPLACE_NEM_MATTERS_GROUP_ID' ], status: 'active' }) }}",
+        "jsonBody": "={{ JSON.stringify({ email: $('Validate Token').first().json.email, fields: { name: $('Validate Token').first().json.firstName }, groups: [ '157087585777223620' ], status: 'active' }) }}",
         "options": {}
       },
       "id": "b2000000-0000-4000-8000-00000000000c",

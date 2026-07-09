@@ -18,32 +18,148 @@ email link hits the `/verify` webhook. See the full architecture in
 | MailerLite — double opt-in | account setting | ✅ **Disabled for API/integrations** — subscribers land Active, no MailerLite opt-in email |
 | MailerLite — verification automation + email | `mailerlite-verification.md` | ✅ **Built + verified** — email arrives, `{$nem_verify_url}` resolves to the tokened link |
 | Component prop wiring | `src/nem-test-phase-b.tsx` | ⏳ Paste submit URL into `submitWebhookUrl` in Webflow Designer |
-| `/verify` webhook | `nem-verify.workflow.json` | ✅ **Live (validation core)** — workflow id `uKkMgMYoH5nOLoCR`, active; `https://reus.app.n8n.cloud/webhook/nem-verify?token=…`. Redirects → `nem-life-1.webflow.io/verificatie/{bevestigd,verlopen}` (staging; EN under `/en/verificatie/…`); `consumed` flips on validate. Report branch disabled. |
-| Anthropic report | Generate Report node | ✅ **Enabled + verified** (2026-07-07, exec #19) — `Anthropic API` Header Auth cred (`x-api-key`, id `FPiOec7GU6JFfFFf`, Will's own key) wired; `claude-opus-4-8` returns text, locale-correct, profile fields flow through. Retry-on-fail added (3× / 5s) for transient 529s. Running a **clearly-labelled stub** system prompt — swap in Alex's real prompt (one `system:` field on the node) when it lands. |
-| PDF generation | Render PDF node | ✅ **Enabled + verified** (2026-07-07, exec #22) — **PDFShift** (`https://api.pdfshift.io/v3/convert/pdf`), body `{ source: html }`, returns `application/pdf` (~40 kB). ⚠️ **Auth is `X-API-Key` header, NOT Basic auth** — use an *HTTP Header Auth* credential (Name `X-API-Key`, Value `sk_…`), id `9e4Kcyv9XnvbS6zx`. Currently `sandbox: true` in the body (free, watermarked) — remove for production. Free plan = 50 credits/mo, 1 MB/doc. |
-| MailerSend delivery | Send Report node | ✅ **Enabled + verified** (2026-07-07, exec #24) — MailerSend API, `MailerSend API` Header Auth cred (`Authorization: Bearer`, id `699carSHScI1ng0W`). New **Encode PDF** Code node base64-encodes the PDFShift binary before attaching (n8n filesystem binary → base64; `$json.pdfBase64`). **Currently sending from the MailerSend trial domain** `noreply@test-68zxl27ok1k4j905.mlsender.net` (delivers only to the account admin email) — repo template From is `hallo@nemlife.com` for production. Needs a verified sending domain for real users. |
-| NEM Matters newsletter add | Add To Newsletter node | ⏳ Needs group ID |
+| `/verify` webhook | `nem-verify.workflow.json` | ✅ **Live (full chain)** — workflow id `uKkMgMYoH5nOLoCR`, active; `https://reus.app.n8n.cloud/webhook/nem-verify?token=…`. Redirects → `nem-life-1.webflow.io/verificatie/{bevestigd,verlopen}` (staging; EN under `/en/verificatie/…`); `consumed` flips on validate. Report branch **enabled + verified e2e** (2026-07-09, exec #32). |
+| Anthropic report | Generate Report node | ✅ **Production** (verified exec #19, #28, #32) — `Anthropic API` Header Auth cred (`x-api-key`, id `FPiOec7GU6JFfFFf`, **client's key** since 2026-07-08) wired; `claude-opus-4-8` returns text, locale-correct, profile fields flow through. Retry-on-fail added (3× / 5s) for transient 529s. Running a **clearly-labelled stub** system prompt — swap in Alex's real prompt (one `system:` field on the node) when it lands. |
+| PDF generation | Render PDF node | ✅ **Production** (2026-07-09, exec #32) — **PDFShift** (`https://api.pdfshift.io/v3/convert/pdf`), body `{ source: html }`, returns `application/pdf` (~21 kB unwatermarked; was ~40 kB in sandbox). ⚠️ **Auth is `X-API-Key` header, NOT Basic auth** — *HTTP Header Auth* credential (Name `X-API-Key`, Value `sk_…` **raw key, no `Bearer` prefix**), id `9e4Kcyv9XnvbS6zx`. Now on **client's key**. `sandbox` removed from the body — every call bills a credit. |
+| MailerSend delivery | Send Report node | ✅ **Production** (2026-07-09, exec #32) — MailerSend API, `MailerSend API` Header Auth cred (Name `Authorization`, Value **`Bearer mlsn.…`** — the `Bearer ` prefix is required, unlike PDFShift), id `699carSHScI1ng0W`. Now on **client's key**, scope **"Sending access"** (sufficient; only endpoint used is `POST /v1/email`). **Encode PDF** Code node base64-encodes the PDFShift binary before attaching (n8n filesystem binary → base64; `$json.pdfBase64`). Sending from **`hallo@nemmatters.com`** — `nemmatters.com` verified in MailerSend. |
+| NEM Matters newsletter add | Add To Newsletter node | ✅ **Enabled + verified** (2026-07-09, exec #37) — MailerLite group `157087585777223620` ("NEM Matters NL"). `Consent?` gate enabled alongside. ⚠️ **All locales land in the NL group** — EN users get the Dutch list. See *Known issue* below. ⚠️ The node had **no credential attached** in the live workflow; bound to `MailerLite API` (id `wQ0hWw0KfZHraJs1`). The repo template carries no credentials by convention — **attach it manually after any re-import** or the node 401s. |
 
 ### ⏱ Resume here (next session)
 
 1. ~~**Wire `/verify` validation core**~~ ✅ **Done 2026-07-07** — workflow live (id `uKkMgMYoH5nOLoCR`), Data Table `ib5Yh0yEfNpDqeuU` wired into Get Profile + Mark Consumed, `REPLACE_SITE` → `nem-life-1.webflow.io`. All 5 cases pass (valid NL/EN → `/bevestigd`; reused/expired/unknown → `/verlopen`; `consumed` flips only on valid). Confirmation pages live at `/verificatie/bevestigd` + `/verificatie/verlopen` (separate static folder — can't share the `zelftesten` CMS collection slug). EN mirror pages `/en/verificatie/…` still need confirming.
-2. Then layer in Anthropic → PDF → MailerSend → newsletter, per the staged order in the `/verify` section below. The 4 report-branch nodes are currently **disabled** in the live workflow — enable them one stage at a time.
-3. Finally, paste the submit URL into the component's `submitWebhookUrl` prop so the real quiz hits the live backend.
+2. ~~**Layer in Anthropic → PDF → MailerSend**~~ ✅ **Done 2026-07-09** — full chain verified end to end (exec #31 `/submit` → exec #32 `/verify`): row stored, MailerLite verification accepted, Anthropic stub report, 21 kB unwatermarked PDF, MailerSend 202 from `hallo@nemmatters.com`, `consumed` flipped, replay → `/verlopen`.
+3. **Add To Newsletter** — still disabled, still needs the NEM Matters MailerLite group ID (`REPLACE_NEM_MATTERS_GROUP_ID`). `Consent?` gate is disabled alongside it.
+4. **Swap in Alex's real report prompt** — one `system:` field on the Generate Report node; currently a clearly-labelled stub.
+5. Finally, paste the submit URL into the component's `submitWebhookUrl` prop so the real quiz hits the live backend.
 
-### 🔑 Handover — keys to transfer to Alex before go-live
+### 🔑 Handover — credentials (✅ complete)
 
-These two credentials currently use **Will's personal accounts** for testing. Before production, Alex must create his own and the n8n credentials must be repointed:
+| Service | n8n credential | Status | Notes |
+|---------|---------------|--------|-------|
+| **Anthropic** | `Anthropic API` (id `FPiOec7GU6JFfFFf`, Header Auth `x-api-key`) | ✅ **Transferred 2026-07-08** | Client's key in place (credential `updatedAt` 2026-07-08 13:37; verified by exec #28 immediately after, and again by exec #32). Value is the **raw key — no `Bearer` prefix**. Billing now lands on Alex. |
+| **PDFShift** | `PDFShift Header` (id `9e4Kcyv9XnvbS6zx`, Header Auth `X-API-Key`) | ✅ **Transferred 2026-07-09** | Client's key in place, verified exec #32. Value is the **raw `sk_…` key — no `Bearer` prefix**. `sandbox` removed, so every call now bills a credit; watch the plan's monthly credit cap and 1 MB/doc limit. |
+| **MailerSend** | `MailerSend API` (id `699carSHScI1ng0W`, Header Auth `Authorization`) | ✅ **Transferred 2026-07-09** | Client's token in place, scope **"Sending access"** (sufficient — only `POST /v1/email` is used). Value **must** read `Bearer mlsn.…`; a bare key returns 401. `nemmatters.com` verified in MailerSend + MailerLite; Send Report `from.email` = `hallo@nemmatters.com`. |
 
-| Service | n8n credential | Currently | Action for handover |
-|---------|---------------|-----------|---------------------|
-| **Anthropic** | `Anthropic API` (id `FPiOec7GU6JFfFFf`, Header Auth `x-api-key`) | Will's own Anthropic API key | Alex creates an Anthropic account + API key → update the credential's Value. Billing then lands on Alex. |
-| **PDFShift** | `PDFShift Header` (id `9e4Kcyv9XnvbS6zx`, Header Auth `X-API-Key`) | Will's PDFShift free account (50 credits/mo) | Alex creates a PDFShift account + API key → update the credential's Value. Free tier is only 50 credits/mo + 1 MB/doc, so Alex likely needs a paid plan for real volume. |
+**Auth prefix gotcha** — MailerSend needs a `Bearer ` prefix and the other two don't. Easiest thing to get wrong:
 
-| **MailerSend** | `MailerSend API` (id `699carSHScI1ng0W`, Header Auth `Authorization: Bearer`) | Will's MailerSend account, sending from the **trial domain** (`test-68zxl27ok1k4j905.mlsender.net`) which only delivers to Will's admin email | Alex creates a MailerSend account + API token → update the credential's Value, **and verify a real sending domain** (`nemlife.com`) via DNS (SPF/DKIM/return-path). Then change the Send Report `from.email` to `hallo@nemlife.com`. This is the one step that needs **DNS access**. |
+| Credential | Header name | Value |
+|---|---|---|
+| `Anthropic API` | `x-api-key` | `sk-ant-…` (raw, **no** prefix) |
+| `PDFShift Header` | `X-API-Key` | `sk_…` (raw, **no** prefix) |
+| `MailerSend API` | `Authorization` | `Bearer mlsn.…` (**with** prefix) |
 
-Only the credential **Value** changes for Anthropic + PDFShift (no node edits). MailerSend additionally needs a **verified domain** (DNS) + the `from.email` swapped from the trial domain to `hallo@nemlife.com` — that From address is the single node edit for go-live.
+**All three credentials are now on the client's accounts.** No credential work blocks go-live.
 
-Open decision remaining: none for PDF (PDFShift chosen). Next stage: **MailerSend** delivery.
+### 🌐 Known issue — every subscriber lands in the NL newsletter group
+
+`Add To Newsletter` hardcodes a single group and does **not** branch on `locale`:
+
+```js
+groups: [ '157087585777223620' ]   // "NEM Matters NL"
+```
+
+So an **English-locale user who consents is added to the Dutch list** and will receive Dutch
+campaigns. Nothing errors — it's silently wrong. Needs an EN split before any campaign is sent to
+this list.
+
+**Confirmed live, not theoretical.** Exec #40 (2026-07-09) ran a `locale: 'en'` profile with
+`nemMattersConsent: true`. MailerLite returned the subscriber in `157087585777223620`
+("NEM Matters NL"). The English report itself was correct — see the localisation note below — but
+the group was wrong.
+
+**Two ways to fix it.** The data needed is already present, so the cheap option is real:
+
+1. **Segment (no code).** `/submit` already writes a `nem_locale` custom field onto every MailerLite
+   subscriber (`nl` / `en`), and it survives the later upsert from `Add To Newsletter` — confirmed
+   in exec #37, where the record still read `nem_locale: "nl"`. Alex can build a MailerLite segment
+   on `nem_locale = en` today and target campaigns at it. No workflow change at all.
+2. **Separate group (one node edit).** Create a "NEM Matters EN" group, then branch:
+   `groups: [ locale === 'en' ? '<EN_GROUP_ID>' : '157087585777223620' ]`. Needs the EN group ID
+   from Alex.
+
+**Recommendation:** the segment. It's zero-risk, works retroactively on subscribers already in the
+list, and needs no deploy. Prefer a group only if MailerLite automations are wanted per-language,
+since automations trigger on group join.
+
+⚠️ **Hardening either way:** `Add To Newsletter` writes only `fields: { name }`. It relies on
+`/submit` having set `nem_locale` earlier. That holds for every real user today (all subscribers
+arrive via `/submit`), but a subscriber created any other way would have no locale and fall out of
+the segment. Adding `nem_locale` to that node's `fields` makes the segment self-sufficient — one
+line, not yet done.
+
+Exec #40 showed the subscriber's `nem_locale` reading `nl` on an EN run. **That was a test artifact,
+not a bug** — the row was inserted straight into the Data Table to dodge `/submit`'s rate limiter,
+so `/submit` never wrote the EN locale. In the real flow `/submit` always runs first and sets it
+correctly. It does illustrate the point above: the field is only ever as fresh as the last
+`/submit`, and `Add To Newsletter` never refreshes it at the moment consent is actually given.
+
+### 🌍 Localisation — status
+
+| Surface | EN handled? | Evidence |
+|---|---|---|
+| Verify redirect | ✅ | Exec #40 → `/en/verificatie/bevestigd` |
+| Anthropic report text | ✅ | Exec #40 — report written in English |
+| PDF heading + greeting | ✅ | `Build HTML` branches: "Your NEM Test report" / "Dear" |
+| Email subject | ✅ | `'Your NEM Test report'` vs `'Jouw NEM Test rapport'` |
+| Email body (`text`) | ✅ | `'Your personal report is attached as a PDF.'` |
+| **PDF filename** | ❌ | Always `NEM-rapport.pdf`, even for EN users. Cosmetic; unfixed. |
+| **Newsletter group** | ❌ | EN users land in the NL group — see above. |
+| MailerLite verification email | ❓ | Automation lives in the MailerLite UI. Whether it branches on `nem_locale` is **unverified** — check with Alex before EN launch. |
+
+The report chain is localised end to end and was verified in English on 2026-07-09 (exec #40). The
+two ❌ rows and the ❓ row are the outstanding gaps.
+
+### 📊 Email analytics — currently impossible, by construction
+
+MailerSend Analytics shows **0.00% opened** across all sends. This is not low engagement: the
+Send Report node sends `text` only, with **no `html` body**. Open tracking works by injecting a
+tracking pixel into the HTML part, and click tracking by rewriting links in it. No HTML → no pixel,
+no links, no data. Ever.
+
+To enable, add to the Send Report payload (all verified against MailerSend's `POST /v1/email` docs):
+
+```js
+html: emailHtml,                                   // required for any tracking at all
+settings: { track_opens: true, track_clicks: true },
+reply_to: { email: '…', name: 'NEM Life' },
+tags: [ 'report' ],                                // max 5 tags, 191 chars each
+```
+
+- **`tags` do not enable tracking.** They are purely a filter/reporting label — the "Tags" dropdown
+  in the Analytics view. Useful once a second email type exists; today every MailerSend send is a
+  report email (verification goes via MailerLite).
+- **`html` and `template_id` are mutually exclusive.** Use raw content *or* a template, not both.
+- `emailHtml` must be a **new, short** string — do **not** reuse `$json.html` from `Build HTML`,
+  which is the full report destined for the PDF. Email HTML is its own dialect: tables not
+  flex/grid, inline styles, ~600px, no web fonts (the Montserrat/Georgia stack will not load).
+- Open rates are soft data — Apple Mail Privacy Protection pre-fetches images and inflates them.
+  Clicks are more trustworthy, and there is nothing to click while the report is an attachment.
+
+Opens are recorded **on MailerSend's side**, not in GA or Webflow. Read them in the MailerSend
+dashboard (Activity + Analytics). A webhook → n8n is available if the numbers are ever wanted in our
+own system (HMAC-SHA256 `Signature` header; creatable from the dashboard, no API needed).
+
+> Correction to an earlier note: it was claimed that a "Sending access" token cannot read the
+> Activity/Analytics API. That was an inference from MailerSend's permission model and is **not
+> stated in their docs**. Sending access is still definitely sufficient for `POST /v1/email`, which
+> is the only endpoint used. If API reads are ever wanted, just try the token and see if it 403s.
+
+### 🚨 Go-live blocker — MailerSend is still a trial account
+
+Discovered 2026-07-09 (exec #35). Verifying `nemmatters.com` was necessary but **not sufficient**:
+
+```
+422 — You have reached trial account unique recipients limit. #MS42225
+```
+
+A MailerSend **trial** account can only ever email a small, fixed set of *unique recipients*. The
+domain is verified and the token is valid — sends to an already-seen recipient succeed (exec #37),
+but the first **new** address is refused. In production every user is a new unique recipient, so
+**every report email would fail** until the account is upgraded to a paid plan.
+
+This is not something we can fix from n8n. **Alex must upgrade the MailerSend account.** Re-test with
+a never-before-used recipient afterwards to confirm the cap is lifted — testing with an old address
+will pass regardless and tell you nothing.
 
 **Design note (2026-07-07):** `Mark Consumed` was moved onto the *fast path* — it now fires alongside the confirm redirect, not at the tail of the report chain. Rationale: in the original graph `consumed` only flipped after the newsletter-add, so any failure in the report/PDF/email steps left the token replayable. The workflow JSON in this repo reflects the fix.
 

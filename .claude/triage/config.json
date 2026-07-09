@@ -26,9 +26,9 @@
     "boards": []
   },
   "notion": {
-    "databaseName": "Master Tasks",
-    "databaseId": null,
-    "dataSourceId": null,
+    "databaseName": "Tasks Tracker",
+    "databaseId": "226e1848-bb51-80ab-8c0e-e431e66548d4",
+    "dataSourceId": "collection://226e1848-bb51-80e6-b02b-000bf42f3fca",
     "clientsDbDataSourceId": "collection://229e1848-bb51-8018-888c-000b6dbead72",
     "defaultStatus": "Inbox"
   }

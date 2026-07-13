@@ -1,0 +1,49 @@
+<!--
+  Dejonghe & Morley — "Read full bio" modal safety net
+  Placement: Webflow → Home page → Settings → Custom Code → Before </body>
+  Purpose: Open/close the bio modals with vanilla JS so they DON'T depend on the
+  Webflow IX2 runtime (which can be blocked by iOS content/tracking protection,
+  leaving the links dead). See specs/bio-modal-ios-fix.md.
+
+  Trigger: any element carrying the custom attribute  data-link="bio-open"
+  (add it in Webflow to each "Read full bio" element — Element settings → Custom attributes:
+   Name = data-link, Value = bio-open). Tag-agnostic and independent of class/text.
+-->
+<script>
+(function () {
+  var DUR = 400;
+  function reveal(modal){
+    var wrap = modal.querySelector('.modal2_content-wrapper');
+    var ov   = modal.querySelector('.modal2_background-overlay');
+    modal.style.display = 'flex'; modal.offsetHeight; /* reflow so transition runs */
+    if(wrap){ wrap.style.transition='transform '+DUR+'ms ease'; wrap.style.transform='translate3d(0%,0,0)'; }
+    if(ov){ ov.style.transition='opacity '+DUR+'ms ease'; ov.style.opacity='1'; }
+    modal.setAttribute('data-bio-open','true');
+    document.documentElement.style.overflow='hidden';
+  }
+  function hide(modal){
+    var wrap = modal.querySelector('.modal2_content-wrapper');
+    var ov   = modal.querySelector('.modal2_background-overlay');
+    if(wrap){ wrap.style.transform='translate3d(100%,0,0)'; }
+    if(ov){ ov.style.opacity='0'; }
+    modal.removeAttribute('data-bio-open');
+    document.documentElement.style.overflow='';
+    setTimeout(function(){ if(!modal.hasAttribute('data-bio-open')) modal.style.display='none'; }, DUR);
+  }
+  function init(){
+    var links = document.querySelectorAll('[data-link="bio-open"]');
+    links.forEach(function(link){
+      var modal = link.nextElementSibling;
+      if(!modal || !modal.classList.contains('modal2_component')) return;
+      link.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); reveal(modal); });
+      modal.querySelectorAll('.modal2_close-button').forEach(function(btn){
+        btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); hide(modal); }); });
+      var ov = modal.querySelector('.modal2_background-overlay');
+      if(ov) ov.addEventListener('click', function(e){ e.preventDefault(); hide(modal); });
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key==='Escape'){ document.querySelectorAll('.modal2_component[data-bio-open]').forEach(hide); } });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>

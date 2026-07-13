@@ -84,6 +84,35 @@
     });
   }
 
+  /* ── Quote author name highlight ───────────────────────── */
+  /* CMS quote-author strings read "Name, Role at Company". Wrap the
+     name — everything up to the first comma — in a yellow span so it
+     reads apart from the role, leaving the comma and remainder as plain
+     text. Idempotent via data-author-split; the strings are plain text
+     (no nested markup), so rebuilding from textContent is lossless. */
+
+  function highlightQuoteAuthors() {
+    document.querySelectorAll('[data-text="quote-author"]').forEach((el) => {
+      if (el.dataset.authorSplit) return;
+
+      const text = el.textContent;
+      const commaIndex = text.indexOf(',');
+      const name = commaIndex === -1 ? text : text.slice(0, commaIndex);
+      if (!name.trim()) return;
+
+      el.dataset.authorSplit = 'true';
+
+      const span = document.createElement('span');
+      span.className = 'text-color-yellow';
+      span.textContent = name;
+
+      el.textContent = '';
+      el.appendChild(span);
+      const rest = text.slice(name.length);
+      if (rest) el.appendChild(document.createTextNode(rest));
+    });
+  }
+
   /* ── Project video embeds ──────────────────────────────── */
   /* Editors paste a plain YouTube URL into a CMS field bound to the
      data-yt-url attribute of an embed element. We swap it for a
@@ -282,8 +311,7 @@
     if (!hosts.length) return;
 
     /* Respect reduced motion and data-saver: leave the static poster. */
-    const saveData = navigator.connection && navigator.connection.saveData;
-    if (prefersReducedMotion() || saveData) return;
+    if (prefersReducedMotion() || saveDataEnabled()) return;
 
     observeOnce(
       hosts,
@@ -296,42 +324,243 @@
     );
   }
 
-  /* ── Deferred CTA background video (QW3) ───────────────── */
-  /* The bottom CTA background video is a large 1080p MP4 sitting far
-     below the fold. We strip autoplay/preload so nothing is fetched on
-     load, then start playback only when it nears the viewport. */
+  /* ── Managed background videos (breakpoint-correct hydration) ─── */
+  /* Webflow's native background-video ships one <video> per breakpoint, each
+     inside its own variant WRAPPER (.is-desktop / .is-mobile) that Webflow
+     toggles with CSS `display`. Each <video> holds <source> children (mp4 +
+     dead webm) and paints its poster as an inline background-image, so a
+     source-less <video> still shows frame 0 (no black flash).
 
-  function setupDeferredVideos() {
-    const wrappers = document.querySelectorAll('.video_cta');
-    if (!wrappers.length) return;
+     The bandwidth problem: the browser fetches EVERY variant's <source> at
+     parse time — ~19 MB, ~14 MB of it wasted on mobile (off-breakpoint +
+     below-fold). Preventing that fetch requires stripping each <source src>
+     BEFORE the parser reaches it, which only a synchronous inline snippet in
+     the site-wide <head> can do (see `head-video-strip.html`). init.js loads
+     in the FOOTER, so its own strip below runs too late to stop the initial
+     fetch — measured live 2026-07-13: footer strip → all 4 fetched; head
+     snippet → 0 fetched. So the division of labour is:
 
-    const reduce = prefersReducedMotion();
-    const videos = [];
+       • HEAD snippet (head-video-strip.html): strips <source src> → data-src
+         during parse, so nothing fetches. This is what delivers the bandwidth
+         win. It shares this module's data-video-processed guard + data-src
+         contract.
+       • init.js (here, footer): reads data-src and HYDRATES only the active
+         breakpoint's <video> at the right time — hero eagerly (above fold),
+         CTA on scroll, with a progressive low→high hero swap. The strip below
+         is a guarded FALLBACK: if the head snippet is absent, playback still
+         works (videos already cached from the parse-time fetch), just without
+         the bandwidth win.
 
-    wrappers.forEach((node) => {
-      const video =
-        node.tagName === 'VIDEO' ? node : node.querySelector('video');
-      if (!video || video.dataset.deferProcessed) return;
-      video.dataset.deferProcessed = 'true';
+     IMPORTANT — do not "simplify" the source-stripping away. Restoring src
+     from data-src is deliberate and load-bearing; `preload="none"` alone is
+     insufficient for a Webflow bg-video (see spec §4 / §8 and the measured
+     result above). */
 
-      video.preload = 'none';
-      video.removeAttribute('autoplay');
-      video.autoplay = false;
-      video.muted = true;
-      video.playsInline = true;
+  const MOBILE_BREAKPOINT = '(max-width: 991px)'; // Webflow tablet breakpoint
 
-      /* Reduced motion: keep the poster, never auto-start playback. */
-      if (!reduce) videos.push(video);
+  function saveDataEnabled() {
+    return !!(navigator.connection && navigator.connection.saveData);
+  }
+
+  /* Point a video at a single URL: prefer its first <source>, else the <video>
+     src itself. Shared by the progressive low and high hydrate paths. */
+  function setVideoSourceUrl(video, url) {
+    const firstSource = video.querySelector('source');
+    if (firstSource) firstSource.setAttribute('src', url);
+    else video.setAttribute('src', url);
+  }
+
+  /* The original (high-res) URL of a stripped video — Webflow keeps it on the
+     first <source>'s data-src; fall back to the <video>'s own data-src. */
+  function highResUrl(video) {
+    const firstSource = video.querySelector('source[data-src]');
+    return (firstSource && firstSource.dataset.src) || video.dataset.src || '';
+  }
+
+  /* Move a video's live source URLs into data-src so nothing can fetch them,
+     and normalise playback attributes. Idempotent (data-video-processed guard). */
+  function stripVideoSources(video) {
+    if (video.dataset.videoProcessed) return;
+    video.dataset.videoProcessed = 'true';
+
+    if (video.getAttribute('src')) {
+      video.dataset.src = video.getAttribute('src');
+      video.removeAttribute('src');
+    }
+    video.querySelectorAll('source').forEach((s) => {
+      const url = s.getAttribute('src');
+      if (url) {
+        s.dataset.src = url;
+        s.removeAttribute('src');
+      }
     });
 
-    observeOnce(
-      videos,
-      (video) => {
-        video.preload = 'auto';
-        video.play().catch(() => {}); /* swallow autoplay-policy rejection */
-      },
-      { rootMargin: '200px 0px' }
+    video.preload = 'none';
+    video.removeAttribute('autoplay');
+    video.autoplay = false;
+    video.muted = true;
+    video.playsInline = true;
+    /* No src means the video's inline background-image poster covers frame 0. */
+  }
+
+  /* Restore a video's source URLs and start playback. `lowUrl`, if given,
+     points the video at a single low-res clip (progressive swap); otherwise the
+     original (high-res) URLs are restored from data-src. */
+  function hydrateVideo(video, lowUrl) {
+    if (video.dataset.videoHydrated) return;
+    video.dataset.videoHydrated = 'true';
+
+    if (lowUrl) {
+      setVideoSourceUrl(video, lowUrl);
+    } else {
+      if (video.dataset.src) video.setAttribute('src', video.dataset.src);
+      video.querySelectorAll('source').forEach((s) => {
+        if (s.dataset.src) s.setAttribute('src', s.dataset.src);
+      });
+    }
+
+    video.preload = 'auto';
+    video.load();
+    video.play().catch(() => {}); /* swallow autoplay-policy rejection */
+  }
+
+  /* True when an element is actually rendered (has a layout box) — false for
+     display:none on the element or any ancestor. Robust for absolutely- and
+     fixed-positioned wrappers where offsetParent is unreliable. */
+  function isRendered(el) {
+    return el.getClientRects().length > 0;
+  }
+
+  /* The variant WRAPPER the browser actually renders at the current viewport.
+     Webflow toggles the .is-desktop / .is-mobile wrappers with `display`, so
+     prefer reading real layout over re-deriving breakpoints in JS; fall back to
+     matchMedia + the variant class. */
+  function activeWrapper(wrappers) {
+    const rendered = wrappers.find(isRendered);
+    if (rendered) return rendered;
+    const mobile = window.matchMedia(MOBILE_BREAKPOINT).matches;
+    return (
+      wrappers.find((w) =>
+        w.classList.contains(mobile ? 'is-mobile' : 'is-desktop')
+      ) || wrappers[0]
     );
+  }
+
+  /* Progressive low→high swap for the hero. After the page settles, warm the
+     high-res clip in a throwaway <video> (so the low clip keeps playing), then
+     cut the live element over to high, preserving playback position. */
+  function scheduleHeroUpgrade(video, highUrl) {
+    if (!highUrl || prefersReducedMotion() || saveDataEnabled()) return;
+
+    const upgrade = () => {
+      const probe = document.createElement('video');
+      probe.muted = true;
+      probe.preload = 'auto';
+      probe.addEventListener(
+        'canplaythrough',
+        () => {
+          const resumeAt = video.currentTime;
+          setVideoSourceUrl(video, highUrl);
+          video.load();
+          video.addEventListener(
+            'loadedmetadata',
+            () => {
+              if (video.duration) video.currentTime = resumeAt % video.duration;
+              video.play().catch(() => {});
+            },
+            { once: true }
+          );
+          probe.removeAttribute('src');
+          probe.remove();
+        },
+        { once: true }
+      );
+      probe.addEventListener('error', () => probe.remove(), { once: true });
+      probe.src = highUrl; /* warms the HTTP cache; the swap reload hits cache */
+      probe.load();
+    };
+
+    /* Wait for load, then idle time, so the upgrade never contends with the
+       FCP/LCP window. */
+    const afterLoad = () => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(upgrade, { timeout: 2000 });
+      } else {
+        setTimeout(upgrade, 200);
+      }
+    };
+    if (document.readyState === 'complete') afterLoad();
+    else window.addEventListener('load', afterLoad, { once: true });
+  }
+
+  /* Hero (eager, above fold): hydrate the active variant's <video> now. The
+     off-breakpoint wrapper's <video> is never hydrated, so it never fetches. */
+  function hydrateHero(wrappers) {
+    const wrapper = activeWrapper(wrappers);
+    if (!wrapper) return;
+    const video = wrapper.querySelector('video');
+    if (!video || video.dataset.videoHydrated) return;
+
+    /* Reduced motion / data-saver: stay on the poster, fetch nothing. */
+    if (prefersReducedMotion() || saveDataEnabled()) return;
+
+    /* Progressive: a low-res clip (per-video data-lowsrc, else wrapper-level
+       data-video-lowsrc) buffers fast under throttling; swap to the original
+       high-res source after load. No low clip → hydrate high directly. */
+    const lowUrl = video.dataset.lowsrc || wrapper.dataset.videoLowsrc || '';
+    if (lowUrl) {
+      hydrateVideo(video, lowUrl);
+      scheduleHeroUpgrade(video, highResUrl(video));
+    } else {
+      hydrateVideo(video);
+    }
+  }
+
+  function setupBackgroundVideos() {
+    const heroWrappers = Array.from(
+      document.querySelectorAll('.video_about-b-video')
+    );
+    const ctaWrappers = Array.from(document.querySelectorAll('.video_cta'));
+    if (!heroWrappers.length && !ctaWrappers.length) return;
+
+    /* Strip every managed variant up front so nothing fetches on load. */
+    [...heroWrappers, ...ctaWrappers].forEach((wrapper) => {
+      wrapper.querySelectorAll('video').forEach(stripVideoSources);
+    });
+
+    /* Hero: hydrate the active variant's <video> immediately. */
+    if (heroWrappers.length) hydrateHero(heroWrappers);
+
+    /* CTA (deferred, below fold): each breakpoint variant is its own wrapper,
+       and only the rendered one has a layout box, so observing all of them
+       hydrates just the active variant when it nears the viewport (the
+       display:none variant never intersects). Reduced motion keeps the poster,
+       never auto-plays. */
+    if (!prefersReducedMotion()) {
+      observeOnce(
+        ctaWrappers,
+        (wrapper) => {
+          const video = wrapper.querySelector('video');
+          if (video) hydrateVideo(video);
+        },
+        { rootMargin: '200px 0px' }
+      );
+    }
+
+    /* Resize safety: a breakpoint change can reveal an un-hydrated hero
+       variant. Re-run hydrateHero (its guards make it a no-op once the active
+       variant is hydrated) so the hero is never blank after a desktop↔mobile
+       resize. CTA is left to its observer. One debounced listener — the only
+       persistent listener this module adds (spec §10). */
+    if (heroWrappers.length) {
+      let resizeTimer;
+      const onResize = () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => hydrateHero(heroWrappers), 200);
+      };
+      window.addEventListener('resize', onResize);
+      window.addEventListener('orientationchange', onResize);
+    }
   }
 
   /* ── Hero reveal failsafe (QW4) ────────────────────────── */
@@ -360,9 +589,15 @@
       return;
     }
 
-    /* Otherwise let the GSAP reveal win; only force visibility as a last
-       resort if it hasn't run within ~1s. */
-    setTimeout(reveal, 1000);
+    /* Otherwise let the GSAP reveal win, but never hold the LCP text longer
+       than the SplitText load budget: force visibility after ~200ms (was
+       1000ms). The hero heading is the LCP element, held opacity:0 for the
+       reveal — a 1s hold guaranteed LCP ≥ 1s. If SplitText runs within budget
+       it still wins the animation; if not, the plain H1 paints early, which is
+       strictly better for LCP than a 1s hold (spec §4 2b).
+       NOTE: raising GSAP/SplitText *fetch* priority (CDN preload) is head-code,
+       documented in the handoff — init.js does not load GSAP itself. */
+    setTimeout(reveal, 200);
   }
 
   /* ── Loader helpers ────────────────────────────────────── */
@@ -394,11 +629,12 @@
     setFooterYear();
     injectUTMTracking();
     moveNavSeeAll();
+    highlightQuoteAuthors();
     setupProjectVideos();
 
     /* Performance quick-wins — each sets up its own observers/timeouts */
     setupDeferredSpline();
-    setupDeferredVideos();
+    setupBackgroundVideos();
     revealHeroFailsafe();
 
     /* Vendor deps (sequential where order matters) */

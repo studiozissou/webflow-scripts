@@ -121,25 +121,26 @@ existing bugs into the new site.
 **Owner:** B2, B4, B9 need answers from Carsa (Tomek). B1, B3, B6, B7, B8 are
 ours to fix in the build. B5 and B10 are decisions.
 
-## Open Question — Store Locator / Storepoint
+## Store Locator / Storepoint — RESOLVED (2026-07-13)
 
-The original spec redirects `service.carsa.co.uk/store-locator` → `carsa.co.uk/stores`
-but does not address the mechanism. The source page does **not** use a Webflow
-list — it embeds a third-party **Storepoint** widget (`cdn.storepoint.co/api/v1/js/1679341f058133.js`,
-map id `1679341f058133`) providing postcode search + map + pins.
+**Decision:** Drop the third-party **Storepoint** widget
+(`cdn.storepoint.co/api/v1/js/1679341f058133.js`, map id `1679341f058133`). The
+source `/store-locator` page will not be reproduced with its own map. Instead,
+**reuse the existing store-locator component already built on the main site's
+`/stores` page** for any location-finding UI in the service area.
 
-Unresolved:
+Consequences:
+- One paid third-party dependency removed, and one fewer embed to maintain.
+- The `service.carsa.co.uk/store-locator` → `carsa.co.uk/stores` redirect
+  (already in the 301 map) is correct as-is and needs no filtered variant.
+- The hub page's location section (Section 4) remains the CMS-driven grid of the
+  5 service-enabled stores. If a map/postcode-search surface is wanted there too,
+  reuse the same `/stores` locator component filtered to service-enabled stores
+  (`service-location` ref populated) rather than building anything new.
 
-1. Carsa's existing `/stores` page shows **all 11 stores**. The service locator
-   shows only the **5 HiQ service locations**. Redirecting one to the other
-   changes what the user sees. Is that acceptable, or does `/mot-and-car-servicing`
-   need its own filtered locator?
-2. Does the Storepoint subscription survive the migration, or is the map dropped
-   in favour of the CMS-driven location grid (Section 4 of the hub page)?
-
-**Recommendation:** drop Storepoint. The hub page's filtered location grid
-(5 cards, CMS-driven) already covers the job for 5 locations, and it removes a
-paid third-party dependency plus a second embed. Confirm with Carsa.
+**Build-time action (needs Task 0):** snapshot the `/stores` page locator
+component via `element_snapshot_tool`, confirm it can be filtered by the
+`service-location` ref, and reuse it. Recorded as part of Task 3b.
 
 ## URL Structure
 
@@ -167,7 +168,10 @@ Top-level `/mot-and-car-servicing` path for SEO targeting ("car servicing", "MOT
 **Implementation — verify Option A before costing Option B.**
 
 `service.carsa.co.uk` is its own Webflow **site** (`679361bb056aa22a71aaad31`)
-with its own site settings, and therefore its own 301 redirect table.
+with its own site settings, and therefore its own 301 redirect table. Platform
+re-verified live on 2026-07-13 (`x-wf-region` header, `data-wf-site` attribute,
+`website-files.com` assets, zero WordPress fingerprints) — so the site will still
+be Webflow at redirect-flip time and this table is the mechanism.
 
 - **Option A (preferred, unverified):** Add 8 rows to the *service site's*
   Webflow 301 redirect table, each targeting an absolute `https://carsa.co.uk/...`
@@ -369,7 +373,7 @@ the SKILL.md exception accordingly.
 |------|-------|
 | Resolve content defects B2, B4, B9 | Carsa (Tomek) |
 | FAQ copy | Carsa (Tomek) |
-| Storepoint decision | Carsa |
+| ~~Storepoint decision~~ | Resolved 2026-07-13 — drop, reuse `/stores` locator |
 | Playwright tests | Already written — `tests/acceptance/carsa-service-migration.spec.js` (17 tests) |
 
 ### Realistic automation ceiling
@@ -386,7 +390,7 @@ manual work is template binding, cross-breakpoint visual QA, redirects, and GTM.
 |---|------|------|-------|----------|--------------|
 | **0** | **Re-authorise Webflow MCP to Carsa workspace `67caba0c5c72084908790f0b`** | **infra** | **manual (Will)** | — | **None — blocks 1–8, 14** |
 | 0b | Resolve content defects with Carsa: B2 (review count), B4 (Bolton/Towcester hours), B9 (Towcester photo) | content | manual (Tomek) | — | None |
-| 0c | Confirm Storepoint decision (drop vs retain) | scope | manual (Tomek) | — | None |
+| 0c | ~~Confirm Storepoint decision~~ **RESOLVED 2026-07-13:** drop Storepoint, reuse the existing `/stores` locator component | scope | done | — | — |
 | 1 | Create "Service Locations" CMS collection in Webflow | webflow | **scripted — `data_cms_tool`** | .25 | Task 0 |
 | 2 | Add `service-location` ref field to Stores collection | webflow | **scripted — `data_cms_tool`** | — | Tasks 0, 1 |
 | 3 | Populate 5 Service Location CMS items with Acuity calendar IDs | webflow | **scripted — `data_cms_tool`** | — | Tasks 0, 1 |

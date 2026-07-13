@@ -1,8 +1,9 @@
 {
-  "lastUpdated": "2026-06-25",
+  "lastUpdated": "2026-07-13",
+  "note": "tsc-hero-video-perf deployed (929f758)",
   "version": 1,
-  "lastDeployed": "2026-05-14",
-  "lastDeployedHash": "7d80e5d",
+  "lastDeployed": "2026-07-13",
+  "lastDeployedHash": "929f758",
   "testPages": [
     {
       "slug": "getcoconut-thetimes",
@@ -157,6 +158,66 @@
       "critical": false,
       "description": "Carsa VDP script externalisation — verifies 19 inline scripts work correctly when loaded as single external CDN bundle (Phase 1) and modular init.js loader (Phase 2)",
       "created": "2026-06-25"
+    },
+    {
+      "slug": "carsa-service-migration",
+      "url": "https://carsa-v2.webflow.io/mot-and-car-servicing",
+      "spec": "tests/acceptance/carsa-service-migration.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Carsa service site migration — hub page, 5 location booking pages (Acuity embed), winter health check, cross-sell sections, JSON-LD schema, 301 redirects",
+      "created": "2026-06-30"
+    },
+    {
+      "slug": "tsc-historic-blog-migration",
+      "url": "https://tsc-v2.webflow.io/news",
+      "spec": "tests/acceptance/tsc-historic-blog-migration.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC historic blog migration — 7 WordPress posts (2019-2021) migrated to Webflow CMS News collection with correct dates, AVIF images, and categories",
+      "created": "2026-07-06"
+    },
+    {
+      "slug": "carsa-visual-regression",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-visual-regression.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Carsa visual regression system — Playwright toHaveScreenshot proof-of-concept: static page diffs, CMS-masked diffs, console error checks, broken link detection",
+      "created": "2026-07-03"
+    },
+    {
+      "slug": "carsa-code-migration",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-code-migration.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Carsa code migration — page-by-page inline code externalisation to GitHub CDN, baseline and post-migration tests for all interactive features",
+      "created": "2026-07-06"
+    },
+    {
+      "slug": "tsc-cms-seo-fields",
+      "url": "https://tsc-v2.webflow.io/products/etcs",
+      "spec": "tests/acceptance/tsc-cms-seo-fields.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC dedicated SEO fields — seo-title/seo-description added to 5 templated CMS collections (Products, Services, RailOS Devices, News, Case Studies) and bound in template-page SEO settings; verifies rendered title/meta/OG tags on item pages",
+      "created": "2026-07-08"
+    },
+    {
+      "slug": "tsc-hero-video-perf",
+      "url": "https://tsc-v2.webflow.io",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-hero-video-perf-2026-07-13.md",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC hero/CTA background video loading — source-stripping so off-breakpoint and below-fold variants never fetch, breakpoint-correct hydration, progressive low→high hero swap, reduced-motion/saveData guards; targets mobile Lighthouse LCP via font/render-blocking chain alongside ~14MB video bandwidth saving",
+      "created": "2026-07-13"
     }
   ]
 }

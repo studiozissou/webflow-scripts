@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-13
 **Page:** https://www.dejonghemorley.com/ (Home)
-**Status:** Deployed & verified on live site (2026-07-13). Awaiting client real-device sign-off (iPhone Safari + Chrome).
+**Status:** ✅ CLOSED (2026-07-13). Deployed, verified on live site, and confirmed working by client on a real iPhone (Safari + Chrome).
 
 ## Symptom
 Client reported the two "Read full bio" links did nothing on iPhone (Safari **and** Chrome).
@@ -69,7 +69,7 @@ to strip IX2 listeners) to simulate the client's blocked-runtime device:
 (`data-bio-open="true"` marker set — IX2 never sets it), panel on-screen, overlay opacity 1,
 scrollJump 0, body locked, close restores scroll. ✅
 
-**Outstanding:** client to confirm on a real iPhone (Safari + Chrome).
+**Client confirmation (2026-07-13):** confirmed working on a real iPhone in both Safari and Chrome. Issue closed.
 
 ## Action required (Webflow)
 1. On each "Read full bio" element: Element settings → Custom attributes → add `data-link` = `bio`.

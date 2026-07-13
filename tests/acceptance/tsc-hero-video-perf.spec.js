@@ -25,11 +25,17 @@ const STAGING_URL = process.env.STAGING_URL || 'https://tsc-v2.webflow.io';
 //   Hero desktop: *02-desktop-1280x720*.mp4   Hero mobile: *02-mobile-640x360*.mp4
 //   CTA desktop:  *08-desktop-1280x720*.mp4   CTA mobile:  *08-mobile-640x360*.mp4
 
-const HERO_MOBILE_RE = /02-mobile-640x360/;
-const HERO_DESKTOP_RE = /02-desktop-1280x720/;
-const CTA_MOBILE_RE = /08-mobile-640x360/;
-const CTA_DESKTOP_RE = /08-desktop-1280x720/;
-const ANY_HERO_RE = /02-(desktop-1280x720|mobile-640x360)/;
+// These match the VIDEO files only, not the poster image. Webflow names both
+// from the same stem — video: `…_02-desktop-1280x720_mp4.mp4`, poster:
+// `…_02-desktop-1280x720_poster.0000000.jpg` — so we require an .mp4/.webm
+// extension. The poster loads eagerly (frame-0, desired); without the
+// extension guard the poster falsely trips the "video requested" assertions.
+const VIDEO_EXT = String.raw`[^"']*\.(?:mp4|webm)`;
+const HERO_MOBILE_RE = new RegExp(`02-mobile-640x360${VIDEO_EXT}`);
+const HERO_DESKTOP_RE = new RegExp(`02-desktop-1280x720${VIDEO_EXT}`);
+const CTA_MOBILE_RE = new RegExp(`08-mobile-640x360${VIDEO_EXT}`);
+const CTA_DESKTOP_RE = new RegExp(`08-desktop-1280x720${VIDEO_EXT}`);
+const ANY_HERO_RE = new RegExp(`02-(?:desktop-1280x720|mobile-640x360)${VIDEO_EXT}`);
 
 /** Reads the currently-visible hero <video> (inside .is-desktop or .is-mobile,
  *  whichever the CSS breakpoint has switched to `display` != none) and returns
@@ -101,7 +107,11 @@ test.describe('TSC Hero Video Perf — 13 Jul 2026 (pre-implementation TDD)', ()
       const ctaRequestedBeforeScroll = requests.some((url) => CTA_MOBILE_RE.test(url));
       expect(ctaRequestedBeforeScroll).toBe(false);
 
-      const ctaWrapper = page.locator('.video_cta');
+      // `.video_cta` matches BOTH breakpoint wrappers (.is-desktop is
+      // display:none on mobile). Scroll to the visible (mobile) variant — the
+      // only one that hydrates. (Original selector matched 2 elements and
+      // scrolled to a hidden node → timeout.)
+      const ctaWrapper = page.locator('.video_cta.is-mobile');
       await ctaWrapper.scrollIntoViewIfNeeded();
       await page.waitForTimeout(1500);
 
@@ -171,11 +181,21 @@ test.describe('TSC Hero Video Perf — 13 Jul 2026 (pre-implementation TDD)', ()
 
     test('prefers-reduced-motion: no hero video hydrated (poster only)', async ({ page }) => {
       test.setTimeout(30000);
+      // The `reducedMotion` context option (test.use) proved unreliable here —
+      // the page read no-preference — so force it explicitly and guard that it
+      // actually applied, otherwise this test silently runs under normal motion.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+
       const requests = [];
       page.on('request', (r) => requests.push(r.url()));
 
       await page.goto(`${STAGING_URL}/`, { waitUntil: 'load', timeout: 30000 });
       await page.waitForTimeout(2000);
+
+      const rmApplied = await page.evaluate(
+        () => matchMedia('(prefers-reduced-motion: reduce)').matches
+      );
+      expect(rmApplied, 'reduced-motion emulation must be active for this assertion to be meaningful').toBe(true);
 
       const heroVideoRequested = requests.some((url) => ANY_HERO_RE.test(url));
       expect(heroVideoRequested).toBe(false);

@@ -1,0 +1,72 @@
+<!--
+  TSC — background-video source-strip (site-wide <head> custom code)
+  ================================================================
+
+  PASTE THIS INTO: Webflow → Project Settings → Custom Code → Head Code
+  (site-wide), as high as the editor allows. It MUST be an inline
+  <script> in <head> — NOT deferred, NOT external — so it runs while the
+  browser is still parsing <body>, BEFORE the background <video> elements
+  are seen by the preload scanner.
+
+  WHY THIS EXISTS (verified live 2026-07-13):
+    Webflow ships each hero/CTA background video as a server-rendered
+    <video autoplay preload> with <source src> children, one wrapper per
+    breakpoint (.is-desktop / .is-mobile). The browser fetches EVERY
+    variant's source at parse time — ~19 MB, ~14 MB of it wasted on mobile
+    (off-breakpoint + below-fold). Stripping the sources from init.js is
+    too late: init.js loads in the footer, so by the time it runs all four
+    videos are already downloading. Measured: footer strip → all 4 fetched;
+    this head snippet → 0 fetched until init.js opts a variant in.
+
+  WHAT IT DOES:
+    Installs a MutationObserver at document-start that moves every managed
+    video's <source src> (and any <video src>) into data-src and blanks the
+    live src the instant the element is parsed — so nothing fetches. It then
+    disconnects at DOMContentLoaded. init.js (footer) reads data-src and
+    hydrates ONLY the active breakpoint's video (hero eager, CTA on scroll,
+    progressive low→high). The two share the data-video-processed guard and
+    the data-src contract, so init.js never double-strips.
+
+  CONTRACT WITH init.js (do not change one without the other):
+    - selectors:            .video_about-b-video , .video_cta
+    - processed guard:      data-video-processed="true"
+    - stashed URL (video):  data-src
+    - stashed URL (source): data-src
+-->
+<script>
+  (function () {
+    var MANAGED = '.video_about-b-video, .video_cta';
+    function strip(video) {
+      try {
+        if (video.dataset.videoProcessed) return;
+        if (!video.closest || !video.closest(MANAGED)) return;
+        video.dataset.videoProcessed = 'true';
+        if (video.getAttribute('src')) {
+          video.dataset.src = video.getAttribute('src');
+          video.removeAttribute('src');
+        }
+        var sources = video.querySelectorAll('source');
+        for (var i = 0; i < sources.length; i++) {
+          var url = sources[i].getAttribute('src');
+          if (url) {
+            sources[i].dataset.src = url;
+            sources[i].removeAttribute('src');
+          }
+        }
+        video.preload = 'none';
+        video.removeAttribute('autoplay');
+        video.autoplay = false;
+      } catch (e) { /* never block the page on a strip failure */ }
+    }
+    function sweep() {
+      var vids = document.querySelectorAll('video');
+      for (var i = 0; i < vids.length; i++) strip(vids[i]);
+    }
+    /* document always exists at document-start; observe it so we catch the
+       <video> nodes the moment the parser inserts them. */
+    var mo = new MutationObserver(sweep);
+    mo.observe(document, { childList: true, subtree: true });
+    sweep();
+    document.addEventListener('DOMContentLoaded', function () { mo.disconnect(); });
+  })();
+</script>

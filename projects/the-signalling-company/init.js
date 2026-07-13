@@ -84,6 +84,27 @@
     });
   }
 
+  /* ── Flatten project meta tiles ────────────────────────── */
+  /* Each .projects_meta-wrapper nests its .country_tile items inside
+     Finsweet CMS list wrappers (.projects_meta-list-wrapper). Lift every
+     tile to be a direct child of its own wrapper, then drop the now-empty
+     list wrappers, so the tiles lay out in one flat container. Scoped per
+     wrapper so each project card keeps its own tiles. Idempotent: once a
+     wrapper has no list wrappers, there is nothing left to move. */
+
+  function flattenProjectMeta() {
+    document.querySelectorAll('.projects_meta-wrapper').forEach((wrapper) => {
+      const lists = wrapper.querySelectorAll('.projects_meta-list-wrapper');
+      if (!lists.length) return;
+
+      wrapper
+        .querySelectorAll('.country_tile')
+        .forEach((tile) => wrapper.appendChild(tile));
+
+      lists.forEach((list) => list.remove());
+    });
+  }
+
   /* ── Quote author name highlight ───────────────────────── */
   /* CMS quote-author strings read "Name, Role at Company". Wrap the
      name — everything up to the first comma — in a yellow span so it
@@ -629,6 +650,7 @@
     setFooterYear();
     injectUTMTracking();
     moveNavSeeAll();
+    flattenProjectMeta();
     highlightQuoteAuthors();
     setupProjectVideos();
 

@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "updated": "2026-07-14",
-  "note": "tsc-leadership-modal added (Ready to Build)",
+  "note": "tsc-leadership-modal built + MCP-verified (Ready to Review; deploy-gated on IX2 deletion)",
   "queue": [
     {
       "id": "tsc-leadership-modal",
       "project": "the-signalling-company",
       "type": "feature",
       "priority": "P2",
-      "status": "Ready to Build",
+      "status": "Ready to Review",
       "title": "Rebuild leadership team modal in vanilla JS (drop Webflow IX2)",
       "description": "Reproduce the /leadership .card_team open + .modal2_background-overlay close interactions (Webflow IX2 a-146/a-147) as a bindLeadershipModals() function in init.js: identical 500ms outQuad slide + 500ms ease overlay fade, plus accessibility (role=dialog, focus trap, ESC, body scroll-lock, focus-return) and prefers-reduced-motion. User deletes the two IX2 interactions in Designer; deploy swaps the jsDelivr @hash in the site footer and adds closed-state CSS to the leadership page head via Webflow MCP.",
       "spec": "projects/the-signalling-company/.claude/specs/tsc-leadership-modal.md",
@@ -1023,13 +1023,12 @@
       "project": "carsa",
       "type": "feature",
       "priority": "P1",
-      "status": "Blocked",
-      "blockedBy": "Webflow MCP is authorised to the wrong workspace; cannot see the Carsa site. Re-authorise against workspace 67caba0c5c72084908790f0b. See spec Task 0.",
+      "status": "Ready to Build",
       "title": "Migrate service.carsa.co.uk to main Carsa site",
-      "description": "Migrate 8-page service microsite to carsa.co.uk/mot-and-car-servicing. New hub page (7 sections), CMS-driven location template (5 locations with Acuity embeds), winter health check page, cross-sell sections on store pages, JSON-LD schema, 301 redirects, SEO checks. Spec v2 adds an automation map (60-70% scriptable via Webflow Data API), 10 source-site defects not to migrate, and a decision log rejecting Relume MCP and Claude Design.",
+      "description": "Migrate 8-page service microsite to carsa.co.uk/mot-and-car-servicing. New hub page (7 sections), CMS-driven location template (5 locations with Acuity embeds), winter health check page, cross-sell sections on store pages, JSON-LD schema, 301 redirects, SEO checks. Spec v2: MCP reconnected; Service Locations CMS mirrors the proven Sell Locations->Stores reference pattern (Stores is source of truth for hours/photos/address); reviews use the standard live Trustpilot widget; Storepoint dropped for the existing /stores locator. Only open decision is B10 (Trustpilot business unit HiQ vs Carsa).",
       "spec": "projects/carsa/.claude/specs/carsa-service-migration.md",
       "created": "2026-06-30",
-      "updated": "2026-07-09"
+      "updated": "2026-07-14"
     },
     {
       "id": "carsa-visual-regression-scaffold",

@@ -1,0 +1,71 @@
+<script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://nemlife.com/nem-methode#webpage",
+    "name": "NEM Methode | Patronen doorbreken met een aanpak die werkt - NEM Life",
+    "description": "De NEM Methode - Neuro Emotional Mastery - helpt je hardnekkige patronen doorbreken. Concreet, stapsgewijs en direct toepasbaar. Zonder eindeloos praten.",
+    "url": "https://nemlife.com/nem-methode",
+    "isPartOf": {
+      "@id": "https://nemlife.com/#website"
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://nemlife.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "NEM Methode",
+          "item": "https://nemlife.com/nem-methode"
+        }
+      ]
+    },
+    "inLanguage": "nl"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_1",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_1"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_2",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_2"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_3",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_3"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_4",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_4"
+        }
+      }
+    ]
+  }
+]
+</script>

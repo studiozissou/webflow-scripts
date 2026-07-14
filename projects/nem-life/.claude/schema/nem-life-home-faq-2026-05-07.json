@@ -1,0 +1,65 @@
+<script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://nemlife.com/#webpage-home",
+    "name": "FILL_IN_SEO_TITLE",
+    "description": "FILL_IN_SEO_DESCRIPTION",
+    "url": "https://nemlife.com/",
+    "isPartOf": {
+      "@id": "https://nemlife.com/#website"
+    },
+    "about": {
+      "@id": "https://nemlife.com/#organization"
+    },
+    "inLanguage": "nl"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_1",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_1"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_2",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_2"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_3",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_3"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_4",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_4"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "FILL_IN_FAQ_QUESTION_5",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FILL_IN_FAQ_ANSWER_5"
+        }
+      }
+    ]
+  }
+]
+</script>

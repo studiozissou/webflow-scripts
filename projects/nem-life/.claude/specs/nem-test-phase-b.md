@@ -594,7 +594,42 @@ Alex flagged: "The current width of the question module feels too narrow. Please
 - Token management + storage
 
 **Alex owns:**
-- Anthropic API prompt engineering (full report prompt) — source of truth: [Notion: NEM TEST 01 system prompt](https://app.notion.com/p/NEM-TEST-01-Waarom-reageer-ik-zo-system-prompt-382c706b69c081f2b7cec566c49d8647) (may change, always reference this page)
+- Anthropic API prompt engineering (full report prompt) — authored in Notion, pulled into n8n via the runtime link below (see "Report prompt — runtime link & updates"). Working-doc source of truth: [Notion: NEM TEST 01 system prompt](https://app.notion.com/p/NEM-TEST-01-Waarom-reageer-ik-zo-system-prompt-382c706b69c081f2b7cec566c49d8647).
+
+### Report prompt — runtime link & updates
+
+**Resolved 2026-07-10** (Slack, Alex + Will) — this replaces the earlier "Will manually copies the prompt from Notion into the node" assumption and closes the open question parked in `nem-report-prompt-escaping-and-token-limit.md` about *where the prompt lives and who edits it*.
+
+**How Alex authors and publishes:**
+
+1. Alex edits the prompt in his **working Notion doc**. That doc is *not* a clean system prompt — it carries a header, a changelog, instructions for Christel, and open placeholders. **None of that may reach the API.**
+2. When a version is validated, Alex **copies the clean prompt block into a dedicated runtime Notion page** that contains *only* the prompt text. That copy step is the approval — there is deliberately **no draft/approved toggle** (Alex's call).
+3. Alex triggers the **Publish Prompt** workflow (below). Publishing is his explicit action; it also produces a test PDF so he can eyeball real output before it goes live to users.
+
+**Publish Prompt workflow** (new, manual-trigger n8n workflow — separate from `/submit` and `/verify`):
+
+```
+Manual trigger
+  → Notion: Get Child Blocks (runtime page)      ← "Notion account" cred (notionApi,
+  → Assemble prompt string (Code: concat block     id eSRkYZp4IhWJBH9h) — already exists,
+      plain_text, preserve newlines)                unused until now
+  → Write to Data Table (nem_runtime_config,
+      key report_prompt, value = prompt string,
+      publishedAt = now)
+  → Generate test report (Anthropic) on ONE fixed
+      test profile → Build HTML → Render PDF
+  → Email test PDF to Alex (MailerSend)          ← lets him judge quality post-change
+```
+
+**How `/verify` consumes it:** `Generate Report.system` reads the prompt from the **Data Table row** (`nem_runtime_config.report_prompt`), not from Notion. The report hot path makes **no Notion API call** — so a Notion outage, page rename, or permission change cannot break live report generation. The prompt is only ever as current as the last Publish, which matches Alex's "the copy step is the approval" model (publish is deliberate, not automatic-on-edit).
+
+**Why cache-on-publish rather than live-fetch per report:** report generation already runs async on the background branch of `/verify`, and that branch has a history of *silent* failures (MailerSend trial cap; `Mark Consumed` on the fast path). Adding a live external Notion dependency to that path would be another silent-failure surface. Caching to a Data Table keeps the hot path local and dependency-free; the trade is that publishing is a button press, not instant-on-copy — acceptable given updates are ~weekly, tapering off as the prompt stabilises.
+
+**Rollback:** none built — Notion page history is the rollback (Alex's call; a custom history was deemed overkill).
+
+**Relationship to the escaping fix:** `nem-report-prompt-escaping-and-token-limit.md` parks the prompt in a fixed-value **Set node** as a clean seam. This mechanism fills that seam: the Set node is superseded by the Data Table read that the Publish workflow writes. Land the escaping fix first (it also lifts `max_tokens` to 8000 and fixes `$json` references); the Data Table read then drops in where the Set node was.
+
+**Not yet built** — this section documents the agreed design only. Building the Publish workflow depends on MailerSend being off its trial account (the test-PDF email needs it).
 
 ### Spam / bot protection
 
@@ -917,3 +952,4 @@ googleapis (for Gmail API)
 11. ~~MailerSend vs MailerLite~~ — resolved: MailerLite for verification email + newsletter; MailerSend for report delivery only (PDF attachment). MailerSend free tier = 500 emails/month.
 12. ~~Conclusion text identifiers~~ — resolved: Alex's convention confirmed. Single: `valse-hoop`. Dual: `valse-hoop_valse-macht`. All lowercase, hyphenated. 15 texts total.
 13. ~~Internationalisation~~ — resolved: NL + EN built in from start. Locale auto-detected, passed through to backend for emails + report language.
+14. ~~Prompt update mechanism~~ — resolved 2026-07-10 (Slack): Alex publishes from a dedicated clean Notion runtime page via a manual "Publish Prompt" n8n workflow that caches the prompt to a Data Table and emails him a test PDF; `/verify` reads the cached prompt, not Notion. No draft/approved toggle, no custom rollback (Notion page history). Full design in "Backend Architecture → Report prompt — runtime link & updates". Not yet built (test-PDF email needs MailerSend off trial).

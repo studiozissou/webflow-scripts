@@ -1,0 +1,28 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "name": "Ervaring: {{wf {&quot;path&quot;:&quot;essence-title&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "description": "{{wf {&quot;path&quot;:&quot;short-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "url": "https://nemlife.com/ervaringen/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "about": {
+    "@type": "Organization",
+    "@id": "https://nemlife.com/#organization",
+    "name": "NEM Life"
+  },
+  "inLanguage": "nl-NL",
+  "review": {
+    "@type": "Review",
+    "author": {
+      "@type": "Person",
+      "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+    },
+    "reviewBody": "{{wf {&quot;path&quot;:&quot;short-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+    "itemReviewed": {
+      "@type": "Organization",
+      "@id": "https://nemlife.com/#organization",
+      "name": "NEM Life"
+    }
+  }
+}
+</script>

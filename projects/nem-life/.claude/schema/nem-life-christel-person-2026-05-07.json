@@ -1,0 +1,26 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://nemlife.com/#christel-reus",
+  "name": "Christel Reus",
+  "jobTitle": "Therapeut, ondernemer & ontwikkelaar van de NEM Methode",
+  "description": "Christel Reus is therapeut, ondernemer en de ontwikkelaar van de NEM Methode (Neuro Emotional Mastery). Ze helpt mensen hardnekkige patronen doorbreken met een concrete, stapsgewijze aanpak.",
+  "url": "https://nemlife.com/link-in-bio/christel",
+  "image": "FILL_IN_CHRISTEL_PHOTO_URL",
+  "worksFor": {
+    "@id": "https://nemlife.com/#organization"
+  },
+  "knowsAbout": [
+    "NEM Methode",
+    "Neuro Emotional Mastery",
+    "Therapie",
+    "Patronen doorbreken",
+    "Emotionele complexiteit"
+  ],
+  "sameAs": [
+    "FILL_IN_LINKEDIN",
+    "FILL_IN_INSTAGRAM"
+  ]
+}
+</script>

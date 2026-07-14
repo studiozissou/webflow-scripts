@@ -1,0 +1,136 @@
+# The Signalling Company
+
+> 100% software-defined Automatic Train Protection (ATP) for European freight and passenger railways.
+
+The Signalling Company (TSC) is a Belgian digital rail company founded in 2019 by Stanislas Pinte, with Alexandre Betis — now CEO — as employee number one and CTO. It was acquired by Škoda Group in 2023. TSC designs, certifies, installs, and maintains onboard ATP systems for locomotives and trains.
+
+Its founding premise is Safety-as-Software: that railway signalling can be implemented in software and made independent of hardware, decoupling it from device obsolescence and regulatory change. The result is RailOS, a portable, SIL4-certified real-time operating system with its own application development environment. RailOS runs international (ETCS) and national Class B (TBL1+, PZB, KVB) train protection applications on a single safe computer, the iEVC, using standard off-the-shelf Ethernet-connected devices. When standards change, the software updates and the hardware stays. Over a rail vehicle's 50-year-plus life, this converts capital-intensive system replacement into software-only upgrades.
+
+TSC's ETCS application was certified in September 2025, an industry record. RailOS powers the ETCS and Class B retrofit of 109 Lineas freight locomotives operating in Belgium, the Netherlands, and Germany, and is designed into Škoda Transportation's 27Ev hybrid multiple-unit fleet for RegioJet. RailOS is also the industry's first open ATP platform: qualified third-party developers can build, test, and certify their own applications using a RailOS Application Development Kit.
+
+TSC serves fleet operators, fleet leasing companies, infrastructure managers, and locomotive and train manufacturers.
+
+## Core pages
+
+- [Home](https://www.thesignallingcompany.com/): Software-defined ATP — fleets stay compliant, costs stay down, systems don't go obsolete
+- [RailOS](https://www.thesignallingcompany.com/railos): The software-defined operating system for safety-critical train protection
+- [Products](https://www.thesignallingcompany.com/products): Onboard and trackside digital rail products, powered by RailOS Apps and Devices
+- [Services](https://www.thesignallingcompany.com/services): Full-lifecycle services for ETCS and Class B projects
+- [Projects](https://www.thesignallingcompany.com/projects): Customer segments and case studies
+- [About](https://www.thesignallingcompany.com/about): Founding story, Safety-as-Software, and the four company values
+- [Leadership](https://www.thesignallingcompany.com/leadership): Executive team
+- [Careers](https://www.thesignallingcompany.com/careers): Open roles — "join our 50+ train-blazers"
+- [FAQ](https://www.thesignallingcompany.com/faq): Certification, multi-country operation, and retrofit questions
+- [News](https://www.thesignallingcompany.com/news): Product milestones, certifications, customer wins, and industry perspective
+- [Contact](https://www.thesignallingcompany.com/contact): Enquiries and contact form
+
+## RailOS platform
+
+- [RailOS Overview](https://www.thesignallingcompany.com/railos): One platform, every ATP system — run multiple ATP applications on a single SIL4 computer
+- [RailOS Apps](https://www.thesignallingcompany.com/railos/apps): Safety-critical and data applications running on the iEVC
+- [RailOS Devices](https://www.thesignallingcompany.com/railos/devices): Tested, RailOS-qualified Ethernet plug-and-play devices, powered from 24–110 VDC or PoE
+- [RailOS App Store](https://www.thesignallingcompany.com/railos/app-store): Browse and select ATP applications for your fleet (under construction)
+- [Open RailOS](https://www.thesignallingcompany.com/railos/open): App Developer Program, with a General ADK for non-safety-critical applications and a Safe ADK for safety-critical ones
+
+## Products
+
+- [ETCS](https://www.thesignallingcompany.com/products/etcs): Certified, award-winning onboard ETCS Baseline 3 and 4 on the iEVC-RailOS platform, delivering 5x–10x TCO gains over conventional rack-based systems; upgradable to ATO over ETCS
+- [TBL1+](https://www.thesignallingcompany.com/products/tbl1): Belgian Class B ATP, including +, ++, and NG variations, in stand-alone or ETCS-integrated configurations
+- [PZB](https://www.thesignallingcompany.com/products/pzb): Class B ATP for Germany, Austria, Romania, Serbia, and Croatia, in stand-alone or ETCS-integrated configurations
+- [KVB](https://www.thesignallingcompany.com/products/kvb): French Class B ATP, in stand-alone or ETCS-integrated configurations
+- [Telecom Box](https://www.thesignallingcompany.com/products/telecom-box): Ruggedized telecom gateway replacing multiple stand-alone telecom and GPS devices; FRMCS- and TOBA-ready
+
+A sixth product, wSTM — a universal software-defined STM integrating third-party national Class B systems — is described on the Products page; see the [wSTM App](https://www.thesignallingcompany.com/railos-apps/wstm-app) for detail.
+
+## Services
+
+- [ETCS Retrofit Viability Assessment](https://www.thesignallingcompany.com/services/etcs-retrofit-viability-assessment): Determines the technical, regulatory, and authorization risk and cost of retrofitting a fleet with ETCS
+- [First-in-Class Homologation](https://www.thesignallingcompany.com/services/first-in-class-homologation): Complete V-cycle service packs from concept design to Authorization to Place In Service (APIS)
+- [Series Installation & Commissioning](https://www.thesignallingcompany.com/services/series-installation-commissioning): Turn-key installation through to supervision, audit, and training
+- [Training](https://www.thesignallingcompany.com/services/training): Courses for drivers, maintenance technicians, and operational managers
+- [Maintenance](https://www.thesignallingcompany.com/services/maintenance): Post-warranty corrective, preventative, and predictive maintenance packs for up to 10 years or longer
+
+Service partners: Prose, Brouwer, SNCB/NMBS Technics.
+
+## Projects
+
+- [Lineas HLD77](https://www.thesignallingcompany.com/projects/lineas-hld77): ETCS and Class B retrofit of 109 freight locomotives — 87 with ETCS plus Belgian ATP, 22 with ETCS plus Belgian, German, and Dutch ATP — with a 10-year maintenance programme and no additional floorspace used. Installation takes about ten days per locomotive and automated commissioning under three hours.
+- [Škoda RegioJet 27Ev](https://www.thesignallingcompany.com/projects/skoda-regiojet): ETCS and Czech Class B designed into 34 new-build hybrid bi-mode electro-diesel multiple units (18 two-car, 16 three-car) for RegioJet, entering service from December 2029
+- [Akiem BR189](https://www.thesignallingcompany.com/projects/akiem-br189): Feasibility assessment for retrofitting ETCS to a Siemens electric freight locomotive fleet operating across ten European countries
+
+Customer segments served: fleet operators (freight, passenger, track maintenance), fleet leasing companies, infrastructure managers, and locomotive and train manufacturers.
+
+## RailOS applications
+
+All RailOS ATP applications run on the iEVC, a certified SIL4 safe computer.
+
+- [ETCS App](https://www.thesignallingcompany.com/railos-apps/etcs-app): Flagship ATP application, certified in 2025; combines with the iSTM and wSTM apps for no-code interoperability with national Class B systems
+- [TBL1+ App](https://www.thesignallingcompany.com/railos-apps/tbl1-app): Belgian Class B ATP, in service on the Lineas HLD77 fleet since 2025; available with ++ and NG variations
+- [PZB App](https://www.thesignallingcompany.com/railos-apps/pzb-app): German, Austrian, and Romanian Class B ATP; in development and undergoing certification
+- [KVB App](https://www.thesignallingcompany.com/railos-apps/kvb-app): French Class B ATP; in development and undergoing certification
+- [iSTM App](https://www.thesignallingcompany.com/railos-apps/istm-app): Fully software-defined Specific Transmission Module for integrating RailOS-native ETCS and Class B apps
+- [wSTM App](https://www.thesignallingcompany.com/railos-apps/wstm-app): Specific Transmission Module for integrating third-party national Class B systems
+- [TCMS App](https://www.thesignallingcompany.com/railos-apps/tcms-app): Train Control and Management System application, customised to the vehicle sub-system integration plan
+- [DJR App](https://www.thesignallingcompany.com/railos-apps/djr-app): Digital Journey Replay — an analytics tool for troubleshooting onboard and trackside signalling anomalies
+- [TRU App](https://www.thesignallingcompany.com/railos-apps/tru-app): Configurable for Diagnostic Recording Unit or Juridical Recording Unit function; with Crash Protected Memory it removes the need for a separate JRU device
+- [LRU App](https://www.thesignallingcompany.com/railos-apps/lru-app): Windows-based local and remote data extraction and pre-processing for any analytics platform
+- [TOBA App](https://www.thesignallingcompany.com/railos-apps/toba-app): Telecom On-Board Architecture application for multi-technology onboard telecom and satcom access
+
+RailOS also includes built-in system health and diagnostic applications for drivers and remote operations centre staff.
+
+## RailOS devices
+
+- [iEVC](https://www.thesignallingcompany.com/railos-devices/ievc): SIL4 safe computer hosting RailOS; supports Ethernet, Ethernet-TRDP, digital IO relays, and CANopen; available in 19-inch or ruggedized Computer Box format
+- [Computer Box](https://www.thesignallingcompany.com/railos-devices/computer-box): Ruggedized housing for the iEVC, mountable anywhere on the vehicle — ideal for retrofits
+- [Sensor Box](https://www.thesignallingcompany.com/railos-devices/sensor-box): ATP sensor gateway integrating odometry and signalling modules; used with ETCS, KVB, and TBL1
+- [Telecom Box](https://www.thesignallingcompany.com/railos-devices/telecom-box): Ruggedized telecom gateway supporting TOBA, extendable to FRMCS and 6G
+- [DMI (Driver Machine Interface)](https://www.thesignallingcompany.com/railos-devices/dmi-driver-machine-interface): Configurable 8-inch and 12-inch driver displays, with or without speakers
+- [JRU](https://www.thesignallingcompany.com/railos-devices/jru): Juridical Recording Unit combining the recording app with Crash Protected Memory
+- [Data Storage Unit (DSU)](https://www.thesignallingcompany.com/railos-devices/data-storage-unit-dsu): Mass data storage in a range of sizes and crash protection ratings
+- [Euroantenna](https://www.thesignallingcompany.com/railos-devices/euroantenna): Signalling sensor designed without active electronics, supporting multiple ATP standards
+- [GPS](https://www.thesignallingcompany.com/railos-devices/gps): GNSS access device, standalone or integrated into the Telecom Box
+- [Doppler Radar](https://www.thesignallingcompany.com/railos-devices/doppler-radar): Speed sensor connected to the Sensor Box
+- [CoRRail](https://www.thesignallingcompany.com/railos-devices/corrail): Advanced optical speed sensor connected to the Sensor Box
+- [Optical Pulse Generator](https://www.thesignallingcompany.com/railos-devices/optical-pulse-generator): Optical speed sensor connected to the Sensor Box
+- [Crocodile & Encoder](https://www.thesignallingcompany.com/railos-devices/crocodile-encoder): Signalling sensor used with the TBL1 and KVB apps in Belgium and France
+- [PZB Magnet & Magnet Reader](https://www.thesignallingcompany.com/railos-devices/pzb-magnet-magnet-reader): Signalling sensor used with the PZB app in Germany
+- [GSM-R & FRMCS Radio](https://www.thesignallingcompany.com/railos-devices/gsm-r-frmcs-radio): ERTMS radio, standalone or integrated into the Telecom Box
+- [Wi-Fi / 4G / 5G Radio](https://www.thesignallingcompany.com/railos-devices/wifi-4-5-6g-radio): Broadband remote access gateway
+- [Ethernet Switch](https://www.thesignallingcompany.com/railos-devices/ethernet-switch): High-reliability industrial switch in PoE and non-PoE variants
+
+Device partners: Duagon, Mios, Deuta, Scle, Hasler Rail, Lantech, Triorail.
+
+## News
+
+- [World's first software-defined ETCS certified](https://www.thesignallingcompany.com/news/worlds-first-software-defined-etcs-certified)
+- [First locomotive authorised on the TSC platform](https://www.thesignallingcompany.com/news/first-locomotive-authorised-tsc-platform)
+- [TSC's ETCS wins RailTech Innovation Award](https://www.thesignallingcompany.com/news/etcs-wins-railtech-innovation-award)
+- [Škoda Group acquires majority stake](https://www.thesignallingcompany.com/news/skoda-group-acquires-majority-stake)
+- [TÜV Rheinland positive assessment of the iEVC](https://www.thesignallingcompany.com/news/tuv-rheinland-positive-assessment-ievc)
+- [A better ETCS onboard: no more, no less](https://www.thesignallingcompany.com/news/a-better-etcs-onboard-no-more-no-less)
+- [Digital STMs will accelerate ERTMS roll-out](https://www.thesignallingcompany.com/news/digital-stms-will-accelerate-ertms-roll-out)
+- [Shaping the train positioning algorithms of the future](https://www.thesignallingcompany.com/news/shaping-the-train-positioning-algorithms-of-the-future)
+- [TSC mobile app for Belgian TBL1+](https://www.thesignallingcompany.com/news/tsc-mobile-app-belgian-tbl1-plus)
+- [Introducing Silicon Valley best practice into European ETCS development](https://www.thesignallingcompany.com/news/the-signalling-company-and-try-and-cert-introduce-silicon-valley-best-practice-into-european-etcs-development)
+- [Nomination of Stanislas Pinte as CEO](https://www.thesignallingcompany.com/news/nomination-of-stanislas-pinte-as-ceo-of-thesignallingcompany)
+- [Geert Pauwels, CEO of Lineas, wins European Railway Award](https://www.thesignallingcompany.com/news/geert-pauwels-ceo-of-lineas-wins-prestigious-european-railway-award)
+- [Stan's diary: 11 days in Australia](https://www.thesignallingcompany.com/news/stans-diary-11-days-in-australia)
+
+## Company values
+
+TSC is driven by four core values: think strategically, care for what we do and how we do it, collaborate extensively, and act rationally. On safety: "We entrust the lives of our children to our systems."
+
+## Contact
+
+- The Signalling Company SRL, company number 0724.925.936
+- Operations HQ: Rue des Deux Gares 82, Building B, B-1070 Anderlecht, Brussels, Belgium
+- General enquiries: info@thesignallingcompany.com
+- Telephone: +32 (0)2 882 59 00
+- Media: Romain Hourtiguet, Marketing Manager — romain.hourtiguet@thesignallingcompany.com
+- [LinkedIn](https://www.linkedin.com/company/thesignallingcompany/)
+
+## Optional
+
+- [Privacy Policy](https://www.thesignallingcompany.com/privacy-policy)
+- [Cookie Policy (EU)](https://www.thesignallingcompany.com/cookie-policy-eu)
+- [Disclaimer](https://www.thesignallingcompany.com/disclaimer)

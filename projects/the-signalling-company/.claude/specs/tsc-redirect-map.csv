@@ -1,0 +1,22 @@
+old_path,new_path,type,confidence,notes
+/news,/news,unchanged,exact,Webflow auto-strips trailing slash; verify /news/ resolves
+/privacy-policy,/privacy-policy,unchanged,exact,Exists on new site
+/privacy,/privacy-policy,legacy-301,exact,Old WP already 301s /privacy -> /privacy-policy
+/category/news,/news,category-archive,high,Collapse category archive into news listing
+/category/mise-en-avant,/news,category-archive,high,French "featured" archive -> news listing
+/category/uncategorized,/news,category-archive,high,Default WP archive -> news listing
+/feed,/news,rss,medium,Optional: old RSS feed pollers -> news listing
+/a-better-etcs-onboard-no-more-no-less,/news/a-better-etcs-onboard-no-more-no-less,post,exact,Slug unchanged
+/digital-stms-will-accelerate-ertms-roll-out,/news/digital-stms-will-accelerate-ertms-roll-out,post,exact,Slug unchanged
+/geert-pauwels-ceo-of-lineas-wins-prestigious-european-railway-award,/news/geert-pauwels-ceo-of-lineas-wins-prestigious-european-railway-award,post,exact,Slug unchanged
+/nomination-of-stanislas-pinte-as-ceo-of-thesignallingcompany,/news/nomination-of-stanislas-pinte-as-ceo-of-thesignallingcompany,post,exact,Slug unchanged
+/shaping-the-train-positioning-algorithms-of-the-future,/news/shaping-the-train-positioning-algorithms-of-the-future,post,exact,Slug unchanged
+/the-signalling-company-and-try-and-cert-introduce-silicon-valley-best-practice-into-european-etcs-development,/news/the-signalling-company-and-try-and-cert-introduce-silicon-valley-best-practice-into-european-etcs-development,post,exact,Slug unchanged
+/positive-assessment-from-tuv-rheinland-for-ievc-product-design,/news/tuv-rheinland-positive-assessment-ievc,post,high,Renamed slug (TUV Rheinland iEVC)
+/skoda-group-acquires-a-majority-stake-in-the-signalling-company,/news/skoda-group-acquires-majority-stake,post,high,Renamed slug (Skoda acquisition)
+/thesignallingcompany-to-build-new-mobile-app-to-function-as-the-belgian-class-bsystem-tbl1-on-its-etcs-solution,/news/tsc-mobile-app-belgian-tbl1-plus,post,high,Renamed slug (TBL1+ mobile app)
+/first-locomotive-authorised-with-the-signalling-companys-software-defined-safety-system,/news/first-locomotive-authorised-tsc-platform,post,high,Renamed slug (first loco authorised)
+/introducing-the-worlds-1st-software-defined-etcs-certified-safety-system,/news/worlds-first-software-defined-etcs-certified,post,high,Renamed slug (world's first SW-defined ETCS)
+/stans-etcs-diary-11-days-australia,/news/stans-diary-11-days-in-australia,post,high,Renamed slug (Stan's diary Australia)
+/the-signalling-companys-etcs-wins-railtech-innovation-award,/news/etcs-wins-railtech-innovation-award,post,high,Renamed slug (RailTech award)
+/award-winning-etcs-soon-deployed-on-new-hybrid-regiojet-trains,/projects/skoda-regiojet,post-GAP,LOW,No news equivalent migrated. Interim topical target. RECOMMEND migrating the post then repoint to /news/{slug}

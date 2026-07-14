@@ -1,0 +1,31 @@
+/**
+ * The Signalling Company — Client First Fluid Root CSS
+ *
+ * Fluid root font-size using linear interpolation between breakpoints.
+ * All rem-based variables scale smoothly instead of snapping at breakpoints.
+ *
+ * Breakpoint scaling ranges:
+ *   >1920px   → 18px (1.125rem, fixed)
+ *   1439–1920 → 18px → 16px
+ *   992–1439  → 16px → 12px
+ *   480–992   → 16px → 14px
+ *   <480px    → 16px → ~12px
+ */
+
+html { font-size: 1.125rem; }
+
+@media screen and (max-width: 1920px) {
+  html { font-size: calc(0.6260395010395009rem + 0.41580041580041593vw); }
+}
+
+@media screen and (max-width: 1439px) {
+  html { font-size: calc(0.19519015659955263rem + 0.8948545861297538vw); }
+}
+
+@media screen and (max-width: 992px) {
+  html { font-size: calc(0.7578125rem + 0.390625vw); }
+}
+
+@media screen and (max-width: 480px) {
+  html { font-size: calc(0.7494780793319415rem + 0.8350730688935282vw); }
+}

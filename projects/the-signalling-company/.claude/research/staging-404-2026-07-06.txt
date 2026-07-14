@@ -1,0 +1,7 @@
+uid=13_0 RootWebArea "Page Not Found: The Signalling Company" url="https://tsc-v2.webflow.io/404"
+  uid=13_1 banner
+    uid=13_2 link "home" url="https://tsc-v2.webflow.io/"
+  uid=13_3 StaticText "404"
+  uid=13_4 heading "Signal failure" level="1"
+  uid=13_5 link "Reset journey" url="https://tsc-v2.webflow.io/"
+    uid=13_6 StaticText "Reset journey"

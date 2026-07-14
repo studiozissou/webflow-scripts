@@ -1,0 +1,591 @@
+{
+  "date": "2026-07-14",
+  "dpr": 2,
+  "gapPx": 100,
+  "buckets": [
+    730,
+    960,
+    1180,
+    1500,
+    2850
+  ],
+  "images": [
+    {
+      "base": "cliff-009",
+      "pages": [
+        "/about",
+        "/services"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "cliff-011",
+      "pages": [
+        "/services",
+        "/services/etcs-retrofit-viability-assessment"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "cliff-040",
+      "pages": [
+        "/",
+        "/home-b",
+        "/railos",
+        "/railos/app-store",
+        "/railos/apps",
+        "/railos/devices",
+        "/services",
+        "/services/series-installation-commissioning"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "cliff-046",
+      "pages": [
+        "/",
+        "/home-b",
+        "/projects/skoda-regiojet",
+        "/services"
+      ],
+      "desktopMaxCss": 419,
+      "mobileMaxCss": 431,
+      "desktopTarget": 838,
+      "mobileTarget": 862,
+      "desktopBucket": 960,
+      "mobileBucket": 960,
+      "buckets": [
+        960
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "mobile-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large"
+      ]
+    },
+    {
+      "base": "cliff-066",
+      "pages": [
+        "/about",
+        "/railos",
+        "/railos/app-store",
+        "/railos/apps",
+        "/railos/open"
+      ],
+      "desktopMaxCss": 452,
+      "mobileMaxCss": 345,
+      "desktopTarget": 904,
+      "mobileTarget": 690,
+      "desktopBucket": 960,
+      "mobileBucket": 730,
+      "buckets": [
+        730,
+        960
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "mobile-large",
+      "mobileFolder": "mobile-small",
+      "folders": [
+        "mobile-small",
+        "mobile-large"
+      ]
+    },
+    {
+      "base": "cliff-080",
+      "pages": [
+        "/",
+        "/careers",
+        "/home-b"
+      ],
+      "desktopMaxCss": 588,
+      "mobileMaxCss": 431,
+      "desktopTarget": 1176,
+      "mobileTarget": 862,
+      "desktopBucket": 1180,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        1180
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-small",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-small"
+      ]
+    },
+    {
+      "base": "cliff-100",
+      "pages": [
+        "/railos",
+        "/railos/app-store",
+        "/railos/apps",
+        "/railos/devices",
+        "/railos/open"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "cliff-119",
+      "pages": [
+        "/contact",
+        "/news"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "cliff-121",
+      "pages": [
+        "/services",
+        "/services/maintenance"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "cliff-148",
+      "pages": [
+        "/",
+        "/home-b"
+      ],
+      "desktopMaxCss": 749,
+      "mobileMaxCss": 431,
+      "desktopTarget": 1498,
+      "mobileTarget": 862,
+      "desktopBucket": 1500,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        1500
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "desktop-medium",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-medium"
+      ]
+    },
+    {
+      "base": "cliff-155",
+      "pages": [
+        "/railos",
+        "/railos/app-store",
+        "/railos/devices"
+      ],
+      "desktopMaxCss": 749,
+      "mobileMaxCss": 431,
+      "desktopTarget": 1498,
+      "mobileTarget": 862,
+      "desktopBucket": 1500,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        1500
+      ],
+      "srcWidth": 4101,
+      "desktopFolder": "desktop-medium",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-medium"
+      ]
+    },
+    {
+      "base": "cliff-156",
+      "pages": [
+        "/railos/app-store",
+        "/railos/apps",
+        "/railos/devices",
+        "/railos/open"
+      ],
+      "desktopMaxCss": 452,
+      "mobileMaxCss": 345,
+      "desktopTarget": 904,
+      "mobileTarget": 690,
+      "desktopBucket": 960,
+      "mobileBucket": 730,
+      "buckets": [
+        730,
+        960
+      ],
+      "srcWidth": 7008,
+      "desktopFolder": "mobile-large",
+      "mobileFolder": "mobile-small",
+      "folders": [
+        "mobile-small",
+        "mobile-large"
+      ]
+    },
+    {
+      "base": "rosendaal-003",
+      "pages": [
+        "/",
+        "/about",
+        "/home-b",
+        "/railos"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 9504,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "rosendaal-088",
+      "pages": [
+        "/about"
+      ],
+      "desktopMaxCss": 363,
+      "mobileMaxCss": 431,
+      "desktopTarget": 726,
+      "mobileTarget": 862,
+      "desktopBucket": 730,
+      "mobileBucket": 960,
+      "buckets": [
+        730,
+        960
+      ],
+      "srcWidth": 9504,
+      "desktopFolder": "mobile-small",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-small",
+        "mobile-large"
+      ]
+    },
+    {
+      "base": "rosendaal-100",
+      "pages": [
+        "/railos/open"
+      ],
+      "desktopMaxCss": 588,
+      "mobileMaxCss": 431,
+      "desktopTarget": 1176,
+      "mobileTarget": 862,
+      "desktopBucket": 1180,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        1180
+      ],
+      "srcWidth": 9504,
+      "desktopFolder": "desktop-small",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-small"
+      ]
+    },
+    {
+      "base": "rosendaal-101",
+      "pages": [
+        "/railos",
+        "/railos/apps",
+        "/railos/devices",
+        "/railos/open"
+      ],
+      "desktopMaxCss": 452,
+      "mobileMaxCss": 345,
+      "desktopTarget": 904,
+      "mobileTarget": 690,
+      "desktopBucket": 960,
+      "mobileBucket": 730,
+      "buckets": [
+        730,
+        960
+      ],
+      "srcWidth": 9504,
+      "desktopFolder": "mobile-large",
+      "mobileFolder": "mobile-small",
+      "folders": [
+        "mobile-small",
+        "mobile-large"
+      ]
+    },
+    {
+      "base": "rosendaal-124",
+      "pages": [
+        "/services",
+        "/services/training"
+      ],
+      "desktopMaxCss": 1425,
+      "mobileMaxCss": 479,
+      "desktopTarget": 2850,
+      "mobileTarget": 958,
+      "desktopBucket": 2850,
+      "mobileBucket": 960,
+      "buckets": [
+        960,
+        2850
+      ],
+      "srcWidth": 9504,
+      "desktopFolder": "desktop-large",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-large",
+        "desktop-large"
+      ]
+    },
+    {
+      "base": "rosendaal-144",
+      "pages": [
+        "/railos"
+      ],
+      "desktopMaxCss": 360,
+      "mobileMaxCss": 431,
+      "desktopTarget": 720,
+      "mobileTarget": 862,
+      "desktopBucket": 730,
+      "mobileBucket": 960,
+      "buckets": [
+        730,
+        960
+      ],
+      "srcWidth": 9504,
+      "desktopFolder": "mobile-small",
+      "mobileFolder": "mobile-large",
+      "folders": [
+        "mobile-small",
+        "mobile-large"
+      ]
+    }
+  ],
+  "unmatched": [
+    {
+      "base": "cliff-006",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-010",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-028",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-052",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-055",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-056",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-065",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-071",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-072",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-082",
+      "srcWidth": 6957
+    },
+    {
+      "base": "cliff-137",
+      "srcWidth": 4559
+    },
+    {
+      "base": "cliff-143",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-144",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-147",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-152",
+      "srcWidth": 7008
+    },
+    {
+      "base": "cliff-157",
+      "srcWidth": 4608
+    },
+    {
+      "base": "rosendaal-041",
+      "srcWidth": 9504
+    },
+    {
+      "base": "rosendaal-042",
+      "srcWidth": 9504
+    },
+    {
+      "base": "rosendaal-073",
+      "srcWidth": 9504
+    },
+    {
+      "base": "rosendaal-096",
+      "srcWidth": 9504
+    },
+    {
+      "base": "stopmotion-01",
+      "srcWidth": 6920
+    },
+    {
+      "base": "stopmotion-17",
+      "srcWidth": 6920
+    }
+  ],
+  "encodeCount": 35,
+  "bucketNames": {
+    "730": "mobile-small",
+    "960": "mobile-large",
+    "1180": "desktop-small",
+    "1500": "desktop-medium",
+    "2850": "desktop-large"
+  },
+  "webflow": {
+    "siteId": "6a32b717a48adbce92029295",
+    "folders": {
+      "2850": {
+        "wfName": "4. Desktop Large",
+        "folderId": "6a56437a37158205c9f2a6d0",
+        "localFolder": "desktop-large"
+      },
+      "1500": {
+        "wfName": "5. Desktop Medium",
+        "folderId": "6a56437b213b07b0cce1279b",
+        "localFolder": "desktop-medium"
+      },
+      "1180": {
+        "wfName": "6. Desktop Small",
+        "folderId": "6a56437b9c6f0e301c18ab85",
+        "localFolder": "desktop-small"
+      },
+      "960": {
+        "wfName": "7. Mobile Large",
+        "folderId": "6a56437bad8b4ce5cb1a21e7",
+        "localFolder": "mobile-large"
+      },
+      "730": {
+        "wfName": "8. Mobile Small",
+        "folderId": "6a56437c37158205c9f2a805",
+        "localFolder": "mobile-small"
+      }
+    }
+  }
+}

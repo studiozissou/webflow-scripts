@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coconut — Making Tax Digital for Sole Traders (prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --coco-coral: #f77d53;
+    --coco-coral-dark: #e56236;
+    --coco-gold: #f7c11c;
+    --aqua-mist: #c2efed;
+    --coco-cream: #ddd9d4;
+    --coconut-palm: #2a2228;
+    --off-white: whitesmoke;
+    --white: #fff;
+    --muted: #61595e;
+    --round-corner: 1.5625rem;
+    --font-head: "Work Sans", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --container: 1180px;
+    --pad-x: 5vw;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font-family: var(--font-body); color: var(--coconut-palm); background: var(--white); line-height: 1.7; font-size: 1.0625rem; overflow-x: hidden; }
+  img { max-width: 100%; display: block; }
+  h1, h2, h3, h4, .eyebrow, .btn { font-family: var(--font-head); }
+  h1, h2, h3, h4 { line-height: 1.14; margin: 0 0 0.6em; font-weight: 700; text-wrap: balance; }
+  h1 { font-size: clamp(2.2rem, 5.2vw, 3.25rem); }
+  h2 { font-size: clamp(1.7rem, 3.6vw, 2.4rem); }
+  h3 { font-size: clamp(1.2rem, 2.1vw, 1.5rem); }
+  p { margin: 0 0 1rem; text-wrap: pretty; }
+  a { color: inherit; }
+  .section { padding: clamp(3rem, 7vw, 6rem) var(--pad-x); }
+  .container { max-width: var(--container); margin-inline: auto; }
+  .narrow { max-width: 48rem; }
+  .bg-off { background: var(--off-white); }
+  .bg-aqua { background: var(--aqua-mist); }
+  .bg-white { background: var(--white); }
+  .bg-cream { background: var(--coco-cream); }
+  .bg-palm { background: var(--coconut-palm); color: var(--off-white); }
+  .bg-palm h1, .bg-palm h2, .bg-palm h3, .bg-palm h4 { color: var(--white); }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; font-weight: 600; color: var(--coco-coral); margin: 0 0 0.75rem; }
+  .lead { font-size: 1.15rem; color: var(--muted); }
+  .bg-palm .lead { color: rgba(255,255,255,0.82); }
+  .section-head { max-width: 46rem; margin: 0 auto clamp(2rem, 4vw, 3rem); text-align: center; }
+  .section-head.left { margin-inline: 0; text-align: left; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.6rem; border-radius: 999px; font-weight: 600; font-size: 1rem; text-decoration: none; border: 2px solid transparent; cursor: pointer; transition: transform .15s ease, background .15s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--coco-coral); color: var(--white); }
+  .btn-primary:hover { background: var(--coco-coral-dark); }
+  .btn-secondary { background: transparent; color: var(--coconut-palm); border-color: var(--coconut-palm); }
+  .bg-palm .btn-secondary { color: var(--white); border-color: rgba(255,255,255,0.6); }
+  .btn-ghost { background: transparent; color: var(--coco-coral); border-color: transparent; padding-inline: 0; font-weight: 600; text-decoration: none; }
+  .microtrust { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-top: 1rem; font-family: var(--font-head); font-size: 0.85rem; color: var(--muted); }
+  .microtrust span { display: flex; align-items: center; gap: 0.4rem; }
+  .microtrust span::before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: 999px; background: var(--coco-coral); }
+  .bg-palm .microtrust { color: rgba(255,255,255,0.7); }
+  .card { background: var(--white); border-radius: var(--round-corner); padding: clamp(1.5rem, 3vw, 2.25rem); box-shadow: 0 18px 40px -28px rgba(42,34,40,0.35); height: 100%; }
+  .grid { display: grid; gap: clamp(1rem, 2vw, 1.5rem); align-items: stretch; }
+  .ticks { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: 1.1rem; }
+  .ticks li { display: grid; grid-template-columns: 1.9rem 1fr; gap: 0.9rem; align-items: start; }
+  .tick { width: 1.9rem; height: 1.9rem; border-radius: 999px; background: var(--coco-coral); display: inline-flex; align-items: center; justify-content: center; flex: none; margin-top: 0.1rem; }
+  .tick svg { width: 1rem; height: 1rem; }
+  .ticks li strong { font-family: var(--font-head); font-size: 1.05rem; }
+  .component-chip { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--font-head); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: rgba(0,0,0,0.05); padding: 0.3rem 0.7rem; border-radius: 999px; margin-bottom: 1rem; }
+  .layout-note { display: inline-block; font-family: var(--font-head); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #7a5b00; background: #fdf0c9; border: 1px dashed var(--coco-gold); padding: 0.25rem 0.6rem; border-radius: 999px; }
+  .hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  .hero-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .badge { font-family: var(--font-head); font-size: 0.82rem; font-weight: 500; background: var(--white); border: 1px solid rgba(42,34,40,0.12); border-radius: 999px; padding: 0.35rem 0.85rem; }
+  .hero-art { border-radius: var(--round-corner); background: linear-gradient(150deg, var(--aqua-mist), #d7f3f0); aspect-ratio: 4/3.4; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+  .ph-label { font-family: var(--font-head); font-size: 0.8rem; color: var(--muted); background: rgba(255,255,255,0.7); padding: 0.3rem 0.7rem; border-radius: 999px; margin: 1rem; }
+  .marquee { overflow: hidden; }
+  .marquee-track { display: flex; gap: 3rem; width: max-content; animation: scroll-x 30s linear infinite; }
+  .marquee-item { font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; color: var(--coconut-palm); display: flex; align-items: center; gap: 0.55rem; white-space: nowrap; }
+  .marquee-item .dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--coco-coral); }
+  .stars { color: var(--coco-gold); letter-spacing: 0.05em; }
+  @keyframes scroll-x { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; flex-wrap: wrap; justify-content: center; width: auto; } }
+  .tabs { background: var(--white); border-radius: var(--round-corner); overflow: hidden; box-shadow: 0 18px 40px -28px rgba(42,34,40,0.35); display: grid; grid-template-columns: 0.9fr 1.6fr; }
+  .tablist { display: flex; flex-direction: column; border-right: 1px solid rgba(42,34,40,0.1); }
+  .tab { text-align: left; font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; padding: 1.3rem 1.5rem; background: var(--off-white); border: none; border-bottom: 1px solid rgba(42,34,40,0.08); cursor: pointer; color: var(--muted); transition: background .15s, color .15s; }
+  .tab:last-child { border-bottom: none; }
+  .tab[aria-selected="true"] { background: var(--white); color: var(--coconut-palm); box-shadow: inset 4px 0 0 var(--coco-coral); }
+  .tabpanels { padding: clamp(1.5rem, 3vw, 2.75rem); }
+  .tabpanel { display: none; }
+  .tabpanel.active { display: block; animation: fade .25s ease; }
+  .tabpanel h3 { margin-top: 0; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .timeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; position: relative; }
+  .timeline::before { content: ""; position: absolute; top: 1.1rem; left: 8%; right: 8%; height: 3px; background: repeating-linear-gradient(90deg, var(--coco-cream) 0 12px, transparent 12px 22px); z-index: 0; }
+  .tl-node { position: relative; z-index: 1; }
+  .tl-dot { width: 2.25rem; height: 2.25rem; border-radius: 999px; background: var(--coco-coral); color: var(--white); font-family: var(--font-head); font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 1.1rem; }
+  .tl-date { font-family: var(--font-head); font-weight: 700; font-size: 1.4rem; margin-bottom: 0.35rem; }
+  .tl-income { color: var(--coco-coral); font-weight: 600; font-family: var(--font-head); }
+  .callout { margin-top: 2rem; background: var(--white); border-radius: var(--round-corner); padding: 1.5rem 1.75rem; border-left: 5px solid var(--coco-gold); max-width: 52rem; }
+  .callout p:last-child { margin-bottom: 0; }
+  .mini-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .mini-card { background: var(--white); border-radius: 1rem; padding: 1.1rem 1.25rem; font-family: var(--font-head); font-weight: 600; border-left: 4px solid var(--coco-coral); display: flex; align-items: center; }
+  .tasks { display: grid; gap: 1.25rem; }
+  .task { display: grid; grid-template-columns: auto 1fr; gap: 1.5rem; align-items: start; }
+  .task-num { width: 2.75rem; height: 2.75rem; border-radius: 999px; background: var(--coco-coral); color: #fff; font-family: var(--font-head); font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; flex: none; }
+  .task h3 { margin-top: 0.35rem; }
+  .qtable-wrap { overflow-x: auto; }
+  .qtable { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-family: var(--font-head); font-size: 0.95rem; border-radius: 1rem; overflow: hidden; min-width: 480px; }
+  .qtable th, .qtable td { text-align: left; padding: 0.8rem 1rem; border-bottom: 1px solid rgba(42,34,40,0.1); }
+  .qtable thead th { background: var(--coconut-palm); color: #fff; }
+  .qtable tbody tr:nth-child(even) { background: var(--off-white); }
+  .subblock { margin-top: 2.5rem; }
+  .zig { display: grid; gap: clamp(2rem, 4vw, 3.5rem); }
+  .zig-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: center; }
+  .zig-row:nth-child(even) .zig-art { order: -1; }
+  .zig-art { border-radius: var(--round-corner); background: linear-gradient(150deg, var(--coco-cream), #efece7); aspect-ratio: 4/3; display: flex; align-items: flex-end; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: center; }
+  .faq { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; align-items: start; }
+  .faq-item { background: var(--white); border-radius: var(--round-corner); overflow: hidden; box-shadow: 0 14px 34px -30px rgba(42,34,40,0.4); }
+  .faq-q { width: 100%; text-align: left; font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; padding: 1.25rem 1.4rem; background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; gap: 1rem; align-items: center; color: var(--coconut-palm); }
+  .faq-q .plus { flex: none; width: 1.6rem; height: 1.6rem; position: relative; }
+  .faq-q .plus::before, .faq-q .plus::after { content: ""; position: absolute; background: var(--coco-coral); border-radius: 2px; transition: transform .2s; }
+  .faq-q .plus::before { top: 50%; left: 0; right: 0; height: 3px; transform: translateY(-50%); }
+  .faq-q .plus::after { left: 50%; top: 0; bottom: 0; width: 3px; transform: translateX(-50%); }
+  .faq-item.open .plus::after { transform: translateX(-50%) scaleY(0); }
+  .faq-a { padding: 0 1.4rem; max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s ease; }
+  .faq-item.open .faq-a { padding: 0 1.4rem 1.4rem; max-height: 900px; }
+  .faq-a p { color: var(--muted); margin: 0 0 0.75rem; }
+  .final { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  .final-badges { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.25rem; }
+  .store-badge { font-family: var(--font-head); font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(42,34,40,0.25); border-radius: 0.7rem; padding: 0.55rem 0.9rem; display: flex; align-items: center; gap: 0.5rem; background: var(--white); }
+  .trustpilot { display: flex; align-items: center; gap: 0.6rem; margin-top: 1.25rem; font-family: var(--font-head); font-weight: 600; }
+  .proto-foot { padding: 1.5rem var(--pad-x); background: var(--coconut-palm); color: rgba(255,255,255,0.55); font-family: var(--font-head); font-size: 0.8rem; text-align: center; }
+  .proto-banner { padding: 0.75rem var(--pad-x); background: #fdf0c9; color: #6b5200; font-family: var(--font-head); font-size: 0.82rem; text-align: center; border-bottom: 1px solid #ecdca0; }
+  @media (max-width: 900px) {
+    .hero, .final, .split { grid-template-columns: 1fr; }
+    .hero-art, .final .hero-art { order: -1; }
+    .tabs { grid-template-columns: 1fr; }
+    .tablist { flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid rgba(42,34,40,0.1); }
+    .tab { border-bottom: none; border-right: 1px solid rgba(42,34,40,0.08); white-space: nowrap; }
+    .tab[aria-selected="true"] { box-shadow: inset 0 -4px 0 var(--coco-coral); }
+    .timeline { grid-template-columns: 1fr; gap: 0; }
+    .timeline::before { top: 0; bottom: 0; left: 1rem; right: auto; width: 3px; height: auto; background: repeating-linear-gradient(180deg, var(--coco-cream) 0 12px, transparent 12px 22px); }
+    .tl-node { padding-left: 3.5rem; padding-bottom: 2rem; }
+    .tl-dot { position: absolute; left: 0; }
+    .mini-cards { grid-template-columns: 1fr; }
+    .task { grid-template-columns: 1fr; gap: 0.75rem; }
+    .zig-row { grid-template-columns: 1fr; }
+    .zig-row:nth-child(even) .zig-art { order: -1; }
+    .faq { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="proto-banner">Design prototype · Coconut MTD — Sole Traders (pilot). Layout &amp; visual rhythm only — <strong>all copy is verbatim from the live staging page</strong>; nothing has been reworded. Headings marked “layout label” are the only new text.</div>
+
+<!-- HERO (existing component — shown for context) -->
+<section class="section bg-cream">
+  <div class="container">
+    <div class="hero">
+      <div class="hero-copy">
+        <span class="component-chip">Existing hero component · not being redesigned</span>
+        <div class="hero-badges">
+          <span class="badge">HMRC-recognised</span>
+          <span class="badge">Built for sole traders and self-employed people</span>
+          <span class="badge">14-day free trial</span>
+          <span class="badge">No card details needed</span>
+        </div>
+        <h1>Making Tax Digital for Sole Traders</h1>
+        <p>Making Tax Digital for sole traders is changing how self-employed people keep records and report income tax to HMRC.</p>
+        <p>That means you'll need to keep digital records, send quarterly updates to HMRC and complete a year-end tax submission using compatible software.</p>
+        <p>Coconut helps keep that simple.</p>
+        <p>You can track self-employment income, sort expenses, store receipts, see your tax estimate and submit MTD updates to HMRC from one place — without complicated accounting software or messy spreadsheets.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="#">Start your free trial</a>
+          <a class="btn btn-secondary" href="#">See how Coconut works</a>
+        </div>
+        <div class="microtrust"><span>No card details required</span><span>FCA authorised</span><span>Bank level security</span></div>
+      </div>
+      <div class="hero-art"><span class="ph-label">Hero illustration (existing)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- #16 TRUST STRIP (marquee) — trust signals present on the page -->
+<section class="section bg-off" style="padding-top:2.5rem;padding-bottom:2.5rem;">
+  <div class="container marquee">
+    <div class="marquee-track">
+      <span class="marquee-item"><span class="dot"></span>HMRC-recognised</span>
+      <span class="marquee-item"><span class="stars">★★★★</span>Rated Great · 4.1 on Trustpilot</span>
+      <span class="marquee-item"><span class="dot"></span>FCA authorised</span>
+      <span class="marquee-item"><span class="dot"></span>Bank level security</span>
+      <span class="marquee-item"><span class="dot"></span>No card details required</span>
+      <span class="marquee-item"><span class="dot"></span>14-day free trial</span>
+      <span class="marquee-item"><span class="dot"></span>HMRC-recognised</span>
+      <span class="marquee-item"><span class="stars">★★★★</span>Rated Great · 4.1 on Trustpilot</span>
+      <span class="marquee-item"><span class="dot"></span>FCA authorised</span>
+      <span class="marquee-item"><span class="dot"></span>Bank level security</span>
+      <span class="marquee-item"><span class="dot"></span>No card details required</span>
+      <span class="marquee-item"><span class="dot"></span>14-day free trial</span>
+    </div>
+  </div>
+</section>
+
+<!-- #18 TABBED — "Worried MTD means more admin?" absorbs 3 prose sections -->
+<section class="section bg-aqua">
+  <div class="container">
+    <div class="section-head">
+      <h2>Worried MTD means more admin? Here's what changes for you</h2>
+    </div>
+    <div class="tabs">
+      <div class="tablist" role="tablist" aria-label="What changes">
+        <button class="tab" role="tab" aria-selected="true" aria-controls="tp1" id="t1">What changes for you</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="tp2" id="t2">What MTD actually is</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="tp3" id="t3">Year-round tracking</button>
+      </div>
+      <div class="tabpanels">
+        <div class="tabpanel active" id="tp1" role="tabpanel" aria-labelledby="t1">
+          <p>If you're used to doing your Self Assessment tax return once a year, Making Tax Digital can sound like a big change.</p>
+          <p>The main difference is that your records need to stay up to date during the tax year. Instead of pulling everything together at the end, you'll keep digital records as you go and send HMRC quarterly updates through MTD-compatible software.</p>
+          <p>These updates are simple summaries of your income and expenses. They're not four full tax returns.</p>
+          <p>You'll still finalise your income tax position at the end of the tax year with a year-end tax submission. Coconut keeps your records, quarterly updates and year-end information connected, so you're not starting from scratch every time a deadline comes around.</p>
+        </div>
+        <div class="tabpanel" id="tp2" role="tabpanel" aria-labelledby="t2">
+          <h3>What Making Tax Digital for Income Tax actually is</h3>
+          <p>Making Tax Digital for Income Tax is HMRC's new way of asking sole traders, landlords and self-employed people to keep records and report income digitally.</p>
+          <p>If MTD applies to you, you'll need to:</p>
+          <ul class="ticks">
+            <li><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Keep digital records</span></li>
+            <li><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Use compatible software</span></li>
+            <li><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Send quarterly updates to HMRC</span></li>
+            <li><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Complete a year-end tax submission after the tax year ends</span></li>
+          </ul>
+          <p style="margin-top:1.25rem;">It's still income tax. You're not suddenly paying tax four times a year — the main 31 January payment deadline still applies.</p>
+          <p>What changes is how you keep your records and send information to HMRC.</p>
+          <p>With Coconut, you can manage the whole process in one app — from everyday record keeping to your MTD quarterly updates and year-end tax submission.</p>
+          <a class="btn btn-ghost" href="#">Read our guide to MTD-compatible software →</a>
+        </div>
+        <div class="tabpanel" id="tp3" role="tabpanel" aria-labelledby="t3">
+          <h3>How Coconut replaces the once-a-year Self Assessment scramble with year-round tracking</h3>
+          <p>Most sole traders know the January rush.</p>
+          <p>Bank statements, receipts, invoices and expenses all need sorting before the Self Assessment deadline. It can be stressful, especially if your records have been sitting in different places all year.</p>
+          <p>Coconut keeps these things organised as you go.</p>
+          <p>Connect your bank account, and Coconut securely pulls in your transactions using Open Banking. From there, you can categorise income and expenses, snap and store receipts, and keep your digital records ready for MTD throughout the tax year.</p>
+          <p>That means less last-minute sorting when a quarterly update is due. Your records are already in one place, your tax estimate updates as you go, and you can submit your MTD updates to HMRC through Coconut when the time comes.</p>
+          <p>So instead of treating tax as one big annual job, you can keep it ticking along in the background while you get on with your work in real time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- #1 TIMELINE — Does MTD apply to you yet? -->
+<section class="section bg-white">
+  <div class="container">
+    <div class="section-head">
+      <h2>Does MTD apply to you yet? Check your income and date</h2>
+      <p class="lead">Making Tax Digital for Income Tax is being introduced in stages.</p>
+      <p>For sole traders, the date you need to start depends on your qualifying income. That usually means your gross self-employment income before expenses. If you also have property income, that can count towards the threshold too.</p>
+      <p><strong>Here's the simple version:</strong></p>
+    </div>
+    <div class="timeline">
+      <div class="tl-node">
+        <div class="tl-dot">1</div>
+        <div class="tl-date">From 6 April 2026</div>
+        <div class="tl-income">Qualifying income over £50,000</div>
+      </div>
+      <div class="tl-node">
+        <div class="tl-dot">2</div>
+        <div class="tl-date">From 6 April 2027</div>
+        <div class="tl-income">Qualifying income over £30,000</div>
+      </div>
+      <div class="tl-node">
+        <div class="tl-dot">3</div>
+        <div class="tl-date">From 6 April 2028</div>
+        <div class="tl-income">Qualifying income over £20,000</div>
+      </div>
+    </div>
+    <div class="callout">
+      <p><strong>The important bit is that this is based on income before expenses, not profit.</strong></p>
+      <p>So, if you earn £52,000 from self-employment and have £12,000 of business expenses, your qualifying income is still £52,000 for MTD.</p>
+      <p>That means the April 2026 start date would apply.</p>
+    </div>
+  </div>
+</section>
+
+<!-- What counts as qualifying income? -->
+<section class="section bg-off">
+  <div class="container">
+    <div class="section-head">
+      <h2>What counts as qualifying income?</h2>
+      <p>Qualifying income usually includes gross income from:</p>
+    </div>
+    <div class="mini-cards">
+      <div class="mini-card">Self-employment</div>
+      <div class="mini-card">UK property income</div>
+      <div class="mini-card">Both, if you have more than one income stream</div>
+    </div>
+    <div class="narrow" style="margin-inline:auto;">
+      <p>It does not usually include PAYE income, pensions, dividends or capital gains.</p>
+      <p>So, if you're employed and also run a sole trader business on the side, your employment income does not count towards the MTD threshold. What matters is your gross income from self-employment and property income.</p>
+      <p>If your income changes from year to year, it's worth checking your position regularly. You may not need to use MTD straight away, but the thresholds are dropping over time — so getting your digital records organised early can save a rush later.</p>
+      <p><a class="btn btn-ghost" href="#">Check when MTD applies to you →</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- Who's exempt? -->
+<section class="section bg-white">
+  <div class="container">
+    <div class="split">
+      <div>
+        <h2>Who's exempt from Making Tax Digital?</h2>
+        <p>Some people may be exempt from Making Tax Digital for Income Tax.</p>
+        <p>That can apply if it is not reasonably practical for you to use digital tools, for example because of age, disability, location, religion or another reason that makes digital record keeping difficult.</p>
+        <p>If you think that might apply to you, you'll need to check the rules with HMRC and apply for an exemption.</p>
+        <p>For most sole traders, though, the simplest route is to get used to digital record keeping before the deadline arrives.</p>
+        <p>You don't need to wait until MTD applies to start using Coconut. You can begin tracking income, sorting expenses and keeping digital records now, so when your start date comes around, the process already feels familiar.</p>
+        <div class="btn-row" style="margin-top:1.25rem;"><a class="btn btn-primary" href="#">Start your 14-day free trial</a></div>
+      </div>
+      <div class="hero-art" style="aspect-ratio:4/3.2;"><span class="ph-label">Existing illustration</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- #12 DARK BAND — What you have to do under MTD -->
+<section class="section bg-palm">
+  <div class="container narrow" style="margin-inline:auto;text-align:center;">
+    <h2>What you have to do under MTD — and what Coconut does for you</h2>
+    <p>Once Making Tax Digital for Income Tax applies to you, there are three main things you'll need to do.</p>
+    <p>You'll need to keep digital records, send quarterly updates to HMRC and complete a year-end tax submission after the tax year ends.</p>
+    <p class="lead">That might sound like a lot, but the work is much easier when your income and expenses are already organised. Coconut keeps everything in one place, so each step feels more manageable.</p>
+  </div>
+</section>
+
+<!-- Three tasks (verbatim), incl. the quarterly-deadline table -->
+<section class="section bg-off">
+  <div class="container">
+    <div class="tasks">
+      <div class="task">
+        <div class="task-num">1</div>
+        <div>
+          <h3>Keep digital records</h3>
+          <p>Under MTD, you'll need to maintain digital records of your income and expenses.</p>
+          <p>That means keeping your business records in compatible software, rather than relying on paper notes, loose receipts or manual records you only pull together at the end of the year.</p>
+          <p>Coconut helps by connecting securely to your bank account through Open Banking. Your transactions are pulled in automatically, so you can track self-employment income and expenses as they happen.</p>
+          <p>You can also snap and store receipts, attach them to the right transactions and keep your digital records tidier throughout the tax year.</p>
+          <p>So, when an MTD deadline comes around, you're not digging through paperwork or trying to rebuild your records from scratch.</p>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-num">2</div>
+        <div>
+          <h3>Submit quarterly updates</h3>
+          <p>Sole traders in MTD for Income Tax will need to send four quarterly updates to HMRC each tax year.</p>
+          <p>These updates are summaries of your income and expenses for each period. They help HMRC see what's happening during the year, but they're not the same as a full tax return.</p>
+          <p>The standard quarterly update periods are:</p>
+          <div class="qtable-wrap">
+            <table class="qtable">
+              <thead><tr><th>Quarterly update</th><th>Period covered</th><th>Deadline</th></tr></thead>
+              <tbody>
+                <tr><td>1st update</td><td>6 April – 5 July</td><td>7 August</td></tr>
+                <tr><td>2nd update</td><td>6 April – 5 October</td><td>7 November</td></tr>
+                <tr><td>3rd update</td><td>6 April – 5 January</td><td>7 February</td></tr>
+                <tr><td>4th update</td><td>6 April – 5 April</td><td>7 May</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Coconut keeps your records organised as you go, so each update is more of a review-and-submit step than a full admin job.</p>
+          <p>When your update is ready, you can submit it to HMRC through Coconut's HMRC-recognised software.</p>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-num">3</div>
+        <div>
+          <h3>File your year-end tax submission</h3>
+          <p>Quarterly updates don't finalise your income tax for the year.</p>
+          <p>After the tax year ends, you'll still need to complete a year-end tax submission, also known as a final declaration, to confirm your full income tax position.</p>
+          <p>This is where you bring everything together, make any final adjustments and confirm what you owe.</p>
+          <p>Because Coconut keeps your income, expenses, receipts and quarterly updates connected throughout the year, your year-end submission is much easier to manage. You're not starting again from a blank spreadsheet or trying to piece everything together in January.</p>
+          <p>With Coconut, your MTD tax return process stays connected from the first transaction to the final submission.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Do you really need software? / spreadsheets / free vs paid -->
+<section class="section bg-white">
+  <div class="container">
+    <div class="section-head">
+      <h2>Do you really need software? And can it be free?</h2>
+    </div>
+    <div class="narrow" style="margin-inline:auto;">
+      <p>Yes — if Making Tax Digital for Income Tax applies to you, you'll need to use compatible software.</p>
+      <p>That doesn't mean you need a complicated accounting package. But it does mean your records and submissions need to be handled digitally in a way that connects with HMRC systems.</p>
+      <p>Coconut is built for sole traders who want to keep MTD simple. You can track income, sort expenses, keep digital records and submit updates to HMRC from one place — without paying for tools built for much bigger businesses.</p>
+
+      <div class="subblock"><h3>Why spreadsheets and paper won't meet MTD on their own</h3>
+      <p>Under MTD, paper records on their own won't be enough.</p>
+      <p>You also can't simply type your final figures into HMRC's website in the same way as before. To meet the MTD requirements, you'll need digital records and compatible software that can send the right information to HMRC.</p>
+      <p>If you already keep tidy spreadsheets and mainly need a way to connect them to HMRC, <a href="/bridging-software"><strong>MTD bridging software</strong></a> may be enough.</p>
+      <p>But if you want help with the whole process — tracking income, recording expenses, storing receipts, seeing your tax estimate and submitting quarterly updates — Coconut's full MTD software is the simpler route.</p>
+      <p>It keeps your records and submissions connected, so you're not moving figures between different tools every time a deadline comes around.</p></div>
+
+      <div class="subblock"><h3>Coconut's free-to-start, HMRC-recognised MTD software vs paid plans</h3>
+      <p>You can try Coconut free for 14 days, with no card details needed.</p>
+      <p>That gives you a simple way to see how Coconut helps you track self-employment income, categorise expenses, keep digital records and get ready for Making Tax Digital for Income Tax.</p>
+      <p>Eligible new Zempler users may also be able to get Coconut free for 2 years when they sign up through Coconut, open a Zempler bank account and connect it in the app.</p>
+      <p>So, if you're looking for free MTD software for sole traders, Coconut gives you a couple of ways to get started — whether you want to try the app first or check whether you qualify for the Zempler offer.</p>
+      <div class="btn-row" style="margin-top:1.25rem;">
+        <a class="btn btn-primary" href="#">Start your 14-day free trial</a>
+        <a class="btn btn-secondary" href="#">See how to get Coconut free with Zempler</a>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- #15 ZIGZAG — Why sole traders choose Coconut for MTD -->
+<section class="section bg-aqua">
+  <div class="container">
+    <div class="section-head">
+      <h2>Why sole traders choose Coconut for MTD</h2>
+      <p>Making Tax Digital is easier to manage when your software fits the way you actually work.</p>
+      <p>Coconut is built for sole traders and self-employed people who want to stay on top of tax without using complicated accounting software. It helps you keep your records organised, understand what you may owe and submit your MTD updates from one place.</p>
+    </div>
+    <div class="zig">
+      <div class="zig-row">
+        <div>
+          <h3>HMRC-recognised, with tax estimates as you go</h3>
+          <p>Coconut is HMRC-recognised software for Making Tax Digital for Income Tax.</p>
+          <p>That means you can use it to keep digital records and send MTD updates securely to HMRC when the rules apply to you.</p>
+          <p>But Coconut does more than help with submissions. It also gives you a clearer view of your tax position during the year, with income tax estimates that update as your income and expenses change.</p>
+          <p>So instead of waiting until January to work out what you owe, you can see how things are shaping up as you go — and plan ahead with more confidence.</p>
+          <a class="btn btn-ghost" href="#">Check Coconut on the official HMRC software list →</a>
+        </div>
+        <div class="zig-art"><span class="ph-label">Existing illustration</span></div>
+      </div>
+      <div class="zig-row">
+        <div>
+          <h3>Built for your trade</h3>
+          <p>Coconut is built for the way sole traders actually earn and manage money.</p>
+          <p>Whether you're a freelancer, contractor, tradesperson, online seller or self-employed professional, your income might not look the same every month. You might have different clients, project work, invoices, expenses, receipts and quieter periods to plan around.</p>
+          <p>Coconut helps you keep those moving parts organised.</p>
+          <p>You can track self-employment income, categorise expenses, store receipts, create invoices and keep a clearer view of what's coming in and going out.</p>
+          <p>That makes it easier to stay ready for Making Tax Digital without needing software designed for larger businesses with finance teams.</p>
+        </div>
+        <div class="zig-art"><span class="ph-label">Existing illustration</span></div>
+      </div>
+      <div class="zig-row">
+        <div>
+          <h3>Expert support when you need it most</h3>
+          <p>You don't need to work out Making Tax Digital for Income Tax on your own.</p>
+          <p>Coconut gives you clear steps to follow, with support available when you need a hand. So, if you're unsure about getting set up, connecting to HMRC, keeping digital records or preparing for quarterly updates, help is there.</p>
+          <p>That means you can move into MTD with more confidence, without needing to become an accounting expert.</p>
+          <a class="btn btn-ghost" href="#">See all features →</a>
+        </div>
+        <div class="zig-art"><span class="ph-label">Existing illustration</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- #9 FAQ (answers verbatim from the page copy) -->
+<section class="section bg-white">
+  <div class="container">
+    <div class="section-head"><h2>Frequently Asked Questions</h2></div>
+    <div class="faq">
+      <div class="faq-item">
+        <button class="faq-q">Can I use Coconut to comply with Making Tax Digital as a sole trader?<span class="plus"></span></button>
+        <div class="faq-a"><p>Yes. If your qualifying income is over the MTD threshold, you'll need to keep digital records and submit quarterly updates to HMRC using compatible software.</p><p>Coconut is HMRC-recognised MTD software built for sole traders. You can connect your bank, keep your digital records organised, prepare quarterly updates and submit to HMRC from one app.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Is Coconut HMRC-recognised for MTD for Income Tax?<span class="plus"></span></button>
+        <div class="faq-a"><p>Yes. Coconut is HMRC-recognised software for Making Tax Digital for Income Tax.</p><p>That means you can use Coconut to keep digital records and send MTD updates securely to HMRC when the rules apply to you. Coconut is also built with secure bank connections, so your income, expenses and tax records can stay organised in one place.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">When does MTD start for me?<span class="plus"></span></button>
+        <div class="faq-a"><p>MTD for Income Tax is being phased in by qualifying income.</p><p>It starts from 6 April 2026 if your qualifying income is over £50,000, from 6 April 2027 if it is over £30,000, and from 6 April 2028 if it is over £20,000.</p><p>Qualifying income usually means your gross self-employment income, plus property income if you have it. Coconut can help you start keeping digital records early, so you're not rushing when your start date comes around.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Is there a free version of Coconut for MTD?<span class="plus"></span></button>
+        <div class="faq-a"><p>You can try Coconut free for 14 days, with no card details needed.</p><p>During your trial, you can see how Coconut helps you track income, sort expenses, store receipts and get ready for Making Tax Digital. Eligible new users may also be able to get Coconut free for 2 years when they sign up through Coconut, open a Zempler bank account and connect it in the app.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Will Coconut still let me handle Self Assessment, or does MTD replace it?<span class="plus"></span></button>
+        <div class="faq-a"><p>Coconut lets you manage both Self Assessment and Making Tax Digital.</p><p>If you're affected by MTD, you'll need to keep digital records, send quarterly updates and complete a year-end tax submission to finalise your income tax position.</p><p>If you're not in MTD, you may still need to file a Self Assessment tax return as usual.</p><p>Coconut helps keep your Self Assessment and MTD tax information connected, so you can manage the right process for your circumstances without switching between separate tools.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How much work are quarterly updates with Coconut?<span class="plus"></span></button>
+        <div class="faq-a"><p>Quarterly updates are summaries of your income and expenses, not full tax returns.</p><p>Most sole traders using MTD for Income Tax will submit four quarterly updates each year, with deadlines on 7 August, 7 November, 7 February and 7 May.</p><p>With Coconut, your bank transactions, expenses and receipts are already organised as you go, so each update is more of a review-and-submit step than a big admin job.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Who is exempt from Making Tax Digital?<span class="plus"></span></button>
+        <div class="faq-a"><p>Some people may be exempt from Making Tax Digital if it is not reasonably practical for them to use digital tools.</p><p>That could be because of age, disability, location, religion or another reason that makes digital record keeping difficult. If you think this applies to you, you'll need to check the rules with HMRC and apply for an exemption — check out our blog for more information on who is eligible for an exemption.</p><p>For most sole traders, Coconut gives you a simple way to keep digital records and prepare for MTD.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Can I do Making Tax Digital myself?<span class="plus"></span></button>
+        <div class="faq-a"><p>Yes. You can manage Making Tax Digital yourself, as long as you use compatible software and keep the right digital records.</p><p>You don't always need an accountant, especially if your tax affairs are straightforward. Coconut is built to help sole traders track income, sort expenses, store receipts and submit MTD updates to HMRC from one place, with support available if you need a hand.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How does digital tax work for self-employed people?<span class="plus"></span></button>
+        <div class="faq-a"><p>For self-employed people, digital tax means keeping income and expense records digitally, then using compatible software to send updates to HMRC.</p><p>Under Making Tax Digital for Income Tax, affected sole traders will send quarterly updates during the tax year and complete a year-end tax submission after the year ends.</p><p>Coconut keeps your records, receipts, tax estimates and MTD submissions connected, so the process feels easier to manage throughout the year.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- #10 FINAL CTA — Ready to make MTD simple? -->
+<section class="section bg-aqua">
+  <div class="container">
+    <div class="final">
+      <div>
+        <h2>Ready to make MTD simple?</h2>
+        <p>Making Tax Digital doesn't need to mean more admin.</p>
+        <p>With Coconut, you can keep digital records, track income and expenses, see what you may owe, and submit your MTD updates to HMRC from one place.</p>
+        <p><strong>Simple tax software. Built for sole traders and self-employed people.</strong></p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="#">Start your 14-day free trial</a>
+          <a class="btn btn-secondary" href="#">View pricing</a>
+        </div>
+        <div class="microtrust"><span>No card details required</span><span>FCA authorised</span><span>Bank level security</span></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="trustpilot"><span class="stars" style="font-size:1.2rem;">★★★★</span> Rated Great. 4.1 out of 5 on Trustpilot</div>
+          <p style="margin:0.75rem 0 0;color:var(--muted);">Recognised by HMRC · MTD Ready</p>
+          <div class="final-badges">
+            <span class="store-badge">Download on the App Store</span>
+            <span class="store-badge">Get it on Google Play</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="proto-foot">Design prototype · Coconut MTD — Sole Traders (pilot) · Copy verbatim from the live staging page · Sections cycle Off-White → Aqua Mist → White with one Coconut Palm dark band · Hero is an existing component shown for context</div>
+
+<script>
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.tabpanel'));
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.setAttribute('aria-selected', 'false'); });
+        panels.forEach(function (p) { p.classList.remove('active'); });
+        tab.setAttribute('aria-selected', 'true');
+        var panel = document.getElementById(tab.getAttribute('aria-controls'));
+        if (panel) { panel.classList.add('active'); }
+      });
+    });
+  })();
+  (function () {
+    document.querySelectorAll('.faq-q').forEach(function (q) {
+      q.addEventListener('click', function () { q.parentElement.classList.toggle('open'); });
+    });
+  })();
+</script>
+</body>
+</html>

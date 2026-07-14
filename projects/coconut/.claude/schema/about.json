@@ -1,0 +1,36 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://www.getcoconut.com/about#webpage",
+  "url": "https://www.getcoconut.com/about",
+  "name": "About Coconut",
+  "description": "We're building the ultimate accounting and tax tool for self-employed people. Coconut's vision is to make self-employment easier than being employed.",
+  "isPartOf": {
+    "@type": "WebSite",
+    "@id": "https://www.getcoconut.com/#website",
+    "url": "https://www.getcoconut.com",
+    "name": "Coconut"
+  },
+  "about": {
+    "@id": "https://www.getcoconut.com/#organization"
+  },
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.getcoconut.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About",
+        "item": "https://www.getcoconut.com/about"
+      }
+    ]
+  }
+}
+</script>

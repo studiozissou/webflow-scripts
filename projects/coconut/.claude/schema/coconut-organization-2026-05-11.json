@@ -1,0 +1,80 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://www.getcoconut.com/#organization",
+  "name": "Coconut",
+  "alternateName": "!Coconut",
+  "legalName": "Coconut Platform Limited",
+  "url": "https://www.getcoconut.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "FILL_IN",
+    "caption": "Coconut logo"
+  },
+  "image": "FILL_IN",
+  "description": "Coconut is a bookkeeping and tax app for sole traders, freelancers, and self-employed workers in the UK. HMRC-recognised and MTD-compliant, Coconut helps you track income, send invoices, categorise expenses, and work out how much tax you owe.",
+  "foundingDate": "2015-12-07",
+  "founders": [
+    {
+      "@type": "Person",
+      "name": "Sam O'Connor"
+    },
+    {
+      "@type": "Person",
+      "name": "Adam Goodall"
+    }
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "London",
+    "addressCountry": "GB"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "United Kingdom",
+    "sameAs": "https://en.wikipedia.org/wiki/United_Kingdom"
+  },
+  "sameAs": [
+    "https://www.linkedin.com/company/getcoconut",
+    "https://x.com/getcoconut",
+    "https://www.facebook.com/getcoconut",
+    "https://www.instagram.com/getcoconut",
+    "https://www.youtube.com/@getcoconut"
+  ],
+  "contactPoint": [
+    {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "email": "support@getcoconut.com",
+      "availableLanguage": "English",
+      "hoursAvailable": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday"
+        ],
+        "opens": "09:00",
+        "closes": "16:00"
+      }
+    }
+  ],
+  "knowsAbout": [
+    "Self-employed accounting",
+    "Making Tax Digital",
+    "Self Assessment tax returns",
+    "Bookkeeping for sole traders",
+    "Landlord accounting",
+    "HMRC compliance",
+    "Expense tracking",
+    "Digital invoicing"
+  ],
+  "taxID": "09904418",
+  "numberOfEmployees": {
+    "@type": "QuantitativeValue",
+    "minValue": 20,
+    "maxValue": 50
+  }
+}

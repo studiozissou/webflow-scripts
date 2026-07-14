@@ -7,7 +7,24 @@
 node_modules/
 .env
 .env.test
+.mcp.json
 playwright-report/
 test-results/
 scripts/webflow/samples/
 *.pem
+
+# Accidental nested claude dirs (anywhere in the tree)
+**/.claude/.claude/
+
+# Heavy local research/audit artifacts — kept on disk, not in git history
+*.heapsnapshot
+*.pptm
+*.json.json.gz
+projects/carsa/.claude/research/halesowen-sell-screenshot.png
+projects/coconut/.claude/research/test-page/landlords-v2-fullpage.png
+projects/nem-life/.claude/research/phase-b-page-full.png
+
+# Scraped page dumps (research scratch) — can carry third-party tokens/PII, keep local only
+*snapshot*.txt
+*-snapshot.html
+*-fullpage.html

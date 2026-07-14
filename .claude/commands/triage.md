@@ -21,8 +21,8 @@ Before scanning, verify which MCP tools are available:
 
 ```
 Required:
-- Gmail MCP (search_threads, get_thread, create_draft)
-- Slack MCP (read_channel, read_thread)
+- Gmail MCP (mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread, mcp__claude_ai_Gmail__create_draft)
+- Slack MCP (mcp__plugin_slack_slack__slack_read_channel, mcp__plugin_slack_slack__slack_read_thread)
 - Notion MCP (notion-search, notion-create-pages)
 
 Optional:
@@ -56,11 +56,11 @@ Spawn parallel agents to scan each source:
 - Return classified threads with full content for actionable ones
 
 **Agent 2 — Slack**:
-- For each channel in config: `read_channel(id, oldest: state.slack.channels[id].lastProcessed || lookbackTimestamp, limit: 100)`
-- For each DM in config: `read_channel(id, oldest: state.slack.dms[id].lastProcessed || lookbackTimestamp, limit: 100)`
+- For each channel in config: `mcp__plugin_slack_slack__slack_read_channel(id, oldest: state.slack.channels[id].lastProcessed || lookbackTimestamp, limit: 100)`
+- For each DM in config: `mcp__plugin_slack_slack__slack_read_channel(id, oldest: state.slack.dms[id].lastProcessed || lookbackTimestamp, limit: 100)`
 - Classify messages using the same REPLY NEEDED / FLAG / ACTION / NOISE buckets
 - Use config's client mapping to auto-assign clients
-- For threads with replies, fetch full thread via `read_thread`
+- For threads with replies, fetch full thread via `mcp__plugin_slack_slack__slack_read_thread`
 - Return classified messages with permalinks
 
 **Agent 3 — Calendar** (if available):
@@ -135,13 +135,13 @@ Based on user's choice:
 4. Log each created task with Notion URL
 
 **Gmail draft creation:**
-1. For each approved draft, call `create_draft` with `replyToMessageId`
+1. For each approved draft, call `mcp__claude_ai_Gmail__create_draft` with `replyToMessageId`
 2. NEVER send — drafts only
 3. Confirm: "Draft created for thread: {subject}"
 
 **Slack reply sending:**
 1. Show each Slack reply one more time for final confirmation
-2. If approved, send via `send_message`
+2. If approved, send via `mcp__plugin_slack_slack__slack_send_message`
 3. If not approved or MCP unavailable, present as copy-paste block
 
 ### Step 8b — Quick Wins

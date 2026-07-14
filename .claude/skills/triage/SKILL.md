@@ -43,9 +43,9 @@ Group questions by source at the end of the triage output, not scattered through
 
 <prerequisites>
 
-Required MCP tools:
-- Gmail: `search_threads`, `get_thread`, `create_draft`, `list_labels`
-- Slack: `read_channel`, `search_public_and_private`, `read_thread`
+Required MCP tools (fully-qualified — these are the exact callable names on the connected servers):
+- Gmail: `mcp__claude_ai_Gmail__search_threads`, `mcp__claude_ai_Gmail__get_thread`, `mcp__claude_ai_Gmail__create_draft`, `mcp__claude_ai_Gmail__list_labels`
+- Slack: `mcp__plugin_slack_slack__slack_read_channel`, `mcp__plugin_slack_slack__slack_read_thread`, `mcp__plugin_slack_slack__slack_search_public_and_private`, `mcp__plugin_slack_slack__slack_send_message`
 - Google Calendar: `list_events`, `get_event`
 - Notion: `notion-search`, `notion-create-pages`, `notion-query-database-view`
 - Trello (optional): `trello_get_tasks`, `trello_analyze_board`
@@ -113,8 +113,8 @@ When Doer is "Claude", identify the specific command or skill that can execute t
 
 | Task pattern | Command/Skill |
 |--------------|--------------|
-| Draft a reply (Gmail) | `create_draft` via gmail-triage |
-| Draft a reply (Slack) | `send_message` via Slack MCP |
+| Draft a reply (Gmail) | `mcp__claude_ai_Gmail__create_draft` via gmail-triage |
+| Draft a reply (Slack) | `mcp__plugin_slack_slack__slack_send_message` via Slack MCP |
 | Generate JSON-LD schema | `/generate-schema` |
 | Run a site audit | `/site-audit` |
 | Run an SEO check | `/site-audit` or seo agent |
@@ -242,10 +242,10 @@ After gmail-triage classification:
 
 For each channel and DM in config:
 
-1. Load the channel via `read_channel(channel_id, oldest: lastProcessedTimestamp, limit: 100)`
+1. Load the channel via `mcp__plugin_slack_slack__slack_read_channel(channel_id, oldest: lastProcessedTimestamp, limit: 100)`
 2. For DMs, use the DM ID directly — same tool, same params
 3. Classify each message/thread using the same REPLY NEEDED / FLAG / ACTION / NOISE buckets
-4. For threads with replies, use `read_thread` to get full context
+4. For threads with replies, use `mcp__plugin_slack_slack__slack_read_thread` to get full context
 5. Extract tasks from actionable messages
 
 ### Slack permalink construction
@@ -351,7 +351,7 @@ Draft Slack replies following similar principles:
 - No formal sign-off needed
 - Reference specific details from the thread
 - Present as a quoted block for approval
-- If approved, send via Slack MCP `send_message` (with explicit user confirmation)
+- If approved, send via Slack MCP `mcp__plugin_slack_slack__slack_send_message` (with explicit user confirmation)
 - If Slack MCP send is unavailable, present as a copy-paste block
 
 </reply_drafting>

@@ -102,12 +102,27 @@ Brief summary of categories (e.g. "12 newsletters, 5 receipts, 3 LinkedIn")
 
 For each REPLY NEEDED thread, draft a reply following these rules:
 
-### Tone and voice
-- Match the user's existing email voice: professional but warm, concise, no filler
-- Use "Kind regards, Will" as the sign-off (do not include the full signature — Gmail handles that)
-- Start with "Hi {name}," — never "Dear" or "Hey"
-- Keep replies short and direct. The user writes tight emails.
-- If the user has replied to this person before in the thread, match that tone exactly
+### Tone and voice — use the `draft-email` skill
+Write every reply in the exact voice defined by the **`draft-email`** skill
+(`.claude/skills/draft-email/SKILL.md`), which is the single source of truth for
+how Will's emails read. Load that skill and apply its full voice profile: a
+polite, well-educated British man of 39, very short and warm (two to four
+sentences of substance), British spelling with Oxford commas, no em or en
+dashes, no corporate jargon, no emoji, contractions welcome, and no crutch words
+like "landed". Start with "Hi {name},".
+
+Two deliberate differences from a normal draft-email run:
+- **No sign-off.** Same as draft-email: end on the last real sentence, don't add
+  "Kind regards" or a name. Gmail appends Will's signature.
+- **Review before saving, not immediate save.** draft-email normally saves the
+  moment it's written, but triage is a batch the user reviews first, so the
+  approval flow below (present the draft, wait for approval, then `create_draft`)
+  overrides that. This is the one place draft-email's "save immediately" rule
+  does *not* apply.
+
+If the user has replied to this person before in the thread, let their earlier
+tone nudge the draft, but keep the draft-email hard rules (no em dashes, no
+jargon, no emoji, no sign-off) regardless.
 
 ### Content rules
 - Answer the question directly if there is enough context

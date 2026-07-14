@@ -1,16 +1,34 @@
 {
-  "lastRun": null,
-  "processedSourceIds": [],
+  "lastRun": "2026-07-14T11:00:00+00:00",
+  "processedSourceIds": [
+    "gmail:19f239a9bded3637#item10",
+    "gmail:19f239a9bded3637#item27",
+    "gmail:19f239a9bded3637#item9",
+    "gmail:19f4b0cbfe542a4e",
+    "manual:studio-zissou-btw-return",
+    "notion-meeting:39ce1848bb518078a8a9fa367ee2e9a8#laurent-reschedule",
+    "notion-meeting:39ce1848bb518078a8a9fa367ee2e9a8#projects-page",
+    "notion-meeting:39ce1848bb518078a8a9fa367ee2e9a8#video-loading",
+    "gmail:19f5c3b55b32ef1d",
+    "gmail:19f5c133ef614de4",
+    "gmail:19f5b0bcd1502966",
+    "slack:C0973LJ2BTJ:1783508718.532619"
+  ],
   "sources": {
     "gmail": {
-      "lastProcessed": null
+      "lastProcessed": "2026-07-13T21:02:25Z"
     },
     "slack": {
-      "channels": {},
-      "dms": {}
+      "channels": {
+        "C0973LJ2BTJ": "1783609502.696749",
+        "C08G8FGHX9Q": "1782402167.307479"
+      },
+      "dms": {
+        "D08SEJ6QTD2": "1783420744.376409"
+      }
     },
     "calendar": {
-      "lastProcessed": null
+      "lastProcessed": "2026-07-14T11:00:00+00:00"
     },
     "trello": {
       "lastProcessed": null

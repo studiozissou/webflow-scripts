@@ -176,9 +176,56 @@ If user approves parallel, spawn 5 subagents simultaneously. If sequential, run 
 | Canonical domain | Consistent WWW/non-WWW |
 | Analytics | GA4 or GTM in page embeds |
 | Cookie consent | Any consent mechanism present |
-| Alignment | Analytics not firing before consent |
+| Consent Mode | See **Consent Mode check** below — never infer from script load order |
+| Non-Google trackers | See **Consent Mode check** below — cookies set before consent |
 | Lighthouse Performance | Run Lighthouse on all auditable pages (see page selection rules below) |
 | Lighthouse Accessibility | Same pages — record scores and recurring issues |
+
+**Consent Mode check (required method):**
+
+A correctly-configured Consent Mode v2 site loads GTM and gtag.js immediately and fires tags
+before the user chooses. Those tags run in `denied` mode and send cookieless pings. **A compliant
+site and a non-compliant site look identical in the network panel.** Never conclude "analytics
+fires before consent" from script load order, `<head>` embed code, or a WebFetch of the HTML.
+That inference produced a false positive on Coconut (May 2026) that reached the client.
+
+Two things must be true before flagging anything:
+
+1. **Use a clean browser context.** A stored consent cookie from a previous visit makes the
+   defaults come back `granted` and inverts the result. With Chrome DevTools MCP, pass
+   `isolatedContext: "consent-check"` to `new_page`. Verify the banner is visible and do not
+   click it.
+2. **Query the consent state directly:**
+
+```js
+() => ({
+  consentCalls: (window.dataLayer || [])
+    .filter(e => e && e[0] === 'consent')
+    .map(e => JSON.stringify(Array.from(e))),
+  icsDefaults: window.google_tag_data?.ics?.entries
+    ? Object.fromEntries(Object.entries(window.google_tag_data.ics.entries).map(([k, v]) => [k, v.default]))
+    : 'none',
+  cookieNames: document.cookie.split(';').map(c => c.trim().split('=')[0]).filter(Boolean),
+})
+```
+
+Grade it as follows:
+
+| Observation | Verdict |
+|---|---|
+| `gtag('consent','default',…)` present, values `denied` | PASS — Consent Mode v2 correct. Do not raise a task. |
+| `gtag('consent','default',…)` present, values `granted` | FAIL — defaults must be denied. |
+| No `consent` call and no `google_tag_data.ics` | FAIL — Consent Mode not implemented. |
+
+Alternatively, read the `gcs=` parameter on the GA4 `/collect` request: `G100` = denied,
+`G111` = granted.
+
+**Then check the non-Google trackers separately.** Consent Mode governs Google tags only. Meta,
+TikTok, Hotjar, Intercom, LinkedIn, and Zoho are unaffected by it and commonly set cookies on
+load regardless. In the clean context, list cookies set before any banner interaction and match
+them to vendors (`_fbp` → Meta, `_ttp` → TikTok, `_hj*` → Hotjar, `intercom-*` → Intercom).
+Cookies from these vendors pre-consent are a genuine PECR finding — and it is a *different*
+finding from Consent Mode, with a different fix. Report them separately; never merge the two.
 
 **Lighthouse page selection rules:**
 
@@ -240,11 +287,23 @@ SEMRush.
 | Heading hierarchy | No jumps (H2→H4) |
 | Schema.org JSON-LD | Present on homepage, type check (Organization vs Product default) |
 | JSON-LD coverage | Count pages with/without across site |
-| Schema gaps | Flag missing: FAQPage, Article, Person, JobPosting, BreadcrumbList, Organization |
+| Schema gaps | Flag missing: Article, Person, JobPosting, BreadcrumbList, Organization. For `FAQPage`, see the eligibility rule below |
 | Sitemap completeness | All published pages included |
 | `llms.txt` | Present at root — recommend if absent |
 | Hreflang | Present if multi-locale, check for conflicts |
 | Broken external links | Flag pages with broken outbound links |
+
+**FAQPage eligibility rule.** Since August 2023, Google shows FAQ rich results only for
+authoritative government and health sites. For every other site — SaaS, ecommerce, agency,
+professional services — adding `FAQPage` markup will **not** produce expandable Q&As in search
+results, and a task justified that way is a false promise. This reached a client in the Coconut
+audit (May 2026).
+
+`FAQPage` markup is still worth recommending on a commercial site, but only on its real merits:
+AI-citation extraction and page-type signal. So flag a missing `FAQPage` when the site is a
+government or health domain, **or** when the justification is limited to those two grounds. Never
+write "so Google can display them as expandable Q&As in search results" for a commercial site. If
+the whole value of the task rests on rich results, drop the task.
 
 Write to `audits/seo.md`.
 
@@ -365,6 +424,43 @@ If skipped, the report will include "Section not yet run" placeholders for these
 
 Merge all outputs into `reports/intake-report-YYYY-MM-DD.md`.
 
+### Claim gate (applies to Phase 6, 6c, and 7)
+
+The audit streams verify **findings** — what is or isn't on the page. Synthesis adds
+**justifications** — why a finding matters and what fixing it buys. Justifications are generated
+prose, they are the part the client reads and budgets against, and until now nothing checked them.
+Both false positives in the Coconut audit (May 2026) entered here, not in the audit streams.
+
+Every justification splits into two kinds of claim:
+
+- **Site claims** — "the homepage has 13 Q&A pairs with no FAQPage schema." Sourced from an audit
+  file. Carry them through unchanged; do not restate them more strongly than the source did.
+- **Platform claims** — any assertion about what Google, ChatGPT, Perplexity, or a browser *does*
+  in response to a change. "Google will show expandable Q&As." "Star ratings appear in results."
+  "AI assistants weight outbound links." These are third-party behaviours, they change without
+  notice, and model training data goes stale on them.
+
+**Every platform claim must carry a source and a date, or it does not ship.** In the internal
+report, append `[source, YYYY]` to the justification. If you cannot source it, choose one:
+
+1. Rewrite the justification to rest only on a site claim ("marks up existing Q&As for AI
+   extraction"), or
+2. Mark the row `NEEDS VERIFY` and list it under "needs user input", or
+3. Drop the task.
+
+Never let a task's entire rationale rest on an unsourced platform claim. When in doubt, `WebSearch`
+the claim before writing it — a platform behaviour you "know" from training data is exactly the
+kind of fact most likely to have changed.
+
+Known-stale claims to check for explicitly before shipping any report:
+
+| Claim | Status |
+|---|---|
+| FAQ schema → expandable Q&As in Google results | **False** for non-gov/health since Aug 2023 |
+| HowTo schema → rich results | **False** — removed from Google results in 2023 |
+| Consent Mode absent because tags fire pre-consent | **False** — that is correct denied-mode behaviour |
+| `llms.txt` required for AI citation | **False** — no engine requires it (see `ai-search-aeo` mythbusting) |
+
 ### Report structure
 
 Read and follow the template at `.claude/templates/site-audit-report.md`. The template defines
@@ -413,16 +509,47 @@ Present the narrative to the user for review before proceeding.
 
 ---
 
-## Phase 7 — Pricing + client-facing report (gated)
+## Phase 7 — Client-facing report (gated)
 
-After report + narrative are written, tell the user:
+After internal report + narrative are written, present the report-type gate:
 
-> "Internal report and narrative generated. The effort columns are blank — fill in your
-> estimates, then come back and say 'price it'."
+> "Internal report and narrative generated. Which client report do you want?"
+>
+> **A) Monthly retainer report** — compact, toggle-detail format, Notion-ready.
+> For clients on a recurring retainer. Uses `site-audit-monthly-report.md` template.
+>
+> **B) One-off intake report** — longer, includes pricing options (A/B/C).
+> For first engagements or one-off audits. Uses `site-audit-client-report.md` template.
+> Effort columns must be filled in first — say "price it" when ready.
+>
+> **C) Both**
 
-When re-invoked (user says "price it", "calculate pricing", or similar):
+---
 
-### Step 1 — Pricing
+### Path A — Monthly retainer report
+
+1. Read and follow the template at `.claude/templates/site-audit-monthly-report.md`.
+2. Read the previous month's report (`comms/site-report-YYYY-MM.md`) for month-over-month
+   deltas. If no previous report exists, use "—" for last-month columns.
+3. Generate `comms/site-report-YYYY-MM.md` (month-stamped, not date-stamped).
+4. Load the `humanizer` skill and apply it to the final draft. It may only change *how* a claim
+   reads, never *what* it asserts. Hedged wording from the Claim Gate ("may help", "not
+   guaranteed") is load-bearing — do not polish it into confidence.
+5. If SEMRush keyword data is available, include the **Blog topic suggestions** section
+   with keyword opportunities and suggested articles.
+6. Present to user for review. Iterate until approved.
+7. After approval, proceed to **Step: Notion push** (below).
+
+Source files: `reports/intake-report-YYYY-MM-DD.md`, `audits/*.md`, `client.md`,
+previous `comms/site-report-*.md`, SEMRush keyword data (if available).
+
+---
+
+### Path B — One-off intake report
+
+Effort columns must be filled in before this path runs. If re-invoked with "price it":
+
+**Pricing:**
 
 1. Re-read the report, detect filled-in effort values in the P-band tables
 2. If any tasks still have `TBD`, list them and ask user to fill in before proceeding
@@ -430,37 +557,64 @@ When re-invoked (user says "price it", "calculate pricing", or similar):
 4. Calculate per-band totals and overall total
 5. Append a `## Pricing Summary` to the internal report with the per-band table
 
-### Step 2 — Client-facing report
+**Client report:**
 
-Generate `comms/site-report-YYYY-MM-DD.md` — the plain-language document the client sees.
-
-Read and follow the template at `.claude/templates/site-audit-client-report.md`. Key rules:
-- No technical jargon — translate everything to business language
-- Concrete numbers over abstractions
-- Opportunity framing, not blame
-- Pricing is per-phase, not per-task
-- Option A (fixed project) vs Option B (retainer) always presented
-- Load the `humanizer` skill and apply it to the final draft
+1. Generate `comms/site-report-YYYY-MM-DD.md` (date-stamped for one-off reports).
+2. Read and follow Template 1 (Intake Report) in `.claude/templates/site-audit-client-report.md`.
+3. Key rules:
+   - No technical jargon — translate everything to business language
+   - Concrete numbers over abstractions
+   - Opportunity framing, not blame
+   - Pricing is per-phase, not per-task
+   - Option A (fixed project) vs Option B (retainer) vs Option C (pick and choose)
+4. Load the `humanizer` skill and apply it to the final draft. It may only change *how* a claim
+   reads, never *what* it asserts. Hedged wording from the Claim Gate ("may help", "not
+   guaranteed") is load-bearing — do not polish it into confidence.
+5. Present to user for review. Iterate until approved.
 
 Source files: `reports/intake-report-YYYY-MM-DD.md`, `proposals/narrative-YYYY-MM-DD.md`,
 `client.md`, `.claude/reference/about-me.md` (if available), `.claude/reference/rate-card.md`.
 
-Present to user for review. Iterate until approved.
-
-### Step 3 — Multi-format comms (optional)
+**Multi-format comms (optional):**
 
 Ask: "Generate comms in other formats?" — if yes, produce:
 - `comms/plan-and-options-slack-YYYY-MM-DD.md` — Slack mrkdwn format
 - `comms/plan-and-options-email-YYYY-MM-DD.md` — Email format
-- `comms/plan-and-options-notion-YYYY-MM-DD.md` — Notion format
 - `comms/plan-and-options-plaintext-YYYY-MM-DD.txt` — Plain text
 
 Each derived from the client-facing report, not the internal report.
 Load the `slack-message` skill for the Slack format.
 
-### Step 4 — Proposal bridge (optional)
+**Proposal bridge (optional):**
 
 Ask: "Generate a full proposal with scope tables?" — if yes, bridge to `/proposal`
+
+---
+
+### Step: Notion push (optional, any path)
+
+After the client report is approved, ask:
+
+> "Push to Notion Notes database?"
+
+If yes:
+
+1. Use `mcp__claude_ai_Notion__notion-search` to find the client's Notes database
+   (search for the client name or the previous month's report page).
+2. Use `mcp__claude_ai_Notion__notion-create-pages` to create a new page in the
+   Notes database with:
+   - **Title:** `[Client Name] Site Report – [Month YYYY]`
+   - **Date property:** First day of the report month
+   - **Content:** The approved client report, converted to Notion enhanced markdown.
+3. Toggle headings (`{toggle="true"}`) become Notion toggle headings.
+4. Tables use Notion's simple table format.
+5. Colour-code the Change column in metrics tables:
+   - Green (`color="green"`) for improvements
+   - Red (`color="red"`) for regressions
+   - Orange (`color="orange"`) for minor concerns
+6. After creation, return the Notion page URL to the user.
+7. Use `mcp__claude_ai_Notion__notion-update-page` to set the Summary property
+   to a 2-3 sentence synopsis of the report (for database views).
 
 ---
 
@@ -479,11 +633,20 @@ Ask: "Generate a full proposal with scope tables?" — if yes, bridge to `/propo
 11. Phase 6b automation triage adds `Automation` column (AUTO/SEMI/MANUAL) to every P-band table
 12. Automation Summary section present in report
 13. Phase 6c narrative follows three-beat structure with key phrases and pillar mapping
-14. Phase 7 correctly reads user-filled estimates and calculates pricing
-15. Client-facing report uses plain language, no jargon, per-phase pricing, Option A/B
-16. `humanizer` skill loaded and applied to client-facing report
-17. Multi-format comms derived from client-facing report (not internal report)
-18. Asset CSV parsing produces bandwidth tables when provided and PNGs >50%
-19. Custom code migration plan included when third-party hosted code detected
-20. Lighthouse audits cover all static pages, sample 5 per CMS collection, and fall back to nav-linked pages when >20 unique pages
-21. Existing `/intake` command is unchanged
+14. Phase 7 presents report-type gate with three options: A (monthly), B (one-off), C (both)
+15. Path A produces `comms/site-report-YYYY-MM.md` matching `site-audit-monthly-report.md` template
+16. Path A includes Blog topic suggestions section when SEMRush keyword data is available
+17. Path B correctly reads user-filled estimates and calculates pricing
+18. Path B produces `comms/site-report-YYYY-MM-DD.md` matching `site-audit-client-report.md` Template 1
+19. Both paths load `humanizer` skill and apply it to the final draft
+20. Notion push creates a page in the client's Notes database with correct title, date, and summary
+21. Notion push converts toggle headings and colour-coded table cells correctly
+22. Multi-format comms derived from client-facing report (not internal report)
+23. Asset CSV parsing produces bandwidth tables when provided and PNGs >50%
+24. Custom code migration plan included when third-party hosted code detected
+25. Lighthouse audits cover all static pages, sample 5 per CMS collection, and fall back to nav-linked pages when >20 unique pages
+26. Consent Mode verdict comes from `google_tag_data.ics` / `gtag('consent','default',…)` read in a clean browser context — never inferred from script load order. `NEEDS VERIFY` when no browser is available
+27. Non-Google trackers (Meta, TikTok, Hotjar, Intercom, LinkedIn, Zoho) are checked for pre-consent cookies and reported as a finding separate from Consent Mode
+28. No `FAQPage` task is justified on rich-results grounds for a non-gov/health site — but FAQPage recommended on AI-extraction / page-type-signal grounds is correct and should not be stripped
+29. Every platform claim in a justification carries `[source, YYYY]`, is rewritten to rest on a site claim, is marked `NEEDS VERIFY`, or the task is dropped
+30. The client-facing report asserts nothing the internal report did not establish; humanizer has not strengthened any hedged claim

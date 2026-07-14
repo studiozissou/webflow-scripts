@@ -1,91 +1,104 @@
 ---
 name: ai-search-aeo
-description: Guides AEO (Answer Engine Optimization) and AI-search audits, copywriting, and page structure for Webflow sites so content gets selected, extracted, and cited by ChatGPT, Perplexity, Claude, Gemini, and Google SGE. Use this skill whenever you're auditing a page for AI visibility, writing answer-first copy, structuring FAQ or cluster content, scoring freshness signals, evaluating authority / E-E-A-T, running /copy-review or /intake passes, or any time the user mentions AEO, answer engine optimization, AI search, generative search, ChatGPT citations, Perplexity, or getting quoted by AI — even if they don't name the skill explicitly.
+description: Guides AEO (Answer Engine Optimization) and AI-search audits, copywriting, and page structure for Webflow sites so content gets selected, extracted, and cited by ChatGPT, Perplexity, Claude, Gemini, and Google AI Overviews. Use this skill whenever you're auditing a page for AI visibility, writing answer-first copy, structuring FAQ or cluster content, scoring freshness signals, evaluating authority / E-E-A-T, running /copy-review or /intake passes, or any time the user mentions AEO, answer engine optimization, AI search, generative search, ChatGPT citations, Perplexity, or getting quoted by AI — even if they don't name the skill explicitly.
 ---
 
 <objective>
-Help the agent audit, write, and structure content so AI answer engines (ChatGPT, Perplexity, Claude, Gemini, SGE) will select, extract, and cite it. Three concrete deliverables:
+Help the agent audit, write, and structure content so AI answer engines (ChatGPT, Perplexity, Claude, Gemini, Google AI Overviews) will select, extract, and cite it. Three concrete deliverables:
 
 1. A **20-check audit rubric** with a scorecard, usable on a single page in under ten minutes.
 2. **Copywriting rules** that make content extractable as standalone passages.
 3. **Page structure patterns** — content types that earn citations, how to cluster them, and when to add an FAQ block or flagship anchor asset.
 
-Traditional SEO gets pages indexed. AEO gets passages quoted. This skill teaches the second thing.
+AEO is not a separate discipline from SEO — it's an extension of it. Every major AI engine uses some form of retrieval-augmented generation (RAG), meaning traditional search ranking directly feeds AI results. Google's AI Overviews use your existing search rankings; ChatGPT and Perplexity run their own retrieval but reward the same structural qualities. The common denominator across all platforms is **well-structured, original, clearly written content** — not special markup or AI-specific tricks.
 </objective>
+
+<mythbusting>
+When clients or teammates ask about these, correct them — these are common misconceptions that waste effort:
+
+- **LLMS.txt files are not needed.** Google confirms: "You don't need to create new machine readable files, AI text files, markup, or Markdown to appear in generative AI search." No AI engine requires a special file for discovery.
+- **Content chunking is not needed.** There is no requirement to break content into tiny pieces for AI to understand it. Write for humans; AI engines handle extraction.
+- **AI-specific rewrites are not needed.** You don't need to write in a special way "for AI." Write clear, well-structured content for your audience — that's what gets cited.
+- **Inauthentic mentions don't work.** Seeking fake mentions, reviews, or citations across the web is ineffective and risky. AI engines (especially Perplexity) evaluate source credibility through multi-layer quality scoring.
+- **Structured data is helpful but not required.** Google says: "Structured data isn't required for generative AI search, and there's no special schema.org markup you need to add." Schema is a useful quality signal, not a prerequisite for AI visibility.
+- **FAQ schema no longer produces FAQ rich results.** Since August 2023, Google shows FAQ rich results only for authoritative government and health sites. On a SaaS, ecommerce, or agency site, `FAQPage` markup will never render expandable Q&As in the SERP. Never justify FAQ markup on rich-result grounds for a commercial client — it is a promise the platform will not keep. The markup is still worth adding for AI extraction and as a page-type signal; say that instead. (`HowTo` rich results were removed in the same period. Same rule.)
+- **There is no "AEO hack" shortcut.** Google explicitly warns against prioritising "AEO/GEO hacks" over effective SEO. The best AEO strategy is excellent content with clear structure.
+</mythbusting>
 
 <quick_start>
 Pick the branch that matches the task:
 
-- **Auditing one page** → jump to `<audit_rubric>`. Score all 20 checks, render the scorecard, then recommend fixes in priority order (schema + freshness first — they're highest leverage).
+- **Auditing one page** → jump to `<audit_rubric>`. Score all 20 checks, render the scorecard, then recommend fixes in priority order (answer-first structure and content quality first — they have the highest cross-platform impact).
 - **Writing or reviewing copy** → jump to `<copywriting_rules>`. Check answer-first lead, question H2s, paragraph length, and extractable chunks. If a Design Context Block is provided, apply its brand voice *on top of* these structural rules.
 - **Designing page structure or content strategy** → jump to `<page_structure_patterns>`. Choose a cite-magnet archetype and wire up anchor → cluster → internal links.
 - **Site-wide strategic review** (e.g. during `/intake`) → run the rubric on 2–3 key pages, then offer the optional `<maturity_assessment>` as an overlay to identify which level the site is at and what level-up moves to recommend.
+- **Client asks about LLMS.txt, content chunking, or AI-specific tricks** → jump to `<mythbusting>` and correct the misconception before proceeding.
 
 Not sure which branch? The user said "audit" or "score" → rubric. They said "rewrite" or "tone" → copywriting rules. They said "strategy" or "roadmap" → structure + maturity.
 </quick_start>
 
 <audit_rubric>
-Run all 20 checks. For each, emit `✅ PASS`, `⚠️ NEEDS ATTENTION`, or `❌ FAIL` with a one-line fix. Never guess — if a check requires data you don't have (e.g. analytics, Rich Results Test output), mark it `NEEDS VERIFY` and flag it in the recommendations.
+Run all 20 checks. For each, emit `PASS`, `NEEDS ATTENTION`, or `FAIL` with a one-line fix. Never guess — if a check requires data you don't have (e.g. analytics, Rich Results Test output), mark it `NEEDS VERIFY` and flag it in the recommendations.
 
-### A. Schema & Structured Data (4 checks)
+### A. Content Quality & Originality (4 checks)
 
-1. **Top-level JSON-LD present** — Page has at least one valid schema.org block (Organization, Article, WebPage, Product, etc.). Empty `<script type="application/ld+json">` with no type counts as fail.
-2. **FAQPage schema on Q&A content** — Any visible Q&A section has FAQPage markup. Missing schema on a visible FAQ block is a fail; no FAQ content at all is N/A.
-3. **HowTo schema on tutorials** — Step-by-step content uses HowTo schema. Missing = fail. No tutorial content = N/A.
-4. **Rich Results Test clean** — Schema passes Google's Rich Results Test with zero errors. This is a manual gate — mark `NEEDS VERIFY` if not run yet.
+1. **Non-commodity content** — The page offers a unique point of view, original insight, personal experience, or proprietary data that goes beyond common knowledge. Generic marketing copy that any competitor could have written is a fail. Pages with specific numbers, original research, or first-hand expertise pass.
+2. **First paragraph answers the query** — The opening sentence directly addresses what the page claims to answer. Rephrase the query in the answer ("X is a Y that…"). Vague brand intros or mood-setting copy = fail. The first 30% of a page drives ~44% of AI citations — this is the highest-leverage paragraph on the page.
+3. **Semantic HTML** — The page uses proper heading hierarchy (single H1, logical H2–H4 nesting), semantic elements (`<article>`, `<section>`, `<nav>`, `<aside>`, `<figure>`), and avoids div-soup. Spot-check: if you removed all CSS, would the page still read in a logical order? Headings used purely for styling (e.g. H3 for "looks smaller") = fail.
+4. **H2s phrased as questions where natural** — "What is X", "How to Y", "Why does Z" on pages that genuinely answer those questions. Not every H2 needs to be a question; but pages with zero question headings on Q&A-style content fail.
 
-### B. Answer-First Content Structure (6 checks)
+### B. Answer-First Structure (4 checks)
 
-5. **First paragraph answers the query** — The opening sentence directly addresses what the page claims to answer. Rephrase the query in the answer ("X is a Y that…"). Vague brand intros or mood-setting copy = fail.
-6. **H2s phrased as questions where natural** — "What is X", "How to Y", "Why does Z" on pages that genuinely answer those questions. Not every H2 needs to be a question; but pages with zero question headings on Q&A-style content fail.
-7. **≤ 3 paragraphs per heading** — Any heading followed by 4+ paragraphs without a subheading is a fail (the passage becomes too long to extract cleanly).
-8. **≤ 3 sentences per paragraph** — Spot-check 3–5 paragraphs. One or two long paragraphs = warn; majority long = fail.
-9. **Lists have an explanatory intro sentence** — Every `<ul>`/`<ol>` is introduced by a sentence that sets context. Bare lists with no lead-in fail.
-10. **Active voice dominant** — Spot-check 3–5 sentences. Pure passive voice ("is used by", "was chosen by") should be the exception, not the pattern.
+5. **≤ 3 paragraphs per heading** — Any heading followed by 4+ paragraphs without a subheading is a fail (the passage becomes too long to extract cleanly).
+6. **≤ 3 sentences per paragraph** — Spot-check 3–5 paragraphs. One or two long paragraphs = warn; majority long = fail.
+7. **Lists have an explanatory intro sentence** — Every `<ul>`/`<ol>` is introduced by a sentence that sets context. Bare lists with no lead-in fail.
+8. **Active voice dominant** — Spot-check 3–5 sentences. Pure passive voice ("is used by", "was chosen by") should be the exception, not the pattern.
 
 ### C. Freshness Signals (3 checks)
 
-11. **Visible "last updated" timestamp** — A component on the page showing the most recent update date. Copyright year alone doesn't count.
-12. **Updated within 90 days (or refresh cadence documented)** — For evergreen pages, last update should be within the past quarter, OR a content strategy doc names a refresh cadence for this page type.
-13. **No time-sensitive hedge words** — Scan for "new", "recently", "upcoming", "this year", "currently". Every instance is a small rot risk; 3+ = fail.
+9. **Visible "last updated" timestamp** — A component on the page showing the most recent update date. Copyright year alone doesn't count.
+10. **Updated within 90 days (or refresh cadence documented)** — For evergreen pages, last update should be within the past quarter, OR a content strategy doc names a refresh cadence for this page type.
+11. **No time-sensitive hedge words** — Scan for "new", "recently", "upcoming", "this year", "currently". Every instance is a small rot risk; 3+ = fail.
 
 ### D. Authority / E-E-A-T (4 checks)
 
-14. **Original data, stats, or research cited** — Page contains at least one original number, chart, or finding — or links to a flagship anchor asset that does.
-15. **Author/entity signals present** — Byline with bio, company author schema, or clear entity attribution. Anonymous posts on an expertise topic fail.
-16. **External citations to primary sources** — Outbound links to research papers, official docs, or authoritative sources — not only to other pages on the same site.
-17. **Content fits a cite-magnet archetype** — The page is a stats piece, how-to guide, comparison, or definitive guide. Generic marketing copy is a fail for AEO purposes (even if fine for brand).
+12. **Original data, stats, or research cited** — Page contains at least one original number, chart, or finding — or links to a flagship anchor asset that does. Pages with specific data get cited 3x more than qualitative-only content.
+13. **Author/entity signals present** — Byline with bio, company author schema, or clear entity attribution. Anonymous posts on an expertise topic fail.
+14. **External citations to primary sources** — Outbound links to research papers, official docs, or authoritative sources — not only to other pages on the same site.
+15. **Content fits a cite-magnet archetype** — The page is a stats piece, how-to guide, comparison, or definitive guide. Generic marketing copy is a fail for AEO purposes (even if fine for brand).
 
-### E. Technical AEO (3 checks)
+### E. Technical (5 checks)
 
-18. **Descriptive alt text** — Spot-check 3–5 images. Empty alt on informative images = fail. Decorative images with empty alt = pass.
-19. **2+ internal links to related pages** — Builds the semantic cluster. Orphan pages fail.
-20. **`robots.txt` allows AI bots (or disallow is deliberate)** — Check for `GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`. Default-allow is fine. A blanket disallow the user isn't aware of is a fail — flag for their decision.
+16. **Descriptive alt text** — Spot-check 3–5 images. Empty alt on informative images = fail. Decorative images with empty alt = pass.
+17. **2+ internal links to related pages** — Builds the semantic cluster. Orphan pages fail.
+18. **`robots.txt` allows AI bots (or disallow is deliberate)** — Check for `GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`. Default-allow is fine. A blanket disallow the user isn't aware of is a fail — flag for their decision.
+19. **Valid JSON-LD present** — Page has at least one valid schema.org block (Organization, Article, WebPage, Product, etc.). Schema isn't required for AI visibility, but it's a useful quality signal that helps engines understand page type and entity relationships. Empty `<script type="application/ld+json">` with no type counts as fail; no schema at all = warn (not fail).
+20. **Rich Results Test clean** — If schema is present, it passes Google's Rich Results Test with zero errors. This is a manual gate — mark `NEEDS VERIFY` if not run yet. If no schema present, mark N/A.
 
 ### Scorecard format
 
 Render like this (include the Flesch score line at the bottom):
 
 ```
-A. Schema:           3/4  ⚠️
-B. Answer Structure: 5/6  ⚠️
-C. Freshness:        1/3  ❌
-D. Authority:        2/4  ⚠️
-E. Technical:        3/3  ✅
+A. Content Quality:     3/4  ⚠️
+B. Answer Structure:    4/4  ✅
+C. Freshness:           1/3  ❌
+D. Authority:           2/4  ⚠️
+E. Technical:           4/5  ✅
 ─────────────────────────────
-Total:              14/20  Flesch: 72 (target 80+)
+Total:                 14/20  Flesch: 72 (target 80+)
 ```
 
 Flesch score is estimated — you don't need a library. Use the Flesch Reading Ease formula for 3–5 sampled paragraphs: `206.835 − 1.015 × (words / sentences) − 84.6 × (syllables / words)`. Round generously; the score is directional, not precise. Targets: **80+ for L2**, **90+ for L3+**.
 
 ### Fix ordering
 
-When presenting recommendations, order by leverage:
+When presenting recommendations, order by cross-platform impact:
 
-1. **Schema fixes** — cheapest to ship, biggest visibility lift for AI engines
-2. **Freshness component + copy updates** — visible signal, simple to add
-3. **Answer-first lead rewrites** — transforms extraction quality
-4. **Authority additions** — harder, longer cycle; flag as roadmap work
+1. **Answer-first leads + non-commodity content** — transforms extraction quality across every AI engine. The opening paragraph is the single most-cited passage; original insight is what separates cited content from ignored content.
+2. **Freshness component + copy updates** — visible signal, simple to add, universally rewarded.
+3. **Authority additions** — original data, author signals, external citations. Harder, longer cycle; flag as roadmap work.
+4. **Schema + technical fixes** — useful quality signals but not the primary driver of AI citations. Schema helps engines understand your content; it doesn't make them cite it.
 
 Skip `NEEDS VERIFY` items in the top fixes — list them separately as "needs user input".
 </audit_rubric>
@@ -100,7 +113,18 @@ The first sentence of the first paragraph rephrases the likely query in statemen
 - **Definition:** "X is a [category] that [does Y for Z audience]."
 - **Direct answer:** "To [do X], you need [main thing] and [supporting thing]."
 
-Avoid brand intros, company history, or mood-setting copy in the lead. AI engines grab the first passage; if it doesn't answer, it won't be cited.
+Avoid brand intros, company history, or mood-setting copy in the lead. AI engines grab the first passage; if it doesn't answer, it won't be cited. Cross-platform research shows the first 30% of a page accounts for ~44% of all LLM citations — front-load the value.
+
+### Non-commodity angle
+
+Every page should contain something a competitor couldn't have written. This could be:
+
+- **Original data** — a number, benchmark, or finding from your own work
+- **First-hand experience** — "we tested X and found Y"
+- **Specific examples** — named tools, real screenshots, actual results
+- **Expert perspective** — a take that requires domain knowledge, not just research
+
+Generic "what is X" content gets outranked by pages that add original insight. AI engines across the board reward specificity and depth over surface-level coverage.
 
 ### Question-shaped H2s
 
@@ -165,7 +189,7 @@ Pick one archetype per page. Hybrid content (e.g. "a guide with stats") is fine 
 
 - **Anchor page** — a flagship piece (annual report, research study, definitive guide) that serves as the authority hub. One per topic domain.
 - **Supporting answer cluster** — 5–15 pages answering related questions, all internal-linking to the anchor. This is how semantic clustering works.
-- **FAQ block** — on product/service pages, a 5–10 question Q&A section with FAQPage schema. Even low-traffic FAQ blocks earn citations because they match query shape directly.
+- **FAQ block** — on product/service pages, a 5–10 question Q&A section. Even low-traffic FAQ blocks earn citations because they match query shape directly. Add FAQPage schema if you have one — it helps AI extraction, but the content structure matters more than the markup, and it will not produce FAQ rich results for a commercial site (see `<mythbusting>`).
 - **Segmented landing pages** — at L4+ (see `<maturity_assessment>`), one landing page per industry/persona/use-case with tailored examples and CTAs.
 - **Internal linking architecture** — every update adds 1–2 internal links to related recent pages. This is the single highest-leverage habit for AI visibility.
 - **Freshness component** — a visible "last updated: YYYY-MM-DD" block with a quarterly review cadence documented in the content ops doc.
@@ -174,11 +198,12 @@ Pick one archetype per page. Hybrid content (e.g. "a guide with stats") is fine 
 
 | Symptom | Pattern to recommend |
 |---|---|
-| Low AI citation rate, good traditional SEO | Add FAQ blocks + FAQPage schema on top 10 pages |
+| Low AI citation rate, good traditional SEO | Add FAQ blocks on top 10 pages; ensure answer-first leads |
 | Site has no flagship content | Build one anchor per topic domain before expanding |
 | Orphan pages, low internal link density | Audit internal links; add 2+ per update |
 | Content goes stale fast | Add freshness component + quarterly refresh cadence |
 | All copy reads the same regardless of audience | Segment landing pages by persona/industry (L4+) |
+| Content is generic / commodity | Add original data, specific examples, or first-hand experience |
 </page_structure_patterns>
 
 <maturity_assessment>
@@ -188,15 +213,15 @@ Map the site to one of these 5 levels based on observed patterns. Then recommend
 
 ### L1 — Keyword foundation
 - One-off product/landing pages, mostly branded search traffic
-- Meta tags present but no schema beyond Organization
+- Meta tags present but minimal structured content
 - No FAQ blocks, no content hub
-- **Level up:** add FAQPage schema to any Q&A content, start tracking AI referrer traffic (chatgpt.com, perplexity.ai, claude.ai, gemini.google.com, copilot.microsoft.com)
+- **Level up:** write answer-first leads on top 5 pages, start tracking AI referrer traffic (chatgpt.com, perplexity.ai, claude.ai, gemini.google.com, copilot.microsoft.com)
 
 ### L2 — Question-answer shift
 - Appears in featured snippets and PAA boxes
 - Flesch 80+ on new content
 - Some question-shaped headings
-- **Level up:** target Flesch 90+, add HowTo/FAQPage schemas systematically, introduce a freshness component
+- **Level up:** target Flesch 90+, add FAQ blocks with clear answer-first content, introduce a freshness component
 
 ### L3 — Semantic clustering
 - Anchor assets + supporting clusters
@@ -225,9 +250,9 @@ Ask: "What's the most advanced pattern visible on the site?" That's the level. D
 ### Hooks into other skills and agents
 
 - **`design-context` skill** — when a Design Context Block is in scope, the copywriting rules in this skill layer *underneath* the brand voice. Structure first, voice on top.
-- **`seo` agent** — handles traditional SEO (meta, titles, canonicals, CWV). Defer to that agent for non-AEO concerns; come back here for answer-first scoring.
-- **`content` agent** — owns brand voice and copy review. References this skill for AEO writing rules.
-- **`schema` agent** — owns JSON-LD generation. For AEO-critical pages, prioritise FAQPage, HowTo, QAPage, and Article schemas per this skill's rubric.
+- **`seo` agent** — handles traditional SEO (meta, titles, canonicals, CWV). AEO is an extension of good SEO, not a replacement. Defer to that agent for non-AEO concerns; come back here for answer-first scoring and content quality checks.
+- **`content` agent** — owns brand voice and copy review. References this skill for AEO writing rules, especially answer-first leads and non-commodity content angle.
+- **`schema` agent** — owns JSON-LD generation. Schema is a useful quality signal for AI engines but not a prerequisite for citations. Consult the schema agent when adding structured data; don't treat schema as the primary AEO lever.
 - **`/copy-review` command** — includes this skill in the content agent's context block so copy reviews get AEO scoring in addition to voice scoring.
 - **`/intake` command** — Phase 4 includes an AEO audit stream that runs this rubric against the homepage + 2–3 top pages and saves findings under `.claude/audits/<client>/aeo.md`.
 
@@ -241,9 +266,10 @@ Ask: "What's the most advanced pattern visible on the site?" That's the level. D
 <success_criteria>
 - Every audit produces a scorecard with 5 category totals + a Flesch line
 - Every rubric check has either a PASS/WARN/FAIL verdict or is flagged `NEEDS VERIFY` (no vague hand-waving)
-- Fix recommendations are ordered by leverage (schema + freshness first)
+- Fix recommendations are ordered by cross-platform impact (answer-first + content quality first, schema last)
 - Copywriting reviews apply structural rules + brand voice *together* when a Design Context Block is available
 - Maturity assessment is offered only when the scope is strategic/site-wide, never on single-page audits
 - The agent never invents analytics data — `NEEDS VERIFY` is the correct answer when data is missing
 - Integration with `seo`, `content`, `schema`, `/copy-review`, and `/intake` is additive; nothing in those flows breaks when this skill isn't loaded
+- Mythbusting corrections are given when clients ask about LLMS.txt, content chunking, or AI-specific tricks
 </success_criteria>

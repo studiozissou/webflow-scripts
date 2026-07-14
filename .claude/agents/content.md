@@ -44,11 +44,13 @@ When **competitor URLs** are provided in the inspiration references:
 
 ## AEO writing rules
 
-For any copy that will live on a public page where AI-search visibility matters, also apply the `ai-search-aeo` skill. Structural rules from that skill include:
+For any copy that will live on a public page where AI-search visibility matters, also apply the `ai-search-aeo` skill. The highest-impact rules from that skill:
 
-- **Answer-first leads** — the first sentence rephrases the likely query in statement form
+- **Non-commodity content** — every page needs a unique angle: original data, first-hand experience, specific examples, or expert perspective. Generic copy that any competitor could write doesn't get cited.
+- **Answer-first leads** — the first sentence rephrases the likely query in statement form. The first 30% of a page drives ~44% of AI citations; front-load the value.
 - **Question-shaped H2s** — use "What is", "How to", "Why does" where the content genuinely answers those questions
 - **Short extractable paragraphs** — max 2–3 sentences, max 3 paragraphs per heading
+- **Semantic HTML** — proper heading hierarchy and semantic elements, not div-soup
 - **Flesch 80+** target (90+ on flagship content)
 - **Lists introduced by a sentence** so they don't orphan when extracted
 - **Freshness signals + no time-sensitive hedge words** ("new", "recently", "this year")

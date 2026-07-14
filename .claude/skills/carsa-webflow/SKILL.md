@@ -153,6 +153,24 @@ Append these based on the build log entry's `action` and `elementTypes`:
 
 <!-- ═══════════════════════════════════════════════════════ -->
 
+## External Repo Delivery
+
+Production-ready scripts are delivered via PR to the shared repo:
+`focalstrategy/carsa-website-support` (cloned at `~/carsa-website-support/`).
+
+See `projects/carsa/.claude/client.md` §10 for the full workflow. Key rules:
+- Develop and test here in `webflow-scripts` first
+- Feature branch in the external repo, PR to `main`
+- All deliverables go in the `webflow/` folder at the repo root
+- Organise by type inside `webflow/` (e.g. `webflow/schema/`, `webflow/scripts/`)
+- Do NOT put files in their `apps/` or `core/` folders — those are for their React/SST code
+- Never push `.claude/` docs, specs, or research to the external repo
+- Their stack is TypeScript/React — our vanilla JS scripts won't match their
+  lint/format rules. That's expected and fine; our code lives in a separate folder
+- Dev contact on their side: Grant
+
+<!-- ═══════════════════════════════════════════════════════ -->
+
 ## Slack Reporting
 
 After every build, share the summary with the dev team.

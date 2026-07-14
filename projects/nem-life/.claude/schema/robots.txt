@@ -1,0 +1,45 @@
+# robots.txt — NEM Life (nemlife.com)
+# Placement: Webflow Site Settings > SEO > Indexing (or custom code)
+# Note: Webflow auto-generates robots.txt. On staging (*.webflow.io),
+# Webflow adds Disallow: / automatically. This file is the PRODUCTION
+# version for when the site goes live on nemlife.com.
+
+User-agent: *
+Allow: /
+Disallow: /page-starter*
+Disallow: /style-guide
+
+# Sitemap
+Sitemap: https://nemlife.com/sitemap.xml
+
+# AI crawlers — allow for AEO visibility
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Block common bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

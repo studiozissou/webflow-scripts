@@ -1,0 +1,52 @@
+<script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://nemlife.com/#organization",
+    "name": "NEM Life",
+    "url": "https://nemlife.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "FILL_IN",
+      "width": "FILL_IN",
+      "height": "FILL_IN"
+    },
+    "description": "Psychologie-gebaseerde aanpak die mensen helpt van emotionele complexiteit naar helderheid te bewegen. Ontwikkelaar van de NEM Methode (Neuro Emotional Mastery).",
+    "founder": {
+      "@type": "Person",
+      "@id": "https://nemlife.com/#christel-reus",
+      "name": "Christel Reus",
+      "jobTitle": "Therapeut, ondernemer & ontwikkelaar van de NEM Methode"
+    },
+    "foundingDate": "FILL_IN",
+    "areaServed": {
+      "@type": "Country",
+      "name": "Netherlands"
+    },
+    "inLanguage": "nl",
+    "sameAs": [
+      "FILL_IN_INSTAGRAM",
+      "FILL_IN_LINKEDIN",
+      "FILL_IN_FACEBOOK"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer service",
+      "email": "FILL_IN",
+      "availableLanguage": ["Dutch", "English"]
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://nemlife.com/#website",
+    "name": "NEM Life",
+    "url": "https://nemlife.com",
+    "publisher": {
+      "@id": "https://nemlife.com/#organization"
+    },
+    "inLanguage": "nl"
+  }
+]
+</script>

@@ -1,0 +1,34 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "@id": "https://nemlife.com/missie-nem-life#webpage",
+  "name": "Onze missie | Waarom NEM Life bestaat - NEM Life",
+  "description": "Je bent niet het probleem - je mist alleen een heldere aanpak. Ontdek waarom NEM Life bestaat en hoe de NEM Methode je helpt patronen te doorbreken.",
+  "url": "https://nemlife.com/missie-nem-life",
+  "isPartOf": {
+    "@id": "https://nemlife.com/#website"
+  },
+  "about": {
+    "@id": "https://nemlife.com/#organization"
+  },
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://nemlife.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Onze missie",
+        "item": "https://nemlife.com/missie-nem-life"
+      }
+    ]
+  },
+  "inLanguage": "nl"
+}
+</script>

@@ -272,6 +272,11 @@ html {
   min-width: auto !important;
 }
 
+.article-card_slide:hover .article-card_bg-wrap {
+  background-color: var(--_token---accent-48);
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.08);
+}
+
 .article_preview-text {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -290,7 +295,45 @@ html {
 
 
 /* ==============================================
-   7. UTILITY CLASSES
+   7. KEN BURNS — HERO IMAGES (disabled for now)
+   ============================================== */
+
+/*
+.section_hero-swiper .i-100.is--hero {
+  transform: scale(1.02);
+  will-change: transform;
+}
+
+.section_hero-swiper .swiper-slide-active .i-100.is--hero {
+  animation: ken-burns 6s linear forwards;
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1.02); }
+  to   { transform: scale(1.10); }
+}
+
+.Section-Hero.is--smaller .i-100.is--hero {
+  will-change: transform;
+  animation: ken-burns-loop 20s ease-in-out infinite alternate;
+}
+
+@keyframes ken-burns-loop {
+  from { transform: scale(1.0)  translate(0, 0); }
+  to   { transform: scale(1.12) translate(-2%, -1%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section_hero-swiper .swiper-slide-active .i-100.is--hero,
+  .Section-Hero.is--smaller .i-100.is--hero {
+    animation: none;
+  }
+}
+*/
+
+
+/* ==============================================
+   8. UTILITY CLASSES
    ============================================== */
 
 .pointer-events-off {
@@ -365,7 +408,7 @@ html {
 
 
 /* ==============================================
-   8. SPACING UTILITIES
+   9. SPACING UTILITIES
    ============================================== */
 
 .margin-0 { margin: 0rem !important; }

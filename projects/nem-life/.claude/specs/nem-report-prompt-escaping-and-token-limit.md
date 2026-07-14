@@ -120,9 +120,18 @@ Two changes beyond `system:` and `max_tokens`:
 - MailerSend trial-account send cap (separate P0, see below).
 - Silent-failure alerting on the report branch.
 - Where the prompt ultimately *lives* (Notion / Data Table / git) and who may edit it.
-  That decision is pending a conversation with Alex. This task deliberately parks the
-  prompt in a Set node, which is a clean seam: swapping the Set node for a Notion fetch
-  or Data Table read later touches one node and no expressions.
+  ~~That decision is pending a conversation with Alex.~~ **Resolved 2026-07-10** (Slack):
+  Alex authors in a working Notion doc, copies the validated block to a dedicated clean
+  runtime Notion page, and runs a manual "Publish Prompt" n8n workflow that caches the
+  prompt to a Data Table (`nem_runtime_config.report_prompt`) and emails him a test PDF.
+  `/verify` reads the cached Data Table value — no Notion call on the report hot path.
+  Full design lives in `nem-test-phase-b.md` → "Backend Architecture → Report prompt —
+  runtime link & updates". This task deliberately parks the prompt in a Set node, which is
+  the clean seam that mechanism fills: **once the Publish workflow lands, `Generate Report`
+  reads `system:` from the Data Table row instead of the Set node** — one node swapped, no
+  expressions touched. Land this escaping fix first; it is the prerequisite (an unescaped
+  apostrophe still detonates the node regardless of whether the text comes from a Set node,
+  a Data Table, or Notion).
 
 ## Blockers discovered during planning
 

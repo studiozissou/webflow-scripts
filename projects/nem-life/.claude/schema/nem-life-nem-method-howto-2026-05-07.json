@@ -1,0 +1,33 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "De NEM Methode: Patronen doorbreken met Neuro Emotional Mastery",
+  "description": "De NEM Methode - Neuro Emotional Mastery - helpt je hardnekkige patronen doorbreken. Concreet, stapsgewijs en direct toepasbaar. Zonder eindeloos praten.",
+  "inLanguage": "nl",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Neuro",
+      "text": "FILL_IN_NEURO_STEP_DESCRIPTION",
+      "url": "https://nemlife.com/nem-methode#neuro"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Emotional",
+      "text": "FILL_IN_EMOTIONAL_STEP_DESCRIPTION",
+      "url": "https://nemlife.com/nem-methode#emotional"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Mastery",
+      "text": "FILL_IN_MASTERY_STEP_DESCRIPTION",
+      "url": "https://nemlife.com/nem-methode#mastery"
+    }
+  ],
+  "totalTime": "FILL_IN"
+}
+</script>

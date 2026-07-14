@@ -1,0 +1,36 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "description": "{{wf {&quot;path&quot;:&quot;seo-meta-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "url": "https://nemlife.com/inzichten/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "image": "{{wf {&quot;path&quot;:&quot;main-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+  "datePublished": "{{wf {&quot;path&quot;:&quot;date-published&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+  "dateModified": "{{wf {&quot;path&quot;:&quot;date-modified&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+  "author": {
+    "@type": "Person",
+    "@id": "https://nemlife.com/#christel-reus",
+    "name": "Christel Reus"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "@id": "https://nemlife.com/#organization",
+    "name": "NEM Life",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cdn.prod.website-files.com/69bfba56f3622791a798b816/69c538c8d3971172f86c3436_Logo.avif"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://nemlife.com/inzichten/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+  },
+  "articleSection": "{{wf {&quot;path&quot;:&quot;blog-cateogry:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "keywords": "{{wf {&quot;path&quot;:&quot;tags-2&quot;,&quot;type&quot;:&quot;Option&quot;\} }}",
+  "inLanguage": "nl-NL",
+  "isPartOf": {
+    "@id": "https://nemlife.com/#website"
+  }
+}
+</script>

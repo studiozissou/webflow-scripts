@@ -1,0 +1,308 @@
+<!-- Show loader while list loads -->
+<script>
+window.FinsweetAttributes = window.FinsweetAttributes || [];
+window.FinsweetAttributes.push([
+  'list',
+  (listInstances) => {
+    // Show loader and hide results on input
+    $(document).on('input change', '[fs-list-field]', () => {
+      $('.loading').show();
+      $('#results-list-wrapper').hide();
+      //$('#mobile-results-button').hide();
+      //$('#mobile-loading-button').show();
+      $('.facet-wrapper').addClass('is-hidden');
+      $('.filters1_item').addClass('is-loading');
+    });
+
+    listInstances.forEach(list => {
+      // Backup: show loader if filter triggered without input
+      list.addHook('filter', () => {
+        $('.loading').show();
+        $('#results-list-wrapper').hide();
+        //$('#mobile-results-button').hide();
+      	//$('#mobile-loading-button').show();
+      	$('.facet-wrapper').addClass('is-hidden');
+        $('.filters1_item').addClass('is-loading');
+      });
+
+      // Hide loader and show results after rendering
+      list.addHook('afterRender', () => {
+        
+        $('.loading').hide();
+        $('#results-list-wrapper').show();
+        //$('#mobile-results-button').show();
+      	//$('#mobile-loading-button').hide();
+        $('.facet-wrapper').removeClass('is-hidden');
+        $('.filters1_item').removeClass('is-loading');
+      });
+    });
+  }
+]);
+</script>  
+    
+<!-- Make/Model selection -->
+    <script>
+      window.FinsweetAttributes = window.FinsweetAttributes || [];
+      window.FinsweetAttributes.push([
+        'list',
+        (listInstances) => {
+        // TODO - LIMIT TO MODELS LIST ONLY
+          const modelList = listInstances.find(({ instance }) => instance === 'models');
+          if (!modelList) return;
+          initMakeModelFilters();
+          // On any render - call the function
+          modelList.addHook('render', () => {
+            initMakeModelFilters();
+          });
+        }
+      ]);
+    
+      function initMakeModelFilters() {
+        // Get an element on the page that has each model/make 
+        const items = $('.model-data').map(function () {
+          return {
+            model: $(this).attr('model-title'),
+            make: $(this).attr('make-title')
+          };
+        }).get();
+        // Get the make + model, if none found return
+        const $makeDropdown = $('[name="make"]');
+        const $modelDropdown = $('[name="model"]');
+        if (!$makeDropdown.length || !$modelDropdown.length) return;
+
+        //This removes change event handlers and sets the values. Makes models disabled\
+        //TODO - if we have make / model in query params set here, remove duplication from later
+        // Logic should be: If query params set that. If not set to any. 
+        $makeDropdown.off('change').html('<option value="" selected>Any</option>');
+        $modelDropdown.off('change').html('<option value="">Any</option>')
+          .prop('disabled', true)
+          .addClass('is-disabled');
+    
+        // Goes through all the list of models, gets the makes, uniques them.
+        const uniqueMakes = [...new Set(items.map(i => i.make))].sort();
+        uniqueMakes.forEach(make => {
+          $makeDropdown.append(`<option value="${make}">${make}</option>`);
+        });
+    
+        // Function to set dropdowns from URL parameters
+        function setDropdownsFromURL() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const makeParam = urlParams.get('cars_make_equal');
+          const modelParam = urlParams.get('cars_model_equal');
+          
+          if (makeParam) {
+            $makeDropdown.val(makeParam);
+            $makeDropdown[0].dispatchEvent(new Event('change', { bubbles: true }));
+            
+            // Populate model dropdown for the selected make
+            const filtered = items.filter(i => i.make === makeParam);
+            if (filtered.length) {
+              $modelDropdown.html('<option value="">Any</option>')
+                .prop('disabled', false)
+                .removeClass('is-disabled');
+              filtered.forEach(i =>
+                $modelDropdown.append(`<option value="${i.model}">${i.model}</option>`)
+              );
+              
+              // Set the model value if it exists
+              if (modelParam) {
+                $modelDropdown.val(modelParam);
+                $modelDropdown[0].dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            }
+          }
+        }
+        
+        // Set dropdowns from URL on page load
+        setDropdownsFromURL();
+        
+        $makeDropdown.on('change', function () {
+          const selectedMake = this.value;
+          const filtered = items.filter(i => i.make === selectedMake);
+          // Clear only the model filter when make changes
+          const tagRemoveButtons = document.querySelectorAll('[fs-list-element="tag-remove"]');
+          
+          // Get all the tag remove buttons, go up the chain to the tag, and if the tag value matches, click it
+          tagRemoveButtons.forEach((button) => {
+            const tagElement = button.closest('[fs-list-element="tag"]');
+            if (tagElement) {
+              const tagValue = tagElement.querySelector('[fs-list-element="tag-value"]');
+              if (tagValue) {
+                const value = tagValue.textContent.trim();
+                
+                // Check if this tag value exists in the model dropdown options
+                const isModelTag = $modelDropdown.find(`option[value="${value}"]`).length > 0;
+                if (isModelTag) {
+                  if (!isMobile()) {
+                    button.click();
+                  }
+                }
+              }
+            }
+          });
+          
+          // Clear the field value as backup
+          $modelDropdown.val('').trigger('input').trigger('change');
+          
+          // if no make selected, make model dropdown not clickable
+          if (!filtered.length) {
+            $modelDropdown.html('<option value="">Any</option>')
+              .prop('disabled', true)
+              .addClass('is-disabled');
+            return;
+          }
+          // if make selected, prepopulate model dropdown with models
+          // TODO - create a function to prepopulate models field. Is used twice
+          $modelDropdown.html('<option value="">Any</option>')
+            .prop('disabled', false)
+            .removeClass('is-disabled');
+          filtered.forEach(i =>
+            $modelDropdown.append(`<option value="${i.model}">${i.model}</option>`)
+          );
+        });
+    
+        $modelDropdown.on('change', function () {
+          // placeholder, if needed later
+        });
+      }
+    </script>
+       
+<!-- Show toast message if user is redirected from VDP 404 -->
+<script>
+      $(function() {
+        if (sessionStorage.getItem('from404Used') === 'true') {
+          $('#redirect-message').show();
+          sessionStorage.removeItem('from404Used');
+        }
+      });
+</script>
+
+<!-- Insert promo cards -->
+<script>
+window.FinsweetAttributes = window.FinsweetAttributes || [];
+window.FinsweetAttributes.push([
+  'list',
+  (listInstances) => {
+    listInstances.forEach(list => {
+      list.addHook('afterRender', () => {
+        const $list = $('#results-list');
+        $list.find('[data-element="promo-card"]').remove(); // clear old
+
+        $('#promo-storage [data-element="promo-card"]').each(function(){
+          const base = parseInt($(this).attr('data-position'),10) || 1;
+          const repeat = parseInt($(this).attr('data-repeat'),10) || 0;
+          const $children = $list.children();
+          const max = $children.length;
+
+          const insertAt = (pos)=>{
+            const $clone = $(this).clone(true);
+            const kids = $list.children();
+            if(pos >= kids.length){ $list.append($clone); }
+            else{ $clone.insertBefore(kids.eq(pos-1)); }
+          };
+
+          insertAt(base);
+          if(repeat>0){
+            let pos = base + repeat;
+            while(pos <= max + 1){
+              insertAt(pos);
+              pos += repeat;
+            }
+          }
+        });
+
+        // ✅ find first wrapper with a following sibling, then hide all after it
+        const $wrappers = $('#results-list > .results_offer-wrapper');
+        $wrappers.each(function(){
+          if($(this).next('.results_offer-wrapper').length){
+            $(this).nextAll('.results_offer-wrapper').hide(); // hide all after
+            return false; // stop after first match
+          }
+        });
+
+      });
+    });
+  }
+]);
+</script>
+
+<!-- Hide mobile filters button if list still loading -->
+<script>
+function windowLoaded() {
+    const span = document.getElementById('desktop-results');    
+
+    function getCount(el) {
+      // Try to parse its numeric content (e.g. "1,234" → 1234)
+      const raw = el.textContent.trim().replace(/,/g, '');
+      const count = parseInt(raw, 10);
+      return count;
+    }
+
+    let startValue = getCount(span);
+    let i = 0;
+
+    // Poll every 300 ms
+    const pollId = setInterval(() => {
+      const c = getCount(span);
+      if(c == startValue) {
+        i++;
+
+        if(i >= 10) {
+          // If we haven't changed in 3 seconds, stop polling
+          clearInterval(pollId);
+					$('#mobile-filters-loading-link').hide();
+					$('#mobile-filters-link').css('display','flex');
+        }
+      }
+      else if(c != startValue) {
+        startValue = c;
+        i = 0;
+      }
+    }, 400);
+
+}
+
+window.addEventListener("load", windowLoaded);
+</script>
+
+<!-- Open/close filters list and accordions on mobile without using Webflow interactions -->
+<script>
+$(document).ready(function(){
+  // --- Mobile filters toggle (≤991px) ---
+  function bindFilterToggle(){
+    if($(window).width() <= 991){
+      // open filters
+      $('#mobile-filters-link').off('click').on('click', function(e){
+        e.preventDefault();
+        $('.filters1_filters-wrapper').addClass('is-visible');
+      });
+      // close filters
+      $('#mobile-search-submit').off('click').on('click', function(){
+  			$('.filters1_filters-wrapper').removeClass('is-visible');
+			});
+			$('#filters-mobile-close').on('click', function(){
+  			$('.filters1_filters-wrapper').removeClass('is-visible');
+			});
+    } else {
+      // unbind on desktop
+      $('#mobile-filters-link, #mobile-search-submit').off('click');
+    }
+  }
+  bindFilterToggle();
+  $(window).on('resize', bindFilterToggle);
+
+  // --- Accordion toggle (all screen sizes) ---
+  $(document).on('click', '.filters1_filter-group-heading', function(){
+    $(this).siblings('.filters1_filter-options').toggleClass('is-open');
+    $(this).find('.filters1_accordion-icon').toggleClass('is-open');
+  });
+});
+</script>
+
+<!-- Trim VRM search of disallowed characters -->
+<script>
+// Allow only A–Z, a–z, 0–9 while typing or pasting
+$("#vrm-search").on("input", function() {
+  this.value = this.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+});
+</script>

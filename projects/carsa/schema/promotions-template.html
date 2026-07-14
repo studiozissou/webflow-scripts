@@ -1,0 +1,43 @@
+<!-- PROMOTIONS TEMPLATE — JSON-LD Schema -->
+
+<!-- WebPage + BreadcrumbList — always present -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://www.carsa.co.uk/used-cars/promotions/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#webpage",
+      "url": "https://www.carsa.co.uk/used-cars/promotions/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }} | Used Cars | Carsa",
+      "description": "{{wf {&quot;path&quot;:&quot;meta-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "publisher": { "@id": "https://www.carsa.co.uk/#organization" },
+      "breadcrumb": { "@id": "https://www.carsa.co.uk/used-cars/promotions/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/used-cars/promotions/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Used Cars",
+          "item": "https://www.carsa.co.uk/used-cars"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        }
+      ]
+    }
+  ]
+}
+</script>

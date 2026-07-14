@@ -1,0 +1,50 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://www.carsa.co.uk/used-cars/deals#webpage",
+      "url": "https://www.carsa.co.uk/used-cars/deals",
+      "name": "Deals on used cars for sale or on finance | Carsa",
+      "description": "Daily price drops on selected used cars — £200 to £1,500 off. Every car includes cosmetic and mechanical checks, a 90-day warranty, and flexible finance from 8.9% APR.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "about": { "@id": "https://www.carsa.co.uk/used-cars/deals#catalog" },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": ["h1", "h2", "h3"]
+      }
+    },
+    {
+      "@type": "OfferCatalog",
+      "@id": "https://www.carsa.co.uk/used-cars/deals#catalog",
+      "name": "Carsa Used Car Deals",
+      "description": "Daily price drops on selected used cars, from £200 to £1,500 off.",
+      "itemListOrder": "https://schema.org/ItemListUnordered",
+      "numberOfItems": "2000",
+      "offeredBy": { "@id": "https://www.carsa.co.uk/#organization" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/used-cars/deals#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Used Cars",
+          "item": "https://www.carsa.co.uk/used-cars"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Deals"
+        }
+      ]
+    }
+  ]
+}

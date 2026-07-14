@@ -1,0 +1,8 @@
+<script>
+(function() {
+  var vrm = new URLSearchParams(window.location.search).get('vrm');
+  if (vrm) {
+    window.location.replace('https://www.carsa.co.uk/vehicles/used/' + vrm.toLowerCase());
+  }
+})();
+</script>

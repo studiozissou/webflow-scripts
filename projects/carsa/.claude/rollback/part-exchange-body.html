@@ -1,0 +1,340 @@
+<!-- Update and open the link for Instant Valuation form -->
+<script>
+/* Build valuation links using stored UTMs + external referrer domain (fallbacks included) */
+$(function () {
+  const HOST = location.hostname.replace(/^www\./,'');
+
+  function getAttributionParams(){
+    const pick = (s)=>{ try{ return JSON.parse(s.getItem('attribution_session')||'null') || JSON.parse(s.getItem('attribution')||'null'); }catch(_){ return null; } };
+    const ss = pick(sessionStorage) || {};
+    const ls = pick(localStorage)  || {};
+    const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms||{}));
+    let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+    if(!refDomain && document.referrer){
+      try{
+        const d = new URL(document.referrer).hostname.replace(/^www\./,'');
+        if(!(d===HOST || d.endsWith('.'+HOST))) refDomain = d;
+      }catch(_){}
+    }
+    const params = {...utms};
+    if(refDomain) params.referrer = refDomain;
+    return params;
+  }
+
+  function addParams(url, obj){
+    const u = new URL(url, location.origin);
+    for(const k in obj){ if(!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
+    return u.toString();
+  }
+
+  function generateOrderURL(vrm, mileage){
+    const base = 'https://sellcar.carsa.co.uk/new-order?vrm=' + encodeURIComponent(vrm)
+               + '&mileage=' + encodeURIComponent(mileage || '');
+    return addParams(base, getAttributionParams());
+  }
+
+  function getFormValues($form){
+    const vrm = ($form.find('[name="vrm"]').first().val() || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '');
+    const mileage = ($form.find('[name="mileage"]').first().val() || '').trim();
+    return { vrm, mileage };
+  }
+
+  function setHref($trigger){
+    const $form = $trigger.closest('form');
+    if(!$form.length) return null;
+    const { vrm, mileage } = getFormValues($form);
+    if(!vrm) return null;
+    const url = generateOrderURL(vrm, mileage);
+    if($trigger.is('a')) $trigger.attr({ href: url, target: '_blank' });
+    return url;
+  }
+
+  $(document).on('click', '[data-link="valuation"]', function(e){
+    const url = setHref($(this));
+    if(!url) return;
+    if(!$(this).is('a')){
+      e.preventDefault();
+      window.open(url, '_blank', 'noopener');
+    }
+  });
+
+  $(document).on('keydown', 'form input', function(e){
+    if(e.key !== 'Enter') return;
+    const $form = $(this).closest('form');
+    const $trigger = $form.find('[data-link="valuation"]').first();
+    if(!$trigger.length) return;
+    e.preventDefault();
+    const url = setHref($trigger);
+    if(url && !$trigger.is('a')) window.open(url, '_blank', 'noopener');
+    else if(url) $trigger[0].click();
+  });
+
+  $(document).on('input', 'form [name="vrm"], form [name="mileage"]', function(){
+    const $form = $(this).closest('form');
+    $form.find('[data-link="valuation"]').each(function(){ setHref($(this)); });
+  });
+});
+</script>
+
+<!-- Build FAQ schema -->
+<script>
+(function () {
+  // Run once
+  if (window.__FAQ_SCHEMA_MINI__) return;
+  window.__FAQ_SCHEMA_MINI__ = true;
+
+  // If your FAQs live inside a section, set SCOPE_SEL to that element.
+  // Otherwise it will scan the whole document.
+  const SCOPE_SEL = '#section-faq'; // or '[data-faq-scope]' — adjust or set to null
+  const ITEM_Q    = '[data-faq-question]';
+  const ITEM_A    = '[data-faq-answer]';
+
+  const norm = s => (s || '').replace(/\s+/g, ' ').trim();
+
+  function collect(scope) {
+    const items = [];
+    scope.querySelectorAll(ITEM_Q).forEach(qEl => {
+      const item = qEl.closest('[data-faq-item]');
+      const aEl  = item ? item.querySelector(ITEM_A) : null;
+      const q = norm(qEl.textContent);
+      const a = norm(aEl ? aEl.textContent : '');
+      if (!q || !a) return;
+      items.push({
+        "@type": "Question",
+        "name": q,
+        "acceptedAnswer": { "@type": "Answer", "text": a }
+      });
+    });
+    return items;
+  }
+
+  function inject(data) {
+    if (!data || !data.mainEntity || !data.mainEntity.length) return;
+    if (document.querySelector('script[data-faq-jsonld]')) return;
+    const s = document.createElement('script');
+    s.type = 'application/ld+json';
+    s.dataset.faqJsonld = '1';
+    s.text = JSON.stringify(data);
+    document.head.appendChild(s);
+  }
+
+  function build() {
+    const scope = (SCOPE_SEL && document.querySelector(SCOPE_SEL)) || document;
+    const items = collect(scope);
+    if (!items.length) return;
+    inject({ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": items });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', build, { once: true });
+  } else {
+    build();
+  }
+})();
+</script>
+
+<!-- SVG Animations -->
+<!-- Draw lines -->
+<script>
+// Unified GSAP "draw-line" (single or multiple paths)
+// Applies ONLY to wrappers: [data-svg="draw-line"]
+// Options: data-svg-start="auto|scroll" (default: auto), data-svg-duration="2" (seconds)
+
+$(function () {
+  if (typeof gsap === "undefined") return;
+  if (typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
+
+  // Track the first user scroll (used when start=scroll AND element is already past on load)
+  let userHasScrolled = false;
+  window.addEventListener('scroll', function onFirstScroll(){
+    userHasScrolled = true;
+    window.removeEventListener('scroll', onFirstScroll);
+  }, { passive: true });
+
+  // Target ONLY draw-line wrappers
+  const wrappers = Array.from(new Set($('[data-svg="draw-line"]').get()));
+  wrappers.forEach(function(wrapper){
+    const $w = $(wrapper);
+    if ($w.data('svgDrawInit')) return; // prevent double init per wrapper
+    $w.data('svgDrawInit', true);
+
+    // Per-wrapper config
+    const startMode = (wrapper.getAttribute('data-svg-start') || 'auto').toLowerCase(); // 'auto' | 'scroll'
+    const totalDur  = Math.max(0.001, parseFloat(wrapper.getAttribute('data-svg-duration')) || 2); // default 2s
+
+    // All descendant SVGs
+    const svgs = Array.from(wrapper.querySelectorAll('svg'));
+    if (!svgs.length) return;
+
+    svgs.forEach(function(svg){
+      // Collect stroked shapes (works for 1 or many)
+      const els = Array.from(svg.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect')).filter(function(el){
+        const cs = getComputedStyle(el);
+        return cs.stroke && cs.stroke !== 'none' && parseFloat(cs.strokeWidth) > 0;
+      });
+      if (!els.length) return;
+
+      // Prime dashes + measure lengths (for proportional timing)
+      let totalLen = 0;
+      els.forEach(function(el){
+        let len = 0;
+        try { len = (typeof el.getTotalLength === 'function') ? el.getTotalLength() : 0; } catch(e){ len = 0; }
+        if (!isFinite(len) || len <= 0) {
+          const b = el.getBBox?.();
+          len = (b && isFinite(b.width) && isFinite(b.height)) ? 2*(b.width + b.height) : 1000;
+        }
+        el.style.strokeDasharray = `${len} ${len}`;
+        el.style.strokeDashoffset = `${len}`;
+        el.__svgDrawLen = len;
+        totalLen += len;
+      });
+      if (totalLen <= 0) totalLen = els.length || 1;
+
+      // Build linear child timeline (each path sequential, duration proportional to length)
+      const tl = gsap.timeline({ paused: true });
+      els.forEach(function(el){
+        const seg = (el.__svgDrawLen / totalLen) * totalDur; // seconds
+        tl.to(el, { strokeDashoffset: 0, duration: seg, ease: "none" }, ">");
+      });
+
+      // Driver tween sets overall duration + smooth in/out
+      const driver = gsap.to(tl, { progress: 1, duration: totalDur, ease: "power1.inOut", paused: true });
+
+      // Helpers
+      const playNow = () => gsap.delayedCall(0.2, () => driver.play()); // +200ms
+      const playAfterFirstScroll = () => {
+        if (userHasScrolled) playNow();
+        else {
+          const handler = () => { window.removeEventListener('scroll', handler); userHasScrolled = true; playNow(); };
+          window.addEventListener('scroll', handler, { passive: true });
+        }
+      };
+
+      // 20% viewport threshold ≈ "top 80%"
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const r0 = svg.getBoundingClientRect();
+      const pastOnLoad = (r0.top <= vh * 0.8 && r0.bottom >= 0);
+
+      // IMPORTANT FIX: if already past on load, DO NOT create ScrollTrigger — decide immediately.
+      if (pastOnLoad) {
+        (startMode === 'scroll') ? playAfterFirstScroll() : playNow();
+        return;
+      }
+
+      // Otherwise, normal trigger behavior
+      if (typeof ScrollTrigger !== "undefined") {
+        ScrollTrigger.create({
+          trigger: svg,
+          start: "top 80%",
+          once: true,
+          onEnter: () => playNow()
+        });
+      } else {
+        // Fallback without ScrollTrigger
+        const onScroll = () => {
+          const r = svg.getBoundingClientRect();
+          const enters = r.top <= vh * 0.8 && r.bottom >= 0;
+          if (!enters) return;
+          window.removeEventListener('scroll', onScroll);
+          window.removeEventListener('resize', onScroll);
+          playNow();
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        onScroll(); // initial check
+      }
+    });
+  });
+});
+</script>
+
+<!-- Draw shapes -->
+<script>
+// Unified "grow & pop-up" for wrappers: [data-svg="draw-shape"]
+// Options: data-svg-start="auto|scroll" (default auto), data-svg-duration="2" (seconds)
+
+$(function () {
+  if (typeof gsap === "undefined") return;
+  if (typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
+
+  // track first user scroll (used when start=scroll and already past on load)
+  let userHasScrolled = false;
+  window.addEventListener('scroll', function onFirstScroll(){
+    userHasScrolled = true; window.removeEventListener('scroll', onFirstScroll);
+  }, { passive:true });
+
+  // ONLY target draw-shape wrappers
+  const wrappers = Array.from(new Set($('[data-svg="draw-shape"]').get()));
+  wrappers.forEach(function(wrapper){
+    const $w = $(wrapper);
+    if ($w.data('svgPopInit')) return; $w.data('svgPopInit', true);
+
+    const startMode = (wrapper.getAttribute('data-svg-start') || 'auto').toLowerCase(); // 'auto'|'scroll'
+    const totalDur  = Math.max(0.001, parseFloat(wrapper.getAttribute('data-svg-duration')) || 2); // default 2s
+
+    // all descendant SVGs
+    const svgs = Array.from(wrapper.querySelectorAll('svg'));
+    if (!svgs.length) return;
+
+    svgs.forEach(function(svg){
+      // shapes to animate
+      const els = Array.from(svg.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect'));
+      if (!els.length) return;
+
+      // initial state: below + scaled down + hidden
+      gsap.set(els, { y:24, scale:0, opacity:0, transformOrigin:"50% 50%", transformBox:"fill-box" });
+
+      // child timeline: sequential, linear per item; total = totalDur
+      const tl = gsap.timeline({ paused:true });
+      const seg = totalDur / els.length;
+      els.forEach(el => tl.to(el, { y:0, scale:1, opacity:1, duration:seg, ease:"none" }, ">"));
+
+      // driver tween gives global in/out ease + exact total time
+      const driver = gsap.to(tl, { progress:1, duration:totalDur, ease:"power1.inOut", paused:true });
+
+      // helpers
+      const playNow = () => gsap.delayedCall(0.2, () => driver.play()); // +200ms delay
+      const playAfterFirstScroll = () => {
+        if (userHasScrolled) playNow();
+        else {
+          const h = () => { window.removeEventListener('scroll', h); userHasScrolled = true; playNow(); };
+          window.addEventListener('scroll', h, { passive:true });
+        }
+      };
+
+      // threshold (≈ "top 80%")
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const r0 = svg.getBoundingClientRect();
+      const pastOnLoad = (r0.top <= vh * 0.8 && r0.bottom >= 0);
+
+      // If already past on load, decide immediately (fixes start=scroll reliability)
+      if (pastOnLoad) { (startMode === 'scroll') ? playAfterFirstScroll() : playNow(); return; }
+
+      // Otherwise, set up trigger
+      if (typeof ScrollTrigger !== "undefined") {
+        ScrollTrigger.create({
+          trigger: svg,
+          start: "top 80%",
+          once: true,
+          onEnter: () => playNow()
+        });
+      } else {
+        // fallback without ScrollTrigger
+        const onScroll = () => {
+          const r = svg.getBoundingClientRect();
+          const enters = r.top <= vh * 0.8 && r.bottom >= 0;
+          if (!enters) return;
+          window.removeEventListener('scroll', onScroll);
+          window.removeEventListener('resize', onScroll);
+          playNow();
+        };
+        window.addEventListener('scroll', onScroll, { passive:true });
+        window.addEventListener('resize', onScroll);
+        onScroll(); // initial check
+      }
+    });
+  });
+});
+</script>

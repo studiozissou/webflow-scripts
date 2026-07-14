@@ -1,0 +1,319 @@
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const depositInput = document.getElementById("finance-deposit");
+  const carPriceInput = document.getElementById("finance-car-price");
+  const totalPriceEl = document.getElementById("total-price");
+
+  // ---------- Helpers ----------
+  const fmtGBP = (v, opts={minimumFractionDigits:0, maximumFractionDigits:0}) =>
+    "£" + Number(v).toLocaleString("en-GB", opts);
+  const parseGBP = v => Number((v||"").toString().replace(/[^0-9.]/g,"")) || 0;
+  const aprFor = rating => rating==="excellent" ? 8.9 : (rating==="fair" ? 16.9 : 11.9);
+
+  let cmsPrice = parseGBP(carPriceInput.value || "10000");
+
+  // ---------- Ensure APR checked matches visible .is-active on load (Webflow quirk) ----------
+  (function fixAprLoadMismatch(){
+    const aprWrap = document.querySelector('.finance-calculator_radio-buttons-wrapper input[data-name="apr"]')?.closest('.finance-calculator_radio-buttons-wrapper');
+    if (!aprWrap) return;
+    const activeAprInput = aprWrap.querySelector('label.finance-calculator_radio-button-field.is-active input[type="radio"][data-name="apr"]');
+    const checkedApr = aprWrap.querySelector('input[type="radio"][data-name="apr"]:checked');
+    if (activeAprInput && activeAprInput !== checkedApr) {
+      aprWrap.querySelectorAll('input[data-name="apr"]').forEach(r => r.classList.remove('w--redirected-checked'));
+      activeAprInput.checked = true;
+      activeAprInput.classList.add('w--redirected-checked');
+    }
+  })();
+
+  function getSelectedAPRAndUpdateUI() {
+    const sel = document.querySelector('input[type="radio"][data-name="apr"]:checked');
+    const rating = sel?.value;
+    const apr = aprFor(rating);
+    document.querySelectorAll('[data-number="apr"]').forEach(el => el.textContent = apr);
+    console.log("[APR Selected]", rating, "=>", apr);
+    return apr;
+  }
+
+  function updateStaticOutputs(deposit, term) {
+    const hpTermEl = document.getElementById("hp-term");
+    if (hpTermEl) {
+      hpTermEl.textContent = term + " monthly payments of";
+      console.log("[Term Updated]", term);
+    }
+    const credit = cmsPrice - deposit;
+    document.querySelectorAll('[data-number="total-credit"]').forEach(el => {
+      el.textContent = fmtGBP(credit);
+    });
+    console.log("[Static Outputs] Deposit:", deposit, "Price:", cmsPrice, "Credit:", credit);
+  }
+
+  // ---------- API ----------
+  function callFinanceAPI() {
+    const deposit = parseGBP(depositInput?.value);
+    const term = document.querySelector('input[type="radio"][data-name="finance-term"]:checked')?.value;
+    const apr  = getSelectedAPRAndUpdateUI();
+
+    updateStaticOutputs(deposit, term);
+
+    const mapping = {
+      "hp-price": { path: "hp.payments.regular", currency: true, localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 } },
+      "hp-price-short": { path: "hp.payments.regular", currency: true, transform: v => Math.floor(parseFloat(v)), localeOptions: { minimumFractionDigits: 0, maximumFractionDigits: 0 } },
+      "hp-total-amount-payable": { path: "hp.totalAmountPayable", currency: true, localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 } },
+      "hp-total-charges": { path: "hp.totalCharges", currency: true, localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 } }
+    };
+
+    const payload = {
+      criteria: { annualMileage: 10000, cashDeposit: Number(deposit), outstandingFinance: 0, pxEquity: 0, term: Number(term), apr },
+      vehicle:  { mileage: 7617, price: cmsPrice, registrationDate: "2025-01-22", type: "Car", vrm: "MD74ZHJ" },
+      requestedBy: "manual",
+      requestUuid: (window.crypto?.randomUUID && crypto.randomUUID()) || String(Date.now())
+    };
+
+    console.log("[Finance API Payload]", payload);
+
+    fetch("https://consumer-finance.carsanet.co.uk/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("[Finance API Response]", data);
+        const get = (o,p) => p.split('.').reduce((a,k)=>a?.[k], o);
+
+        Object.keys(mapping).forEach(id => {
+          const cfg = mapping[id];
+          let val = get(data, cfg.path);
+          if (val == null) return;
+          if (cfg.transform) val = cfg.transform(val);
+          if (cfg.format)    val = cfg.format(val);
+          else if (cfg.currency) val = "£" + Number(val).toLocaleString("en-GB", cfg.localeOptions);
+
+          const el = document.getElementById(id);
+          if (el) el.textContent = val;
+          document.querySelectorAll('[data-number="'+id+'"]').forEach(n => n.textContent = val);
+          console.log("[Updated Element]", id, "=>", val);
+        });
+      })
+      .catch(err => console.error("[Finance API Error]", err));
+  }
+
+  // ---------- Defaults ----------
+  depositInput.value = fmtGBP(2000);
+
+  cmsPrice = parseGBP(carPriceInput.value || "10000");
+  carPriceInput.value = fmtGBP(cmsPrice);
+  if (totalPriceEl) totalPriceEl.textContent = fmtGBP(cmsPrice);
+
+  // If no term is checked, default to 48
+  if (!document.querySelector('input[type="radio"][data-name="finance-term"]:checked')) {
+    const t48 = document.getElementById("48");
+    if (t48) t48.checked = true;
+  }
+
+  // Sync APR display on load
+  getSelectedAPRAndUpdateUI();
+
+  // ---------- Inputs ----------
+  // Car price
+  carPriceInput.addEventListener("input", () => {
+    cmsPrice = parseGBP(carPriceInput.value);
+    console.log("[Car Price Updated]", cmsPrice);
+    if (totalPriceEl) totalPriceEl.textContent = fmtGBP(cmsPrice);
+    callFinanceAPI();
+  });
+  carPriceInput.addEventListener("blur", () => {
+    cmsPrice = parseGBP(carPriceInput.value);
+    carPriceInput.value = fmtGBP(cmsPrice);
+    if (totalPriceEl) totalPriceEl.textContent = fmtGBP(cmsPrice);
+    callFinanceAPI();
+  });
+  carPriceInput.addEventListener("focus", () => {
+    carPriceInput.value = parseGBP(carPriceInput.value) || '';
+  });
+
+  // Deposit
+  let depTimer;
+  depositInput.addEventListener("input", () => {
+    clearTimeout(depTimer);
+    const n = parseGBP(depositInput.value);
+    document.querySelectorAll('[data-number="deposit"]').forEach(el => el.textContent = fmtGBP(n));
+    console.log("[Deposit Updated]", n);
+    depTimer = setTimeout(callFinanceAPI, 800);
+  });
+  depositInput.addEventListener("blur", () => {
+    depositInput.value = fmtGBP(parseGBP(depositInput.value));
+  });
+  depositInput.addEventListener("focus", () => {
+    depositInput.value = parseGBP(depositInput.value) || '';
+  });
+
+  // ---------- Scoped radio handlers ----------
+  function wireScopedRadios(groupName) {
+    document.querySelectorAll('input[type="radio"][data-name="'+groupName+'"]').forEach(input => {
+      input.addEventListener("change", function() {
+        const wrapper = this.closest('.finance-calculator_radio-buttons-wrapper');
+        if (wrapper) {
+          wrapper.querySelectorAll('label.finance-calculator_radio-button-field').forEach(lbl => lbl.classList.remove('is-active'));
+          wrapper.querySelectorAll('input[type="radio"][data-name="'+groupName+'"]').forEach(r => r.classList.remove('w--redirected-checked'));
+        }
+        this.checked = true;
+        this.classList.add('w--redirected-checked');
+        this.closest('label')?.classList.add('is-active');
+
+        if (groupName === "apr") {
+          const apr = getSelectedAPRAndUpdateUI();
+          console.log("[APR Changed]", this.value, "=>", apr);
+        }
+        if (groupName === "finance-term") {
+          console.log("[Term Changed]", this.value);
+        }
+        callFinanceAPI();
+      });
+    });
+  }
+  wireScopedRadios("finance-term");
+  wireScopedRadios("apr");
+
+  // Prevent Enter submitting the form
+  document.querySelectorAll('#finance-deposit, #finance-car-price, input[type="radio"][data-name="finance-term"], input[type="radio"][data-name="apr"]')
+    .forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); }));
+
+  // Initial calc
+  callFinanceAPI();
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("DOM Loaded")
+  const btn = document.querySelector('[data-analytics-event="finance-calculator-cta-view-results-mobile"]');
+  const results = document.getElementById("finance-calculator-results");
+  console.log(btn)
+    console.log(results)
+  if (btn && results) {
+    btn.addEventListener("click", function(e) {
+    console.log("Button clicked")
+      e.preventDefault();
+      results.scrollIntoView({ behavior: "smooth" });
+    });
+  }
+});
+</script>
+
+<!-- Update car card link when finance check is hovered/clicked -->
+<script>
+(() => {
+  const BASE = 'https://quote.carsa.co.uk/eligibility/questions';
+  const SELECTOR = '[data-link="check-finance"]';
+  const ANALYTICS_VALUE = 'check-finance-car-card-click';
+  const HOST = location.hostname.replace(/^www\./, '');
+
+  function getAttributionParams() {
+    const pick = (s) => {
+      try {
+        return JSON.parse(s.getItem('attribution_session') || 'null') ||
+               JSON.parse(s.getItem('attribution') || 'null');
+      } catch (_) { return null; }
+    };
+    const ss = pick(sessionStorage) || {};
+    const ls = pick(localStorage) || {};
+    const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms || {}));
+    let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+    if (!refDomain && document.referrer) {
+      try {
+        const d = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (!(d === HOST || d.endsWith('.' + HOST))) refDomain = d;
+      } catch (_) { /* invalid referrer URL */ }
+    }
+    const params = { ...utms };
+    if (refDomain) params.referrer = refDomain;
+    return params;
+  }
+
+  function addParams(url, obj) {
+    try {
+      const u = new URL(url, location.origin);
+      for (const k in obj) { if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
+      return u.toString();
+    } catch (_) {
+      const hasQ = url.indexOf('?') > -1;
+      const parts = [];
+      for (const k in obj) {
+        if (!new RegExp('([?&])' + k + '=').test(url)) parts.push(k + '=' + encodeURIComponent(obj[k]));
+      }
+      return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
+    }
+  }
+
+  function buildURL(vrm) {
+    let url = BASE;
+    if (vrm) url += '?vrm=' + encodeURIComponent(vrm);
+    return addParams(url, getAttributionParams());
+  }
+
+  // Hover: swap ancestor <a> href so browser status bar shows finance URL
+  document.body.addEventListener('mouseover', (e) => {
+    const el = e.target.closest(SELECTOR);
+    if (!el) return;
+    const anchor = el.closest('a');
+    if (!anchor) return;
+    if (!anchor.dataset.originalHref) anchor.dataset.originalHref = anchor.href;
+    if (!('originalAnalytics' in anchor.dataset)) anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+    anchor.href = buildURL(el.getAttribute('vrm'));
+    anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+  });
+
+  document.body.addEventListener('mouseout', (e) => {
+    const el = e.target.closest(SELECTOR);
+    if (!el) return;
+    if (el.contains(e.relatedTarget)) return;
+    const anchor = el.closest('a');
+    if (!anchor || !anchor.dataset.originalHref) return;
+    anchor.href = anchor.dataset.originalHref;
+    delete anchor.dataset.originalHref;
+    if ('originalAnalytics' in anchor.dataset) {
+      const orig = anchor.dataset.originalAnalytics;
+      if (orig) anchor.setAttribute('data-analytics-event', orig);
+      else anchor.removeAttribute('data-analytics-event');
+      delete anchor.dataset.originalAnalytics;
+    }
+  });
+
+  // Click fallback: if href wasn't swapped yet (keyboard/touch), swap it now
+  document.body.addEventListener('click', (e) => {
+    const el = e.target.closest(SELECTOR);
+    if (!el) return;
+    const anchor = el.closest('a');
+    if (!anchor) return;
+    if (!anchor.dataset.originalHref) {
+      anchor.dataset.originalHref = anchor.href;
+      anchor.href = buildURL(el.getAttribute('vrm'));
+    }
+    if (!('originalAnalytics' in anchor.dataset)) {
+      anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+      anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+    }
+  });
+})();
+</script>
+
+<!-- Set all Car Cards to the height of tallest -->
+<script>
+    function setEqualHeight() {
+      var cards = document.querySelectorAll('[data-card-height="equal"]');
+      if (!cards.length) return;
+      cards.forEach(function(c) { c.style.height = 'auto'; });
+      var maxH = 0;
+      cards.forEach(function(c) { maxH = Math.max(maxH, c.offsetHeight); });
+      cards.forEach(function(c) { c.style.height = maxH + 'px'; });
+    }
+
+    window.addEventListener('resize', setEqualHeight);
+
+    // Re-equalize whenever Finsweet or Webflow modifies the slider DOM
+    new MutationObserver(setEqualHeight).observe(
+      document.body,
+      { childList: true, subtree: true }
+    );
+</script>

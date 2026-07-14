@@ -54,9 +54,10 @@
 }
 </script>
 
-<!-- FAQPage — all 10 FAQ ref slots MUST be populated in Webflow CMS.
-     Empty slots will output blank Question nodes which Google rejects.
-     If a model has fewer than 10 FAQs, fill remaining slots with placeholder content. -->
+<!-- FAQPage — 7 FAQ ref slots from Webflow CMS.
+     Populated model pages use exactly 7 FAQs (faq-1..faq-7).
+     Model pages with 0 FAQs still emit empty slots and require the
+     scrub script or Webflow conditional visibility to avoid errors. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -117,30 +118,6 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "{{wf {&quot;path&quot;:&quot;faq-7:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "{{wf {&quot;path&quot;:&quot;faq-8:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "{{wf {&quot;path&quot;:&quot;faq-8:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "{{wf {&quot;path&quot;:&quot;faq-9:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "{{wf {&quot;path&quot;:&quot;faq-9:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "{{wf {&quot;path&quot;:&quot;faq-10:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "{{wf {&quot;path&quot;:&quot;faq-10:answer-plain-text&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
       }
     }
   ]

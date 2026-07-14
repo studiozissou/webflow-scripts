@@ -1,0 +1,49 @@
+<link rel="canonical" href="https://www.carsa.co.uk/used-cars/make/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}" />
+
+<!-- Finsweet Attributes -->
+<script async type="module" src="https://cdn.jsdelivr.net/npm/@finsweet/attributes@2/attributes.js" fs-list></script>
+
+<style>
+  #promo-storage {
+    display: none !important;
+  }
+</style>
+
+<!-- Block native form submission on Filter Vehicles form -->
+<!-- Fix: Finsweet CDN update (2026-06-16) started triggering native submit -->
+<!-- events on select changes, causing Webflow to count filter interactions -->
+<!-- as form submissions. This blocks native submit while preserving -->
+<!-- Finsweet filter behaviour and the mobile submit button redirect. -->
+<script>
+(function () {
+  var FORM_ID = 'wf-form-Filter-Vehicles';
+
+  function blockSubmit() {
+    var form = document.getElementById(FORM_ID);
+    if (!form) return false;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, true);
+
+    // Hide Webflow's success/error states so they never flash
+    var parent = form.closest('.w-form');
+    if (parent) {
+      var done = parent.querySelector('.w-form-done');
+      var fail = parent.querySelector('.w-form-fail');
+      if (done) done.style.display = 'none';
+      if (fail) fail.style.display = 'none';
+    }
+
+    return true;
+  }
+
+  // Run immediately if DOM is ready, otherwise wait
+  if (document.getElementById(FORM_ID)) {
+    blockSubmit();
+  } else {
+    document.addEventListener('DOMContentLoaded', blockSubmit);
+  }
+})();
+</script>

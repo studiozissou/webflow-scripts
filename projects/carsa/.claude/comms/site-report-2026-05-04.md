@@ -1,338 +1,232 @@
-# Carsa Site Audit
+# Carsa website audit
 
-**Date:** May 2026
-**Prepared for:** Tomek
-
----
-
-## Executive summary
-
-The Carsa site scored 89% on SEMRush's health check. No broken links, no server errors, solid blog content. The issues we found aren't visible when you browse the site. They're in the code layer that Google, AI assistants, and screen readers read instead of looking at the page. Sorting that layer out is the difference between a site that works and one that works hard for you.
+**Prepared for:** Tomek | **Date:** May 2026 | **Site:** www.carsa.co.uk
 
 ---
 
-## What's already strong
+## The short version
 
-- 89% site health across 100 pages scanned by SEMRush
-- Zero broken links, zero server errors, zero redirect issues
-- ChatGPT, Perplexity, Google AI, and Claude can all read the site. llms.txt is in place.
-- Every car listing includes price, condition, mileage, and VIN in a format Google reads directly
-- Blog content is strong: answer-first writing, original data, question-based headings
-- Links shared on LinkedIn, WhatsApp, or Facebook show branded previews with the right title, description, and image
-- Cookie consent, SSL, analytics, and internal linking are all set up correctly
+Your site scored 89% on SEMRush's health check across 100 pages. No broken links, no server errors, decent blog content, good internal linking. The technical side is clean.
 
----
+The problems we found aren't visible when you browse the site. They're in the code -- the layer that Google, AI tools, and screen readers read instead of looking at the page. They've gone unnoticed because you can't see them. But they affect how the site performs in search and how accessible it is to people using assistive technology.
 
-## Search visibility
+Five things in particular:
 
-How Google understands and displays your pages in search results.
+1. **The chatbot widget confuses Google on every page.** "Chat with Caroline AI" uses a heading tag that tells Google "this page is about Chat with Caroline AI." It's on every page.
 
----
+2. **50+ images have no text descriptions.** Car photos, store images, icons, blog thumbnails. Screen readers can't describe them and Google can't index them. That's a WCAG Level A failure (the minimum accessibility standard).
 
-**Chatbot heading is competing with your page titles**
+3. **109 links across 94 pages have no anchor text.** Social icons, logo links, image links. Invisible to screen readers, no SEO value.
 
-The chat widget "Chat with Caroline AI" uses a heading tag that tells Google "this page is about Chat with Caroline AI." It appears on every page. The /reserve page has no other heading at all, so Google thinks the entire reserve page is about the chatbot.
+4. **Vehicle page titles get cut off in Google results.** Some run to 98 characters. Google shows about 60. The useful details disappear.
 
-We change one tag in the chat widget code. No visual change, takes minutes. Every page sends a clearer signal to Google about what it's actually about.
+5. **Trust signals have gaps.** An expired promotion ("Ends 31st Dec 25") is still on the homepage. A blog author is listed as "Jane Doe." Terms pages link to insecure HTTP addresses. No links to the FCA, DVLA, or any regulatory body.
+
+Individually, none of these is urgent. Together, they cap what the content can do.
 
 ---
 
-**Vehicle page titles get cut off in Google results**
+## What's working well
 
-Some vehicle page titles run to 98 characters. Google shows roughly 60. Everything past that becomes "..." so the useful details (fuel type, body style, "Carsa") disappear.
-
-We restructure the title template so the most important information comes first, within the 60 character window.
-
----
-
-**Car finance and carsaCover page titles are slightly too long**
-
-The /car-finance title is 65 characters and /car-care/carsacover is 81. Both get trimmed in search results.
-
-We shorten the titles to fit within Google's display limit.
-
----
-
-**Two test pages are visible to Google**
-
-Development pages (/development/impel-test and /development/eligibility-hero-mcp-test) are published and can appear in search results. They make the site look unfinished.
-
-Unpublish them and they're gone from Google within a few days.
+| Area | What we found |
+|------|---------------|
+| Site health | 89% SEMRush score. No broken links, no server errors, no redirect issues. |
+| Structured data | Full JSON-LD schema suite live: Organization, WebSite, LocalBusiness, FAQPage, Article, BreadcrumbList, Product. Google can read each car listing, store, blog post, and the company itself as structured data. |
+| Blog content | Answer-first writing, original data, question-based headings. The blog is doing more for SEO than most of the rest of the site. |
+| AI bot access | ChatGPT, Perplexity, Google AI, and Claude can all read the site. llms.txt is in place. |
+| Security | HTTPS everywhere. Cookie consent live with granular categories. |
+| Analytics | GA4 and GTM on all pages. VWO (A/B testing) consent-gated. |
+| Social sharing | Links shared on LinkedIn, WhatsApp, or Facebook show branded previews with the right title, description, and image. |
+| Internal linking | Conversion pages are well-linked from navigation and homepage. |
+| Heading structure | H1 > H2 > H3 flows correctly on most pages. |
+| Mobile | Configured correctly on all pages. |
+| Sitemap | ~1,268 URLs listed and linked. |
 
 ---
 
-**Three CMS template pages are published but empty**
+## What needs attention
 
-Template pages for /testimonials, /facilities, and /car-badges are live but serve no purpose for visitors.
-
-Same fix: unpublish or redirect.
+Grouped by priority.
 
 ---
 
-**The reserve page has no page heading**
+### Priority 0 -- Fix this week
 
-Every page needs one main heading that tells Google what the page is about. The /reserve page doesn't have one, only the chatbot widget heading.
+These affect every page or block basic accessibility.
 
-We add a proper heading so Google understands the page is about reserving a car.
-
----
-
-**/value-car and /part-exchange have identical descriptions**
-
-Both pages share the same meta description. Google may treat them as duplicate content or just pick one and ignore the other.
-
-We write a unique description for /value-car that reflects what it specifically offers (selling outright vs trading in).
+| # | What we'll do | Why it matters |
+|---|---------------|----------------|
+| 1 | Fix the chatbot heading. Change "Chat with Caroline AI" from a main heading to a regular text element. No visual change, takes minutes. | Google currently sees two main headings on every page. One fix clears that up across the entire site. |
+| 2 | Add alt text to 50+ images: car gallery, store photos, feature icons, blog thumbnails. | Screen readers can't describe these to visually impaired users. Google Image search can't index them. About 20% of UK adults have some form of disability. |
 
 ---
 
-**Three terms pages contain insecure links**
+### Priority 1 -- First sprint
 
-The data privacy, terms and conditions, and vehicle purchase pages link to http://www.carsa.co.uk instead of https://. Browsers may show security warnings.
+Search visibility, risk reduction, trust repairs.
 
-We update the links from http to https.
-
----
-
-**Sitemap may not include all vehicles**
-
-The sitemap lists roughly 250 vehicles, but the CMS contains over 4,600. Google may not know about most of your car listings.
-
-We investigate why the gap exists (likely unpublished items or a DealerNet sync issue) and make sure all live vehicles are in the sitemap.
-
----
-
-**Domain redirect needs checking**
-
-We need to confirm that carsa.co.uk (without www) correctly redirects to www.carsa.co.uk. If it doesn't, Google may treat them as two separate sites and split your ranking power between them.
-
-Quick check. If needed, a one line config change.
+| # | What we'll do | Why it matters |
+|---|---------------|----------------|
+| 3 | Move custom code to a Carsa-owned GitHub repo. 6 scripts currently sit on a developer's personal account. If that account changes, parts of the site break. | Carsa owns its own code. Nothing updates unless someone at Carsa decides it should. |
+| 4 | Shorten the /car-finance page title (67 characters; Google shows ~60). | The full title shows in search results instead of trailing off. |
+| 5 | Unpublish 2 development pages (/development/impel-test, /development/eligibility-hero-mcp-test). Both are live and visible to Google. | They make the site look unfinished. Gone from Google within days. |
+| 6 | Unpublish 3 empty CMS template pages: /testimonials, /facilities, /car-badges. Live but serving no purpose. | Removes thin pages from the index. |
+| 7 | Pin CDN script versions. GSAP, n8n Chat, and JetBoost all load with "@latest", so they pull whatever the newest version is. A breaking change would hit the site without anyone at Carsa doing anything. | Libraries only update when someone deliberately chooses to update. |
+| 8 | Remove the expired promotion. "Ends 31st Dec 25" is still on the homepage. | A visitor landing in May 2026 will wonder if the site is maintained. |
+| 9 | Replace "Jane Doe" blog author with a real name and bio. Google and AI tools use author signals when deciding whether to trust content. | This one's on the Carsa team: give us a name and a short bio, we'll wire it up. |
+| 10 | Fix HTTP links in 3 terms pages (/terms/data-privacy, /terms-conditions, /vehicle-purchase). They link to http:// instead of https://. | Browsers may show security warnings. Quick find and replace in CMS content. |
+| ~~11~~ | ~~Add a heading to /reserve.~~ | Done. |
+| 12 | Write a unique description for /value-car. Currently duplicates /part-exchange, even though they're different things (selling outright vs trading in). | Google may treat them as duplicate content or just pick one and ignore the other. |
 
 ---
 
-## Accessibility
+### Priority 2 -- First month
 
-Making the site usable for everyone. Roughly 20% of UK adults have some form of disability, and many of these fixes also improve SEO.
+Accessibility, content structure, freshness signals.
 
----
-
-**50+ images have no descriptions for screen readers**
-
-When an image has no alt text, screen readers either skip it or read the file name, which is usually a long string of random characters. Google also uses image descriptions to understand page content.
-
-The fix is adding descriptive text to every image.
-
----
-
-**109 links have no text for screen readers or Google**
-
-Links that are just icons (social media buttons, logo links, image links) have no text. A screen reader says "link" with no context, and Google can't pass SEO value through them.
-
-We add invisible labels to every icon link so screen readers say "Facebook" or "Home" instead of just "link."
-
----
-
-**No skip-to-content link for keyboard users**
-
-People who navigate with a keyboard (common for motor disabilities) have to tab through the entire navigation menu on every page before reaching the main content.
-
-We add an invisible "Skip to main content" link that appears on first tab press.
+| # | What we'll do | Why it matters |
+|---|---------------|----------------|
+| 13 | Add a skip-to-content link. Keyboard users currently have to tab through the full navigation on every page before reaching content. | An invisible "Skip to main content" link appears on first tab press. Common need for users with motor disabilities. |
+| 14 | Add proper labels to all form inputs. Fields currently use placeholder text (the grey text inside the box), which disappears when someone starts typing. Screen readers may not announce what the field is for. | Labels stay visible to screen readers even when visually hidden. |
+| 15 | Add labels to 109 links with no anchor text across 94 pages. Social icons, logo links, image links. | A screen reader currently says "link" with no context. After this: "Facebook", "Home", "View this car". Google can pass SEO value through them too. |
+| 16 | Add a main content landmark. Screen readers use landmarks to jump between page sections (navigation, content, footer). The main content area isn't marked. | One tag. Screen reader users can jump straight to the content. |
+| 17 | Add "last updated" dates to key pages. /car-finance, /faq, and service pages show no date. Google and AI tools prefer content with visible freshness signals. | A small "Last updated: [date]" line. |
+| 18 | Rewrite the homepage hero. Opens with "Find your next car. Finance ready." -- good tagline, but doesn't say what Carsa is. AI tools looking for something to quote will skip past it. | Add a factual opening sentence. ChatGPT and Perplexity can then say "Carsa is a UK used car retailer with 2,000+ vehicles and nationwide delivery." |
+| 19 | Rewrite the /car-finance intro. Someone landing here is probably asking "How does car finance work?" The opening doesn't answer that. | Answer the question up front, then expand. Helps the page rank for question-based searches too. |
+| 20 | Add links to authoritative sources. The site explains finance, warranties, and car care without linking to the FCA, DVLA, or Thatcham. | Google and AI tools treat outbound links to trusted sources as a quality signal. |
+| 21 | Add favicon references. The site doesn't declare its icon in the page code. Some browsers won't show Carsa's icon in tabs, bookmarks, or search results. | A few lines in the page head. |
+| 22 | Verify the www redirect. Check that carsa.co.uk (without www) redirects to www.carsa.co.uk. If it doesn't, Google may split ranking power between two versions of the site. | Quick check. One-line config change if needed. |
+| 23 | Remove time-sensitive language from blog posts. Phrases like "currently", "at the time of writing", "as of 2024" tell AI tools the content might be outdated, even when the information is still accurate. | Rewrite so AI tools treat the content as current. |
+| 24 | Investigate 15 slow-loading pages flagged by SEMRush. Store pages with maps, vehicle listings with heavy script bundles. These are pages where someone has already decided to visit a showroom or look at a car. | Slow loading at that point costs conversions. We'll investigate the causes and fix what we can. |
 
 ---
 
-**Form fields rely on placeholder text instead of labels**
+### Priority 3 -- Backlog
 
-When a form field only has placeholder text (the grey text inside the box), screen readers may not announce what the field is for. The placeholder also disappears as soon as someone starts typing.
+Longer term improvements that build on the work above.
 
-We add proper labels that are always visible to screen readers, even if visually hidden.
-
----
-
-**Navigation and icon buttons lack screen reader labels**
-
-The navigation menu and icon-only buttons (close, search, menu) don't announce their purpose to screen readers.
-
-We add labels to every navigation element and icon button so screen readers say "Main navigation," "Close menu," "Search" instead of nothing.
-
----
-
-**No main content landmark**
-
-Screen readers use landmarks to jump between sections of a page (navigation, main content, footer). The site doesn't mark its main content area.
-
-We add a single tag to the content wrapper so screen reader users can jump straight to the content.
+| # | What we'll do | Why it matters |
+|---|---------------|----------------|
+| 25 | Add HowTo markup to the /car-finance "How it works" section. It's currently plain content. Structured markup tells Google "this is a process with defined steps." | Could appear as a rich result in Google, or get cited step by step by AI tools. |
+| 26 | Promote FAQ questions to proper headings on the /faq page. | AI tools scan headings to find answers. Questions buried in body text get missed. |
+| 27 | Add question-format headings to the homepage. "Why buy from Carsa?" is already there, but most sections use statement headings. | AI tools match user queries to question-answer pairs. |
+| 28 | Add lastmod/changefreq to the sitemap. Currently just URLs with no freshness signals. | Tells search engines which pages changed recently so they re-crawl those first. |
+| 29 | Investigate sitemap vehicle coverage. ~250 vehicles in the sitemap vs 4,600+ in the CMS. | Google may not know most of your car listings exist. Likely a sync or publishing issue. |
+| 30 | Add a chatbot fallback. If the webhook that powers the chat goes down, visitors see an error or nothing. | A fallback message with phone, email, and WhatsApp so nobody hits a dead end. |
+| 31 | Set up a CMS alt text pattern for vehicle images, so every car photo automatically gets text like "2022 Blue BMW 3 Series, front view." | Covers all 4,600+ vehicles without manual work. |
+| 32 | Add author bios with credentials. Blog posts don't include qualifications, role, or the structured data Google uses to evaluate expertise. | Named, qualified people behind the content is a trust signal for Google and AI tools. |
+| 33 | Shorten the /car-care/carsacover title (81 characters, gets truncated). | Full title displays in search results. |
+| 34 | Shorten the vehicle page title template (98 characters on sample pages). Restructure so the important info comes first, within ~60 characters. | Make, model, year, price show up instead of getting cut off. |
 
 ---
 
-**Vehicle images need descriptive alt text**
+### Priority 4 -- Future consideration
 
-Car listing photos have generic or missing alt text. A screen reader user browsing a 2022 BMW 3 Series listing hears nothing about the images.
-
-We set up a CMS pattern so every image automatically gets text like "2022 Blue BMW 3 Series, front view." This covers all 4,600+ vehicles without manual work.
-
----
-
-## Trust and authority
-
-Signals that tell visitors and search engines Carsa is credible and current.
+| # | What we'll do | Why it matters |
+|---|---------------|----------------|
+| 36 | Build quarterly original data content. The Iran/Ukraine war fuel impact piece is a template for content that earns links and citations. | Original data is one of the strongest reasons for other sites and AI tools to reference you. |
+| 37 | Set up anchor + cluster blog architecture. Link each post to a parent topic (car finance, used cars, car care) with two-way linking. | Service pages become the hub for each topic. 103 posts is enough to build real topical authority. |
+| 38 | Set up Consent Mode v2 in GTM for full compliance verification. | Becoming the standard. |
 
 ---
 
-**Expired promotion still visible on the homepage**
+## Local SEO -- Southampton listing scan
 
-"Ends 31st Dec 25" is still showing. A visitor landing on the site in May 2026 will wonder if the site is still maintained.
+We ran a SEMRush listing scan for the Southampton store (258 Bridge Road). This checks whether the business appears correctly across directories, maps, and voice assistants.
 
-Quick content update to remove or replace it.
+**Google Business Profile:** Connected and live.
 
----
+**7 directories have wrong information:**
 
-**Blog author is listed as "Jane Doe"**
+| Directory | Problem |
+|-----------|---------|
+| Facebook | Wrong phone number (shows 3003034797) |
+| HotFrog | Wrong phone number |
+| iGlobal | Wrong phone number |
+| Cylex | Different phone number (3330441363) |
+| Central Index GB | Wrong phone number |
+| Brownbook.net | Wrong phone number |
+| AroundMe | Wrong phone number |
 
-A placeholder author name undermines otherwise strong blog content. Google and AI assistants use author signals when deciding whether to trust and cite content.
+The GBP number is 2046399557. Most directories are showing 3003034797 instead, which may be an old or central number.
 
-This one's on the Carsa team: provide a real name and a brief bio, and we'll wire it up.
+**10 directories have no listing at all:**
 
----
+Bing, Foursquare, TripAdvisor, YP.com, 192.com, Acompio UK, InfoIsInfo, Opening Times, Snapchat, My Local Services UK.
 
-**No links to authoritative external sources**
+Bing is the most important gap. Bing powers Copilot, DuckDuckGo, and Yahoo search. No listing there means Carsa Southampton doesn't exist for those users.
 
-The site doesn't link to the FCA, DVLA, Thatcham, or other regulatory bodies. Google and AI assistants use outbound links to trusted sources as a quality signal.
+**Not available on:** Apple Maps, Instagram, Amazon Alexa, Navmii, Where To?, iBegin. These platforms either don't accept listings for this category or require a different submission process.
 
-We add relevant links where they naturally fit, like FCA registration on the finance page and DVLA on car care pages.
+**What we'd recommend:**
 
----
+1. Fix the phone number across the 7 directories with wrong data. Most of these can be claimed and corrected individually, or handled in bulk through SEMRush's Listing Management tool.
+2. Create a Bing Places listing. Free, takes about 15 minutes, and covers Bing, Copilot, DuckDuckGo, and Yahoo in one go.
+3. Consider Foursquare (powers Uber, Samsung Maps, and various in-car systems) and Apple Maps Connect (powers Siri and Apple Maps).
 
-**No "last updated" dates on key pages**
+This scan covers Southampton only. If you want us to run the same check for other stores, let us know.
 
-Pages like /car-finance and /faq have no visible date showing when the content was last reviewed. Google and AI assistants prefer content that shows when it was last touched.
+**Optional add-on: managed local listings**
 
-A small "Last updated: [date]" line on each page solves this.
+There's a SEMRush tool that handles this ongoing for £30/month per location. For each store it would:
 
----
+| Feature | Basic (£30/mo) | Pro (£60/mo) |
+|---------|----------------|--------------|
+| GBP audit and optimisation | Yes | Yes |
+| GBP post and photo publishing | Yes | Yes |
+| Review auto-replies | Yes | Yes |
+| Business description optimisation | Yes | Yes |
+| Auto-distribute info to directories | No | Yes |
+| Keep info synced across directories | No | Yes |
+| Suppress duplicate listings | No | Yes |
+| Block user-suggested edits | No | Yes |
+| Team collaboration | No | Yes |
+| API access | No | Yes |
 
-**Author profiles lack credentials**
+Basic handles GBP well but you'd still fix directory listings manually. Pro pushes updates to all directories at once and keeps them synced, which is where the real time saving is with 10+ locations.
 
-Blog posts don't include author qualifications, role, or the structured data Google uses to evaluate expertise.
-
-We add author bios with credentials and structured data so Google sees named, qualified people behind the content.
-
----
-
-**Homepage hero could lead with a clearer answer**
-
-The homepage opens with "Find your next car. Finance ready." Good tagline, but it doesn't say what Carsa actually is. AI assistants looking for something to quote may skip past it.
-
-We add a brief factual opening sentence. ChatGPT and Perplexity can then say "Carsa is a UK used car retailer with 2,000+ vehicles and nationwide delivery."
-
----
-
-**/car-finance intro doesn't answer the obvious question**
-
-Someone landing on /car-finance is probably asking "How does car finance work?" The opening paragraph doesn't answer that directly.
-
-We rewrite the first paragraph to answer the question up front, then expand. This also helps the page rank for question-based searches.
-
----
-
-## Performance and stability
-
-Speed, reliability, and reducing the risk of things breaking unexpectedly.
+With 10+ stores, that's £300/month on Basic or £600/month on Pro. Worth starting with the highest-traffic locations rather than all at once. We can run scans for each store to see which ones have the most issues before committing.
 
 ---
 
-**Custom code is hosted on a developer's personal account**
+## What changes after this work
 
-Six scripts that power parts of the site are hosted on a developer's GitHub account. If that account changes or goes away, sections of the site stop working.
+Once the P0-P2 work is done, the difference is mostly invisible to someone browsing the site. But to Google, AI tools, and screen readers:
 
-We migrate the code to a Carsa-owned repository with version pinned delivery. Carsa owns its own code.
+Every page has one heading that says what the page is actually about. Titles display in full in search results. The structured data layer is already done, so Google already reads every listing, every store, every blog post.
 
----
+AI tools like ChatGPT and Perplexity can quote Carsa when someone asks "Where can I buy a used car on finance in the UK?" Right now the homepage doesn't give them anything to quote. After the hero rewrite, it does.
 
-**Three libraries could update and break without warning**
+Screen readers can navigate properly. Every link says where it goes. Every image has a description. That's about 20% of UK adults who currently can't use parts of the site.
 
-GSAP (animations), n8n Chat (chatbot), and JetBoost (search) are loaded with "@latest," meaning they automatically pull whatever the newest version is. A breaking change in any of them could affect the site without anyone at Carsa doing anything.
+Store pages and vehicle listings load faster. Those are the pages closest to a booking or a reservation, so speed matters most there.
 
-We pin each library to a specific version. Updates only happen when someone deliberately chooses to update.
-
----
-
-**15 pages load slowly**
-
-Store pages with interactive maps and some vehicle listing pages are flagged as slow by SEMRush. These are the pages where someone has already decided to visit a showroom or look at a specific car, so slow loading at that point costs conversions.
-
-We investigate the causes (map rendering, script weight) and optimise.
+The expired promo, placeholder author, and HTTP links are gone. Those are small things, but they're the kind of details that erode trust for the exact people Carsa is trying to reach: careful buyers who are looking for signs that a dealership is professional.
 
 ---
 
-**No explicit favicon references**
+## AI search readiness score
 
-The site doesn't declare its favicon in the page code. Some browsers and platforms may not show Carsa's icon in tabs, bookmarks, or search results.
+How ready the site is for AI answer tools (ChatGPT, Perplexity, Google's AI Overviews) that pull answers directly from websites.
 
-A few lines of code in the page head. Tiny fix.
-
----
-
-**Chatbot has no fallback when the service is down**
-
-If the webhook that powers the chat is unavailable, visitors see an error or nothing.
-
-A fallback message with phone, email, and WhatsApp links so nobody hits a dead end.
-
----
-
-## AI search readiness
-
-Positioning the site to be cited by AI assistants like ChatGPT, Perplexity, and Google AI Overviews.
+| Category | Score | What it means |
+|----------|-------|---------------|
+| Structured data | 4/4 | Done. Organization, WebSite, LocalBusiness, FAQPage, Article, BreadcrumbList, Product all live. |
+| Answer structure | 5/6 | Blog is strong. Homepage and service pages open with marketing copy, not answers. |
+| Freshness | 1/3 | Blog has dates. No "last updated" signals elsewhere. Time-sensitive language in some posts. |
+| Authority | 2/4 | Some original data on the blog. No external citations. Weak author signals. |
+| Technical | 2/3 | robots.txt and internal links are fine. Alt text drags this down. |
+| **Overall** | **14/20** | **Emerging. The structured data is done. What's left is content positioning and trust signals.** |
 
 ---
 
-**Blog posts contain time-sensitive language**
+## Next steps
 
-Phrases like "currently," "at the time of writing," and "as of 2024" tell AI assistants the content may be outdated, even when the information is still accurate.
-
-We remove or rewrite these across blog posts so AI assistants treat the content as current.
-
----
-
-**FAQ questions aren't structured for AI extraction**
-
-The FAQ page has questions and answers, but the questions aren't formatted as proper headings. AI assistants scan headings to find answers they can cite.
-
-Making each question a proper heading fixes this.
+1. Let us know which priorities you want to go ahead with.
+2. P0 and P1 need no input from your side. We can start straight away.
+3. P2 will need a quick sign-off on content changes (homepage copy, blog author, alt text approach).
+4. We'll update you at each milestone.
 
 ---
 
-**/car-finance "How it works" section could have structured markup**
-
-The step-by-step "How it works" section is plain content. Adding HowTo schema markup tells Google and AI assistants "this is a process with defined steps."
-
-We add the markup. The section may appear as a rich result in Google or get cited step by step by AI assistants.
-
----
-
-**Homepage sections could use question-format headings**
-
-Sections like "Why buy from Carsa?" already answer questions, but the headings aren't phrased as questions. AI assistants match user queries to question-answer pairs.
-
-We rephrase key section headings as questions so AI assistants can match them to what people are searching for.
-
----
-
-**Blog content could be organised into topic clusters**
-
-The 103 blog posts aren't linked in a structured way to the main service pages. An anchor + cluster model would link each post to a parent topic (car finance, used cars, car care) with two-way linking, so the service pages become the authoritative hub for each topic.
-
-This is a longer term project. We classify all posts, add linking structure, and optionally rewrite intros and conclusions to strengthen the connections.
-
----
-
-## What happens next
-
-The work breaks into three phases:
-
-**Quick wins (first sprint):** Chatbot heading fix, unpublish test pages, pin script versions, remove expired promo, fix HTTP links, title corrections. Small changes, immediate impact.
-
-**Monthly work:** Accessibility improvements, alt text, form labels, author updates, page speed investigation, "last updated" components.
-
-**Longer term:** AI readiness content rewrites, blog cluster architecture, schema expansion, content freshness programme.
-
-Pricing and a detailed plan follow separately.
+*Prepared by Will Morley. Based on SEMRush crawl, Google Lighthouse, Chrome DevTools, and manual review.*

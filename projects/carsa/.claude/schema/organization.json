@@ -1,63 +1,73 @@
 {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  "@id": "https://www.carsa.co.uk/#organization",
-  "name": "Carsa",
-  "legalName": "Carsa Limited",
-  "url": "https://www.carsa.co.uk",
-  "description": "Search 2,000+ checked, protected, and ready-to-go used cars. Every car goes through cosmetic and mechanical checks, backed by a 90-day warranty included as standard. Flexible finance from 8.9% APR.",
-  "foundingDate": "2020",
-  "telephone": "+44 330 040 1167",
-  "contactPoint": [
+  "@graph": [
     {
-      "@type": "ContactPoint",
-      "telephone": "+44 330 040 1167",
-      "contactType": "customer support",
-      "availableLanguage": "English"
+      "@type": "Organization",
+      "@id": "https://www.carsa.co.uk/#organization",
+      "name": "Carsa",
+      "legalName": "Carsa Limited",
+      "url": "https://www.carsa.co.uk",
+      "description": "Search 2,000+ checked, protected, and ready-to-go used cars. Every car goes through cosmetic and mechanical checks, backed by a 90-day warranty included as standard. Flexible finance from 8.9% APR.",
+      "foundingDate": "2020",
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "telephone": "+44 330 040 1167",
+          "contactType": "customer support",
+          "availableLanguage": "English"
+        },
+        {
+          "@type": "ContactPoint",
+          "telephone": "+44 20 4632 2989",
+          "contactType": "customer support",
+          "description": "WhatsApp — available 24/7",
+          "availableLanguage": "English"
+        }
+      ],
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://cdn.prod.website-files.com/68348ea61096b37caacd2f95/6836cdac0ef79fe2aac1b349_carsa-logo.avif",
+        "width": 200,
+        "height": 50
+      },
+      "image": "https://cdn.prod.website-files.com/68348ea61096b37caacd2f95/6836cdac0ef79fe2aac1b349_carsa-logo.avif",
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Kingdom"
+      },
+      "sameAs": [
+        "https://www.tiktok.com/@carsauk",
+        "https://www.linkedin.com/company/carsacars/",
+        "https://www.trustpilot.com/review/carsa.co.uk"
+      ],
+      "hasCredential": {
+        "@type": "GovernmentPermit",
+        "name": "FCA Firm Reference Number",
+        "identifier": "935130",
+        "validIn": { "@type": "Country", "name": "United Kingdom" }
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "name": "Companies House Number",
+        "value": "12805624"
+      },
+      "taxID": "GB356789439"
     },
     {
-      "@type": "ContactPoint",
-      "telephone": "+44 20 4632 2989",
-      "contactType": "customer support",
-      "description": "WhatsApp — available 24/7",
-      "availableLanguage": "English"
-    }
-  ],
-  "logo": {
-    "@type": "ImageObject",
-    "url": "https://cdn.prod.website-files.com/68348ea61096b37caacd2f95/6836cdac0ef79fe2aac1b349_carsa-logo.avif",
-    "width": 200,
-    "height": 50
-  },
-  "image": "https://cdn.prod.website-files.com/68348ea61096b37caacd2f95/6836cdac0ef79fe2aac1b349_carsa-logo.avif",
-"areaServed": {
-    "@type": "Country",
-    "name": "United Kingdom"
-  },
-  "sameAs": [
-    "https://www.tiktok.com/@carsauk",
-    "https://www.linkedin.com/company/carsacars/",
-    "https://www.trustpilot.com/review/carsa.co.uk"
-  ],
-  "additionalProperty": [
-    {
-      "@type": "PropertyValue",
-      "name": "FCA Firm Reference Number",
-      "value": "935130"
+      "@type": "WebSite",
+      "@id": "https://www.carsa.co.uk/#website",
+      "url": "https://www.carsa.co.uk",
+      "name": "Carsa",
+      "publisher": { "@id": "https://www.carsa.co.uk/#organization" }
     },
     {
-      "@type": "PropertyValue",
-      "name": "Companies House Number",
-      "value": "12805624"
+      "@type": "WebPage",
+      "@id": "https://www.carsa.co.uk/#webpage",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": ["h1", "h2", "h3"]
+      }
     }
-  ],
-  "taxID": "GB356789439",
-  "knowsAbout": [
-    "Used car sales",
-    "Car finance",
-    "Vehicle servicing",
-    "MOT testing",
-    "Part exchange"
-  ],
-  "slogan": "Modern, Hassle-Free Used Car Buying UK"
+  ]
 }

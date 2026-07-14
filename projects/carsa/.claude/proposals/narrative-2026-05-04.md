@@ -15,7 +15,7 @@ Here is what is already working well:
 - **89% site health score** from SEMRush across 100 pages scanned
 - **Zero broken links, zero server errors, zero redirect loops** — the infrastructure is clean
 - **Strong internal linking** from navigation and homepage to key conversion pages
-- **Vehicle schema is live** — Google already understands each car listing as a product with price, condition, and VIN
+- **Full JSON-LD schema suite is live** — Organization, WebSite, LocalBusiness, FAQPage, Article, BreadcrumbList, and Product schemas all deployed sitewide. Google understands each car listing, each store, each blog post, and the company itself
 - **Blog content is well-structured** — answer-first writing, original data, question-based headings
 - **All major AI crawlers are allowed** — ChatGPT, Perplexity, Google AI, and Claude can all access the site
 - **Cookie consent, SSL, GA4, and GTM** are all properly configured
@@ -31,7 +31,7 @@ The issues below are not visible to someone browsing the site. They live in the 
 
 ### A chatbot widget is confusing heading structure sitewide
 
-Every page on the site has a second H1 tag — "Chat with Caroline AI" — injected by the chatbot widget. The H1 is how a search engine understands what a page is fundamentally about. Two H1s per page dilute that signal. The /reserve page has no real H1 at all, only the chatbot one.
+Every page on the site has a second H1 tag — "Chat with Caroline AI" — injected by the chatbot widget. The H1 is how a search engine understands what a page is fundamentally about. Two H1s per page dilute that signal. The /reserve page H1 has been fixed.
 
 This is a single fix (change the widget's heading to a `<span>`) that improves every page at once.
 
@@ -61,9 +61,9 @@ For the peace-of-mind buyer segment — people who are specifically looking for 
 
 After this work is complete, the site moves from "solid foundation" to "fully optimised platform." Here is what that looks like:
 
-**Every page tells Google exactly what it is about.** One clean H1 per page, concise titles that display fully in search results, and structured data across the site. Google shows Carsa's own messaging, not a truncated guess.
+**Every page tells Google exactly what it is about.** One clean H1 per page, concise titles that display fully in search results. The structured data layer is already complete — Organization, WebSite, LocalBusiness, FAQPage, Article, BreadcrumbList, and Product schemas are all live. Google shows Carsa's own messaging, not a truncated guess.
 
-**AI assistants can confidently cite Carsa.** With llms.txt restored, schema expanded, and answer-first content on key pages, tools like ChatGPT and Perplexity can recommend Carsa directly when someone asks "Where can I buy a used car on finance in the UK?"
+**AI assistants can confidently cite Carsa.** With llms.txt in place, the full schema suite live, and answer-first content on key pages, tools like ChatGPT and Perplexity can recommend Carsa directly when someone asks "Where can I buy a used car on finance in the UK?"
 
 **The site is accessible to all users.** Screen readers can navigate properly. Every link has a purpose. Every image has a description. This is not just compliance — it is a better experience for every visitor, and it signals professionalism.
 
@@ -114,7 +114,7 @@ These tasks reduce load times, prevent accidental breakage, and give the client 
 
 ### 5. AI Search Readiness (9 tasks)
 
-Restore llms.txt, answer-first rewrites, question-format H2s, HowTo schema, remove hedge words, FAQ schema promotion, anchor/cluster architecture.
+Answer-first rewrites, question-format H2s, HowTo schema, remove hedge words, FAQ schema promotion, anchor/cluster architecture.
 
 These tasks position Carsa to be cited by AI assistants — a channel that is growing fast and where early movers have a lasting advantage.
 

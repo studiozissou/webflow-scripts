@@ -7,6 +7,20 @@
 > - First engagement / one-off audit → use `site-audit-client-report.md` (intake template)
 > - Internal reference → use `site-audit-report.md`
 
+> **KEEP IT LEAN — this is client-facing, not an internal audit dump.** Default to the
+> shortest report that's still useful. Rules of thumb:
+> - The Summary is what the client actually reads — make it count; everything else is
+>   reference they open if they want detail.
+> - Top issues: only what's worth their time and money this month. Don't pad to hit a
+>   number; a tight list of 4–6 real, actionable items beats 10 with filler.
+> - Each issue is a one-line summary + a collapsed toggle. Keep toggle detail short —
+>   root cause, what to change, how to verify. No essays, no options-menus unless a real
+>   decision is needed.
+> - Cut internal/process content entirely: no methodology notes, no "reflects next crawl"
+>   or cross-report commentary, no Lighthouse score dumps, no "Other notes" catch-all,
+>   no editor asides about what changed since last version.
+> - If in doubt, leave it out — or move it to internal memory, not the client report.
+
 ---
 
 ## Output file
@@ -293,7 +307,14 @@ local expertise, unique perspective.]
 - **Give credit.** Lead with what's working before naming problems.
 - **Vary the language.** Don't start every Benefit line the same way. Don't use the same
   sentence pattern across all 10 issues.
-- **Load the `humanizer` skill** before writing and apply it to the final draft.
+- **Claim gate — no unsourced platform claims.** Every Benefit line asserting what Google or an
+  AI assistant will *do* needs a source and a date, or it gets rewritten to rest only on what was
+  directly observed on the site, or the issue is dropped. Platform behaviour changes without
+  notice and a model will state it confidently from stale memory. See the Claim Gate in
+  `/site-audit` Phase 6 for the known-stale list (FAQ rich results, HowTo rich results, Consent
+  Mode, `llms.txt`).
+- **Load the `humanizer` skill** before writing and apply it to the final draft. It may change how
+  a claim reads, never what it asserts — hedged wording from the claim gate is load-bearing.
 - **Meeting context overrides scan data.** If the client said 404s for sold cars are
   intentional, note it as context, don't flag it as an error.
 - **Toggle detail is for developers and curious clients.** The top-level

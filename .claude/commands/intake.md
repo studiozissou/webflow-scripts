@@ -99,7 +99,13 @@ If user approves parallel, spawn 4 subagents simultaneously. If sequential, run 
 | Canonical domain | Consistent WWW/non-WWW |
 | Analytics | GA4 or GTM in page embeds |
 | Cookie consent | Any consent mechanism present |
-| Alignment | Analytics not firing before consent |
+| Consent Mode | Check `gtag('consent','default',…)` values — see below |
+
+**Consent Mode:** a correct Consent Mode v2 install loads GTM and fires tags *before* consent,
+in `denied` mode. Script load order tells you nothing. Load the page in a clean browser context
+(no stored consent cookie) and read `window.google_tag_data.ics.entries` — all `default: false`
+is a PASS. If you cannot run a browser, mark `NEEDS VERIFY`; do not guess. See the Consent Mode
+check in `/site-audit` for the full method and the separate non-Google tracker check.
 
 ### Stream B — SEO
 | Check | What to look for |

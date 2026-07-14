@@ -52,6 +52,9 @@ number. Frame as opportunity, not blame.)
 
 Source: `proposals/narrative-YYYY-MM-DD.md` § What's holding it back.
 
+**Claim gate applies here.** Every "why it matters" sentence must trace to a justification already
+sourced in the internal report. See *Writing rules* at the foot of this file.
+
 ---
 
 ## The plan
@@ -404,8 +407,20 @@ the detail behind the summary numbers.
 - **Intake reports include pricing.** Three options: Option A (fixed project), Option B
   (retainer), Option C (pick and choose with per-task pricing). Monthly reports don't
   include pricing unless the client pays per task.
+- **Claim gate — no unsourced platform claims.** These reports are a translation of the internal
+  report, not a new analysis. Every sentence must trace to a justification already sourced
+  upstream (see the Claim Gate in `/site-audit` Phase 6). Plain English may make a claim
+  *simpler*; it may never make it *stronger*, or add a benefit the internal report didn't
+  establish. This bites hardest on the **Benefit line**, which asserts what Google or an AI
+  assistant will *do* — third-party behaviours that change without notice and that a model will
+  cheerfully state from stale memory. Two that reached a Coconut client in May 2026: "FAQ schema
+  makes Google show expandable Q&As" (false since Aug 2023 outside gov/health) and "analytics
+  fires before consent" (that is what correct Consent Mode v2 looks like). If a Benefit line
+  reads thin, it was thin upstream — go fix it there rather than papering over it with a
+  confident sentence. Clients spend money against this column.
 - **Load the `humanizer` skill** before writing and apply it to the final draft. The client
-  report must read as natural human writing, not AI output.
+  report must read as natural human writing, not AI output. It may change how a claim reads,
+  never what it asserts — hedged wording from the claim gate is load-bearing.
 - **Meeting notes override scan data.** If a meeting established that an issue is intentional
   (e.g. 404s for sold vehicles, storage pages deliberately hidden), note it in the report
   rather than flagging it as an error. The report should reflect the client's reality, not

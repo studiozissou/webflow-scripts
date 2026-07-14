@@ -84,6 +84,206 @@
     });
   }
 
+  /* ── Close mega-menu on panel background click ─────────────── */
+  /* The desktop nav dropdowns open on hover, and their .master_dropdown
+     panel is a full-screen overlay — so the pointer can't leave the menu to
+     dismiss it except by hovering another top-bar item. This lets a click on
+     any non-link area of the panel close it, while child links still navigate.
+
+     One delegated listener on document (not per-node): CMS/Finsweet-safe,
+     survives re-render, no per-element bookkeeping. Desktop-only via the
+     .nav-menu-dektop gate (Webflow's own class typo — intentional); the mobile
+     menu duplicates are excluded. The manual class-strip is the timing-free
+     Webflow close; verified live that a hover reopens it in one action with no
+     internal-state desync. Idempotent via a documentElement dataset guard so a
+     second boot() adds no duplicate listener. */
+
+  function closeWebflowDropdown(dropdown) {
+    const toggle = dropdown.querySelector('.w-dropdown-toggle');
+    const list = dropdown.querySelector('.w-dropdown-list');
+    if (list) list.classList.remove('w--open');
+    if (toggle) {
+      toggle.classList.remove('w--open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.blur();
+    }
+  }
+
+  function bindMasterDropdownClose() {
+    if (document.documentElement.dataset.masterDropdownClose) return;
+    document.documentElement.dataset.masterDropdownClose = 'true';
+
+    document.addEventListener('click', (event) => {
+      const master = event.target.closest('.master_dropdown');
+      if (!master) return; /* click outside any master panel */
+      if (!master.closest('.nav-menu-dektop')) return; /* desktop scope only */
+      if (event.target.closest('a')) return; /* child link → let it navigate */
+
+      const dropdown = master.closest('.w-dropdown');
+      if (dropdown) closeWebflowDropdown(dropdown);
+    });
+  }
+
+  /* ── Leadership team modal (replaces Webflow IX2 a-146 / a-147) ──
+   * /leadership has 8 .card_team cards, each with a nested
+   * .modal2_component (content-wrapper + full-screen overlay). The IX2
+   * click interactions that drove these were removed in the Designer;
+   * this reproduces them 1:1 — 500ms slide (outQuad) + 500ms overlay
+   * fade (ease) — and adds a11y: role=dialog, focus trap, ESC,
+   * scroll-lock, focus-return. Reduced motion → 0ms. Closed-state
+   * defaults are enforced by page-head CSS so there is no flash before
+   * this CDN-deferred script runs; JS also resets them defensively on
+   * init. */
+
+  function bindLeadershipModals() {
+    const cards = document.querySelectorAll('.card_team');
+    if (!cards.length) return; /* scope: leadership page only */
+    if (document.documentElement.dataset.tscLeadershipModals) return;
+    document.documentElement.dataset.tscLeadershipModals = 'true';
+
+    const SLIDE = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'; /* Webflow "outQuad" */
+    const FADE = 'ease'; /* Webflow "ease" */
+    const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const DUR = REDUCED ? 0 : 500;
+
+    let active = null; /* currently open .modal2_component */
+    let trigger = null; /* .card_team that opened it (for focus return) */
+    let closeTimer = null;
+
+    const parts = (modal) => ({
+      wrap: modal.querySelector('.modal2_content-wrapper'),
+      overlay: modal.querySelector('.modal2_background-overlay'),
+    });
+
+    const focusables = (wrap) =>
+      wrap.querySelectorAll(
+        'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])'
+      );
+
+    function prep(modal) {
+      const { wrap, overlay } = parts(modal);
+      modal.setAttribute('aria-hidden', 'true');
+      modal.style.display = 'none';
+      if (wrap) {
+        wrap.setAttribute('role', 'dialog');
+        wrap.setAttribute('aria-modal', 'true');
+        wrap.setAttribute('tabindex', '-1');
+        const h = wrap.querySelector('h1,h2,h3,.heading-style-h2');
+        if (h) {
+          if (!h.id) h.id = 'tsc-modal-title-' + Math.random().toString(36).slice(2, 8);
+          wrap.setAttribute('aria-labelledby', h.id);
+        }
+        wrap.style.transform = 'translateX(100%)';
+        wrap.style.transition = '';
+      }
+      if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.transition = '';
+      }
+    }
+
+    function snapClosed(modal) {
+      /* instant close (used when switching between cards) */
+      const { wrap, overlay } = parts(modal);
+      if (wrap) {
+        wrap.style.transition = '';
+        wrap.style.transform = 'translateX(100%)';
+      }
+      if (overlay) overlay.style.opacity = '0';
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function open(card) {
+      const modal = card.querySelector('.modal2_component');
+      if (!modal || active === modal) return;
+      if (active) snapClosed(active); /* one modal open at a time */
+      clearTimeout(closeTimer);
+      active = modal;
+      trigger = card;
+      const { wrap, overlay } = parts(modal);
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+      void modal.offsetHeight; /* reflow → transition runs from initial state */
+      if (wrap) {
+        wrap.style.transition = 'transform ' + DUR + 'ms ' + SLIDE;
+        wrap.style.transform = 'translateX(0%)';
+      }
+      if (overlay) {
+        overlay.style.transition = 'opacity ' + DUR + 'ms ' + FADE;
+        overlay.style.opacity = '1';
+      }
+      document.documentElement.style.overflow = 'hidden'; /* scroll lock */
+      if (wrap) wrap.focus({ preventScroll: true });
+    }
+
+    function close(modal) {
+      if (!modal) return;
+      const { wrap, overlay } = parts(modal);
+      if (wrap) {
+        wrap.style.transition = 'transform ' + DUR + 'ms ' + SLIDE;
+        wrap.style.transform = 'translateX(100%)';
+      }
+      if (overlay) {
+        overlay.style.transition = 'opacity ' + DUR + 'ms ' + FADE;
+        overlay.style.opacity = '0';
+      }
+      modal.setAttribute('aria-hidden', 'true');
+      document.documentElement.style.overflow = ''; /* restore scroll */
+      const returnTo = trigger;
+      active = null;
+      trigger = null;
+      closeTimer = setTimeout(function () {
+        modal.style.display = 'none';
+      }, DUR);
+      if (returnTo) returnTo.focus({ preventScroll: true });
+    }
+
+    cards.forEach(function (c) {
+      const m = c.querySelector('.modal2_component');
+      if (m) prep(m);
+    });
+
+    document.addEventListener('click', function (e) {
+      const overlay = e.target.closest('.modal2_background-overlay');
+      if (overlay) {
+        e.stopPropagation();
+        close(overlay.closest('.modal2_component'));
+        return;
+      }
+      if (e.target.closest('.modal2_component')) return; /* click inside open modal content */
+      const card = e.target.closest('.card_team');
+      if (card) open(card);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (!active) return;
+      if (e.key === 'Escape') {
+        close(active);
+        return;
+      }
+      if (e.key === 'Tab') {
+        const wrap = parts(active).wrap;
+        if (!wrap) return;
+        const f = focusables(wrap);
+        if (!f.length) {
+          e.preventDefault();
+          wrap.focus();
+          return;
+        }
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+  }
+
   /* ── Flatten project meta tiles ────────────────────────── */
   /* Each .projects_meta-wrapper nests its .country_tile items inside
      Finsweet CMS list wrappers (.projects_meta-list-wrapper). Lift every
@@ -650,6 +850,8 @@
     setFooterYear();
     injectUTMTracking();
     moveNavSeeAll();
+    bindMasterDropdownClose();
+    bindLeadershipModals();
     flattenProjectMeta();
     highlightQuoteAuthors();
     setupProjectVideos();

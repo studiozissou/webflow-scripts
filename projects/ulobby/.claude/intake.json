@@ -1,0 +1,84 @@
+{
+  "projectName": "Ulobby",
+  "projectId": "65377b9b48dc025491f04eba",
+  "urls": {
+    "staging": "https://ulobbyv2.webflow.io",
+    "live": "https://ulobby.eu",
+    "liveWww": "https://www.ulobby.eu"
+  },
+  "locales": {
+    "primary": { "tag": "en", "displayName": "English", "subdirectory": "en" },
+    "secondary": [
+      { "tag": "da", "displayName": "Dansk", "subdirectory": "da" },
+      { "tag": "no", "displayName": "Norsk", "subdirectory": "no" },
+      { "tag": "sv", "displayName": "Svenska", "subdirectory": "sv" }
+    ]
+  },
+  "pages": {
+    "total": 36,
+    "published": [
+      { "title": "Home", "slug": "/", "type": "static" },
+      { "title": "Solutions", "slug": "/solutions", "type": "static" },
+      { "title": "Plans", "slug": "/plans", "type": "static" },
+      { "title": "Blog", "slug": "/blog", "type": "static" },
+      { "title": "Contact", "slug": "/contact", "type": "static" },
+      { "title": "Get a Demo", "slug": "/demo", "type": "static" },
+      { "title": "Newsletter", "slug": "/newsletter", "type": "static" },
+      { "title": "Privacy Policy", "slug": "/privacy-policy", "type": "static" },
+      { "title": "Thank You", "slug": "/thank-you", "type": "static" },
+      { "title": "Check your inbox", "slug": "/check-your-inbox", "type": "static" },
+      { "title": "Quiz Answers", "slug": "/quiz", "type": "static" },
+      { "title": "Maturity Model Quiz", "slug": "/maturity-model-quiz", "type": "static" },
+      { "title": "Transparent Democracy", "slug": "/transparent-democracy", "type": "static" },
+      { "title": "404", "slug": "/404", "type": "utility" },
+      { "title": "Password", "slug": "/401", "type": "utility" },
+      { "title": "Story", "slug": "/about/story", "type": "static", "parent": "about" },
+      { "title": "Technology", "slug": "/about/technology", "type": "static", "parent": "about" },
+      { "title": "Security", "slug": "/about/security", "type": "static", "parent": "about" },
+      { "title": "Board", "slug": "/about/board", "type": "static", "parent": "about" },
+      { "title": "Careers", "slug": "/about/careers", "type": "static", "parent": "about" },
+      { "title": "Management", "slug": "/about/management", "type": "static", "parent": "about" }
+    ],
+    "drafts": [
+      { "title": "Style Guide", "slug": "/style-guide" },
+      { "title": "Newsletter v1", "slug": "/newsletter-v1" },
+      { "title": "Terms & Conditions", "slug": "/terms-conditions" },
+      { "title": "Maturity Model Quiz Template", "slug": "/static-template-slug-1745489116855" },
+      { "title": "Transparent Democracy Template", "slug": "/static-template-slug-1745489116855-copy" },
+      { "title": "Solutions Template (old)", "slug": "/issue-monitoring" }
+    ],
+    "cmsTemplates": [
+      { "title": "Solutions Template", "collection": "Solutions", "publishedPath": "/solutions" },
+      { "title": "Features Template", "collection": "Features", "publishedPath": "/features" },
+      { "title": "Blog Articles Template", "collection": "Blog Articles", "publishedPath": "/blog" },
+      { "title": "Blog Categories Template", "collection": "Blog Categories", "publishedPath": "/category" },
+      { "title": "Pricing Features Template", "collection": "Pricing Features", "publishedPath": "/pricing-plans" },
+      { "title": "Landing Pages Template", "collection": "Landing Pages", "publishedPath": "/landing-pages" },
+      { "title": "Quizzes Template", "collection": "Quizzes", "publishedPath": "/quizzes" },
+      { "title": "Transparent Democracy Template", "collection": "Transparent Democracy", "publishedPath": "/transparent-democracy" },
+      { "title": "Team Members Template", "collection": "Team Members", "publishedPath": "/team" }
+    ]
+  },
+  "collections": [
+    { "name": "Pricing Features", "slug": "pricing-plans", "itemCount": 30, "needsTemplatePage": false },
+    { "name": "Team Members", "slug": "team", "itemCount": 12, "needsTemplatePage": false },
+    { "name": "Blog Articles", "slug": "blog", "itemCount": 35, "needsTemplatePage": true },
+    { "name": "Blog Categories", "slug": "category", "itemCount": 3, "needsTemplatePage": false },
+    { "name": "Features", "slug": "features", "itemCount": 15, "needsTemplatePage": false },
+    { "name": "Solutions", "slug": "solutions", "itemCount": 4, "needsTemplatePage": true },
+    { "name": "Landing Pages", "slug": "landing-pages", "itemCount": 10, "needsTemplatePage": true },
+    { "name": "Quizzes", "slug": "quizzes", "itemCount": 1, "needsTemplatePage": false },
+    { "name": "Transparent Democracy", "slug": "transparent-democracy", "itemCount": 1, "needsTemplatePage": false }
+  ],
+  "ecommerce": false,
+  "designerComments": "Not available via API",
+  "typoNote": "Blog Categories slug is 'category' (inconsistent with collection name). Landing Pages slug 'landing-pages' is fine.",
+  "semrushAudit": {
+    "source": "projects/ulobby/.claude/audits/semrush-2026-06-08.md",
+    "keyFinding": "171 broken links from Cookiebot javascript: protocol href"
+  },
+  "checks": {
+    "source": "webflow-mcp",
+    "date": "2026-06-08"
+  }
+}

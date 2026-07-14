@@ -9,6 +9,10 @@ New website build for The Hearth. Awaiting full brief from client. https://www.t
 - **Target live date:** End of July 2026
 - **Status:** Pre-brief — email sent requesting site map, feature list, and assets
 
+## Brief
+
+https://docs.google.com/document/d/1Hwxmq-Kuc6_lBhzSkrvCgvG6peUdxMGBMRNDfak8ge0/edit?tab=t.0#heading=h.r2ru28tkszqn
+
 ## What we're waiting on
 
 - [ ] Site map (page-by-page outline)

@@ -1,0 +1,195 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.getcoconut.com/mtd-software#webpage",
+      "url": "https://www.getcoconut.com/mtd-software",
+      "name": "MTD Software UK | HMRC-Recognised | Coconut",
+      "description": "HMRC-recognised Making Tax Digital software for sole traders and landlords. Track income and expenses, send quarterly MTD updates to HMRC and submit your year-end return with Coconut.",
+      "inLanguage": "en-GB",
+      "isPartOf": { "@id": "https://www.getcoconut.com/#website" },
+      "publisher": { "@id": "https://www.getcoconut.com/#organization" },
+      "breadcrumb": { "@id": "https://www.getcoconut.com/mtd-software#breadcrumb" },
+      "about": { "@id": "https://www.getcoconut.com/#software" },
+      "mainEntity": { "@id": "https://www.getcoconut.com/mtd-software#faq" }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.getcoconut.com/#website",
+      "url": "https://www.getcoconut.com",
+      "name": "Coconut",
+      "inLanguage": "en-GB",
+      "publisher": { "@id": "https://www.getcoconut.com/#organization" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.getcoconut.com/mtd-software#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.getcoconut.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Making Tax Digital for Income Tax"
+        }
+      ]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://www.getcoconut.com/#software",
+      "name": "Coconut",
+      "alternateName": "!Coconut",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "iOS, Android, Web",
+      "url": "https://www.getcoconut.com/mtd-software",
+      "description": "Accounting and tax app for self-employed people and landlords, built specifically to help with Making Tax Digital for Income Tax.",
+      "provider": { "@id": "https://www.getcoconut.com/#organization" },
+      "featureList": [
+        "Automatic income and expense tracking",
+        "Connect your bank in 30 seconds",
+        "Expenses categorised for you",
+        "Friendly UK expert support",
+        "Self-employment tax estimate",
+        "Send quarterly MTD updates to HMRC",
+        "Submit your MTD year-end return",
+        "Submit Self Assessment direct to HMRC",
+        "Snap and store receipts instantly",
+        "Unlimited professional invoices",
+        "Mobile app (iOS & Android)",
+        "Access from any web browser"
+      ],
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "MTD Bridging",
+          "price": "39.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "39.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "Bookkeeping",
+          "price": "99.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "99.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "MTD filing",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "129.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "+Self Assessment",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "129.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "Full",
+          "price": "159.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "159.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.getcoconut.com/mtd-software#faq",
+      "mainEntityOfPage": { "@id": "https://www.getcoconut.com/mtd-software#webpage" },
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How much does Coconut cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Coconut's Bookkeeping plan is £99.99/year or £16.99/month. If you need to send MTD updates to HMRC, the MTD filing plan is £129.99/year or £21.99/month. You can try Coconut free for 14 days, with no card details needed, and choose the plan that fits what you need - whether that's simple bookkeeping or MTD filing."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Coconut on the HMRC-approved list?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Coconut is HMRC-recognised software for Making Tax Digital for Income Tax. You can check the official GOV.UK list here: Find software that works with Making Tax Digital for Income Tax"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use Coconut alongside my accountant?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Coconut keeps your records organised, so it's easier to share what your accountant needs. No more digging through spreadsheets or sending over bits and pieces at the last minute!"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I switch from another MTD provider?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. If Coconut feels like a better fit, you can switch over. Connect your bank account, get your records up to date and manage your income, expenses and MTD updates in one place."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Coconut work for landlords with multiple properties?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Coconut is built for landlords as well as sole traders. You can use it to track property income, record expenses and keep the digital records you'll need for MTD."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a free trial?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can try Coconut free for 14 days, without even needing to enter any card details to get started. Find out more about our pricing. You may also be able to get Coconut free for 2 years when you open and connect a new Zempler Bank business account through Coconut, subject to eligibility and terms. Learn how to take advantage of our offer with Zempler."
+          }
+        }
+      ]
+    }
+  ]
+}

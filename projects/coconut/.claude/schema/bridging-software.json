@@ -1,0 +1,235 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.getcoconut.com/mtd-software/bridging-software#webpage",
+      "url": "https://www.getcoconut.com/mtd-software/bridging-software",
+      "name": "MTD Bridging Software | Simple Making Tax Digital Submissions | Coconut",
+      "description": "Use Coconut's MTD bridging software to manage Making Tax Digital submissions without full accounting software. Start your trial today.",
+      "inLanguage": "en-GB",
+      "dateModified": "2026-07-09",
+      "isPartOf": { "@id": "https://www.getcoconut.com/#website" },
+      "publisher": { "@id": "https://www.getcoconut.com/#organization" },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://cdn.prod.website-files.com/6069af2a39978132d0155fd7/68494e83812cad2671383511_OG%20Image.png"
+      },
+      "breadcrumb": { "@id": "https://www.getcoconut.com/mtd-software/bridging-software#breadcrumb" },
+      "about": { "@id": "https://www.getcoconut.com/#software" },
+      "mainEntity": { "@id": "https://www.getcoconut.com/mtd-software/bridging-software#faq" }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.getcoconut.com/#website",
+      "url": "https://www.getcoconut.com",
+      "name": "Coconut",
+      "inLanguage": "en-GB",
+      "publisher": { "@id": "https://www.getcoconut.com/#organization" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.getcoconut.com/mtd-software/bridging-software#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.getcoconut.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Making Tax Digital for Income Tax",
+          "item": "https://www.getcoconut.com/mtd-software"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MTD Bridging Software"
+        }
+      ]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://www.getcoconut.com/#software",
+      "name": "Coconut",
+      "alternateName": "!Coconut",
+      "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "Making Tax Digital bridging software",
+      "operatingSystem": "iOS, Android, Web",
+      "url": "https://www.getcoconut.com/mtd-software/bridging-software",
+      "description": "Coconut's MTD bridging software connects existing spreadsheet records to HMRC for Making Tax Digital submissions. Upload your information, check the details in an MTD dashboard and manage your submission without switching to full accounting software.",
+      "provider": { "@id": "https://www.getcoconut.com/#organization" },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Sole traders, freelancers, contractors, self-employed people, landlords and small businesses"
+      },
+      "featureList": [
+        "Upload income and expenses from existing spreadsheets",
+        "Review your details in a clear MTD dashboard before submitting",
+        "Send quarterly MTD updates to HMRC",
+        "Submit your MTD year-end return",
+        "HMRC recognised for Making Tax Digital",
+        "No full accounting package or data migration required",
+        "Dedicated MTD expert help",
+        "Mobile app (iOS & Android)",
+        "Access from any web browser",
+        "Secure bank-level encryption"
+      ],
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Bookkeeping",
+          "price": "99.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "99.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "MTD filing",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "129.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "+Self Assessment",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "129.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "Full",
+          "price": "159.99",
+          "priceCurrency": "GBP",
+          "url": "https://www.getcoconut.com/pricing",
+          "availability": "https://schema.org/InStock",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "159.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          }
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.getcoconut.com/mtd-software/bridging-software#faq",
+      "mainEntityOfPage": { "@id": "https://www.getcoconut.com/mtd-software/bridging-software#webpage" },
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is MTD bridging software?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "MTD bridging software connects your existing records to HMRC for Making Tax Digital submissions. It's often used by people who keep their records in spreadsheets, but still need compatible software to submit MTD information online. Coconut's bridging software gives you a practical solution that helps you to upload your information, check the details in an MTD dashboard and manage your submission without switching to full accounting software."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who is Coconut's MTD bridging software designed for?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Coconut's MTD bridging software is designed for sole traders, freelancers, contractors, self-employed people, landlords and small businesses. It's a good fit if you're comfortable using spreadsheets, uploading files and checking details online, but don't want a full accounting package."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need full accounting software to use it?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No — and that's the point. Bridging software is designed for people who already keep records in a spreadsheet, and just need a way to manage Making Tax Digital submissions through compatible software. If you need bookkeeping, invoicing or wider reporting, full accounting software may be a better fit."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I upload information from my existing records?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Coconut's bridging software is built for people who already have records they want to keep using. You can upload information from existing spreadsheets, then review the details in your dashboard before managing your MTD submission."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this suitable for sole traders?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Coconut's MTD bridging software can be suitable for sole traders with simple tax affairs who want a focused way to manage Making Tax Digital. It's especially useful if you already keep your income and expenses in spreadsheets and want a lower-cost alternative to full accounting software."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this suitable for self-employed people?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Coconut is built for self-employed people who want to keep tax simple. If you're comfortable with basic digital tools and already have your records organised, bridging software can help you submit MTD information online without moving everything into a bigger accounting platform."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does MTD bridging software cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The cost of MTD bridging software depends on the software provider and what's included. In general, bridging software is often more affordable than full accounting software because it focuses on MTD submissions, rather than extra tools like payroll, invoicing or advanced reporting."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to be an accountant to use it?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Coconut's bridging software is designed for confident basic IT users — no accountancy expertise required. If you're comfortable using spreadsheets, uploading files and checking information in an online dashboard, the process should feel straightforward."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What information do I need before submitting?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You'll need the information required for the MTD submission you're making. That could include income and expenses on a spreadsheet."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does bridging software replace accounting software?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not always. Bridging software is mainly there to connect your existing spreadsheet records to HMRC for submission. It does not usually replace full accounting software if you need bookkeeping, invoicing, cash flow tools or reporting. But if your records are already organised in a spreadsheet, bridging software may be all you need for the submission step."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I know if I need to comply with Making Tax Digital?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Making Tax Digital rules depend on your income, business type and the tax you're reporting. MTD for Income Tax is being introduced for some sole traders, landlords and self-employed people based on qualifying income. If MTD applies to you, you'll need compatible software to keep digital records and manage the relevant submissions."
+          }
+        }
+      ]
+    }
+  ]
+}

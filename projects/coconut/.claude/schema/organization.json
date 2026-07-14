@@ -1,0 +1,59 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://www.getcoconut.com/#organization",
+  "name": "Coconut",
+  "alternateName": "!Coconut",
+  "legalName": "@Coconut Platform Ltd",
+  "url": "https://www.getcoconut.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://cdn.prod.website-files.com/6069af2a39978132d0155fd7/694962c84409e6fb387dfa61_!Coconut_2025_logo_RGB_Full_Logo_Black%26White%201.webp",
+    "caption": "Coconut logo"
+  },
+  "image": "https://cdn.prod.website-files.com/6069af2a39978132d0155fd7/694962c84409e6fb387dfa61_!Coconut_2025_logo_RGB_Full_Logo_Black%26White%201.webp",
+  "description": "Bookkeeping and tax app for sole traders and landlords. Manage tax, invoicing and expenses with simple mobile app and desktop access. HMRC-recognised and MTD-compliant.",
+  "areaServed": {
+    "@type": "Country",
+    "name": "United Kingdom",
+    "sameAs": "https://en.wikipedia.org/wiki/United_Kingdom"
+  },
+  "sameAs": [
+    "https://www.linkedin.com/company/getcoconut",
+    "https://twitter.com/getcoconut",
+    "https://www.facebook.com/getcoconut",
+    "https://www.instagram.com/getcoconut/",
+    "https://www.youtube.com/@getcoconut"
+  ],
+  "contactPoint": [
+    {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "email": "support@getcoconut.com",
+      "availableLanguage": "English"
+    }
+  ],
+  "knowsAbout": [
+    "Self-employed accounting",
+    "Making Tax Digital",
+    "Self Assessment tax returns",
+    "Bookkeeping for sole traders",
+    "Landlord accounting",
+    "HMRC compliance",
+    "Expense tracking",
+    "Digital invoicing",
+    "CIS subcontractor accounting",
+    "Receipt scanning"
+  ],
+  "taxID": "09904418",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "5 Cromwell Court",
+    "addressLocality": "Oldham",
+    "addressRegion": "Greater Manchester",
+    "postalCode": "OL1 1ET",
+    "addressCountry": "GB"
+  }
+}
+</script>

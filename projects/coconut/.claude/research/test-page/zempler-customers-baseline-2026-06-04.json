@@ -1,0 +1,47 @@
+{
+  "url": "https://www.getcoconut.com/free-making-tax-digital-software",
+  "originalUrl": "https://www.getcoconut.com/zempler-customers-get-coconut-free-for-making-tax-digital",
+  "redirected": true,
+  "date": "2026-06-04",
+  "mode": "Full",
+  "scores": {
+    "accessibility": 97,
+    "bestPractices": 58,
+    "seo": 100
+  },
+  "cls": {
+    "lab": 0.107,
+    "field": null
+  },
+  "lcp": {
+    "lab_ms": 157,
+    "field_ms": null
+  },
+  "consoleErrors": 0,
+  "mobileOverflow": false,
+  "network": {
+    "totalRequests": 97,
+    "failedRequests": 0,
+    "blockedRequests": 2,
+    "pendingRequests": 1,
+    "pngImages": []
+  },
+  "memory": {
+    "usedJSHeapMB": 24.02,
+    "totalJSHeapMB": 34.37
+  },
+  "a11y": {
+    "mainLandmark": false,
+    "linksWithoutName": 1,
+    "emptyAltImages": 0,
+    "headingCount": 40,
+    "h1Count": 1,
+    "headingOrderValid": false
+  },
+  "issueCount": {
+    "critical": 1,
+    "high": 3,
+    "medium": 4,
+    "low": 3
+  }
+}

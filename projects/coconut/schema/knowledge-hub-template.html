@@ -1,0 +1,61 @@
+<!-- KNOWLEDGE HUB ARTICLE TEMPLATE — BlogPosting + BreadcrumbList -->
+<!-- Replaces BOTH existing BlogPosting blocks. Remove the old duplicate
+     (the one with "@context": "http://schema.org" and "publisher": "Coconut"
+     as a plain string) when deploying this embed. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://www.getcoconut.com/knowledge-hub/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#article",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://www.getcoconut.com/knowledge-hub/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      },
+      "headline": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "description": "{{wf {&quot;path&quot;:&quot;summary&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "image": [
+        "{{wf {&quot;path&quot;:&quot;thumbnail-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}"
+      ],
+      "publisher": { "@id": "https://www.getcoconut.com/#organization" },
+      "author": {
+        "@type": "Person",
+        "name": "{{wf {&quot;path&quot;:&quot;author:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "url": "https://www.getcoconut.com/authors/{{wf {&quot;path&quot;:&quot;author:slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "image": "{{wf {&quot;path&quot;:&quot;author:author-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+        "jobTitle": "{{wf {&quot;path&quot;:&quot;author:job-title&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+        "description": "{{wf {&quot;path&quot;:&quot;author:bio&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      },
+      "datePublished": "{{wf {&quot;path&quot;:&quot;published-on&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+      "dateModified": "{{wf {&quot;path&quot;:&quot;updated-on&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+      "articleSection": "{{wf {&quot;path&quot;:&quot;category:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "keywords": "{{wf {&quot;path&quot;:&quot;meta-keywords&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "inLanguage": "en"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.getcoconut.com/knowledge-hub/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.getcoconut.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "{{wf {&quot;path&quot;:&quot;category:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+          "item": "https://www.getcoconut.com/knowledge-hub"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        }
+      ]
+    }
+  ]
+}
+</script>

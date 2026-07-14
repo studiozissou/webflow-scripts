@@ -1,0 +1,21 @@
+Two Facebook Pixels firing on every page
+
+We found two separate Facebook Pixel IDs on the site. Both fire a PageView event on every page load.
+
+Pixel 1: 664589987931207
+Location: Webflow site-wide <head> custom code
+Format: Standard Meta Pixel snippet
+
+Pixel 2: 233127443764795
+Location: Likely injected via Google Tag Manager (container GTM-WLRSZ9N)
+Format: Minified snippet — not visible in Webflow site settings, only appears in the rendered page at runtime
+
+Both pixels load the same fbevents.js library and track PageView on every page. Having two pixels means:
+- Every visitor is tracked twice, which can inflate conversion counts in Facebook Ads Manager
+- Extra network requests on every page load (minor performance impact)
+- Potential GDPR concern if one pixel belongs to a third party
+
+Action needed:
+1. Check Facebook Events Manager (business.facebook.com) to confirm which pixel ID is connected to your active ad account
+2. Check Google Tag Manager (tagmanager.google.com) — open container GTM-WLRSZ9N and look for a tag containing pixel ID 233127443764795 (likely a "Custom HTML" tag or Meta pixel template)
+3. Remove whichever pixel is legacy — either from Webflow site settings (Pixel 1) or from GTM (Pixel 2)

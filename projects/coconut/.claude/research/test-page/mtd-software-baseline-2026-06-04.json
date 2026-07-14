@@ -1,0 +1,58 @@
+{
+  "url": "https://www.getcoconut.com/mtd-software",
+  "date": "2026-06-04",
+  "mode": "Full",
+  "scores": {
+    "accessibility": 95,
+    "bestPractices": 50,
+    "seo": 100
+  },
+  "cls": {
+    "lab": 0.115,
+    "field": 0.10
+  },
+  "lcp": {
+    "lab_ms": 168,
+    "field_ms": 2732
+  },
+  "consoleErrors": 0,
+  "mobileOverflow": false,
+  "network": {
+    "totalRequests": 111,
+    "failedRequests": 0,
+    "blockedRequests": 2,
+    "pngImages": [
+      "Coconut_2025_Graphics_RGB-05.png",
+      "Coconut_2025_Graphics_RGB-06.png",
+      "Coconut_2025_Graphics_RGB-08.png",
+      "Coconut_2025_Graphics_RGB-10.png"
+    ]
+  },
+  "memory": {
+    "usedJSHeapMB": 24.18,
+    "totalJSHeapMB": 24.77
+  },
+  "a11y": {
+    "mainLandmark": false,
+    "linksWithoutName": 1,
+    "emptyAltImages": 0,
+    "headingCount": 34,
+    "h1Count": 1
+  },
+  "thirdParty": {
+    "totalTransferMB": 7.0,
+    "topBySize": {
+      "websiteFiles": "2.2 MB",
+      "googleTagManager": "1.5 MB",
+      "intercom": "1.2 MB",
+      "facebook": "719.8 KB",
+      "tiktok": "635.5 KB"
+    }
+  },
+  "issueCount": {
+    "critical": 1,
+    "high": 4,
+    "medium": 5,
+    "low": 4
+  }
+}

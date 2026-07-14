@@ -1,0 +1,55 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://www.getcoconut.com/knowledge-hub/{slug}#article",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://www.getcoconut.com/knowledge-hub/{slug}"
+      },
+      "headline": "{name}",
+      "description": "{summary}",
+      "image": [
+        "{thumbnail-image}"
+      ],
+      "publisher": { "@id": "https://www.getcoconut.com/#organization" },
+      "author": {
+        "@type": "Person",
+        "name": "{author:name}",
+        "url": "https://www.getcoconut.com/authors/{author:slug}",
+        "image": "{author:author-image}",
+        "jobTitle": "{author:job-title}",
+        "description": "{author:bio}"
+      },
+      "datePublished": "{published-on}",
+      "dateModified": "{updated-on}",
+      "articleSection": "{category:name}",
+      "keywords": "{meta-keywords}",
+      "inLanguage": "en"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.getcoconut.com/knowledge-hub/{slug}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.getcoconut.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "{category:name}",
+          "item": "https://www.getcoconut.com/knowledge-hub"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{name}"
+        }
+      ]
+    }
+  ]
+}

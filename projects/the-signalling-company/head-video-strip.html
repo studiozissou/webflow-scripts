@@ -33,6 +33,26 @@
     - stashed URL (video):  data-src
     - stashed URL (source): data-src
 -->
+
+<!--
+  STACKING FIX (verified live 2026-07-14, mobile 390×844):
+  Webflow's native bg-video ships the <video> at `z-index:-100` (its default
+  `.w-background-video>video` rule). The `.is-mobile` variant wrapper is
+  `position:absolute; z-index:auto`, so it does NOT create a stacking context —
+  the video's -100 then resolves against the ROOT and paints BEHIND
+  `.page-wrapper`, which has an opaque background. Result on mobile: the hero
+  video plays but is hidden, and its poster (a background-image on the same -100
+  <video>) is hidden too → a flat dark hero. Desktop is unaffected because the
+  `.is-desktop` combo carries a z-index. Isolating the wrapper scopes the -100
+  inside it so the video (and poster) paint above the page background. This can
+  only RAISE a negative-z-index child's visibility, so it is safe for the
+  already-working desktop variant and for the reduced-motion poster-only path.
+-->
+<style>
+  .video_about-b-video,
+  .video_cta { isolation: isolate; }
+</style>
+
 <script>
   (function () {
     var MANAGED = '.video_about-b-video, .video_cta';

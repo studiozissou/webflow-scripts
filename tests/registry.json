@@ -1,10 +1,20 @@
 {
-  "lastUpdated": "2026-07-13",
+  "lastUpdated": "2026-07-14",
   "note": "tsc-hero-video-perf deployed (929f758)",
   "version": 1,
   "lastDeployed": "2026-07-13",
   "lastDeployedHash": "929f758",
   "testPages": [
+    {
+      "slug": "tsc-leadership-modal",
+      "url": "https://tsc-v2.webflow.io/leadership",
+      "spec": "tests/acceptance/tsc-leadership-modal.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-07-14",
+      "description": "Vanilla-JS rebuild of the leadership .modal2 open/close (replaces Webflow IX2 a-146/a-147): 500ms outQuad slide + ease fade, plus role=dialog, focus trap, ESC, scroll-lock, focus-return, reduced-motion."
+    },
     {
       "slug": "getcoconut-thetimes",
       "url": "https://www.getcoconut.com/thetimes",
@@ -218,6 +228,27 @@
       "critical": false,
       "description": "TSC hero/CTA background video loading — source-stripping so off-breakpoint and below-fold variants never fetch, breakpoint-correct hydration, progressive low→high hero swap, reduced-motion/saveData guards; targets mobile Lighthouse LCP via font/render-blocking chain alongside ~14MB video bandwidth saving",
       "created": "2026-07-13"
+    },
+    {
+      "slug": "tsc-master-dropdown-close",
+      "url": "https://tsc-v2.webflow.io",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-master-dropdown-close.md",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC desktop nav mega-menu — clicking a non-link area of a .master_dropdown panel closes its parent Webflow dropdown; child links still navigate; desktop-only (scoped by .nav-menu-dektop)",
+      "created": "2026-07-14"
+    },
+    {
+      "slug": "tsc-image-resize-avif",
+      "url": "https://tsc-v2.webflow.io",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-image-resize-avif-2026-07-14.md",
+      "verify": "tests/acceptance/tsc-image-resize-avif.verify.sh",
+      "type": "asset-pipeline",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC responsive image resizing to AVIF — measured on-site render widths @1440/@479, 2x retina targets, 100px-gap bucketing into 730/960/1180/1500/2850, magick+avifenc encode; shell Tier-1 verify (width==bucket, format, size, originals-untouched). Output to Downloads/optimised/<bucket>/, not deployed.",
+      "created": "2026-07-14"
     }
   ]
 }

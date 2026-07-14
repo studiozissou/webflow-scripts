@@ -1,0 +1,40 @@
+# Coconut
+
+> Bookkeeping and tax app for sole traders and landlords in the UK.
+
+Coconut is HMRC-recognised accounting software that helps self-employed people, sole traders, and landlords manage their finances. It handles Making Tax Digital (MTD) for Income Tax, Self Assessment tax returns, expense tracking, invoicing, and bank feed categorisation. FCA authorised. Available on iOS, Android, and web.
+
+## Key pages
+
+- [Homepage](https://www.getcoconut.com/)
+- [Features](https://www.getcoconut.com/features)
+- [Pricing](https://www.getcoconut.com/pricing)
+- [MTD Software](https://www.getcoconut.com/mtd-software)
+- [MTD for Sole Traders](https://www.getcoconut.com/mtd-software/sole-traders)
+- [MTD for Landlords](https://www.getcoconut.com/mtd-software/landlords)
+- [Accountant Software](https://www.getcoconut.com/accountant-software)
+- [About](https://www.getcoconut.com/about)
+- [Knowledge Hub](https://www.getcoconut.com/knowledge-hub)
+
+## What Coconut does
+
+- Automatic income and expense tracking via bank feeds
+- Making Tax Digital (MTD) for Income Tax quarterly submissions
+- Self Assessment tax return filing direct to HMRC
+- Receipt scanning and categorisation
+- Digital invoicing
+- Real-time tax estimates
+- Multiple income stream and property management
+- CIS subcontractor deduction tracking
+
+## Who Coconut is for
+
+- Sole traders
+- Self-employed people
+- Landlords with rental income
+- Accountants supporting sole traders and landlords
+
+## Contact
+
+- Support: support@getcoconut.com
+- Website: https://www.getcoconut.com

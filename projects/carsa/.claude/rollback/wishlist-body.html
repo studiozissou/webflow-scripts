@@ -1,0 +1,70 @@
+<!-- Format numbers into currency, decimal places and commas -->
+<script>
+// --- Formatting functions ---
+function formatCurrency(num) {
+  return '£' + Number(num.replace(/[^0-9.-]+/g, '')).toLocaleString('en-UK');
+}
+function formatDecimals(num) {
+  return Number(num.replace(/[^0-9.-]+/g, '')).toFixed(2);
+}
+function formatCommas(num) {
+  return Number(num.replace(/[^0-9.-]+/g, '')).toLocaleString('en-UK');
+}
+
+function formatCurrencyRounded(num) {
+  const clean = Number(num.replace(/[^0-9.-]+/g, ''));
+  return '£' + Math.round(clean).toLocaleString('en-UK');
+}
+
+// --- Apply formatting ---
+function applyNumberFormatting() {
+  // currency
+  $('[data-number="currency"]').each(function () {
+    if (!$(this).hasClass('is-formatted')) {
+      $(this).html($(this).text()
+        .replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCurrency));
+      $(this).addClass('is-formatted');
+    }
+  });
+  // decimals
+  $('[data-number="decimals"]').each(function () {
+    if (!$(this).hasClass('is-formatted')) {
+      $(this).html($(this).text()
+        .replace(/[-+]?[0-9]*\.?[0-9]+/g, formatDecimals));
+      $(this).addClass('is-formatted');
+    }
+  });
+  // commas
+  $('[data-number="commas"]').each(function () {
+    if (!$(this).hasClass('is-formatted')) {
+      $(this).html($(this).text()
+        .replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCommas));
+      $(this).addClass('is-formatted');
+    }
+  });
+  // ✅ currency-rounded
+  $('[data-number="currency-rounded"]').each(function () {
+    if (!$(this).hasClass('is-formatted')) {
+      $(this).html($(this).text()
+        .replace(/[-+]?[0-9]*\.?[0-9]+/g, formatCurrencyRounded));
+      $(this).addClass('is-formatted');
+    }
+  });
+}
+
+// --- Initial load ---
+$(document).ready(applyNumberFormatting);
+
+// --- Re-run after CMS filter/pagination ---
+window.FinsweetAttributes = window.FinsweetAttributes || [];
+window.FinsweetAttributes.push([
+  'list',
+  (listInstances) => {
+    listInstances.forEach(list => {
+      list.addHook('render', () => {
+        applyNumberFormatting();
+      });
+    });
+  }
+]);
+</script>

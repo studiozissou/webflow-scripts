@@ -1,165 +1,234 @@
-# Carsa.co.uk Content Quality & Custom Code Audit
-**Date:** 2026-05-04
+# Carsa.co.uk Content & Code Inventory Audit
+**Date:** 2026-07-01
+**Previous:** 2026-06-01 (May baseline: 2026-05-04)
 
 ## Summary
 
-| Category | Status | Key Finding |
-|----------|--------|---|
-| Forms | PASS | Success messages confirmed on contact, finance, valuation forms |
-| Image Alt Text | CRITICAL | 50+ images missing alt text across all pages |
-| Viewport Meta | PASS | Mobile viewport present (Webflow default) |
-| CMS Hygiene | FAIL | 3 template pages published for taxonomy-only collections |
-| Dev/Test Pages | MIXED | 2 password-protected, 2 returning 404 |
-| Text-to-HTML Ratio | GOOD | Strong body copy on key pages |
-| Custom Code | CRITICAL | 6+ scripts on external GitHub — migration needed |
+| Category | July Status | June Status | Change |
+|----------|------------|-------------|--------|
+| Custom code inventory | 16 external scripts, 28 inline | N/A (first full inventory) | NEW |
+| Dev/test pages | 2 protected, 2 removed/redirected | 4 published (2 protected, 2 x 404) | IMPROVED |
+| Expired promotion | RESOLVED | "Ends 31st Dec 25" still live | FIXED |
+| Blog author "Jane Doe" | RESOLVED | Still "Jane Doe" | FIXED |
+| HTTP links on terms pages | 2 pages affected | 3 pages affected | IMPROVED |
+| Broken blog images | RESOLVED | 2 posts with broken images | FIXED |
+| Forms | PASS | PASS | No change |
+| Unpinned scripts (@latest) | 2 scripts | 3 scripts (GSAP, n8n, JetBoost) | IMPROVED |
 
 ---
 
-## 1. Forms & Submissions
+## 1. Custom Code Inventory (Full)
 
-**Status: PASS**
+### External Scripts (loaded via `<script src>`)
 
-- Contact form: "Thank you! Your submission has been received!" confirmed
-- Finance eligibility form: Success/error messages present
-- Valuation form: Success message confirmed
-- All forms include error handling: "Oops! Something went wrong while submitting the form."
-- Forms use Webflow's native form handling
+| # | Script | Source | Version | Pinned? | Risk |
+|---|--------|--------|---------|---------|------|
+| 1 | Mixpanel SDK | cdn.mxpnl.com/libs/mixpanel-2-latest.min.js | `latest` | NO | MEDIUM |
+| 2 | Mixpanel JS Wrapper | cdn.mxpnl.com/libs/mixpanel-js-wrapper.min.js | N/A | N/A | LOW |
+| 3 | Google Tag Manager | googletagmanager.com/gtm.js | GTM-MM5N6CP8 | Yes (container ID) | LOW |
+| 4 | Webflow Analytics | carsa.co.uk/g0lnomhfn3m... (1st party) | N/A | N/A | LOW |
+| 5 | Finsweet Attributes | cdn.jsdelivr.net/npm/@finsweet/attributes@2 | @2 (major) | Partial | LOW |
+| 6 | Finsweet Components Config | cdn.prod.website-files.com/.../finsweetcomponentsconfig-1.0.2.js | 1.0.2 | Yes | LOW |
+| 7 | Finsweet fs-components | cdn.jsdelivr.net/npm/@finsweet/fs-components@2 | @2 (major) | Partial | LOW |
+| 8 | Calltracks Loader | app3.calltracks.com/wnd/loader.js | N/A | N/A | LOW |
+| 9 | Calltracks g3.js | app3.calltracks.com/wnd/g3.js | N/A | N/A | LOW |
+| 10 | Trustpilot Widget | widget.trustpilot.com/bootstrap/v5 | v5 | Yes (major) | LOW |
+| 11 | jQuery | d3e54v103j8qbb.cloudfront.net (Webflow CDN) | 3.5.1 | Yes | LOW |
+| 12 | Webflow runtime | cdn.prod.website-files.com/.../webflow.*.js | Webflow-managed | Yes | LOW |
+| 13 | GSAP | cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js | 3.15.0 | Yes | LOW |
+| 14 | GSAP ScrollTrigger | cdn.prod.website-files.com/gsap/3.15.0/ScrollTrigger.min.js | 3.15.0 | Yes | LOW |
+| 15 | GSAP DrawSVGPlugin | cdn.prod.website-files.com/gsap/3.15.0/DrawSVGPlugin.min.js | 3.15.0 | Yes | LOW |
+| 16 | GSAP EasePack | cdn.prod.website-files.com/gsap/3.15.0/EasePack.min.js | 3.15.0 | Yes | LOW |
 
----
+### Inline Scripts (28 total)
 
-## 2. Images Missing Alt Text
+| # | Purpose | Size | Notes |
+|---|---------|------|-------|
+| 1 | Webflow modernizr/touch detect | 181 B | Webflow default |
+| 2 | Schema.org (CollectionPage) | 1,030 B | Structured data |
+| 3 | GA4 first-party tag push | 162 B | G-6WQDNZH59K |
+| 4 | GA4 config | 223 B | gtag('config', 'G-6WQDNZH59K') |
+| 5 | GTM loader | 431 B | GTM-MM5N6CP8 |
+| 6 | Schema.org (Organization + WebSite) | 2,706 B | Structured data |
+| 7 | VWO (Visual Website Optimizer) | 5,498 B | Account 1130895, version 2.1 |
+| 8 | Filter form submit blocker | 845 B | Blocks wf-form-Filter-Vehicles submit |
+| 9 | VWO error handler | 11,839 B | Account 1130895 |
+| 10 | GSAP plugin registration | 58 B | ScrollTrigger, DrawSVGPlugin, EasePack |
+| 11 | Menu scroll lock | 1,248 B | Prevents bg scroll on mobile nav |
+| 12 | CMS model/make link builder | 668 B | Builds /used-cars?... links |
+| 13 | Store list reorder (jQuery) | 78 B | Moves #find-store-link |
+| 14 | UTM attribution saver | 3,251 B | sessionStorage + localStorage (30d) |
+| 15 | UTM link appender | 2,187 B | Appends UTMs to outbound links |
+| 16 | External link rel=noreferrer | 197 B | Adds noreferrer noopener to target=_blank |
+| 17 | Year updater | 105 B | Sets #year to current year |
+| 18 | n8n Chat widget | 2,815 B | Imports from jsdelivr (unpinned) |
+| 19 | Finsweet list loading UX | 1,384 B | Show/hide loader on CMS list |
+| 20 | make-model-redirect v2 | 13,564 B | Core vehicle search routing |
+| 21 | 404 redirect message | 176 B | Shows #redirect-message from session |
+| 22 | Finsweet list card enhancements | 1,683 B | CMS card rendering hooks |
+| 23 | Check finance link builder | 3,838 B | Builds eligibility checker URLs |
+| 24 | Results counter | 890 B | Formats #desktop-results count |
+| 25 | Mobile filters toggle | 1,219 B | Filter panel for <= 991px |
+| 26 | VRM input sanitiser | 178 B | A-Z0-9 only, uppercase |
+| 27 | Valuation link builder | 2,822 B | UTM-aware valuation URLs |
+| 28 | Calltracks loader (inline) | 206 B | Duplicate of external loader |
 
-**Status: CRITICAL — 50+ images**
+### Stylesheets (4)
 
-Comparison to March audit (30+): Issue has expanded or was under-counted.
+| # | Source | Notes |
+|---|--------|-------|
+| 1 | Webflow shared CSS | carsa-v2.webflow.shared.*.min.css |
+| 2 | Webflow page CSS | carsa-v2.webflow.*.opt.min.css |
+| 3 | Google Fonts | Plus Jakarta Sans (400-800) |
+| 4 | n8n Chat CSS | cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css (unpinned) |
 
-| Page | Examples |
-|------|----------|
-| Homepage | Car gallery images, logos, feature icons |
-| /used-cars | All car listing images |
-| /car-finance | Illustrations, partner logos, hero images |
-| /stores | All 11 store photos, blog thumbnails |
-| /blog | All article thumbnail images |
-| /about/carsa | Store photos, benefit illustrations |
-| /contact | Logo and blog preview (2 instances) |
-| /faq | Logo (appears twice) |
+### Scripts Using @latest / Unpinned Versions
 
-**WCAG Impact:** Level A failure (SC 1.1.1 — Non-text Content)
+| Script | URL Pattern | Risk | Recommendation |
+|--------|-------------|------|----------------|
+| Mixpanel SDK | `mixpanel-2-latest.min.js` | MEDIUM | Pin to specific version |
+| n8n Chat (JS + CSS) | `@n8n/chat/dist/...` (no version) | MEDIUM | Pin e.g. `@n8n/chat@0.20.0` |
 
----
+**Resolved since June:**
+- GSAP: Now pinned to 3.15.0 via Webflow native GSAP integration (was unpinned)
+- JetBoost: Removed entirely from the site
 
-## 3. Viewport Meta
+### New Since May/June
 
-**Status: PASS** — Webflow default present.
+| Script | Status | Notes |
+|--------|--------|-------|
+| Mixpanel SDK + Wrapper | NEW | Not present in May/June audits. Analytics/tracking. Uses `@latest` pattern. |
+| Calltracks (3 scripts) | NEW | Call tracking service. Not in previous inventory. |
+| Finsweet Components | NEW | Was only Attributes before; now also fs-components with config file |
+| Webflow 1st-party analytics | NEW | carsa.co.uk-hosted analytics script (Webflow Analyze) |
 
----
+### Removed Since May/June
 
-## 4. CMS Hygiene
-
-**Status: FAIL**
-
-| Collection | Template Page | Items | Status | Action |
-|------------|--------------|-------|--------|--------|
-| Testimonials | /testimonials | 7 | 404 | Depublish — taxonomy-only |
-| Facilities | /facilities | 6 | 404 | Depublish — taxonomy-only |
-| Car Badges | /car-badges | 0 | 404 | Depublish — empty collection |
-
-These pages are in sitemap but return 404, causing crawl waste.
-
----
-
-## 5. Dev/Test Pages Published
-
-| Page | URL | Status | Risk |
-|------|-----|--------|------|
-| Impel Test | /development/impel-test | 401 Protected | Medium |
-| Search Demo | /development/search-demo | 404 | Low (removed) |
-| Our Team | /development/our-team | 404 | Low (removed) |
-| Eligibility Hero MCP Test | /development/eligibility-hero-mcp-test | 401 Protected | Medium |
-
-The 401 pages are password-protected but may still be indexed. Add `noindex` or depublish.
-
----
-
-## 6. Text-to-HTML Ratio
-
-**Status: GOOD**
-
-- Homepage: Strong value prop ("£700 below Auto Trader market valuations, on average")
-- /used-cars: Minimal text, filter-heavy (by design for VSRP)
-- /car-finance: Dense content, 8+ Q&A pairs, thorough disclaimers
-- /stores: Clear store info with hours and amenities
-- /blog: Well-organized categories and pagination
-- /faq: Excellent — 23 categorized Q&A pairs
-- /about/carsa: Strong narrative, mission and values
-
----
-
-## 7. Custom Code Inventory
-
-### Custom Scripts (hosted on studiozissou GitHub via jsDelivr)
-
-| Script | Purpose | Risk |
-|--------|---------|------|
-| homepage.js | Make/Model dropdowns, search state, price tabs, Part Exchange form, valuation form, card height equalization | CRITICAL |
-| make-model-redirect.js | Make/Model dropdown routing on VSRP and CMS pages | CRITICAL |
-| make-model.js | Alternative Make/Model template filtering | MEDIUM |
-| check-finance.js | Finance eligibility link builder | MEDIUM |
-| global.js | Empty file (no functionality) | LOW |
-
-### Third-Party & Library Scripts
-
-| Script | Source | Version | Risk |
-|--------|--------|---------|------|
-| Google Analytics 4 | gtag.js | GA-6WQDNZH59K | LOW |
-| Google Tag Manager | GTM | GTM-MM5N6CP8 | LOW |
-| VWO | dev.visualwebsiteoptimizer.com | Account 1130895 | MEDIUM |
-| n8n Chat Widget | carsa.app.n8n.cloud/webhook/... | Custom | MEDIUM |
-| @n8n/chat | CDN (jsdelivr) | Latest (unpinned) | MEDIUM |
-| GSAP + Plugins | CDN | Inline registration | LOW |
-| JetBoost | cdn.jetboost.io | Latest (unpinned) | LOW |
-| jQuery | Webflow-bundled | Webflow default | LOW |
+| Script | Status | Notes |
+|--------|--------|-------|
+| GitHub-hosted scripts (studiozissou) | REMOVED | All custom scripts now inlined in page `<head>` / `<body>`. Migration to inline complete. |
+| JetBoost | REMOVED | cdn.jetboost.io no longer loaded |
 
 ---
 
-## Code Migration Plan
+## 2. Dev/Test Pages
 
-**Trigger:** 6+ custom scripts hosted on external GitHub (studiozissou/webflow-scripts).
+| Page | URL | May Status | July Status | Change |
+|------|-----|------------|-------------|--------|
+| Impel Test | /development/impel-test | 401 Protected | 401 Protected | No change |
+| Search Demo | /development/search-demo | 404 | 401 Protected | Now protected (was 404) |
+| Our Team | /development/our-team | 404 | Redirects to /car-finance | Removed/redirected |
+| Eligibility Hero MCP Test | /development/eligibility-hero-mcp-test | 401 Protected | Redirects to /stores | Removed/redirected |
 
-### Recommended Repo Structure
+**Status: IMPROVED** -- Down from 4 published pages to 2 (both password-protected). The two that were previously 404 have been cleaned up (one redirected, one now protected). Recommend depublishing the remaining 2 or adding `noindex` meta tags.
 
-```
-carsa-business/carsa-webflow-scripts/
-├── src/
-│   ├── homepage.js
-│   ├── make-model.js
-│   ├── make-model-redirect.js
-│   ├── check-finance.js
-│   └── animations.js
-├── dist/                    # Minified output
-├── package.json
-└── README.md
-```
+---
 
-### jsDelivr CDN Pattern
+## 3. Expired Content
 
-```html
-<!-- Pinned version (production) -->
-<script src="https://cdn.jsdelivr.net/gh/carsa-business/carsa-webflow-scripts@1.0.0/dist/homepage.min.js"></script>
+| Item | May/June Status | July Status |
+|------|-----------------|-------------|
+| "Ends 31st Dec 25" homepage promotion | Present (7 months expired by June) | REMOVED |
+| Current promotion | N/A | "Summer Deals: £200-£1500 off + Free 1-year warranty" |
 
-<!-- Never use @latest in production -->
-```
+**Status: RESOLVED** -- The expired December 2025 promotion has been replaced with a current Summer Deals promotion. No date-specific expiry text found on the homepage.
 
-### Version Pinning Rules
+---
 
-- Always pin to explicit semver: `@1.0.0`, `@1.1.0`
-- Tag releases in GitHub — jsDelivr auto-serves
-- Never use `@latest` or unpinned URLs in production
+## 4. Blog Author
 
-### Purge Workflow
+| Check | May/June Status | July Status |
+|-------|-----------------|-------------|
+| Visible author name | "Jane Doe" on blog posts | No author name displayed |
+| Schema.org author field | Not checked | Not present in BlogPosting schema |
+| Jane Doe text anywhere | Present | Not found |
 
-1. Edit source in `/src/`
-2. Test on Webflow staging
-3. Tag release: `git tag v1.2.0 && git push --tags`
-4. Purge if urgent: `https://purge.jsdelivr.net/gh/carsa-business/carsa-webflow-scripts@1.2.0/dist/homepage.min.js`
-5. Update Webflow embed to new version URL
+**Status: RESOLVED** -- "Jane Doe" placeholder has been removed. Blog posts now display date, read time, and category but no author name. The BlogPosting schema includes `publisher` (Organization) but no `author` field.
+
+**Recommendation:** Consider adding a real author to blog posts for E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness). Google's Search Quality Rater Guidelines weigh authorship for YMYL content (car finance articles qualify).
+
+---
+
+## 5. HTTP Links on Terms Pages
+
+| Page | May/June Status | July Status | Links Found |
+|------|-----------------|-------------|-------------|
+| /terms/data-privacy | HTTP links present | CLEAN | None |
+| /terms/terms-conditions | HTTP links present | STILL HTTP | 3x `http://www.carsa.co.uk/` |
+| /terms/cookie-policy | HTTP links present | STILL HTTP | 2x `http://www.youronlinechoices.com/` |
+| /terms/terms-of-use | Not checked | CLEAN | None |
+
+**Status: IMPROVED** -- Down from 3 affected pages to 2. Data-privacy is now clean.
+
+**Remaining fixes needed:**
+- `/terms/terms-conditions`: 3 instances of `http://www.carsa.co.uk/` should be `https://www.carsa.co.uk/`
+- `/terms/cookie-policy`: 2 instances of `http://www.youronlinechoices.com/` should be `https://www.youronlinechoices.com/`
+
+---
+
+## 6. Broken Blog Images
+
+| Page | June Status | July Status |
+|------|-------------|-------------|
+| /blog/best-used-cars-under-15000-uk | Broken images reported | All images loading (0 broken) |
+| /blog/best-used-estate-cars-uk | Broken images reported | All images loading (0 broken) |
+
+**Status: RESOLVED** -- Both blog posts now load all images successfully.
+
+---
+
+## 7. Forms
+
+| Form | Page | Success Message | Error Handling | Redirect |
+|------|------|-----------------|----------------|----------|
+| Contact form | /contact | "Thank you! Your submission has been received!" | Yes | None (inline) |
+| Part Exchange (small) | /sell-car/value-car | "Thank you! Your submission has been received!" | Yes | None (inline) |
+| Valuation form | /sell-car/value-car | "Thank you! Your submission has been received!" | Yes | None (inline) |
+
+**Status: PASS** -- All forms have success and error states configured. No redirect configured (all use Webflow native inline confirmation).
+
+---
+
+## Month-Over-Month Trend
+
+| Issue | May | June | July | Trajectory |
+|-------|-----|------|------|------------|
+| Dev/test pages published | 4 (2 protected, 2 x 404) | 4 (unchanged) | 2 (both protected) | Improving |
+| Expired promotion | 5 months expired | 7 months expired | Removed, current promo active | Resolved |
+| Blog author "Jane Doe" | Present | Present | Removed | Resolved |
+| Terms pages with HTTP links | 3 | 3 | 2 | Improving |
+| Blog posts with broken images | Unknown | 2 | 0 | Resolved |
+| Scripts using @latest | 3 (GSAP, n8n, JetBoost) | 3 | 2 (Mixpanel, n8n) | Improving |
+| GitHub-hosted custom scripts | 6+ | 6+ | 0 (all inlined) | Resolved |
+| Total external scripts | ~12 | ~12 | 16 (new: Mixpanel, Calltracks, Finsweet Components) | Increased |
+| Total inline scripts | Unknown | Unknown | 28 | Baselined |
+
+---
+
+## New Observations (July)
+
+1. **Mixpanel added** -- New analytics tool (2 scripts). Uses `@latest` filename pattern (`mixpanel-2-latest.min.js`). Confirm this is intentional and not a leftover from testing.
+
+2. **Calltracks added** -- Call tracking service with 3 scripts (loader, g3.js, pingback.js). Dynamic phone number insertion for attribution.
+
+3. **Script inlining complete** -- All 6+ custom scripts previously hosted on studiozissou GitHub via jsDelivr are now inlined directly in the Webflow page. This eliminates the external dependency risk but increases the importance of Webflow version control (publish history).
+
+4. **Webflow native GSAP** -- GSAP is now loaded from `cdn.prod.website-files.com/gsap/3.15.0/` (Webflow's native GSAP integration) rather than an external CDN. This pins the version and removes the @latest risk.
+
+5. **VWO code weight** -- VWO contributes ~17 KB across 2 inline scripts (5,498 B + 11,839 B). Consider whether A/B testing is actively used; if not, removing VWO saves significant render-blocking weight.
+
+6. **Inline script payload** -- 28 inline scripts totalling approximately 55 KB of uncompressed JavaScript. The largest is make-model-redirect v2 at 13.5 KB.
+
+---
+
+## Action Items
+
+| Priority | Action | Owner | Status |
+|----------|--------|-------|--------|
+| LOW | Fix 3x `http://` links on /terms/terms-conditions | Carsa (CMS) | Open |
+| LOW | Fix 2x `http://` links on /terms/cookie-policy | Carsa (CMS) | Open |
+| MEDIUM | Pin n8n Chat to specific version (JS + CSS) | Dev | Open |
+| LOW | Pin Mixpanel SDK or confirm @latest is vendor-recommended | Dev | Open |
+| LOW | Depublish or noindex remaining 2 dev pages | Carsa (Webflow) | Open |
+| MEDIUM | Add author names to blog posts for E-E-A-T | Carsa (content) | Open |
+| LOW | Audit VWO usage -- remove if not actively testing | Carsa | Open |

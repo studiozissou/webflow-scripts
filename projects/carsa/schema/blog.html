@@ -1,0 +1,35 @@
+<!-- BLOG LISTING — JSON-LD Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://www.carsa.co.uk/blog#webpage",
+      "url": "https://www.carsa.co.uk/blog",
+      "name": "Carsa Blog | Insights & Advice for Car Buyers",
+      "description": "Browse buying guides, electric vehicle advice, and car finance tips from Carsa. Practical insights to help you find and finance your next used car.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "about": { "@id": "https://www.carsa.co.uk/#organization" },
+      "publisher": { "@id": "https://www.carsa.co.uk/#organization" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/blog#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Blog"
+        }
+      ]
+    }
+  ]
+}
+</script>

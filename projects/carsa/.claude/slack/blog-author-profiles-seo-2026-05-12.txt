@@ -1,0 +1,19 @@
+*Blog Author Profiles — SEO & AEO Recommendation*
+
+Adding named authors to blog posts with linked profile pages is one of the highest-impact SEO moves we can make. Here's why:
+
+*What is E-E-A-T?*
+Google's quality framework: Experience, Expertise, Authoritativeness, Trustworthiness. It's how Google judges whether content deserves to rank. Sites that demonstrate E-E-A-T consistently outperform those that don't, especially after core algorithm updates.
+
+*Why it matters more for Carsa*
+Car buying is classed as YMYL (Your Money or Your Life) — topics that affect someone's finances, health, or safety. Google holds YMYL content to a *higher* standard. Anonymous blog posts with no author signal low quality in Google's eyes.
+
+*What we'd add*
+•  Author name + byline on each blog post (e.g. "John Smith, Automotive Finance Specialist")
+•  Author profile pages with expertise, role, headshot, and links to their articles
+•  Structured data (JSON-LD schema) connecting articles to authors
+
+*AEO benefit*
+AI search tools (ChatGPT, Perplexity, Gemini) heavily favour attributed content over anonymous content when choosing what to cite. Named authors with credentials give AI a reason to pick Carsa over competitors.
+
+Let me know what you think — happy to scope this out as a build task.

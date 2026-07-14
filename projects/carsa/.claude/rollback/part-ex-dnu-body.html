@@ -1,0 +1,82 @@
+<!-- Update and open the link for PX form -->
+<script>
+// Reusable function to parse UTM parameters from URL
+function getUTMParams() {
+  const params = {};
+  const queryString = window.location.search.substring(1);
+  const vars = queryString.split('&');
+  vars.forEach(function(pair) {
+    const [key, value] = pair.split('=');
+    if (key && key.startsWith('utm_')) {
+      params[key] = decodeURIComponent(value || '');
+    }
+  });
+  return params;
+}
+
+// Generate the full valuation URL with UTM parameters
+function generatePxURL(pxVrm) {
+  let url = 'https://quote.carsa.co.uk/value-my-car/enter-vrm?px_vrm=' + encodeURIComponent(pxVrm);
+  const utmParams = getUTMParams();
+  const queryParts = [];
+
+  for (const key in utmParams) {
+    queryParts.push(key + '=' + encodeURIComponent(utmParams[key]));
+  }
+
+  if (queryParts.length) {
+    url += '&' + queryParts.join('&');
+  }
+
+  return url;
+}
+
+// Update button href attributes in real-time
+function updateButtonHref(form, button) {
+  const pxVrm = form.find('[name="px-vrm"]').val();
+  if (pxVrm) {
+    const url = generatePxURL(pxVrm);
+    button.attr('href', url);
+    button.attr('target', '_blank'); // Open link in new tab
+  }
+}
+
+// Handle Enter key in form inputs
+$('#px-form-large input, #px-form-small input').on('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const form = $(this).closest('form');
+    const button = form.find('a');
+    updateButtonHref(form, button);
+    button[0].click(); // Simulate click after updating href
+  }
+});
+
+// Handle form submission
+$('#px-form-large, #px-form-small').submit(function(e) {
+  e.preventDefault();
+  const button = $(this).find('a');
+  updateButtonHref($(this), button);
+  button[0].click();
+});
+
+// Handle button clicks
+$('#px-button-large').on('click', function(e) {
+  const form = $('#px-form-large');
+  updateButtonHref(form, $(this));
+});
+
+$('#px-button-small').on('click', function(e) {
+  const form = $('#px-form-small');
+  updateButtonHref(form, $(this));
+});
+
+// Live update button href on VRM input
+$('#px-form-large [name="px-vrm"]').on('input', function () {
+  updateButtonHref($('#px-form-large'), $('#px-button-large'));
+});
+
+$('#px-form-small [name="px-vrm"]').on('input', function () {
+  updateButtonHref($('#px-form-small'), $('#px-button-small'));
+});
+</script>

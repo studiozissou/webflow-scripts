@@ -17,14 +17,14 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 - /about/carsa H1 inflation fixed (7 → 1, confirmed via live HTML)
 - Meta descriptions, canonical tags, and OG tags now rendering correctly sitewide
 - Cookie consent mechanism now live
-- JSON-LD schema in progress (Product schema live on vehicle pages)
+- JSON-LD schema complete and live sitewide
 - Reserve page and Reviews page added
 - llms.txt confirmed present and working
 
 **Key stats:**
 - 74 pages (53 published, 21 drafts, 17 CMS templates)
 - 17 CMS collections (4,639 vehicles, 1,975 features, 440 models, 181 FAQs, 103 blogs)
-- AEO maturity: L2 Emerging (12/20)
+- AEO maturity: L2 Emerging (14/20)
 - Designer comments: 45 total, all resolved
 - No ecommerce, no localization
 
@@ -75,7 +75,7 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 | 8 | Remove expired promotion "Ends 31st Dec 25" from homepage | TBD | Trust, AEO | — | SEMI |
 | 9 | Replace "Jane Doe" placeholder author with real byline + bio | TBD | Trust, AEO | — | MANUAL |
 | 10 | Fix HTTP links in /terms/data-privacy, /terms-conditions, /vehicle-purchase | TBD | SEO, Trust | SEMRush | SEMI |
-| 11 | Add H1 to /reserve page | TBD | SEO | SEMRush | SEMI |
+| ~~11~~ | ~~Add H1 to /reserve page~~ | — | Done | SEMRush | — |
 | 12 | Write unique meta description for /value-car (duplicates /part-exchange) | TBD | SEO | SEMRush | AUTO |
 
 ---
@@ -120,7 +120,7 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 
 | # | Task | Effort | Justification | Client item | Automation |
 |---|------|--------|---------------|-------------|------------|
-| 35 | Split sitemap into sub-sitemaps (vehicles, blog, stores) | TBD | SEO | — | SEMI |
+| ~~35~~ | ~~Split sitemap into sub-sitemaps~~ | — | N/A — Webflow doesn't support sub-sitemaps | — | — |
 | 36 | Build quarterly original data content (Iran war template) | TBD | AEO | — | MANUAL |
 | 37 | Implement anchor + cluster content architecture | TBD | AEO | — | MANUAL |
 | 38 | Set up consent mode v2 in GTM for full compliance verification | TBD | Ops | — | MANUAL |
@@ -142,18 +142,18 @@ Carsa is a UK used car retailer with 10+ stores, ~4,600 vehicles, and a Webflow 
 
 | Item | Owner | Status |
 |------|-------|--------|
-| JSON-LD schema for all pages (Organization, WebSite, LocalBusiness, FAQPage, Article, BreadcrumbList) | Will | Active development |
+| JSON-LD schema for all pages (Organization, WebSite, LocalBusiness, FAQPage, Article, BreadcrumbList) | Will | Complete |
 | Product schema on vehicle detail pages | Will | Live |
 
 ---
 
 ## AEO Scorecard
 
-**Overall: 12/20 — L2 Emerging**
+**Overall: 14/20 — L2 Emerging**
 
 | Category | Score | Notes |
 |----------|-------|-------|
-| A. Schema | 2/4 | FAQPage live; Organization in progress |
+| A. Schema | 4/4 | Complete — Organization, WebSite, LocalBusiness, FAQPage, Article, BreadcrumbList, Product all live |
 | B. Answer Structure | 5/6 | Blog strong; homepage/service leads weak |
 | C. Freshness | 1/3 | Blog has dates; no sitewide "last updated"; hedge words |
 | D. Authority | 2/4 | Original data on blog; no external citations; weak entity signals |

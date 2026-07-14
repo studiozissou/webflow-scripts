@@ -1,0 +1,1017 @@
+<!-- Show loader while list loads -->
+<script>
+  window.FinsweetAttributes = window.FinsweetAttributes || [];
+  window.FinsweetAttributes.push([
+    'list',
+    (listInstances) => {
+      // Show loader and hide results on input
+      $(document).on('input change', '[fs-list-field]', () => {
+        $('.loading').show();
+        $('#results-list-wrapper').hide();
+        //$('#mobile-results-button').hide();
+        //$('#mobile-loading-button').show();
+        $('.facet-wrapper').addClass('is-hidden');
+        $('.filters1_item').addClass('is-loading');
+      });
+
+      listInstances.forEach((list) => {
+        // Backup: show loader if filter triggered without input
+        list.addHook('filter', () => {
+          $('.loading').show();
+          $('#results-list-wrapper').hide();
+          //$('#mobile-results-button').hide();
+          //$('#mobile-loading-button').show();
+          $('.facet-wrapper').addClass('is-hidden');
+          $('.filters1_item').addClass('is-loading');
+        });
+
+        // Hide loader and show results after rendering
+        list.addHook('afterRender', () => {
+          $('.loading').hide();
+          $('#results-list-wrapper').show();
+          //$('#mobile-results-button').show();
+          //$('#mobile-loading-button').hide();
+          $('.facet-wrapper').removeClass('is-hidden');
+          $('.filters1_item').removeClass('is-loading');
+        });
+      });
+    },
+  ]);
+</script>
+
+<!-- Make/Model selection -->
+<script>
+(function () {
+  // Module: make-model-redirect v2
+  // Project: Carsa
+  // Deps: jQuery (loaded sitewide), Finsweet Attributes CMS List
+  // Pages: /used-cars, /used-cars/make/{slug}, /used-cars/models/{slug}
+
+  var DEBUG = false;
+
+  // --- Page detection ---
+
+  var _pageCtx = null;
+  function getPageContext() {
+    if (_pageCtx) return _pageCtx;
+    var path = location.pathname.replace(/\/$/, '') || '/';
+    if (path === '/used-cars') { _pageCtx = { type: 'vsrp' }; return _pageCtx; }
+    var makeMatch = path.match(/^\/used-cars\/make\/(.+)$/);
+    if (makeMatch) { _pageCtx = { type: 'make', slug: makeMatch[1] }; return _pageCtx; }
+    var modelMatch = path.match(/^\/used-cars\/models\/(.+)$/);
+    if (modelMatch) { _pageCtx = { type: 'model', slug: modelMatch[1] }; return _pageCtx; }
+    _pageCtx = { type: 'other' };
+    return _pageCtx;
+  }
+
+  // --- Helpers ---
+
+  function isMobile() {
+    return window.matchMedia('(max-width: 991px)').matches;
+  }
+
+  function slugify(str) {
+    return str.toLowerCase().trim()
+      .replace(/['']/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function createOption(value, text) {
+    var opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = text;
+    return opt;
+  }
+
+  function getActiveFilters() {
+    var params = {};
+    new URLSearchParams(location.search).forEach(function (val, key) {
+      if (key === 'cars_make_equal' || key === 'cars_model_equal') return;
+      params[key] = val;
+    });
+    return params;
+  }
+
+  function buildModelRedirectURL(modelSlug, makeName, modelName, filters) {
+    var url = new URL('/used-cars/models/' + modelSlug, location.origin);
+    url.searchParams.set('cars_make_equal', makeName);
+    url.searchParams.set('cars_model_equal', modelName);
+    for (var k in filters) url.searchParams.set(k, filters[k]);
+    return url.toString();
+  }
+
+  function buildMakeRedirectURL(makeSlug, makeName, filters) {
+    var url = new URL('/used-cars/make/' + makeSlug, location.origin);
+    url.searchParams.set('cars_make_equal', makeName);
+    for (var k in filters) url.searchParams.set(k, filters[k]);
+    return url.toString();
+  }
+
+  // --- Shared state (updated on each Finsweet render) ---
+
+  var _modelSlugMap = {};
+  var _makeSlugMap = {};
+
+  // --- Prefetch management ---
+
+  var pendingRedirectURL = null;
+
+  function prefetchURL(url) {
+    var existing = document.querySelector('link[data-carsa-prefetch]');
+    if (existing) existing.remove();
+    if (!url) return;
+    var link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = url;
+    link.setAttribute('data-carsa-prefetch', '');
+    document.head.appendChild(link);
+    DEBUG && console.log('[carsa] prefetch:', url);
+  }
+
+  // --- Mobile submit handler (bound once) ---
+
+  var _submitBound = false;
+  function bindMobileSubmit() {
+    if (_submitBound) return;
+    _submitBound = true;
+    // Navigate using prefetched URL (fast path)
+    $(document).on('click', '#mobile-search-submit', function () {
+      // Always recompute fresh — URL has latest filters at click time
+      var url = computeRedirectURL();
+      // Fall back to prefetched URL if fresh computation fails
+      if (!url) url = pendingRedirectURL;
+      if (url) {
+        location.href = url;
+      }
+    });
+    // Keep prefetch fresh when any filter changes (not just make/model)
+    // Debounce to let Finsweet push filter state to URL first
+    var _filterTimer = null;
+    $(document).on('change', '[fs-list-field]', function () {
+      if (!isMobile()) return;
+      var name = $(this).attr('name') || $(this).attr('fs-list-field');
+      if (name === 'make' || name === 'model') return;
+      clearTimeout(_filterTimer);
+      _filterTimer = setTimeout(function () {
+        var url = computeRedirectURL();
+        if (url) {
+          pendingRedirectURL = url;
+          prefetchURL(url);
+        }
+      }, 300);
+    });
+  }
+
+  // --- Compute redirect URL from current dropdown state ---
+
+  function computeRedirectURL() {
+    var makeName = $('[name="make"]').val();
+    var modelName = $('[name="model"]').val();
+    var filters = getActiveFilters();
+    var ctx = getPageContext();
+
+    if (modelName) {
+      var modelSlug = _modelSlugMap[modelName] || slugify(modelName);
+      // Same-page guard: don't redirect to current model page
+      if (ctx.type === 'model' && modelSlug === ctx.slug) return null;
+      return buildModelRedirectURL(modelSlug, makeName, modelName, filters);
+    }
+    if (makeName) {
+      var makeSlug = _makeSlugMap[makeName] || slugify(makeName);
+      // Same-page guard: don't redirect to current make page
+      if (ctx.type === 'make' && makeSlug === ctx.slug) return null;
+      return buildMakeRedirectURL(makeSlug, makeName, filters);
+    }
+    // On make/model pages with "Any" selected → redirect to /used-cars with filters
+    if (ctx.type === 'make' || ctx.type === 'model') {
+      var vsrpUrl = new URL('/used-cars', location.origin);
+      for (var k in filters) vsrpUrl.searchParams.set(k, filters[k]);
+      return vsrpUrl.toString();
+    }
+    return null;
+  }
+
+  // --- Finsweet init ---
+
+  window.FinsweetAttributes = window.FinsweetAttributes || [];
+  window.FinsweetAttributes.push([
+    'list',
+    (listInstances) => {
+      var modelList = listInstances.find(function (inst) { return inst.instance === 'models'; });
+      if (!modelList) return;
+      initMakeModelFilters();
+      modelList.addHook('render', function () {
+        initMakeModelFilters();
+      });
+    }
+  ]);
+
+  function initMakeModelFilters() {
+    _modelSlugMap = {};
+    _makeSlugMap = {};
+    var items = [];
+
+    $('.model-data').each(function () {
+      var $el = $(this);
+      var modelName = $el.attr('model-title');
+      var makeName = $el.attr('make-title');
+      var modelSlug = $el.attr('model-slug');
+      var makeSlug = $el.attr('make-slug');
+
+      if (modelName && makeName) items.push({ model: modelName, make: makeName });
+      if (modelName && modelSlug) _modelSlugMap[modelName] = modelSlug;
+      if (makeName && makeSlug && !_makeSlugMap[makeName]) _makeSlugMap[makeName] = makeSlug;
+    });
+
+    var $makeDropdown = $('[name="make"]');
+    var $modelDropdown = $('[name="model"]');
+    if (!$makeDropdown.length || !$modelDropdown.length) return;
+
+    // Reset dropdowns to "Any"
+    $makeDropdown.off('change.carsa').html('');
+    $makeDropdown.append(createOption('', 'Any'));
+    $makeDropdown.val('');
+
+    $modelDropdown.off('change.carsa').html('');
+    $modelDropdown.append(createOption('', 'Any'));
+    $modelDropdown.prop('disabled', true).addClass('is-disabled');
+
+    var uniqueMakes = [...new Set(items.map(function (i) { return i.make; }))].sort();
+    uniqueMakes.forEach(function (make) {
+      $makeDropdown.append(createOption(make, make));
+    });
+
+    function populateModels(makeName) {
+      var filtered = items.filter(function (i) { return i.make === makeName; });
+      $modelDropdown.html('');
+      $modelDropdown.append(createOption('', 'Any'));
+      if (!filtered.length) {
+        $modelDropdown.prop('disabled', true).addClass('is-disabled');
+        return;
+      }
+      $modelDropdown.prop('disabled', false).removeClass('is-disabled');
+      filtered.forEach(function (i) {
+        $modelDropdown.append(createOption(i.model, i.model));
+      });
+    }
+
+    // --- Prefill from page context (same-page guards prevent redirect loops) ---
+    var ctx = getPageContext();
+    if (ctx.type === 'make') {
+      // Find make name from slug
+      var prefillMake = Object.keys(_makeSlugMap).find(function (name) {
+        return _makeSlugMap[name] === ctx.slug;
+      }) || uniqueMakes.find(function (name) { return slugify(name) === ctx.slug; });
+      if (prefillMake) {
+        $makeDropdown.val(prefillMake);
+        populateModels(prefillMake);
+      }
+    } else if (ctx.type === 'model') {
+      // Find model name from slug
+      var prefillModel = Object.keys(_modelSlugMap).find(function (name) {
+        return _modelSlugMap[name] === ctx.slug;
+      }) || items.map(function (i) { return i.model; }).find(function (name) { return slugify(name) === ctx.slug; });
+      // Find its make
+      var prefillMake2 = null;
+      if (prefillModel) {
+        var modelItem = items.find(function (i) { return i.model === prefillModel; });
+        if (modelItem) prefillMake2 = modelItem.make;
+      }
+      // Fall back to URL param
+      if (!prefillMake2) prefillMake2 = new URLSearchParams(location.search).get('cars_make_equal');
+      if (prefillMake2) {
+        $makeDropdown.val(prefillMake2);
+        populateModels(prefillMake2);
+      }
+      if (prefillModel) {
+        $modelDropdown.val(prefillModel);
+      }
+    }
+
+    // Bind mobile submit once
+    bindMobileSubmit();
+
+    // --- Facet count visibility ---
+    var $facetWrappers = $('.facet-wrapper');
+    function updateFacetVisibility() {
+      var ctx = getPageContext();
+      var hide = false;
+      if (ctx.type === 'make') {
+        var makeSlug = _makeSlugMap[$makeDropdown.val()] || slugify($makeDropdown.val() || '');
+        hide = $makeDropdown.val() && makeSlug !== ctx.slug;
+      } else if (ctx.type === 'model') {
+        var modelSlug = _modelSlugMap[$modelDropdown.val()] || slugify($modelDropdown.val() || '');
+        hide = $modelDropdown.val() && modelSlug !== ctx.slug;
+      }
+      $facetWrappers.css('visibility', hide ? 'hidden' : '');
+    }
+
+    // --- Make change handler ---
+    $makeDropdown.on('change.carsa', function () {
+      var selectedMake = this.value;
+      var ctx = getPageContext();
+      var mobile = isMobile();
+
+      // Always populate models
+      populateModels(selectedMake);
+      $modelDropdown.val('');
+      $modelDropdown[0].dispatchEvent(new Event('input', { bubbles: true }));
+      $modelDropdown[0].dispatchEvent(new Event('change', { bubbles: true }));
+      updateFacetVisibility();
+
+      if (mobile) {
+        // On model page, selecting a different make → strip cars_model_equal from URL
+        if (ctx.type === 'model' && selectedMake) {
+          var currentPageMake = new URLSearchParams(location.search).get('cars_make_equal');
+          if (!currentPageMake) {
+            var pageModelItems = items.filter(function (i) {
+              return (_modelSlugMap[i.model] || slugify(i.model)) === ctx.slug;
+            });
+            if (pageModelItems.length) currentPageMake = pageModelItems[0].make;
+          }
+          if (selectedMake !== currentPageMake) {
+            var cleanParams = new URLSearchParams(location.search);
+            cleanParams.delete('cars_model_equal');
+            var cleanUrl = location.pathname + (cleanParams.toString() ? '?' + cleanParams.toString() : '');
+            history.replaceState(null, '', cleanUrl);
+          }
+        }
+        // Mobile (all pages): compute + prefetch, defer redirect
+        pendingRedirectURL = computeRedirectURL();
+        prefetchURL(pendingRedirectURL);
+        return;
+      }
+
+      // Desktop VSRP: no redirect (Finsweet handles filtering)
+      if (ctx.type === 'vsrp') return;
+
+      // Desktop make/model pages: immediate redirect
+      if (ctx.type === 'make' || ctx.type === 'model') {
+        if (!selectedMake) {
+          var anyFilters = getActiveFilters();
+          var anyUrl = new URL('/used-cars', location.origin);
+          for (var k in anyFilters) anyUrl.searchParams.set(k, anyFilters[k]);
+          location.href = anyUrl.toString();
+          return;
+        }
+        var slug = _makeSlugMap[selectedMake] || slugify(selectedMake);
+        // Same-page guard: don't redirect if selecting current make
+        if (ctx.type === 'make' && slug === ctx.slug) return;
+        if (ctx.type === 'model') {
+          // Check URL param first, fall back to CMS data for the page's model
+          var currentPageMake = new URLSearchParams(location.search).get('cars_make_equal');
+          if (!currentPageMake) {
+            // Look up make from model slug in CMS items
+            var pageModelItems = items.filter(function (i) {
+              return (_modelSlugMap[i.model] || slugify(i.model)) === ctx.slug;
+            });
+            if (pageModelItems.length) currentPageMake = pageModelItems[0].make;
+          }
+          if (selectedMake === currentPageMake) return;
+        }
+        location.href = buildMakeRedirectURL(slug, selectedMake, getActiveFilters());
+      }
+    });
+
+    // --- Model change handler ---
+    $modelDropdown.on('change.carsa', function () {
+      var selectedModel = this.value;
+      var ctx = getPageContext();
+      var mobile = isMobile();
+      updateFacetVisibility();
+
+      if (mobile) {
+        // Mobile (all pages): compute + prefetch, defer redirect
+        pendingRedirectURL = computeRedirectURL();
+        prefetchURL(pendingRedirectURL);
+        return;
+      }
+
+      // Desktop VSRP: no redirect (Finsweet handles filtering)
+      if (ctx.type === 'vsrp') return;
+
+      // Desktop make page: model from current make → filter in place (no redirect)
+      if (ctx.type === 'make') return;
+
+      // Desktop model pages: immediate redirect on model selection
+      if (ctx.type === 'model' && selectedModel) {
+        var currentMakeName = $makeDropdown.val();
+        var slug = _modelSlugMap[selectedModel] || slugify(selectedModel);
+        // Same-page guard: don't redirect if selecting current model
+        if (slug === ctx.slug) return;
+        location.href = buildModelRedirectURL(slug, currentMakeName, selectedModel, getActiveFilters());
+      }
+    });
+  }
+})();
+</script>
+
+<!-- Insert promo cards -->
+<script>
+  window.FinsweetAttributes = window.FinsweetAttributes || [];
+  window.FinsweetAttributes.push([
+    'list',
+    (listInstances) => {
+      listInstances.forEach((list) => {
+        list.addHook('afterRender', () => {
+          const $list = $('#results-list');
+          $list.find('[data-element="promo-card"]').remove(); // clear old
+
+          $('#promo-storage [data-element="promo-card"]').each(function () {
+            const base = parseInt($(this).attr('data-position'), 10) || 1;
+            const repeat = parseInt($(this).attr('data-repeat'), 10) || 0;
+            const $children = $list.children();
+            const max = $children.length;
+
+            const insertAt = (pos) => {
+              const $clone = $(this).clone(true);
+              const kids = $list.children();
+              if (pos >= kids.length) {
+                $list.append($clone);
+              } else {
+                $clone.insertBefore(kids.eq(pos - 1));
+              }
+            };
+
+            insertAt(base);
+            if (repeat > 0) {
+              let pos = base + repeat;
+              while (pos <= max + 1) {
+                insertAt(pos);
+                pos += repeat;
+              }
+            }
+          });
+
+          // ✅ find first wrapper with a following sibling, then hide all after it
+          const $wrappers = $('#results-list > .results_offer-wrapper');
+          $wrappers.each(function () {
+            if ($(this).next('.results_offer-wrapper').length) {
+              $(this).nextAll('.results_offer-wrapper').hide(); // hide all after
+              return false; // stop after first match
+            }
+          });
+        });
+      });
+    },
+  ]);
+</script>
+
+<!-- Update car card link when finance check is hovered/clicked -->
+<script>
+  (() => {
+    const BASE = 'https://quote.carsa.co.uk/eligibility/questions';
+    const SELECTOR = '[data-link="check-finance"]';
+    const ANALYTICS_VALUE = 'check-finance-car-card-click';
+    const HOST = location.hostname.replace(/^www\./, '');
+
+    function getAttributionParams() {
+      const pick = (s) => {
+        try {
+          return JSON.parse(s.getItem('attribution_session') || 'null') || JSON.parse(s.getItem('attribution') || 'null');
+        } catch (_) {
+          return null;
+        }
+      };
+      const ss = pick(sessionStorage) || {};
+      const ls = pick(localStorage) || {};
+      const utms = ss.utms && Object.keys(ss.utms).length ? ss.utms : ls.utms || {};
+      let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+      if (!refDomain && document.referrer) {
+        try {
+          const d = new URL(document.referrer).hostname.replace(/^www\./, '');
+          if (!(d === HOST || d.endsWith('.' + HOST))) refDomain = d;
+        } catch (_) {
+          /* invalid referrer URL */
+        }
+      }
+      const params = { ...utms };
+      if (refDomain) params.referrer = refDomain;
+      return params;
+    }
+
+    function addParams(url, obj) {
+      try {
+        const u = new URL(url, location.origin);
+        for (const k in obj) {
+          if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]);
+        }
+        return u.toString();
+      } catch (_) {
+        const hasQ = url.indexOf('?') > -1;
+        const parts = [];
+        for (const k in obj) {
+          if (!new RegExp('([?&])' + k + '=').test(url)) parts.push(k + '=' + encodeURIComponent(obj[k]));
+        }
+        return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
+      }
+    }
+
+    function buildURL(vrm) {
+      let url = BASE;
+      if (vrm) url += '?vrm=' + encodeURIComponent(vrm);
+      return addParams(url, getAttributionParams());
+    }
+
+    // Hover: swap ancestor <a> href so browser status bar shows finance URL
+    document.body.addEventListener('mouseover', (e) => {
+      const el = e.target.closest(SELECTOR);
+      if (!el) return;
+      const anchor = el.closest('a');
+      if (!anchor) return;
+      if (!anchor.dataset.originalHref) anchor.dataset.originalHref = anchor.href;
+      if (!('originalAnalytics' in anchor.dataset)) anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+      anchor.href = buildURL(el.getAttribute('vrm'));
+      anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+    });
+
+    document.body.addEventListener('mouseout', (e) => {
+      const el = e.target.closest(SELECTOR);
+      if (!el) return;
+      if (el.contains(e.relatedTarget)) return;
+      const anchor = el.closest('a');
+      if (!anchor || !anchor.dataset.originalHref) return;
+      anchor.href = anchor.dataset.originalHref;
+      delete anchor.dataset.originalHref;
+      if ('originalAnalytics' in anchor.dataset) {
+        const orig = anchor.dataset.originalAnalytics;
+        if (orig) anchor.setAttribute('data-analytics-event', orig);
+        else anchor.removeAttribute('data-analytics-event');
+        delete anchor.dataset.originalAnalytics;
+      }
+    });
+
+    // Click fallback: if href wasn't swapped yet (keyboard/touch), swap it now
+    document.body.addEventListener('click', (e) => {
+      const el = e.target.closest(SELECTOR);
+      if (!el) return;
+      const anchor = el.closest('a');
+      if (!anchor) return;
+      if (!anchor.dataset.originalHref) {
+        anchor.dataset.originalHref = anchor.href;
+        anchor.href = buildURL(el.getAttribute('vrm'));
+      }
+      if (!('originalAnalytics' in anchor.dataset)) {
+        anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+        anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+      }
+    });
+  })();
+</script>
+
+<!-- Hide mobile filters button if list still loading -->
+<script>
+  function windowLoaded() {
+    const span = document.getElementById('desktop-results');
+
+    function getCount(el) {
+      // Try to parse its numeric content (e.g. "1,234" → 1234)
+      const raw = el.textContent.trim().replace(/,/g, '');
+      const count = parseInt(raw, 10);
+      return count;
+    }
+
+    let startValue = getCount(span);
+    let i = 0;
+
+    // Poll every 300 ms
+    const pollId = setInterval(() => {
+      const c = getCount(span);
+      if (c == startValue) {
+        i++;
+
+        if (i >= 10) {
+          // If we haven't changed in 3 seconds, stop polling
+          clearInterval(pollId);
+          $('#mobile-filters-loading-link').hide();
+          $('#mobile-filters-link').css('display', 'flex');
+        }
+      } else if (c != startValue) {
+        startValue = c;
+        i = 0;
+      }
+    }, 400);
+  }
+
+  window.addEventListener('load', windowLoaded);
+</script>
+
+<!-- Open/close filters list and accordions on mobile without using Webflow interactions -->
+<script>
+  $(document).ready(function () {
+    // --- Mobile filters toggle (≤991px) ---
+    function bindFilterToggle() {
+      if ($(window).width() <= 991) {
+        // open filters
+        $('#mobile-filters-link')
+          .off('click')
+          .on('click', function (e) {
+            e.preventDefault();
+            $('.filters1_filters-wrapper').addClass('is-visible');
+          });
+        // close filters
+        $('#mobile-search-submit')
+          .off('click')
+          .on('click', function () {
+            $('.filters1_filters-wrapper').removeClass('is-visible');
+          });
+        $('#filters-mobile-close').on('click', function () {
+          $('.filters1_filters-wrapper').removeClass('is-visible');
+        });
+      } else {
+        // unbind on desktop
+        $('#mobile-filters-link, #mobile-search-submit').off('click');
+      }
+    }
+    bindFilterToggle();
+    $(window).on('resize', bindFilterToggle);
+
+    // --- Accordion toggle (all screen sizes) ---
+    $(document).on('click', '.filters1_filter-group-heading', function () {
+      $(this).siblings('.filters1_filter-options').toggleClass('is-open');
+      $(this).find('.filters1_accordion-icon').toggleClass('is-open');
+    });
+  });
+</script>
+
+<!-- Redirect when non-related store is filtered for -->
+<script>
+(function () {
+  // Module: near-location-redirect v1
+  // Project: Carsa
+  // Deps: Finsweet Attributes CMS List (already loaded)
+  // Pages: /used-cars/near/* only
+
+  const DEBUG = false;
+
+  // --- R1: Page guard ---
+
+  const path = location.pathname.replace(/\/$/, '') || '/';
+  if (!/^\/used-cars\/near\/.+$/.test(path)) {
+    DEBUG && console.log('[near-redirect] not a /near/ page, exiting');
+    return;
+  }
+
+  // --- Stale location param guard ---
+  // On /near/ pages, cars_location_equal in the URL is always stale
+  // (from back-nav after a redirect). Finsweet caches it internally
+  // before we can strip it, so we must strip + reload to get a clean slate.
+  const earlyParams = new URLSearchParams(location.search);
+  if (earlyParams.has('cars_location_equal')) {
+    earlyParams.delete('cars_location_equal');
+    const cleanURL = location.pathname + (earlyParams.toString() ? '?' + earlyParams.toString() : '');
+    location.replace(cleanURL);
+    return; // Stop execution — page is reloading
+  }
+
+  // --- bfcache handling ---
+  // On back/forward cache restore, Finsweet's internal state is stale.
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      DEBUG && console.log('[near-redirect] bfcache restore, reloading');
+      location.reload();
+    }
+  });
+
+  // --- Constants ---
+
+  const DEBOUNCE_MS = 200;
+  const BASE_URL = location.origin + '/used-cars';
+  const LOCATION_PARAM = 'cars_location_equal';
+  const DATA_ATTR_ZERO = 'data-near-zero';
+
+  // --- State ---
+
+  let initialised = false;
+  let submitBound = false;
+
+  function isMobile() {
+    return window.matchMedia('(max-width: 991px)').matches;
+  }
+
+  // --- Helpers ---
+
+  function findLocationFilterGroup() {
+    const inputs = document.querySelectorAll('input[fs-list-field="location"]');
+    if (!inputs.length) return null;
+    let el = inputs[0];
+    while (el && !el.classList.contains('filters1_filter-group')) {
+      el = el.parentElement;
+    }
+    return el || null;
+  }
+
+  function getLocationEntries(group) {
+    const inputs = group.querySelectorAll('input[fs-list-field="location"]');
+    const entries = [];
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
+      const label = input.closest('label.dropdown1_checkbox-field');
+      if (!label) continue;
+      const name = input.getAttribute('fs-list-value') || '';
+      if (!name) continue;
+      const facetCount = label.querySelector('[fs-list-element="facet-count"]');
+      const facetWrapper = label.querySelector('.facet-wrapper');
+      entries.push({ input, label, facetCount, facetWrapper, name });
+    }
+    return entries;
+  }
+
+  function isZeroCount(entry) {
+    if (!entry.facetCount) return false;
+    const text = (entry.facetCount.textContent || '').trim();
+    return text === '0';
+  }
+
+  function getCheckedLocationNames(entries) {
+    const names = [];
+    for (let i = 0; i < entries.length; i++) {
+      if (entries[i].label.classList.contains('is-list-active')) {
+        names.push(entries[i].name);
+      }
+    }
+    return names;
+  }
+
+  function buildRedirectURL(clickedName, entries) {
+    let url;
+    try {
+      url = new URL(BASE_URL);
+    } catch (err) {
+      DEBUG && console.log('[near-redirect] URL construction failed:', err);
+      return null;
+    }
+
+    // R5: Collect currently-checked locations + the clicked one
+    const locations = getCheckedLocationNames(entries);
+    if (clickedName && locations.indexOf(clickedName) === -1) {
+      locations.push(clickedName);
+    }
+
+    // Set location param as JSON array: ["Bradford","Gloucester"]
+    url.searchParams.set(LOCATION_PARAM, JSON.stringify(locations));
+
+    // R6: Copy all other URL params except cars_location_equal
+    const current = new URLSearchParams(location.search);
+    current.forEach(function (val, key) {
+      if (key === LOCATION_PARAM) return;
+      url.searchParams.set(key, val);
+    });
+
+    return url.toString();
+  }
+
+  // --- R3: Process location filters (hide/show zero-count facet-wrappers) ---
+
+  function processLocationFilters(entries) {
+    DEBUG && console.log('[near-redirect] processing', entries.length, 'locations');
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const zero = isZeroCount(entry);
+
+      if (zero) {
+        if (entry.facetWrapper) {
+          entry.facetWrapper.style.display = 'none';
+        }
+        entry.label.setAttribute(DATA_ATTR_ZERO, '');
+        DEBUG && console.log('[near-redirect] zero-count:', entry.name);
+      } else {
+        if (entry.facetWrapper) {
+          entry.facetWrapper.style.display = '';
+        }
+        entry.label.removeAttribute(DATA_ATTR_ZERO);
+      }
+    }
+  }
+
+  // --- R4: Click interception via event delegation ---
+
+  function handleClick(e, entries) {
+    const label = e.target.closest('label.dropdown1_checkbox-field');
+    if (!label) return;
+    if (!label.hasAttribute(DATA_ATTR_ZERO)) return;
+
+    let entry = null;
+    for (let i = 0; i < entries.length; i++) {
+      if (entries[i].label === label) {
+        entry = entries[i];
+        break;
+      }
+    }
+    if (!entry) return;
+
+    DEBUG && console.log('[near-redirect] intercepted click on zero-count:', entry.name);
+
+    if (isMobile()) {
+      // Mobile: let Finsweet handle the click normally. The redirect URL
+      // is built at submit time (not here) so it always reflects the
+      // latest checked state. We just flag that a zero-count was selected.
+      return;
+    }
+
+    // Desktop: block Finsweet and redirect immediately
+    e.stopImmediatePropagation();
+
+    // Visually check the checkbox so the click feels natural
+    label.classList.add('is-list-active');
+    if (entry.input) entry.input.checked = true;
+
+    const redirectURL = buildRedirectURL(entry.name, entries);
+    if (!redirectURL) return;
+
+    DEBUG && console.log('[near-redirect] redirecting to:', redirectURL);
+    location.href = redirectURL;
+  }
+
+  // --- Bootstrap ---
+
+  function bootstrap() {
+    if (initialised) return;
+    const group = findLocationFilterGroup();
+    if (!group) {
+      DEBUG && console.log('[near-redirect] no location filter group found');
+      return;
+    }
+
+    const entries = getLocationEntries(group);
+    if (!entries.length) {
+      DEBUG && console.log('[near-redirect] no location inputs found');
+      return;
+    }
+
+    initialised = true;
+
+    // Initial processing
+    processLocationFilters(entries);
+
+    // R4: Click handler via event delegation on the filter group
+    group.addEventListener('click', function (e) {
+      const currentEntries = getLocationEntries(group);
+      handleClick(e, currentEntries);
+    }, true); // useCapture to fire before Finsweet
+
+    // R2 + R7: MutationObserver for facet count changes
+    let debounceTimer = null;
+    const observer = new MutationObserver(function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () {
+        const currentEntries = getLocationEntries(group);
+        processLocationFilters(currentEntries);
+      }, DEBOUNCE_MS);
+    });
+
+    observer.observe(group, {
+      characterData: true,
+      childList: true,
+      subtree: true
+    });
+
+    // Mobile: on submit, check if any zero-count locations are active.
+    // Build redirect URL at submit time so it always has the latest state.
+    if (!submitBound) {
+      submitBound = true;
+      const submitBtn = document.getElementById('mobile-search-submit');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', function () {
+          if (!isMobile()) return;
+          var currentEntries = getLocationEntries(group);
+          var hasZeroChecked = currentEntries.some(function (e) {
+            return e.label.classList.contains('is-list-active') && isZeroCount(e);
+          });
+          if (!hasZeroChecked) return;
+          var redirectURL = buildRedirectURL(null, currentEntries);
+          if (!redirectURL) return;
+          DEBUG && console.log('[near-redirect] mobile submit → redirecting:', redirectURL);
+          location.href = redirectURL;
+        });
+      }
+    }
+
+    DEBUG && console.log('[near-redirect] initialized, watching', entries.length, 'locations');
+  }
+
+  // --- Finsweet init hook ---
+
+  window.FinsweetAttributes = window.FinsweetAttributes || [];
+  window.FinsweetAttributes.push([
+    'list',
+    function () {
+      DEBUG && console.log('[near-redirect] Finsweet list ready');
+      bootstrap();
+    }
+  ]);
+})();
+</script>
+
+
+
+<!-- Trim VRM search of disallowed characters -->
+<script>
+  // Allow only A–Z, a–z, 0–9 while typing or pasting
+  $('#vrm-search').on('input', function () {
+    this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  });
+</script>
+
+<!-- Update Search buttons to add related location filters -->
+<script>
+$(document).ready(function(){
+  // collect all text from data-button="locations"
+  let locations = $('[data-button="locations"]').map(function(){
+    return $(this).text().trim();
+  }).get();
+
+  // filter out unwanted names
+  // let filtered = locations.filter(loc => !/(BCA|Prep|HQ|Storage)/i.test(loc));
+
+  // build encoded query param
+  let encoded = encodeURIComponent(JSON.stringify(filtered));
+
+  // update the href of search-locations button(s)
+  $('[data-button="search-locations"]').each(function(){
+    let baseUrl = "/used-cars?cars_sort_dated-added=desc&cars_location_equal=";
+    $(this).attr("href", baseUrl + encoded);
+  });
+});
+</script>
+
+<!-- Update and open the link for Instant Valuation form -->
+<script>
+/* Build valuation links using stored UTMs + external referrer domain (fallbacks included) */
+$(function () {
+  const HOST = location.hostname.replace(/^www\./,'');
+
+  function getAttributionParams(){
+    const pick = (s)=>{ try{ return JSON.parse(s.getItem('attribution_session')||'null') || JSON.parse(s.getItem('attribution')||'null'); }catch(_){ return null; } };
+    const ss = pick(sessionStorage) || {};
+    const ls = pick(localStorage)  || {};
+    const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms||{}));
+    let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+    if(!refDomain && document.referrer){
+      try{
+        const d = new URL(document.referrer).hostname.replace(/^www\./,'');
+        if(!(d===HOST || d.endsWith('.'+HOST))) refDomain = d;
+      }catch(_){}
+    }
+    const params = {...utms};
+    if(refDomain) params.referrer = refDomain;
+    return params;
+  }
+
+  function addParams(url, obj){
+    const u = new URL(url, location.origin);
+    for(const k in obj){ if(!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
+    return u.toString();
+  }
+
+  function generateOrderURL(vrm, mileage){
+    const base = 'https://sellcar.carsa.co.uk/new-order?vrm=' + encodeURIComponent(vrm)
+               + '&mileage=' + encodeURIComponent(mileage || '');
+    return addParams(base, getAttributionParams());
+  }
+
+  function getFormValues($form){
+    const vrm = ($form.find('[name="vrm"]').first().val() || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '');
+    const mileage = ($form.find('[name="mileage"]').first().val() || '').trim();
+    return { vrm, mileage };
+  }
+
+  function setHref($trigger){
+    const $form = $trigger.closest('form');
+    if(!$form.length) return null;
+    const { vrm, mileage } = getFormValues($form);
+    if(!vrm) return null;
+    const url = generateOrderURL(vrm, mileage);
+    if($trigger.is('a')) $trigger.attr({ href: url, target: '_blank' });
+    return url;
+  }
+
+  $(document).on('click', '[data-link="valuation"]', function(e){
+    const url = setHref($(this));
+    if(!url) return;
+    if(!$(this).is('a')){
+      e.preventDefault();
+      window.open(url, '_blank', 'noopener');
+    }
+  });
+
+  $(document).on('keydown', 'form input', function(e){
+    if(e.key !== 'Enter') return;
+    const $form = $(this).closest('form');
+    const $trigger = $form.find('[data-link="valuation"]').first();
+    if(!$trigger.length) return;
+    e.preventDefault();
+    const url = setHref($trigger);
+    if(url && !$trigger.is('a')) window.open(url, '_blank', 'noopener');
+    else if(url) $trigger[0].click();
+  });
+
+  $(document).on('input', 'form [name="vrm"], form [name="mileage"]', function(){
+    const $form = $(this).closest('form');
+    $form.find('[data-link="valuation"]').each(function(){ setHref($(this)); });
+  });
+});
+</script>

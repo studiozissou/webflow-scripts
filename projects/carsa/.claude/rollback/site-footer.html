@@ -1,0 +1,410 @@
+<script>
+  /**
+   * Menu Scroll Lock
+   * Prevents background scroll when Webflow nav menu is open,
+   * while keeping the menu panel itself scrollable.
+   */
+  (() => {
+    const nav = document.querySelector('.navbar7_component');
+    if (!nav) return;
+
+    const btn = nav.querySelector('.w-nav-button');
+    const menu = nav.querySelector('.navbar8_menu');
+    if (!btn || !menu) return;
+
+    let locked = false;
+    let scrollY = 0;
+
+    function lock() {
+      if (locked) return;
+      locked = true;
+      scrollY = window.scrollY;
+      // Only body — setting overflow on html breaks sticky positioning
+      document.body.style.overflow = 'hidden';
+      menu.style.overflowY = 'auto';
+      menu.style.webkitOverflowScrolling = 'touch';
+    }
+
+    function unlock() {
+      if (!locked) return;
+      locked = false;
+      document.body.style.overflow = '';
+      menu.style.overflowY = '';
+      menu.style.webkitOverflowScrolling = '';
+      window.scrollTo(0, scrollY);
+    }
+
+    const observer = new MutationObserver(() => {
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      if (isOpen) lock();
+      else unlock();
+    });
+
+    observer.observe(btn, { attributes: true, attributeFilter: ['aria-expanded'] });
+  })();
+</script>
+
+<!-- Set links for models and promos in menu -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- MODELS ---
+    const modelBase = '/used-cars?cars_sort_dated-added=desc&cars_model_equal=';
+    document.querySelectorAll('a[data-link="model"]').forEach((link) => {
+      const txt = link.textContent.trim();
+      if (txt) link.href = modelBase + txt.replace(/\s+/g, '+');
+    });
+
+    // --- PROMOS ---
+    const promoBase = '/used-cars/deals?cars_sort_reduced-amount-true=desc&cars_promotion_equal=';
+    document.querySelectorAll('a[data-link="promo"]').forEach((link) => {
+      const txt = link.textContent.trim();
+      if (txt) link.href = promoBase + txt.replace(/\s+/g, '+');
+    });
+  });
+</script>
+
+<!-- On page load, prepend #find-store-link to #store-list -->
+<script>
+  $(function () {
+    $('#store-list').prepend($('#find-store-link'));
+  });
+</script>
+
+<!-- Write UTMs and Referrer to localStorage for 30 days, plus sessionStorage -->
+<script>
+  /* Global attribution saver (fixed)
+   - Parse all utm_* from URL + external referrer (full + domain)
+   - sessionStorage (last-touch): ALWAYS overwrite
+   - localStorage (first-touch, 30d):
+       * If no record or expired -> save current (UTMs and/or referrer)
+       * If record exists with NO UTMs, but this visit HAS UTMs -> overwrite (upgrade to UTMs)
+       * Otherwise -> preserve existing
+*/
+  $(function () {
+    const LS_KEY = 'attribution',
+      SS_KEY = 'attribution_session',
+      TTL_DAYS = 30;
+    const HOST = location.hostname.replace(/^www\./, '');
+
+    const now = () => Date.now(),
+      ms = (d) => d * 24 * 60 * 60 * 1000;
+
+    function getURLUtms() {
+      const o = {},
+        qs = new URLSearchParams(location.search);
+      qs.forEach((v, k) => {
+        if (/^utm_/i.test(k) && v) o[k] = v;
+      });
+      return o;
+    }
+    function isExternalRef(ref) {
+      try {
+        if (!ref) return false;
+        const h = new URL(ref).hostname.replace(/^www\./, '');
+        return !(h === HOST || h.endsWith('.' + HOST));
+      } catch (_) {
+        return false;
+      }
+    }
+    function refPieces(ref) {
+      if (!isExternalRef(ref)) return { referrer: '', referrerDomain: '' };
+      try {
+        const u = new URL(ref);
+        return { referrer: ref, referrerDomain: u.hostname.replace(/^www\./, '') };
+      } catch (_) {
+        return { referrer: '', referrerDomain: '' };
+      }
+    }
+    const utmsNow = getURLUtms();
+    const { referrer, referrerDomain } = refPieces(document.referrer);
+
+    // Always write LAST-TOUCH
+    try {
+      sessionStorage.setItem(
+        SS_KEY,
+        JSON.stringify({
+          utms: utmsNow,
+          referrer,
+          referrerDomain,
+          updatedAt: now(),
+        }),
+      );
+    } catch (_) {}
+
+    // FIRST-TOUCH write rules
+    let localObj = null;
+    try {
+      localObj = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    } catch (_) {
+      localObj = null;
+    }
+
+    const hasExp = !!(localObj && typeof localObj.expiresAt === 'number');
+    const expired = hasExp && now() > localObj.expiresAt;
+    const exists = !!localObj && !expired;
+    const hasLocalUTMs = !!(localObj && localObj.utms && Object.keys(localObj.utms).length);
+    const hasLocalRef = !!(localObj && localObj.referrerDomain);
+    const hasCurrentUTMs = Object.keys(utmsNow).length > 0;
+    const hasCurrentRef = !!referrerDomain;
+
+    let shouldWrite = false;
+
+    if (!exists || !hasExp || expired) {
+      // No record, or missing expiresAt, or expired -> write
+      shouldWrite = true;
+    } else if (!hasLocalUTMs && !hasLocalRef && (hasCurrentUTMs || hasCurrentRef)) {
+      // Blank/local stub -> populate if current has UTMs or external ref
+      shouldWrite = true;
+    } else if (!hasLocalUTMs && hasCurrentUTMs) {
+      // Upgrade from ref-only to first UTMs
+      shouldWrite = true;
+    }
+
+    if (shouldWrite) {
+      const firstTouch = {
+        utms: utmsNow, // {} if none
+        referrer, // full external URL or ''
+        referrerDomain, // external domain or ''
+        updatedAt: now(),
+        expiresAt: now() + ms(TTL_DAYS),
+      };
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(firstTouch));
+      } catch (_) {}
+    }
+  });
+</script>
+
+<!-- Add UTMs to Finance Eligibility links -->
+<script>
+  /* Append UTMs + external referrer domain from localStorage (no self-referrals) */
+  $(window).on('load', function () {
+    const HOST = location.hostname.replace(/^www\./, '');
+    const isInternal = (d) => !!d && (d === HOST || d.endsWith('.' + HOST));
+
+    // Read saved attribution
+    let store = {};
+    try {
+      store = JSON.parse(localStorage.getItem('attribution') || '{}');
+    } catch (e) {}
+    const utms = store.utms || {};
+
+    // Resolve referrer domain safely (prefer stored domain; ensure external)
+    let refDomain = '';
+    if (store.referrerDomain && !isInternal(store.referrerDomain)) {
+      refDomain = store.referrerDomain;
+    } else if (store.referrer) {
+      try {
+        const d = new URL(store.referrer).hostname.replace(/^www\./, '');
+        if (!isInternal(d)) refDomain = d;
+      } catch (e) {}
+    } else if (document.referrer) {
+      // final fallback: only if external
+      try {
+        const d = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (!isInternal(d)) refDomain = d;
+      } catch (e) {}
+    }
+
+    // Fallback UTMs from current URL if none stored
+    if (!Object.keys(utms).length) {
+      const qs = new URLSearchParams(location.search);
+      qs.forEach((v, k) => {
+        if (/^utm_/i.test(k) && v) utms[k] = v;
+      });
+    }
+
+    // Build params to add
+    const toAdd = { ...utms };
+    if (refDomain) toAdd.referrer = refDomain; // only if external + non-empty
+
+    // Append params without duplicating keys
+    function addParams(url, obj) {
+      try {
+        const u = new URL(url, location.origin);
+        for (const k in obj) if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]);
+        return u.toString();
+      } catch (_) {
+        const hasQ = url.includes('?');
+        const parts = [];
+        for (const k in obj) if (!new RegExp('([?&])' + k + '=').test(url)) parts.push(k + '=' + encodeURIComponent(obj[k]));
+        return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
+      }
+    }
+
+    // Update target links
+    $('a[href*="quote.carsa.co.uk/eligibility/questions"]').each(function () {
+      this.href = addParams(this.href, toAdd);
+    });
+  });
+</script>
+
+<!-- Make all links opening in a new tab 'noreferrer noopener' – except those containing carsa.co.uk  -->
+<script fs-consent-categories="essential" fs-consent-scripttype="text/javascript" type="fs-consent">
+  document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll('a[target="_blank"]').forEach(e=>{if(!e.href.includes("carsa.co.uk"))e.setAttribute("rel","noreferrer noopener")})});
+</script>
+
+<!-- Update the copyright year in the footer to the current year -->
+<script fs-consent-categories="essential" fs-consent-scripttype="text/javascript" type="fs-consent">
+  const currentYear = new Date().getFullYear();document.getElementById("year").innerText = currentYear;
+</script>
+
+<!-- Slider Navigation Styling -->
+<style>
+  .w-slider-dot {
+    background-color: var(--text);
+    width: 0.5rem;
+    height: 0.5rem;
+    opacity: 0.2;
+  }
+
+  .w-slider-dot.w-active {
+    background-color: var(--text);
+    opacity: 1;
+  }
+</style>
+
+<!-- Chat Bot -->
+<link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+<style>
+  :root {
+    --chat--color--primary: #511e62;
+    --chat--color--primary-shade-50: #3d1749;
+    --chat--color--primary-shade-100: #2a1033;
+    --chat--color--secondary: #805bb2;
+    --chat--color--dark: #511e62;
+    --chat--message--bot--background: #f6e6ff;
+    --chat--message--bot--color: #511e62;
+    --chat--message--border-radius: 24px;
+    --chat--header--background: #511e62;
+    --chat--header--color: #ffffff;
+    --chat--toggle--background: #511e62;
+    --chat--toggle--hover--background: #3d1749;
+    --chat--toggle--active--background: #2a1033;
+    --chat--toggle--color: #ffffff;
+    --real-vh: 1vh;
+  }
+
+  .chat-window-wrapper .chat-header h1 {
+    font-size: 18px !important;
+    line-height: 24px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide floating toggle on tablet/mobile - use nav button instead */
+  @media (max-width: 991px) {
+    .chat-window-wrapper .chat-window-toggle {
+      display: none !important;
+    }
+
+    .chat-window-wrapper .chat-window {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      width: 100dvw !important;
+      height: calc(var(--real-vh) * 100) !important;
+      max-height: calc(var(--real-vh) * 100) !important;
+      border-radius: 0 !important;
+    }
+
+    .chat-window-wrapper .chat-header {
+      position: relative !important;
+      padding: 12px 50px 12px 16px !important;
+      min-height: auto !important;
+    }
+
+    .chat-window-wrapper .chat-header > p {
+      display: none !important;
+    }
+  }
+</style>
+
+<script type="module">
+  import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+
+  // Set real viewport height for mobile browsers
+  function updateViewportHeight() {
+    document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);
+  }
+  updateViewportHeight();
+  window.addEventListener('resize', updateViewportHeight);
+
+  // Add close button inside header on tablet/mobile
+  function addCloseButton() {
+    if (window.innerWidth > 991) return;
+    const header = document.querySelector('.chat-window-wrapper .chat-header');
+    if (!header || header.querySelector('.chat-close-btn')) return;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'chat-close-btn';
+    closeBtn.setAttribute('aria-label', 'Close chat');
+    closeBtn.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    `;
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    closeBtn.addEventListener('click', () => {
+      document.querySelector('.chat-window-wrapper .chat-window-toggle')?.click();
+    });
+    header.appendChild(closeBtn);
+  }
+
+  // Watch for chat window opening to add close button
+  new MutationObserver(() => {
+    addCloseButton();
+  }).observe(document.body, { childList: true, subtree: true });
+
+  // Handle nav button click
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.chat-nav-trigger')) {
+      document.querySelector('.chat-window-wrapper .chat-window-toggle')?.click();
+    }
+  });
+
+  // Handle keyboard accessibility
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.closest('.chat-nav-trigger')) {
+      document.querySelector('.chat-window-wrapper .chat-window-toggle')?.click();
+    }
+  });
+
+  // Initialize chat
+  const isReturningUser = !!localStorage.getItem('n8n-chat/sessionId');
+
+  createChat({
+    webhookUrl: 'https://carsa.app.n8n.cloud/webhook/88d110ef-b4ab-4c22-9306-1e492c9f7687/chat',
+    mode: 'window',
+    showWelcomeScreen: false,
+    loadPreviousSession: false,
+    initialMessages: isReturningUser ? ['Welcome back! 👋'] : ['Hello! 👋', 'How can I help you today?'],
+    metadata: {
+      currentPageUrl: window.location.href,
+      source: 'Website',
+    },
+    i18n: {
+      en: {
+        title: 'Chat with Caroline AI',
+        subtitle: 'Get instant help with your car search',
+        inputPlaceholder: 'Type your message...',
+      },
+    },
+  });
+</script>

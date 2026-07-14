@@ -124,16 +124,17 @@
     });
   }
 
-  /* ── Leadership team modal (replaces Webflow IX2 a-146 / a-147) ──
-   * /leadership has 8 .card_team cards, each with a nested
-   * .modal2_component (content-wrapper + full-screen overlay). The IX2
-   * click interactions that drove these were removed in the Designer;
-   * this reproduces them 1:1 — 500ms slide (outQuad) + 500ms overlay
-   * fade (ease) — and adds a11y: role=dialog, focus trap, ESC,
-   * scroll-lock, focus-return. Reduced motion → 0ms. Closed-state
-   * defaults are enforced by page-head CSS so there is no flash before
-   * this CDN-deferred script runs; JS also resets them defensively on
-   * init. */
+  /* ── Leadership team modal (replaces Webflow IX2 a-146 / a-147) ── */
+  /* /leadership has 8 .card_team cards, each with a nested
+     .modal2_component (content-wrapper + full-screen overlay). The IX2
+     click interactions that drove these were removed in the Designer;
+     this reproduces them 1:1 — 500ms slide (outQuad) + 500ms overlay
+     fade (ease) — and adds a11y: keyboard-operable card trigger
+     (role=button, Enter/Space), role=dialog, focus trap, ESC,
+     scroll-lock, focus-return. Reduced motion → 0ms. Closed-state
+     defaults are enforced by page-head CSS so there is no flash before
+     this CDN-deferred script runs; JS also resets them defensively on
+     init. */
 
   function bindLeadershipModals() {
     const cards = document.querySelectorAll('.card_team');
@@ -145,36 +146,47 @@
     const FADE = 'ease'; /* Webflow "ease" */
     const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const DUR = REDUCED ? 0 : 500;
+    const slideTransition = `transform ${DUR}ms ${SLIDE}`;
+    const fadeTransition = `opacity ${DUR}ms ${FADE}`;
 
     let active = null; /* currently open .modal2_component */
     let trigger = null; /* .card_team that opened it (for focus return) */
     let closeTimer = null;
 
     const parts = (modal) => ({
-      wrap: modal.querySelector('.modal2_content-wrapper'),
+      wrapper: modal.querySelector('.modal2_content-wrapper'),
       overlay: modal.querySelector('.modal2_background-overlay'),
     });
 
-    const focusables = (wrap) =>
-      wrap.querySelectorAll(
+    const focusablesIn = (wrapper) =>
+      wrapper.querySelectorAll(
         'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])'
       );
 
-    function prep(modal) {
-      const { wrap, overlay } = parts(modal);
+    function prep(card, modal) {
+      const { wrapper, overlay } = parts(modal);
+      /* card is a plain div — make it a real keyboard-operable button so it
+         is tabbable and Enter/Space open the modal (focus-return also lands
+         on it). Its nested modal is display:none + aria-hidden when closed,
+         so the button has no exposed interactive descendants. */
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-haspopup', 'dialog');
       modal.setAttribute('aria-hidden', 'true');
       modal.style.display = 'none';
-      if (wrap) {
-        wrap.setAttribute('role', 'dialog');
-        wrap.setAttribute('aria-modal', 'true');
-        wrap.setAttribute('tabindex', '-1');
-        const h = wrap.querySelector('h1,h2,h3,.heading-style-h2');
-        if (h) {
-          if (!h.id) h.id = 'tsc-modal-title-' + Math.random().toString(36).slice(2, 8);
-          wrap.setAttribute('aria-labelledby', h.id);
+      if (wrapper) {
+        wrapper.setAttribute('role', 'dialog');
+        wrapper.setAttribute('aria-modal', 'true');
+        wrapper.setAttribute('tabindex', '-1');
+        const heading = wrapper.querySelector('h1,h2,h3,.heading-style-h2');
+        if (heading) {
+          if (!heading.id) {
+            heading.id = `tsc-modal-title-${Math.random().toString(36).slice(2, 8)}`;
+          }
+          wrapper.setAttribute('aria-labelledby', heading.id);
         }
-        wrap.style.transform = 'translateX(100%)';
-        wrap.style.transition = '';
+        wrapper.style.transform = 'translateX(100%)';
+        wrapper.style.transition = '';
       }
       if (overlay) {
         overlay.style.opacity = '0';
@@ -182,102 +194,117 @@
       }
     }
 
-    function snapClosed(modal) {
-      /* instant close (used when switching between cards) */
-      const { wrap, overlay } = parts(modal);
-      if (wrap) {
-        wrap.style.transition = '';
-        wrap.style.transform = 'translateX(100%)';
-      }
-      if (overlay) overlay.style.opacity = '0';
-      modal.style.display = 'none';
-      modal.setAttribute('aria-hidden', 'true');
-    }
-
     function open(card) {
       const modal = card.querySelector('.modal2_component');
       if (!modal || active === modal) return;
-      if (active) snapClosed(active); /* one modal open at a time */
+      if (active) close(active, true); /* one modal open at a time */
       clearTimeout(closeTimer);
       active = modal;
       trigger = card;
-      const { wrap, overlay } = parts(modal);
+      const { wrapper, overlay } = parts(modal);
       modal.style.display = 'flex';
       modal.setAttribute('aria-hidden', 'false');
       void modal.offsetHeight; /* reflow → transition runs from initial state */
-      if (wrap) {
-        wrap.style.transition = 'transform ' + DUR + 'ms ' + SLIDE;
-        wrap.style.transform = 'translateX(0%)';
+      if (wrapper) {
+        wrapper.style.transition = slideTransition;
+        wrapper.style.transform = 'translateX(0%)';
       }
       if (overlay) {
-        overlay.style.transition = 'opacity ' + DUR + 'ms ' + FADE;
+        overlay.style.transition = fadeTransition;
         overlay.style.opacity = '1';
       }
       document.documentElement.style.overflow = 'hidden'; /* scroll lock */
-      if (wrap) wrap.focus({ preventScroll: true });
+      if (wrapper) wrapper.focus({ preventScroll: true });
     }
 
-    function close(modal) {
+    /* close(modal): graceful 500ms close with focus-return + scroll restore.
+       close(modal, true): instant snap-closed, used when switching cards
+       (no focus move, no scroll restore — open() re-locks immediately). */
+    function close(modal, instant) {
       if (!modal) return;
-      const { wrap, overlay } = parts(modal);
-      if (wrap) {
-        wrap.style.transition = 'transform ' + DUR + 'ms ' + SLIDE;
-        wrap.style.transform = 'translateX(100%)';
+      const { wrapper, overlay } = parts(modal);
+      if (wrapper) {
+        wrapper.style.transition = instant ? '' : slideTransition;
+        wrapper.style.transform = 'translateX(100%)';
       }
       if (overlay) {
-        overlay.style.transition = 'opacity ' + DUR + 'ms ' + FADE;
+        overlay.style.transition = instant ? '' : fadeTransition;
         overlay.style.opacity = '0';
       }
-      modal.setAttribute('aria-hidden', 'true');
-      document.documentElement.style.overflow = ''; /* restore scroll */
+
+      if (instant) {
+        /* move focus out before hiding — same ARIA rule as the graceful
+           path; the switching open() re-focuses the incoming wrapper next */
+        if (modal.contains(document.activeElement)) document.activeElement.blur();
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        return;
+      }
+
+      /* Move focus out BEFORE hiding: setting aria-hidden on a subtree that
+         still contains the focused element is an ARIA anti-pattern Chromium
+         blocks. trigger (the card) is a descendant-free ancestor of modal. */
       const returnTo = trigger;
       active = null;
       trigger = null;
-      closeTimer = setTimeout(function () {
+      if (returnTo) returnTo.focus({ preventScroll: true });
+      modal.setAttribute('aria-hidden', 'true');
+      document.documentElement.style.overflow = ''; /* restore scroll */
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(() => {
         modal.style.display = 'none';
       }, DUR);
-      if (returnTo) returnTo.focus({ preventScroll: true });
     }
 
-    cards.forEach(function (c) {
-      const m = c.querySelector('.modal2_component');
-      if (m) prep(m);
+    cards.forEach((card) => {
+      const modal = card.querySelector('.modal2_component');
+      if (modal) prep(card, modal);
     });
 
-    document.addEventListener('click', function (e) {
-      const overlay = e.target.closest('.modal2_background-overlay');
+    document.addEventListener('click', (event) => {
+      const overlay = event.target.closest('.modal2_background-overlay');
       if (overlay) {
-        e.stopPropagation();
+        event.stopPropagation();
         close(overlay.closest('.modal2_component'));
         return;
       }
-      if (e.target.closest('.modal2_component')) return; /* click inside open modal content */
-      const card = e.target.closest('.card_team');
+      if (event.target.closest('.modal2_component')) return; /* click inside open modal content */
+      const card = event.target.closest('.card_team');
       if (card) open(card);
     });
 
-    document.addEventListener('keydown', function (e) {
-      if (!active) return;
-      if (e.key === 'Escape') {
+    document.addEventListener('keydown', (event) => {
+      if (!active) {
+        /* keyboard-open: Enter/Space on a focused card acts like a click */
+        if (event.key === 'Enter' || event.key === ' ') {
+          const card = event.target.closest('.card_team');
+          if (card) {
+            event.preventDefault(); /* Space would otherwise scroll the page */
+            open(card);
+          }
+        }
+        return;
+      }
+      if (event.key === 'Escape') {
         close(active);
         return;
       }
-      if (e.key === 'Tab') {
-        const wrap = parts(active).wrap;
-        if (!wrap) return;
-        const f = focusables(wrap);
-        if (!f.length) {
-          e.preventDefault();
-          wrap.focus();
+      if (event.key === 'Tab') {
+        const wrapper = parts(active).wrapper;
+        if (!wrapper) return;
+        const focusable = focusablesIn(wrapper);
+        if (!focusable.length) {
+          event.preventDefault();
+          wrapper.focus();
           return;
         }
-        const first = f[0];
-        const last = f[f.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
           last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
           first.focus();
         }
       }

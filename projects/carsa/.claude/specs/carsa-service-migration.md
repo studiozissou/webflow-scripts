@@ -44,10 +44,17 @@ Recorded so these are not re-litigated at build time.
 
 ## Prerequisites
 
-### Task 0 — Webflow MCP workspace re-authorisation (**HARD BLOCKER**)
+### Task 0 — Webflow MCP workspace re-authorisation — ✅ CLEARED 2026-07-14
 
-The Webflow MCP is currently OAuth-authorised against a workspace that does not
-contain Carsa. Verified 2026-07-09:
+Re-authorised and verified: `get_site` on `68348ea61096b37caacd2f95` now returns
+the Carsa site (workspace `67caba0c5c72084908790f0b`, domains `carsa.co.uk` +
+`www.carsa.co.uk`). All scripted-build tasks (1–8, 14) are unblocked. The
+original blocker is retained below for the record.
+
+---
+
+**Original blocker (resolved).** The Webflow MCP was OAuth-authorised against a
+workspace that did not contain Carsa. Verified 2026-07-09:
 
 - `data_sites_tool > list_sites` returns exactly one site: *The Signalling Company*
   (`6a32b717a48adbce92029295`, workspace `6373a15b26d1775ae7b14055`)
@@ -108,18 +115,19 @@ existing bugs into the new site.
 | # | Defect | Where | Resolution needed |
 |---|--------|-------|-------------------|
 | B1 | Meta description on `/mot-service-towcester` reads *"Book your MOT in **Halesowen**"* | Towcester page | Write correct Towcester description. Copy-paste error. |
-| B2 | Review count inconsistent: **9700+** on home & winter, **9500+** on store-locator & all 5 location pages | 8 pages | Ask Carsa for the current true count. Becomes one CMS/global value, not 8 hardcoded strings. |
-| B3 | **Mountsorrel missing entirely** from the winter page's location grid (4 cards, not 5) and from its subhead | `/winter-health-check` | Winter page location grid must render all 5 from CMS. |
-| B4 | Bolton & Towcester Saturday hours conflict: `Sat & Sun: Closed` on home vs `08:30–12:30` on winter page | home vs winter | Confirm real hours with Carsa. Single CMS source. |
-| B5 | Service Manager names + "NEW" badge exist **only** on the winter page's cards, absent from home | winter page | Decide whether these are CMS fields on Service Locations. Not in the original field schema below. |
+| B2 | Review count inconsistent: **9700+** on home & winter, **9500+** on store-locator & all 5 location pages | 8 pages | ✅ **Resolved** — live Trustpilot widget renders the count dynamically; no hardcoded number. |
+| B3 | **Mountsorrel missing entirely** from the winter page's location grid (4 cards, not 5) and from its subhead | `/winter-health-check` | Winter page location grid renders all 5 from the CMS collection. |
+| B4 | Bolton & Towcester Saturday hours conflict: `Sat & Sun: Closed` on home vs `08:30–12:30` on winter page | home vs winter | ✅ **Resolved** — hours come from Stores CMS `opening-hours` via the `linked-store` ref. One value, one place. |
+| B5 | Service Manager names + "NEW" badge exist **only** on the winter page's cards, absent from home | winter page | Minor decision: is the manager the store manager (→ Stores) or service-specific (→ Service Locations)? Is "NEW" a launch flag (`is-new` Switch) or drop it? Low stakes. |
 | B6 | Multiple `<h1>` per page — "Exclusive Offers" and "Our Locations" section titles are marked `<h1>` | every page | New build uses one `<h1>` per page; section titles are `<h2>`. |
 | B7 | Winter page's 8 feature-card labels are `<div>`, not headings | `/winter-health-check` | Use `<h3>`. |
 | B8 | Winter page uses a different component library (`a-*` classes) from the rest (`brix-*`) | `/winter-health-check` | Irrelevant post-migration — rebuilt in Client First. Noted so the visual difference isn't mistaken for intent. |
-| B9 | Towcester location photo is a **generic placeholder** (`hiq-generic.avif`); home and winter pages use two entirely different photo sets | home vs winter | Source a real Towcester photo. Pick one canonical image per location. |
-| B10 | Trustpilot link points to `hiqonline.co.uk` reviews, not Carsa's | all review sections | Ties to HiQ-removal strategy — see below. |
+| B9 | Towcester location photo is a **generic placeholder** (`hiq-generic.avif`); home and winter pages use two entirely different photo sets | home vs winter | ✅ **Resolved** — photo comes from Stores CMS `main-image`/`thumbnail-image` via the `linked-store` ref. If Towcester's Store image is itself a placeholder, that's a one-item Stores fix, out of this migration's scope. |
+| B10 | Trustpilot link points to `hiqonline.co.uk` reviews, not Carsa's | all review sections | **Open decision** — which Trustpilot business unit the widget shows. Ties to HiQ-removal strategy. |
 
-**Owner:** B2, B4, B9 need answers from Carsa (Tomek). B1, B3, B6, B7, B8 are
-ours to fix in the build. B5 and B10 are decisions.
+**Owner (updated 2026-07-14):** B2, B4, B9 **resolved** by connecting to Stores
+CMS + live Trustpilot widget. B1, B3, B6, B7, B8 are ours to fix in the build.
+B5 is a minor build-time decision. **B10 is the only open client decision.**
 
 ## Store Locator / Storepoint — RESOLVED (2026-07-13)
 
@@ -201,32 +209,79 @@ estimate drops accordingly.
 | 3 | Partnership callout | "In partnership with HiQ" with HiQ logo. Removable component — single utility class `.is-hiq-partner` or CMS switch to hide when HiQ branding is dropped | **New component** |
 | 4 | Service locations | Filtered grid of 5 service-enabled stores. Each card: name, address, hours, "Book Now" link to `/mot-and-car-servicing/{slug}` | Existing store card pattern, filtered by CMS ref |
 | 5 | Trust badges | 6 icon+text items: Goodyear certified, 9700+ reviews, tyres & repairs, MOT & servicing, only essential work, partnership with Carsa | Existing icon+text grid |
-| 6 | Reviews | Trustpilot testimonials — either embed widget or static carousel of 7 reviews | TBD: Trustpilot widget or static cards |
+| 6 | Reviews | Standard Trustpilot TrustBox widget (live) — **decided 2026-07-14** | Trustpilot widget, see note below |
 | 7 | FAQ accordion | FAQ section — Carsa to write questions. CMS-ref pattern (faq-1 through faq-10) or static rich text | Existing FAQ pattern |
 
 **Sections: 7 total (1 new component, 6 reuse existing patterns)**
 
+**Reviews decision (2026-07-14).** Use the **standard Trustpilot TrustBox
+widget**, rendered live — not the 7 hand-copied static cards from the source
+site. Consequences and constraints:
+
+- The standard widget already shows **Service reviews** (Trustpilot's term for
+  company-experience reviews) by default. No special config needed for that.
+- **Filtering to only servicing/MOT reviews is not possible** on historical
+  reviews. TrustBox widgets filter by star rating (`data-stars`) and by **tags**
+  (`data-tags`), but tags must be applied *at review-collection time* via tagged
+  invitation links. Retroactive filtering of untagged reviews cannot be done.
+  If per-service filtering is wanted later, Carsa must start sending tagged
+  Trustpilot invitations for service bookings — an ops change on Carsa's side,
+  not a build task.
+- A live widget renders the review count dynamically, which **resolves defect
+  B2** — there is no hardcoded 9500/9700 number to drift.
+- **Open (B10):** the source widget points at `hiqonline.co.uk`'s Trustpilot
+  business unit. Confirm which business unit the migrated widget should show —
+  HiQ's, or Carsa's own. Ties to the HiQ-removal strategy.
+- Widget embed is permitted under the D4 carve-out (third-party embed), same
+  basis as the Acuity iframe.
+
 ### Page 2: Service Location Template (`/mot-and-car-servicing/{slug}`) — NEW CMS template
 
-**New CMS Collection: "Service Locations"**
+**New CMS Collection: "Service Locations"** — collection slug `mot-and-car-servicing`
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `name` | Plain text | Display name (e.g. "Halesowen") |
-| `slug` | Slug | URL slug |
-| `meta-title` | Plain text | SEO title |
-| `meta-description` | Plain text | SEO description |
-| `acuity-calendar-id` | Plain text | Acuity calendarID for embed |
-| `store` | Reference → Stores | Links to main store CMS item (pulls address, hours, phone, coords) |
-| `services-offered` | Rich text or multi-ref | Services available at this location |
-| `hiq-enabled` | Switch | Whether to show HiQ partnership branding (for easy removal) |
-| `photo` | Image | Canonical location photo — resolves defect B9 (Towcester currently a placeholder; home and winter pages use different sets) |
-| `service-manager` | Plain text | Nash Sahota (Halesowen), Dan Tift (Cannock), David Fildes (Bolton), Kevin Howkins (Towcester), TBC (Mountsorrel). Currently only rendered on the winter page — see B5 |
-| `is-new` | Switch | Drives the "NEW" badge, currently winter-page-only — see B5 |
+> **Follow the proven "Sell Locations" precedent (verified live 2026-07-14).**
+> The site already has a `Sell Locations` collection (`6a0320854614e50267cb09a1`,
+> slug `store`) that does *exactly* this: a thin overlay collection holding only
+> page-specific copy, with a `linked-store` **Reference → Stores** pulling all
+> shared location data. Stores carries a `linked-sell-page` ref back — the link
+> is bidirectional. Service Locations mirrors this one-for-one. **Do not
+> duplicate any field that already exists on Stores** — reference it.
 
-Added in v2: `photo`, `service-manager`, `is-new`. These exist in the source
-markup but were absent from the original field schema, and are the root cause of
-defects B5 and B9.
+**Shared data lives on Stores (`68429a3b6fa9a12bf88fb7d1`) — pull via reference, do not copy:**
+`main-image`, `thumbnail-image`, `images-gallery`, `address` / `address-2`,
+`opening-hours` (RichText) / `opening-times` (short), `phone`, `email`, `city`,
+`postcode`, `latitude`, `longitude`, `google-maps-link`,
+`google-maps-directions-link`, `facilities`, `faq`, `region`. This is why
+"Stores is the source of truth" resolves defects **B4** (hours) and **B9** (photo)
+outright — one value, one place.
+
+**Service Locations fields (service-specific overlay only):**
+
+| Field (slug) | Type | Notes |
+|--------------|------|-------|
+| `name` | PlainText (required) | Display name (e.g. "Halesowen") |
+| `slug` | Slug (required) | URL slug (`halesowen`, `cannock`, …) |
+| `linked-store` | **Reference → Stores** | The join. Pulls address, hours, phone, images, coords, maps, facilities, FAQs. Mirrors Sell Locations' `linked-store`. |
+| `acuity-calendar-id` | PlainText | Acuity calendarID for the booking embed |
+| `seo-title` | PlainText | SEO title (mirrors Sell Locations field slug) |
+| `seo-metadescription` | PlainText | SEO description (mirrors Sell Locations field slug) |
+| `hero-title` | PlainText | Hero H1 override (mirrors Sell Locations) |
+| `hero-description` | PlainText | Hero subcopy (mirrors Sell Locations) |
+| `services-offered` | RichText or MultiReference | Services available at this location |
+| `hiq-enabled` | Switch | Show/hide HiQ partnership branding (easy removal) |
+
+**Bidirectional link — add to Stores:** `linked-service-page` **Reference →
+Service Locations** (mirrors the existing `linked-sell-page`). This *replaces*
+the spec's earlier proposed `service-location` field — same purpose, correct
+naming, and it doubles as the flag that drives the cross-sell section (a Store
+with `linked-service-page` populated shows the cross-sell; others don't).
+
+**Fields dropped from the v2 draft** (were going to duplicate Stores data):
+`photo` → use Stores `main-image`/`thumbnail-image`; hours/address/phone/coords
+→ all from Stores. **B5's** `service-manager` and `is-new` badge: only decide
+whether these are genuinely service-specific. If the manager is the store
+manager, it belongs on Stores; if the "NEW" badge is a launch flag, hold it as
+a `is-new` Switch here. Otherwise omit both.
 
 **5 CMS items:** Halesowen (11436415), Cannock (11436354), Bolton (11436404), Towcester (11718661), Mountsorrel (13865154)
 
@@ -388,12 +443,12 @@ manual work is template binding, cross-breakpoint visual QA, redirects, and GTM.
 
 | # | Task | Type | Agent | Est. LOC | Dependencies |
 |---|------|------|-------|----------|--------------|
-| **0** | **Re-authorise Webflow MCP to Carsa workspace `67caba0c5c72084908790f0b`** | **infra** | **manual (Will)** | — | **None — blocks 1–8, 14** |
-| 0b | Resolve content defects with Carsa: B2 (review count), B4 (Bolton/Towcester hours), B9 (Towcester photo) | content | manual (Tomek) | — | None |
-| 0c | ~~Confirm Storepoint decision~~ **RESOLVED 2026-07-13:** drop Storepoint, reuse the existing `/stores` locator component | scope | done | — | — |
-| 1 | Create "Service Locations" CMS collection in Webflow | webflow | **scripted — `data_cms_tool`** | .25 | Task 0 |
-| 2 | Add `service-location` ref field to Stores collection | webflow | **scripted — `data_cms_tool`** | — | Tasks 0, 1 |
-| 3 | Populate 5 Service Location CMS items with Acuity calendar IDs | webflow | **scripted — `data_cms_tool`** | — | Tasks 0, 1 |
+| **0** | ~~Re-authorise Webflow MCP~~ **✅ CLEARED 2026-07-14** — Carsa site accessible | infra | done | — | — |
+| 0b | ~~Content defects B2/B4/B9~~ **✅ RESOLVED 2026-07-14** — sourced from Stores CMS + live Trustpilot widget | content | done | — | — |
+| 0c | ~~Confirm Storepoint decision~~ **✅ RESOLVED 2026-07-13** — drop Storepoint, reuse the existing `/stores` locator component | scope | done | — | — |
+| 1 | Create "Service Locations" CMS collection (slug `mot-and-car-servicing`) — mirror Sell Locations schema | webflow | **scripted — `data_cms_tool`** | .25 | — |
+| 2 | Add `linked-service-page` ref field to Stores (mirrors `linked-sell-page`) + `linked-store` ref on Service Locations | webflow | **scripted — `data_cms_tool`** | — | Task 1 |
+| 3 | Populate 5 Service Location CMS items (Acuity IDs + `linked-store` ref to each Store) | webflow | **scripted — `data_cms_tool`** | — | Task 1 |
 | 3b | Snapshot existing Carsa components (All Components + Extended Library) | webflow | **scripted — `element_snapshot_tool`** | — | Task 0 |
 | 4 | Build service hub page (`/mot-and-car-servicing`) — 7 sections | webflow | **scripted — `data_pages_tool` + `data_element_builder`** | 2 | Tasks 1, 3b |
 | 5 | Build service location template (`/mot-and-car-servicing/{slug}`) — 5 sections | webflow | scripted build + **manual template binding** | 2 | Tasks 1–3 |

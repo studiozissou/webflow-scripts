@@ -213,8 +213,27 @@
         overlay.style.transition = fadeTransition;
         overlay.style.opacity = '1';
       }
-      document.documentElement.style.overflow = 'hidden'; /* scroll lock */
+      lockScroll(); /* scroll lock, scrollbar-width compensated (no page jump) */
       if (wrapper) wrapper.focus({ preventScroll: true });
+    }
+
+    /* Scroll lock without layout shift: hiding the scrollbar frees its width
+       and reflows the page right. Reserve that width as padding-right so the
+       content box stays put. Overlay scrollbars (macOS/mobile) report 0 →
+       no-op. Idempotent: the early return keeps the reserved padding when
+       switching cards (measuring again while already locked reads 0). */
+    function lockScroll() {
+      const html = document.documentElement;
+      if (html.style.overflow === 'hidden') return; /* already locked */
+      const sbw = window.innerWidth - html.clientWidth;
+      if (sbw > 0) html.style.paddingRight = sbw + 'px';
+      html.style.overflow = 'hidden';
+    }
+
+    function unlockScroll() {
+      const html = document.documentElement;
+      html.style.overflow = '';
+      html.style.paddingRight = '';
     }
 
     /* close(modal): graceful 500ms close with focus-return + scroll restore.
@@ -249,7 +268,7 @@
       trigger = null;
       if (returnTo) returnTo.focus({ preventScroll: true });
       modal.setAttribute('aria-hidden', 'true');
-      document.documentElement.style.overflow = ''; /* restore scroll */
+      unlockScroll(); /* restore scroll + release reserved scrollbar width */
       clearTimeout(closeTimer);
       closeTimer = setTimeout(() => {
         modal.style.display = 'none';

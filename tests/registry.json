@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-15",
-  "note": "tsc-leadership-modal scrollbar-width reserve (no page jump) deployed to tsc-v2.webflow.io (677502e)",
+  "note": "tsc-launch-metadata-schema COMPLETE on staging: Apps SEO fields + Full JSON-LD (static via API, 6 CMS-template blocks pasted in Designer, site-wide Org/WebSite). Acceptance 20/20. Rich-Results validation deferred to production launch (Google robots cache blocks RRT on .webflow.io).",
   "version": 1,
   "lastDeployed": "2026-07-15",
   "lastDeployedHash": "677502e",

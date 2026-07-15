@@ -118,6 +118,19 @@ test.describe('tsc-leadership-modal', () => {
     expect(restored).toBe(true);
   });
 
+  test('opening the modal does not shift the page (scrollbar width reserved)', async ({ page }) => {
+    // Locking scroll hides the vertical scrollbar; without compensation the
+    // content area widens and the page jumps ~15px. lockScroll() reserves the
+    // scrollbar width as padding-right so documentElement.clientWidth — the
+    // content box width — is unchanged. (On overlay-scrollbar runners the
+    // scrollbar width is 0, so this holds trivially and still guards no-jump.)
+    const widthClosed = await page.evaluate(() => document.documentElement.clientWidth);
+    await page.locator('.card_team').first().click();
+    await page.waitForTimeout(ANIM_SETTLE);
+    const widthOpen = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(widthOpen).toBe(widthClosed);
+  });
+
   test('focus moves into the dialog on open and returns to the card on close', async ({ page }) => {
     const card = page.locator('.card_team').first();
     await card.click();

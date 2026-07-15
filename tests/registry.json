@@ -1,9 +1,9 @@
 {
-  "lastUpdated": "2026-07-14",
-  "note": "tsc-hero-video-perf deployed (929f758)",
+  "lastUpdated": "2026-07-15",
+  "note": "tsc-leadership-modal scrollbar-width reserve (no page jump) deployed to tsc-v2.webflow.io (677502e)",
   "version": 1,
-  "lastDeployed": "2026-07-13",
-  "lastDeployedHash": "929f758",
+  "lastDeployed": "2026-07-15",
+  "lastDeployedHash": "677502e",
   "testPages": [
     {
       "slug": "tsc-leadership-modal",
@@ -249,6 +249,16 @@
       "critical": false,
       "description": "TSC responsive image resizing to AVIF — measured on-site render widths @1440/@479, 2x retina targets, 100px-gap bucketing into 730/960/1180/1500/2850, magick+avifenc encode; shell Tier-1 verify (width==bucket, format, size, originals-untouched). Output to Downloads/optimised/<bucket>/, not deployed.",
       "created": "2026-07-14"
+    },
+    {
+      "slug": "tsc-launch-metadata-schema",
+      "url": "https://tsc-v2.webflow.io/railos-apps/etcs-app",
+      "spec": "tests/acceptance/tsc-launch-metadata-schema.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC launch metadata + schema — writes missing SEO title/meta for the 11 RailOS Apps CMS items, adds Full JSON-LD schema site-wide (Organization/WebSite/BreadcrumbList/Product/Service/FAQPage/NewsArticle/Person/SoftwareApplication/CreativeWork/VideoObject), and re-audits all existing meta for accuracy; verifies distinct app titles and parseable typed JSON-LD on sampled pages",
+      "created": "2026-07-15"
     }
   ]
 }

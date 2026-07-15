@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "updated": "2026-07-14",
-  "note": "tsc-leadership-modal built + MCP-verified (Ready to Review; deploy-gated on IX2 deletion)",
+  "updated": "2026-07-15",
+  "note": "tsc-launch-metadata-schema COMPLETE on staging (Ready to Review): 11 Apps SEO fields + Full JSON-LD (static via API + 6 CMS-template blocks pasted by client + site-wide Org/WebSite). Acceptance 20/20. Rich-Results validation deferred to production launch.",
   "queue": [
     {
       "id": "tsc-leadership-modal",
@@ -1108,6 +1108,18 @@
       "verify": "tests/acceptance/tsc-image-resize-avif.verify.sh",
       "report": "projects/the-signalling-company/.claude/reports/tsc-image-inventory-2026-07-14.md",
       "created": "2026-07-14"
+    },
+    {
+      "id": "tsc-launch-metadata-schema",
+      "project": "the-signalling-company",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Launch metadata gap + Full JSON-LD schema + metadata re-audit",
+      "description": "WS-A: wrote seo-title/meta-description fields + copy for 11 RailOS Apps items and bound the template (title binding verified live). WS-B: Organization/WebSite live site-wide (client-pasted, Škoda parent, logo SVG + LinkedIn sameAs confirmed); WebPage/CollectionPage/AboutPage/ContactPage + BreadcrumbList + FAQPage(26) + Person(8, top-level) + SoftwareApplication(RailOS) via schema-markup API across static pages; per-item Product/Service/NewsArticle/CreativeWork/SoftwareApplication pasted into CMS-template custom-code heads by client (API can't bind {{wf}} in schema field / 406s on freeform <script>). Homepage deduped (WebPage+Breadcrumb only; Org/WebSite site-wide). WS-C: metadata re-audit report. Staging-only publish. ACCEPTANCE: 20/20 pass. Schema Rich-Results validation deferred to production launch (Google robots cache blocks RRT on .webflow.io staging). OPEN: Home B / Projects B published duplicates (unpublish decision); VideoObject omitted (no uploadDate).",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-launch-metadata-schema.md",
+      "report": "projects/the-signalling-company/.claude/audits/tsc-metadata-audit-2026-07-15.md",
+      "created": "2026-07-15"
     }
   ]
 }

@@ -867,6 +867,82 @@
     setTimeout(reveal, 200);
   }
 
+  /* ── SplitText aria fix (a11y) ─────────────────────────── */
+  /* The scroll-text animation utility (attributes text-fill-scroll /
+     heading-scroll / text-scroll, loaded in Webflow head code — not this file)
+     runs GSAP SplitText with the default aria:"auto". That writes an aria-label
+     of the original text onto every element it splits AND sets aria-hidden="true"
+     on the generated word/char spans. On <h1>–<h6> the aria-label is valid
+     (headings support an accessible name), but on the <p>/<blockquote>/<div>
+     reveals the element's role prohibits aria-label → axe fires
+     aria-prohibited-attr (19 nodes on home, verified against tsc-v2 2026-07-16).
+
+     DO NOT strip the aria-label: the split children are all aria-hidden, so the
+     aria-label is the ONLY accessible name — removing it silences the text to
+     screen readers. Instead add role="text" (a run of text as one unit), which
+     makes aria-label valid and keeps the name. Verified live: role="text" clears
+     aria-prohibited-attr and restores Accessibility + Agentic Browsing to 100.
+
+     The split is async / scroll-triggered and re-runs on resize, so a
+     MutationObserver re-applies the role on late splits and re-splits. */
+
+  /* Tags whose role natively supports an accessible name — never touched. */
+  const ARIA_NAMEABLE = new Set([
+    'A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'IMG', 'SVG', 'IFRAME',
+    'AREA', 'AUDIO', 'VIDEO', 'FORM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+  ]);
+
+  /* A SplitText reveal target, by any of the signatures seen live: the scroll
+     animation hook attribute, the generated line class, or the aria-hidden
+     word/char wrappers the split leaves behind. */
+  function isSplitTarget(el) {
+    return (
+      el.hasAttribute('text-fill-scroll') ||
+      el.hasAttribute('heading-scroll') ||
+      el.hasAttribute('text-scroll') ||
+      el.querySelector('.gsap_split_line') !== null ||
+      el.querySelector('[aria-hidden="true"]') !== null
+    );
+  }
+
+  function fixProhibitedSplitAria() {
+    let fixed = 0;
+    document.querySelectorAll('[aria-label]:not([role])').forEach((el) => {
+      if (ARIA_NAMEABLE.has(el.tagName)) return; // role supports a name — valid
+      if (!isSplitTarget(el)) return; // only SplitText reveals, nothing else
+      el.setAttribute('role', 'text'); // makes aria-label valid; keeps the name
+      fixed += 1;
+    });
+    DEBUG && fixed && console.log('[init][a11y] added role=text ×', fixed);
+  }
+
+  function watchSplitAria() {
+    fixProhibitedSplitAria(); // in case the split already ran
+
+    let scheduled = false;
+    const schedule = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        fixProhibitedSplitAria();
+      });
+    };
+
+    const observer = new MutationObserver((records) => {
+      for (const r of records) {
+        if (r.type === 'childList' && r.addedNodes.length) return schedule();
+        if (r.type === 'attributes' && r.attributeName === 'aria-label') return schedule();
+      }
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-label'],
+    });
+  }
+
   /* ── Loader helpers ────────────────────────────────────── */
 
   function loadScript(url) {
@@ -906,6 +982,7 @@
     setupDeferredSpline();
     setupBackgroundVideos();
     revealHeroFailsafe();
+    watchSplitAria();
 
     /* Vendor deps (sequential where order matters) */
     for (const url of deps) {

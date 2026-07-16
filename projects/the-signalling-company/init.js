@@ -76,12 +76,30 @@
     });
   }
 
-  function moveNavSeeAll() {
+  /* Each mega-menu dropdown has a [data-nav="see-all"] link sitting next to its
+     CMS [data-nav="list"]. Desktop keeps it at the END of the list (append);
+     tablet-and-below (Webflow ≤991px) moves it to the START (prepend) so it
+     reads first in the stacked mobile menu. Placement re-runs whenever the
+     viewport crosses the breakpoint so rotate/resize keeps the right order. */
+  const navSeeAllQuery = window.matchMedia('(max-width: 991px)');
+
+  function placeNavSeeAll() {
+    const prepend = navSeeAllQuery.matches;
     document.querySelectorAll('.w-dropdown-list').forEach((dropdown) => {
       const list = dropdown.querySelector('[data-nav="list"]');
       const seeAll = dropdown.querySelector(':scope [data-nav="see-all"]');
-      if (list && seeAll && !list.contains(seeAll)) list.appendChild(seeAll);
+      if (!list || !seeAll) return;
+      if (prepend) {
+        if (list.firstElementChild !== seeAll) list.insertBefore(seeAll, list.firstElementChild);
+      } else if (list.lastElementChild !== seeAll) {
+        list.appendChild(seeAll);
+      }
     });
+  }
+
+  function moveNavSeeAll() {
+    placeNavSeeAll();
+    navSeeAllQuery.addEventListener('change', placeNavSeeAll);
   }
 
   /* ── Close mega-menu on panel background click ─────────────── */

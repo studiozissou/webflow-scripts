@@ -22,9 +22,7 @@ Before scanning, verify which MCP tools are available:
 ```
 Required:
 - Gmail MCP (mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread, mcp__claude_ai_Gmail__create_draft)
-- Slack MCP — one server per workspace, listed in `config.slack.workspaces`:
-  - `zissou` (Team Zissou, main) → `mcp__plugin_slack_slack__*`
-  - `skyehigh` (Skye High, secondary) → `mcp__slack-skyehigh__*`
+- Slack MCP (mcp__plugin_slack_slack__slack_read_channel, mcp__plugin_slack_slack__slack_read_thread)
 - Notion MCP (notion-search, notion-create-pages)
 
 Optional:
@@ -58,24 +56,15 @@ Spawn parallel agents to scan each source:
 - Return classified threads with full content for actionable ones
 
 **Agent 2 — Slack**:
-
-Slack spans two workspaces, each with its own MCP server. A channel ID is only
-valid on its own workspace's server — calling the wrong one returns
-`channel_not_found`. Every source in config carries a `workspace` key; resolve
-it to a tool prefix via `config.slack.workspaces[<key>].toolPrefix` and use that
-prefix for every call about that source. Sources with no `workspace` key fall
-back to the workspace marked `"default": true` (currently `zissou`).
-
-- For each channel in config: `{toolPrefix}slack_read_channel(id, oldest: state.slack.channels[id].lastProcessed || lookbackTimestamp, limit: 100)`
-- For each DM in config: `{toolPrefix}slack_read_channel(id, oldest: state.slack.dms[id].lastProcessed || lookbackTimestamp, limit: 100)`
+- For each channel in config: `mcp__plugin_slack_slack__slack_read_channel(id, oldest: state.slack.channels[id].lastProcessed || lookbackTimestamp, limit: 100)`
+- For each DM in config: `mcp__plugin_slack_slack__slack_read_channel(id, oldest: state.slack.dms[id].lastProcessed || lookbackTimestamp, limit: 100)`
 - Classify messages using the same REPLY NEEDED / FLAG / ACTION / NOISE buckets
 - Use config's client mapping to auto-assign clients
-- For threads with replies, fetch full thread via `{toolPrefix}slack_read_thread` — same prefix as the parent channel
-- Return classified messages with permalinks, each tagged with its workspace
-
-If one workspace's server is unauthenticated or its tools are missing, warn the
-user naming that workspace, skip only its sources, and still triage the other
-workspace's sources. Never retry a failed ID against the other server.
+- For threads with replies, fetch full thread via `mcp__plugin_slack_slack__slack_read_thread`
+- Return classified messages with permalinks
+- Do **not** attempt to read anything in `config.slack.manualCheck` — those live in a
+  different Slack workspace that this connection cannot see, and their IDs will return
+  `channel_not_found`. Return them as a reminder list instead.
 
 **Agent 3 — Calendar** (if available):
 - `list_events` for the next `config.calendar.lookaheadDays` days
@@ -127,7 +116,22 @@ Output the full triage report following the format in the triage skill:
 ## Flag / Action Items
 ## Questions for You
 ## Noise Summary
+## Check Manually
 ```
+
+Always end with a **Check Manually** section listing every entry in
+`config.slack.manualCheck`, so these don't get silently missed:
+
+```
+## Check Manually
+Not covered by automated triage — Claude Code can only hold one Slack
+connection, currently Team Zissou:
+- Skye High → #tamsen-web-dev (Tamsen Fadal)
+- Skye High → DM with Yoni (Tamsen Fadal)
+```
+
+If anything actionable turns up there, paste it in and it will be triaged with
+the rest.
 
 ### Step 7 — Ask for approval
 
@@ -155,7 +159,7 @@ Based on user's choice:
 
 **Slack reply sending:**
 1. Show each Slack reply one more time for final confirmation
-2. If approved, send via `{toolPrefix}slack_send_message` — using the tool prefix for the workspace that message's channel belongs to
+2. If approved, send via `mcp__plugin_slack_slack__slack_send_message`
 3. If not approved or MCP unavailable, present as copy-paste block
 
 ### Step 8b — Quick Wins
@@ -276,5 +280,5 @@ Process Notion call recordings, meeting notes, and AI-generated meeting summarie
 - If a source MCP is unavailable → warn and skip that source, continue with others
 - If Notion MCP is unavailable → present tasks as local summary, offer to retry later
 - If Notion DB doesn't exist yet → guide user through setup, still present triage results
-- If a Slack channel returns an error → warn and skip, continue with other channels. On `channel_not_found`, say which workspace server was used — it usually means the channel's `workspace` key in config is wrong or that server is authed to the wrong workspace
+- If a Slack channel returns an error → warn and skip, continue with other channels
 - If state.json is missing or corrupt → treat as first run, use config lookback windows

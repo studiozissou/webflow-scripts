@@ -1,25 +1,16 @@
 {
   "slack": {
-    "workspaces": {
-      "zissou": {
-        "label": "Team Zissou (main)",
-        "toolPrefix": "mcp__plugin_slack_slack__",
-        "default": true
-      },
-      "skyehigh": {
-        "label": "Skye High (secondary)",
-        "toolPrefix": "mcp__slack-skyehigh__",
-        "default": false
-      }
-    },
+    "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time — every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
     "channels": [
-      { "id": "C0973LJ2BTJ", "name": "carsa-tomek-rishi", "client": "Carsa", "workspace": "zissou" },
-      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa", "workspace": "zissou" },
-      { "id": "C09A7MZEK3P", "name": "tamsen-web-dev", "client": "Tamsen Fadal", "workspace": "skyehigh" }
+      { "id": "C0973LJ2BTJ", "name": "carsa-tomek-rishi", "client": "Carsa" },
+      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa" }
     ],
     "dms": [
-      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa", "workspace": "zissou" },
-      { "id": "D049YCR485C", "name": "Yoni", "client": "Tamsen Fadal", "workspace": "skyehigh" }
+      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa" }
+    ],
+    "manualCheck": [
+      { "workspace": "Skye High", "name": "#tamsen-web-dev", "id": "C09A7MZEK3P", "client": "Tamsen Fadal" },
+      { "workspace": "Skye High", "name": "DM — Yoni", "id": "D049YCR485C", "client": "Tamsen Fadal" }
     ],
     "lookbackHours": 24
   },

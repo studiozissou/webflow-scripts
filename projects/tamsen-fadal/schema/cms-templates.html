@@ -1,0 +1,153 @@
+<!--
+  CMS TEMPLATE SCHEMA — Article, Event, PodcastEpisode
+  ====================================================
+  Each block goes on its Webflow Collection Page template, Before </body>.
+  Requires: sitewide-graph.html deployed site-wide.
+
+  Webflow dynamic-field syntax: type "+" in the custom code box and pick the
+  field. The +{{...}} tokens below are placeholders showing WHICH field to bind —
+  they will not work if pasted literally. Bind them in the Designer.
+
+  ⚠️ Escaping: bind fields into JSON string positions only. If a field can contain
+  a double quote (titles often can), use Webflow's "Plain text" field variant, not
+  Rich text, or the JSON will break. Validate after binding with a real item.
+-->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     1. BLOG TEMPLATE  →  /blog/[slug]
+     Webflow page: "Blogs Template" (detail_blog)
+     Verified: template currently emits NO JSON-LD.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "@id": "https://www.tamsenfadal.com/blog/+{{slug}}#article",
+      "headline": "+{{Name}}",
+      "description": "+{{Short Description}}",
+      "image": "+{{Hero Image}}",
+      "datePublished": "+{{Published Date}}",
+      "dateModified": "+{{Updated Date}}",
+      "author": { "@id": "https://www.tamsenfadal.com/#person" },
+      "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
+      "mainEntityOfPage": "https://www.tamsenfadal.com/blog/+{{slug}}"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/blog/+{{slug}}#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://www.tamsenfadal.com/blog" },
+        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/blog/+{{slug}}" }
+      ]
+    }
+  ]
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     2. EVENTS TEMPLATE  →  /events/[slug]
+     Webflow page: "Events / Events Template" (detail_events)
+
+     ⚠️ Google requires startDate and location for Event rich results. If an event
+     item is missing either, the markup will warn. Make both fields required in the
+     CMS collection before deploying this.
+
+     eventAttendanceMode: the Events listing filters by Virtual / In-Person, so bind
+     that field to pick the right value rather than hardcoding.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Event",
+      "@id": "https://www.tamsenfadal.com/events/+{{slug}}#event",
+      "name": "+{{Name}}",
+      "description": "+{{Short Description}}",
+      "image": "+{{Featured Image}}",
+      "startDate": "+{{Start Date}}",
+      "endDate": "+{{End Date}}",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "location": {
+        "@type": "Place",
+        "name": "+{{Venue Name}}",
+        "address": "+{{Venue Address}}"
+      },
+      "performer": { "@id": "https://www.tamsenfadal.com/#person" },
+      "organizer": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "url": "https://www.tamsenfadal.com/events/+{{slug}}",
+
+      "_comment_offers": "OPTIONAL but recommended — Rich Results Test flags 'Missing field offers' as the only non-critical issue on this template. Add the block below if the CMS carries a ticket URL. Delete this _comment_offers line either way.",
+      "offers": {
+        "@type": "Offer",
+        "url": "+{{Ticket URL}}",
+        "price": "+{{Ticket Price}}",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "validFrom": "+{{Tickets On Sale Date}}"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/events/+{{slug}}#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Events", "item": "https://www.tamsenfadal.com/events" },
+        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/events/+{{slug}}" }
+      ]
+    }
+  ]
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     3. PODCAST EPISODE TEMPLATE  →  /podcast/[slug]
+     Webflow page: "Podcast Episodes Template" (detail_podcast)
+
+     This replaces the hardcoded episode array currently sitting in the series
+     block on /podcast — bound to real CMS fields, so it stays correct and does
+     not go stale.
+
+     Bind "actor" to the real guest field. Leave it out entirely rather than
+     guessing: the live series block currently credits the wrong guest on one
+     episode because it was hardcoded.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "PodcastEpisode",
+      "@id": "https://www.tamsenfadal.com/podcast/+{{slug}}#episode",
+      "name": "+{{Name}}",
+      "description": "+{{Short Description}}",
+      "image": "+{{Featured Image}}",
+      "datePublished": "+{{Published Date}}",
+      "url": "https://www.tamsenfadal.com/podcast/+{{slug}}",
+      "episodeNumber": "+{{Episode Number}}",
+      "partOfSeries": { "@id": "https://www.tamsenfadal.com/podcast#podcast" },
+      "author": { "@id": "https://www.tamsenfadal.com/#person" },
+      "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/podcast/+{{slug}}#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Podcast", "item": "https://www.tamsenfadal.com/podcast" },
+        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/podcast/+{{slug}}" }
+      ]
+    }
+  ]
+}
+</script>

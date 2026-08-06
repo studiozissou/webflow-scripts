@@ -1,0 +1,128 @@
+<!--
+  PODCAST PAGE — PodcastSeries (CORRECTED) + BreadcrumbList
+  =========================================================
+  Place in: Webflow → /podcast → Page Settings → Before </body>
+  REPLACES the PodcastSeries block currently live on this page.
+
+  ⚠️ THIS IS A REPLACEMENT, NOT AN ADDITION. The existing block has real errors.
+
+  ─────────────────────────────────────────────────────────────────────────
+  WHAT WAS WRONG WITH THE LIVE BLOCK (verified 2026-08-06)
+  ─────────────────────────────────────────────────────────────────────────
+
+  1. BROKEN FEED URLS — the live webFeed array contains invented slugs:
+        https://podcasts.apple.com/podcast/tamsen-fadal   → returns HTTP 404
+        https://open.spotify.com/show/tamsen-fadal        → not the real show ID
+        https://music.amazon.com/podcasts/tamsen-fadal    → not the real show ID
+        https://www.youtube.com/@tamsen-fadal             → not the real handle
+
+     The correct IDs are already used in the homepage sameAs array:
+        https://open.spotify.com/show/7KuIU0g3CsUY0eAlzQaA5T          → HTTP 200
+        https://podcasts.apple.com/us/podcast/the-tamsen-show/id1799976761
+        https://music.amazon.com/podcasts/75bc8347-0c2b-40cb-a8f2-397fce8c3ec4/the-tamsen-show
+        https://www.youtube.com/@TamsenFadalTV
+
+     Pointing structured data at a 404 actively undermines entity trust.
+
+  2. WRONG PERSON ON AN EPISODE — the "Testosterone Doctor" episode listed
+     actor "Dr. Kelly Casperson" while its own description names
+     "Dr. Mary Claire Haver". One of the two is wrong. Episode-level guest
+     markup is dropped below until the CMS can populate it correctly from the
+     real guest field, rather than hardcoding a guess.
+
+  3. SELF-SERVING aggregateRating — the live block asserts ratingValue 5 from
+     reviewCount 8, marked up on your own page. This is precisely what Google's
+     review-snippet spam policy targets, and it risks a manual action on the
+     whole domain. Removed.
+
+  4. FRAGMENTED ENTITY — the live block defines an inline Person for the author
+     instead of referencing the site's #person node, so Google sees two
+     unconnected "Tamsen Fadal" entities. Now references #person by @id.
+
+  5. TYPO — "during this new seaason" in the live description. Fixed.
+
+  ─────────────────────────────────────────────────────────────────────────
+  VERIFIED against https://www.tamsenfadal.com/podcast :
+    - Series name "The Tamsen Show" ....... H1 + meta
+    - Twice-weekly cadence ................ meta description
+    - Host is Tamsen Fadal ................ meta description
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "PodcastSeries",
+      "@id": "https://www.tamsenfadal.com/podcast#podcast",
+      "name": "The Tamsen Show",
+      "url": "https://www.tamsenfadal.com/podcast",
+      "description": "Hosted by Emmy-winning journalist, filmmaker and New York Times bestselling author Tamsen Fadal, The Tamsen Show is where real talk meets real solutions. Twice a week, Tamsen sits down with top doctors, leading voices and women rewriting the rules — from hormones and health to reinvention, relationships and everything in between.",
+      "inLanguage": "en",
+      "author": { "@id": "https://www.tamsenfadal.com/#person" },
+      "creator": { "@id": "https://www.tamsenfadal.com/#person" },
+      "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "about": [
+        "Menopause",
+        "Perimenopause",
+        "Women's Health",
+        "Midlife",
+        "Reinvention",
+        "Relationships"
+      ],
+      "webFeed": [
+        "https://open.spotify.com/show/7KuIU0g3CsUY0eAlzQaA5T",
+        "https://podcasts.apple.com/us/podcast/the-tamsen-show/id1799976761",
+        "https://music.amazon.com/podcasts/75bc8347-0c2b-40cb-a8f2-397fce8c3ec4/the-tamsen-show"
+      ],
+      "sameAs": [
+        "https://open.spotify.com/show/7KuIU0g3CsUY0eAlzQaA5T",
+        "https://podcasts.apple.com/us/podcast/the-tamsen-show/id1799976761",
+        "https://music.amazon.com/podcasts/75bc8347-0c2b-40cb-a8f2-397fce8c3ec4/the-tamsen-show",
+        "https://www.youtube.com/@TamsenFadalTV"
+      ],
+      "mainEntityOfPage": { "@id": "https://www.tamsenfadal.com/podcast#webpage" }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.tamsenfadal.com/podcast#webpage",
+      "url": "https://www.tamsenfadal.com/podcast",
+      "name": "The Tamsen Show Podcast | Tamsen Fadal",
+      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
+      "about": { "@id": "https://www.tamsenfadal.com/podcast#podcast" },
+      "breadcrumb": { "@id": "https://www.tamsenfadal.com/podcast#breadcrumb" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/podcast#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.tamsenfadal.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "The Tamsen Show Podcast",
+          "item": "https://www.tamsenfadal.com/podcast"
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<!--
+  EPISODE MARKUP — do this properly on the episode template instead.
+
+  Rather than hardcoding three episodes into the series block (which goes stale
+  immediately and is where the wrong-guest error crept in), add PodcastEpisode
+  markup to the episode CMS template at /podcast/[slug], bound to real CMS fields.
+  See podcast-episode-template.html.
+
+  Also note: the page title tag is currently "The Tamsen Show Podcast " with a
+  trailing space, and carries no brand suffix. Suggest:
+      "The Tamsen Show Podcast | Tamsen Fadal"
+-->

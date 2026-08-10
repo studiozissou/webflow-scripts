@@ -1,144 +1,49 @@
 <!--
-  CMS TEMPLATE SCHEMA — Article, Event, PodcastEpisode
-  ====================================================
-  Each block goes on its Webflow Collection Page template, Before </body>.
-  Requires: sitewide-graph.html deployed site-wide.
+  CMS TEMPLATE SCHEMA — bound to REAL Webflow field slugs
+  =======================================================
+  Every binding below was read from the live collection schema via Webflow MCP on
+  2026-08-06, not assumed. Field display names are given so you can find them in the
+  Designer picker.
 
-  Webflow dynamic-field syntax: type "+" in the custom code box and pick the
-  field. The +{{...}} tokens below are placeholders showing WHICH field to bind —
-  they will not work if pasted literally. Bind them in the Designer.
+  WHERE: each block goes on its Collection Page template →
+         Page Settings → Custom Code → Inside <head> tag
 
-  ⚠️ Escaping: bind fields into JSON string positions only. If a field can contain
-  a double quote (titles often can), use Webflow's "Plain text" field variant, not
-  Rich text, or the JSON will break. Validate after binding with a real item.
+  HOW TO BIND: type "+" in the custom code box and choose the field from the picker.
+  The +{{Field Name}} tokens below show WHICH field to pick — they do not work if
+  pasted literally.
+
+  ⚠️ Escaping: only bind Plain Text fields into JSON string positions. Rich Text
+  will inject HTML and break the JSON. Where a field can contain a double quote
+  (episode and post titles often do), Webflow escapes it for you in the head context,
+  but validate one real item after binding before publishing the lot.
+
+  Requires: sitewide-graph.html live in SITE head code, so #person / #publisher /
+  #website resolve.
 -->
 
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     1. BLOG TEMPLATE  →  /blog/[slug]
-     Webflow page: "Blogs Template" (detail_blog)
+     1. PODCAST EPISODES  →  /podcast/[slug]
+     Collection: "Podcast Episodes" (68a5993943f9f66c9d22b4b7)
+     Template page: "Podcast Episodes Template" (detail_podcast)
 
-     ⚠️ REPLACEMENT, NOT AN ADDITION. This template ALREADY emits a BlogPosting
-     block. Adding this one without removing that one gives every blog post two
-     competing Article nodes. Verified 2026-08-06 on
-     /blog/10-ways-to-support-your-partner-in-menopause.
+     100 pages, currently ZERO schema. Biggest single gap on the site.
 
-     What the existing block gets wrong:
-       1. author is an INLINE Person ({"@type":"Person","name":"Tamsen Fadal"})
-          rather than a reference to #person. Google therefore sees a separate,
-          unconnected Tamsen Fadal on all ~253 blog posts — which is the exact
-          entity fragmentation this whole project is trying to fix. This is the
-          single highest-leverage schema fix on the site by page count.
-       2. publisher is typed as a Person. Publisher should be the Organization
-          (Take Flight Productions LLC).
-       3. No BreadcrumbList and no isPartOf → #website.
+     Real fields used:
+       name              → Name
+       slug              → Slug
+       short-description → Short Description   (Plain Text)
+       featured-image    → Featured Image
+       release-date      → Release Date        (DateTime)
+       episode-number    → Episode Number      (Number)
+       guest             → Guest               (Plain Text)
+       keywords          → Keywords            (Plain Text)
+       video-link        → Video link
 
-     What it gets right and should be KEPT: keywords, and
-     about → MedicalCondition "Menopause". Both are carried over below.
-     ══════════════════════════════════════════════════════════════════════ -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "@id": "https://www.tamsenfadal.com/blog/+{{slug}}#article",
-      "headline": "+{{Name}}",
-      "description": "+{{Short Description}}",
-      "image": "+{{Hero Image}}",
-      "datePublished": "+{{Published Date}}",
-      "dateModified": "+{{Updated Date}}",
-      "author": { "@id": "https://www.tamsenfadal.com/#person" },
-      "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
-      "inLanguage": "en-US",
-      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
-      "mainEntityOfPage": "https://www.tamsenfadal.com/blog/+{{slug}}",
-      "keywords": "+{{Keywords}}",
-      "about": { "@type": "MedicalCondition", "name": "Menopause" }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "@id": "https://www.tamsenfadal.com/blog/+{{slug}}#breadcrumb",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://www.tamsenfadal.com/blog" },
-        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/blog/+{{slug}}" }
-      ]
-    }
-  ]
-}
-</script>
-
-
-<!-- ══════════════════════════════════════════════════════════════════════
-     2. EVENTS TEMPLATE  →  /events/[slug]
-     Webflow page: "Events / Events Template" (detail_events)
-
-     ⚠️ Google requires startDate and location for Event rich results. If an event
-     item is missing either, the markup will warn. Make both fields required in the
-     CMS collection before deploying this.
-
-     eventAttendanceMode: the Events listing filters by Virtual / In-Person, so bind
-     that field to pick the right value rather than hardcoding.
-     ══════════════════════════════════════════════════════════════════════ -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Event",
-      "@id": "https://www.tamsenfadal.com/events/+{{slug}}#event",
-      "name": "+{{Name}}",
-      "description": "+{{Short Description}}",
-      "image": "+{{Featured Image}}",
-      "startDate": "+{{Start Date}}",
-      "endDate": "+{{End Date}}",
-      "eventStatus": "https://schema.org/EventScheduled",
-      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-      "location": {
-        "@type": "Place",
-        "name": "+{{Venue Name}}",
-        "address": "+{{Venue Address}}"
-      },
-      "performer": { "@id": "https://www.tamsenfadal.com/#person" },
-      "organizer": { "@id": "https://www.tamsenfadal.com/#publisher" },
-      "url": "https://www.tamsenfadal.com/events/+{{slug}}",
-
-      "_comment_offers": "OPTIONAL but recommended — Rich Results Test flags 'Missing field offers' as the only non-critical issue on this template. Add the block below if the CMS carries a ticket URL. Delete this _comment_offers line either way.",
-      "offers": {
-        "@type": "Offer",
-        "url": "+{{Ticket URL}}",
-        "price": "+{{Ticket Price}}",
-        "priceCurrency": "USD",
-        "availability": "https://schema.org/InStock",
-        "validFrom": "+{{Tickets On Sale Date}}"
-      }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "@id": "https://www.tamsenfadal.com/events/+{{slug}}#breadcrumb",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Events", "item": "https://www.tamsenfadal.com/events" },
-        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/events/+{{slug}}" }
-      ]
-    }
-  ]
-}
-</script>
-
-
-<!-- ══════════════════════════════════════════════════════════════════════
-     3. PODCAST EPISODE TEMPLATE  →  /podcast/[slug]
-     Webflow page: "Podcast Episodes Template" (detail_podcast)
-
-     This replaces the hardcoded episode array currently sitting in the series
-     block on /podcast — bound to real CMS fields, so it stays correct and does
-     not go stale.
-
-     Bind "actor" to the real guest field. Leave it out entirely rather than
-     guessing: the live series block currently credits the wrong guest on one
-     episode because it was hardcoded.
+     NOTE ON GUEST: bind "guest" to the actor field. The old hardcoded episode array
+     on /podcast credited the wrong guest on one episode precisely because it was
+     hand-written. If Guest is empty for an item, Webflow renders an empty string —
+     acceptable, but consider making Guest required.
      ══════════════════════════════════════════════════════════════════════ -->
 <script type="application/ld+json">
 {
@@ -146,25 +51,266 @@
   "@graph": [
     {
       "@type": "PodcastEpisode",
-      "@id": "https://www.tamsenfadal.com/podcast/+{{slug}}#episode",
+      "@id": "https://www.tamsenfadal.com/podcast/+{{Slug}}#episode",
       "name": "+{{Name}}",
       "description": "+{{Short Description}}",
       "image": "+{{Featured Image}}",
-      "datePublished": "+{{Published Date}}",
-      "url": "https://www.tamsenfadal.com/podcast/+{{slug}}",
+      "datePublished": "+{{Release Date}}",
       "episodeNumber": "+{{Episode Number}}",
+      "url": "https://www.tamsenfadal.com/podcast/+{{Slug}}",
+      "keywords": "+{{Keywords}}",
       "partOfSeries": { "@id": "https://www.tamsenfadal.com/podcast#podcast" },
       "author": { "@id": "https://www.tamsenfadal.com/#person" },
       "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
-      "inLanguage": "en"
+      "inLanguage": "en",
+      "actor": { "@type": "Person", "name": "+{{Guest}}" }
     },
     {
       "@type": "BreadcrumbList",
-      "@id": "https://www.tamsenfadal.com/podcast/+{{slug}}#breadcrumb",
+      "@id": "https://www.tamsenfadal.com/podcast/+{{Slug}}#breadcrumb",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
         { "@type": "ListItem", "position": 2, "name": "Podcast", "item": "https://www.tamsenfadal.com/podcast" },
-        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/podcast/+{{slug}}" }
+        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/podcast/+{{Slug}}" }
+      ]
+    }
+  ]
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     2. BLOG POSTS  →  /blog/[slug]
+     Collection: "Blogs" (68bede1a5ef125759435c0e1)
+     Template page: "Blogs Template" (detail_blog)
+
+     ⚠️ REPLACEMENT, NOT AN ADDITION — 250 pages already emit a BlogPosting block.
+     Delete the existing one or every post carries two competing Article nodes.
+
+     What the live block gets wrong:
+       1. author is an INLINE Person, not a reference to #person. Google sees an
+          unconnected "Tamsen Fadal" on all 250 posts. Largest source of entity
+          fragmentation on the site — fixing this is the highest-leverage change here.
+       2. publisher is typed Person; it should be the Organization.
+       3. No BreadcrumbList, no isPartOf → #website.
+
+     Real fields used:
+       name              → Name
+       slug              → Slug
+       short-description → Short Description   (Plain Text)
+       hero-image        → Hero Image
+       publication-date  → Publication Date    (DateTime)
+       main-topic        → Main Topic          (Reference → Blog Topics)
+
+     ⚠️ There is NO "updated date" field on this collection. dateModified therefore
+     reuses Publication Date. Do not invent one — a dateModified that never changes is
+     better than one that is wrong. Add a real field later if freshness matters.
+
+     ⚠️ There is NO keywords field on Blogs (Keywords exists on Podcast Episodes, not
+     here). "about" uses Main Topic instead, plus the MedicalCondition the live block
+     already asserts, which is worth keeping.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://www.tamsenfadal.com/blog/+{{Slug}}#article",
+      "headline": "+{{Name}}",
+      "description": "+{{Short Description}}",
+      "image": "+{{Hero Image}}",
+      "datePublished": "+{{Publication Date}}",
+      "dateModified": "+{{Publication Date}}",
+      "url": "https://www.tamsenfadal.com/blog/+{{Slug}}",
+      "author": { "@id": "https://www.tamsenfadal.com/#person" },
+      "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
+      "mainEntityOfPage": "https://www.tamsenfadal.com/blog/+{{Slug}}",
+      "about": [
+        { "@type": "MedicalCondition", "name": "Menopause" },
+        { "@type": "Thing", "name": "+{{Main Topic}}" }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/blog/+{{Slug}}#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://www.tamsenfadal.com/blog" },
+        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/blog/+{{Slug}}" }
+      ]
+    }
+  ]
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     3. EVENTS  →  /events/[slug]
+     Collection: "Events / Events" (68d65c61db60f21e8489ce00)
+     Template page: "Events / Events Template" (detail_events)
+
+     Real fields used:
+       name     → Name
+       slug     → Slug
+       image    → Image
+       date-day → Date Start   (DateTime)
+       date-end → Date End     (DateTime)
+       address  → Address      (Plain Text)
+       link     → Link
+
+     ⚠️ ADDRESS IS A SINGLE PLAIN-TEXT FIELD. There is no separate venue name, city,
+     region or postcode, so location cannot be expressed as a structured PostalAddress.
+     Place.address takes the raw string, which Google accepts. Splitting the CMS field
+     into venue/street/city/region/postcode would produce noticeably better Event rich
+     results — worth proposing as a small follow-up.
+
+     ⚠️ NO TICKET URL OR PRICE FIELD EXISTS, so "offers" is deliberately omitted.
+     Rich Results Test flags "missing field offers (optional)" — that is expected and
+     non-blocking. Do not fabricate a price to silence it. Adding a Ticket URL field to
+     the collection would clear it honestly.
+
+     ⚠️ Date Start is required for Event rich results. Items with an empty Date Start
+     will warn. Consider making it required in the collection.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Event",
+      "@id": "https://www.tamsenfadal.com/events/+{{Slug}}#event",
+      "name": "+{{Name}}",
+      "image": "+{{Image}}",
+      "startDate": "+{{Date Start}}",
+      "endDate": "+{{Date End}}",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "location": {
+        "@type": "Place",
+        "name": "+{{Address}}",
+        "address": "+{{Address}}"
+      },
+      "performer": { "@id": "https://www.tamsenfadal.com/#person" },
+      "organizer": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "url": "https://www.tamsenfadal.com/events/+{{Slug}}"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/events/+{{Slug}}#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Events", "item": "https://www.tamsenfadal.com/events" },
+        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/events/+{{Slug}}" }
+      ]
+    }
+  ]
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     4. EDUCATION HUB RESOURCES  →  /menopause-education-hub/[slug]
+     Collection: "Education Hub / Resources" (68d6721d9e5d8910c339845c)
+     Template page: "Education Hub / Resources Template"
+
+     ⚠️ UPGRADE, NOT AN ADDITION — 16 pages already emit a bare WebPage block with no
+     author, no publisher and no link to the entity graph. Replace it with this.
+
+     Real fields used:
+       name              → Name
+       slug              → Slug
+       short-description → Short Description   (Plain Text)
+       image             → Image
+       publication-date  → Publication Date    (DateTime)
+       resource-type     → Resource Type       (Plain Text: Guide / Documentary / Podcast)
+
+     This collection also has a FAQs MultiReference. If an item has FAQs bound and they
+     are rendered visibly on the page, FAQPage markup is a strong additional win — but
+     only mark up FAQs that are actually visible to the user, or it breaches Google's
+     structured-data guidelines. Left out here pending a look at how FAQs render.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "@id": "https://www.tamsenfadal.com/menopause-education-hub/+{{Slug}}#article",
+      "headline": "+{{Name}}",
+      "description": "+{{Short Description}}",
+      "image": "+{{Image}}",
+      "datePublished": "+{{Publication Date}}",
+      "url": "https://www.tamsenfadal.com/menopause-education-hub/+{{Slug}}",
+      "genre": "+{{Resource Type}}",
+      "author": { "@id": "https://www.tamsenfadal.com/#person" },
+      "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
+      "about": { "@type": "MedicalCondition", "name": "Menopause" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/menopause-education-hub/+{{Slug}}#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Education Hub", "item": "https://www.tamsenfadal.com/menopause-education-hub" },
+        { "@type": "ListItem", "position": 3, "name": "+{{Name}}", "item": "https://www.tamsenfadal.com/menopause-education-hub/+{{Slug}}" }
+      ]
+    }
+  ]
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     5. SHOP COLLECTIONS  →  /shop/[slug]
+     Collection: "Shop Collections" (68e51ac42e78266cb3fa2813)
+     Template page: "Shop Collections Template" (detail_shop)
+
+     ⚠️ TYPE DECISION — these are NOT products.
+
+     The collection's fields are "Shopmy Collection ID" and "Amazon Link" — these are
+     curated AFFILIATE collections, not goods sold by Tamsen. Marking them up as
+     Product with an Offer would assert a price and availability she does not control,
+     which is both inaccurate and a Google merchant-policy risk.
+
+     CollectionPage is the honest type. Do NOT "upgrade" this to Product later without
+     confirming she actually sells the items.
+
+     Real fields used:
+       name             → Collection Name
+       slug             → Slug
+       description      → Description        (Plain Text)
+       featured-image   → Featured Image
+       publication-date → Publication Date   (DateTime)
+     ══════════════════════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://www.tamsenfadal.com/shop/+{{Slug}}#webpage",
+      "name": "+{{Collection Name}}",
+      "description": "+{{Description}}",
+      "image": "+{{Featured Image}}",
+      "datePublished": "+{{Publication Date}}",
+      "url": "https://www.tamsenfadal.com/shop/+{{Slug}}",
+      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
+      "about": { "@id": "https://www.tamsenfadal.com/#person" },
+      "breadcrumb": { "@id": "https://www.tamsenfadal.com/shop/+{{Slug}}#breadcrumb" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/shop/+{{Slug}}#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.tamsenfadal.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://www.tamsenfadal.com/shop" },
+        { "@type": "ListItem", "position": 3, "name": "+{{Collection Name}}", "item": "https://www.tamsenfadal.com/shop/+{{Slug}}" }
       ]
     }
   ]

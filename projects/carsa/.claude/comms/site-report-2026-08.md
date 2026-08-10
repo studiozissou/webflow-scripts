@@ -115,7 +115,7 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Run the Rich Results Test on any sold car. It should either validate cleanly or report no vehicle listing at all.
 
-### 2. Store pages are too alike for Google to separate them — 1.5 hours {toggle="true"}
+### 2. Store pages are too alike for Google to separate them — 1 hour {toggle="true"}
 
 *Issue:* The store pages are similar enough that Google can't reliably tell which is which.
 *Explanation:* When ten pages read the same, searches for one store surface the wrong branch, and none of them rank as well as they should.
@@ -172,7 +172,26 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Open any post; a byline should be visible and the author name should appear in the page data.
 
-**Total estimated time: ~3 hours**, excluding issue #1, which needs a decision from you before it can be scoped.
+### 5. Vehicle pages read identically to each other — 1 hour {toggle="true"}
+
+*Issue:* 1,286 vehicle pages have body copy near-identical to at least one other vehicle page, up 180 this month.
+*Explanation:* When two cars' pages read the same, Google tends to index one and largely ignore the other, so parts of the stock compete with themselves.
+*Fix:* Work each car's own details into the page copy instead of relying on text generated from the model and trim.
+*Benefit:* Makes each car's page distinct, and tackles the largest remaining count in this report.
+
+	---
+
+	**Detail**
+
+	**Root cause:** The descriptive copy on a vehicle page is built from the model and trim, so every car of the same specification gets the same paragraphs. Checked across the flagged set: "Used 2023 Grey Ford Puma ST-Line" matches two other Puma ST-Lines, "Used 2024 White Audi A1 Sport" matches two other A1 Sports, "Used 2022 Grey BMW iX M Sport" matches two more. Each flagged page has one or two near-twins. The count rose this month because more near-identical stock arrived, not because anything got worse.
+
+	**What to change:** The CMS already holds the fields that differ between two otherwise identical cars — mileage, registration, colour, previous owners, service history, MOT expiry, and which store it's at. Binding two or three of those into the opening paragraph makes the text itself differ. The title and description change that went live on 10 August does this for the search snippet; this does the same job for the page body.
+
+	**Worth knowing:** This won't reach zero, and it shouldn't. Two genuinely identical cars will always read similarly. The goal is enough difference that Google indexes both rather than folding one into the other.
+
+	**How to verify:** Re-crawl; the duplicate-content count should fall from 1,286.
+
+**Total estimated time: ~3 hrs 30 min**, excluding issue #1, which needs a decision from you before it can be scoped.
 
 ---
 
@@ -240,23 +259,9 @@ Carsa holds data nobody else has: what sells fastest, average prices by region, 
 
 ---
 
-## Climbing the unbranded rankings — the 5 highest-value moves
+## 5 highest-value moves to climb the unbranded rankings
 
-New section, following the 6 August call. Tomek's point was that Carsa isn't on page one for "used cars", and that sites which look weaker are. His own read was "we've got no content". The data mostly agrees with him, though not in the way you'd expect, and the fix isn't where the frustration is pointing.
-
-**On the recent movement.** The "used cars" average position has moved from 13 to 10 over the past week, and one non-branded term went from 55 to 24. Clicks haven't changed. The search results rebuild only shipped the Wednesday before, so this is far too early to call a trend. I'd wait for next month's crawl before reading anything into it.
-
-**The honest position on "used cars" itself.** The page-one holders are AutoTrader, Carwow, Cinch, the AA, Parkers, Motors, Evans Halshaw and Listers. Those are national marketplaces with fifteen-year link profiles. Going head-on at "used cars" as a national term is a twelve-month project and I wouldn't fund it first.
-
-**Why the weaker sites beat you — I checked.** I pulled cars2.co.uk's search data to see what's actually carrying them. It isn't content volume. Almost all their traffic comes from pages combining a manufacturer with a town: "nissan wakefield", "hyundai bradford", "nissan huddersfield", "renault wakefield", "mg wakefield", "hyundai barnsley", "omoda wakefield". They rank first for every one of those. They have a page per make, and a contact page per make per branch.
-
-Then, having built that base, they pick up the generic terms almost as a byproduct — "car dealerships" at 12,100 searches a month, position 6.
-
-Carsa has make pages and store pages, but nothing that combines the two. Where those searches do surface a Carsa page it's a store page landing at position 35 to 58: "porsche wolverhampton" 35th, "kia wolverhampton" 48th, "bolton kia bolton" 56th. So the demand exists, Carsa is in the index for it, and there's no page built to win it. That's the clearest content gap on the site, and it's the one Tomek is sensing.
-
-Two things to hold in mind before the list. Carsa already ranks first or second for plenty of unbranded searches — store pages on their own towns, blog listicles, finance eligibility. The templates work when the content differs. And the biggest-looking prizes, the bare model names like "nissan qashqai" at 110,000 searches a month, aren't realistically winnable soon: Carsa sits at 17 against the manufacturers and AutoTrader. The five below are ground you can actually take, ordered by return per hour.
-
-### 1. Target "[model] for sale" on the model pages — 2 hours {toggle="true"}
+### 1. Target "[model] for sale" on the model pages — 0.5 hours {toggle="true"}
 
 This is the single best opportunity on the site. The pages already exist, they already rank, and the competition is unusually weak.
 
@@ -348,7 +353,7 @@ This is the pattern cars2.co.uk is beating you with, and Carsa has both halves o
 
 	**Honest note:** This is a difficulty-52 term with Auto Trader and We Buy Any Car above it. Expect movement into the low teens rather than the top three.
 
-### 5. Extend the blog formats that already reach the top 3 — 2 hours per post {toggle="true"}
+### 5. Extend the blog formats that already reach the top 3 {toggle="true"}
 
 Carsa's blog wins on a specific pattern: "best/cheapest [category] for [audience]". That format is proven and the difficulty scores are low.
 
@@ -364,7 +369,17 @@ Carsa's blog wins on a specific pattern: "best/cheapest [category] for [audience
 
 	**Why it works:** Each one is a listicle Carsa can populate from real stock, with internal links straight to the relevant model pages.
 
-**Total estimated time: ~7 hrs 30 min**, excluding the ongoing blog work.
+**Total estimated time: ~6 hours**, excluding the ongoing blog work.
+
+**The honest position on "used cars" itself.** The page-one holders are AutoTrader, Carwow, Cinch, the AA, Parkers, Motors, Evans Halshaw and Listers. Those are national marketplaces with fifteen-year link profiles. Going head-on at "used cars" as a national term is a twelve-month project.
+
+**Why the weaker sites beat you — I checked.** I pulled cars2.co.uk's search data to see what's actually carrying them. It isn't content volume. Almost all their traffic comes from pages combining a manufacturer with a town: "nissan wakefield", "hyundai bradford", "nissan huddersfield", "renault wakefield", "mg wakefield", "hyundai barnsley", "omoda wakefield". They rank first for every one of those. They have a page per make, and a contact page per make per branch.
+
+Then, having built that base, they pick up the generic terms almost as a byproduct — "car dealerships" at 12,100 searches a month, position 6.
+
+Carsa has make pages and store pages, but nothing that combines the two. Where those searches do surface a Carsa page it's a store page landing at position 35 to 58: "porsche wolverhampton" 35th, "kia wolverhampton" 48th, "bolton kia bolton" 56th. So the demand exists, Carsa is in the index for it, and there's no page built to win it. That's the clearest content gap on the site.
+
+Two things to hold in mind before the list. Carsa already ranks first or second for plenty of unbranded searches — store pages on their own towns, blog listicles, finance eligibility. The templates work when the content differs. And the biggest-looking prizes, the bare model names like "nissan qashqai" at 110,000 searches a month, aren't realistically winnable soon: Carsa sits at 17 against the manufacturers and AutoTrader.
 
 **On "we've got no content".** Half right, and the half that's right matters. The blog is genuinely strong — second nationally on several terms — so the problem isn't how much content exists. It's that the pages meant to sell cars are thin and near-identical while the blog carries the site. That's why the valuation blog post outranks the valuation tool, and why cars2 beats you with pages that are, individually, quite basic. Moves 1 to 4 are all the same underlying fix: give the commercial pages enough distinct content to stand on their own.
 

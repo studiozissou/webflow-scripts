@@ -17,7 +17,24 @@
 <!-- ══════════════════════════════════════════════════════════════════════
      1. BLOG TEMPLATE  →  /blog/[slug]
      Webflow page: "Blogs Template" (detail_blog)
-     Verified: template currently emits NO JSON-LD.
+
+     ⚠️ REPLACEMENT, NOT AN ADDITION. This template ALREADY emits a BlogPosting
+     block. Adding this one without removing that one gives every blog post two
+     competing Article nodes. Verified 2026-08-06 on
+     /blog/10-ways-to-support-your-partner-in-menopause.
+
+     What the existing block gets wrong:
+       1. author is an INLINE Person ({"@type":"Person","name":"Tamsen Fadal"})
+          rather than a reference to #person. Google therefore sees a separate,
+          unconnected Tamsen Fadal on all ~253 blog posts — which is the exact
+          entity fragmentation this whole project is trying to fix. This is the
+          single highest-leverage schema fix on the site by page count.
+       2. publisher is typed as a Person. Publisher should be the Organization
+          (Take Flight Productions LLC).
+       3. No BreadcrumbList and no isPartOf → #website.
+
+     What it gets right and should be KEPT: keywords, and
+     about → MedicalCondition "Menopause". Both are carried over below.
      ══════════════════════════════════════════════════════════════════════ -->
 <script type="application/ld+json">
 {
@@ -35,7 +52,9 @@
       "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
       "inLanguage": "en-US",
       "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
-      "mainEntityOfPage": "https://www.tamsenfadal.com/blog/+{{slug}}"
+      "mainEntityOfPage": "https://www.tamsenfadal.com/blog/+{{slug}}",
+      "keywords": "+{{Keywords}}",
+      "about": { "@type": "MedicalCondition", "name": "Menopause" }
     },
     {
       "@type": "BreadcrumbList",

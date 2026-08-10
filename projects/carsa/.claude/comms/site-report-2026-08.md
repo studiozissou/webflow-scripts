@@ -296,9 +296,9 @@ This is the single best opportunity on the site. The pages already exist, they a
 
 	**How to verify:** Track those eight searches monthly. Movement should show within two crawls.
 
-### 2. Build a page for "near me" searches — 2 hours {toggle="true"}
+### 2. Repoint the existing /stores page at "near me" searches — 1.5 hours {toggle="true"}
 
-High-value local searches currently land on whichever store page Google picks, usually Gloucester. Nothing on the site is built for them.
+High-value local searches currently land on whichever branch page Google picks, usually Gloucester. The /stores page should be taking them and isn't, because it's written to answer a different question.
 
 	---
 
@@ -306,13 +306,24 @@ High-value local searches currently land on whichever store page Google picks, u
 
 	"Used car dealerships near me" gets 6,600 searches a month and Carsa ranks 9th — with /stores/gloucester, which is an odd answer for someone in Bradford. "Car showroom near me" (2,900) ranks 5th, also Gloucester. "Used car dealerships" (2,900) ranks 6th, Gloucester again. "Car sales" gets 27,100 searches a month and Carsa ranks 14th with the Portsmouth page.
 
-	Google is picking a page more or less at random because there isn't a right one.
+	**Root cause:** /stores ranks for branded terms only — "carsa gloucester", "carsa bolton", "carsa towcester" and so on, at positions 6 to 16, plus "carsa locations" at number one. Not a single unbranded term. Google has read the page exactly as written, because the title and the H1 both lead with the brand: "Find your nearest Carsa store". The search you want to win never mentions Carsa.
 
-	**What to change:** A proper index page covering all branches, built to answer "where can I buy a used car near me", with the full branch list, a map, and links through to each store page. Point the generic local searches at that page instead of a single branch.
+	The page is otherwise in good shape. It runs to 2,811 words, lists all eleven branches in the page source, and carries a proper AutoDealer entry per branch with address, postcode, phone, opening hours, price range and payment methods. This is a repositioning job, not a rebuild — and updating it beats building something new, which would only compete with it.
 
-	**Expected gain:** These are national-volume searches where Carsa already ranks 5th to 14th with a page that isn't even trying.
+	**What to change, in order of leverage:**
 
-	**How to verify:** Track the four searches above and check which URL Google returns.
+	1. Move the brand out of the lead. Title to something like "Used Car Dealerships Near You — 11 UK Showrooms \| Carsa", H1 to "Used car dealerships near you".
+	2. Write a meta description. There isn't one at all at the moment, so Google is inventing the snippet.
+	3. Add an answer-first opening paragraph. The page currently drops straight into the store grid; two sentences naming the eleven towns and the stock count give Google and AI assistants something to quote.
+	4. Add geo coordinates and areaServed to each branch's listing data. Everything else is already there, and the coordinates are what support proximity.
+	5. Swap the FAQ for location questions and add FAQ markup. The current questions cover Reserve & Collect, warranties and provenance checks — good content, wrong page — and carry no markup at all.
+	6. Link to the hub from the footer and from each branch page. /stores currently sits at 13 for "carsa gloucester" while /stores/gloucester takes first place, so the hub has less internal weight than its own children. That's also why Google reaches past it for the generic searches.
+
+	**Sequencing:** do this alongside issue #2 in the fix list, not before it. If the hub starts winning generic searches while the branch pages still read identically to each other, it may start taking town searches the branches currently own outright.
+
+	**One caveat:** "near me" phrasing specifically is served largely by the map results, which are driven by Google Business Profile rather than by this page. I haven't reviewed Carsa's business profiles, so I'd treat the winnable ground here as "used car dealerships" and "car showroom near me" style queries and look at the profiles separately.
+
+	**How to verify:** Track the four searches above and check which URL Google returns. Success is /stores replacing /stores/gloucester.
 
 ### 3. Build "[make] in [town]" pages — 3 hours {toggle="true"}
 
@@ -364,7 +375,7 @@ Carsa's blog wins on a specific pattern: "best/cheapest [category] for [audience
 
 	**Why it works:** Each one is a listicle Carsa can populate from real stock, with internal links straight to the relevant model pages.
 
-**Total estimated time: ~8 hours**, excluding the ongoing blog work.
+**Total estimated time: ~7 hrs 30 min**, excluding the ongoing blog work.
 
 **On "we've got no content".** Half right, and the half that's right matters. The blog is genuinely strong — second nationally on several terms — so the problem isn't how much content exists. It's that the pages meant to sell cars are thin and near-identical while the blog carries the site. That's why the valuation blog post outranks the valuation tool, and why cars2 beats you with pages that are, individually, quite basic. Moves 1 to 4 are all the same underlying fix: give the commercial pages enough distinct content to stand on their own.
 

@@ -30,13 +30,13 @@ Everything else is inventory churn. Duplicate content is up 180 and duplicate ti
 | Links with no anchor text | 5,640 | 11 | −5,629 (fixed) |
 | Slow page load | 3,928 | 1,090 | −2,838 |
 | Pages with one internal link | 87 | 47 | −40 |
-| Duplicate meta descriptions | 52 | 28 | −24 |
+| Duplicate meta descriptions | 52 | 28 | −24 (new format live 10 Aug) |
 | Incorrect pages in sitemap | 29 | 10 | −19 |
 | Broken external links | 5,631 | 5,489 | −142 (not a real fault — see note) |
-| Duplicate title tags | 2,128 | 2,151 | +23 (stock growth) |
+| Duplicate title tags | 2,128 | 2,151 | +23 (stock growth; new format live 10 Aug) |
 | Duplicate content pages | 1,106 | 1,286 | +180 (stock growth) |
 | Pages not crawled | 17 | 40 | +23 (new stock, crawl timing) |
-| Over-length page titles | 430 | 430 | — |
+| Over-length page titles | 430 | 430 | — (new format live 10 Aug) |
 | Multiple H1 tags | 0 | 0 | — (holding) |
 | Nofollow internal links | 0 | 0 | — (holding) |
 
@@ -75,6 +75,14 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 **Added:**
 - Several new blog posts including best used EVs under £20,000, part-exchanging a car with outstanding finance, and a used-car budgeting guide. The part-exchange one was on July's recommended list.
+
+**Deployed after the crawl (so not yet in the numbers above):**
+
+- **New vehicle page titles and descriptions, live 10 August.** The title is now "Used {year} {colour} {make and model} ({registration}) | Carsa" — for example "Used 2023 Black Kia Sportage (RF23YWH) | Carsa", 45 characters. Fuel type, door count and trim have come out of the title and moved into the description, and the registration has gone in.
+
+	This targets three of the numbers above at once. Over-length titles should fall from 430, since the new format averages 47 characters against the old 70 and only the longest Land Rover combinations still run over. Duplicate titles should fall hard from 2,151 — the registration makes every title unique, where previously ten different cars shared "Used 2022 White Tesla Model Y Long Range 5dr | Electric | Carsa". Duplicate descriptions should clear from 28 for the same reason.
+
+	The next crawl will show whether it lands as expected.
 
 **Dropped from the list:**
 - July's issue #7, image alt text. Done, and confirmed — the crawl reports zero missing alt attributes and the vehicle images carry alt text.
@@ -126,26 +134,7 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Re-crawl and watch the duplicate-content count. Search a branch town and check only that branch's page comes back.
 
-### 3. Shorten over-length page titles — 0.5 hours {toggle="true"}
-
-*Issue:* 430 pages have titles too long for Google to show in full, unchanged since July.
-*Explanation:* Over-length titles get cut off in search results, so the words that matter can disappear.
-*Fix:* Trim the title templates so the important information sits inside roughly 60 characters.
-*Benefit:* Full, readable titles in search results.
-
-	---
-
-	**Detail**
-
-	**Root cause:** Some templates append more fields than fit. Vehicle titles like "Used 2021 White Citroen C3 Flair Plus 5dr | Petrol | Carsa" run past the limit.
-
-	**What to change:** Put the most important terms first and cap the length. Year, make, model and trim earn their place; fuel type and door count usually don't.
-
-	**Flagged since:** July 2026. Carried over untouched.
-
-	**How to verify:** Re-crawl; the over-length count should drop.
-
-### 4. Add "last updated" dates to service pages — 0.5 hours {toggle="true"}
+### 3. Add "last updated" dates to service pages — 0.5 hours {toggle="true"}
 
 *Issue:* /car-finance, /faq and the car-care pages show no date anywhere.
 *Explanation:* An undated finance page gives a reader no way to tell whether the rates are current.
@@ -164,7 +153,7 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Open any updated page and look for a clear "Last updated" line.
 
-### 5. Give blog posts a named author — 1 hour, needs your input {toggle="true"}
+### 4. Give blog posts a named author — 1 hour, needs your input {toggle="true"}
 
 *Issue:* Blog posts have no author, in the page data or on the page itself.
 *Explanation:* Advice about finance and car buying reads as more trustworthy with a real person's name behind it.
@@ -183,7 +172,7 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Open any post; a byline should be visible and the author name should appear in the page data.
 
-**Total estimated time: ~3 hrs 30 min**, excluding issue #1, which needs a decision from you before it can be scoped.
+**Total estimated time: ~3 hours**, excluding issue #1, which needs a decision from you before it can be scoped.
 
 ---
 
@@ -197,7 +186,7 @@ The blog is doing real work — it ranks second in the country for "cheapest car
 
 	**Detail**
 
-	Beyond the byline in issue #5, a proper author page with credentials and a link from every post builds up over 100+ articles. Worth doing once the name is decided.
+	Beyond the byline in issue #4, a proper author page with credentials and a link from every post builds up over 100+ articles. Worth doing once the name is decided.
 
 	**Depends on:** Author details from Carsa.
 

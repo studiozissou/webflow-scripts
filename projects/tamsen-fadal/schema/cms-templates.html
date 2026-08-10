@@ -37,6 +37,37 @@
 
      Slugs: name, slug, short-description, featured-image, release-date,
             episode-number, guest, keywords
+
+     ── WHY contributor, NOT actor ──────────────────────────────────────
+     schema.org has no podcast-specific "guest" property. The candidates:
+       actor       "An actor (individual or a group), e.g. in TV, radio, movie,
+                    video games etc., or in an event."  → implies performing a
+                    role; an interviewee is not acting
+       contributor "A secondary contributor to the CreativeWork or Event."
+                    → exactly what a podcast guest is
+     No rich result depends on either — Google's podcast support reads RSS, not
+     JSON-LD — so the semantically correct property wins. The block this replaces
+     used actor; that was inherited, not chosen.
+
+     ⚠️ DATA ISSUE — solo episodes list guest = "Tamsen Fadal"
+     Checked all 100 published episodes: the guest field is never empty, and
+     multi-guest is a non-issue (the only comma is a credential, "Sharon Malone, MD").
+     BUT roughly a quarter of episodes are solo and carry "Tamsen Fadal" as the guest.
+
+     On those, this markup emits an inline Person named "Tamsen Fadal" as contributor
+     while author already points at #person — a second, unlinked node for the same
+     human. That is the exact entity fragmentation this project is fixing, just at
+     smaller scale.
+
+     Webflow's binding tokens cannot do conditionals, so this cannot be solved in
+     markup. Options, best first:
+       1. Add a "Guest URL" field to the collection and bind it to sameAs. This both
+          fixes the duplicate (Tamsen's URL resolves to her own site) and is the
+          genuinely high-value change — it lets Google resolve guests as real
+          entities, strengthening co-occurrence signal around Tamsen.
+       2. Accept it. Redundant but not false — she does contribute to her own episode.
+       3. Do NOT simply clear guest on solo episodes: an empty field renders
+          "name": "" , and an empty-name Person node is worse than a redundant one.
      ══════════════════════════════════════════════════════════════════════ -->
 <script type="application/ld+json">
 {
@@ -56,7 +87,7 @@
       "author": { "@id": "https://www.tamsenfadal.com/#person" },
       "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
       "inLanguage": "en",
-      "actor": {
+      "contributor": {
         "@type": "Person",
         "name": "{{wf {&quot;path&quot;:&quot;guest&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
       }

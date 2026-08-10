@@ -2,7 +2,8 @@
 
 **Entity:** [Q7681850](https://www.wikidata.org/wiki/Q7681850)
 **Audited:** 2026-08-06 (live entity data via `Special:EntityData`)
-**Current state:** 27 claims, 3 sitelinks, English Wikipedia article present
+**Current state:** 28 claims, 3 sitelinks, English Wikipedia article present  
+**Last updated:** 2026-08-10 — P856 official website added; property labels re-verified
 
 Google pulls Knowledge Panel facts from Wikidata, so this directly supports the
 branded-search work. This is structured data, not editorial copy — it does **not**
@@ -20,35 +21,57 @@ need the bio sign-off.
 | --- | --- |
 | **P856** `official website` | `https://www.tamsenfadal.com/` |
 
-This is the single most valuable addition. It is the property Google leans on to
-associate the Knowledge Panel with the official site, and it is currently **absent**
-from the entity entirely. Add with qualifier `language of work or name (P407)` =
-`English (Q1860)`.
+**STATUS: added 2026-08-10.** Verified live — the entity went from 27 to 28 claims.
+This was the single most valuable addition: it is the property Google leans on to tie
+the Knowledge Panel to the official site.
+
+WARNING — it currently has **0 references**. Unreferenced statements are the ones
+patrollers revert. Add one to make it stick:
+`reference URL (P854)` = `https://www.tamsenfadal.com/` and
+`retrieved (P813)` = today's date.
+
+Optional but tidy: qualifier `language of work or name (P407)` = `English (Q1860)`.
 
 ---
 
 ## 2. Missing social and platform identifiers
 
-All confirmed absent from the entity as of the audit. Values below are the handles
-already used in the site's own outbound links and the live homepage `sameAs` array.
+> **Corrected 2026-08-10.** Property labels were verified against the Wikidata API,
+> which caught two errors in the first draft of this change set:
+> - **P11245 is "YouTube handle", not "Spotify show ID"** — good news, see below
+> - **P2850 is "Apple Music artist ID", not "Apple podcast ID"** — not applicable
 
-| Property | Identifier | Value to add |
+### Ready to paste — handles confirmed from the site's own outbound links
+
+| Property | Label | Value |
 | --- | --- | --- |
 | **P2003** | Instagram username | `tamsenfadal` |
-| **P2397** | YouTube channel ID | from `youtube.com/@TamsenFadalTV` — resolve to the `UC…` ID before submitting |
-| **P2013** | Facebook ID | `tamsenfadal` |
+| **P2013** | Facebook username | `tamsenfadal` |
 | **P6634** | LinkedIn personal profile ID | `tamsenfadal` |
-| **P7085** | TikTok username | `tamsenfadal` |
-| **P11245** | Spotify podcast show ID | `7KuIU0g3CsUY0eAlzQaA5T` |
-| **P2850** | Apple podcast show ID | `1799976761` |
-| **P2963** | Goodreads author ID | look up before submitting — not yet verified |
-| **P648** | Open Library ID | look up before submitting — not yet verified |
+| **P7085** | TikTok username | `tamsenfadal` (no @) |
+| **P11245** | YouTube handle | `TamsenFadalTV` (no @) |
+
+**P11245 sidesteps the blocked lookup.** The original plan needed P2397's `UC...`
+channel ID, which YouTube's consent wall blocks from scripted retrieval. P11245 takes
+the handle directly, so YouTube can be linked now without it.
+
+### Needs a lookup first — do not guess
+
+| Property | Label | Why blocked |
+| --- | --- | --- |
+| **P2397** | YouTube channel ID | Wants the `UC...` form, not the handle. To get it: open the channel, View Source, search `externalId`. Add alongside P11245 — complementary, not alternatives. |
+| **P2963** | Goodreads author ID | Not verified. Find her Goodreads author page; the ID is the number in the URL. |
+| **P648** | Open Library ID | Not verified. Author IDs start `OL...A`. |
+
+### Not applicable — dropped from the change set
+
+| Property | Why |
+| --- | --- |
+| P2850 Apple Music artist ID | For musical artists/authors in Apple Music, not podcasts. Skip unless she has an Apple Music artist presence. |
+| Spotify / Apple **podcast** IDs | These describe *The Tamsen Show*, not Tamsen. They belong on a podcast item. The Tamsen Show has no Wikidata item yet — creating one and linking it via P800 is the correct route, and a larger job. |
 
 **Already present, leave alone:** P2002 X/Twitter (`TamsenFadal`), P345 IMDb
 (`nm2876731`), P214 VIAF, P213 ISNI, P244 Library of Congress.
-
-⚠️ **P2397 caution:** the YouTube channel-ID property expects the `UC…` form, not
-the `@handle`. Resolve it first or the statement will be malformed.
 
 ---
 
@@ -99,12 +122,13 @@ Keep it factual and under about 12 words.
 
 ## Suggested order of work
 
-1. **P856 official website** — biggest single win, do it first
-2. Social identifiers (P2003, P2013, P6634, P7085) — quick, low risk
-3. Podcast identifiers (P11245, P2850)
-4. Description update
-5. P800 notable work — slowest, may need new items created
-6. P2397 YouTube — needs the `UC…` lookup
+1. ~~**P856 official website**~~ — **DONE 2026-08-10**
+2. **Add a reference to P856** — it has 0 references and is revert-bait. Do this next.
+3. Social identifiers: P2003, P2013, P6634, P7085, P11245 — five paste-ready values,
+   quick and low risk, no lookups needed
+4. Description update — one field, immediate
+5. P800 notable work — slowest; may need new items created for the book, film and podcast
+6. P2397 YouTube channel ID — needs the `UC...` lookup via View Source
 7. Goodreads / Open Library — verify the IDs exist first
 
 ## Verification after submitting

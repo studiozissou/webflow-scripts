@@ -58,9 +58,18 @@ Google and AI-search crawlers see one Tamsen Fadal, one publisher, one website.
    holds a canonical tag and Swiper CSS; the site head holds `google-site-verification`,
    GTM, and Finsweet. Every write MUST be **read → append → write** or working code is
    destroyed. This is the single biggest risk in the build.
-3. **CMS collections have no schema field.** The Blogs collection was checked field by
-   field — there is none. CMS-template schema therefore needs Webflow's escaped
-   dynamic-field bindings (`+{{field}}`), which cannot be written through the API.
+3. **Pages have a first-class `jsonLdSchema` field.** Corrected during the build — an
+   earlier assumption that the homepage graph lived in an in-canvas HTML Embed was
+   wrong. Webflow exposes a dedicated per-page structured-data field, readable via
+   `query_pages_schema_markup` and writable via `bulk_update_pages_schema_markup`.
+   This is strictly better than page head code: it is a dedicated field, so there is no
+   read-append-write risk, and many pages can be set in a single call.
+   → **Static pages: write the `jsonLdSchema` field via MCP, in bulk.**
+
+3b. **CMS collections have no schema field.** Checked field by field on Blogs, Podcast
+   Episodes, Events, Education Hub Resources and Shop Collections — none has one. CMS
+   *template* schema therefore still needs Webflow's escaped dynamic-field bindings
+   (`+{{field}}`), which cannot be written through the API.
    → **CMS templates are delivered as files for manual paste.**
 4. **Adding code ≠ publishing.** Approved sequence: add via MCP → publish → test.
 5. Webflow serves fully rendered HTML, so static blocks are visible to all crawlers

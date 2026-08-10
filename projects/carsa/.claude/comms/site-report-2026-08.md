@@ -100,16 +100,18 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 ### 1. Sold cars break their own listing data — needs a decision {toggle="true"}
 
-*Issue:* 460 vehicle pages have listing data Google rejects, and all of them are cars that have sold.
-*Explanation:* When a car sells, the page stays up but its price and photo are removed from the data Google reads, leaving a product listing too incomplete to be valid.
-*Fix:* Keep the price and photo in the listing data and just mark the car as sold, rather than stripping them out.
-*Benefit:* Clears the entire remaining structured-data error count in one change.
+*Issue:* 460 sold vehicle pages publish listing data Google can't read, because the price and photo are stripped out while the listing itself is still being published.
+*Explanation:* Withdrawing a sold car from search is the right intention, and marking it "sold out" already does that — but removing the price and photo as well leaves markup Google reads as broken rather than as deliberately withdrawn.
+*Fix:* Stop publishing the vehicle listing data altogether once a car is marked sold.
+*Benefit:* Same outcome you want, expressed in a way Google understands, and it clears the entire remaining error count.
 
 	---
 
 	**Detail**
 
-	**Root cause:** The sold state does two jobs at once. It shows visitors a "Sorry! This car has been sold." message, which works well. It also empties the price and image out of the page's listing data and sets availability to "sold out". Google needs a price to validate a product listing and an image to validate a merchant listing, so removing both leaves an item it can't accept.
+	**Root cause:** The sold state does three things. It shows visitors a "Sorry! This car has been sold." message, which works well. It sets availability to "sold out", which is the correct way to tell Google the car is no longer for sale. And it also empties out the price and image — which is the part that causes trouble, because Google needs a price to read a product listing and an image to read a merchant listing. The listing is still published, just without the fields needed to make sense of it.
+
+	**Worth being clear:** withdrawing sold cars from search is the right intention, and "sold out" already achieves it. The errors aren't a sign the outcome is wrong — they're a sign it's being expressed in a way Google reads as broken rather than as deliberate. The practical cost is that these 460 make up the entire structured-data error count, so a genuine error appearing next month would be lost among them.
 
 	**How I confirmed it:** I pulled the list of flagged pages from SEMRush and checked 25 of them individually. Every one was a sold car. I then compared against ten cars currently in stock — all ten had a price and photo in their data and validated fine. Google's own Rich Results Test on a sold car (10 August) reported the vehicle listing invalid, with the missing price as the critical fault.
 

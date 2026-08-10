@@ -92,9 +92,10 @@ async function validateFile(path) {
     results.blocks += 1;
     let body = m[1].trim();
 
-    // Templates carry Webflow binding tokens that are not valid JSON until bound.
+    // Webflow CMS binding tokens are not valid JSON until Webflow substitutes them.
+    // Real format: {{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}
     if (isTemplate) {
-      body = body.replace(/\+\{\{[^}]*\}\}/g, 'BOUND_FIELD');
+      body = body.replace(/\{\{wf[\s\S]*?\}\}/g, 'BOUND_FIELD');
     }
 
     try {
@@ -117,8 +118,21 @@ async function validateFile(path) {
       continue;
     }
 
-    if (!isTemplate && /\+\{\{/.test(m[1])) {
-      results.errors.push(`block ${idx}: contains an unbound Webflow token (+{{...}})`);
+    // Guard against the two ways CMS bindings go wrong. Both publish as empty
+    // strings rather than erroring, so they must be caught here.
+    if (/\+\{\{/.test(m[1])) {
+      results.errors.push(
+        `block ${idx}: invented placeholder "+{{...}}" — Webflow needs {{wf {&quot;path&quot;...}}`,
+      );
+    }
+    const bareTokens = (m[1].match(/\{\{(?!wf[\s{])/g) || []).length;
+    if (bareTokens) {
+      results.errors.push(
+        `block ${idx}: ${bareTokens} bare "{{ }}" token(s) — Webflow rejects these as invalid variables and publishes them empty`,
+      );
+    }
+    if (!isTemplate && /\{\{wf/.test(m[1])) {
+      results.errors.push(`block ${idx}: CMS binding token in a non-template file`);
     }
   }
 

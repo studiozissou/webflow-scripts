@@ -42,7 +42,10 @@ You are a structured data specialist. Your job is to generate valid JSON-LD sche
 - Always use `@context: "https://schema.org"` (HTTPS)
 - Live site content overrides secondary sources (e.g. use the exact legalName from the footer, not a normalised version from Companies House)
 - Do NOT include fields that can't be verified on the live site unless explicitly confirmed by the user (e.g. employee counts, office addresses, support hours, founders)
-- For Webflow CMS pages, note which fields should be dynamic (and how to do it with custom code)
+- For Webflow CMS pages, bind dynamic fields using Webflow's **exact** token format — bare `{{ field }}` or invented placeholders publish as empty strings. Load the `webflow-embeds` skill (`cms_schema_bindings` section) before writing any Collection Page template schema. The format is:
+  `{{wf {&quot;path&quot;:&quot;field-slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}`
+  — `{{wf ` prefix, HTML-entity quotes, the field **slug** not its display name, and a backslash-escaped `\}` before the closing `}}`.
+- Get field slugs from `get_collection_details` via Webflow MCP rather than guessing from display names. Remember the built-ins that never appear in that list: `name`, `slug`, `published-on`, `updated-on`, `created-on`.
 - Keep schemas minimal — only include fields you have data for
 
 ## AEO context

@@ -4,11 +4,13 @@
 
 ## Summary
 
-The best month since we started tracking. Site health is up to 75% from 72%, and SEMRush's AI Search score moved for the first time since May, 74 to 78. Four things that have sat on the issue list for months are now genuinely gone: broken internal links went from 56 to zero, server errors from 3 to zero, 404s from 21 to one, and links with no anchor text from 5,640 to 11. Pages loading slowly dropped from 3,928 to 1,090.
+The best month since we started tracking. Site health is up to 75% from 72%, and SEMRush's AI Search score moved for the first time since May, 74 to 78. Three things that have sat on the issue list for months are now genuinely gone: broken internal links went from 56 to zero, server errors from 3 to zero, and links with no anchor text from 5,640 to 11. Pages loading slowly dropped from 3,928 to 1,090.
 
-The sold-car work is what did most of it. Sold vehicles now keep their pages live with a "this car has been sold" message instead of vanishing, which is the approach we recommended in July. That single change is why the broken links and 404s cleared.
+The broken internal links cleared because of the carousel filtering fix we traced on the 9 July call. That was the cause, and it's now resolved.
 
-It also created the one real problem left. When a car sells, the page keeps working for visitors but its listing data has the price and photo stripped out, so Google sees an incomplete product listing and rejects it. That accounts for all 460 remaining structured-data errors, down from 1,207. I want to flag that July's report got the cause of these wrong: we said they were cars awaiting photography. They aren't, and never were — they're sold cars. I checked 25 of the flagged pages individually this month and every one was sold. Worth knowing because it changes the fix.
+The one real problem left sits on sold cars, and it isn't new. When a car sells its page stays live for a retention period showing "Sorry, this car has been sold", then comes down — behaviour agreed back in September, and the 404s at the end of that window were confirmed in June as correct and not worth fixing. What hasn't been picked up before is that during the retention window the page's listing data has its price and photo stripped out, so Google sees an incomplete product listing and rejects it. That accounts for all 460 remaining structured-data errors, down from 1,207.
+
+Two corrections to July's report. It said these errors were cars awaiting photography — they aren't: I checked 25 of the flagged pages individually this month and every one had sold. And this is long-standing rather than anything that changed recently. Ten of those 25 pages have carried the same error since 12 May.
 
 Everything else is inventory churn. Duplicate content is up 180 and duplicate titles up 23 as stock turns over, and the store pages are similar enough that Google struggles to tell them apart. That last one matters more than it looks, and it feeds into the ranking section at the end.
 
@@ -59,34 +61,38 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 ## What changed and why
 
-**Fixed:**
-- Broken internal links: 56 → 0. Sold cars keep their pages instead of 404ing.
-- Server errors: 3 → 0. The two problem vehicle pages from July are gone.
-- 404s: 21 → 1. The one left is a single sold car, /vehicles/used/sa70oul.
-- Links with no anchor text: 5,640 → 11. The icon, social and card link components now carry proper labels. I checked the homepage directly — 199 links, none unlabelled. The 11 remaining are on the vehicle purchase and cookie policy pages.
-- Slow page load: 3,928 → 1,090. Same crawl size, so this is a real improvement rather than a measurement quirk.
-- Near-orphaned pages: 87 → 47. Internal linking has improved.
-- Sitemap: 29 wrong pages → 10.
-- Structured-data errors: 1,207 → 460, as sold stock cycles through.
+### Fixed {toggle="true"}
 
-**Regressed:**
-- Duplicate content: 1,106 → 1,286, and duplicate titles 2,128 → 2,151. Stock turnover plus templates that produce near-identical pages.
-- Pages not crawled: 17 → 40. All 40 are vehicle pages first seen on the day of the crawl — new stock added while SEMRush was running. The same thing happened in June and settled by itself.
+	- Broken internal links: 56 → 0. The carousel filtering issue identified on the 9 July call.
+	- Server errors: 3 → 0. The two problem vehicle pages from July are gone.
+	- 404s: 21 → 1. The one left is a sold car, /vehicles/used/sa70oul. Worth remembering these aren't faults — sold vehicles are removed after their retention period, which we agreed in June is the right use of a 404. The count mostly reflects how many happen to have just come down when the crawl runs.
+	- Links with no anchor text: 5,640 → 11. The icon, social and card link components now carry proper labels. I checked the homepage directly — 199 links, none unlabelled. The 11 remaining are on the vehicle purchase and cookie policy pages.
+	- Slow page load: 3,928 → 1,090. Same crawl size, so this is a real improvement rather than a measurement quirk.
+	- Near-orphaned pages: 87 → 47. Internal linking has improved.
+	- Sitemap: 29 wrong pages → 10.
+	- Structured-data errors: 1,207 → 460, as sold stock cycles through.
 
-**Added:**
-- Several new blog posts including best used EVs under £20,000, part-exchanging a car with outstanding finance, and a used-car budgeting guide. The part-exchange one was on July's recommended list.
+### Regressed {toggle="true"}
 
-**Deployed after the crawl (so not yet in the numbers above):**
+	- Duplicate content: 1,106 → 1,286, and duplicate titles 2,128 → 2,151. Stock turnover plus templates that produce near-identical pages.
+	- Pages not crawled: 17 → 40. All 40 are vehicle pages first seen on the day of the crawl — new stock added while SEMRush was running. The same thing happened in June and settled by itself.
 
-- **New vehicle page titles and descriptions, live 10 August.** The title is now "Used {year} {colour} {make and model} ({registration}) | Carsa" — for example "Used 2023 Black Kia Sportage (RF23YWH) | Carsa", 45 characters. Fuel type, door count and trim have come out of the title and moved into the description, and the registration has gone in.
+### Added {toggle="true"}
 
-	This targets three of the numbers above at once. Over-length titles should fall from 430, since the new format averages 47 characters against the old 70 and only the longest Land Rover combinations still run over. Duplicate titles should fall hard from 2,151 — the registration makes every title unique, where previously ten different cars shared "Used 2022 White Tesla Model Y Long Range 5dr | Electric | Carsa". Duplicate descriptions should clear from 28 for the same reason.
+	- Several new blog posts including best used EVs under £20,000, part-exchanging a car with outstanding finance, and a used-car budgeting guide. The part-exchange one was on July's recommended list.
 
-	The next crawl will show whether it lands as expected.
+### Deployed after the crawl — not yet in the numbers above {toggle="true"}
 
-**Dropped from the list:**
-- July's issue #7, image alt text. Done, and confirmed — the crawl reports zero missing alt attributes and the vehicle images carry alt text.
-- July's issue #9, broken external links. Not a real fault. All 5,489 are the same WhatsApp link in the site header returning "too many requests" when the crawler hits it thousands of times in a row. Real visitors clicking it are fine. It will show in the numbers every month, and it can be ignored every month.
+	- **New vehicle page titles and descriptions, live 10 August.** The title is now "Used {year} {colour} {make and model} ({registration}) | Carsa" — for example "Used 2023 Black Kia Sportage (RF23YWH) | Carsa", 45 characters. Fuel type, door count and trim have come out of the title and moved into the description, and the registration has gone in.
+
+		This targets three of the numbers above at once. Over-length titles should fall from 430, since the new format averages 47 characters against the old 70 and only the longest Land Rover combinations still run over. Duplicate titles should fall hard from 2,151 — the registration makes every title unique, where previously ten different cars shared "Used 2022 White Tesla Model Y Long Range 5dr | Electric | Carsa". Duplicate descriptions should clear from 28 for the same reason.
+
+		The next crawl will show whether it lands as expected.
+
+### Dropped from the list {toggle="true"}
+
+	- July's issue #7, image alt text. Done, and confirmed — the crawl reports zero missing alt attributes and the vehicle images carry alt text.
+	- July's issue #9, broken external links. Not a real fault. All 5,489 are the same WhatsApp link in the site header returning "too many requests" when the crawler hits it thousands of times in a row. Real visitors clicking it are fine. It will show in the numbers every month, and it can be ignored every month.
 
 ---
 
@@ -109,9 +115,9 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**Correction to July:** Last month's report said these errors were cars that went live before being photographed. That was wrong. Available stock is fine; it's sold stock that's affected.
 
-	**What to change:** Leave the image and price in place when a car sells and only change availability to "sold out". A sold listing with complete data validates; an incomplete one doesn't.
+	**Not a new problem.** The sold state has worked this way for a long time — the "Sorry, this car has been sold" message was specified back in September, and ten of the 25 pages I checked have carried this same error since 12 May. Nothing changed recently to cause it; it simply hadn't been traced to the right cause before.
 
-	**Worth confirming first:** Removing the price and photo may be deliberate, to keep sold cars out of shopping feeds. If that's the intent, the alternative is to leave the vehicle listing data off sold pages entirely rather than publishing a partial one. Either works. Publishing an incomplete listing is the only option that doesn't.
+	**What to change:** Since these pages are temporary anyway — they come down at the end of the retention period — the cleanest fix is to stop emitting the vehicle listing data once a car is marked sold. Google then sees no listing rather than a broken one. The alternative, if you'd rather keep the markup, is to leave the image and price in place and only switch availability to "sold out"; a sold listing with complete data validates. Either works. Publishing an incomplete listing is the only option that doesn't.
 
 	**How to verify:** Run the Rich Results Test on any sold car. It should either validate cleanly or report no vehicle listing at all.
 

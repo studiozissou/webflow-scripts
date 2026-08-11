@@ -4,15 +4,9 @@
 
 ## Summary
 
-The best month since we started tracking. Site health is up to 75% from 72%, and SEMRush's AI Search score moved for the first time since May, 74 to 78. Three things that have sat on the issue list for months are now genuinely gone: broken internal links went from 56 to zero, server errors from 3 to zero, and links with no anchor text from 5,640 to 11. Pages loading slowly dropped from 3,928 to 1,090.
+The best month since we started tracking. Site health is up from 72% to 75%, SEMRush's AI Search score moved for the first time since May, 74 to 78, and three long-standing problems are genuinely gone: broken internal links 56 to zero (the carousel filtering issue traced on the 9 July call), server errors 3 to zero, and links with no anchor text 5,640 to 11. Slow-loading pages fell from 3,928 to 1,090. The new vehicle page titles and descriptions went live on 10 August, a few hours after this crawl ran, so the duplicate-title and over-length-title counts should come down next month rather than this one.
 
-The broken internal links cleared because of the carousel filtering fix we traced on the 9 July call. That was the cause, and it's now resolved.
-
-The one real problem left sits on sold cars, and it isn't new. When a car sells its page stays live for a retention period showing "Sorry, this car has been sold", then comes down — behaviour agreed back in September, and the 404s at the end of that window were confirmed in June as correct and not worth fixing. What hasn't been picked up before is that during the retention window the page's listing data has its price and photo stripped out, so Google sees an incomplete product listing and rejects it. That accounts for all 460 remaining structured-data errors, down from 1,207.
-
-Two corrections to July's report. It said these errors were cars awaiting photography — they aren't: I checked 25 of the flagged pages individually this month and every one had sold. And this is long-standing rather than anything that changed recently. Ten of those 25 pages have carried the same error since 12 May.
-
-Everything else is inventory churn. Duplicate content is up 180 and duplicate titles up 23 as stock turns over, and the store pages are similar enough that Google struggles to tell them apart. That last one matters more than it looks, and it feeds into the ranking section at the end.
+What needs attention is the commercial pages. Duplicate content rose to 1,286 and duplicate titles to 2,151 as stock turned over, and the store pages read similarly enough that Google can't reliably tell them apart — the same underlying problem in two places, and the main thing holding back the unbranded rankings covered at the end. One correction to July's report while I'm here: the 460 remaining structured-data errors are sold cars, not cars awaiting photography, and they're long-standing rather than new — ten of the 25 I checked have carried the error since 12 May. Withdrawing sold cars from search is the right intention, so that one is a tidy-up rather than a priority.
 
 ---
 
@@ -98,32 +92,7 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 ## Top issues to fix
 
-### 1. Sold cars break their own listing data — needs a decision {toggle="true"}
-
-*Issue:* 460 sold vehicle pages publish listing data Google can't read, because the price and photo are stripped out while the listing itself is still being published.
-*Explanation:* Withdrawing a sold car from search is the right intention, and marking it "sold out" already does that — but removing the price and photo as well leaves markup Google reads as broken rather than as deliberately withdrawn.
-*Fix:* Stop publishing the vehicle listing data altogether once a car is marked sold.
-*Benefit:* Same outcome you want, expressed in a way Google understands, and it clears the entire remaining error count.
-
-	---
-
-	**Detail**
-
-	**Root cause:** The sold state does three things. It shows visitors a "Sorry! This car has been sold." message, which works well. It sets availability to "sold out", which is the correct way to tell Google the car is no longer for sale. And it also empties out the price and image — which is the part that causes trouble, because Google needs a price to read a product listing and an image to read a merchant listing. The listing is still published, just without the fields needed to make sense of it.
-
-	**Worth being clear:** withdrawing sold cars from search is the right intention, and "sold out" already achieves it. The errors aren't a sign the outcome is wrong — they're a sign it's being expressed in a way Google reads as broken rather than as deliberate. The practical cost is that these 460 make up the entire structured-data error count, so a genuine error appearing next month would be lost among them.
-
-	**How I confirmed it:** I pulled the list of flagged pages from SEMRush and checked 25 of them individually. Every one was a sold car. I then compared against ten cars currently in stock — all ten had a price and photo in their data and validated fine. Google's own Rich Results Test on a sold car (10 August) reported the vehicle listing invalid, with the missing price as the critical fault.
-
-	**Correction to July:** Last month's report said these errors were cars that went live before being photographed. That was wrong. Available stock is fine; it's sold stock that's affected.
-
-	**Not a new problem.** The sold state has worked this way for a long time — the "Sorry, this car has been sold" message was specified back in September, and ten of the 25 pages I checked have carried this same error since 12 May. Nothing changed recently to cause it; it simply hadn't been traced to the right cause before.
-
-	**What to change:** Since these pages are temporary anyway — they come down at the end of the retention period — the cleanest fix is to stop emitting the vehicle listing data once a car is marked sold. Google then sees no listing rather than a broken one. The alternative, if you'd rather keep the markup, is to leave the image and price in place and only switch availability to "sold out"; a sold listing with complete data validates. Either works. Publishing an incomplete listing is the only option that doesn't.
-
-	**How to verify:** Run the Rich Results Test on any sold car. It should either validate cleanly or report no vehicle listing at all.
-
-### 2. Store pages are too alike for Google to separate them — 1 hour {toggle="true"}
+### 1. Store pages are too alike for Google to separate them — 1 hour {toggle="true"}
 
 *Issue:* The store pages are similar enough that Google can't reliably tell which is which.
 *Explanation:* When ten pages read the same, searches for one store surface the wrong branch, and none of them rank as well as they should.
@@ -141,6 +110,25 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 	**Worth knowing:** Portsmouth, Cannock, Gloucester and Mountsorrel already rank first or second for their own town's searches. The template works when the content differs. The branches that don't rank are the ones reading like every other page.
 
 	**How to verify:** Re-crawl and watch the duplicate-content count. Search a branch town and check only that branch's page comes back.
+
+### 2. Vehicle pages read identically to each other — 1 hour {toggle="true"}
+
+*Issue:* 1,286 vehicle pages have body copy near-identical to at least one other vehicle page, up 180 this month.
+*Explanation:* When two cars' pages read the same, Google tends to index one and largely ignore the other, so parts of the stock compete with themselves.
+*Fix:* Work each car's own details into the page copy instead of relying on text generated from the model and trim.
+*Benefit:* Makes each car's page distinct, and tackles the largest remaining count in this report.
+
+	---
+
+	**Detail**
+
+	**Root cause:** The descriptive copy on a vehicle page is built from the model and trim, so every car of the same specification gets the same paragraphs. Checked across the flagged set: "Used 2023 Grey Ford Puma ST-Line" matches two other Puma ST-Lines, "Used 2024 White Audi A1 Sport" matches two other A1 Sports, "Used 2022 Grey BMW iX M Sport" matches two more. Each flagged page has one or two near-twins. The count rose this month because more near-identical stock arrived, not because anything got worse.
+
+	**What to change:** The CMS already holds the fields that differ between two otherwise identical cars — mileage, registration, colour, previous owners, service history, MOT expiry, and which store it's at. Binding two or three of those into the opening paragraph makes the text itself differ. The title and description change that went live on 10 August does this for the search snippet; this does the same job for the page body.
+
+	**Worth knowing:** This won't reach zero, and it shouldn't. Two genuinely identical cars will always read similarly. The goal is enough difference that Google indexes both rather than folding one into the other.
+
+	**How to verify:** Re-crawl; the duplicate-content count should fall from 1,286.
 
 ### 3. Add "last updated" dates to service pages — 0.5 hours {toggle="true"}
 
@@ -161,7 +149,32 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Open any updated page and look for a clear "Last updated" line.
 
-### 4. Give blog posts a named author — 1 hour, needs your input {toggle="true"}
+### 4. Sold cars publish listing data Google can't read — 0.5 hours {toggle="true"}
+
+*Issue:* 460 sold vehicle pages publish listing data Google can't read, because the price and photo are stripped out while the listing itself is still being published.
+*Explanation:* Withdrawing a sold car from search is the right intention, and marking it "sold out" already does that — but removing the price and photo as well leaves markup Google reads as broken rather than as deliberately withdrawn.
+*Fix:* Stop publishing the vehicle listing data altogether once a car is marked sold.
+*Benefit:* Same outcome you want, expressed in a way Google understands, and it clears the entire remaining error count.
+
+	---
+
+	**Detail**
+
+	**Root cause:** The sold state does three things. It shows visitors a "Sorry! This car has been sold." message, which works well. It sets availability to "sold out", which is the correct way to tell Google the car is no longer for sale. And it also empties out the price and image — which is the part that causes trouble, because Google needs a price to read a product listing and an image to read a merchant listing. The listing is still published, just without the fields needed to make sense of it.
+
+	**Worth being clear:** withdrawing sold cars from search is the right intention, and "sold out" already achieves it. The errors aren't a sign the outcome is wrong — they're a sign it's being expressed in a way Google reads as broken rather than as deliberate. The practical cost is that these 460 make up the entire structured-data error count, so a genuine error appearing next month would be lost among them.
+
+	**How I confirmed it:** I pulled the list of flagged pages from SEMRush and checked 25 of them individually. Every one was a sold car. I then compared against ten cars currently in stock — all ten had a price and photo in their data and validated fine. Google's own Rich Results Test on a sold car (10 August) reported the vehicle listing invalid, with the missing price as the critical fault.
+
+	**Correction to July:** Last month's report said these errors were cars that went live before being photographed. That was wrong. Available stock is fine; it's sold stock that's affected.
+
+	**Not a new problem.** The sold state has worked this way for a long time — the "Sorry, this car has been sold" message was specified back in September, and ten of the 25 pages I checked have carried this same error since 12 May. Nothing changed recently to cause it; it simply hadn't been traced to the right cause before.
+
+	**What to change:** Stop publishing the vehicle listing data once a car is marked sold. Google then sees no listing at all rather than a broken one, which is exactly the delisting you're after. In Webflow that's conditional visibility on the schema block set to "not sold", or the same condition in the vehicle page script if the block is built there — a quick check confirms which.
+
+	**How to verify:** Run the Rich Results Test on any sold car. It should either validate cleanly or report no vehicle listing at all.
+
+### 5. Give blog posts a named author — 1 hour, needs your input {toggle="true"}
 
 *Issue:* Blog posts have no author, in the page data or on the page itself.
 *Explanation:* Advice about finance and car buying reads as more trustworthy with a real person's name behind it.
@@ -180,26 +193,8 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Open any post; a byline should be visible and the author name should appear in the page data.
 
-### 5. Vehicle pages read identically to each other — 1 hour {toggle="true"}
 
-*Issue:* 1,286 vehicle pages have body copy near-identical to at least one other vehicle page, up 180 this month.
-*Explanation:* When two cars' pages read the same, Google tends to index one and largely ignore the other, so parts of the stock compete with themselves.
-*Fix:* Work each car's own details into the page copy instead of relying on text generated from the model and trim.
-*Benefit:* Makes each car's page distinct, and tackles the largest remaining count in this report.
-
-	---
-
-	**Detail**
-
-	**Root cause:** The descriptive copy on a vehicle page is built from the model and trim, so every car of the same specification gets the same paragraphs. Checked across the flagged set: "Used 2023 Grey Ford Puma ST-Line" matches two other Puma ST-Lines, "Used 2024 White Audi A1 Sport" matches two other A1 Sports, "Used 2022 Grey BMW iX M Sport" matches two more. Each flagged page has one or two near-twins. The count rose this month because more near-identical stock arrived, not because anything got worse.
-
-	**What to change:** The CMS already holds the fields that differ between two otherwise identical cars — mileage, registration, colour, previous owners, service history, MOT expiry, and which store it's at. Binding two or three of those into the opening paragraph makes the text itself differ. The title and description change that went live on 10 August does this for the search snippet; this does the same job for the page body.
-
-	**Worth knowing:** This won't reach zero, and it shouldn't. Two genuinely identical cars will always read similarly. The goal is enough difference that Google indexes both rather than folding one into the other.
-
-	**How to verify:** Re-crawl; the duplicate-content count should fall from 1,286.
-
-**Total estimated time: ~3 hrs 30 min**, excluding issue #1, which needs a decision from you before it can be scoped.
+**Total estimated time: ~4 hours**
 
 ---
 
@@ -213,7 +208,7 @@ The blog is doing real work — it ranks second in the country for "cheapest car
 
 	**Detail**
 
-	Beyond the byline in issue #4, a proper author page with credentials and a link from every post builds up over 100+ articles. Worth doing once the name is decided.
+	Beyond the byline in issue #5, a proper author page with credentials and a link from every post builds up over 100+ articles. Worth doing once the name is decided.
 
 	**Depends on:** Author details from Carsa.
 
@@ -321,7 +316,7 @@ High-value local searches currently land on whichever branch page Google picks, 
 	5. Swap the FAQ for location questions and add FAQ markup. The current questions cover Reserve & Collect, warranties and provenance checks — good content, wrong page — and carry no markup at all.
 	6. Link to the hub from the footer and from each branch page. /stores currently sits at 13 for "carsa gloucester" while /stores/gloucester takes first place, so the hub has less internal weight than its own children. That's also why Google reaches past it for the generic searches.
 
-	**Sequencing:** do this alongside issue #2 in the fix list, not before it. If the hub starts winning generic searches while the branch pages still read identically to each other, it may start taking town searches the branches currently own outright.
+	**Sequencing:** do this alongside issue #1 in the fix list, not before it. If the hub starts winning generic searches while the branch pages still read identically to each other, it may start taking town searches the branches currently own outright.
 
 	**One caveat:** "near me" phrasing specifically is served largely by the map results, which are driven by Google Business Profile rather than by this page. I haven't reviewed Carsa's business profiles, so I'd treat the winnable ground here as "used car dealerships" and "car showroom near me" style queries and look at the profiles separately.
 

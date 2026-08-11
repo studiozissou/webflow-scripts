@@ -67,7 +67,10 @@ tell them you've left it blank for them to fill).
 ## Standard links and details
 
 Will's own links and figures, for when an email needs one. Paste links bare, no
-link text or markdown, and never invent a variant.
+link text or markdown, and never invent a variant. Always use the clean
+canonical URL, never a `https://www.google.com/url?q=...&source=gmail` wrapper,
+which is what Gmail produces when a link is copied out of a rendered message.
+If a URL arrives in that form, take the part between `q=` and `&source=`.
 
 - **Booking a call:** https://calendar.notion.so/meet/studiozissou/30mins
   (a 30 minute slot). Use this whenever the email offers a call, suggests

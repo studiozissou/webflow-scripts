@@ -152,26 +152,26 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Open any updated page and look for a clear "Last updated" line.
 
-### 4. Vehicle pages are still slow — already scoped {toggle="true"}
+### 4. Replace the "Learn more" links with real text — 0.5 hours {toggle="true"}
 
-*Issue:* 1,090 vehicle pages take between 3 and 4.8 seconds to load. Down sharply from 3,928, but still the largest group of slow pages on the site.
-*Explanation:* These are the pages where someone decides whether to buy a particular car, so a slow one loses people at the worst possible moment.
-*Fix:* The script-to-CDN migration already scoped in June, currently waiting on a hosting decision rather than on effort.
-*Benefit:* Faster pages on the highest-value part of the site, for both visitors and search.
+*Issue:* 125 internal links use "Learn more" as their wording, across the city pages and the promotion pages.
+*Explanation:* Link text is how Google works out what sits on the other end. "Learn more" describes nothing, so those 125 links pass no useful signal.
+*Fix:* Change the wording in the shared block so it names where the link goes.
+*Benefit:* All 125 links start describing their destination, off the back of two small edits.
 
 	---
 
 	**Detail**
 
-	**Root cause:** Identified on the 10 June call. The vehicle and search pages have slowed over the year as scripts and conditional visibility logic accumulated, all pasted straight into the Webflow editor with no build pipeline. Because they sit inline, browsers download them again on every page rather than caching them once.
+	**Root cause:** Two links sit in a shared block — one to /car-finance, one to /sell-car/part-exchange — and both read "Learn more". That block repeats across every /used-cars/near/ city page and the promotion pages, so a single component produces the entire count. Confirmed on /used-cars/near/wolverhampton, which carries three of them.
 
-	**Progress:** the count has already fallen from 3,928 to 1,090 this month, so most of the site is now fine. What's left is concentrated on the vehicle pages, sitting between 3.0 and 4.8 seconds.
+	**What to change:** Swap "Learn more" for wording that names the destination — something like "See our finance options" and "Value your part exchange". Two edits in the component, and every page carrying it updates at once.
 
-	**What to change:** Move the scripts out of Webflow and serve them from a CDN so they can be cached, then refactor them for size. This was agreed on the 9 July call.
+	**Worth doing at the same time:** the last 11 unlabelled links, which sit on just two pages — /terms/vehicle-purchase has 3 pointing at go.carsa.co.uk/cc, and /terms/cookie-policy has 8 pointing at external privacy pages. Labelling those clears the unlabelled-link count to zero.
 
-	**What it's waiting on:** where the scripts are hosted. The repo is private, so a public host needs settling with Steven, and it should sit on a Carsa-controlled account rather than a personal one. That decision is the blocker, not the work itself.
+	**Pairs with:** move #3 in the ranking section, which is about strengthening those same city pages. Worth doing in one pass.
 
-	**How to verify:** Re-crawl and watch the slow-page count, and check load time on a vehicle page before and after.
+	**How to verify:** Re-crawl. Non-descriptive anchor text should fall from 125, and unlabelled links from 11 to zero.
 
 ### 5. Give blog posts a named author — 1 hour, needs your input {toggle="true"}
 
@@ -193,7 +193,7 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 	**How to verify:** Open any post; a byline should be visible and the author name should appear in the page data.
 
 
-**Total estimated time: ~3 hrs 30 min**, excluding issue #4, which is already scoped.
+**Total estimated time: ~4 hours**
 
 ---
 
@@ -235,7 +235,9 @@ The homepage headline is now "A better rate. On every Carsa car." It's a good li
 
 	Worth doing the same on /car-finance and /sell-car.
 
-	**One to fix while you're there:** the llms.txt file, which we put live last month specifically so AI tools read the right facts, lists Shrewsbury as a store and doesn't mention Portsmouth or Wolverhampton. The live stores page lists 11 branches: Bolton, Bradford, Cannock, Durham, Gloucester, Halesowen, Mountsorrel, Portsmouth, Southampton, Towcester and Wolverhampton. Worth correcting, since the whole point of that file is accuracy.
+	**One to check while you're there:** the llms.txt file we put live last month, which exists so AI tools read the right facts about Carsa, doesn't match the stores page. It names Shrewsbury and omits Portsmouth and Wolverhampton, while /stores lists 11 branches: Bolton, Bradford, Cannock, Durham, Gloucester, Halesowen, Mountsorrel, Portsmouth, Southampton, Towcester and Wolverhampton.
+
+	Shrewsbury is the odd one. Its page is live and sits in the sitemap, but nothing on /stores links to it — so either it's a branch missing from the list, or a closed one whose page is still up. Worth telling me which, and I'll make llms.txt, /stores and the sitemap agree.
 
 ### 4. Finish the outbound citations — 0.5 hours {toggle="true"}
 

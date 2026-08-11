@@ -64,15 +64,18 @@ than guessing an address. A wrong `to` address is worse than a quick question.
 If they give a name but no address, ask for the address (or leave `to` empty and
 tell them you've left it blank for them to fill).
 
-## Standard links
+## Standard links and details
 
-Will's own links, for when an email needs one. Paste them bare, no link text or
-markdown, and never invent a variant.
+Will's own links and figures, for when an email needs one. Paste links bare, no
+link text or markdown, and never invent a variant.
 
 - **Booking a call:** https://calendar.notion.so/meet/studiozissou/30mins
   (a 30 minute slot). Use this whenever the email offers a call, suggests
   talking, or asks to find time. Say something like "you can grab half an hour
   whenever suits" and put the URL after it, rather than sending it bare.
+- **Hourly rate:** £120 per hour. Use this when quoting training, consulting, or
+  any time-billed work. Only state it if the email actually calls for a price,
+  and never guess at day rates or project fees from it.
 
 ## Saving
 
@@ -86,6 +89,11 @@ this?" step. Pass:
 
 If the email is a reply to a specific message you've been given the ID for, pass
 `replyToMessageId` so it threads correctly.
+
+Note that `update_draft` cannot set `replyToMessageId`, and updating a threaded
+draft drops it out of its thread. If a reply needs changing, create a fresh
+draft with `replyToMessageId` rather than updating the old one, and tell the
+user which draft to keep and which to bin.
 
 After saving, show the user the email you wrote (subject and body) in your reply
 so they can see it without opening Gmail, and confirm the draft is saved. Keep

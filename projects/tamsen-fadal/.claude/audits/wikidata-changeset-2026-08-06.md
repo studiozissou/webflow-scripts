@@ -75,18 +75,63 @@ the handle directly, so YouTube can be linked now without it.
 
 ---
 
-## 3. Missing notable work
+## 3. Notable work — needs items created first
 
-`P800 notable work` is absent. Add these, each as a separate statement:
+**Checked 11 Aug 2026:** none of her works exist as Wikidata items. Searched
+"How to Menopause", "The M Factor", "The Tamsen Show", "Take Flight Productions" —
+no results for any. So `P800 notable work` is not a quick add; each work needs an
+item creating before it can be linked.
 
-| Work | Notes |
-| --- | --- |
-| *How to Menopause* | The book. Create the work item first if it does not exist. |
-| *The M Factor: Shredding the Silence on Menopause* | Documentary (PBS). |
-| *The Tamsen Show* | Podcast. Create item if needed. |
+Priority is the book: it has an ISBN, a publisher and bestseller coverage, so it is
+the easiest to source, and it links author to work in both directions — exactly the
+association branded search needs.
 
-These are the works most associated with her entity and the ones the Knowledge
-Panel should surface.
+### 3a. CREATE — How to Menopause
+
+All Q-IDs and property numbers below were verified against the Wikidata API.
+
+**Label (en):** `How to Menopause`
+**Description (en):** `2025 book by Tamsen Fadal`
+
+| Property | Value | Notes |
+| --- | --- | --- |
+| P31 instance of | `Q47461344` written work | `Q571` (book) also widely used and won't be challenged |
+| P50 author | `Q7681850` Tamsen Fadal | the key link |
+| P1476 title | How to Menopause: Take Charge of Your Health, Reclaim Your Life, and Feel Even Better than Before | full subtitle, from the publisher page |
+| P577 publication date | `25 March 2025` | |
+| P123 publisher | `Q1567078` Hachette Book Group | imprint is Balance, which has no Wikidata item |
+| P212 ISBN-13 | `978-0-306-83354-0` | must be hyphenated for this property |
+| P407 language of work | `Q1860` English | |
+| P921 main subject | `Q177708` menopause | the condition, not the journal (`Q6817295`) |
+| P136 genre | `Q3739522` self-help book | |
+| P1104 number of pages | `384` | |
+| P2679 author of foreword | `Q65201723` Lisa Mosconi | verified, she wrote the foreword |
+
+**Reference for every statement:**
+`reference URL (P854)` = `https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/`
+`retrieved (P813)` = date added
+
+### 3b. THEN link it from Tamsen
+
+On `Q7681850`, add `P800 notable work` → the new book item.
+
+### Known trade-off — worth deciding once
+
+Wikidata's model splits a *work* from its *editions*. `P212 ISBN-13` and
+`P1104 number of pages` are strictly edition-level, so putting them on a single
+work item may raise a soft constraint warning. That is a warning, not an error, and
+single-item books are extremely common on Wikidata.
+
+**Recommendation: create one item.** The goal here is entity association for the
+Knowledge Panel, not bibliographic perfection. A work/edition split doubles the work
+for no benefit to branded search.
+
+### 3c. Later, if worth it
+
+- *The M Factor: Shredding the Silence on Menopause* — documentary (PBS)
+- *The Tamsen Show* — podcast. Would also give the Spotify and Apple podcast IDs a
+  proper home, since those describe the show and not Tamsen.
+- *Take Flight Productions LLC* — would let `P108 employer` / `P1830 owner of` be added.
 
 ---
 

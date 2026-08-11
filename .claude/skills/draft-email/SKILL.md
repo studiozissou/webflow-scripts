@@ -64,6 +64,16 @@ than guessing an address. A wrong `to` address is worse than a quick question.
 If they give a name but no address, ask for the address (or leave `to` empty and
 tell them you've left it blank for them to fill).
 
+## Standard links
+
+Will's own links, for when an email needs one. Paste them bare, no link text or
+markdown, and never invent a variant.
+
+- **Booking a call:** https://calendar.notion.so/meet/studiozissou/30mins
+  (a 30 minute slot). Use this whenever the email offers a call, suggests
+  talking, or asks to find time. Say something like "you can grab half an hour
+  whenever suits" and put the URL after it, rather than sending it bare.
+
 ## Saving
 
 Create the draft immediately with `create_draft`, no separate "shall I save

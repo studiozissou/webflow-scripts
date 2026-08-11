@@ -23,6 +23,18 @@
       "created": "2026-04-02"
     },
     {
+      "slug": "getcoconut-sole-traders",
+      "url": "https://www.getcoconut.com/mtd-software/sole-traders",
+      "spec": "tests/acceptance/test-page-getcoconut-sole-traders.spec.js",
+      "baseline": ".claude/research/test-page/getcoconut-sole-traders-baseline-2026-07-16.json",
+      "report": ".claude/research/test-page/getcoconut-sole-traders-report-2026-07-16.md",
+      "type": "test-page",
+      "source": "test-page",
+      "critical": false,
+      "description": "MTD for Sole Traders landing page — Full-mode /test-page baseline (a11y 100, SEO 100, best-practices 73, LCP 158ms, CLS 0.11). Regression spec: JS errors, mobile overflow, CLS ceiling 0.15, heading hierarchy, img alt, SEO essentials.",
+      "created": "2026-07-16"
+    },
+    {
       "slug": "coconut-pricing",
       "url": "https://getcoconut.webflow.io/pricing",
       "baseline": ".claude/research/test-page/coconut-pricing-baseline-2026-04-03.json",

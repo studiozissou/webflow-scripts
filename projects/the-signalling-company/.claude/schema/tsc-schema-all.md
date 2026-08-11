@@ -140,14 +140,23 @@
       ]
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "Product",
       "@id": "https://www.thesignallingcompany.com/railos#software",
       "name": "RailOS",
-      "applicationCategory": "Railway signalling operating system",
-      "operatingSystem": "RailOS",
+      "category": "Railway signalling operating system",
       "description": "A certified, software-defined real-time operating system for safety-critical railway applications — one platform for ETCS, national Class B ATP, TCMS, and data recording.",
-      "provider": {
+      "brand": {
+        "@type": "Organization",
+        "name": "The Signalling Company",
         "@id": "https://www.thesignallingcompany.com/#organization"
+      },
+      "manufacturer": {
+        "@id": "https://www.thesignallingcompany.com/#organization"
+      },
+      "additionalProperty": {
+        "@type": "PropertyValue",
+        "name": "Platform",
+        "value": "RailOS"
       },
       "offers": {
         "@type": "Offer",

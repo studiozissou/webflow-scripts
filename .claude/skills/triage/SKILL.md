@@ -264,6 +264,29 @@ Use the client field from config.json to auto-assign the `Clients` relation:
 - Messages in `D049YCR485C` → Client: Tamsen Fadal
 - etc.
 
+### Channels that must be checked manually
+
+Some Slack sources are not reachable via MCP — the app is not installed in that
+workspace, or the ID is stale. `slack_read_channel` returns `channel_not_found` for
+these. They are marked in config.json with `"manualCheck": true`.
+
+**Do not try to read them, and do not treat the failure as an error.** Instead, always
+end the triage report with a Manual Slack Check section listing every source flagged
+`manualCheck`, so the user knows to open those conversations themselves:
+
+```
+## ⚠️ Check These Slack Channels Manually
+Not reachable via MCP — open in Slack and scan for anything actionable:
+- #skye-high-tamsen-fadal (Tamsen Fadal)
+- DM with Yoni (Tamsen Fadal)
+```
+
+This section appears on **every** run, whether or not anything else was found. If the
+user surfaces a task from one of these manually, create it with Source `Slack` and a
+Source ID of `slack:manual:{short-slug}`, since there is no message_ts to key on.
+
+Never advance `lastProcessed` for a `manualCheck` source — there is nothing to record.
+
 ## Calendar
 
 1. `list_events` for the next N days (from config lookaheadDays)
@@ -446,6 +469,9 @@ Numbered list, grouped by source. Everything that was unclear during scanning.
 
 ## Noise Summary
 Brief counts by category per source. No detail needed.
+
+## ⚠️ Check These Slack Channels Manually
+Always present. Lists every source flagged `manualCheck` in config.json.
 ```
 
 After presenting, use AskUserQuestion:

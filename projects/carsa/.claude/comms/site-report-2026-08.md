@@ -4,7 +4,7 @@
 
 ## Summary
 
-The best month since we started tracking. Site health is up from 72% to 75%, SEMRush's AI Search score moved for the first time since May, 74 to 78, and three long-standing problems are genuinely gone: broken internal links 56 to zero (the carousel filtering issue traced on the 9 July call), server errors 3 to zero, and links with no anchor text 5,640 to 11. Slow-loading pages fell from 3,928 to 1,090. The new vehicle page titles and descriptions went live on 10 August, a few hours after this crawl ran, so the duplicate-title and over-length-title counts should come down next month rather than this one.
+The best month since we started tracking. Site health is up from 72% to 75%, SEMRush's AI Search score moved for the first time since May, 74 to 78, and three long-standing problems are genuinely gone: broken internal links 56 to zero (the carousel filtering issue traced on the 9 July call), server errors 3 to zero, and links with no anchor text 5,640 to 11. Slow-loading pages fell from 3,928 to 1,090. The new vehicle page titles and descriptions went live on 10 August, a few hours after this crawl ran, and I've confirmed on the live site that duplicate titles, duplicate descriptions and over-length titles are all fixed at source — the table below still shows the morning's figures, so those three will catch up next month.
 
 What needs attention is the commercial pages. Duplicate content rose to 1,286 and duplicate titles to 2,151 as stock turned over, and the store pages read similarly enough that Google can't reliably tell them apart — the same underlying problem in two places, and the main thing holding back the unbranded rankings covered at the end. One correction to July's report while I'm here: the 460 remaining structured-data errors are sold cars, not cars awaiting photography, and they're long-standing rather than new — ten of the 25 I checked have carried the error since 12 May. Withdrawing sold cars from search is the right intention, so that one is a tidy-up rather than a priority.
 
@@ -26,13 +26,13 @@ What needs attention is the commercial pages. Duplicate content rose to 1,286 an
 | Links with no anchor text | 5,640 | 11 | −5,629 (fixed) |
 | Slow page load | 3,928 | 1,090 | −2,838 |
 | Pages with one internal link | 87 | 47 | −40 |
-| Duplicate meta descriptions | 52 | 28 | −24 (new format live 10 Aug) |
+| Duplicate meta descriptions | 52 | 28 | −24 (fixed 10 Aug, verified live) |
 | Incorrect pages in sitemap | 29 | 10 | −19 |
 | Broken external links | 5,631 | 5,489 | −142 (not a real fault — see note) |
-| Duplicate title tags | 2,128 | 2,151 | +23 (stock growth; new format live 10 Aug) |
+| Duplicate title tags | 2,128 | 2,151 | +23 (fixed 10 Aug, verified live) |
 | Duplicate content pages | 1,106 | 1,286 | +180 (stock growth) |
 | Pages not crawled | 17 | 40 | +23 (new stock, crawl timing) |
-| Over-length page titles | 430 | 430 | — (new format live 10 Aug) |
+| Over-length page titles | 430 | 430 | — (fixed 10 Aug, verified live) |
 | Multiple H1 tags | 0 | 0 | — (holding) |
 | Nofollow internal links | 0 | 0 | — (holding) |
 
@@ -79,13 +79,16 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	- **New vehicle page titles and descriptions, live 10 August.** The title is now "Used {year} {colour} {make and model} ({registration}) | Carsa" — for example "Used 2023 Black Kia Sportage (RF23YWH) | Carsa", 45 characters. Fuel type, door count and trim have come out of the title and moved into the description, and the registration has gone in.
 
-		This targets three of the numbers above at once. Over-length titles should fall from 430, since the new format averages 47 characters against the old 70 and only the longest Land Rover combinations still run over. Duplicate titles should fall hard from 2,151 — the registration makes every title unique, where previously ten different cars shared "Used 2022 White Tesla Model Y Long Range 5dr | Electric | Carsa". Duplicate descriptions should clear from 28 for the same reason.
+		**Confirmed working.** I checked it live rather than waiting for the next crawl. The ten Tesla Model Ys that previously all shared "Used 2022 White Tesla Model Y Long Range 5dr | Electric | Carsa" now have ten distinct titles, one per registration. Across a sample of fourteen cars, including the longest names on the site, all fourteen titles and all fourteen descriptions are unique.
 
-		The next crawl will show whether it lands as expected.
+		Lengths are right too. Titles now average 47 characters against the old 70, and only the two longest Land Rover names still tip just past the limit at 61 and 62. Descriptions average 142 characters, with one Range Rover Sport at 172 — the shortened wording you used keeps almost all of them inside the limit.
+
+		So duplicate titles, duplicate descriptions and over-length titles are all resolved at source. The counts in the table above are from the morning crawl and still show the old figures; next month's crawl will catch up with what's already live.
 
 ### Dropped from the list {toggle="true"}
 
 	- July's issue #7, image alt text. Done, and confirmed — the crawl reports zero missing alt attributes and the vehicle images carry alt text.
+	- Sold-car listing data. The 460 structured-data errors are all sold cars, whose price and photo are stripped while the listing is still published. Withdrawing sold cars from search is what you want and "sold out" already achieves it, so this is a tidy-up rather than a fix — worth doing eventually to clear the error count, but it isn't holding anything back. Tracked in the AI readiness table above.
 	- July's issue #9, broken external links. Not a real fault. All 5,489 are the same WhatsApp link in the site header returning "too many requests" when the crawler hits it thousands of times in a row. Real visitors clicking it are fine. It will show in the numbers every month, and it can be ignored every month.
 
 ---
@@ -149,30 +152,26 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 
 	**How to verify:** Open any updated page and look for a clear "Last updated" line.
 
-### 4. Sold cars publish listing data Google can't read — 0.5 hours {toggle="true"}
+### 4. Vehicle pages are still slow — already scoped {toggle="true"}
 
-*Issue:* 460 sold vehicle pages publish listing data Google can't read, because the price and photo are stripped out while the listing itself is still being published.
-*Explanation:* Withdrawing a sold car from search is the right intention, and marking it "sold out" already does that — but removing the price and photo as well leaves markup Google reads as broken rather than as deliberately withdrawn.
-*Fix:* Stop publishing the vehicle listing data altogether once a car is marked sold.
-*Benefit:* Same outcome you want, expressed in a way Google understands, and it clears the entire remaining error count.
+*Issue:* 1,090 vehicle pages take between 3 and 4.8 seconds to load. Down sharply from 3,928, but still the largest group of slow pages on the site.
+*Explanation:* These are the pages where someone decides whether to buy a particular car, so a slow one loses people at the worst possible moment.
+*Fix:* The script-to-CDN migration already scoped in June, currently waiting on a hosting decision rather than on effort.
+*Benefit:* Faster pages on the highest-value part of the site, for both visitors and search.
 
 	---
 
 	**Detail**
 
-	**Root cause:** The sold state does three things. It shows visitors a "Sorry! This car has been sold." message, which works well. It sets availability to "sold out", which is the correct way to tell Google the car is no longer for sale. And it also empties out the price and image — which is the part that causes trouble, because Google needs a price to read a product listing and an image to read a merchant listing. The listing is still published, just without the fields needed to make sense of it.
+	**Root cause:** Identified on the 10 June call. The vehicle and search pages have slowed over the year as scripts and conditional visibility logic accumulated, all pasted straight into the Webflow editor with no build pipeline. Because they sit inline, browsers download them again on every page rather than caching them once.
 
-	**Worth being clear:** withdrawing sold cars from search is the right intention, and "sold out" already achieves it. The errors aren't a sign the outcome is wrong — they're a sign it's being expressed in a way Google reads as broken rather than as deliberate. The practical cost is that these 460 make up the entire structured-data error count, so a genuine error appearing next month would be lost among them.
+	**Progress:** the count has already fallen from 3,928 to 1,090 this month, so most of the site is now fine. What's left is concentrated on the vehicle pages, sitting between 3.0 and 4.8 seconds.
 
-	**How I confirmed it:** I pulled the list of flagged pages from SEMRush and checked 25 of them individually. Every one was a sold car. I then compared against ten cars currently in stock — all ten had a price and photo in their data and validated fine. Google's own Rich Results Test on a sold car (10 August) reported the vehicle listing invalid, with the missing price as the critical fault.
+	**What to change:** Move the scripts out of Webflow and serve them from a CDN so they can be cached, then refactor them for size. This was agreed on the 9 July call.
 
-	**Correction to July:** Last month's report said these errors were cars that went live before being photographed. That was wrong. Available stock is fine; it's sold stock that's affected.
+	**What it's waiting on:** where the scripts are hosted. The repo is private, so a public host needs settling with Steven, and it should sit on a Carsa-controlled account rather than a personal one. That decision is the blocker, not the work itself.
 
-	**Not a new problem.** The sold state has worked this way for a long time — the "Sorry, this car has been sold" message was specified back in September, and ten of the 25 pages I checked have carried this same error since 12 May. Nothing changed recently to cause it; it simply hadn't been traced to the right cause before.
-
-	**What to change:** Stop publishing the vehicle listing data once a car is marked sold. Google then sees no listing at all rather than a broken one, which is exactly the delisting you're after. In Webflow that's conditional visibility on the schema block set to "not sold", or the same condition in the vehicle page script if the block is built there — a quick check confirms which.
-
-	**How to verify:** Run the Rich Results Test on any sold car. It should either validate cleanly or report no vehicle listing at all.
+	**How to verify:** Re-crawl and watch the slow-page count, and check load time on a vehicle page before and after.
 
 ### 5. Give blog posts a named author — 1 hour, needs your input {toggle="true"}
 
@@ -194,7 +193,7 @@ Authority moves up because /car-finance carries the FCA firm reference (935130) 
 	**How to verify:** Open any post; a byline should be visible and the author name should appear in the page data.
 
 
-**Total estimated time: ~4 hours**
+**Total estimated time: ~3 hrs 30 min**, excluding issue #4, which is already scoped.
 
 ---
 

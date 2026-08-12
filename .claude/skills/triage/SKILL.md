@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion. Loaded by the /triage command. NEVER sends emails or Slack messages without explicit user approval.
+description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Loaded by the /triage command. NEVER sends emails or Slack messages without explicit user approval.
 ---
 
 <objective>
@@ -30,7 +30,9 @@ Group questions by source at the end of the triage output, not scattered through
 - NEVER send emails. Only create Gmail drafts via `create_draft`.
 - NEVER send Slack messages without explicit user approval.
 - NEVER create Notion tasks without showing the user first and getting approval.
-- NEVER update existing Notion tasks — only create new ones.
+- NEVER update existing Notion tasks — only create new ones. This protects tasks that
+  existed before this run. Tasks created earlier in the same run are fair game: if the user
+  answers an open question after a page is written, update that page's brief.
 - NEVER delete anything from Notion.
 
 ## Notion is the source of truth
@@ -77,7 +79,7 @@ will fail.
 | Due date | date | Optional. Only set when explicitly stated or confirmed by user |
 | Source | select | Gmail, Slack, Calendar, Trello, Meeting, Manual |
 | Source Link | url | Permalink to original message/event |
-| Source Context | text | 2-3 sentences: why this was flagged + key excerpt from the message |
+| Source Context | text | 2-3 sentences: why this was flagged + key excerpt. The at-a-glance line in list views — the full brief goes in the page body, see <task_brief> |
 | Source ID | text | Dedup key: Gmail thread ID, Slack channel:ts, Calendar event ID |
 | Clients | relation | Two-way relation to Clients DB (collection://229e1848-bb51-8018-888c-000b6dbead72) |
 | Tags | multi_select | Flexible categorisation |
@@ -94,7 +96,8 @@ Never set: `Description`, `Assignee`, `Person`, `Estimates`, `Hours Estimate`, `
 `Task type`, `Scheduled for`, `Webflow Link`, `Figma File`, `Google Drive File`, `Notes`,
 `Attach file`, `AI keywords`, `Blocking`.
 
-In particular `Description` is the user's own field — triage context goes in `Source Context`.
+In particular `Description` is the user's own field. Triage writes its short summary to
+`Source Context` and the full brief to the page body — never to `Description`.
 
 ### Doer classification
 
@@ -222,6 +225,141 @@ When a task is blocked/waiting:
 3. Include in the Blocked/Waiting summary at the end of triage output
 
 </task_extraction>
+
+<task_brief>
+
+## Every task carries its own brief
+
+The point of a triaged task is that it can be picked up cold. Open it three weeks later, or
+hand it to a freelancer, and work starts immediately. If the page only says "Reply to Tomek
+about the service pages", the reader still has to re-read Slack, work out which pages, find
+the spec, and remember which URL is staging. That reconstruction cost is the whole reason
+the task felt heavy in the first place — a brief is what removes it.
+
+So write a brief into the page body of every task. The test to hold in mind:
+
+> Could someone who has never seen the original thread pick this up and finish it,
+> without asking a question or opening another tool?
+
+Where it goes: the `content` field of `notion-create-pages`, in Notion-flavored Markdown.
+Read `notion://docs/enhanced-markdown-spec` via `notion-fetch` once per run before the first
+write — the dialect has its own rules for tables, callouts and toggles, and guessing
+produces pages that render badly.
+
+Do not put the brief in the `Description` property. That property belongs to the user (see
+"Properties triage must never write"), and it is flat text that cannot carry headings or
+links. `Source Context` also stays as it is: two or three sentences that make sense at a
+glance in a Notion list view. The page body is the only place the full brief goes.
+
+## Gather context before writing briefs — once per client, not once per task
+
+A brief is only as good as what you know when you write it. Before writing briefs for a
+client, read that client's context once and reuse it across every task for them in this run:
+
+| Read | For |
+|------|-----|
+| `projects/{client}/.claude/intake.json` | staging + live URLs, page slugs and IDs |
+| `projects/{client}/.claude/client.md` | contacts, who owns what, engagement scope |
+| `projects/{client}/.claude/specs/` | an existing spec that already covers this work |
+| `projects/{client}/.claude/brand-voice.md` | anything copy-related |
+| `projects/{client}/.claude/research/` | screenshots and audits already captured |
+
+If a client has no project directory, say so in the brief rather than guessing at URLs.
+
+## Never invent context
+
+A brief containing a plausible-but-wrong staging URL or an invented acceptance criterion is
+worse than a thin one, because it will be trusted and acted on. Every line must trace to one
+of three things:
+
+- the source message, event, or meeting note — quote it
+- a file actually read in this repo — cite the path
+- `config.json` or the client's `intake.json`
+
+Anything else is an open question. Put it under **Open questions** in the brief and raise the
+same point in the run's "Questions for You" — the two lists should agree. When the user
+answers during the approval step, fold the answer into the brief before creating the page.
+
+## How deep to go
+
+Depth follows the work, not a template. Three rough tiers:
+
+**Quick** — a reply, a one-line change, a single decision. The verbatim ask plus the link is
+the entire brief; four or five lines. Headings would be noise.
+
+**Standard** — one real deliverable. Use the skeleton below, dropping any section with
+nothing true to put in it.
+
+**Parent with subtasks** — the parent brief carries the goal, the shape of the work, and a
+map of the subtasks. Each subtask gets its own brief scoped to its slice, restating the
+client and target page in one line so it stands alone. A subtask that forces the reader to
+open the parent just to learn which site they are on has failed the test.
+
+## Skeleton
+
+    ## The ask
+    > Verbatim quote of the sentence that created this task.
+
+    — Who said it, where, when. [link to source]
+
+    ## Context
+    What a stranger needs in order to make sense of the ask.
+
+    ## Done when
+    - [ ] Checkable outcomes, not activities.
+
+    ## Steps
+    1. Ordered, one action each.
+
+    ## Where things live
+    - Source thread — [link]
+    - Live page — [url]
+    - Staging — [url]
+    - Spec — `path`
+    - Assets — [link or path]
+
+    ## Open questions
+    - Anything unresolved, and who can answer it.
+
+A plain bulleted list is used for "Where things live" on purpose. Notion-flavored Markdown
+does not support pipe tables — they need `<table>` XML — and a link list reads just as well
+while being far harder to get wrong. `references/task-brief.md` covers the rest of the
+dialect's traps.
+
+The verbatim quote does more work than any summary — it is the single thing that reliably
+removes the trip back to Slack, because it preserves wording and tone that a paraphrase
+loses. Quote the operative lines, not the whole thread: a brief nobody reads is no better
+than no brief at all.
+
+## Assets travel by link, not by copy
+
+- Slack files and images have permalinks in the message payload — use them.
+- Gmail attachments cannot be linked directly. Name the file, note its type, and link the
+  thread, so the reader knows what they are looking for and where it lives.
+- Figma, Drive, Loom and Jam URLs pasted into a message go into the brief exactly as
+  written. Never reconstruct one from memory — a wrong Figma link costs more than a missing
+  one.
+- Screenshots and audits already captured in the repo go in as their path.
+
+Do not re-upload files into Notion by default. It duplicates assets and they drift out of
+sync with the source. Offer it only when an asset is small, critical, and likely to expire.
+
+## Make the handoff back to Claude work
+
+When Doer is "Claude" or "User + Claude", end the brief with the command that would execute
+the task, arguments included:
+
+    Run with: `/generate-schema --client carsa --page /mot-and-car-servicing`
+
+This is what lets a task be handed straight back to Claude later without re-deriving
+anything, and it makes the Quick Wins section of the report cheap to act on.
+
+Full template, worked examples at all three depths, and the Notion-Markdown gotchas that
+break page rendering: `references/task-brief.md`. Read it before writing the first brief of
+a run — the examples are what separate a brief that reads as useful from one that reads as
+filler.
+
+</task_brief>
 
 <source_scanning>
 
@@ -425,8 +563,23 @@ Present each draft in a quoted block with:
 - Any [QUESTION FOR YOU: ...] flags inline
 
 ## New Tasks → Notion (approve before creating)
-| # | Task | Priority | Due | Client | Doer | Source | Parent task | Status |
-|---|------|----------|-----|--------|------|--------|-------------|--------|
+| # | Task | Priority | Due | Client | Doer | Source | Parent task | Status | Brief |
+|---|------|----------|-----|--------|------|--------|-------------|--------|-------|
+
+`Brief` is the depth written for that task — quick / standard / parent — so the user can
+see at a glance which tasks got a full write-up.
+
+## Gaps in Briefs
+Every **Open questions** entry across all the briefs, grouped by task. These are the parts
+of a brief that could not be filled from the source or the repo.
+
+This is the most valuable thing to surface at approval time: an answer given here lands in
+the page body before it is written, which is the difference between a task that is genuinely
+self-contained and one that is nearly so. Ask these before creating anything, and fold the
+answers in.
+
+Do not print the full briefs by default — the report stays scannable. Offer instead:
+"Show the full brief for any task by number."
 
 ## Quick Wins (Claude can do now)
 List tasks where Doer is "Claude" with the command that would execute them.
@@ -487,8 +640,9 @@ For each approved task:
    a. Search Tasks Tracker for the parent by name + client
    b. If found, use its page ID for the `Parent task` relation
    c. If not found, create the parent first, then link
-3. Create the task page with all properties:
+3. Create the task page with all properties **and its brief**:
    - Use the Tasks Tracker data source ID from config as the parent
+   - Pass the brief as `content` — this is the deliverable, not an extra. See <task_brief>
    - Set `Source ID` for future dedup
    - Set `Source Link` for easy reference
    - Set `Source Context` with the reasoning — never `Description`
@@ -500,6 +654,15 @@ For each approved task:
    - Set `Priority`
    - Set `Doer`
 4. Log the created task name + Notion URL
+
+Batch the creates. `notion-create-pages` takes up to 100 pages in one call, and each page
+carries its own `content`, so a run's worth of tasks is normally one call — with the
+exception of subtasks, which need the parent's page ID before they can be linked.
+
+A task written without a brief is not finished. If context-gathering failed for a client —
+no project directory, an unreachable source — still write the brief from what the message
+itself contains, and list the missing pieces under **Open questions**. A brief that is
+honest about its gaps is useful; a task page that is empty is not.
 
 ## First-run setup
 
@@ -521,4 +684,10 @@ If `notion.databaseId` is null in config.json:
 - State.json updated with new timestamps after completion
 - Blocked/Waiting items surfaced in summary
 - Subtasks linked to parent tasks via relation
+- Every created task has a brief in its page body, at a depth that matches the work
+- Every brief quotes the ask verbatim and links back to its source
+- Every URL, path and deadline in a brief traces to the source or a file that was read —
+  nothing invented, gaps declared under Open questions
+- Briefs for Claude-doable tasks name the command that would run them
+- The user could work each task, or hand it to someone else, without opening another tool
 </success_criteria>

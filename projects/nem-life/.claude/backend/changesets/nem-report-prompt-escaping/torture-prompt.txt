@@ -1,0 +1,6 @@
+TEST. Alex's prompt — don't truncate.
+Hij zei: "'t is goed." Backslash: \ and a curly quote: ’
+Write at least 400 words in the requested language.
+Line two.
+
+Line four, after a blank line.

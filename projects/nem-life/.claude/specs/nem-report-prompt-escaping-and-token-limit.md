@@ -9,6 +9,29 @@
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, **active**)
 **Repo file:** `projects/nem-life/.claude/backend/nem-verify.workflow.json`
 
+## Prepared, not applied (2026-08-11)
+
+The change is built and unit-tested but **nothing in the live workflow has been touched**.
+Everything needed to apply it sits in
+`../backend/changesets/nem-report-prompt-escaping/` — read its `README.md` first.
+
+- `partial-update.operations.json` — the diff to send through `n8n_update_partial_workflow`
+- `generate-report.jsonBody.txt` — the rewritten expression, for hand-pasting in the UI
+- `report-prompt.node.json` — the Set node, in the corrected v3.5 shape
+- `torture-prompt.txt`, `verify.sh` — verification inputs
+- `tests/nem/nem-verify-report-body.test.js` — 21 passing unit tests
+
+**Blocker discovered while preparing:** the **n8n API key is failing authentication**
+(`n8n_get_workflow` → `AUTHENTICATION_ERROR`; `n8n_health_check` still passes, so the
+instance is up and it is the key that is stale). Implementation step 1 — snapshot live as
+the rollback point — cannot run until it is refreshed. Do not edit the workflow before
+that snapshot exists; n8n holds no version history for it.
+
+**The change is expressed as a node-level diff, not a workflow import,** because the repo
+copy of `nem-verify.workflow.json` has drifted from live and is the older of the two.
+Importing it would revert the `Add To Newsletter` group wiring verified on 2026-07-09.
+Drift table in the changeset README.
+
 ## Summary
 
 Two defects in the `Generate Report` node of the live `/verify` workflow, both of
@@ -61,9 +84,15 @@ apostrophes, double quotes, backslashes, newlines, curly quotes, em dashes.
 
 ### New node
 
-`Report Prompt` — `n8n-nodes-base.set`, position ~`[1040, 180]`
+`Report Prompt` — `n8n-nodes-base.set`, **`typeVersion: 3.5`**, position ~`[780, 360]`
+(between `Valid?` at x=660 and `Generate Report` at x=900; position is cosmetic).
 
 - Field `systemPrompt`, type String, holding the prompt text.
+- **Corrected 2026-08-11:** Set v3.5 stores fields at
+  `parameters.assignments.assignments[]` — objects of `{ id, name, type, value }`.
+  The `parameters.fields` shape referenced in an earlier draft of this spec is Set **v2**
+  and no longer exists. Ready-to-apply node JSON in the 3.5 shape:
+  `../backend/changesets/nem-report-prompt-escaping/report-prompt.node.json`.
 - **The value must be entered as a fixed value, not an expression.** In the n8n UI the
   field must not be toggled to Expression mode, and the stored value must not begin
   with `=`. If it does, the text re-enters the JavaScript evaluator and this whole fix
@@ -179,8 +208,10 @@ task is verified (below).
 
 ### Pass/fail criteria
 
-- `Report Prompt.parameters.fields` stores `systemPrompt` as a string that **does not
-  begin with `=`** (assert on the fetched node JSON — this is the whole point of the fix).
+- `Report Prompt.parameters.assignments.assignments[0].value` stores `systemPrompt` as a
+  string that **does not begin with `=`** (assert on the fetched node JSON — this is the
+  whole point of the fix). *Path corrected 2026-08-11: this is the Set v3.5 shape; an
+  earlier draft said `parameters.fields`, which is v2.*
 - With a torture-test prompt (below) installed, a `/verify` call produces an execution
   in which `Generate Report` has `status: "success"`. Before the fix, this node throws.
 - `Generate Report` output has `stop_reason: "end_turn"`, **not** `"max_tokens"` —
@@ -245,6 +276,20 @@ Anthropic tokens against Alex's key. Keep runs to a handful.
   it is an n8n workflow edit. No acceptance test file is generated and nothing is added
   to `tests/registry.json`. The equivalent automated check is the n8n execution
   inspection above, driven through the n8n MCP.
+- **Tier 1 — Auto (unit, added 2026-08-11):** `tests/nem/nem-verify-report-body.test.js`,
+  run with `node --test`. It evaluates the real `Generate Report` expression the way n8n
+  does — stripping `={{ … }}` and running the inner source with `$('Node')` bound to
+  fixtures — against the torture-test prompt, and asserts the request body parses, the
+  system prompt survives byte-for-byte, `max_tokens` is 8000, profile values are
+  interpolated rather than embedded, and no `$json.` reference survives the rewrite.
+  A companion test reconstructs the **old** inlined form and asserts it throws a
+  `SyntaxError`, so the defect itself is pinned. Further tests assert the apply payload
+  is byte-identical to the tested expression, and that the rewire leaves
+  `Respond Confirmed` and `Mark Consumed` on the fast path. 21 tests, all passing.
+
+  This catches every failure mode that is decidable without n8n — which is all of them
+  except whether Anthropic returns `stop_reason: "end_turn"`. It does **not** replace the
+  live execution check.
 - **Tier 2 — CDN regression:** not applicable; no CDN asset changes.
 - **Tier 3 — Manual:**
   - Open the PDF attachment and read it end to end. Only a human can judge whether the

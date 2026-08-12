@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.8.12.1'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.8.12.2'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -1359,9 +1359,21 @@
    * @param {boolean} [force=true] - false on direct-land to skip if src already set
    */
   function _updateCaseVideos(force) {
-    if (force === undefined) force = true;
     // Extract slug from URL (e.g. /work/overland-ai → overland-ai)
     const slug = window.location.pathname.replace(/\/$/, '').split('/').pop() || '';
+    if (!slug) return;
+    _setFgVideoForSlug(slug, force);
+  }
+
+  /**
+   * Load a case study's teaser into the persistent #fg-video-wrap video.
+   * Split out of _updateCaseVideos so the about→work via-home beat can load the
+   * target case's teaser while the URL still points at /about.
+   * @param {string} slug - case study slug, e.g. 'overland-ai'
+   * @param {boolean} [force=true] - false on direct-land to skip if src already set
+   */
+  function _setFgVideoForSlug(slug, force) {
+    if (force === undefined) force = true;
     if (!slug) return;
     // Find matching CMS item (persists outside Barba container)
     const item = document.querySelector('.dial_cms-item[data-url="' + slug + '"]');
@@ -1422,6 +1434,76 @@
         frameOverlay.parentNode.removeChild(frameOverlay);
       }
     }, { once: true });
+  }
+
+  const VIA_HOME_SLIDE_DUR = 0.8;  // about container slides off to reveal the dial
+  const VIA_HOME_HOLD      = 0.25; // beat on the home look before expanding
+
+  /** Resolve the persistent tick canvas.
+   *  Scoped to a direct child of .dial_component on purpose: the about container
+   *  carries its own #dial_ticks-canvas.dial_layer-ticks inside .about_dial-wrapper,
+   *  so the id and class are both duplicated while /about is mounted. */
+  function _persistentTicks() {
+    const comp = document.querySelector('.dial_component');
+    return comp ? comp.querySelector(':scope > .dial_layer-ticks') : null;
+  }
+
+  /** about -> home -> work.
+   *  Slides the about container away to reveal the persistent dial dressed as the
+   *  homepage dial (with the clicked case's teaser already playing inside it),
+   *  holds briefly, then expands the circle into the case frame and hands video
+   *  playback off to the case header video. */
+  async function runAboutToWorkViaHome(data) {
+    const gsap = window.gsap;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const slug = (data?.next?.url?.path || '').replace(/\/$/, '').split('/').pop() || '';
+
+    if (!gsap || reduced) {
+      setDialToWorkState();
+      return;
+    }
+
+    // -- Beat 2 prep: runs while the about container still covers the screen --
+    const dialComp = document.querySelector('.dial_component');
+    const dialFg   = document.querySelector('.dial_layer-fg');
+    const fgWrap   = document.getElementById('fg-video-wrap');
+    const dialUI   = document.querySelector('.dial_layer-ui');
+    const ticks    = _persistentTicks();
+
+    setDialToHomeState();
+    // is-intro-small pins the dial to --dial-small-*; home-scroll-morph clears it
+    // on the homepage, but it can survive a direct land on /about.
+    dialComp?.classList.remove('is-intro-small');
+    // CSS pins the home foreground to opacity 0 in both hover media queries.
+    if (dialFg) gsap.set(dialFg, { opacity: 1 });
+    if (fgWrap) gsap.set(fgWrap, { opacity: 1, '--fg-overlay-opacity': 0 });
+    // Label/meta are stale after about - keep them out of the beat.
+    if (dialUI) gsap.set(dialUI, { opacity: 0 });
+    // work-dial is destroyed on about, so nothing is painting the ring.
+    if (ticks) {
+      gsap.set(ticks, { opacity: 1 });
+      RHP.transitionDial?.paintInto?.(ticks, fgWrap);
+    }
+    if (slug) _setFgVideoForSlug(slug);
+
+    // -- Beat 1: about slides out, revealing the dial --
+    await RHP.homeAboutSlide?.leaveAboutToHome?.(data, { duration: VIA_HOME_SLIDE_DUR });
+
+    // -- Beat 2: hold on the home look --
+    await new Promise((resolve) => gsap.delayedCall(VIA_HOME_HOLD, resolve));
+
+    // -- Beat 3: hand playback off, then expand into the case frame --
+    const fgVideo = document.querySelector('#fg-video-wrap > .dial_fg-video');
+    const items = Array.from(document.querySelectorAll('.dial_cms-item'));
+    const index = items.findIndex((el) => el.getAttribute('data-url') === slug);
+    if (RHP.videoState) {
+      RHP.videoState.caseHandoff = {
+        index: index >= 0 ? index : 0,
+        currentTime: fgVideo?.currentTime || 0,
+        transitionDuration: 0.8
+      };
+    }
+    await runDialExpandAnimation();
   }
 
   function bootCurrentView() {
@@ -1960,25 +2042,26 @@
           }
         },
 
-        /* ---- About -> Work ---- */
+        /* ---- About -> Work ----
+           Plays about -> home -> case. The about container is an opaque,
+           viewport-covering sibling of section_home, so expanding the dial
+           straight away (the previous behaviour) happened entirely behind it and
+           read as a hard cut. See runAboutToWorkViaHome. */
         {
           name: 'about-to-work',
           from: { namespace: ['about'] },
           to: { namespace: ['case', 'work'] },
 
           beforeLeave(data) {
+            RHP.lenis?.stop();                    // about runs Lenis on its container
+            RHP.homeAboutSlide?.resetCurtain?.(); // clear any half-run curtain
             const ns = data.current?.namespace || currentNs;
             if (ns && RHP.views[ns]?.destroy) RHP.views[ns].destroy();
             RHP.videoLoader?.destroy?.();
           },
 
-          async leave() {
-            const dialComp = document.querySelector('.dial_component');
-            if (dialComp?.getAttribute('data-dial-ns') !== 'work') {
-              await runDialExpandAnimation();
-            } else {
-              setDialToWorkState();
-            }
+          async leave(data) {
+            await runAboutToWorkViaHome(data);
           },
 
           enter() {
@@ -1986,6 +2069,10 @@
           },
 
           afterEnter(data) {
+            // Clear the static ring painted for the home beat - work-dial is not
+            // alive to own it, and the case namespace never shows ticks.
+            const ticks = _persistentTicks();
+            if (ticks) RHP.transitionDial?.clearCanvas?.(ticks);
             runAfterEnter(data);
           }
         },

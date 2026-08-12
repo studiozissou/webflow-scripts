@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.5.4.3'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.8.12.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -798,6 +798,7 @@
         // DISABLED: scroll-open accordions — conflicts with about-icon-scale.js fixed-height calculation (see spec rhp-about-icon-viewport-fill.md)
         // RHP.aboutScrollAccordions?.init?.(container);
         initAboutTeamHover(container); // handles desktop vs mobile internally
+        RHP.caseVideoControls?.init?.(container);
       },
       destroy() {
         if (!active) return;
@@ -812,6 +813,7 @@
         // DISABLED: scroll-open accordions — conflicts with about-icon-scale.js fixed-height calculation (see spec rhp-about-icon-viewport-fill.md)
         // RHP.aboutScrollAccordions?.destroy?.();
         destroyAboutTeamHover();
+        RHP.caseVideoControls?.destroy?.();
       }
     };
   })();

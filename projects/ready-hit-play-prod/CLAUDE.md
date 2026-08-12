@@ -46,7 +46,7 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | File | Version | Responsibility |
 |------|---------|----------------|
 | `init.js` | 2026.3.12.1 | Loader: load order, dev/CDN URL resolution, health check, `window.RHP` bootstrap, project CSS loading |
-| `orchestrator.js` | 2026.8.12.3 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
+| `orchestrator.js` | 2026.8.12.4 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
 | `lenis-manager.js` | 2026.2.6.10 | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
 | `cursor.js` | 2026.2.18.1 | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
 | `work-dial.js` | 2026.4.8.2 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover |

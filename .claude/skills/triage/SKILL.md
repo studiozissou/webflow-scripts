@@ -1,10 +1,10 @@
 ---
 name: triage
-description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Loaded by the /triage command. NEVER sends emails or Slack messages without explicit user approval.
+description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Also keeps existing Notion tasks current: proposes field updates when new information arrives and flags obsolete tasks for cancelling. Loaded by the /triage command. NEVER sends emails or Slack messages, and NEVER writes to Notion, without explicit user approval.
 ---
 
 <objective>
-Scan all configured input sources (Gmail, Slack, Calendar, Trello), extract actionable tasks, detect blockers and dependencies, draft replies where needed, and create tasks in the Notion "Tasks Tracker" database. Notion is the source of truth — never overwrite existing tasks. Always ask the user when anything is unclear.
+Scan all configured input sources (Gmail, Slack, Calendar, Trello), extract actionable tasks, detect blockers and dependencies, draft replies where needed, create tasks in the Notion "Tasks Tracker" database, and keep tasks already in there current as new information arrives. Notion is the source of truth. Every write — create, update, or trash — happens only after the user approves that specific change. Always ask when anything is unclear.
 </objective>
 
 <hard_rules>
@@ -25,21 +25,29 @@ This is the most important rule in this skill. When in doubt, ask. Never assume.
 
 Group questions by source at the end of the triage output, not scattered throughout.
 
-## Never auto-send
+## Never act without approval
 
 - NEVER send emails. Only create Gmail drafts via `create_draft`.
 - NEVER send Slack messages without explicit user approval.
 - NEVER create Notion tasks without showing the user first and getting approval.
-- NEVER update existing Notion tasks — only create new ones. This protects tasks that
-  existed before this run. Tasks created earlier in the same run are fair game: if the user
-  answers an open question after a page is written, update that page's brief.
-- NEVER delete anything from Notion.
+- NEVER update an existing Notion task without showing the exact before and after values
+  and getting approval for that change.
+- NEVER trash a Notion task on a bulk "approve all". Trashing is confirmed one task at a
+  time, or not at all.
+- NEVER write to a field in the never-write list in <notion_schema>. That list applies on
+  update exactly as it does on create.
 
 ## Notion is the source of truth
 
-- Do not maintain a local task list. Notion is the only store.
-- Respect manual edits in Notion — if a task exists, do not touch it.
-- Dedup by Source ID before creating — check Notion first.
+- Do not maintain a local task list. Notion is the only store. `state.json` is a dedup
+  ledger and a Source ID to page map, never a copy of task state.
+- Respect the user's manual edits. Triage owns a narrow set of fields; everything else in
+  a task belongs to the user. See "Fields triage may update" in <task_updates>.
+- Dedup by Source ID before creating.
+- Prefer updating an existing task over creating a near-duplicate. Two tasks describing the
+  same work is a worse outcome than one task with a stale field.
+- Prefer proposing `Cancelled` over trashing. Cancelling is reversible and keeps the
+  record of what was once real.
 
 </hard_rules>
 
@@ -49,12 +57,13 @@ Required MCP tools (fully-qualified — these are the exact callable names on th
 - Gmail: `mcp__claude_ai_Gmail__search_threads`, `mcp__claude_ai_Gmail__get_thread`, `mcp__claude_ai_Gmail__create_draft`, `mcp__claude_ai_Gmail__list_labels`
 - Slack: `mcp__plugin_slack_slack__slack_read_channel`, `mcp__plugin_slack_slack__slack_read_thread`, `mcp__plugin_slack_slack__slack_search_public_and_private`, `mcp__plugin_slack_slack__slack_send_message`
 - Google Calendar: `list_events`, `get_event`
-- Notion: `notion-search`, `notion-create-pages`, `notion-query-database-view`
+- Notion: `notion-search`, `notion-create-pages`, `notion-fetch`, `notion-update-page`, `notion-query-database-view`
 - Trello (optional): `trello_get_tasks`, `trello_analyze_board`
 
 Config files:
 - `.claude/triage/config.json` — source configuration (channels, lookback windows)
-- `.claude/triage/state.json` — last-processed timestamps per source
+- `.claude/triage/state.json` — last-processed timestamps per source, the Source ID dedup
+  ledger, and the `taskLinks` map from Source ID to Notion page URL
 
 Skills to load:
 - `gmail-triage` — email classification, priority ranking, reply drafting, tone rules
@@ -402,6 +411,29 @@ Use the client field from config.json to auto-assign the `Clients` relation:
 - Messages in `D049YCR485C` → Client: Tamsen Fadal
 - etc.
 
+### Channels that must be checked manually
+
+Some Slack sources are not reachable via MCP — the app is not installed in that
+workspace, or the ID is stale. `slack_read_channel` returns `channel_not_found` for
+these. They are marked in config.json with `"manualCheck": true`.
+
+**Do not try to read them, and do not treat the failure as an error.** Instead, always
+end the triage report with a Manual Slack Check section listing every source flagged
+`manualCheck`, so the user knows to open those conversations themselves:
+
+```
+## ⚠️ Check These Slack Channels Manually
+Not reachable via MCP — open in Slack and scan for anything actionable:
+- #skye-high-tamsen-fadal (Tamsen Fadal)
+- DM with Yoni (Tamsen Fadal)
+```
+
+This section appears on **every** run, whether or not anything else was found. If the
+user surfaces a task from one of these manually, create it with Source `Slack` and a
+Source ID of `slack:manual:{short-slug}`, since there is no message_ts to key on.
+
+Never advance `lastProcessed` for a `manualCheck` source — there is nothing to record.
+
 ## Calendar
 
 1. `list_events` for the next N days (from config lookaheadDays)
@@ -524,13 +556,17 @@ Before creating any task:
    - Calendar: event ID
    - Trello: card ID
    - Meeting notes: `notion-meeting:{page-id}`
-2. If the ID is in `processedSourceIds` → skip (do not update, do not mention in output)
+2. If the ID is in `processedSourceIds` → do not create a new task; this source already
+   produced one. Hand the item to <task_updates> instead: look up the existing page via
+   `taskLinks` and decide whether the new activity changes anything. If nothing has
+   changed, drop it silently and do not mention it in the output.
 3. If not → run `notion-search` for the task's likely name, scoped to the Tasks Tracker
-   data source. If a close match exists for the same client, add to the questions list:
-   "This looks similar to existing task 'X' — same thing or separate?"
+   data source. If a close match exists for the same client, do not create a second task.
+   Propose it as an update instead, and note the match in the questions list:
+   "This looks like existing task 'X' — update that, or is this separate work?"
 4. Otherwise → include in the "New Tasks" table for approval
 5. After the user approves and the task is created, append the Source ID to
-   `processedSourceIds`
+   `processedSourceIds` and record `taskLinks[sourceId]` as the new page URL
 
 Only append IDs for tasks that were **actually created**. If the user skips a task, leave
 its ID out so a later run can surface it again.
@@ -542,6 +578,122 @@ Nothing is auto-created — the approval gate still stands — so the failure mo
 triage report, not duplicate tasks in Notion.
 
 </dedup>
+
+<task_updates>
+
+## Keeping existing tasks current
+
+A task goes stale the moment the world moves on from it. A blocker clears, a deadline
+shifts, the client adds a requirement, or the work quietly gets done by someone else.
+Triage is usually the first place that news arrives, so it is the right place to catch it.
+
+The rule is narrow: triage proposes, the user approves, and only then does anything change.
+
+### When to propose an update
+
+Look for source activity that changes something about a task that already exists:
+
+| Signal in the source | Proposed change |
+|----------------------|-----------------|
+| The thing a task was waiting on has arrived | `Waiting`/`Blocked` → `Inbox`, clear `Blocked Reason` |
+| A new blocker appears | → `Waiting` or `Blocked`, set `Blocked Reason` or `Blocked by` |
+| A date is stated or moved | Set or change `Due date` |
+| Someone escalates, or a deadline lands inside 48h | Raise `Priority` |
+| Scope is added to work already tracked | Append to `Source Context`, or propose a subtask |
+| Ownership moves | Change `Doer` |
+| A second source discusses the same task | Append to `Source Context` |
+
+Finding the task to update, in order of preference:
+
+1. `taskLinks[sourceId]` in state.json — exact, no guessing
+2. `notion-search` scoped to the Tasks Tracker data source, matched on name plus client
+3. If neither finds it confidently, ask rather than updating the wrong page
+
+Always `notion-fetch` the page before proposing changes. Proposing a change to a field
+without reading its current value produces a "before" column that is a guess, and the
+user approves against that column.
+
+### Fields triage may update
+
+Only these: `Status`, `Priority`, `Due date`, `Source Context`, `Blocked Reason`,
+`Blocked by`, `Doer`, `Clients`, `Tags`, `Parent task`.
+
+The never-write list in <notion_schema> applies on update exactly as on create.
+
+`Task name` is also off limits. Renaming a task the user has been looking at for a week is
+disorienting and breaks their own search habits. If a name is genuinely wrong, ask.
+
+### Status transitions triage may propose
+
+- `Waiting` or `Blocked` → `Inbox`, when the blocker demonstrably clears
+- `Inbox` or `To Do` → `Waiting` or `Blocked`, when a blocker appears
+- Anything → `Cancelled`, but only through the obsolete-task flow below
+
+Never propose `Done`. Triage cannot verify that work is finished, and wrongly marking
+something done is the one error the user is least likely to catch, because a done task
+stops appearing in front of them. If a source strongly suggests completion, ask.
+
+Never propose `Someday`, `Awaiting feedback`, or `In Testing`. Those are the user's own
+workflow states, and triage only reads them.
+
+### Source Context is append-only
+
+Never overwrite `Source Context`. Read the current value and append a dated line:
+
+```
+2026-08-12: Yoni sent the approved bio, clearing the prerequisite noted on 5 Aug.
+```
+
+This field is the audit trail for why a task looks the way it does. Overwriting it
+destroys the reason the task was created in the first place.
+
+### Do not touch tasks the user has moved on
+
+If a task's `Status` is anything other than the value triage last set, the user has been
+in there. That is a signal they are actively managing it. Surface the new information as a
+question instead of proposing a silent field change.
+
+### Presenting updates
+
+Every proposed update shows the exact before and after, so the user can approve without
+opening Notion:
+
+| # | Task | Field | Now | Proposed | Why |
+|---|------|-------|-----|----------|-----|
+
+If one source implies more than three changes to a single task, that is a signal the task
+should be split. Ask rather than piling updates onto it.
+
+## Obsolete tasks
+
+### Detecting them
+
+A task may be obsolete when:
+
+- A source says the work shipped, was dropped, or was handed to someone else
+- The client cancelled or descoped it
+- A newer task covers the same ground and this one is a leftover
+- Its trigger has expired — a "prepare for the call on the 5th" task after the 5th
+- It has sat untouched past the staleness window and its source thread died
+
+Age alone is never enough. A P3 that has sat for two months may simply be a P3.
+
+### Handling them
+
+1. Never trash on a bulk approval. Each one is confirmed individually, by name.
+2. Default to proposing `Cancelled`, not deletion. It is reversible and keeps the record.
+3. Only propose trashing for genuine clutter: duplicates triage itself created, or tasks
+   built from a misread message. Say plainly that Notion trash is recoverable for 30 days.
+4. Never propose trashing a task the user has edited since triage created it.
+5. If in any doubt, ask. An obsolete task costs a moment of attention. A wrongly deleted
+   one costs the work of reconstructing it.
+
+Present them in their own table, never mixed in with routine updates:
+
+| # | Task | Age | Why it looks obsolete | Proposed |
+|---|------|-----|----------------------|----------|
+
+</task_updates>
 
 <output_format>
 
@@ -581,6 +733,16 @@ answers in.
 Do not print the full briefs by default — the report stays scannable. Offer instead:
 "Show the full brief for any task by number."
 
+## Task Updates → Notion (approve before applying)
+Existing tasks that new source activity has changed. Omit the section entirely if empty.
+| # | Task | Field | Now | Proposed | Why |
+|---|------|-------|-----|----------|-----|
+
+## Possibly Obsolete (confirm individually)
+Never bulk-approved. Omit the section entirely if empty.
+| # | Task | Age | Why it looks obsolete | Proposed |
+|---|------|-----|----------------------|----------|
+
 ## Quick Wins (Claude can do now)
 List tasks where Doer is "Claude" with the command that would execute them.
 Offer to run them immediately after task creation:
@@ -599,13 +761,20 @@ Numbered list, grouped by source. Everything that was unclear during scanning.
 
 ## Noise Summary
 Brief counts by category per source. No detail needed.
+
+## ⚠️ Check These Slack Channels Manually
+Always present. Lists every source flagged `manualCheck` in config.json.
 ```
 
-After presenting, use AskUserQuestion:
-- "Approve all tasks and drafts"
+After presenting, use AskUserQuestion. Keep creates/updates separate from anything
+destructive:
+- "Approve all tasks, updates, and drafts" — covers creates and updates, never trashing
 - "Let me review individually"
-- "Skip tasks, just send the drafts"
+- "Skip tasks, just save the drafts"
 - "Skip everything"
+
+If the Possibly Obsolete table has rows, ask about it in its own question, listing each
+task by name. A bulk approval never reaches it.
 
 </output_format>
 
@@ -621,7 +790,13 @@ After the triage is complete and tasks are created:
 4. For Calendar: set `lastProcessed` to current ISO timestamp
 5. For Trello: set `lastProcessed` to current ISO timestamp
 6. Append the Source ID of every task that was actually created to `processedSourceIds`
-7. Write the updated state to `.claude/triage/state.json`
+7. For every task created, record `taskLinks[sourceId] = "<notion page url>"` so later runs
+   can find the page directly instead of guessing by name
+8. Updating or cancelling a task changes nothing in state.json. The ledger records that a
+   source produced a task, not what became of it — Notion holds that
+9. If a task is trashed, remove its `taskLinks` entry but leave the Source ID in
+   `processedSourceIds`, so the same message does not simply recreate it next run
+10. Write the updated state to `.claude/triage/state.json`
 
 On next run, use these timestamps to only fetch new items since last triage.
 
@@ -654,6 +829,32 @@ For each approved task:
    - Set `Priority`
    - Set `Doer`
 4. Log the created task name + Notion URL
+5. Record `taskLinks[sourceId]` with the new page URL
+
+## Updating tasks in Notion
+
+For each approved update:
+
+1. `notion-fetch` the page first and confirm the current value matches the "Now" column the
+   user approved against. If it has changed since you presented it, stop and re-ask — the
+   user edited it in the meantime
+2. Apply only the approved fields via `notion-update-page`. Send nothing else; a property
+   omitted from the call is left untouched
+3. For `Source Context`, send the existing text plus the new dated line, never the new line
+   alone
+4. Log the task name, the fields changed, and the Notion URL
+
+## Trashing tasks in Notion
+
+Only after individual confirmation for that specific task:
+
+1. `notion-fetch` the page and confirm it is still the task the user agreed to remove
+2. Move it to trash via `notion-update-page`
+3. Tell the user it is recoverable from Notion trash for 30 days
+4. Remove the `taskLinks` entry, keep the `processedSourceIds` entry
+
+If a task has subtasks, never trash the parent alone — orphaned subtasks are worse than
+the clutter. List the children and ask what should happen to them.
 
 Batch the creates. `notion-create-pages` takes up to 100 pages in one call, and each page
 carries its own `content`, so a run's worth of tasks is normally one call — with the
@@ -681,7 +882,12 @@ If `notion.databaseId` is null in config.json:
 - All questions about unclear items presented to user
 - Draft replies shown for approval before any draft is created
 - Tasks only created in Notion after user approval
-- State.json updated with new timestamps after completion
+- Existing tasks updated rather than duplicated when new information arrives
+- Every proposed update showed a real "Now" value read from the page, not a guess
+- No task trashed without its own individual confirmation
+- No write to any field in the never-write list, and no `Task name` change
+- `Source Context` appended to, never overwritten
+- State.json updated with new timestamps, Source IDs, and `taskLinks` after completion
 - Blocked/Waiting items surfaced in summary
 - Subtasks linked to parent tasks via relation
 - Every created task has a brief in its page body, at a depth that matches the work

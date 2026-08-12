@@ -65,8 +65,74 @@ Webflow page namespace (for Barba) — add via Page Settings:
 - Attribute: `data-barba-namespace`, Value: `home` (on page container div)
 </common_patterns>
 
+<cms_schema_bindings>
+JSON-LD on a **Collection Page template** is the one place where inline CMS
+bindings are correct — everywhere else, prefer data attributes (see anti_patterns).
+
+Webflow rejects bare `{{ field }}` in the schema field with:
+
+> ⚠️ Contains invalid `{{ variables }}` that will render as empty when published.
+> Use `{\{ variables }}` to escape.
+
+**The required token format** — this is the literal string Webflow stores, and what
+you must produce if you are writing the field programmatically or handing over a file:
+
+```
+{{wf {&quot;path&quot;:&quot;FIELD-SLUG&quot;,&quot;type&quot;:&quot;FIELD-TYPE&quot;\} }}
+```
+
+Four things make it valid, and all four are load-bearing:
+1. `{{wf ` prefix — not just `{{`
+2. Inner JSON uses HTML entities (`&quot;`) for its quotes, not raw `"`
+3. `path` is the field **slug** (lowercase, hyphenated: `short-description`), NOT the
+   display name ("Short Description")
+4. `\}` — the inner closing brace is backslash-escaped, then a space, then `}}`
+
+**Field types** for `type`: `PlainText`, `RichText`, `ImageRef`, `Date`, `Link`,
+`Number`, `Bool`, `Option`, `ItemRef`, `ItemRefSet`, `Video`, `Color`, `File`.
+
+Worked example — a real published BlogPosting template:
+```html
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "description": "{{wf {&quot;path&quot;:&quot;short-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "image": "{{wf {&quot;path&quot;:&quot;hero-image&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+  "url": "https://example.com/blog/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+  "datePublished": "{{wf {&quot;path&quot;:&quot;published-on&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+  "dateModified": "{{wf {&quot;path&quot;:&quot;updated-on&quot;,&quot;type&quot;:&quot;Date&quot;\} }}"
+}
+</script>
+```
+
+**Built-in item fields** — always available, and they do NOT appear when you list a
+collection's fields via the API, so check for them before concluding a field is missing:
+`name`, `slug`, `published-on`, `updated-on`, `created-on`.
+
+**Getting the slug right.** The API's `get_collection_details` returns each field's
+`slug` — use that value verbatim for `path`. Do not guess from the display name;
+"Date Start" is `date-day`, "Main Topic (Podcast)" is `main-theme`.
+
+**Reading and writing the field via MCP:**
+- Static pages store a parsed object in `jsonLdSchema`
+- **CMS template pages store a raw string in `rawJsonLdSchema`**, including the wrapping
+  `<script type="application/ld+json">` tags
+- Read with `query_pages_schema_markup`, write with `bulk_update_pages_schema_markup`
+- Reading an existing CMS template is the fastest way to confirm current token syntax
+
+**Rules**
+- Only bind PlainText into JSON string positions. RichText injects HTML and breaks JSON.
+- Validate one real published item before rolling a template out — a malformed token
+  fails silently, rendering an empty string rather than erroring.
+- A field that is empty for an item yields `""`, which is valid JSON but a meaningless
+  value. Make fields required in the collection where schema correctness depends on them.
+</cms_schema_bindings>
+
 <anti_patterns>
-- Do NOT use inline template variables in script tags: `var title = "{{wf ...}}"` — use data attributes instead
+- Do NOT use inline template variables in **JS** script tags: `var title = "{{wf ...}}"` — use data attributes instead. The exception is a JSON-LD schema block on a Collection Page template, where bindings are the intended mechanism — see cms_schema_bindings.
+- Do NOT write bare `{{ field }}` or an invented placeholder like `+{{Field Name}}` into the schema field — Webflow flags it as invalid and publishes it as an empty string
 - Webflow re-renders Embed code on every publish — keep embeds minimal
 - `defer` scripts execute after DOM is ready — no need for DOMContentLoaded wrapper if using defer
 - Webflow's own `webflow.js` runs interactions (IX2) — can conflict with GSAP on same elements

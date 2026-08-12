@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.8.12.3'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.8.12.4'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -1458,7 +1458,9 @@
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const slug = (data?.next?.url?.path || '').replace(/\/$/, '').split('/').pop() || '';
 
-    if (!gsap || reduced) {
+    // Without the slide the about container never moves, so the beat would play
+    // underneath a fully opaque container — degrade to the instant swap instead.
+    if (!gsap || reduced || !RHP.homeAboutSlide?.leaveAboutToHome) {
       setDialToWorkState();
       return;
     }
@@ -1496,9 +1498,12 @@
     const fgVideo = document.querySelector('#fg-video-wrap > .dial_fg-video');
     const items = Array.from(document.querySelectorAll('.dial_cms-item'));
     const index = items.findIndex((el) => el.getAttribute('data-url') === slug);
-    if (RHP.videoState) {
+    // Only hand off on a real match — an unmatched slug means _setFgVideoForSlug
+    // already bailed, so there is no teaser position to carry over. Matches
+    // home-to-work, which leaves caseHandoff unset rather than guessing index 0.
+    if (RHP.videoState && index >= 0) {
       RHP.videoState.caseHandoff = {
-        index: index >= 0 ? index : 0,
+        index: index,
         currentTime: fgVideo?.currentTime || 0,
         transitionDuration: 0.8
       };

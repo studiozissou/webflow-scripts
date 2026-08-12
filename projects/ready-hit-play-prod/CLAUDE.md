@@ -46,11 +46,12 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | File | Version | Responsibility |
 |------|---------|----------------|
 | `init.js` | 2026.3.12.1 | Loader: load order, dev/CDN URL resolution, health check, `window.RHP` bootstrap, project CSS loading |
-| `orchestrator.js` | 2026.3.12.1 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
+| `orchestrator.js` | 2026.8.12.3 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
 | `lenis-manager.js` | 2026.2.6.10 | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
 | `cursor.js` | 2026.2.18.1 | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
 | `work-dial.js` | 2026.4.8.2 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover |
-| `transition-dial.js` | 2026.2.18.1 | Static teal canvas dial shown during Barba transitions |
+| `home-about-slide.js` | 2026.8.12.1 | Home↔about curtain/slide transitions; `leaveAboutToHome(data, opts)` takes an optional `{ duration }` |
+| `transition-dial.js` | 2026.8.12.1 | Static teal canvas dial shown during Barba transitions; also paints the static ring into the persistent `#dial_ticks-canvas` for the about→work via-home beat (`paintInto`/`clearCanvas`) |
 | `about-dial-ticks.js` | 2026.2.6.10 | Small 6rem static teal dial on about page |
 | `about-text-lines.js` | 2026.2.13.1 | Scroll-linked per-line text fade on about page (SplitText + Lenis scroll events) |
 | `home-intro.js` | 2026.2.11.1 | One-time intro sequence on fresh home load (step text → ticks → video → nav) |
@@ -96,7 +97,7 @@ Every module registers itself here before orchestrator runs. Key entries:
 RHP.lenis          — { start, stop, resize, onScroll, offScroll, setupScrollTriggerProxy, version }
 RHP.cursor         — { init, destroy, refresh, setPosition, setState, setLockedToDot, getCurrentState, transitionDuration, version }
 RHP.workDial       — { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, setDeadzoneRatio, version }
-RHP.transitionDial — { init, destroy, version }
+RHP.transitionDial — { init, destroy, resize, paintInto, clearCanvas, version }
 RHP.aboutDialTicks — { init, destroy, resize, version }
 RHP.aboutTextLines — { init, destroy, getThresholds, version }
 RHP.homeIntro      — { run }

@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.8.12.2'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.8.12.3'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -133,7 +133,7 @@
     const dialFg = document.querySelector('.dial_layer-fg');
     const dialComp = document.querySelector('.dial_component');
     const dialUI = document.querySelector('.dial_layer-ui');
-    const dialTicks = document.querySelector('.dial_layer-ticks');
+    const dialTicks = _persistentTicks();
     if (!dialFg || !gsap) return Promise.resolve();
 
     const v = getDialVars();
@@ -236,7 +236,7 @@
     const dialFg = document.querySelector('.dial_layer-fg');
     const dialComp = document.querySelector('.dial_component');
     const dialUI = document.querySelector('.dial_layer-ui');
-    const dialTicks = document.querySelector('.dial_layer-ticks');
+    const dialTicks = _persistentTicks();
     if (!dialFg || !gsap) return Promise.resolve();
 
 
@@ -339,12 +339,12 @@
       const videoWrap = document.getElementById('fg-video-wrap');
       if (videoWrap) gsap.set(videoWrap, { '--fg-overlay-opacity': 1 });
       if (dialUI) gsap.set(dialUI, { clearProps: 'opacity' });
-      const dialTicks = document.querySelector('.dial_layer-ticks');
+      const dialTicks = _persistentTicks();
       if (dialTicks) gsap.set(dialTicks, { clearProps: 'opacity' });
     } else {
       dialFg.style.cssText = '';
       if (dialUI) dialUI.style.cssText = '';
-      const dialTicks = document.querySelector('.dial_layer-ticks');
+      const dialTicks = _persistentTicks();
       if (dialTicks) dialTicks.style.opacity = '';
     }
   }

@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "lastUpdated": "2026-05-06",
-  "lastPlanned": "perf-parallel-script-loading",
-  "lastRegistered": "perf-parallel-script-loading",
+  "lastUpdated": "2026-08-12",
+  "lastPlanned": "feat-about-to-work-via-home-transition",
+  "lastRegistered": "feat-about-to-work-via-home-transition",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
   "lastDeployed": "2026-05-06",
   "lastDeployedHash": "8904cdd",
@@ -15,7 +15,7 @@
       "critical": true,
       "slug": "smoke",
       "created": "2026-02-24",
-      "description": "Core smoke — modules loaded, DOM present, Barba transitions, nav links"
+      "description": "Core smoke \u2014 modules loaded, DOM present, Barba transitions, nav links"
     },
     {
       "id": "a11y",
@@ -25,7 +25,7 @@
       "critical": true,
       "slug": "a11y",
       "created": "2026-02-24",
-      "description": "WCAG 2.1 AA — axe-core, aria-hidden, keyboard focus, reduced motion"
+      "description": "WCAG 2.1 AA \u2014 axe-core, aria-hidden, keyboard focus, reduced motion"
     },
     {
       "id": "canary",
@@ -35,7 +35,7 @@
       "critical": true,
       "slug": "canary",
       "created": "2026-03-03",
-      "description": "Pipeline canary — staging URL configured, site loads, no critical errors"
+      "description": "Pipeline canary \u2014 staging URL configured, site loads, no critical errors"
     },
     {
       "id": "case-video-progress-autohide",
@@ -45,7 +45,7 @@
       "critical": false,
       "slug": "case-video-progress-autohide",
       "created": "2026-03-10",
-      "description": "Case video controls — progress bar, viewport auto-pause, auto-hide, Barba cleanup"
+      "description": "Case video controls \u2014 progress bar, viewport auto-pause, auto-hide, Barba cleanup"
     },
     {
       "id": "feat-about-team-hover",
@@ -55,7 +55,7 @@
       "critical": false,
       "slug": "feat-about-team-hover",
       "created": "2026-03-17",
-      "description": "About page team member hover — scale, directional shift, tap toggle, Barba re-entry"
+      "description": "About page team member hover \u2014 scale, directional shift, tap toggle, Barba re-entry"
     },
     {
       "id": "feat-case-title-entrance",
@@ -65,7 +65,7 @@
       "critical": false,
       "slug": "feat-case-title-entrance",
       "created": "2026-03-17",
-      "description": "Case page title entrance animation — SplitText, Barba re-entry, reduced motion"
+      "description": "Case page title entrance animation \u2014 SplitText, Barba re-entry, reduced motion"
     },
     {
       "id": "feat-flip-transition",
@@ -75,7 +75,7 @@
       "critical": false,
       "slug": "feat-flip-transition",
       "created": "2026-03-18",
-      "description": "GSAP Flip-based about transition — logo reparenting, overlay, re-entry, direct land"
+      "description": "GSAP Flip-based about transition \u2014 logo reparenting, overlay, re-entry, direct land"
     },
     {
       "id": "feat-video-buffering-ux",
@@ -85,7 +85,7 @@
       "critical": false,
       "slug": "feat-video-buffering-ux",
       "created": "2026-03-17",
-      "description": "Video buffering UX — spinner on FG/work videos, BG/FG sync, Barba cleanup"
+      "description": "Video buffering UX \u2014 spinner on FG/work videos, BG/FG sync, Barba cleanup"
     },
     {
       "id": "feat-video-loading-spinner",
@@ -95,7 +95,7 @@
       "critical": false,
       "slug": "feat-video-loading-spinner",
       "created": "2026-03-18",
-      "description": "Lottie video loading spinner — visibility, CSS, reduced motion fallback, Barba cleanup"
+      "description": "Lottie video loading spinner \u2014 visibility, CSS, reduced motion fallback, Barba cleanup"
     },
     {
       "id": "fix-memory-leak-cleanup",
@@ -105,7 +105,7 @@
       "critical": false,
       "slug": "fix-memory-leak-cleanup",
       "created": "2026-03-18",
-      "description": "Memory leak regression — video count bounded, dial canvas, rapid navigation survival"
+      "description": "Memory leak regression \u2014 video count bounded, dial canvas, rapid navigation survival"
     },
     {
       "id": "rhp-case-transition-polish",
@@ -115,7 +115,7 @@
       "critical": false,
       "slug": "rhp-case-transition-polish",
       "created": "2026-03-16",
-      "description": "Case transition polish — FG video gap, scroll reset, opacity, rapid multi-cycle"
+      "description": "Case transition polish \u2014 FG video gap, scroll reset, opacity, rapid multi-cycle"
     },
     {
       "id": "rhp-mobile-home-work",
@@ -125,7 +125,7 @@
       "critical": false,
       "slug": "rhp-mobile-home-work",
       "created": "2026-03-18",
-      "description": "Mobile homepage — dial sizing, white dot visibility, case bottom nav, Barba at 390px"
+      "description": "Mobile homepage \u2014 dial sizing, white dot visibility, case bottom nav, Barba at 390px"
     },
     {
       "id": "feat-about-team-mobile-scroll",
@@ -135,7 +135,7 @@
       "critical": false,
       "slug": "feat-about-team-mobile-scroll",
       "created": "2026-03-19",
-      "description": "Mobile scroll-linked team bio reveal — scroll triggers, reverse, direction, console errors, desktop regression, Barba re-entry, reduced motion"
+      "description": "Mobile scroll-linked team bio reveal \u2014 scroll triggers, reverse, direction, console errors, desktop regression, Barba re-entry, reduced motion"
     },
     {
       "id": "fix-dial-namespace-selectors",
@@ -145,7 +145,7 @@
       "critical": true,
       "slug": "fix-dial-namespace-selectors",
       "created": "2026-03-19",
-      "description": "Dial namespace selectors — data-dial-ns attribute + display:grid on all pages and Barba transitions"
+      "description": "Dial namespace selectors \u2014 data-dial-ns attribute + display:grid on all pages and Barba transitions"
     },
     {
       "id": "rhp-about-hero-logo-scroll",
@@ -155,7 +155,7 @@
       "critical": false,
       "slug": "rhp-about-hero-logo-scroll",
       "created": "2026-03-19",
-      "description": "Mobile about hero — scroll-driven logo animation, sticky logo, bell-curve per third, Barba re-entry"
+      "description": "Mobile about hero \u2014 scroll-driven logo animation, sticky logo, bell-curve per third, Barba re-entry"
     },
     {
       "id": "feat-dev-cdn-source-switch",
@@ -165,7 +165,7 @@
       "critical": false,
       "slug": "feat-dev-cdn-source-switch",
       "created": "2026-03-25",
-      "description": "Dev/CDN source switch — localStorage toggle via URL param, console indicator, graceful localhost failure"
+      "description": "Dev/CDN source switch \u2014 localStorage toggle via URL param, console indicator, graceful localhost failure"
     },
     {
       "id": "refactor-about-team-scroll-reveal",
@@ -175,7 +175,7 @@
       "critical": false,
       "slug": "refactor-about-team-scroll-reveal",
       "created": "2026-03-26",
-      "description": "About team scroll reveal — per-element ScrollTrigger scrub, translateX+opacity, scale, reverse, desktop hover regression, Barba re-entry, reduced motion"
+      "description": "About team scroll reveal \u2014 per-element ScrollTrigger scrub, translateX+opacity, scale, reverse, desktop hover regression, Barba re-entry, reduced motion"
     },
     {
       "id": "perf-fg-video-preload-on-transition",
@@ -185,7 +185,7 @@
       "critical": false,
       "slug": "perf-fg-video-preload-on-transition",
       "created": "2026-03-26",
-      "description": "FG video preload on case→home transition — cleanup, readyState, no accumulation, reduced motion"
+      "description": "FG video preload on case\u2192home transition \u2014 cleanup, readyState, no accumulation, reduced motion"
     },
     {
       "id": "fix-autoplay-fallback-mobile",
@@ -195,7 +195,7 @@
       "critical": false,
       "slug": "fix-autoplay-fallback-mobile",
       "created": "2026-03-26",
-      "description": "Mobile autoplay fallback — tap-to-play homepage, persistent case controls, SVG overlay, viewport auto-pause/resume"
+      "description": "Mobile autoplay fallback \u2014 tap-to-play homepage, persistent case controls, SVG overlay, viewport auto-pause/resume"
     },
     {
       "id": "rhp-step-text-scramble",
@@ -205,7 +205,7 @@
       "critical": false,
       "slug": "rhp-step-text-scramble",
       "created": "2026-04-08",
-      "description": "Homepage step text — ScrambleText to active project name on dial ACTIVE, revert to original on IDLE, reduced motion fallback, Barba re-entry"
+      "description": "Homepage step text \u2014 ScrambleText to active project name on dial ACTIVE, revert to original on IDLE, reduced motion fallback, Barba re-entry"
     },
     {
       "id": "rhp-home-intro-scroll-morph",
@@ -215,7 +215,7 @@
       "critical": false,
       "slug": "rhp-home-intro-scroll-morph",
       "created": "2026-04-08",
-      "description": "Home intro section + 100vh scroll-driven cloned-logo morph to nav + dial small→large + scroll lock + Barba skip intro + about slide transitions + nav logo replay + reduced motion + mobile 375px sticky slot + defensive CSS scoping on about/case + about-hero logo animations removed"
+      "description": "Home intro section + 100vh scroll-driven cloned-logo morph to nav + dial small\u2192large + scroll lock + Barba skip intro + about slide transitions + nav logo replay + reduced motion + mobile 375px sticky slot + defensive CSS scoping on about/case + about-hero logo animations removed"
     },
     {
       "id": "feat-work-nav-prev-next",
@@ -225,7 +225,7 @@
       "critical": false,
       "slug": "feat-work-nav-prev-next",
       "created": "2026-04-08",
-      "description": "Work page prev/next navigation — hrefs populated from CMS list, cyclic wrapping on first/last, Barba case→case navigation, re-entry correctness"
+      "description": "Work page prev/next navigation \u2014 hrefs populated from CMS list, cyclic wrapping on first/last, Barba case\u2192case navigation, re-entry correctness"
     },
     {
       "id": "feat-work-nav-prev-next-regression",
@@ -235,7 +235,7 @@
       "critical": false,
       "slug": "feat-work-nav-prev-next-regression",
       "created": "2026-04-09",
-      "description": "Guards against [data-wf-item-slug] on <html> being stale after Barba case→case transitions; asserts prev/next hrefs reflect the new current page using location.pathname"
+      "description": "Guards against [data-wf-item-slug] on <html> being stale after Barba case\u2192case transitions; asserts prev/next hrefs reflect the new current page using location.pathname"
     },
     {
       "id": "rhp-dial-short-viewport-bump",
@@ -245,7 +245,7 @@
       "critical": false,
       "slug": "rhp-dial-short-viewport-bump",
       "created": "2026-04-08",
-      "description": "Homepage dial bumped to 63svh on short-viewport desktops (1440-1990 wide, ≤849 tall); step text 'Great stories made undeniable' is ~438.55px (letter-spacing 5.63px), 63svh gives 504px dial at 1440×800 (~87% fill); unchanged at 1440×900 and 1920×1080; Barba round-trip preserved"
+      "description": "Homepage dial bumped to 63svh on short-viewport desktops (1440-1990 wide, \u2264849 tall); step text 'Great stories made undeniable' is ~438.55px (letter-spacing 5.63px), 63svh gives 504px dial at 1440\u00d7800 (~87% fill); unchanged at 1440\u00d7900 and 1920\u00d71080; Barba round-trip preserved"
     },
     {
       "id": "rhp-home-intro-dial-flip-lock",
@@ -255,7 +255,7 @@
       "critical": false,
       "slug": "rhp-home-intro-dial-flip-lock",
       "created": "2026-04-09",
-      "description": "Homepage intro refined — dial locked idle at .home_dial-start (small, no fg video, step text hidden, intro logo fades in), GSAP Flip.fit scrubbed morph over 100vh to .home_dial-middle + .nav_logo-wrapper-2.is-nav, .rhp-home-ready toggle replaces _animateNavIn, step text reveal via RHP.homeIntro.revealStep, Barba re-entry skip, reduced motion fast-path"
+      "description": "Homepage intro refined \u2014 dial locked idle at .home_dial-start (small, no fg video, step text hidden, intro logo fades in), GSAP Flip.fit scrubbed morph over 100vh to .home_dial-middle + .nav_logo-wrapper-2.is-nav, .rhp-home-ready toggle replaces _animateNavIn, step text reveal via RHP.homeIntro.revealStep, Barba re-entry skip, reduced motion fast-path"
     },
     {
       "id": "rhp-video-overlays",
@@ -265,7 +265,7 @@
       "critical": false,
       "slug": "rhp-video-overlays",
       "created": "2026-04-13",
-      "description": "Video overlays — 45% BG ::after on all namespaces, 15% FG ::after on home only, GSAP custom prop fade during Barba transitions, reduced motion"
+      "description": "Video overlays \u2014 45% BG ::after on all namespaces, 15% FG ::after on home only, GSAP custom prop fade during Barba transitions, reduced motion"
     },
     {
       "id": "rhp-dial-engaged-ticks-dynamic-sectors",
@@ -285,7 +285,7 @@
       "critical": false,
       "slug": "rhp-home-intro-scroll-choreography",
       "created": "2026-04-14",
-      "description": "Homepage intro scroll choreography — large logo + small transition dial animate via GSAP Flip.fit scrubbed by ScrollTrigger, morph complete swaps to work-dial, nav animate-in, scroll lock, Barba re-entry skip, replay on nav logo click, reduced motion"
+      "description": "Homepage intro scroll choreography \u2014 large logo + small transition dial animate via GSAP Flip.fit scrubbed by ScrollTrigger, morph complete swaps to work-dial, nav animate-in, scroll lock, Barba re-entry skip, replay on nav logo click, reduced motion"
     },
     {
       "id": "fix-fg-video-case-to-case-barba",
@@ -295,7 +295,7 @@
       "critical": false,
       "slug": "fix-fg-video-case-to-case-barba",
       "created": "2026-04-15",
-      "description": "FG video src update on case→case Barba nav — src matches new page, autoplay, no console errors, direct-land regression, home→case regression, multi-nav cycle"
+      "description": "FG video src update on case\u2192case Barba nav \u2014 src matches new page, autoplay, no console errors, direct-land regression, home\u2192case regression, multi-nav cycle"
     },
     {
       "id": "feat-fg-overlay-transition-fade",
@@ -305,7 +305,7 @@
       "critical": false,
       "slug": "feat-fg-overlay-transition-fade",
       "created": "2026-04-15",
-      "description": "FG overlay 15% black — fade out on home→work, stay hidden on work, fade in on work→home, reduced motion instant"
+      "description": "FG overlay 15% black \u2014 fade out on home\u2192work, stay hidden on work, fade in on work\u2192home, reduced motion instant"
     },
     {
       "id": "fix-case-video-autoplay-barba",
@@ -315,7 +315,7 @@
       "critical": false,
       "slug": "fix-case-video-autoplay-barba",
       "created": "2026-04-15",
-      "description": "Controlled video sections autoplay after Barba transition — home→work, about→work, direct-load regression, no console errors"
+      "description": "Controlled video sections autoplay after Barba transition \u2014 home\u2192work, about\u2192work, direct-load regression, no console errors"
     },
     {
       "id": "rhp-home-intro-mobile",
@@ -325,7 +325,7 @@
       "critical": false,
       "slug": "rhp-home-intro-mobile",
       "created": "2026-04-15",
-      "description": "Mobile home intro — fg hidden on load, 250svh section, logo fade-out, auto-engage ACTIVE, dial position, bg canvas visibility, desktop regression"
+      "description": "Mobile home intro \u2014 fg hidden on load, 250svh section, logo fade-out, auto-engage ACTIVE, dial position, bg canvas visibility, desktop regression"
     },
     {
       "id": "rhp-about-slider-autoheight",
@@ -335,7 +335,7 @@
       "critical": false,
       "slug": "rhp-about-slider-autoheight",
       "created": "2026-04-20",
-      "description": "About slider auto-height — MutationObserver on .about-slider .w-slide, height update on slide change, Barba re-entry, no console errors"
+      "description": "About slider auto-height \u2014 MutationObserver on .about-slider .w-slide, height update on slide change, Barba re-entry, no console errors"
     },
     {
       "id": "rhp-about-scroll-accordions",
@@ -345,7 +345,7 @@
       "critical": false,
       "slug": "rhp-about-scroll-accordions",
       "created": "2026-04-21",
-      "description": "About page scroll accordions — ScrollTrigger open/close at 35% from bottom, height auto, reverse on scroll-back, multiple open, Barba re-entry, reduced motion"
+      "description": "About page scroll accordions \u2014 ScrollTrigger open/close at 35% from bottom, height auto, reverse on scroll-back, multiple open, Barba re-entry, reduced motion"
     },
     {
       "id": "rhp-about-icon-viewport-fill",
@@ -355,7 +355,7 @@
       "critical": false,
       "slug": "rhp-about-icon-viewport-fill",
       "created": "2026-04-22",
-      "description": "About page icon viewport fill — CSS var sizing, viewport fit, module registration, Barba re-entry, responsive, reduced motion"
+      "description": "About page icon viewport fill \u2014 CSS var sizing, viewport fit, module registration, Barba re-entry, responsive, reduced motion"
     },
     {
       "id": "rhp-about-entrance-curtain",
@@ -365,7 +365,7 @@
       "critical": false,
       "slug": "rhp-about-entrance-curtain",
       "created": "2026-04-23",
-      "description": "About entrance curtain — fullscreen overlay slide-in, SplitText content reveal, re-entry cycle, reduced motion, work→about path"
+      "description": "About entrance curtain \u2014 fullscreen overlay slide-in, SplitText content reveal, re-entry cycle, reduced motion, work\u2192about path"
     },
     {
       "id": "rhp-mobile-home-intro-flip",
@@ -375,7 +375,7 @@
       "critical": false,
       "slug": "rhp-mobile-home-intro-flip",
       "created": "2026-04-23",
-      "description": "Mobile home intro — 300svh section, word reveal over 250svh, logo shrink+translate to nav over last 50svh, desktop regression, reduced motion, Barba re-entry"
+      "description": "Mobile home intro \u2014 300svh section, word reveal over 250svh, logo shrink+translate to nav over last 50svh, desktop regression, reduced motion, Barba re-entry"
     },
     {
       "id": "fix-fg-video-transition-flash",
@@ -385,7 +385,7 @@
       "critical": false,
       "slug": "fix-fg-video-transition-flash",
       "created": "2026-04-23",
-      "description": "FG video transition flash — opacity gap after clearProps on work→home, video teardown on work→work, rAF monitoring for flash detection"
+      "description": "FG video transition flash \u2014 opacity gap after clearProps on work\u2192home, video teardown on work\u2192work, rAF monitoring for flash detection"
     },
     {
       "id": "fix-dial-tick-centering-drift",
@@ -395,7 +395,7 @@
       "critical": false,
       "slug": "fix-dial-tick-centering-drift",
       "created": "2026-04-28",
-      "description": "Dial tick centering — fgWrap-derived center, center drift self-healing, Barba round-trip, mobile 375px, reduced motion"
+      "description": "Dial tick centering \u2014 fgWrap-derived center, center drift self-healing, Barba round-trip, mobile 375px, reduced motion"
     },
     {
       "id": "fix-ios-mobile-dial-video-question-mark",
@@ -405,7 +405,7 @@
       "critical": false,
       "slug": "fix-ios-mobile-dial-video-question-mark",
       "created": "2026-04-29",
-      "description": "iOS mobile dial — no video ? icon, fg-video visibility gate, height freeze with visualViewport re-freeze, Barba re-entry, desktop regression"
+      "description": "iOS mobile dial \u2014 no video ? icon, fg-video visibility gate, height freeze with visualViewport re-freeze, Barba re-entry, desktop regression"
     },
     {
       "id": "fix-about-slider-and-icon-fouc",
@@ -415,7 +415,7 @@
       "critical": false,
       "slug": "fix-about-slider-and-icon-fouc",
       "created": "2026-04-29",
-      "description": "About slider autoheight timing fix + R icon FOUC guard + direct-load content reveal + about→home fade-out"
+      "description": "About slider autoheight timing fix + R icon FOUC guard + direct-load content reveal + about\u2192home fade-out"
     },
     {
       "id": "rhp-about-swipers",
@@ -425,7 +425,7 @@
       "critical": false,
       "slug": "rhp-about-swipers",
       "created": "2026-05-04",
-      "description": "About page Swiper.js crossfade sliders — init, autoplay, Barba re-entry, reduced motion, max-height constraint"
+      "description": "About page Swiper.js crossfade sliders \u2014 init, autoplay, Barba re-entry, reduced motion, max-height constraint"
     },
     {
       "id": "fix-dial-step-text-and-work-to-about",
@@ -435,7 +435,7 @@
       "critical": false,
       "slug": "fix-dial-step-text-and-work-to-about",
       "created": "2026-05-04",
-      "description": "Dial step text reset on Barba re-entry + work→about curtain-only transition — round-trip text content, console errors, reduced motion"
+      "description": "Dial step text reset on Barba re-entry + work\u2192about curtain-only transition \u2014 round-trip text content, console errors, reduced motion"
     },
     {
       "id": "rhp-about-accordion-scroll",
@@ -445,7 +445,7 @@
       "critical": false,
       "slug": "rhp-about-accordion-scroll",
       "created": "2026-05-04",
-      "description": "About page accordion-title click-to-scroll — Lenis scrollTo content with title offset, bottom-of-page cap, Barba re-entry, reduced motion fallback"
+      "description": "About page accordion-title click-to-scroll \u2014 Lenis scrollTo content with title offset, bottom-of-page cap, Barba re-entry, reduced motion fallback"
     },
     {
       "id": "fix-nav-logo-reload-and-replay-bugs",
@@ -465,7 +465,7 @@
       "critical": false,
       "slug": "rhp-mobile-intro-timed-words",
       "created": "2026-05-04",
-      "description": "Mobile home intro — timed word cycle (not scroll-driven), 100svh section, scroll morph identical to desktop, reduced motion, Barba re-entry"
+      "description": "Mobile home intro \u2014 timed word cycle (not scroll-driven), 100svh section, scroll morph identical to desktop, reduced motion, Barba re-entry"
     },
     {
       "id": "fix-about-transition-stuck",
@@ -475,7 +475,7 @@
       "critical": true,
       "slug": "fix-about-transition-stuck",
       "created": "2026-05-05",
-      "description": "Rapid morph→about navigation — Promise resolution safety, container visibility guard, dial namespace, further nav not stuck, reduced motion"
+      "description": "Rapid morph\u2192about navigation \u2014 Promise resolution safety, container visibility guard, dial namespace, further nav not stuck, reduced motion"
     },
     {
       "id": "fix-morph-scroll-snap",
@@ -485,7 +485,7 @@
       "critical": false,
       "slug": "fix-morph-scroll-snap",
       "created": "2026-05-05",
-      "description": "Morph auto-complete when scroll stalls at 90%+ progress — debounced onUpdate threshold, no early trigger at 50%, nav visible, dial unlocked, reduced motion"
+      "description": "Morph auto-complete when scroll stalls at 90%+ progress \u2014 debounced onUpdate threshold, no early trigger at 50%, nav visible, dial unlocked, reduced motion"
     },
     {
       "id": "about-to-home-barba-transition",
@@ -495,7 +495,7 @@
       "critical": true,
       "slug": "about-to-home-barba-transition",
       "created": "2026-05-05",
-      "description": "About→home Barba slide-out transition — no hard reload, dial visible+interactive, skipToEnd, safeResolve on leaveAboutToHome, round-trip, reduced motion"
+      "description": "About\u2192home Barba slide-out transition \u2014 no hard reload, dial visible+interactive, skipToEnd, safeResolve on leaveAboutToHome, round-trip, reduced motion"
     },
     {
       "id": "fix-about-slider-desktop-only-height",
@@ -515,7 +515,7 @@
       "critical": false,
       "slug": "fix-overland-mobile-dropdown-ix2",
       "created": "2026-05-05",
-      "description": "Overland AI mobile dropdown IX2→GSAP migration — open/close animations, colour changes, Barba lifecycle, reduced motion"
+      "description": "Overland AI mobile dropdown IX2\u2192GSAP migration \u2014 open/close animations, colour changes, Barba lifecycle, reduced motion"
     },
     {
       "id": "fix-mobile-dial-skip-and-idle-after-morph",
@@ -525,7 +525,7 @@
       "critical": false,
       "slug": "fix-mobile-dial-skip-and-idle-after-morph",
       "created": "2026-05-05",
-      "description": "Mobile dial — pointerdown skip during word cycle, IDLE after morph, first-tap-anywhere activation, desktop regression, reduced motion"
+      "description": "Mobile dial \u2014 pointerdown skip during word cycle, IDLE after morph, first-tap-anywhere activation, desktop regression, reduced motion"
     },
     {
       "id": "feat-page-loader",
@@ -535,7 +535,7 @@
       "critical": false,
       "slug": "feat-page-loader",
       "created": "2026-05-05",
-      "description": "Page loader — dismiss on scriptsOk, DOM removal, no console errors, reduced motion, Barba lifecycle"
+      "description": "Page loader \u2014 dismiss on scriptsOk, DOM removal, no console errors, reduced motion, Barba lifecycle"
     },
     {
       "id": "perf-parallel-script-loading",
@@ -545,7 +545,27 @@
       "critical": false,
       "slug": "perf-parallel-script-loading",
       "created": "2026-05-06",
-      "description": "Parallel script loading — module presence, GSAP plugins, Barba transitions, loader dismiss, load timing"
+      "description": "Parallel script loading \u2014 module presence, GSAP plugins, Barba transitions, loader dismiss, load timing"
+    },
+    {
+      "id": "feat-about-case-video-controls",
+      "file": "tests/acceptance/feat-about-case-video-controls.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-about-case-video-controls",
+      "created": "2026-08-12",
+      "description": "About page case-video block: progress track injected, play/pause + mute wired, scrub seeks, square corners, clean Barba teardown"
+    },
+    {
+      "id": "feat-about-to-work-via-home-transition",
+      "file": "tests/acceptance/feat-about-to-work-via-home-transition.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "feat-about-to-work-via-home-transition",
+      "created": "2026-08-12",
+      "description": "About to case-study three-beat transition: slide out, home dial beat with target teaser, expand with video handoff"
     }
   ]
 }

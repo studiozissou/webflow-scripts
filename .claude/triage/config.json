@@ -1,24 +1,27 @@
 {
   "slack": {
+    "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time — every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
     "channels": [
       { "id": "C0973LJ2BTJ", "name": "carsa-tomek-rishi", "client": "Carsa" },
-      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa" },
-      {
-        "id": "C09A7MZEK3P",
-        "name": "skye-high-tamsen-fadal",
-        "client": "Tamsen Fadal",
-        "enabled": false,
-        "note": "UNREACHABLE as of 2026-08-05 — Slack API returns channel_not_found. Either the ID is wrong or the Slack app is not installed in that workspace. Re-enable once the correct ID is confirmed."
-      }
+      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa" }
     ],
     "dms": [
-      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa" },
+      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa" }
+    ],
+    "manualCheck": [
       {
-        "id": "D049YCR485C",
-        "name": "Yoni",
+        "workspace": "Skye High",
+        "name": "#tamsen-web-dev",
+        "id": "C09A7MZEK3P",
         "client": "Tamsen Fadal",
-        "enabled": false,
-        "note": "UNREACHABLE as of 2026-08-05 — Slack API returns channel_not_found. Yoni's jayshetty.me request arrived by email instead. Re-enable once the correct DM ID is confirmed."
+        "note": "Slack API returned channel_not_found on 2026-08-05 — the ID may be wrong, or the Slack app is not installed in the Skye High workspace."
+      },
+      {
+        "workspace": "Skye High",
+        "name": "DM — Yoni",
+        "id": "D049YCR485C",
+        "client": "Tamsen Fadal",
+        "note": "Slack API returned channel_not_found on 2026-08-05. Yoni's jayshetty.me request arrived by email instead."
       }
     ],
     "lookbackHours": 24

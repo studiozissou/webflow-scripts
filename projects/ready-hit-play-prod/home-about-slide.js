@@ -7,7 +7,7 @@
    ========================================= */
 (function () {
   'use strict';
-  const VERSION = '2026.4.29.2';
+  const VERSION = '2026.8.12.1';
   const DEBUG = false;
 
   function prefersReduced() {
@@ -231,7 +231,11 @@
   }
 
   /* ── About → Home: about container slides out left ── */
-  function leaveAboutToHome(data) {
+  /** Slide the about container off to the left, revealing whatever sits behind it.
+   *  @param {object} data — Barba transition data.
+   *  @param {{duration?: number}} [opts] — override the slide duration. Defaults
+   *         to 1 (about→home); the about→work via-home beat passes a shorter one. */
+  function leaveAboutToHome(data, opts) {
     const g = window.gsap;
     const current = data?.current;
     if (!g || !current?.container) return Promise.resolve();
@@ -239,6 +243,7 @@
       g.set(current.container, { xPercent: -100 });
       return Promise.resolve();
     }
+    const dur = opts?.duration ?? 1;
     return new Promise(function (resolve) {
       let resolved = false;
       let safety = null;
@@ -249,13 +254,14 @@
         resolve();
       }
 
-      safety = g.delayedCall(2, safeResolve);
+      // Safety resolve must always outlast the tween it guards.
+      safety = g.delayedCall(Math.max(2, dur + 1), safeResolve);
 
       g.fromTo(current.container,
         { xPercent: 0 },
         {
           xPercent: -100,
-          duration: 1,
+          duration: dur,
           ease: 'power3.out',
           overwrite: true,
           onComplete: safeResolve,

@@ -103,12 +103,16 @@ Checked directly rather than trusting the intake notes:
   me off air..."*
 - Duplicate H2: *"From TV news anchor to global menopause advocate"* appears twice.
 
-> ⚠️ **Known temporary inconsistency.** Task 4 strips `13x` from About's *metadata*,
-> but the copy decision keeps *body copy* unchanged this pass. Between shipping and the
-> client approving the recommendations doc, the About page will say "Emmy Award-winning"
-> in its meta description and "13x Emmy-award winning" in its visible H2. This is
-> deliberate and should be called out when the recommendations doc goes over — it is the
-> strongest argument for approving the copy edit quickly.
+> ⚠️ **Known temporary inconsistency — wider than it first looked.** Task 4 strips `13x`
+> from *metadata*, but the copy decision keeps *body copy* unchanged this pass. `13x`
+> turns out to live in three places: About's metadata (fixed this pass), About's visible
+> H2, and **the site-wide footer sentence that renders on all ~400 pages** (both left
+> alone).
+>
+> So after this pass the site says "Emmy Award-winning" in its metadata and schema while
+> every page's footer still says "13x Emmy-winning". That is a deliberate consequence of
+> the copy decision, not an oversight — but it makes the recommendations doc time-critical
+> rather than nice-to-have. Lead with it when the doc goes over.
 
 ### Pages with NO page-level schema
 
@@ -118,6 +122,53 @@ technically true but overstates coverage — these pages emit `Organization`/`Pe
 
 `speaking` · `press` · `blog` · `advocacy` · `themfactor` · `themfactor2` ·
 `contact` · `events` · `menopause-education-hub`
+
+### On-page bio surfaces — located 2026-08-12
+
+Only three places on the site state who she is in a factual register. Two are worth
+acting on.
+
+**1. The site footer — highest leverage on the site.** `div.footer_bottom-content`,
+global, so it renders on all ~400 pages:
+
+> "Tamsen Fadal is a NYT bestselling author, podcaster  13x Emmy-winning journalist, and
+> keynote speaker helping women unlock their full potential."
+
+- Contains `13x`
+- Has a **double space and a missing comma** after "podcaster" — a visible copy defect
+  currently on every page of the site
+- Omits filmmaker, both documentaries, and The Tamsen Show by name
+
+This is the "footer entity language" the GreenBanana audit asked about, and the single
+highest-reach entity sentence available. Top item in the recommendations doc.
+
+**2. The Press page has no bio at all.** Its meta description promises *"Media features,
+approved photos, **bios**, and press inquiry contact for journalists and producers."*
+The page has `Approved Photos` and `Media Inquiry` sections and **no bio section** — the
+word "bio" appears nowhere in the rendered body.
+
+This is the strongest recommendation in the pass: the Press page is where journalists and
+producers go for exactly this, the meta description already promises it, and the copy is
+**already approved**, so there is no approval friction. The bio file's title line / short
+bio / full bio map onto that page with no new wording required.
+
+**3. About page** — `div.text-wrapper`, first-person voice: *"Hi! I'm Tamsen... As a 13x
+Emmy-award winning journalist..."* Covered above.
+
+### llms.txt is carrying pre-bio language
+
+`https://www.tamsenfadal.com/llms.txt` is an AEO surface aimed directly at AI-search
+crawlers, and its `description` predates the bio:
+
+> "Author, journalist, and menopause education & advocacy platform with resources,
+> articles, podcasts, and guides focused on perimenopause/menopause and midlife health."
+
+It describes a *platform*, not a person — no Emmy, no filmmaker, no NYT bestseller, no
+named podcast. Its `social:` block also lists only Instagram, TikTok, Facebook and
+YouTube, omitting **LinkedIn and Threads**, both of which are in Wikidata.
+
+Given this file exists specifically to shape how AI assistants describe her, it should
+carry the approved language. Added as Task 17.
 
 ### Wikidata Q7681850 — verified live 2026-08-12
 
@@ -229,11 +280,12 @@ Task 15.
 | 9 | Update Book + PodcastSeries descriptions to approved language | MCP | schema | 2 |
 | 10 | Wikidata Q7681850 — add missing properties | manual / QuickStatements | seo | — |
 | 11 | Wikipedia Talk-page edit request (COI-declared, sourced) | **file** | content | — |
-| 12 | On-page copy recommendations doc — must cover the About H1 (no entity name), the `13x` in About body copy, and the duplicated H2 | **file** | content | — |
+| 12 | On-page copy recommendations doc — ranked, most-leverage first: **(a)** the site-wide footer sentence (all ~400 pages, has `13x` plus a double-space/missing-comma defect), **(b)** publishing the approved bio on the Press page, which its own meta description already promises, **(c)** the About H1 (no entity name), **(d)** `13x` in About body copy, **(e)** the duplicated About H2 | **file** | content | — |
 | 13 | Third-party profile alignment checklist | **file** | content | — |
 | 14 | Publish + validate | MCP + chrome | qa | 2–9 |
 | 15 | Repoint redirect `/subscribe` → `/newsletter` (currently 301s to `/`) | Webflow settings | seo | — |
 | 16 | Add Threads + Muck Rack to `Person.sameAs` | MCP (same write as Task 2) | schema | 1 |
+| 17 | Rewrite `llms.txt` `description` to `bio-200`; add LinkedIn + Threads to its `social:` block | file + Webflow | seo | — |
 
 ### Person node — what changes
 

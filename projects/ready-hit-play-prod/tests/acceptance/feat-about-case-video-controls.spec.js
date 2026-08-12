@@ -49,6 +49,16 @@ async function revealVideo(page) {
   await page.waitForTimeout(1000); // IntersectionObserver + resume
 }
 
+/** Drive a Barba transition directly.
+ *  The nav is deliberately hidden on about (.rhp-nav-hidden) and stays hidden on
+ *  home until the intro sequence completes, so nav links measure 0x0 and cannot
+ *  be clicked in a headless run. Going through Barba exercises the same
+ *  leave/enter lifecycle without depending on nav visibility. */
+async function barbaGo(page, href) {
+  await page.evaluate((h) => window.barba?.go(h), href);
+  await page.waitForTimeout(2500);
+}
+
 /** True once the CMS embed binding is in place. */
 async function hasSource(page) {
   return page.evaluate((sel) => {
@@ -200,8 +210,7 @@ test.describe(`${SLUG} — Barba lifecycle`, () => {
     await revealVideo(page);
     await expect(page.locator(TRACK)).toHaveCount(1);
 
-    await page.locator('.nav_logo-link, .nav_logo-wrapper-2').first().click();
-    await page.waitForTimeout(2500); // Barba about → home
+    await barbaGo(page, '/'); // Barba about → home
 
     const after = await page.evaluate(() => {
       const cursor = document.querySelector('.cursor_dot-wrapper');
@@ -220,10 +229,8 @@ test.describe(`${SLUG} — Barba lifecycle`, () => {
     await loadAbout(page);
     test.skip(!(await hasSource(page)), 'CMS embed src not bound yet');
 
-    await page.locator('.nav_logo-link, .nav_logo-wrapper-2').first().click();
-    await page.waitForTimeout(2500);
-    await page.locator('.nav_about-link').first().click();
-    await page.waitForTimeout(2500);
+    await barbaGo(page, '/');       // about → home
+    await barbaGo(page, '/about');  // home → about (re-entry)
     await revealVideo(page);
 
     await expect(page.locator('.case-video_progress-track')).toHaveCount(1);

@@ -1,6 +1,6 @@
 # /triage — Multi-Source Task Triage
 
-Scan Gmail, Slack, Calendar, and Trello. Extract tasks, detect blockers, draft replies, and create tasks in Notion.
+Scan Gmail, Slack, Calendar, and Trello. Extract tasks, detect blockers, draft replies, create tasks in Notion, and keep existing Notion tasks current as new information arrives.
 
 ## Model split
 - **Opus** for task extraction, classification, reply drafting, and question generation
@@ -23,7 +23,7 @@ Before scanning, verify which MCP tools are available:
 Required:
 - Gmail MCP (mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread, mcp__claude_ai_Gmail__create_draft)
 - Slack MCP (mcp__plugin_slack_slack__slack_read_channel, mcp__plugin_slack_slack__slack_read_thread)
-- Notion MCP (notion-search, notion-create-pages)
+- Notion MCP (notion-search, notion-create-pages, notion-fetch, notion-update-page)
 
 Optional:
 - Google Calendar MCP (list_events)
@@ -94,9 +94,24 @@ against the local `processedSourceIds` ledger in state.json. See the triage skil
 
 For each extracted task:
 1. Check the Source ID against `state.processedSourceIds`
-2. If found → skip (already triaged)
+2. If found → do not create. Route it to the update pass instead: resolve the page via
+   `state.taskLinks[sourceId]`, `notion-fetch` it, and decide whether the new activity
+   changes any field. If nothing changed, drop it silently
 3. If not found → check for semantic duplicates via `notion-search` (similar name + same client)
-4. If semantic match → add to questions list: "Is this the same as existing task 'X'?"
+4. If semantic match → propose an update rather than a second task, and add to the questions
+   list: "This looks like existing task 'X' — update that, or is this separate work?"
+
+### Step 5b — Update pass
+
+Independently of new tasks, review tasks that current source activity touches:
+
+1. Blockers that cleared → propose `Waiting`/`Blocked` → `Inbox` and clearing `Blocked Reason`
+2. New blockers, moved deadlines, added scope, changed ownership → propose the matching field change
+3. Obsolete candidates → collect separately for individual confirmation
+
+Always `notion-fetch` before proposing, so the "Now" column is a real value and not a guess.
+See the triage skill's `<task_updates>` section for the full rules on which fields may change,
+which status transitions are allowed, and why `Source Context` is append-only.
 
 ### Step 6 — Present triage report
 
@@ -108,6 +123,8 @@ Output the full triage report following the format in the triage skill:
 ## Replies Needed
 ## Draft Replies
 ## New Tasks → Notion (with Doer column)
+## Task Updates → Notion (before/after per field; omit if empty)
+## Possibly Obsolete (confirm individually; omit if empty)
 ## Quick Wins (Claude can do now)
 ## Blocked / Waiting Summary
 ## Flag / Action Items
@@ -118,11 +135,15 @@ Output the full triage report following the format in the triage skill:
 ### Step 7 — Ask for approval
 
 Use AskUserQuestion with options:
-- **"Approve all tasks and drafts" (Recommended)** — create all tasks in Notion + create all email/Slack drafts
-- **"Let me review individually"** — go through each task and draft one by one
+- **"Approve all tasks, updates, and drafts" (Recommended)** — create tasks, apply field
+  updates, create email/Slack drafts. Never covers trashing
+- **"Let me review individually"** — go through each task, update, and draft one by one
 - **"Approve tasks only"** — create Notion tasks, skip reply drafts
-- **"Approve drafts only"** — create reply drafts, skip Notion tasks
+- **"Approve drafts only"** — create reply drafts, skip Notion writes
 - **"Skip everything"** — just save the triage report, don't create anything
+
+If the Possibly Obsolete table has rows, ask about it as a **separate question**, listing
+each task by name. No bulk approval ever reaches a trash operation.
 
 ### Step 8 — Execute approved actions
 
@@ -133,6 +154,20 @@ Based on user's choice:
 2. Create parent tasks first, then subtasks (so the `Parent task` relation can be set)
 3. Set all properties per the triage skill schema (including Doer)
 4. Log each created task with Notion URL
+
+**Notion task updates:**
+1. `notion-fetch` each page and confirm the current value still matches the "Now" column the
+   user approved against. If it has drifted, stop and re-ask
+2. Apply only the approved fields via `notion-update-page` — omitted properties stay untouched
+3. `Source Context` gets the existing text plus a new dated line, never a replacement
+4. Never write `Task name` or any field in the never-write list
+5. Log each task with the fields changed and its Notion URL
+
+**Notion task trashing (only after individual confirmation):**
+1. Re-fetch and confirm it is the task the user named
+2. If it has subtasks, stop and ask what happens to the children first
+3. Move to trash via `notion-update-page`, and tell the user it is recoverable for 30 days
+4. Remove its `taskLinks` entry, keep its `processedSourceIds` entry
 
 **Gmail draft creation:**
 1. For each approved draft, call `mcp__claude_ai_Gmail__create_draft` with `replyToMessageId`
@@ -164,12 +199,17 @@ After executing approved actions, if any tasks have Doer = "Claude":
 ### Step 9 — Update state
 
 1. Append the Source ID of every task that was actually created to `processedSourceIds`
-2. Write updated timestamps to `.claude/triage/state.json`
-3. Print summary:
+2. Record `taskLinks[sourceId] = "<notion page url>"` for every task created
+3. Drop `taskLinks` entries for any task trashed, keeping their `processedSourceIds` entries
+4. Updates and cancellations change nothing else in state.json — Notion holds task state
+5. Write updated timestamps to `.claude/triage/state.json`
+6. Print summary:
    ```
    ── Triage Complete ──
    Sources scanned: Gmail (X threads), Slack (Y messages), Calendar (Z events)
    Tasks created: N (P parent + S subtasks)
+   Tasks updated: U (F fields)
+   Tasks cancelled/trashed: C
    Drafts created: D
    Blocked/Waiting: B items
    Questions remaining: Q
@@ -187,7 +227,8 @@ The `/triage` command accepts optional arguments:
 - `/triage add` — manually add tasks from conversation, bullet points, or free-text notes (see Manual Input Mode below)
 - `/triage meeting` — process recent Notion call recordings/meeting notes (see Meeting Notes Mode below)
 - `/triage --no-drafts` — extract tasks but skip reply drafting
-- `/triage --dry-run` — scan and classify but don't create anything in Notion or Gmail
+- `/triage --dry-run` — scan and classify but don't create or change anything in Notion or Gmail
+- `/triage --no-updates` — propose new tasks only; skip the update and obsolete passes
 
 ## Manual Input Mode (`/triage add`)
 

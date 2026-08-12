@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-07-14T11:00:00+00:00",
+  "lastRun": "2026-08-12T08:24:23+00:00",
   "processedSourceIds": [
     "gmail:19f239a9bded3637#item10",
     "gmail:19f239a9bded3637#item27",
@@ -12,26 +12,78 @@
     "gmail:19f5c3b55b32ef1d",
     "gmail:19f5c133ef614de4",
     "gmail:19f5b0bcd1502966",
-    "slack:C0973LJ2BTJ:1783508718.532619"
+    "slack:C0973LJ2BTJ:1783508718.532619",
+    "gmail:19f666952d48686e",
+    "gmail:19f666952d48686e#landing",
+    "gmail:19f666952d48686e#services",
+    "gmail:19f666952d48686e#service-children",
+    "gmail:19f666952d48686e#projects",
+    "gmail:19f666952d48686e#lineas",
+    "gmail:19f666952d48686e#27ev",
+    "gmail:19f666952d48686e#products",
+    "gmail:19f666952d48686e#products-etcs",
+    "gmail:19f666952d48686e#tbl1",
+    "gmail:19f666952d48686e#telecom-box",
+    "gmail:19f666952d48686e#railos",
+    "gmail:19f666952d48686e#railos-apps",
+    "gmail:19f666952d48686e#railos-devices",
+    "gmail:19f666952d48686e#railos-open",
+    "gmail:19f666952d48686e#about",
+    "gmail:19f666952d48686e#leadership",
+    "gmail:19f7fca024207b71",
+    "gmail:19fca32c0a76b0bd#annie-call",
+    "slack:D08SEJ6QTD2:1785920161.712929",
+    "gmail:19fa330b423d93cf",
+    "notion-meeting:3b4e1848bb5181ee8774ccc47f137db8#autotrader-design",
+    "notion-meeting:3b4e1848bb5181ee8774ccc47f137db8#autotrader-implement",
+    "notion-meeting:3b4e1848bb5181ee8774ccc47f137db8#message-rishi",
+    "notion-meeting:3b4e1848bb5181ee8774ccc47f137db8#seo-recommendations",
+    "notion-meeting:3b4e1848bb5181ee8774ccc47f137db8#pagination",
+    "gmail:19fd78232efa3434#reply",
+    "gmail:19fd78232efa3434#sensor-box",
+    "gmail:19fdb9e966101e33",
+    "gmail:19fdb6c59b0362ad",
+    "slack:C0973LJ2BTJ:1786348536.672469",
+    "slack:C08G8FGHX9Q:1785320577.580049#url",
+    "slack:C08G8FGHX9Q:1785320577.580049#make-preselect",
+    "notion-meeting:3b8e1848bb5181c4aaf1fff0dbbf3be8#commit-baseline",
+    "notion-meeting:3b8e1848bb5181c4aaf1fff0dbbf3be8#conclusion-v2",
+    "notion-meeting:3b8e1848bb5181c4aaf1fff0dbbf3be8#sheet-ids",
+    "notion-meeting:3b8e1848bb5181c4aaf1fff0dbbf3be8#retest-e2e",
+    "notion-meeting:3b8e1848bb5181c4aaf1fff0dbbf3be8#notion-validations",
+    "manual:nem-anonymous-score-log",
+    "slack:D08SEJ6QTD2:1786375939.095279",
+    "slack:C0973LJ2BTJ:1786432681.510109",
+    "manual:granola-lunchtime-2026-08-11",
+    "gmail:19fec3a63c7adc5c#line26-answer",
+    "gmail:19fec3a63c7adc5c#lower-priority",
+    "gmail:19fec3a63c7adc5c#spreadsheet",
+    "gmail:19fec3a63c7adc5c#timelapse-howto",
+    "gmail:19ff1ce4b519e543",
+    "calendar:2gak18m2pojglasnbi9dvojt9v_20260813T150000Z"
   ],
   "sources": {
     "gmail": {
-      "lastProcessed": "2026-07-13T21:02:25Z"
+      "lastProcessed": "2026-08-12T07:18:07Z"
     },
     "slack": {
       "channels": {
-        "C0973LJ2BTJ": "1783609502.696749",
-        "C08G8FGHX9Q": "1782402167.307479"
+        "C0973LJ2BTJ": "1786439711.618659",
+        "C08G8FGHX9Q": "1785320577.580049"
       },
       "dms": {
-        "D08SEJ6QTD2": "1783420744.376409"
+        "D08SEJ6QTD2": "1786376245.587589"
       }
     },
     "calendar": {
-      "lastProcessed": "2026-07-14T11:00:00+00:00"
+      "lastProcessed": "2026-08-12T08:24:23+00:00"
     },
     "trello": {
       "lastProcessed": null
     }
+  },
+  "taskLinks": {
+    "gmail:19ff1ce4b519e543": "https://app.notion.com/p/3bae1848bb5181f39f3dd217681bc974",
+    "calendar:2gak18m2pojglasnbi9dvojt9v_20260813T150000Z": "https://app.notion.com/p/3bae1848bb5181708cd5d4d4555cc096"
   }
 }

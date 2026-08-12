@@ -1,8 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-10",
+  "updated": "2026-08-12",
   "note": "nem-test-conclusion-logic-v2 planned 2026-08-10 from the Alex/Christel call, the 6 Aug email chain and Alex's revised conclusion sheet. 5 tasks queued. BLOCKER: nem-test-scoring.js and its unit test are untracked in git - commit the baseline first. Open: Christel's tiebreak order inferred from sheet row order, contact page URLs unverified, flat outcomes generate no backend rows.",
   "queue": [
+    {
+      "id": "tamsen-official-bio-rollout",
+      "project": "tamsen-fadal",
+      "type": "seo",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Roll the approved official bio across schema, metadata and Wikidata",
+      "description": "The approved bio unblocks Phases 1 to 3 of the branded search fix. Update Person.description in the site wide entity graph and enrich the Person node with the two documentaries, Tamsen Fadal Media, the PostYourPatch campaign and the 2026 NYWICI Matrix Award. Strip 13x Emmy wording from Home, About and Speaking metadata. Fix the Podcast trailing space and over long description, and the M Film v2 duplicated meta description. Add page level JSON-LD to the nine pages that only inherit the site wide graph. Update Wikidata Q7681850 directly. Deliver on page copy recommendations, a COI declared Wikipedia Talk page edit request and a third party profile alignment checklist as documents rather than live changes.",
+      "spec": "projects/tamsen-fadal/.claude/specs/official-bio-rollout.md",
+      "created": "2026-08-12"
+    },
     {
       "id": "nem-test-review-alex-notion-validations",
       "project": "nem-life",

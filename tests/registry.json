@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-10",
+  "lastUpdated": "2026-08-12",
   "note": "tsc-leadership-modal scrollbar-width reserve (no page jump) deployed to tsc-v2.webflow.io (677502e)",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -269,6 +269,16 @@
       "critical": true,
       "created": "2026-08-10",
       "description": "NEM Test conclusion engine v2 - directional dual keys, min-8 score gate, flat-low/flat-high outcomes routing to a contact link instead of the report, debug mode via ?nemdebug=1 showing the conclusion ID + key, and gender-differentiated copy."
+    },
+    {
+      "slug": "official-bio-rollout",
+      "url": "https://www.tamsenfadal.com/",
+      "spec": "tests/acceptance/official-bio-rollout.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-12",
+      "description": "Approved official bio is the single source of truth: Person.description matches byte-for-byte, the site-wide entity graph resolves once per page across 13 pages, documentaries emit Movie nodes credited to #person, pre-existing site head code (verification, GTM, Finsweet, styles) survives the read-append-write, no '13x' wording remains in metadata, and the Podcast and M Film v2 description bugs are fixed."
     }
   ]
 }

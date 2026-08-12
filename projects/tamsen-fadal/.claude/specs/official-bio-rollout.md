@@ -89,6 +89,27 @@ Bio-bearing metadata that contradicts the approved language:
 | Podcast | `68c2ff8bba319e1652add93e` | Title has a **trailing space**; description is ~900 chars (≈5× the useful limit) and does not lead with her name |
 | M Film v2 | `6a314a864c78c9f05e987105` | Carries the **Advocacy page's** meta description verbatim — copy-paste error |
 
+### About page — confirmed live 2026-08-12
+
+Checked directly rather than trusting the intake notes:
+
+- **H1 count is 1, not multiple.** `intake.json` records "About page has multiple H1s —
+  needs fixing". That has since been fixed; the check is stale. No action needed.
+- **The H1 still carries no entity name** — `NYT bestselling author. Global keynote
+  speaker. Podcast host.` This is the exact H1 GreenBanana flagged. Goes in the
+  recommendations doc (Task 12), not shipped this pass.
+- **`13x` also appears in visible body copy**, not only in metadata:
+  H2 — *"Hi! I'm Tamsen... As a 13x Emmy-award winning journalist, only one thing took
+  me off air..."*
+- Duplicate H2: *"From TV news anchor to global menopause advocate"* appears twice.
+
+> ⚠️ **Known temporary inconsistency.** Task 4 strips `13x` from About's *metadata*,
+> but the copy decision keeps *body copy* unchanged this pass. Between shipping and the
+> client approving the recommendations doc, the About page will say "Emmy Award-winning"
+> in its meta description and "13x Emmy-award winning" in its visible H2. This is
+> deliberate and should be called out when the recommendations doc goes over — it is the
+> strongest argument for approving the copy edit quickly.
+
 ### Pages with NO page-level schema
 
 Every page inherits the site-wide graph, so the earlier "0 bare pages" result is
@@ -147,7 +168,7 @@ technically true but overstates coverage — these pages emit `Organization`/`Pe
 | 9 | Update Book + PodcastSeries descriptions to approved language | MCP | schema | 2 |
 | 10 | Wikidata Q7681850 — add missing properties | manual / QuickStatements | seo | — |
 | 11 | Wikipedia Talk-page edit request (COI-declared, sourced) | **file** | content | — |
-| 12 | On-page copy recommendations doc | **file** | content | — |
+| 12 | On-page copy recommendations doc — must cover the About H1 (no entity name), the `13x` in About body copy, and the duplicated H2 | **file** | content | — |
 | 13 | Third-party profile alignment checklist | **file** | content | — |
 | 14 | Publish + validate | MCP + chrome | qa | 2–9 |
 

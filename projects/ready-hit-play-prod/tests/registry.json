@@ -4,8 +4,8 @@
   "lastPlanned": "feat-about-to-work-via-home-transition",
   "lastRegistered": "feat-about-to-work-via-home-transition",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
-  "lastDeployed": "2026-05-06",
-  "lastDeployedHash": "8904cdd",
+  "lastDeployed": "2026-08-12",
+  "lastDeployedHash": "179363b",
   "entries": [
     {
       "id": "smoke",

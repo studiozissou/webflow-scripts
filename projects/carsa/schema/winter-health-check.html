@@ -1,0 +1,60 @@
+<!-- WINTER CAR HEALTH CHECK — JSON-LD Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.carsa.co.uk/mot-and-car-servicing/winter-health-check#webpage",
+      "url": "https://www.carsa.co.uk/mot-and-car-servicing/winter-health-check",
+      "name": "Free Winter Car Health Check | Carsa",
+      "description": "Book a free Winter Car Health Check at Carsa. We check your battery, tyres, lights, wipers, and fluids to keep you safe on the road this winter.",
+      "isPartOf": { "@id": "https://www.carsa.co.uk/#website" },
+      "about": { "@id": "https://www.carsa.co.uk/#organization" },
+      "breadcrumb": { "@id": "https://www.carsa.co.uk/mot-and-car-servicing/winter-health-check#breadcrumb" },
+      "mainEntity": { "@id": "https://www.carsa.co.uk/mot-and-car-servicing/winter-health-check#service" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.carsa.co.uk/mot-and-car-servicing/winter-health-check#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.carsa.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "MOT & Car Servicing",
+          "item": "https://www.carsa.co.uk/mot-and-car-servicing"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Winter Health Check"
+        }
+      ]
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.carsa.co.uk/mot-and-car-servicing/winter-health-check#service",
+      "name": "Winter Car Health Check",
+      "serviceType": "Vehicle health check",
+      "description": "A free winter car health check covering battery, tyres, lights, wipers, and fluid levels.",
+      "provider": { "@id": "https://www.carsa.co.uk/#organization" },
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Kingdom"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "GBP",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+  ]
+}
+</script>

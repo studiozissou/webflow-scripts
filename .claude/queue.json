@@ -4,6 +4,18 @@
   "note": "nem-test-conclusion-logic-v2 planned 2026-08-10 from the Alex/Christel call, the 6 Aug email chain and Alex's revised conclusion sheet. 5 tasks queued. BLOCKER: nem-test-scoring.js and its unit test are untracked in git - commit the baseline first. Open: Christel's tiebreak order inferred from sheet row order, contact page URLs unverified, flat outcomes generate no backend rows.",
   "queue": [
     {
+      "id": "tsc-launch-metadata-schema",
+      "project": "the-signalling-company",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Launch metadata gap + Full JSON-LD schema + metadata re-audit",
+      "description": "WS-A: wrote seo-title/meta-description fields + copy for 11 RailOS Apps items and bound the template (title binding verified live). WS-B: Organization/WebSite live site-wide (client-pasted, Škoda parent, logo SVG + LinkedIn sameAs confirmed); WebPage/CollectionPage/AboutPage/ContactPage + BreadcrumbList + FAQPage(26) + Person(8, top-level) + SoftwareApplication(RailOS) via schema-markup API across static pages; per-item Product/Service/NewsArticle/CreativeWork/SoftwareApplication pasted into CMS-template custom-code heads by client (API can't bind {{wf}} in schema field / 406s on freeform <script>). Homepage deduped (WebPage+Breadcrumb only; Org/WebSite site-wide). WS-C: metadata re-audit report. Staging-only publish. ACCEPTANCE: 20/20 pass. Schema Rich-Results validation deferred to production launch (Google robots cache blocks RRT on .webflow.io staging). OPEN: Home B / Projects B published duplicates (unpublish decision); VideoObject omitted (no uploadDate).",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-launch-metadata-schema.md",
+      "report": "projects/the-signalling-company/.claude/audits/tsc-metadata-audit-2026-07-15.md",
+      "created": "2026-07-15"
+    },
+    {
       "id": "tamsen-official-bio-rollout",
       "project": "tamsen-fadal",
       "type": "seo",

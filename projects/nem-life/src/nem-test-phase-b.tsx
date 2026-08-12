@@ -1,6 +1,7 @@
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
 import { useState, useMemo, useCallback } from "react";
+import { calculateScores } from "./nem-test-scoring.js";
 
 declare global {
   interface Window {
@@ -14,22 +15,11 @@ declare global {
   }
 }
 
-/* ─── Mechanism mapping (fixed, never changes regardless of prop values) ─── */
-const MECHANISM_MAP: Record<string, { questions: number[]; bodyQ: number; situationalQ: number }> = {
-  zelfafwijzing:       { questions: [0, 1, 6, 16], bodyQ: 16, situationalQ: 0 },
-  emotioneleVerdoving: { questions: [2, 7, 12, 17], bodyQ: 12, situationalQ: 17 },
-  valseMacht:          { questions: [3, 8, 13, 18], bodyQ: 13, situationalQ: 18 },
-  angst:               { questions: [4, 9, 14, 19], bodyQ: 14, situationalQ: 19 },
-  valseHoop:           { questions: [5, 10, 11, 15], bodyQ: 10, situationalQ: 15 },
-};
-
-const MECHANISM_TO_KEY: Record<string, string> = {
-  zelfafwijzing: "zelfafwijzing",
-  emotioneleVerdoving: "emotionele-verdoving",
-  valseMacht: "valse-macht",
-  angst: "angst",
-  valseHoop: "valse-hoop",
-};
+/* ─── Mechanism mapping + scoring engine ───
+ * Moved to ./nem-test-scoring.js so the scoring logic (mechanism mapping, tie-break,
+ * and canonical conclusion-key construction) can be unit-tested with `node --test`
+ * (tests/nem/nem-test-scoring.test.js). calculateScores is imported at the top.
+ * NOTE: this component now depends on that sibling module — sync both files to Webflow. */
 
 /* ─── Gender normalisation for conclusion lookup ─── */
 const GENDER_TO_CONCLUSION_KEY: Record<string, string> = {
@@ -46,52 +36,7 @@ const EVENTS = {
 };
 const DEBUG = false;
 
-/* ─── Scoring engine ─── */
-function calculateScores(answers: (number | null)[]) {
-  const scores: Record<string, number> = {};
-  for (const [mechanism, { questions }] of Object.entries(MECHANISM_MAP)) {
-    scores[mechanism] = questions.reduce((sum, qi) => sum + (answers[qi] ?? 0), 0);
-  }
-
-  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-
-  let primary = sorted[0][0];
-  let secondary: string | null = null;
-
-  const topScore = sorted[0][1];
-  const tied = sorted.filter(([, s]) => s === topScore);
-
-  if (tied.length > 1) {
-    const withTiebreak = tied.map(([mech]) => {
-      const { bodyQ, situationalQ } = MECHANISM_MAP[mech];
-      return { mech, tiebreak: (answers[bodyQ] ?? 0) + (answers[situationalQ] ?? 0) };
-    });
-    withTiebreak.sort((a, b) => b.tiebreak - a.tiebreak);
-    primary = withTiebreak[0].mech;
-
-    const remaining = sorted.filter(([m]) => m !== primary);
-    if (remaining.length > 0 && topScore - remaining[0][1] <= 3) {
-      secondary = remaining[0][0];
-    }
-  } else {
-    if (sorted.length > 1 && sorted[0][1] - sorted[1][1] <= 3) {
-      secondary = sorted[1][0];
-    }
-  }
-
-  const primaryKey = MECHANISM_TO_KEY[primary];
-  const conclusionKey = secondary
-    ? `${primaryKey}_${MECHANISM_TO_KEY[secondary]}`
-    : primaryKey;
-
-  return {
-    scores,
-    primary,
-    secondary,
-    conclusionKey,
-    totalScore: Object.values(scores).reduce((a, b) => a + b, 0),
-  };
-}
+/* calculateScores lives in ./nem-test-scoring.js (imported above). */
 
 /* ─── Locale detection ─── */
 function getLocale(): "nl" | "en" {

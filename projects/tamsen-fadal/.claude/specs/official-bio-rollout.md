@@ -119,6 +119,67 @@ technically true but overstates coverage — these pages emit `Organization`/`Pe
 `speaking` · `press` · `blog` · `advocacy` · `themfactor` · `themfactor2` ·
 `contact` · `events` · `menopause-education-hub`
 
+### Wikidata Q7681850 — verified live 2026-08-12
+
+Fetched via `Special:EntityData/Q7681850.json` and QIDs resolved against the API.
+
+**Already set (no action):**
+
+| Property | Value |
+| --- | --- |
+| P856 official website | `https://www.tamsenfadal.com/` ✅ |
+| P2003 Instagram | `tamsenfadal` |
+| P2013 Facebook | `tamsenfadal` |
+| P6634 LinkedIn | `tamsenfadal` |
+| P7085 TikTok | `tamsenfadal` |
+| P11245 Threads | `TamsenFadalTV` |
+| P6005 Muck Rack | `tamsenfadal` |
+| P345 IMDb | `nm2876731` |
+| P214 VIAF · P213 ISNI · P244 Library of Congress | present |
+| P106 occupation | journalist, news presenter, author, activist |
+| P166 award received | Emmy Award |
+| P800 notable work | How to Menopause |
+
+**Gaps the new bio exposes (Task 10):**
+
+| Gap | Detail |
+| --- | --- |
+| **P2397 YouTube channel ID — ABSENT** | She has `youtube.com/@TamsenFadalTV`. Needs the `UC…` channel ID, not the handle. |
+| **P106 occupation** | Missing `filmmaker` and `podcaster`. The bio leads with filmmaker. |
+| **P800 notable work** | Only the book. Missing The (M) Factor, Before the Pause, The Tamsen Show. ⚠️ Each needs its own Wikidata item to be referenced — item creation is a separate, higher-bar task subject to notability. Do **not** create them speculatively. |
+| **P166 award received** | Missing the 2026 NYWICI Matrix Award. Check whether a QID exists before adding. |
+
+### sameAs — all live URLs verified 2026-08-12
+
+Every URL in the live `sameAs` array resolves. LinkedIn `999`, Facebook `400` and Muck
+Rack `403` are anti-scraper responses to a non-browser request, **not** dead links —
+confirmed by comparing against the Wikidata identifiers, which match handle-for-handle.
+
+**Two additions available, both corroborated by Wikidata:**
+
+| Add to `sameAs` | Source |
+| --- | --- |
+| `https://www.threads.net/@TamsenFadalTV` | Wikidata P11245; named in the bio's follow list; **currently missing from the site graph** |
+| `https://muckrack.com/tamsenfadal` | Wikidata P6005; journalist-authority signal |
+
+### ⚠️ `/subscribe` redirects to the homepage — verified 2026-08-12
+
+The bio tells readers to sign up at `https://www.tamsenfadal.com/subscribe`. That URL
+**301-redirects to `/`**, not to the newsletter page:
+
+```
+HTTP/2 301
+location: /
+```
+
+The newsletter page is `/newsletter` and returns 200. So the signup link in her official
+bio — the one her team will paste into press kits, show notes and third-party profiles —
+drops people on the homepage.
+
+**Fix:** repoint the Webflow redirect `/subscribe` → `/newsletter`. One line, no design
+work, and it should ship with this pass rather than waiting for the copy doc. Added as
+Task 15.
+
 ### Decisions taken (2026-08-12)
 
 | Decision | Choice | Consequence |
@@ -171,6 +232,8 @@ technically true but overstates coverage — these pages emit `Organization`/`Pe
 | 12 | On-page copy recommendations doc — must cover the About H1 (no entity name), the `13x` in About body copy, and the duplicated H2 | **file** | content | — |
 | 13 | Third-party profile alignment checklist | **file** | content | — |
 | 14 | Publish + validate | MCP + chrome | qa | 2–9 |
+| 15 | Repoint redirect `/subscribe` → `/newsletter` (currently 301s to `/`) | Webflow settings | seo | — |
+| 16 | Add Threads + Muck Rack to `Person.sameAs` | MCP (same write as Task 2) | schema | 1 |
 
 ### Person node — what changes
 
@@ -351,5 +414,6 @@ Carried from `.claude/content/official-bio.md` §5 — none block the build:
 3. Emmy count — "multiple" vs the "13x" currently live *(build follows the bio; flag it)*
 4. Canonical social URLs for the `sameAs` array
 5. Canonical book / podcast link targets
-6. `/subscribe` vs `/newsletter` — the bio points at `/subscribe`; the site page is
-   `/newsletter`. Needs a redirect or a corrected bio link.
+6. ~~`/subscribe` vs `/newsletter`~~ — **resolved by investigation.** `/subscribe` 301s to
+   the homepage. Fixing the redirect (Task 15) rather than changing the bio, so the URL
+   already printed in the bio keeps working. No client decision needed.

@@ -176,11 +176,28 @@ The Today Show · Good Morning America · The Washington Post · Forbes
 3. **"multiple Emmy Award-winning"** — full bio says multiple, short bio and title say
    "Emmy Award-winning" (singular). Confirm the count so it can be stated consistently
    everywhere, including Wikidata.
-4. **Social links** — the supplied bio lists Instagram, Facebook, TikTok, YouTube, LinkedIn,
-   Threads as follow links but without URLs. Confirmed URLs are needed for the schema
-   `sameAs` array. X/Twitter is absent from the list — confirm whether it is inactive.
+4. ~~**Social links**~~ — **resolved by investigation (2026-08-12).** All handles verified
+   against Wikidata Q7681850 and confirmed live. No client input needed:
+
+   | Platform | URL | Wikidata |
+   | --- | --- | --- |
+   | Instagram | https://www.instagram.com/tamsenfadal/ | P2003 |
+   | Facebook | https://www.facebook.com/tamsenfadal/ | P2013 |
+   | TikTok | https://www.tiktok.com/@tamsenfadal | P7085 |
+   | YouTube | https://www.youtube.com/@TamsenFadalTV | — (P2397 missing) |
+   | LinkedIn | https://www.linkedin.com/in/tamsenfadal/ | P6634 |
+   | Threads | https://www.threads.net/@TamsenFadalTV | P11245 |
+   | Muck Rack | https://muckrack.com/tamsenfadal | P6005 |
+
+   X/Twitter confirmed inactive — deliberately removed from the site's `sameAs` and from
+   Wikidata on 11 Aug 2026.
+
 5. **Book / podcast link targets** — the bio references "Website, Amazon" and "Website, Apple
-   Podcasts, Spotify, Amazon Music, YouTube" without URLs. Need the canonical ones.
-6. **`/subscribe` URL** — the bio points the newsletter at `tamsenfadal.com/subscribe`, but the
-   site inventory (`intake.json`) lists the page as `/newsletter`. Confirm which is canonical,
-   or add a redirect.
+   Podcasts, Spotify, Amazon Music, YouTube" without URLs. The site schema already uses
+   verified Apple (`id1799976761`), Spotify (`7KuIU0g3CsUY0eAlzQaA5T`), Amazon Music and
+   Hachette (ISBN `9780306833540`) links — all return 200. Only the **Amazon book listing**
+   is still unconfirmed.
+6. ~~**`/subscribe` URL**~~ — **resolved by investigation (2026-08-12).** `/subscribe`
+   301-redirects to the **homepage**, not the newsletter page, so the signup link printed in
+   this bio currently drops readers on `/`. Being fixed by repointing the redirect to
+   `/newsletter`, so the URL in the bio keeps working. No change needed to the bio text.

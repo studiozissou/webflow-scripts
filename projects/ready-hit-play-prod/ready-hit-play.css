@@ -646,6 +646,15 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   border-radius: 0;
 }
 
+/* Case-video blocks now appear on about as well as work. Reset the base
+   .dial_video-wrap pill radius structurally rather than per-namespace —
+   the pill is only ever wanted on the persistent home dial (#fg-video-wrap),
+   which is a sibling of the Barba container and never a descendant here. */
+.section_case-video .dial_video-wrap,
+.section_case-video-laptop .dial_video-wrap {
+  border-radius: 0;
+}
+
 /* CSS transitions removed - using GSAP for animations */
 
 .dial_fg-video,

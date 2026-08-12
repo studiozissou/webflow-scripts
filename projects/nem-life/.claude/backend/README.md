@@ -28,9 +28,20 @@ email link hits the `/verify` webhook. See the full architecture in
 
 1. ~~**Wire `/verify` validation core**~~ ✅ **Done 2026-07-07** — workflow live (id `uKkMgMYoH5nOLoCR`), Data Table `ib5Yh0yEfNpDqeuU` wired into Get Profile + Mark Consumed, `REPLACE_SITE` → `nem-life-1.webflow.io`. All 5 cases pass (valid NL/EN → `/bevestigd`; reused/expired/unknown → `/verlopen`; `consumed` flips only on valid). Confirmation pages live at `/verificatie/bevestigd` + `/verificatie/verlopen` (separate static folder — can't share the `zelftesten` CMS collection slug). EN mirror pages `/en/verificatie/…` still need confirming.
 2. ~~**Layer in Anthropic → PDF → MailerSend**~~ ✅ **Done 2026-07-09** — full chain verified end to end (exec #31 `/submit` → exec #32 `/verify`): row stored, MailerLite verification accepted, Anthropic stub report, 21 kB unwatermarked PDF, MailerSend 202 from `hallo@nemmatters.com`, `consumed` flipped, replay → `/verlopen`.
-3. **Add To Newsletter** — still disabled, still needs the NEM Matters MailerLite group ID (`REPLACE_NEM_MATTERS_GROUP_ID`). `Consent?` gate is disabled alongside it.
-4. **Swap in Alex's real report prompt** — one `system:` field on the Generate Report node; currently a clearly-labelled stub.
-5. Finally, paste the submit URL into the component's `submitWebhookUrl` prop so the real quiz hits the live backend.
+3. ~~**Add To Newsletter**~~ ✅ **Done 2026-07-09** — enabled and verified (exec #37) against MailerLite group `157087585777223620` ("NEM Matters NL"); the `Consent?` gate is enabled alongside it. *(This item previously read "still disabled, still needs the group ID" — stale; corrected 2026-08-11.)* Two caveats remain, both below: **all locales land in the NL group**, and the node has no credential attached in the repo template.
+4. **Refresh `N8N_API_KEY`** ⚠️ **new blocker, 2026-08-11** — the key is failing authentication (`n8n_get_workflow` → `AUTHENTICATION_ERROR`). `n8n_health_check` still passes, so the instance is up and it is the key that is stale. Nothing that touches n8n can proceed until this is refreshed.
+5. **Apply the prepared `/verify` prompt-escaping fix** — `nem-report-prompt-escaping-and-token-limit` (P0) is built, unit-tested (21 passing) and **unapplied**. Everything needed is in `changesets/nem-report-prompt-escaping/` — start with its `README.md`. Fixes two defects that detonate the moment Alex's real prompt is pasted: the prompt is currently a **JS string literal** (any apostrophe throws, silently — the browser already has its 302), and live `max_tokens` is **1024**, which truncates a full report mid-sentence.
+6. **Swap in Alex's real report prompt** — after item 5, this becomes pasting text into the `Report Prompt` Set node. Doing it *before* item 5 will silently break the report branch.
+7. Finally, paste the submit URL into the component's `submitWebhookUrl` prop so the real quiz hits the live backend.
+
+> ⚠️ **This repo's `nem-verify.workflow.json` is stale against live.** Known drift:
+> `max_tokens` (repo `8000` / live `1024`), the system prompt (repo still holds
+> `REPLACE_WITH_ALEX_SYSTEM_PROMPT_FROM_NOTION`, live holds a stub), `Add To Newsletter`
+> (repo disabled with a placeholder group, live enabled with the real one), and the
+> `Consent?` gate. **Never re-import this file wholesale** — it would revert work verified
+> on 2026-07-09. Edit live via node-level diffs (`n8n_update_partial_workflow`), and pull
+> live → commit before and after. n8n holds **no version history** for this workflow, so
+> the committed snapshot is the only rollback point that exists.
 
 ### 🔑 Handover — credentials (✅ complete)
 
@@ -49,6 +60,15 @@ email link hits the `/verify` webhook. See the full architecture in
 | `MailerSend API` | `Authorization` | `Bearer mlsn.…` (**with** prefix) |
 
 **All three credentials are now on the client's accounts.** No credential work blocks go-live.
+
+> ⚠️ **Corrected 2026-08-11 — that last sentence is not true as written.** No *credential
+> transfer* work blocks go-live, but two account-level things do:
+> 1. **MailerSend is still on a trial account** and 422s on the first unseen recipient, so
+>    in production every report email would fail. See the go-live blocker below. The
+>    "✅ Production" row for MailerSend in the status table above should be read as "wired
+>    and verified", not "ready for real traffic".
+> 2. **The n8n API key is failing authentication** (found 2026-08-11) — unrelated to the
+>    three client credentials above, but it blocks all workflow work until refreshed.
 
 ### 🌐 Known issue — every subscriber lands in the NL newsletter group
 

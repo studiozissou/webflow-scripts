@@ -279,6 +279,18 @@
       "critical": false,
       "created": "2026-08-12",
       "description": "Approved official bio is the single source of truth: Person.description matches byte-for-byte, the site-wide entity graph resolves once per page across 13 pages, documentaries emit Movie nodes credited to #person, pre-existing site head code (verification, GTM, Finsweet, styles) survives the read-append-write, no '13x' wording remains in metadata, and the Podcast and M Film v2 description bugs are fixed."
+    },
+    {
+      "slug": "getcoconut-sole-traders",
+      "url": "https://www.getcoconut.com/mtd-software/sole-traders",
+      "spec": "tests/acceptance/test-page-getcoconut-sole-traders.spec.js",
+      "baseline": ".claude/research/test-page/getcoconut-sole-traders-baseline-2026-07-16.json",
+      "report": ".claude/research/test-page/getcoconut-sole-traders-report-2026-07-16.md",
+      "type": "test-page",
+      "source": "test-page",
+      "critical": false,
+      "description": "MTD for Sole Traders landing page — Full-mode /test-page baseline (a11y 100, SEO 100, best-practices 73, LCP 158ms, CLS 0.11). Regression spec: JS errors, mobile overflow, CLS ceiling 0.15, heading hierarchy, img alt, SEO essentials.",
+      "created": "2026-07-16"
     }
   ]
 }

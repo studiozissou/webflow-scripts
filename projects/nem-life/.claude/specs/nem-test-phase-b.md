@@ -140,6 +140,14 @@ Each mechanism score: 0-16. Total score: 0-80.
 
 **Tiebreaker:** In the event of an equal highest score, the body and situational questions of the tied mechanisms serve as tiebreaker (these are least susceptible to socially desirable answering). Full tiebreaker rule is in Alex's system prompt document.
 
+**Conclusion key ordering (canonical, resolved 2026-07-14).** The 15 conclusion keys are 5 singles plus **10 unordered pairs written in canonical mechanism order** — the declaration order `zelfafwijzing → emotionele-verdoving → valse-macht → angst → valse-hoop`. The table holds e.g. `zelfafwijzing_angst` and never the reverse. `calculateScores` therefore builds a dual key by sorting the two mechanisms into canonical order (`conclusionKeyFor`), **not** primary-then-secondary. This is order-independent: whichever mechanism is dominant, the key resolves to the one text that exists. Primary and secondary are still reported separately (and sent to the backend) for the report's "focus" framing. Enforced by `tests/nem/nem-test-scoring.test.js` (exhaustive: every ordered pair maps into the 15-key table).
+
+> Prior bug (fixed): the component built `${primaryKey}_${secondaryKey}` in dominant-first order, so ~half of dual outcomes (e.g. primary `angst`, secondary `zelfafwijzing` → `angst_zelfafwijzing`) missed the table and rendered a **blank** conclusion. Masked until now only because all conclusion texts are still placeholders.
+
+**Still open — needs Alex (does not block the fix above):**
+1. **Second-level tie.** If the top mechanisms are equal on raw score *and* equal on body + situational (e.g. Fear 12 / False Hope 12 with identical body+situational sums), the current code falls through to declaration order, which is arbitrary. Alex to define the rule: a fixed mechanism priority order, present the pair as co-equal, or another deterministic rule.
+2. **Dominant vs co-equal framing.** For a genuine tie (or a within-3 near-tie), the report currently treats one mechanism as dominant. Alex to confirm whether that is desired, or whether a true tie should be framed as two co-equal mechanisms. If the conclusion texts are to remain order-independent (15 keys), "dominant" only affects the report's emphasis, not which text is shown.
+
 **Example — fictitious profile:**
 
 | Mechanism | Questions | Answers | Total |

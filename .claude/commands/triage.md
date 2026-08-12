@@ -62,6 +62,9 @@ Spawn parallel agents to scan each source:
 - Use config's client mapping to auto-assign clients
 - For threads with replies, fetch full thread via `mcp__plugin_slack_slack__slack_read_thread`
 - Return classified messages with permalinks
+- Do **not** attempt to read anything in `config.slack.manualCheck` — those live in a
+  different Slack workspace that this connection cannot see, and their IDs will return
+  `channel_not_found`. Return them as a reminder list instead.
 
 **Agent 3 — Calendar** (if available):
 - `list_events` for the next `config.calendar.lookaheadDays` days
@@ -113,7 +116,22 @@ Output the full triage report following the format in the triage skill:
 ## Flag / Action Items
 ## Questions for You
 ## Noise Summary
+## Check Manually
 ```
+
+Always end with a **Check Manually** section listing every entry in
+`config.slack.manualCheck`, so these don't get silently missed:
+
+```
+## Check Manually
+Not covered by automated triage — Claude Code can only hold one Slack
+connection, currently Team Zissou:
+- Skye High → #tamsen-web-dev (Tamsen Fadal)
+- Skye High → DM with Yoni (Tamsen Fadal)
+```
+
+If anything actionable turns up there, paste it in and it will be triaged with
+the rest.
 
 ### Step 7 — Ask for approval
 

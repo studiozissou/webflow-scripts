@@ -2,6 +2,14 @@
 
 ## Fixed
 
+### F2: mobile — transition dial canvas covers the case close button
+- **Status:** Fixed 2026-08-13 — found while verifying F1's deploy
+- **Area:** CSS / transition-dial
+- **Symptom:** on mobile, after entering a case study via a Barba transition, the close button could not be tapped. Nothing was visibly drawn over it, so the button just looked dead. Direct page loads were unaffected.
+- **Root cause:** `transition-dial.js` appends a decorative `aria-hidden` `.transition-dial_canvas` into `.home-transition-dial`. Its `destroy()` removes listeners but leaves the canvas in the DOM, and `.home-transition-dial` had no `pointer-events` rule — so the canvas stayed hit-testable. On mobile that wrapper sits bottom-centre, landing exactly over `.case_close-button` at the end of a case study. The sibling `.transition-dial` already set `pointer-events: none` for this reason; `.home-transition-dial` was missing it.
+- **Fix:** `pointer-events: none` on `.home-transition-dial`, plus an unscoped rule on `.transition-dial_canvas` (Flip reparents that canvas between wrappers).
+- **Tests:** `tests/acceptance/fix-transition-dial-blocks-close-button.spec.js` (3 tests, registered critical)
+
 ### F1: intermittent close button failure on /work/ pages
 - **Status:** Fixed 2026-08-13 (work-dial v2026.8.13.1) — reported by Ryan on the 2026-08-10 call
 - **Area:** work-dial / Barba transitions

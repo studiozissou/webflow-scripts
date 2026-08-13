@@ -30,16 +30,27 @@ require('dotenv').config({ path: '.env.test' });
 
 const CASE_PATH = '/work/tommy-hilfiger';
 const LOCAL_WORK_DIAL = path.resolve(__dirname, '../../work-dial.js');
+const LOCAL_CSS = path.resolve(__dirname, '../../ready-hit-play.css');
 
 // ── Helpers ───────────────────────────────────────────────────
 
-/** Serve the local work-dial.js in place of the CDN copy. */
+/** Serve the local work-dial.js and CSS in place of the CDN copies, so these
+ *  tests exercise the full local build. The CSS matters here too: the close
+ *  button is only reliably tappable on mobile once .home-transition-dial is
+ *  pointer-events:none (see fix-transition-dial-blocks-close-button.spec.js). */
 async function useLocalWorkDial(page) {
   await page.route('**/work-dial.js*', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/javascript',
       body: fs.readFileSync(LOCAL_WORK_DIAL, 'utf8'),
+    })
+  );
+  await page.route('**/ready-hit-play.css*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/css',
+      body: fs.readFileSync(LOCAL_CSS, 'utf8'),
     })
   );
 }

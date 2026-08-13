@@ -53,9 +53,25 @@ async function dismissConsent(page) {
 
 async function loadHome(page) {
   await page.goto('/');
-  await page.waitForFunction(() => window.RHP?.scriptsOk === true, { timeout: 30_000 });
+  await page.waitForFunction(() => window.RHP?.scriptsOk === true, { timeout: 45_000 });
   await dismissConsent(page);
-  await page.waitForTimeout(7000); // let the intro settle
+  // Wait for the page loader to clear and the dial's generic reel to decode a
+  // frame, rather than a flat sleep — staging load times vary a lot and a fixed
+  // wait was landing mid-loader. `.loader` is removed from the DOM once scripts
+  // are up (see feat-page-loader.spec.js).
+  await page.waitForFunction(() => document.querySelectorAll('.loader').length === 0, {
+    timeout: 60_000,
+  });
+  await page
+    .waitForFunction(
+      () => {
+        const g = document.querySelector('.dial_generic-video');
+        return !!g && g.readyState >= 2;
+      },
+      { timeout: 45_000 }
+    )
+    .catch(() => {});
+  await page.waitForTimeout(1500);
 }
 
 /** Barba pushState navigation — there is no `load` event to wait on. */
@@ -63,6 +79,34 @@ async function goSpa(page, url) {
   await page.evaluate((u) => window.barba.go(u), url);
   await page.waitForFunction((u) => location.pathname.startsWith(u), url, { timeout: 30_000 });
   await page.waitForTimeout(4000);
+}
+
+/**
+ * Wait for the dial to settle after landing on home.
+ * The restore is not instant: the fg video has to load its new src, and the
+ * headline arrives via a ~0.65s ScrambleText tween that spits noise characters
+ * while it runs. Polling beats a fixed wait — staging video loads are variable.
+ */
+async function waitForDialSettled(page, timeout = 20_000) {
+  await page
+    .waitForFunction(
+      () => {
+        const items = Array.from(document.querySelectorAll('.dial_cms-item'));
+        const fg = document.querySelector('.dial_fg-video');
+        const step = document.querySelector('[data-text="step"]');
+        if (!fg || !step) return false;
+        // fg has decoded a frame of whatever it is showing
+        if (fg.readyState < 2) return false;
+        // scramble finished — text equals a real title or the generic copy
+        if (step.classList.contains('is-scrambling')) return false;
+        const t = step.textContent.trim();
+        const known = items.map((it) => it.getAttribute('data-title'));
+        return t.length > 0 && (known.includes(t) || !/[^A-Za-z0-9 ,.|&'’-]/.test(t));
+      },
+      { timeout }
+    )
+    .catch(() => {}); // fall through to the real assertions on timeout
+  await page.waitForTimeout(1200); // let the final tween frame land
 }
 
 /** Read what the dial is actually showing. */
@@ -94,6 +138,10 @@ function readDial(page) {
 }
 
 test.describe('home restores the just-closed project', () => {
+  // These walk 3-4 real Barba transitions against staging (~7s intro settle +
+  // ~4s per navigation + video load), which does not fit the 30s default.
+  test.describe.configure({ timeout: 180_000 });
+
   test('home > about > work > home shows that project, not the first one', async ({ page }) => {
     await useLocalScripts(page);
     await loadHome(page);
@@ -105,6 +153,7 @@ test.describe('home restores the just-closed project', () => {
     await goSpa(page, '/about');
     await goSpa(page, slugs[idx]);
     await goSpa(page, '/');
+    await waitForDialSettled(page);
 
     const dial = await readDial(page);
     expect(dial.activeIndex, 'dial should be on the just-closed sector').toBe(idx);
@@ -122,6 +171,7 @@ test.describe('home restores the just-closed project', () => {
     const { slugs, titles } = await readDial(page);
     await goSpa(page, slugs[0]);
     await goSpa(page, '/');
+    await waitForDialSettled(page);
 
     const dial = await readDial(page);
     expect(dial.activeIndex).toBe(0);
@@ -133,6 +183,7 @@ test.describe('home restores the just-closed project', () => {
   test('a fresh home load still shows the generic reel and copy', async ({ page }) => {
     await useLocalScripts(page);
     await loadHome(page);
+    await waitForDialSettled(page);
 
     const dial = await readDial(page);
     expect(dial.genericOpacity, 'IDLE home should show the generic reel').toBe('1');
@@ -148,6 +199,7 @@ test.describe('home restores the just-closed project', () => {
 
     await goSpa(page, '/about');
     await goSpa(page, '/');
+    await waitForDialSettled(page);
 
     const dial = await readDial(page);
     expect(dial.genericOpacity, 'no case was visited — reel should still be generic').toBe('1');

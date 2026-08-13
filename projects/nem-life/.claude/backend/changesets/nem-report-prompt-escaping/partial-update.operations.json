@@ -21,7 +21,10 @@
         "name": "Report Prompt",
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.5,
-        "position": [780, 360],
+        "position": [
+          1040,
+          60
+        ],
         "parameters": {
           "mode": "manual",
           "includeOtherFields": true,
@@ -31,7 +34,7 @@
                 "id": "a1b2c3d4-0000-4000-8000-00000000rp01",
                 "name": "systemPrompt",
                 "type": "string",
-                "value": "TEST MODE — clearly-labelled stub. This is not Alex's report prompt.\n\nYou are writing a NEM Test report. Produce a short placeholder headed \"TESTRAPPORT / TEST REPORT\" in the requested language, referencing the reader's first name, primary mechanism and total score, so the delivery chain can be verified end to end. Do not present this as a real psychological assessment.\n\nWrite at least 400 words."
+                "value": "TEST MODE. The final NEM Test report system prompt (owned by Alex, stored in Notion) is not installed yet, so do NOT write the real report. Reply in the requested language, under 120 words, headed \"TESTRAPPORT / TEST REPORT\". State plainly that this is an automated test of the NEM verification pipeline and that the real personalised report will appear here once the final prompt is configured. To prove the data pipeline works, include the first name, primary mechanism, and total score taken from the details below."
               }
             ]
           },

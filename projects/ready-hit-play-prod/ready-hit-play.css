@@ -542,11 +542,19 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   overflow: visible;
   width: var(--dial-small-width, 6rem);
   height: var(--dial-small-height, 6rem);
-  /* Decorative only (holds an aria-hidden canvas) — must never take pointer
-     input. transition-dial.js leaves its canvas in the DOM after destroy(),
-     and this wrapper sits bottom-centre, so on mobile it landed exactly on
-     top of .case_close-button at the end of a case study and swallowed the
-     tap. Sibling .transition-dial already sets this; this one was missing it. */
+}
+
+/* Make the small dial non-interactive ONLY while a case study is displayed.
+   transition-dial.js leaves its canvas in the DOM after destroy(), and this
+   wrapper sits bottom-centre, so on a case study it landed exactly on top of
+   .case_close-button and swallowed the tap (mobile).
+
+   Deliberately scoped, NOT global: on home this wrapper is the tappable
+   skip-intro control — home-scroll-morph.js binds pointerdown to it
+   ("Use dialWrapper (.home-transition-dial) — that's the visible/tappable").
+   A blanket pointer-events:none here kills skip-intro. Keyed on the same
+   .is-case-study signal work-dial.js guards on, so both stay in step. */
+[data-barba="wrapper"]:has(.dial_layer-fg.is-case-study) .home-transition-dial {
   pointer-events: none;
 }
 
@@ -1009,7 +1017,11 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 /* Unscoped so it holds wherever the canvas lands — Flip reparents it between
    .transition-dial and .about_dial-wrapper, and transition-dial.js leaves it
    in the DOM after destroy(). It is aria-hidden decoration in every context,
-   so it must never be a hit-test target. */
+   so it must never be a hit-test target itself.
+
+   Safe for skip-intro: the pointerdown listener lives on the parent wrapper,
+   and pointer-events:none on a child passes the event through to that parent
+   rather than swallowing it. */
 .transition-dial_canvas {
   pointer-events: none;
 }

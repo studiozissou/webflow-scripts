@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.4.28.1';
+  const WORK_DIAL_VERSION = '2026.8.13.1';
   const debugGeom = () => !!window.__DEBUG_GEOM;
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';
@@ -1112,6 +1112,7 @@
       _mobileActiveLocked = false; // reset on each init
       function onPointerDown(e) {
         if (!isMobile()) return;
+        if (inCaseStudyMode()) return; // case study owns touch input, not the dial
         // Kill in-flight snap tween so dragStartRot captures a stable value
         if (window.gsap) window.gsap.killTweensOf(state, 'rotationDeg');
 
@@ -1149,8 +1150,11 @@
 
       function onPointerUp() {
         if (!isMobile()) return;
+        // Always clear the drag flags, even in case-study mode — a stale
+        // dragActive would keep preventTouchScroll() blocking case-study scroll.
         state.dragActive = false;
         state.startedInInner = false;
+        if (inCaseStudyMode()) return; // no snap-rotate behind a case study
 
         // Snap to nearest sector (kill any in-flight snap first)
         if (window.gsap) window.gsap.killTweensOf(state, 'rotationDeg');
@@ -1178,6 +1182,7 @@
 
       function onPointerMoveMobile(e) {
         if (!isMobile() || !state.dragActive) return;
+        if (inCaseStudyMode()) return; // swiping a case study must not rotate the dial
         if (state.startedInInner) return;
 
         const dx = e.clientX - state.dragStartX;
@@ -1194,6 +1199,7 @@
       // Optional: wheel as dial input on coarse-pointer devices (prevents page scroll/address bar)
       function onWheel(e) {
         if (!isMobile()) return;
+        if (inCaseStudyMode()) return; // never swallow case-study scroll
         e.preventDefault();
 
         const delta = (Math.abs(e.deltaY) > Math.abs(e.deltaX)) ? e.deltaY : -e.deltaX;
@@ -1205,6 +1211,7 @@
 
       // Prevent real page scroll while dragging (keeps browser UI calmer)
       function preventTouchScroll(e) {
+        if (inCaseStudyMode()) return; // case study must stay scrollable
         if (isMobile() && state.dragActive) e.preventDefault();
       }
 
@@ -1520,6 +1527,17 @@
       // Center dial layer click → go to active case study (Barba transition)
       const dialFg = comp.querySelector('.dial_layer-fg') || document.querySelector('.dial_layer-fg');
 
+      /* .dial_layer-fg persists outside the Barba container and, on /work/ pages,
+         doubles as the case study's scroll container — so every dial input
+         listener (bound to .dial_component or .dial_layer-fg) also sees events
+         aimed at case-study content. While a case study is displayed the dial is
+         not an input surface at all. suspend() normally unbinds these listeners;
+         this keeps them inert if a transition race ever leaves them bound.
+         Desktop symptom was a dead close button (click hijacked into a no-op
+         barba.go); mobile is worse — onPointerDown sets dragActive on any touch
+         and preventTouchScroll then blocks scrolling the case study entirely. */
+      const inCaseStudyMode = () => !!dialFg && dialFg.classList.contains('is-case-study');
+
         if (dialFg) {
         dialFg.style.cursor = 'pointer';
         refs = refs || {};
@@ -1535,6 +1553,18 @@
         on(comp, 'wheel', onWheel, { passive: false }, true);
         on(window, 'touchmove', preventTouchScroll, { passive: false }, true);
         if (dialFg) on(dialFg, 'click', (e) => {
+          // Case-study mode: .dial_layer-fg holds the whole case study, including
+          // .case_close-button and the prev/next links. goToActiveCase() calls
+          // preventDefault(), and barba.go() to the case you are already on is a
+          // silent no-op — so a live listener here makes the close button dead.
+          if (inCaseStudyMode()) return;
+          // Never swallow a genuine link click. The dial's own hit area uses
+          // .dial_work-link (href="#"), so real destinations are left to Barba.
+          const link = e.target?.closest?.('a[href]');
+          if (link) {
+            const href = link.getAttribute('href');
+            if (href && href !== '#') return;
+          }
           // On mobile, suppress navigation on the tap that activated the dial
           if (isMobile() && _justActivatedMobile) { _justActivatedMobile = false; return; }
           // Only navigate when dial is in ACTIVE or ENGAGED state

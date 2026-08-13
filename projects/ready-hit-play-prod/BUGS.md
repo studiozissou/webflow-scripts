@@ -1,5 +1,15 @@
 # RHP — Bug & Task Backlog
 
+## Fixed
+
+### F1: intermittent close button failure on /work/ pages
+- **Status:** Fixed 2026-08-13 (work-dial v2026.8.13.1) — reported by Ryan on the 2026-08-10 call
+- **Area:** work-dial / Barba transitions
+- **Symptom:** on project pages the close button sometimes "wouldn't register" — clicking it did nothing. Not reproducible on demand.
+- **Root cause:** `work-dial.js` bound a bubbling click listener on `.dial_layer-fg` that calls `preventDefault()` + `stopPropagation()` then `barba.go(activeCase)`. `.dial_layer-fg` persists outside the Barba container and on `/work/` pages becomes the case study's scroll container, containing `.case_close-button`. Whenever the dial was alive and un-suspended on a case page, the close click was cancelled and redirected to the case already showing — a silent no-op. Only `suspend()` prevented this, so any transition race that left the dial un-suspended killed the button. Direct page loads never init the dial (orchestrator "direct-land" path), which is why fresh loads always worked.
+- **Fix:** handler bails when `.dial_layer-fg` has `.is-case-study`, and never swallows a click originating on a real (non-`"#"`) link.
+- **Tests:** `tests/acceptance/fix-case-close-button-dial-hijack.spec.js` (5 tests, registered critical)
+
 ## Barba Transitions — Video Persistence
 
 ### B1: bg + fg videos destroyed after home -> work transition

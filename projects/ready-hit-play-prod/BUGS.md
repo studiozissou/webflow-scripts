@@ -7,8 +7,16 @@
 - **Area:** CSS / transition-dial
 - **Symptom:** on mobile, after entering a case study via a Barba transition, the close button could not be tapped. Nothing was visibly drawn over it, so the button just looked dead. Direct page loads were unaffected.
 - **Root cause:** `transition-dial.js` appends a decorative `aria-hidden` `.transition-dial_canvas` into `.home-transition-dial`. Its `destroy()` removes listeners but leaves the canvas in the DOM, and `.home-transition-dial` had no `pointer-events` rule — so the canvas stayed hit-testable. On mobile that wrapper sits bottom-centre, landing exactly over `.case_close-button` at the end of a case study. The sibling `.transition-dial` already set `pointer-events: none` for this reason; `.home-transition-dial` was missing it.
-- **Fix:** `pointer-events: none` on `.home-transition-dial`, plus an unscoped rule on `.transition-dial_canvas` (Flip reparents that canvas between wrappers).
+- **Fix:** `pointer-events: none` on `.home-transition-dial` — **scoped to case-study mode** via `[data-barba="wrapper"]:has(.dial_layer-fg.is-case-study)` — plus an unscoped rule on `.transition-dial_canvas` (Flip reparents that canvas between wrappers).
 - **Tests:** `tests/acceptance/fix-transition-dial-blocks-close-button.spec.js` (3 tests, registered critical)
+
+### F3: home intro could not be skipped by tapping the small dial
+- **Status:** Fixed 2026-08-13 — self-inflicted regression from F2, reported immediately
+- **Area:** CSS / home-scroll-morph
+- **Symptom:** on the homepage, tapping the small dial no longer skipped the intro word-cycle.
+- **Root cause:** F2's first fix put a **blanket** `pointer-events: none` on `.home-transition-dial`. That wrapper is not decorative — `home-scroll-morph.js` binds `pointerdown` to it as the skip-intro control (`const skipTarget = dialWrapper || dialEl`, commented "that's the visible/tappable").
+- **Fix:** scope the rule to case-study mode only, keyed on the same `.is-case-study` signal `work-dial.js` uses. The canvas child keeps its unconditional rule — safe, because the listener is on the parent and a non-interactive child passes events through.
+- **Tests:** `tests/acceptance/fix-home-intro-dial-tap-to-skip.spec.js` (3 tests, registered critical) — verified to fail against the blanket rule
 
 ### F1: intermittent close button failure on /work/ pages
 - **Status:** Fixed 2026-08-13 (work-dial v2026.8.13.1) — reported by Ryan on the 2026-08-10 call

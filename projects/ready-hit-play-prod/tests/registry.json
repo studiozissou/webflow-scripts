@@ -1,8 +1,8 @@
 {
   "version": 1,
   "lastUpdated": "2026-08-13",
-  "lastPlanned": "fix-transition-dial-blocks-close-button",
-  "lastRegistered": "fix-transition-dial-blocks-close-button",
+  "lastPlanned": "fix-home-intro-dial-tap-to-skip",
+  "lastRegistered": "fix-home-intro-dial-tap-to-skip",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
   "lastDeployed": "2026-08-12",
   "lastDeployedHash": "179363b",
@@ -586,6 +586,16 @@
       "slug": "fix-transition-dial-blocks-close-button",
       "created": "2026-08-13",
       "description": "Decorative transition dial (.home-transition-dial / .transition-dial_canvas) must be pointer-events:none so it cannot cover the case close button on mobile"
+    },
+    {
+      "id": "fix-home-intro-dial-tap-to-skip",
+      "file": "tests/acceptance/fix-home-intro-dial-tap-to-skip.spec.js",
+      "type": "acceptance",
+      "source": "debug",
+      "critical": true,
+      "slug": "fix-home-intro-dial-tap-to-skip",
+      "created": "2026-08-13",
+      "description": "Home intro: .home-transition-dial must stay tappable (it is the skip-intro control) \u2014 guards against a blanket pointer-events:none on that wrapper"
     }
   ]
 }

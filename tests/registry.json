@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-15",
+  "lastUpdated": "2026-08-12",
   "note": "tsc-leadership-modal scrollbar-width reserve (no page jump) deployed to tsc-v2.webflow.io (677502e)",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -259,6 +259,16 @@
       "critical": false,
       "description": "TSC launch metadata + schema — writes missing SEO title/meta for the 11 RailOS Apps CMS items, adds Full JSON-LD schema site-wide (Organization/WebSite/BreadcrumbList/Product/Service/FAQPage/NewsArticle/Person/SoftwareApplication/CreativeWork/VideoObject), and re-audits all existing meta for accuracy; verifies distinct app titles and parseable typed JSON-LD on sampled pages",
       "created": "2026-07-15"
+    },
+    {
+      "slug": "coconut-mtd-compliant-software-page-rework",
+      "url": "https://getcoconut.webflow.io/features/mtd-compliant-software",
+      "spec": "tests/acceptance/coconut-mtd-compliant-software-page-rework.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut MTD Compliant Software service page rework - new H1/meta, 4 new long-form sections, 2 quarterly-table embeds (deadlines + thresholds), feature blocks H2 to H3, persona cards hidden, FAQ replaced with 10 items as H3; includes IX2 accordion interaction check and a /features/scan-receipts regression control for the shared CMS template",
+      "created": "2026-08-12"
     }
   ]
 }

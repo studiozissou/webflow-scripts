@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-12",
-  "lastPlanned": "feat-about-to-work-via-home-transition",
-  "lastRegistered": "feat-about-to-work-via-home-transition",
+  "lastUpdated": "2026-08-13",
+  "lastPlanned": "fix-case-close-button-dial-hijack",
+  "lastRegistered": "fix-case-close-button-dial-hijack",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
   "lastDeployed": "2026-08-12",
   "lastDeployedHash": "179363b",
@@ -566,6 +566,16 @@
       "slug": "feat-about-to-work-via-home-transition",
       "created": "2026-08-12",
       "description": "About to case-study three-beat transition: slide out, home dial beat with target teaser, expand with video handoff"
+    },
+    {
+      "id": "fix-case-close-button-dial-hijack",
+      "file": "tests/acceptance/fix-case-close-button-dial-hijack.spec.js",
+      "type": "acceptance",
+      "source": "debug",
+      "critical": true,
+      "slug": "fix-case-close-button-dial-hijack",
+      "created": "2026-08-13",
+      "description": "Case close button \u2014 work-dial must not hijack clicks/touch inside the case study (.dial_layer-fg in case-study mode); desktop + mobile"
     }
   ]
 }

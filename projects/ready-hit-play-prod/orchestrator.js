@@ -1718,8 +1718,20 @@
               RHP.videoState.caseHandoff = null;
               RHP.views.home.resume(data.next.container, handoff);
             } else {
-              RHP.videoState.caseHandoff = null;
+              // Do NOT clear caseHandoff before init(). work-dial's init()
+              // reads it twice: once up front to start in ACTIVE instead of
+              // IDLE, and again in its "restore handoff index and playback
+              // position" block, which re-selects the just-closed project
+              // (title/meta copy, fg video, and the bg canvas that mirrors it)
+              // and then nulls it itself. Clearing here made that block dead
+              // code, so any return that re-inits rather than resumes came
+              // back IDLE at index 0 — generic copy over the first project.
+              // Reached whenever the dial was destroyed rather than suspended,
+              // e.g. home → about → work → home, since home→about destroys it.
               RHP.views.home.init(data.next.container);
+              // init() consumes and nulls it; only clear here if it bailed
+              // early (missing .dial_component etc) so it can't leak forward.
+              if (RHP.videoState) RHP.videoState.caseHandoff = null;
               if (hadCaseHandoff) {
                 setTimeout(function() { RHP.workDial?.setInteractionUnlocked?.(true); }, 300);
               }

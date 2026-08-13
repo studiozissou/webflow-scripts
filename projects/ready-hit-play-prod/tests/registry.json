@@ -2,7 +2,7 @@
   "version": 1,
   "lastUpdated": "2026-08-13",
   "lastPlanned": "fix-home-intro-dial-tap-to-skip",
-  "lastRegistered": "fix-home-intro-dial-tap-to-skip",
+  "lastRegistered": "2026-08-13",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
   "lastDeployed": "2026-08-12",
   "lastDeployedHash": "179363b",
@@ -596,6 +596,16 @@
       "slug": "fix-home-intro-dial-tap-to-skip",
       "created": "2026-08-13",
       "description": "Home intro: .home-transition-dial must stay tappable (it is the skip-intro control) \u2014 guards against a blanket pointer-events:none on that wrapper"
+    },
+    {
+      "id": "fix-home-restore-closed-project",
+      "file": "tests/acceptance/fix-home-restore-closed-project.spec.js",
+      "type": "acceptance",
+      "source": "debug",
+      "critical": true,
+      "slug": "fix-home-restore-closed-project",
+      "created": "2026-08-13",
+      "description": "Returning home from a case study must restore that project (dial sector, fg video, bg canvas mirror, step headline) instead of falling back to project 0 with the generic copy - covers both the destroy/init and suspend/resume return paths"
     }
   ]
 }

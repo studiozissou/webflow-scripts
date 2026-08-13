@@ -49,7 +49,7 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | `orchestrator.js` | 2026.8.12.4 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
 | `lenis-manager.js` | 2026.2.6.10 | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
 | `cursor.js` | 2026.2.18.1 | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
-| `work-dial.js` | 2026.4.8.2 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover |
+| `work-dial.js` | 2026.8.13.1 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover; inert while a case study is displayed (`inCaseStudyMode()`) |
 | `home-about-slide.js` | 2026.8.12.1 | Home↔about curtain/slide transitions; `leaveAboutToHome(data, opts)` takes an optional `{ duration }` |
 | `transition-dial.js` | 2026.8.12.1 | Static teal canvas dial shown during Barba transitions; also paints the static ring into the persistent `#dial_ticks-canvas` for the about→work via-home beat (`paintInto`/`clearCanvas`) |
 | `about-dial-ticks.js` | 2026.2.6.10 | Small 6rem static teal dial on about page |
@@ -161,6 +161,7 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - Dial morph animations run in Barba `leave()` (pre-swap), not `afterEnter`
 - `clearProps: 'all'` after morph relies on CSS `[data-dial-ns]` rules to maintain layout
 - **Prerequisite**: Webflow Designer must have dial outside Barba container with correct `data-dial-ns` attributes
+- **`.dial_layer-fg` is shared between the dial and the case study** (fixed v2026.8.13.1) — because it persists outside the Barba container, on `/work/` pages it doubles as the case study's scroll container and contains the whole case study, including `.case_close-button`. Any listener bound to it therefore also fires for clicks on case-study content. work-dial's click→navigate handler used to hijack those clicks: it calls `preventDefault()` and then `barba.go()` to the case you are already on, which is a silent no-op, so the close button "just stopped working" whenever the dial was alive and un-suspended on a case page (a transition race — direct page loads never init the dial, so they were never affected). The handler now bails on `.is-case-study` and never swallows a real (non-`"#"`) link click. **When adding listeners to `.dial_layer-fg`, always scope them to the current namespace — do not rely on `suspend()` alone.**
 
 ## Version format
 `YYYY.M.D.N` — year, month, day, daily build number. Bump `CONFIG.version` in `init.js` on each deploy.

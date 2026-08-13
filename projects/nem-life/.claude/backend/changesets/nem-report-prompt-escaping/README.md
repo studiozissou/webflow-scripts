@@ -1,7 +1,43 @@
 # Changeset — `nem-report-prompt-escaping-and-token-limit`
 
-Prepared 2026-08-11 for pick-up. Everything here is **ready to apply but unapplied**.
-Nothing in the live `/verify` workflow has been touched.
+## ✅ APPLIED AND VERIFIED — 2026-08-13
+
+Live on `uKkMgMYoH5nOLoCR`. Kept for the record and for the execution-order finding below.
+
+**Proof it worked** (execution 45, torture prompt installed):
+
+| Criterion | Result |
+|---|---|
+| `Generate Report` with apostrophes, nested quotes, backslash, curly quote, em dash, blank lines | ✅ `success` — throws under the old node |
+| `stop_reason` | ✅ `end_turn`, not `max_tokens` |
+| `output_tokens` | ✅ **1217** — above the old 1024 cap, so the report would have been truncated before |
+| Report body | ✅ complete Dutch prose, ends mid-thought nowhere |
+| `Render PDF` | ✅ 2-page `application/pdf` |
+| Fast path | ✅ 302 immediate, `Mark Consumed` fires |
+| Invalid branch | ✅ replay → `/verificatie/verlopen` |
+| `Send Report` | ❌ 422 MailerSend trial cap — expected, separate P0 |
+
+---
+
+## ⚠️ The trap: n8n v1 execution order follows canvas position, not connection order
+
+Discovered the hard way in execution 44. The node was first placed at `[1040, 60]` —
+*above* `Respond Confirmed` at `[900, 180]`. With `executionOrder: v1`, n8n runs a
+parallel fan-out **top to bottom by y-position**, so the entire report chain ran before
+the redirect: the browser waited **27 seconds** and got a `200` instead of an immediate
+`302`, and `Mark Consumed` never fired at all, leaving the token replayable.
+
+Connection array order does **not** decide this. Position does.
+
+**`Report Prompt` must sit below `Mark Consumed`.** It is at `[1040, 460]`; `Mark Consumed`
+is at `[900, 360]`. If anyone drags it above y=360 on the canvas, the fast path silently
+breaks again — no error, just a 27-second blank page and an unconsumed token.
+
+The same rule applies to any future node added to the `Valid?` true branch.
+
+---
+
+Original prepare-notes follow.
 
 **Spec:** `../../specs/nem-report-prompt-escaping-and-token-limit.md`
 **Workflow:** `NEM Test — /verify`, n8n id `uKkMgMYoH5nOLoCR`, **active**

@@ -1,13 +1,43 @@
 # NEM Test report prompt: make the prompt safe to edit and lift the token limit
 
 **Slug:** `nem-report-prompt-escaping-and-token-limit`
-**Status:** Ready to Build
+**Status:** ✅ **Done — applied and verified live 2026-08-13**
 **Priority:** P0
 **Type:** fix
 **Created:** 2026-07-09
 **Project:** nem-life
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, **active**)
 **Repo file:** `projects/nem-life/.claude/backend/nem-verify.workflow.json`
+
+## Outcome (2026-08-13)
+
+Applied to live `uKkMgMYoH5nOLoCR` and verified. Every pass criterion met except
+`Send Report`, which 422s on the MailerSend trial cap as anticipated.
+
+The decisive evidence is `output_tokens: 1217` on execution 45 with `stop_reason: "end_turn"`.
+That is *above* the old `max_tokens: 1024`, so the same report would previously have been
+truncated mid-sentence — the limit was genuinely lifted, not merely raised. The torture
+prompt (apostrophes, nested quotes, backslash, curly quote, em dash, blank lines) passed
+through `Generate Report` without throwing.
+
+### One correction to this spec's design
+
+The design said to place `Report Prompt` at `~[1040, 180]`. **That position breaks the fast path.**
+n8n `executionOrder: v1` runs a parallel fan-out in **canvas y-order**, not connection order,
+so a node above `Respond Confirmed` (y=180) executes first. Observed in execution 44: the
+browser waited 27s and received a `200` rather than an immediate `302`, and `Mark Consumed`
+never ran, leaving the token replayable.
+
+`Report Prompt` is now at `[1040, 460]`, below `Mark Consumed` (y=360). **Any node added to
+the `Valid?` true branch in future must sit below y=360.** Full note in
+`../backend/changesets/nem-report-prompt-escaping/README.md`.
+
+### Discovered: the markdown defect is confirmed live
+
+With a realistic prompt, Claude returned markdown — `# Persoonlijk Rapport`, `## Inleiding`,
+`**bold**`, `-` bullets. `Build HTML` does paragraph splitting only, so those characters
+reach the PDF literally. This is Defect 1 in `nem-verify-report-email-and-pdf-branding`,
+now observed rather than predicted. Alex's 12 Aug JSON restructure removes it by design.
 
 ## Prepared, not applied (2026-08-11)
 

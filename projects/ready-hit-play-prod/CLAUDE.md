@@ -144,6 +144,7 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - iOS: video autoplay requires a user gesture; work-dial calls `enforceVideoPolicy()` on `pointerdown`
 - jsDelivr caches aggressively — always pin a commit hash AND bump `?v=` to bust cache
 - Safari nav logo SVG `height="162"` causes oversized rendering — needs explicit size constraint
+- **Decorative canvases must be `pointer-events: none`** (fixed 2026-08-13) — `transition-dial.js` leaves its `aria-hidden` `.transition-dial_canvas` in the DOM after `destroy()`, and `.home-transition-dial` sits bottom-centre on mobile, so without the rule it covered `.case_close-button` and swallowed taps with nothing visible on screen. When a module injects a canvas or overlay, give it `pointer-events: none` unless it is genuinely interactive.
 
 ### Work-dial video system
 - Flash on sector change (unfixed) — `fromTo` with `from: { opacity: 0 }` in `applyActive()` line ~772 forces bgVisible to opacity:0 immediately, causing a brief black flash before the animation completes

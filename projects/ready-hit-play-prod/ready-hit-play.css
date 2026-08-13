@@ -542,6 +542,12 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   overflow: visible;
   width: var(--dial-small-width, 6rem);
   height: var(--dial-small-height, 6rem);
+  /* Decorative only (holds an aria-hidden canvas) — must never take pointer
+     input. transition-dial.js leaves its canvas in the DOM after destroy(),
+     and this wrapper sits bottom-centre, so on mobile it landed exactly on
+     top of .case_close-button at the end of a case study and swallowed the
+     tap. Sibling .transition-dial already sets this; this one was missing it. */
+  pointer-events: none;
 }
 
 #interactive-logo {
@@ -998,6 +1004,14 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   height: 100%;
   display: block;
   transform-origin: 50% 50%;
+}
+
+/* Unscoped so it holds wherever the canvas lands — Flip reparents it between
+   .transition-dial and .about_dial-wrapper, and transition-dial.js leaves it
+   in the DOM after destroy(). It is aria-hidden decoration in every context,
+   so it must never be a hit-test target. */
+.transition-dial_canvas {
+  pointer-events: none;
 }
 
 /* ====== About page dial ticks (scaled-down homepage style) ====== */

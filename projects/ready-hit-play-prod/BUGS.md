@@ -2,6 +2,17 @@
 
 ## Fixed
 
+### F4: home showed the generic dial instead of the project just closed
+- **Status:** Fixed 2026-08-13 — reported after the F1–F3 staging deploy
+- **Area:** orchestrator / work-dial — case→home return
+- **Symptom:** going home → about → work → home landed on the homepage with the generic headline ("Great stories made undeniable") over the *first* project's video, instead of the project just closed out of. The bg canvas was generic for the same reason (it mirrors the fg video). On the simpler home → work → home path the video was right but the headline still read generic.
+- **Root cause:** three defects stacked on the "returning from a case study" restore, which only runs when the dial was **destroyed** rather than suspended — i.e. exactly when `home → about` destroyed it (`home-to-about` afterEnter calls `RHP.views.home.destroy()`):
+  1. `orchestrator.js` set `RHP.videoState.caseHandoff = null` on the line *before* `RHP.views.home.init()`. `work-dial.init()` reads that handoff twice — once to boot ACTIVE instead of IDLE, once in its "restore handoff index and playback position" block — so the whole restore was unreachable dead code and home always booted IDLE at index 0.
+  2. `init()` called `applyActive(0)` before the restore. Not just a wasted load: it sets `src` to project 0 while `currentSrc` still reports the case video's URL for a frame, so the follow-up `applyActive(handoffIndex)` trips `setVideoSourceAndPoster`'s dedupe guard (`currentSrc === target`) and skips the swap — stranding project 0's video under the correct project's title.
+  3. Neither `setDialState(ACTIVE)` nor an *initial* `applyActive()` writes the step headline — only the IDLE branch scrambles it — so both return paths kept the generic copy. (This one also affected the suspend/resume path, and predates F1.)
+- **Fix:** let `init()` consume the handoff instead of clearing it first; boot `applyActive()` at the handoff sector; skip the generic-reel fade-in when the dial boots ACTIVE; and write the project headline on both the init-restore and resume paths.
+- **Tests:** `tests/acceptance/fix-home-restore-closed-project.spec.js` (4 tests, registered critical) — verified to fail against the unfixed build
+
 ### F2: mobile — transition dial canvas covers the case close button
 - **Status:** Fixed 2026-08-13 — found while verifying F1's deploy
 - **Area:** CSS / transition-dial

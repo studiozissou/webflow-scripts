@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.8.13.1';
+  const WORK_DIAL_VERSION = '2026.8.13.2';
   const debugGeom = () => !!window.__DEBUG_GEOM;
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';
@@ -351,6 +351,11 @@
       // Fade in generic video as soon as a frame is ready — don't wait for intro to finish.
       const _earlyFadeIn = () => {
         if (!genericVideo || !alive) return;
+        // Only the IDLE dial shows the generic reel. When init() boots straight
+        // into ACTIVE from a case-study handoff the project video owns the
+        // circle, and this fires async (on loadeddata) — late enough to undo
+        // the opacity:0 the handoff restore had already set.
+        if (dialState !== DIAL_STATES.IDLE) return;
         genericVideo.style.visibility = 'visible';
         if (window.gsap && !prefersReduced()) {
           window.gsap.to(genericVideo, { opacity: 1, duration: 0.4, ease: 'linear', overwrite: true });
@@ -1473,7 +1478,17 @@
         on(window.visualViewport, 'resize', resize, { passive: true }, true);
       }
 
-      applyActive(0);
+      // Boot at the handoff sector when returning from a case study — not 0.
+      // Booting at 0 first is not merely a wasted load: applyActive(0) writes
+      // src synchronously while currentSrc still reports the case video's URL
+      // for a frame. The follow-up applyActive(handoffIndex) then hits
+      // setVideoSourceAndPoster's dedupe guard (currentSrc === target) and
+      // skips the swap, stranding the dial on project 0's video under the
+      // correct project's title. Start on the right sector instead.
+      const _bootHandoff = RHP.videoState && RHP.videoState.caseHandoff;
+      const _bootIndex = (_bootHandoff && typeof _bootHandoff.index === 'number' &&
+        _bootHandoff.index >= 0 && _bootHandoff.index < N) ? _bootHandoff.index : 0;
+      applyActive(_bootIndex);
       // Boot opacity: bg canvas starts hidden in IDLE (draw loop populates it but it should not be visible)
       if (dialState === DIAL_STATES.IDLE && bgCanvas) {
         if (window.gsap) window.gsap.set(bgCanvas, { opacity: 0, overwrite: true });
@@ -1506,6 +1521,13 @@
           // Pre-write handoff time so applyActive/restoreVideoStateFromIndex picks it up
           RHP.videoState.byIndex[h.index] = { currentTime: h.currentTime, paused: false };
           applyActive(h.index);
+          // Step copy. applyActive() only rewrites it through scrambleStep on a
+          // *non-initial* sector change, and booting at the handoff index makes
+          // this the initial apply — so without this the restored project's
+          // video and meta would sit under the generic headline. The resume()
+          // path gets the same text via setDialState(ACTIVE).
+          const restoredTitle = items[h.index] ? (items[h.index].getAttribute('data-title') || '') : '';
+          if (restoredTitle) scrambleStep(restoredTitle, { duration: 0.65, speed: 0.6, revert: true });
           // Ensure fg is at the exact handoff time
           const fg = comp.querySelector(SEL.fgVideo) || document.querySelector(SEL.fgVideo);
           if (fg) {
@@ -1639,6 +1661,15 @@
         // Always go through ACTIVE (the only branch that sets dialFg opacity, bg canvas, etc).
         dialState = null;
         setDialState(DIAL_STATES.ACTIVE);
+
+        // Step copy for the sector we resumed onto. Nothing else writes it on
+        // this path: setDialState only scrambles in its IDLE branch, and
+        // applyActive skips its scramble on an initial apply (lastIndex was
+        // just reset). Without this the just-closed project plays under the
+        // generic headline until the pointer crosses into another sector.
+        const resumedItem = items[state.activeIndex];
+        const resumedTitle = resumedItem ? (resumedItem.getAttribute('data-title') || '') : '';
+        if (resumedTitle) scrambleStep(resumedTitle, { duration: 0.65, speed: 0.6, revert: true });
 
         // Restart RAF loop — stop first to prevent double-RAF
         stop();

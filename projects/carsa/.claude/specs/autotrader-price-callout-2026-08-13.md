@@ -76,3 +76,34 @@ Pulled from live `carsa-v2.webflow` CSS, not invented:
   Confirm the CMS field names for market value and saving.
 - Mileage was added to the "rated on" chips. Confirm AutoTrader includes it —
   the call listed make, model, age, fuel type, optional extras.
+
+---
+
+## Call feedback — 13 Aug 2026
+
+Source: Webflow: Planning & Refinement, 13 Aug
+https://app.notion.com/p/Webflow-Planning-Refinement-3bbe1848bb5180e79a84e8fef0027c84
+
+Three options were reviewed in Figma.
+
+**Decision: share options 1 and 3 with Rishi. Option 2 is dropped.**
+
+- **Option 1 — sliding scale. Preferred.** Cleaner and quicker to build. Both
+  the AutoTrader and Carsa logos shown; the saving in a slanted tag for
+  personality; the AutoTrader price anchored at "Fair" on the scale, Carsa at
+  "Good" or "Great".
+- **Option 3 — animated scale.** Same concept with animated price points and
+  counting numbers. More engaging but more dev time.
+- **Option 2 — dropped.** Felt too "drawing-y", not clean enough.
+
+Changes requested:
+
+- Reconsider the yellow on the price tag.
+- Replace the "how prices are calculated" accordion with inline small-print
+  text — e.g. "AutoTrader calculates market price based on make, model, age,
+  mileage…". The accordion was judged not to save meaningful space.
+- Simplify the sliding scale layout for mobile.
+- Explore incorporating AutoTrader's own "Great Price" indicator badge.
+
+Note: the accordion in the original brief is therefore superseded — the
+breakdown becomes small print, not a disclosure.

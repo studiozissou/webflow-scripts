@@ -544,6 +544,20 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   height: var(--dial-small-height, 6rem);
 }
 
+/* Make the small dial non-interactive ONLY while a case study is displayed.
+   transition-dial.js leaves its canvas in the DOM after destroy(), and this
+   wrapper sits bottom-centre, so on a case study it landed exactly on top of
+   .case_close-button and swallowed the tap (mobile).
+
+   Deliberately scoped, NOT global: on home this wrapper is the tappable
+   skip-intro control — home-scroll-morph.js binds pointerdown to it
+   ("Use dialWrapper (.home-transition-dial) — that's the visible/tappable").
+   A blanket pointer-events:none here kills skip-intro. Keyed on the same
+   .is-case-study signal work-dial.js guards on, so both stay in step. */
+[data-barba="wrapper"]:has(.dial_layer-fg.is-case-study) .home-transition-dial {
+  pointer-events: none;
+}
+
 #interactive-logo {
   width: var(--logo-large-width, 90vw);
   max-width: var(--logo-large-max-width, 93rem);
@@ -643,6 +657,15 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 
 /* Work namespace: video wraps inside Barba container get no border-radius (reset from base .dial_video-wrap) */
 [data-barba-namespace="work"] .dial_video-wrap {
+  border-radius: 0;
+}
+
+/* Case-video blocks now appear on about as well as work. Reset the base
+   .dial_video-wrap pill radius structurally rather than per-namespace —
+   the pill is only ever wanted on the persistent home dial (#fg-video-wrap),
+   which is a sibling of the Barba container and never a descendant here. */
+.section_case-video .dial_video-wrap,
+.section_case-video-laptop .dial_video-wrap {
   border-radius: 0;
 }
 
@@ -989,6 +1012,18 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   height: 100%;
   display: block;
   transform-origin: 50% 50%;
+}
+
+/* Unscoped so it holds wherever the canvas lands — Flip reparents it between
+   .transition-dial and .about_dial-wrapper, and transition-dial.js leaves it
+   in the DOM after destroy(). It is aria-hidden decoration in every context,
+   so it must never be a hit-test target itself.
+
+   Safe for skip-intro: the pointerdown listener lives on the parent wrapper,
+   and pointer-events:none on a child passes the event through to that parent
+   rather than swallowing it. */
+.transition-dial_canvas {
+  pointer-events: none;
 }
 
 /* ====== About page dial ticks (scaled-down homepage style) ====== */

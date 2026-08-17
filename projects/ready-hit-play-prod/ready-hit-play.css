@@ -1361,6 +1361,17 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   flex-shrink: 0;
 }
 
+/* Breathing room under the caption. Without it the slide caption sits flush on
+   the accordion's bottom divider — most obvious on the sticky WWCF carousel,
+   which bottom-locks to the copy column when it releases.
+   Padding on the column (not margin on the slider) so it can't margin-collapse
+   out of the column box. One accordion-title height, matching the page rhythm. */
+@media (min-width: 992px) {
+  .section_about-hero .accordion-column:has([data-slider]) {
+    padding-bottom: var(--accordion-title-height, 4.375rem);
+  }
+}
+
 /* Mobile/tablet: auto height — content determines slider height, no JS cap */
 @media (max-width: 991px) {
   .section_about-hero [data-slider] {

@@ -544,6 +544,20 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   height: var(--dial-small-height, 6rem);
 }
 
+/* Make the small dial non-interactive ONLY while a case study is displayed.
+   transition-dial.js leaves its canvas in the DOM after destroy(), and this
+   wrapper sits bottom-centre, so on a case study it landed exactly on top of
+   .case_close-button and swallowed the tap (mobile).
+
+   Deliberately scoped, NOT global: on home this wrapper is the tappable
+   skip-intro control — home-scroll-morph.js binds pointerdown to it
+   ("Use dialWrapper (.home-transition-dial) — that's the visible/tappable").
+   A blanket pointer-events:none here kills skip-intro. Keyed on the same
+   .is-case-study signal work-dial.js guards on, so both stay in step. */
+[data-barba="wrapper"]:has(.dial_layer-fg.is-case-study) .home-transition-dial {
+  pointer-events: none;
+}
+
 #interactive-logo {
   width: var(--logo-large-width, 90vw);
   max-width: var(--logo-large-max-width, 93rem);
@@ -643,6 +657,15 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 
 /* Work namespace: video wraps inside Barba container get no border-radius (reset from base .dial_video-wrap) */
 [data-barba-namespace="work"] .dial_video-wrap {
+  border-radius: 0;
+}
+
+/* Case-video blocks now appear on about as well as work. Reset the base
+   .dial_video-wrap pill radius structurally rather than per-namespace —
+   the pill is only ever wanted on the persistent home dial (#fg-video-wrap),
+   which is a sibling of the Barba container and never a descendant here. */
+.section_case-video .dial_video-wrap,
+.section_case-video-laptop .dial_video-wrap {
   border-radius: 0;
 }
 
@@ -991,6 +1014,18 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   transform-origin: 50% 50%;
 }
 
+/* Unscoped so it holds wherever the canvas lands — Flip reparents it between
+   .transition-dial and .about_dial-wrapper, and transition-dial.js leaves it
+   in the DOM after destroy(). It is aria-hidden decoration in every context,
+   so it must never be a hit-test target itself.
+
+   Safe for skip-intro: the pointerdown listener lives on the parent wrapper,
+   and pointer-events:none on a child passes the event through to that parent
+   rather than swallowing it. */
+.transition-dial_canvas {
+  pointer-events: none;
+}
+
 /* ====== About page dial ticks (scaled-down homepage style) ====== */
 /* Fix: wrapper has height:0 from Webflow — ensure it contains the dial */
 .about_dial-wrapper {
@@ -1292,8 +1327,10 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 /* Swiper sliders: max height = viewport minus 4 accordion titles.
    Fade mode uses position:absolute slides, so height lives on the container.
    Images keep natural aspect ratio, capped so they don't blow up on tall screens. */
-/* --slide-max-height is the smaller of viewport-minus-titles and image-max-width+caption,
-   set by JS after measuring .about_image-wrapper max-width + caption height. */
+/* --slide-max-height is set by about-swipers.js on EACH [data-slider] (not on the
+   section) so every slider is sized to its own tallest slide. Value is
+   min(viewport - titles, tallest image + caption), where image height is derived
+   from rendered width x intrinsic aspect ratio. */
 .section_about-hero [data-slider] {
   height: var(--slide-max-height, calc(100svh - var(--accordion-titles-height, 256px)));
 }
@@ -1313,6 +1350,32 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   align-items: center;
   justify-content: center;
 }
+/* Reserve the caption allowance on EVERY slide, captioned or not, so images are
+   identical in both size and position as the carousel crossfades.
+   --slide-caption-height is the tallest caption in this slider (about-swipers.js).
+
+   height, not max-height: a fixed image box means an uncaptioned slide can't
+   hand the caption's height back to its image (it rendered ~32px taller).
+   flex-start, not center: with the box exactly reserved, centring would split
+   an uncaptioned slide's spare caption row above and below, dropping its image
+   ~16px lower than its captioned neighbours. */
+@media (min-width: 992px) {
+  .section_about-hero [data-slider] .slide-caption {
+    justify-content: flex-start;
+    /* Match the caption to the image's rendered width. When the slide box is
+       short the image is height-capped and `width: auto` shrinks it inside the
+       column, but the caption would still span the full column and overhang it
+       (479px caption against a 293px image at a 650px viewport).
+       --slide-image-width is set by about-swipers.js. */
+    max-width: var(--slide-image-width, 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .section_about-hero [data-slider] .slide-caption .about_image-wrapper {
+    height: calc(100% - var(--slide-caption-height, 0px));
+    flex-shrink: 0;
+  }
+}
 .section_about-hero [data-slider] .slide-caption .about_image-wrapper img {
   max-width: 100%;
   max-height: 100%;
@@ -1323,6 +1386,12 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 .section_about-hero [data-slider] .slide-caption .spacer-medium {
   flex-shrink: 0;
 }
+
+/* Breathing room under the caption is reserved INSIDE the slide box by
+   about-swipers.js (--slide-caption-height = caption + one title height), not
+   as padding on the column. The column is the sticky element: while it is
+   pinned the accordion's bottom rule scrolls up underneath it and meets the
+   caption, so column padding only reads as spacing once the sticky releases. */
 
 /* Mobile/tablet: auto height — content determines slider height, no JS cap */
 @media (max-width: 991px) {
@@ -1337,5 +1406,39 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   }
   .section_about-hero [data-slider] .slide-caption {
     height: auto;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   About — sticky carousel ("Where We Come From")
+
+   The photo column pins while the taller copy column scrolls past it, then
+   releases at the bottom of the copy and travels up with it.
+
+   Desktop only: below 992px .accordion-column-wrapper becomes a column flex,
+   where sticky has no travel and align-items would control the HORIZONTAL axis.
+
+   Webflow sets .accordion-content { overflow: hidden }, which makes it the
+   nearest scrollport and renders any sticky descendant inert. Nothing overflows
+   it (scrollHeight === clientHeight on every accordion), so it is safe to clear.
+   The accordion titles are already sticky and unaffected — they are siblings of
+   .accordion-content, not children.
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 992px) {
+  .section_about-hero .accordion-content {
+    overflow: visible;
+  }
+
+  /* Top-align the columns so the photo starts level with the first line of copy */
+  .accordion-title.is-2 + .accordion-content .accordion-column-wrapper {
+    align-items: flex-start;
+  }
+
+  /* Pin below the two titles stacked above this one ("What we've learned" +
+     "Where we come from"). --accordion-title-height is set by about-swipers.js;
+     the fallback matches the measured 4.375rem title height. */
+  .accordion-title.is-2 + .accordion-content .accordion-column:last-child {
+    position: sticky;
+    top: calc(var(--accordion-title-height, 4.375rem) * 2);
   }
 }

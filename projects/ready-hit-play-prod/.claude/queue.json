@@ -1,7 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-05-05",
+  "updated": "2026-08-12",
   "queue": [
+    {
+      "id": "feat-about-to-work-via-home-transition",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Play an about to home to case study transition on about page work links",
+      "spec": ".claude/specs/feat-about-to-work-via-home-transition.md",
+      "agent": "code-writer",
+      "created": "2026-08-12",
+      "note": "Built and MCP-verified against all 12 spec criteria; committed 249e031 and pushed. Sequences the three beats: leaveAboutToHome slide (0.8s), hold on the home-state dial with the clicked case teaser loaded (0.25s), then runDialExpandAnimation with video handoff (0.8s). Files: orchestrator.js 2026.8.12.2, transition-dial.js 2026.8.12.1, home-about-slide.js 2026.8.12.1. Deploy-gated: CLI suites and the acceptance spec run at /deploy once the CDN hash is bumped. Known limitation: the dial teaser sits at readyState 0 through the 0.25s beat, so the beat shows the CMS poster rather than playing video - preload on hover or a longer hold is a pending decision."
+    },
     {
       "id": "fix-mobile-dial-skip-and-idle-after-morph",
       "project": "ready-hit-play-prod",

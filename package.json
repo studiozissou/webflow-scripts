@@ -17,9 +17,10 @@
     "entity-audit": "node tools/entity-audit/index.js",
     "test:ea": "node --test 'tests/entity-audit/*.test.js'",
     "test:nem": "node --test 'tests/nem/*.test.js'",
-    "build:nem": "node tools/nem/build-component.js",
+    "build:nem": "node tools/nem/build-conclusion-texts.js && node tools/nem/build-component.js && npm run typecheck:nem",
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",
-    "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'"
+    "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'",
+    "typecheck:nem": "tsc -p projects/nem-life/dist/tsconfig.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -28,8 +29,10 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.58.2",
+    "@types/react": "^19.2.18",
     "dotenv": "^17.3.1",
     "googleapis": "^173.0.0",
-    "playwright": "^1.50.0"
+    "playwright": "^1.50.0",
+    "typescript": "^5.9.3"
   }
 }

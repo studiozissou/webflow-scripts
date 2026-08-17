@@ -21,6 +21,8 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import ts from "typescript";
+
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 export const SRC_DIR = resolve(REPO_ROOT, "projects/nem-life/src");
@@ -71,6 +73,69 @@ function bodyWithoutImports(source) {
     .trim();
 }
 
+/* Remove every comment from generated production code.
+ *
+ * Done with the TypeScript parser rather than a regex. The file contains Dutch prose
+ * with slashes, regex literals like /\n{2,}/, and JSX — all of which a regex-based
+ * stripper mistakes for comments, and corrupting a client's copy that way would be
+ * silent. The parser knows the difference.
+ *
+ * The provenance header is added afterwards, so it survives. */
+function stripComments(source) {
+  const file = ts.createSourceFile("bundle.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
+  const ranges = [];
+
+  /* Walk down to individual TOKENS, not just nodes. A comment is leading trivia of the
+   * next token, so token-level walking is what catches the two cases node-level misses:
+   * a comment just before a closing brace (trivia of the `}` token, which no node owns),
+   * and a JSX comment, which lives between the braces of a JsxExpression. */
+  const collect = (node) => {
+    const children = node.getChildren(file);
+
+    if (children.length === 0) {
+      /* Both directions are needed: TypeScript classifies a comment that follows code on
+       * the SAME line as trailing trivia, and only a comment on its own line as leading.
+       * Collecting just one kind leaves `doThing(); // note` untouched. */
+      for (const range of [
+        ...(ts.getLeadingCommentRanges(source, node.pos) ?? []),
+        ...(ts.getTrailingCommentRanges(source, node.end) ?? []),
+      ]) {
+        ranges.push(range);
+      }
+      return;
+    }
+
+    /* `{/* … *\/}` parses as a JsxExpression with no expression. Stripping the comment
+     * alone would leave a stray `{}`, so drop the whole container. */
+    if (ts.isJsxExpression(node) && !node.expression) {
+      ranges.push({ pos: node.getFullStart(), end: node.end });
+      return;
+    }
+
+    for (const child of children) collect(child);
+  };
+
+  collect(file);
+
+  /* De-duplicate: a comment between two nodes is both a trailing and a leading range. */
+  const unique = [...new Map(ranges.map((r) => [`${r.pos}:${r.end}`, r])).values()].sort(
+    (a, b) => b.pos - a.pos,
+  );
+
+  let out = source;
+  for (const { pos, end } of unique) {
+    out = out.slice(0, pos) + out.slice(end);
+  }
+
+  return out
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export function buildComponent() {
   const component = read(COMPONENT);
   const modules = MODULES.map((name) => ({ name, source: read(name) }));
@@ -84,7 +149,7 @@ export function buildComponent() {
     " * GENERATED FILE — do not edit here. Paste this whole file into the Webflow",
     " * custom code component.",
     " *",
-    " * Regenerate with:  node tools/nem/build-component.js",
+    " * Regenerate with:  npm run build:nem   (regenerates, then typechecks)",
     " *",
     " * Built from, and edit instead:",
     ` *   projects/nem-life/src/${COMPONENT}`,
@@ -104,19 +169,19 @@ export function buildComponent() {
       ].join("\n\n"),
   );
 
-  const aliases = [
-    "/* ═══ import aliases, re-declared after inlining ═══════════════════════ */",
-    ...ALIASES.map(([local, exported]) => `const ${local} = ${exported};`),
-  ].join("\n");
+  const aliases = ALIASES.map(([local, exported]) => `const ${local} = ${exported};`).join("\n");
 
-  return [
-    header,
+  const body = [
     imports.join("\n"),
     ...sections,
     aliases,
-    `/* ═══ ${COMPONENT} ${"═".repeat(Math.max(0, 62 - COMPONENT.length))} */`,
     bodyWithoutImports(component),
-  ].join("\n\n").replace(/\n{3,}/g, "\n\n") + "\n";
+  ].join("\n\n");
+
+  /* Comments are stripped from the body only. The header is prepended afterwards so the
+   * generated file still says what it is and how to regenerate it — without that, the
+   * first person to open it has no way to know it must not be edited by hand. */
+  return `${header}\n\n${stripComments(body)}\n`;
 }
 
 /* Run directly (not when imported by the tests). */

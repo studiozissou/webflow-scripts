@@ -1350,13 +1350,23 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   align-items: center;
   justify-content: center;
 }
-/* Reserve the caption allowance on EVERY slide, captioned or not. Without it a
-   slide with no caption gives its image the caption's height back, so images
-   render a caption taller than their neighbours and visibly change size as the
-   carousel crossfades. --slide-caption-height is the tallest caption in this
-   slider, set by about-swipers.js. */
-.section_about-hero [data-slider] .slide-caption .about_image-wrapper {
-  max-height: calc(100% - var(--slide-caption-height, 0px));
+/* Reserve the caption allowance on EVERY slide, captioned or not, so images are
+   identical in both size and position as the carousel crossfades.
+   --slide-caption-height is the tallest caption in this slider (about-swipers.js).
+
+   height, not max-height: a fixed image box means an uncaptioned slide can't
+   hand the caption's height back to its image (it rendered ~32px taller).
+   flex-start, not center: with the box exactly reserved, centring would split
+   an uncaptioned slide's spare caption row above and below, dropping its image
+   ~16px lower than its captioned neighbours. */
+@media (min-width: 992px) {
+  .section_about-hero [data-slider] .slide-caption {
+    justify-content: flex-start;
+  }
+  .section_about-hero [data-slider] .slide-caption .about_image-wrapper {
+    height: calc(100% - var(--slide-caption-height, 0px));
+    flex-shrink: 0;
+  }
 }
 .section_about-hero [data-slider] .slide-caption .about_image-wrapper img {
   max-width: 100%;

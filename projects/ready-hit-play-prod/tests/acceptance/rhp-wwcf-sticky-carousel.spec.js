@@ -128,24 +128,27 @@ test.describe(`${SLUG} — Scroll Behaviour`, () => {
 
   test('pins below the stacked titles while the copy scrolls past', async ({ page }) => {
     const top = await wwcfTop(page);
-    // Scroll to the midpoint of the available sticky travel rather than a fixed
-    // offset — travel depends on the copy/photo height difference, which shifts
-    // with viewport and caption spacing.
-    const travel = await page.evaluate(([copySel, photoSel]) => {
+    // Derive a scroll offset that is genuinely inside the pin, rather than a
+    // fixed number. Measured from the WWCF block top, the element is pinned for
+    // d in [-stickyTop, travel - stickyTop]; this test also wants the copy
+    // scrolled above the fold (d > 0), so aim at the middle of [0, travel - stickyTop].
+    const { travel, stickyTop } = await page.evaluate(([copySel, photoSel]) => {
       const c = document.querySelector(copySel).getBoundingClientRect().height;
-      const p = document.querySelector(photoSel).getBoundingClientRect().height;
-      return c - p;
-    }, [WWCF_COPY, WWCF_PHOTO]);
-    expect(travel).toBeGreaterThan(40);
-    await scrollTo(page, top + Math.round(travel / 2));
-
-    const { r, stickyTop } = await page.evaluate(([copySel, photoSel]) => {
-      const c = document.querySelector(copySel).getBoundingClientRect();
       const p = document.querySelector(photoSel);
       return {
-        r: { copyTop: c.top, photoTop: p.getBoundingClientRect().top },
+        travel: c - p.getBoundingClientRect().height,
         stickyTop: parseFloat(getComputedStyle(p).top)
       };
+    }, [WWCF_COPY, WWCF_PHOTO]);
+
+    const pinnedRange = travel - stickyTop;
+    expect(pinnedRange).toBeGreaterThan(20);
+    await scrollTo(page, top + Math.round(pinnedRange / 2));
+
+    const r = await page.evaluate(([copySel, photoSel]) => {
+      const c = document.querySelector(copySel).getBoundingClientRect();
+      const p = document.querySelector(photoSel);
+      return { copyTop: c.top, photoTop: p.getBoundingClientRect().top };
     }, [WWCF_COPY, WWCF_PHOTO]);
 
     // Copy has scrolled above the fold; photo is held at its sticky offset.

@@ -7,7 +7,7 @@
    - Barba-safe: init(container) / destroy()
    ========================================= */
 (() => {
-  const TRANSITION_DIAL_VERSION = '2026.4.14.2';
+  const TRANSITION_DIAL_VERSION = '2026.8.12.1';
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
 
@@ -96,6 +96,32 @@
       draw();
     }
 
+    /** Stroke the 96-bar teal ring into any 2D context.
+     *  `g` needs { cx, cy, innerR, baseLen, barW } in the context's own units;
+     *  `scale` multiplies coordinates (the live instance draws straight into
+     *  backing-store pixels, paintInto pre-scales the context and passes 1). */
+    function _paintRing(c2, g, scale) {
+      // Teal only — no sector highlight or colour change
+      c2.strokeStyle = `rgb(${T.teal.r},${T.teal.g},${T.teal.b})`;
+      c2.lineWidth = g.barW * scale;
+      c2.lineCap = 'round';
+
+      for (let i = 0; i < T.bars; i++) {
+        const a = (i / T.bars) * Math.PI * 2;
+        const len = g.baseLen;
+
+        const x0 = g.cx + Math.cos(a) * g.innerR;
+        const y0 = g.cy + Math.sin(a) * g.innerR;
+        const x1 = g.cx + Math.cos(a) * (g.innerR + len);
+        const y1 = g.cy + Math.sin(a) * (g.innerR + len);
+
+        c2.beginPath();
+        c2.moveTo(x0 * scale, y0 * scale);
+        c2.lineTo(x1 * scale, y1 * scale);
+        c2.stroke();
+      }
+    }
+
     function draw() {
       if (!alive || !ctx) return;
 
@@ -103,28 +129,60 @@
 
       ctx.resetTransform();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      _paintRing(ctx, geom, scale);
+    }
 
-      // Teal only — no sector highlight or colour change
-      const strokeStyle = `rgb(${T.teal.r},${T.teal.g},${T.teal.b})`;
-      ctx.strokeStyle = strokeStyle;
-      ctx.lineWidth = geom.barW * scale;
-      ctx.lineCap = 'round';
+    /** Paint one static teal ring into an arbitrary canvas, then stop.
+     *
+     *  Follows work-dial's model for the persistent #dial_ticks-canvas rather
+     *  than this module's own: that canvas is full-bleed (it fills
+     *  .dial_component), so the ring is centred in the canvas and its radius
+     *  comes from the foreground circle, not from the canvas box.
+     *
+     *  Used by the about→work via-home beat, where work-dial is destroyed and
+     *  nothing else is painting the ring. Leaves this module's live instance
+     *  (canvas/ctx/geom/alive) untouched.
+     *
+     *  @param {HTMLCanvasElement} cvs — canvas to paint into.
+     *  @param {Element} [radiusFrom] — element whose size sets the ring radius;
+     *                                  defaults to #fg-video-wrap. */
+    function paintInto(cvs, radiusFrom) {
+      if (!cvs || cvs.tagName !== 'CANVAS') return;
+      const c2 = cvs.getContext('2d');
+      if (!c2) return;
 
-      for (let i = 0; i < T.bars; i++) {
-        const a = (i / T.bars) * Math.PI * 2;
-        const len = geom.baseLen;
+      // offsetWidth/Height ignore CSS transforms — matches work-dial's resize()
+      const w = cvs.offsetWidth || cvs.getBoundingClientRect().width;
+      const h = cvs.offsetHeight || cvs.getBoundingClientRect().height;
+      if (!w || !h) return;
 
-        const x0 = geom.cx + Math.cos(a) * geom.innerR;
-        const y0 = geom.cy + Math.sin(a) * geom.innerR;
-        const x1 = geom.cx + Math.cos(a) * (geom.innerR + len);
-        const y1 = geom.cy + Math.sin(a) * (geom.innerR + len);
+      const fg = radiusFrom || document.getElementById('fg-video-wrap');
+      const fr = fg && fg.getBoundingClientRect();
+      const videoR = fr ? Math.min(fr.width, fr.height) / 2 : 0;
+      if (!videoR) return;
 
-        ctx.beginPath();
-        ctx.moveTo(x0 * scale, y0 * scale);
-        ctx.lineTo(x1 * scale, y1 * scale);
-        ctx.stroke();
-      }
+      const dpr = window.devicePixelRatio || 1;
+      cvs.width = Math.round(w * dpr);
+      cvs.height = Math.round(h * dpr);
+      c2.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c2.clearRect(0, 0, w, h);
 
+      _paintRing(c2, {
+        cx: w / 2,
+        cy: h / 2,
+        innerR: videoR + videoR * T.gapRatio,
+        baseLen: videoR * T.baseLenRatio,
+        barW: Math.max(1, videoR * T.barWRatio)
+      }, 1);
+    }
+
+    /** Clear a canvas previously painted by paintInto(). */
+    function clearCanvas(cvs) {
+      if (!cvs || cvs.tagName !== 'CANVAS') return;
+      const c2 = cvs.getContext('2d');
+      if (!c2) return;
+      c2.setTransform(1, 0, 0, 1, 0, 0);
+      c2.clearRect(0, 0, cvs.width, cvs.height);
     }
 
     function onVis() {
@@ -168,6 +226,6 @@
       lastPxSize = 0;
     }
 
-    return { init, destroy, resize, version: TRANSITION_DIAL_VERSION };
+    return { init, destroy, resize, paintInto, clearCanvas, version: TRANSITION_DIAL_VERSION };
   })();
 })();

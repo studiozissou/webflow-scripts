@@ -38,16 +38,21 @@ function collectErrors(page) {
 
 /* 1. Desktop: JS-set height present */
 test.describe(`${SLUG} — Desktop Height`, () => {
-  test('slider has JS-set --slide-max-height on desktop', async ({ page }) => {
+  // NOTE: --slide-max-height moved from .section_about-hero onto each
+  // [data-slider] so sliders are sized independently (see rhp-wwcf-sticky-carousel).
+  test('every slider has its own JS-set --slide-max-height on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await loadPage(page);
 
-    const hasVar = await page.evaluate(() => {
-      const section = document.querySelector('.section_about-hero');
-      if (!section) return false;
-      return section.style.getPropertyValue('--slide-max-height') !== '';
+    const result = await page.evaluate(() => {
+      const sliders = [...document.querySelectorAll('.section_about-hero [data-slider]')];
+      return {
+        count: sliders.length,
+        allSet: sliders.every(s => s.style.getPropertyValue('--slide-max-height') !== '')
+      };
     });
-    expect(hasVar).toBe(true);
+    expect(result.count).toBeGreaterThan(0);
+    expect(result.allSet).toBe(true);
   });
 
   test('slider computed height is not auto on desktop', async ({ page }) => {
@@ -66,14 +71,17 @@ test.describe(`${SLUG} — Desktop Height`, () => {
 
 /* 2. Tablet: auto height, no JS vars */
 test.describe(`${SLUG} — Tablet Auto Height`, () => {
-  test('no --slide-max-height on tablet', async ({ page }) => {
+  test('no --slide-max-height on tablet (section or slider)', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await loadPage(page);
 
     const hasVar = await page.evaluate(() => {
       const section = document.querySelector('.section_about-hero');
       if (!section) return false;
-      return section.style.getPropertyValue('--slide-max-height') !== '';
+      const onSection = section.style.getPropertyValue('--slide-max-height') !== '';
+      const onSlider = [...section.querySelectorAll('[data-slider]')]
+        .some(s => s.style.getPropertyValue('--slide-max-height') !== '');
+      return onSection || onSlider;
     });
     expect(hasVar).toBe(false);
   });

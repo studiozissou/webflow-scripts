@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.8.12.4'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.8.17.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -40,20 +40,42 @@
     return Infinity;
   };
 
-  /* Resolve a CSS length to pixels by measuring a hidden probe element.
-     _parseSize only understands rem/vw/px/min(), but the dial vars alias
-     values like clamp(180px, min(50svh, 70vw), ...) and calc() — those come
-     back as NaN. Anything the browser can lay out, this can measure. */
-  const _resolveLengthPx = (value, axis) => {
-    if (!value) return NaN;
+  /* Resolve CSS lengths to pixels by measuring a hidden probe element.
+
+     _parseSize only understands rem/vw/px/min(<int>vw, <float>rem). The dial
+     vars are outside that grammar in both directions — measured live:
+       --dial-home-width  = clamp(180px, min(50svh, 70vw), ...)  -> NaN
+                          = min(65vw, 65svh) below 768px          -> NaN
+       --dial-case-border-radius = 0 on mobile                    -> Infinity
+     (the `0` case falls through every branch to the `auto` return). Anything
+     the browser can lay out, a probe can measure correctly. */
+  const _withProbe = (read) => {
     const probe = document.createElement('div');
     probe.style.cssText = 'position:absolute;top:0;left:0;visibility:hidden;pointer-events:none';
-    probe.style[axis] = value;
     document.body.appendChild(probe);
-    const px = probe.getBoundingClientRect()[axis];
-    document.body.removeChild(probe);
-    return px;
+    try {
+      return read(probe);
+    } finally {
+      document.body.removeChild(probe);
+    }
   };
+
+  const _resolveLengthPx = (value, axis) => {
+    if (!value) return NaN;
+    return _withProbe((probe) => {
+      probe.style[axis] = value;
+      return probe.getBoundingClientRect()[axis];
+    });
+  };
+
+  /* Both axes off a single probe — one append and one reflow instead of two,
+     which matters because this runs mid-transition inside leave(). */
+  const _resolveBoxPx = (widthValue, heightValue) => _withProbe((probe) => {
+    probe.style.width = widthValue || '0';
+    probe.style.height = heightValue || '0';
+    const r = probe.getBoundingClientRect();
+    return { width: r.width, height: r.height };
+  });
 
   /* -----------------------------
      FG video preload (case → home)
@@ -172,11 +194,10 @@
       // Pin #fg-video-wrap dimensions before ns change
       const vRect = videoWrap?.getBoundingClientRect();
       if (videoWrap && vRect) {
-        const caseBR = _parseSize(v.caseBR);
         gsap.set(videoWrap, {
           width: vRect.width,
           height: vRect.height,
-          borderRadius: caseBR
+          borderRadius: _resolveLengthPx(v.caseBR, 'width')
         });
       }
 
@@ -188,18 +209,22 @@
           'height'
         );
 
-        gsap.to(videoWrap, {
-          width: '100%',
-          height: caseVideoHeight,
-          duration: dur,
-          ease: 'power2.inOut',
-          onComplete: function () {
-            gsap.set(videoWrap, {
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0
-            });
-          }
-        });
+        // Guard mirrors the shrink path: a value that fails to resolve must
+        // not reach GSAP, where it would silently no-op the height.
+        if (caseVideoHeight > 0) {
+          gsap.to(videoWrap, {
+            width: '100%',
+            height: caseVideoHeight,
+            duration: dur,
+            ease: 'power2.inOut',
+            onComplete: function () {
+              gsap.set(videoWrap, {
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0
+              });
+            }
+          });
+        }
       }
 
       // Fade out FG overlay (home → work)
@@ -292,7 +317,7 @@
           width: vRect.width,
           height: vRect.height,
           flexShrink: 0,
-          borderRadius: _parseSize(v.caseBR)
+          borderRadius: _resolveLengthPx(v.caseBR, 'width')
         });
       }
 
@@ -315,13 +340,14 @@
       // animation instead of snapping — the same circle --dial-home-border-
       // radius produces, but as a finite px value GSAP can interpolate.
       if (videoWrap && vRect) {
-        const homeW = _resolveLengthPx(v.homeWidth, 'width');
-        const homeH = _resolveLengthPx(v.homeHeight, 'height');
-        if (homeW > 0 && homeH > 0) {
+        const home = _resolveBoxPx(v.homeWidth, v.homeHeight);
+        // > 0 also rejects NaN, so a var that fails to resolve leaves the box
+        // pinned at its work size rather than feeding NaN to GSAP.
+        if (home.width > 0 && home.height > 0) {
           gsap.to(videoWrap, {
-            width: homeW,
-            height: homeH,
-            borderRadius: homeH / 2,
+            width: home.width,
+            height: home.height,
+            borderRadius: home.height / 2,
             duration: dur,
             ease: 'power2.inOut'
           });
@@ -1730,12 +1756,12 @@
           window.gsap.set(dialFg, { opacity: 1 });
         }
         // Defensive: runDialShrinkAnimation fades .case-studies_wrapper on the
-        // way out. The faded node normally dies with the outgoing container,
-        // but an aborted swap or the rhp-core fallback can carry the inline
-        // opacity onto a wrapper that survives.
-        const caseWrap = (data.next && data.next.container
+        // way out. That node normally dies with the outgoing container and the
+        // incoming one arrives at opacity 1, so this is belt-and-braces for a
+        // swap that reuses a wrapper carrying the inline opacity.
+        const caseWrap = data.next && data.next.container
           ? data.next.container.querySelector('.case-studies_wrapper')
-          : null) || document.querySelector('.case-studies_wrapper');
+          : null;
         if (caseWrap && window.gsap) {
           window.gsap.killTweensOf(caseWrap);
           window.gsap.set(caseWrap, { clearProps: 'opacity' });

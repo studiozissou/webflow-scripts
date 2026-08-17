@@ -128,7 +128,16 @@ test.describe(`${SLUG} — Scroll Behaviour`, () => {
 
   test('pins below the stacked titles while the copy scrolls past', async ({ page }) => {
     const top = await wwcfTop(page);
-    await scrollTo(page, top + 150);
+    // Scroll to the midpoint of the available sticky travel rather than a fixed
+    // offset — travel depends on the copy/photo height difference, which shifts
+    // with viewport and caption spacing.
+    const travel = await page.evaluate(([copySel, photoSel]) => {
+      const c = document.querySelector(copySel).getBoundingClientRect().height;
+      const p = document.querySelector(photoSel).getBoundingClientRect().height;
+      return c - p;
+    }, [WWCF_COPY, WWCF_PHOTO]);
+    expect(travel).toBeGreaterThan(40);
+    await scrollTo(page, top + Math.round(travel / 2));
 
     const { r, stickyTop } = await page.evaluate(([copySel, photoSel]) => {
       const c = document.querySelector(copySel).getBoundingClientRect();
@@ -178,6 +187,24 @@ test.describe(`${SLUG} — Per-Slider Height`, () => {
     // WWCF has captioned slides so it is taller than the single-slide first
     // section — if they are identical the shared-height bug has returned.
     expect(new Set(heights).size).toBeGreaterThan(1);
+  });
+
+  test('captioned and uncaptioned slides render the same image height', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 700 }); // short: height cap binds
+    await loadPage(page);
+
+    const heights = await page.evaluate(() => {
+      const slider = document.querySelector('.accordion-title.is-2 + .accordion-content [data-slider]');
+      return [...slider.querySelectorAll('.swiper-slide')]
+        .map(s => s.querySelector('img'))
+        .filter(Boolean)
+        .map(img => Math.round(img.getBoundingClientRect().height));
+    });
+
+    expect(heights.length).toBeGreaterThan(1);
+    // Without a reserved caption allowance, uncaptioned slides came out a full
+    // caption height (~32px) taller than captioned ones.
+    expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(2);
   });
 
   test('no slider is left with dead space from the max-width proxy', async ({ page }) => {

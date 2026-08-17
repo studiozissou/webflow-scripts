@@ -3,6 +3,12 @@ import { props as propTypes } from "@webflow/data-types";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { calculateScores } from "./nem-test-scoring.js";
 import { CONCLUSION_KEYS } from "./nem-test-conclusion-ids.js";
+import {
+  NL_VROUW as REAL_NL_VROUW,
+  NL_MAN as REAL_NL_MAN,
+  EN_VROUW as REAL_EN_VROUW,
+  EN_MAN as REAL_EN_MAN,
+} from "./nem-conclusion-texts.js";
 
 declare global {
   interface Window {
@@ -143,15 +149,12 @@ function placeholderTable(marker: string, note: string): ConclusionTable {
   return Object.fromEntries(CONCLUSION_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
 }
 
-/* Christel's finished texts. Empty tables are expected: as of 2026-08-17 only the female
- * Dutch column is written (27 of 108), and it has deliberately NOT been loaded here yet.
- * The Drive read path flattens in-cell paragraph breaks to spaces, so pasting from it
- * would silently destroy her paragraphing. Load from a faithful CSV export
- * (File → Download → CSV on NEM_TEST_01_Default_texts), not from a copy-paste. */
-const REAL_NL_VROUW: ConclusionTable = {};
-const REAL_NL_MAN: ConclusionTable = {};
-const REAL_EN_VROUW: ConclusionTable = {};
-const REAL_EN_MAN: ConclusionTable = {};
+/* Christel's finished texts, generated from a CSV export of Alex's sheet by
+ * tools/nem/build-conclusion-texts.js. 27 of 108 written as of 2026-08-17 (female Dutch
+ * complete); the rest fall through to the placeholders below.
+ *
+ * Never paste her copy in by hand: copy-paste and rendered reads both flatten in-cell
+ * paragraph breaks into spaces. Re-export the CSV and regenerate instead. */
 
 const NL_CONCLUSIONS_MAN: ConclusionTable = {
   ...placeholderTable("DUMMY man", "tekst volgt."),
@@ -1060,18 +1063,34 @@ function Quiz({
             </code>
           )}
 
-          {/* Conclusion text (gender-differentiated) */}
-          <p
+          {/* Conclusion text (gender-differentiated).
+              Christel writes in paragraphs separated by blank lines. HTML collapses
+              whitespace, so they are split into separate <p>s rather than rendered as
+              one block — otherwise her three-paragraph flat texts arrive as a wall.
+              The data-element hook stays on a wrapper so tests still read the whole
+              conclusion in one locator. */}
+          <div
             data-element="conclusion-text"
             style={{
-              fontSize: "var(--_typography---paragraph--standard, 1rem)",
-              lineHeight: 1.6,
-              color: "var(--_token---text-main, #292828)",
-              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--_gaps---content-quarter, 0.75rem)",
             }}
           >
-            {conclusionText}
-          </p>
+            {conclusionText.split(/\n{2,}/).map((paragraph, i) => (
+              <p
+                key={i}
+                style={{
+                  fontSize: "var(--_typography---paragraph--standard, 1rem)",
+                  lineHeight: 1.6,
+                  color: "var(--_token---text-main, #292828)",
+                  margin: 0,
+                }}
+              >
+                {paragraph}
+              </p>
+            ))}
+          </div>
 
           {/* Bridge line — flat outcomes get a different one, because there is no report
               to bridge to. */}

@@ -104,6 +104,39 @@ describe("the inlined modules match their sources — no drift", () => {
   });
 });
 
+describe("Christel's copy reaches the bundle intact", () => {
+  test("the aliased imports are re-declared after inlining", () => {
+    for (const [local, exported] of [
+      ["REAL_NL_VROUW", "NL_VROUW"],
+      ["REAL_NL_MAN", "NL_MAN"],
+      ["REAL_EN_VROUW", "EN_VROUW"],
+      ["REAL_EN_MAN", "EN_MAN"],
+    ]) {
+      assert.match(bundle, new RegExp(`const ${local} = ${exported};`));
+      assert.match(bundle, new RegExp(`const ${exported} = \\{`));
+    }
+  });
+
+  test("an alias is declared after the table it points at", () => {
+    assert.ok(
+      bundle.indexOf("const NL_VROUW = {") < bundle.indexOf("const REAL_NL_VROUW = NL_VROUW;"),
+      "alias precedes the table it aliases",
+    );
+  });
+
+  test("real Dutch copy is present, not just placeholders", () => {
+    assert.match(bundle, /Op basis van je antwoorden springt er niets duidelijk uit/);
+  });
+
+  test("paragraph breaks survive into the bundle as escaped newlines", () => {
+    assert.match(bundle, /hoofdrol\.\\n\\nDat kan verschillende dingen betekenen/);
+  });
+
+  test("the component splits paragraphs rather than rendering one block", () => {
+    assert.match(bundle, /conclusionText\.split\(\/\\n\{2,\}\/\)/);
+  });
+});
+
 describe("the bundle carries a provenance header", () => {
   test("says it is generated and names the command that regenerates it", () => {
     assert.match(bundle, /GENERATED FILE/);

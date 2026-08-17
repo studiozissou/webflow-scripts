@@ -33,14 +33,14 @@ export const MECHANISM_MAP = {
 
 /* Fixed tiebreak order, replacing Phase B's body + situational tiebreak.
  *
- * ⚠️ This is inferred, not supplied. Christel's explicit order was never sent, and the
- * spec's original justification (that it matches Alex's sheet row order) is wrong — the
- * sheet reads fear → self-rejection → false-hope → false-power → emotional-numbing.
- * The order below is MECHANISM_MAP declaration order, which is a code artefact rather
- * than a clinical judgement. Confirm with Christel; it is a one-line change.
+ * This is Christel's clinical order (confirmed by Will, 2026-08-17), which is also
+ * MECHANISM_MAP declaration order. It is NOT derived from Alex's sheet row order —
+ * that sheet reads fear → self-rejection → false-hope → false-power → emotional-numbing,
+ * and an earlier draft of the spec wrongly cited it as the justification.
  *
  * Not to be confused with SHEET_ORDER in nem-test-conclusion-ids.js, which drives the
- * row order of the generated text sheet and nothing else. */
+ * row order of the generated text sheet and nothing else. The two answer different
+ * questions and must not be merged. */
 export const TIEBREAK_ORDER = [
   "selfRejection",
   "emotionalNumbing",

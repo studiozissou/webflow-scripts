@@ -217,21 +217,19 @@ const TIEBREAK_ORDER = ['selfRejection', 'emotionalNumbing', 'falsePower', 'fear
 
 This matches the existing `MECHANISM_MAP` declaration order.
 
-> **⚠️ Corrected 2026-08-17 — the sheet justification was wrong.** This spec claimed the
-> order above also matches the row order of Alex's sheet. It does not. The sheet
+> **✅ Confirmed 2026-08-17 (Will): the order above is Christel's.** It is a clinical
+> judgement, not an inference, and needs no further validation. Still worth mentioning
+> to Alex in passing so he knows it is baked in.
+>
+> **But the justification written here was wrong.** This spec claimed the order also
+> matches the row order of Alex's sheet. It does not: the sheet
 > (`NEM_TEST_01_Default_texts`, read 2026-08-17) lists mechanisms as
-> **fear → self-rejection → false-hope → false-power → emotional-numbing**, against the
-> `selfRejection → emotionalNumbing → falsePower → fear → falseHope` above. Either the
-> sheet was reordered after 10 Aug, or the inference was mistaken at the time.
+> **fear → self-rejection → false-hope → false-power → emotional-numbing**. The order is
+> right; the reason given for it was not. Do not "correct" `TIEBREAK_ORDER` to match the
+> sheet — they are different things.
 >
-> So the tiebreak order rests on `MECHANISM_MAP` declaration order alone, which is an
-> artefact of how the Phase B code happened to be written — not a clinical judgement.
-> **Christel's explicit order was never sent. Ask her rather than inferring.** It is a
-> one-line change to `TIEBREAK_ORDER`. Do not block the build on it.
->
-> Note the sheet row order lives separately as `SHEET_ORDER` in
-> `nem-test-conclusion-ids.js`, and drives row order in the generated ID CSV only. The
-> two constants answer different questions and must not be merged.
+> The sheet row order lives separately as `SHEET_ORDER` in `nem-test-conclusion-ids.js`
+> and drives row order in the generated ID CSV only.
 
 `bodyQ` and `situationalQ` stay in `MECHANISM_MAP` — they are still referenced by the report prompt and may return as a second-level rule. They are simply no longer used for tiebreaking.
 

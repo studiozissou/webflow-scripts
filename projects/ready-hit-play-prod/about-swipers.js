@@ -38,23 +38,34 @@
   }
 
   /**
-   * Height a single slide actually wants: the image wrapper's *rendered* width
-   * scaled by the image's intrinsic aspect ratio, plus its caption.
+   * Measure one slider: the tallest image its slides want, and the tallest
+   * caption. Returned separately (not summed per slide) so the caption
+   * allowance can be reserved on EVERY slide — otherwise a slide without a
+   * caption renders its image a caption's-height taller than its neighbours,
+   * and the images visibly jump size as the carousel crossfades.
    *
-   * Deliberately not max-width. The accordion column constrains the wrapper far
-   * below its max-width (479px rendered vs 655px max), so max-width overestimates
-   * the height by ~175px and leaves dead space above and below every image.
+   * Image height is rendered width x intrinsic aspect ratio, deliberately not
+   * max-width: the accordion column constrains the wrapper far below its
+   * max-width (479px rendered vs 655px max), so max-width overestimates by
+   * ~175px and leaves dead space above and below every image.
    */
-  function slideContentHeight(slide) {
-    const imgWrap = slide.querySelector('.about_image-wrapper');
-    if (!imgWrap) return 0;
-    const img = imgWrap.querySelector('img');
-    const captionH = slide.querySelector('.spacer-medium')?.offsetHeight || 0;
-    const width = imgWrap.getBoundingClientRect().width;
-    // naturalWidth is 0 until the image decodes; the window 'load' and
-    // fonts.ready re-measures below correct any early guess.
-    const ratio = img?.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
-    return width * ratio + captionH;
+  function measureSlides(slider) {
+    let imageH = 0;
+    let captionH = 0;
+    slider.querySelectorAll('.swiper-slide').forEach((slide) => {
+      const imgWrap = slide.querySelector('.about_image-wrapper');
+      if (imgWrap) {
+        const img = imgWrap.querySelector('img');
+        const width = imgWrap.getBoundingClientRect().width;
+        // naturalWidth is 0 until the image decodes; the window 'load' and
+        // fonts.ready re-measures below correct any early guess.
+        const ratio = img?.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
+        imageH = Math.max(imageH, width * ratio);
+      }
+      const cap = slide.querySelector('.spacer-medium');
+      if (cap) captionH = Math.max(captionH, cap.offsetHeight);
+    });
+    return { imageH, captionH };
   }
 
   /** Drop every JS-set sizing property — tablet/mobile fall back to CSS auto height. */
@@ -65,6 +76,7 @@
     sectionEl.style.removeProperty('--accordion-title-height');
     sectionEl.querySelectorAll('[data-slider]').forEach((slider) => {
       slider.style.removeProperty('--slide-max-height');
+      slider.style.removeProperty('--slide-caption-height');
     });
     lastSizes = '';
   }
@@ -103,13 +115,13 @@
     const applied = [];
 
     sectionEl.querySelectorAll('[data-slider]').forEach((slider) => {
-      let contentCap = 0;
-      slider.querySelectorAll('.swiper-slide').forEach((slide) => {
-        contentCap = Math.max(contentCap, slideContentHeight(slide));
-      });
-      if (!contentCap) return;
-      const slideH = Math.min(viewportCap, contentCap);
+      const { imageH, captionH } = measureSlides(slider);
+      if (!imageH) return;
+      const slideH = Math.min(viewportCap, imageH + captionH);
       slider.style.setProperty('--slide-max-height', slideH + 'px');
+      // Reserved on every slide so captioned and uncaptioned images match.
+      // Consumed by ready-hit-play.css § About slider image sizing.
+      slider.style.setProperty('--slide-caption-height', captionH + 'px');
       applied.push(Math.round(slideH));
     });
 

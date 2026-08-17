@@ -40,6 +40,21 @@
     return Infinity;
   };
 
+  /* Resolve a CSS length to pixels by measuring a hidden probe element.
+     _parseSize only understands rem/vw/px/min(), but the dial vars alias
+     values like clamp(180px, min(50svh, 70vw), ...) and calc() — those come
+     back as NaN. Anything the browser can lay out, this can measure. */
+  const _resolveLengthPx = (value, axis) => {
+    if (!value) return NaN;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;top:0;left:0;visibility:hidden;pointer-events:none';
+    probe.style[axis] = value;
+    document.body.appendChild(probe);
+    const px = probe.getBoundingClientRect()[axis];
+    document.body.removeChild(probe);
+    return px;
+  };
+
   /* -----------------------------
      FG video preload (case → home)
      Warms browser cache during dial-shrink so work-dial
@@ -168,13 +183,10 @@
       // Tween videoWrap to case video height (leaves gap for title peek)
       if (videoWrap) {
         // Resolve calc(--dial-case-height - --dial-case-title-gap) to pixels
-        const tempEl = document.createElement('div');
-        tempEl.style.height = 'calc(' + v.caseHeight + ' - ' + v.caseTitleGap + ')';
-        tempEl.style.position = 'absolute';
-        tempEl.style.visibility = 'hidden';
-        document.body.appendChild(tempEl);
-        const caseVideoHeight = tempEl.getBoundingClientRect().height;
-        document.body.removeChild(tempEl);
+        const caseVideoHeight = _resolveLengthPx(
+          'calc(' + v.caseHeight + ' - ' + v.caseTitleGap + ')',
+          'height'
+        );
 
         gsap.to(videoWrap, {
           width: '100%',
@@ -246,12 +258,43 @@
 
     return new Promise((resolve) => {
       const videoWrap = document.getElementById('fg-video-wrap');
+      const caseWrap = dialFg.querySelector('.case-studies_wrapper');
       gsap.killTweensOf(dialFg);
       if (videoWrap) gsap.killTweensOf(videoWrap);
+      if (caseWrap) gsap.killTweensOf(caseWrap);
 
       if (dialTicks) gsap.set(dialTicks, { opacity: 0 });
 
+      // The outgoing container is still a sibling of #fg-video-wrap inside
+      // dialFg, and its .case-studies_wrapper sections are #fff. Fade it out
+      // before the namespace flip so no white is ever composited into the
+      // shrinking dial. The node is destroyed by the Barba swap; runAfterEnter
+      // clears the opacity defensively for interrupted transitions.
+      if (caseWrap) {
+        gsap.to(caseWrap, {
+          opacity: 0,
+          duration: reduced ? 0 : 0.2,
+          ease: 'power1.out'
+        });
+      }
+
       const rect = dialFg.getBoundingClientRect();
+
+      // Pin #fg-video-wrap before the namespace flip. The home rule sizes it
+      // height:100%, which resolves against a box the oversized outgoing
+      // container has already eaten — without an inline pixel height the video
+      // collapses to 0 until Barba removes that container. flex-shrink:0
+      // covers the same collapse in the work flex layout that is still live at
+      // this point. Both are cleared by clearProps:'all' in runAfterEnter.
+      const vRect = videoWrap ? videoWrap.getBoundingClientRect() : null;
+      if (videoWrap && vRect) {
+        gsap.set(videoWrap, {
+          width: vRect.width,
+          height: vRect.height,
+          flexShrink: 0,
+          borderRadius: _parseSize(v.caseBR)
+        });
+      }
 
       // Pin current work dimensions inline. margin:auto keeps centering.
       gsap.set(dialFg, {
@@ -265,6 +308,25 @@
 
       setDialNs('home');
       dialFg.classList.remove('is-case-study', 'no-scrollbar');
+
+      // Shrink the video box in lockstep with the dial so the video visibly
+      // closes into the circle. Mirrors runDialExpandAnimation on the way out.
+      // Radius tweens to half the final height so the corners round during the
+      // animation instead of snapping — the same circle --dial-home-border-
+      // radius produces, but as a finite px value GSAP can interpolate.
+      if (videoWrap && vRect) {
+        const homeW = _resolveLengthPx(v.homeWidth, 'width');
+        const homeH = _resolveLengthPx(v.homeHeight, 'height');
+        if (homeW > 0 && homeH > 0) {
+          gsap.to(videoWrap, {
+            width: homeW,
+            height: homeH,
+            borderRadius: homeH / 2,
+            duration: dur,
+            ease: 'power2.inOut'
+          });
+        }
+      }
 
       // Fade in FG overlay (work → home)
       if (videoWrap) {
@@ -1666,6 +1728,17 @@
         setNavHeight();
         if (dialFg && window.gsap) {
           window.gsap.set(dialFg, { opacity: 1 });
+        }
+        // Defensive: runDialShrinkAnimation fades .case-studies_wrapper on the
+        // way out. The faded node normally dies with the outgoing container,
+        // but an aborted swap or the rhp-core fallback can carry the inline
+        // opacity onto a wrapper that survives.
+        const caseWrap = (data.next && data.next.container
+          ? data.next.container.querySelector('.case-studies_wrapper')
+          : null) || document.querySelector('.case-studies_wrapper');
+        if (caseWrap && window.gsap) {
+          window.gsap.killTweensOf(caseWrap);
+          window.gsap.set(caseWrap, { clearProps: 'opacity' });
         }
         // BG canvas: set blur + opacity, start draw loop
         const bgCanvas = document.querySelector('.dial_bg-canvas');

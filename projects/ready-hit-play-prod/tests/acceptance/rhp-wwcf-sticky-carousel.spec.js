@@ -210,6 +210,26 @@ test.describe(`${SLUG} — Per-Slider Height`, () => {
     expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(2);
   });
 
+  test('every slide places its image at the same vertical offset', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 700 });
+    await loadPage(page);
+
+    const offsets = await page.evaluate(() => {
+      const slider = document.querySelector('.accordion-title.is-2 + .accordion-content [data-slider]');
+      return [...slider.querySelectorAll('.swiper-slide')].map((s) => {
+        const img = s.querySelector('img');
+        const box = s.querySelector('.slide-caption');
+        if (!img || !box) return null;
+        return Math.round(img.getBoundingClientRect().top - box.getBoundingClientRect().top);
+      }).filter(v => v !== null);
+    });
+
+    expect(offsets.length).toBeGreaterThan(1);
+    // Centring used to drop uncaptioned slides ~16px lower than captioned ones,
+    // so the image jumped position on every crossfade.
+    expect(Math.max(...offsets) - Math.min(...offsets)).toBeLessThanOrEqual(2);
+  });
+
   test('no slider is left with dead space from the max-width proxy', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await loadPage(page);

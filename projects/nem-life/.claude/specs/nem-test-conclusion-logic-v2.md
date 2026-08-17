@@ -22,7 +22,7 @@ Seven changes to the NEM Test conclusion engine, agreed on the 2026-08-10 call a
 3. **Flat-low outcome** — nothing clears the threshold → "not much stands out" text + contact link.
 4. **Flat-high outcome** — everything is elevated and undifferentiated → "several things at once" text + contact link, **report skipped**.
 5. **English keys everywhere** — mechanism keys, conclusion keys and backend node names move from Dutch to English for future handoff.
-6. **Unique conclusion IDs** — every one of the 54 conclusion rows gets a short decodable code (`F-D-SR-FP`) so Alex can direct Christel to a specific text.
+6. **Unique conclusion IDs** — every one of the 54 conclusion rows gets a short decodable code (`01F-SR-FP`) so Alex can direct Christel to a specific text.
 7. **Debug mode** — a toggle that renders the conclusion ID + key next to the text, so a human tester can instantly verify which variant fired.
 
 ---
@@ -36,7 +36,7 @@ The Phase B component is feature-complete and the backend runs end-to-end on tes
 - `projects/nem-life/src/nem-test-scoring.js` — pure scoring engine, `calculateScores()` + `conclusionKeyFor()`
 - `projects/nem-life/src/nem-test-phase-b.tsx` — React component, holds the conclusion text tables and renders Screen 4
 
-> **⚠️ Build prerequisite.** `projects/nem-life/src/nem-test-scoring.js` and `tests/nem/nem-test-scoring.test.js` are **untracked** in git — the 14 Jul scoring extraction was never committed. They exist only in Will's working copy on branch `tsc-launch-metadata-schema`, alongside uncommitted edits to `nem-test-phase-b.tsx`. **Commit these before starting the build**, or the work has no baseline and is one `git clean` away from being lost.
+> **✅ Build prerequisite cleared 2026-08-17.** `projects/nem-life/src/nem-test-scoring.js`, `tests/nem/nem-test-scoring.test.js` and `nem-test-phase-b.tsx` were untracked when this spec was written; they were committed in `378f9e9` and are on `main`. The baseline exists — the queued task `nem-test-commit-scoring-engine-baseline` is done.
 
 ### What this changes vs Phase B
 
@@ -89,22 +89,61 @@ generic   flat-high
 
 ### 3. Conclusion IDs
 
-Format: `{GENDER}-{TYPE}[-{MECH}][-{MECH}]`
+**Revised 2026-08-17.** Alex had already built his sheet with his own ID column
+(`01-03F` — text set, sequential row, gender) before this spec's scheme was applied.
+The format below merges the two: his text-set prefix, this spec's decodable body.
+
+Format: `{SET}{GENDER}-{MECH}[-{MECH}]`, or `{SET}{GENDER}-LOW|HIGH` for flat outcomes.
 
 ```
-F-S-SR          vrouw   single    self-rejection
-F-D-SR-FP       vrouw   dual      self-rejection → false-power
-F-D-FP-SR       vrouw   dual      false-power → self-rejection
-F-G-LOW         vrouw   generic   flat and low
-F-G-HIGH        vrouw   generic   flat and high
-M-S-SR          man     single    self-rejection
+01F-FR          vrouw   single    fear
+01F-SR-FP       vrouw   dual      self-rejection → false-power
+01F-FP-SR       vrouw   dual      false-power → self-rejection
+01F-LOW         vrouw   flat      flat-low
+01F-HIGH        vrouw   flat      flat-high
+01M-SR          man     single    self-rejection
 ```
 
+- Text set: `01` — Alex's current sheet is `NEM_TEST_01_Default_texts`. The prefix
+  leaves room for alternate text sets later without renumbering anything.
 - Gender: `F` (vrouw), `M` (man)
-- Type: `S` single, `D` dual, `G` generic
 - Mechanism: `SR`, `EM`, `FP`, `FR`, `FH`
 
-54 IDs total: 2 genders × (5 + 20 + 2). Derived programmatically by `conclusionIdFor(gender, primary, secondary, outcome)` — never hand-maintained, so the sheet and the code cannot drift.
+**The type segment is gone.** An earlier draft of this spec used `{GENDER}-{TYPE}-…`
+(`F-D-SR-FP`). Type is inferable from how many mechanisms the ID names — none is flat,
+one is single, two is dual — so the segment carried no information. Dropping it pays
+for the `01` prefix and keeps the ID the same length as before.
+
+**Mechanism codes are two letters throughout,** including `FR` for fear. A single-letter
+`F` would collide with the `F` gender segment when read by eye. A test pins this.
+
+#### Why not simply adopt Alex's `01-03F`?
+
+His is positional. Insert or reorder a row and every ID below it shifts, silently
+remapping onto different texts — and there is no way to detect that from the ID alone.
+His is also opaque: `01-03F` cannot be read without the sheet open, which costs whenever
+an ID travels without the sheet (a Slack message, a support email, a bug report).
+This format is derived from the outcome, so reordering the sheet cannot remap anything,
+and it reads on its own.
+
+The one thing his format has that this does not is a sequential row number, so
+"row 14" no longer reads off the ID. The sheet has native row numbers for that.
+
+#### Generation
+
+54 IDs total: 2 genders × (2 + 5 + 20). Derived programmatically by
+`conclusionIdFor(gender, { outcome, primary, secondary }, textSet)` in
+`projects/nem-life/src/nem-test-conclusion-ids.js` — never hand-maintained, so the
+sheet and the code cannot drift.
+
+`node tools/nem/generate-conclusion-ids.js` writes all 54 rows to
+`projects/nem-life/.claude/research/nem-conclusion-ids.csv` in Alex's sheet row order,
+so the `key` and `ID` columns paste in line for line. The generated `key` column was
+diffed against the sheet's own key column on 2026-08-17 and is identical row for row.
+**Do not edit Alex's Google Sheet directly** — hand the CSV over and let him paste.
+
+The same module owns `conclusionKeyFor`, so the keys the component looks up at runtime
+and the keys Christel writes against are produced by one function.
 
 ### 4. Scoring algorithm v2
 
@@ -166,9 +205,23 @@ Email item 2 (agreed): Christel's fixed order **replaces** the body + situationa
 const TIEBREAK_ORDER = ['selfRejection', 'emotionalNumbing', 'falsePower', 'fear', 'falseHope'];
 ```
 
-This matches both the existing `MECHANISM_MAP` declaration order and the row order of Alex's sheet.
+This matches the existing `MECHANISM_MAP` declaration order.
 
-> **⚠️ Confirm with Alex.** Christel's explicit order was never sent — this is inferred from the sheet row order. If she supplies a different order, it is a one-line change to `TIEBREAK_ORDER`. Do not block the build on it.
+> **⚠️ Corrected 2026-08-17 — the sheet justification was wrong.** This spec claimed the
+> order above also matches the row order of Alex's sheet. It does not. The sheet
+> (`NEM_TEST_01_Default_texts`, read 2026-08-17) lists mechanisms as
+> **fear → self-rejection → false-hope → false-power → emotional-numbing**, against the
+> `selfRejection → emotionalNumbing → falsePower → fear → falseHope` above. Either the
+> sheet was reordered after 10 Aug, or the inference was mistaken at the time.
+>
+> So the tiebreak order rests on `MECHANISM_MAP` declaration order alone, which is an
+> artefact of how the Phase B code happened to be written — not a clinical judgement.
+> **Christel's explicit order was never sent. Ask her rather than inferring.** It is a
+> one-line change to `TIEBREAK_ORDER`. Do not block the build on it.
+>
+> Note the sheet row order lives separately as `SHEET_ORDER` in
+> `nem-test-conclusion-ids.js`, and drives row order in the generated ID CSV only. The
+> two constants answer different questions and must not be merged.
 
 `bodyQ` and `situationalQ` stay in `MECHANISM_MAP` — they are still referenced by the report prompt and may return as a second-level rule. They are simply no longer used for tiebreaking.
 
@@ -204,7 +257,7 @@ The query param is what makes this usable — Alex and Christel can toggle it on
 When active, a monospace badge renders directly above the conclusion text:
 
 ```
-F-D-SR-FP · self-rejection_false-power · SR 14 EM 11 FP 4 FR 2 FH 1 · dual
+01F-SR-FP · self-rejection_false-power · SR 14 EM 11 FP 4 FR 2 FH 1 · dual
 ```
 
 Marked `data-element="conclusion-debug"` and `aria-hidden="true"` (it is QA scaffolding, not content). Absent from the DOM entirely when debug is off — not merely hidden, so it can never leak to a real user via CSS.
@@ -218,7 +271,7 @@ Email item 4 (agreed). The submit payload gains three fields:
 ```js
 outcome:       'single' | 'dual' | 'flat-low' | 'flat-high',
 conclusionKey: 'self-rejection_false-power',
-conclusionId:  'F-D-SR-FP',
+conclusionId:  '01F-SR-FP',
 ```
 
 Backend changes:
@@ -243,7 +296,10 @@ Generated to `projects/nem-life/.claude/research/nem-conclusion-ids.csv` by a sm
 
 | File | Change |
 |---|---|
-| `projects/nem-life/src/nem-test-scoring.js` | Rewrite — English keys, directional duals, min-score gate, flat detection, fixed-order tiebreak, `conclusionIdFor()` |
+| `projects/nem-life/src/nem-test-conclusion-ids.js` | **Done 2026-08-17** — keys, IDs and the 54-row enumeration. Owns `conclusionKeyFor()` and `conclusionIdFor()` |
+| `tests/nem/nem-conclusion-ids.test.js` | **Done 2026-08-17** — 17 tests over the key/ID scheme |
+| `tools/nem/generate-conclusion-ids.js` | **Done 2026-08-17** — writes the 54-row CSV for Alex |
+| `projects/nem-life/src/nem-test-scoring.js` | Rewrite — English keys, min-score gate, flat detection, fixed-order tiebreak. Imports keys/IDs from `nem-test-conclusion-ids.js` rather than redefining them |
 | `projects/nem-life/src/nem-test-phase-b.tsx` | 27-key × 2-gender × 2-locale tables, flat routing, contact link, debug badge, payload fields |
 | `tests/nem/nem-test-scoring.test.js` | Invert canonical-key tests → directional; add flat, min-score, tiebreak, ID and completeness cases |
 | `tests/acceptance/nem-test-conclusion-logic-v2.spec.js` | New — Tier 1 acceptance |
@@ -251,7 +307,7 @@ Generated to `projects/nem-life/.claude/research/nem-conclusion-ids.csv` by a sm
 | `projects/nem-life/.claude/backend/nem-verify.workflow.json` | Pass outcome + conclusionKey to report prompt |
 | `projects/nem-life/.claude/backend/nem_test_profiles.csv` | Header + sample row |
 | `projects/nem-life/.claude/specs/nem-test-phase-b.md` | Mark the canonical-key decision superseded; update the conclusion-key table |
-| `projects/nem-life/.claude/research/nem-conclusion-ids.csv` | New — generated 54-row sheet |
+| `projects/nem-life/.claude/research/nem-conclusion-ids.csv` | **Done 2026-08-17** — generated 54-row sheet, key column verified against Alex's sheet |
 | `tests/registry.json` | Register acceptance test |
 | `.claude/queue.json` | Task entries |
 
@@ -331,6 +387,7 @@ Generated to `projects/nem-life/.claude/research/nem-conclusion-ids.csv` by a sm
 ### Tier mapping
 
 **Tier 1 — Auto, local (`/build`, `/debug`)**
+- `tests/nem/nem-conclusion-ids.test.js` via `node --test` — the key and ID scheme. 17 tests, passing as of 2026-08-17.
 - `tests/nem/nem-test-scoring.test.js` via `node --test` — criteria 1–6. Runs with no network, no staging, no deploy. This is where the real coverage lives.
 - `tests/acceptance/nem-test-conclusion-logic-v2.spec.js` — criteria 7–12, against staging.
 

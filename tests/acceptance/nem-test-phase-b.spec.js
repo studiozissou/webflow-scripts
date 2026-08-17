@@ -29,14 +29,37 @@ const TOTAL_QUESTIONS = 20;
 // Scoring: answer index maps to score value (0-4)
 const ANSWER_SCORES = [0, 1, 2, 3, 4];
 
-// Mechanism -> question indices (1-based)
+// Mechanism -> question indices (1-based).
+// Keys are English as of conclusion engine v2 — window.__nemTestScores publishes
+// English keys, so Dutch keys here silently compared undefined.
 const MECHANISM_MAP = {
-  zelfafwijzing: [1, 2, 7, 17],
-  emotioneleVerdoving: [3, 8, 13, 18],
-  valseMacht: [4, 9, 14, 19],
-  angst: [5, 10, 15, 20],
-  valseHoop: [6, 11, 12, 16],
+  selfRejection: [1, 2, 7, 17],
+  emotionalNumbing: [3, 8, 13, 18],
+  falsePower: [4, 9, 14, 19],
+  fear: [5, 10, 15, 20],
+  falseHope: [6, 11, 12, 16],
 };
+
+/* ── Answer profiles (conclusion engine v2) ────────────────────
+ *
+ * Under v2, ANY uniform answer pattern is a flat outcome: all "soms" scores 8 across
+ * the board → flat-high, all "zelden" → flat-low. Flat outcomes render a contact
+ * anchor INSTEAD of the report CTA, so a uniformly-answered test can no longer reach
+ * the opt-in, confirmation or report screens at all.
+ *
+ * Every test that needs the report path therefore answers a deliberately uneven
+ * profile. Verified against the engine: DUAL → false-hope_false-power (01?-FH-FP),
+ * SINGLE → self-rejection (01?-SR). Both have skipsReport: false. */
+const DUAL_PROFILE_SCORES = {
+  selfRejection: 5,
+  emotionalNumbing: 2,
+  falsePower: 11,
+  fear: 4,
+  falseHope: 14,
+};
+
+// 0-based question order → answer index. Sums to DUAL_PROFILE_SCORES above.
+const DUAL_PROFILE = [4, 1, 2, 4, 4, 4, 0, 0, 4, 0, 4, 4, 0, 3, 0, 2, 0, 0, 0, 0];
 
 const SECONDARY_THRESHOLD = 3;
 
@@ -61,10 +84,22 @@ async function answerQuestion(page, answerLabel = 'soms') {
   await page.waitForTimeout(600); // select + fade transition
 }
 
-/** Answer all 20 questions with the same answer */
+/** Answer all 20 questions with the same answer.
+ *
+ * ⚠️ Under v2 every uniform pattern is a FLAT outcome, which routes to a contact link
+ * and skips the report. Use answerReportProfile() for anything that needs the CTA. */
 async function answerAllQuestions(page, answerLabel = 'soms') {
   for (let i = 0; i < TOTAL_QUESTIONS; i++) {
     await answerQuestion(page, answerLabel);
+  }
+}
+
+/** Answer all 20 questions with an uneven profile that reaches the report path.
+ *
+ * Defaults to DUAL_PROFILE (false-hope leading, false-power following). */
+async function answerReportProfile(page, profile = DUAL_PROFILE, labels = ANSWER_LABELS_NL) {
+  for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+    await answerQuestion(page, labels[profile[i]]);
   }
 }
 
@@ -111,41 +146,10 @@ async function getConclusionText(page) {
   return (await page.locator('[data-element="quiz-module"]').first().innerText()).trim();
 }
 
-/** Answer questions with varied answers to produce a known score profile */
-async function answerWithProfile(page) {
-  // Answers designed to produce: valseHoop dominant, valseMacht secondary
-  // Q1(ZA)=1, Q2(ZA)=1, Q3(EV)=0, Q4(VM)=3, Q5(A)=1
-  // Q6(VH)=3, Q7(ZA)=1, Q8(EV)=0, Q9(VM)=2, Q10(A)=1
-  // Q11(VH)=4, Q12(VH)=3, Q13(EV)=1, Q14(VM)=3, Q15(A)=1
-  // Q16(VH)=4, Q17(ZA)=2, Q18(EV)=1, Q19(VM)=3, Q20(A)=1
-  const answerPattern = [
-    'zelden',      // Q1: ZA=1
-    'zelden',      // Q2: ZA=1
-    'nooit',       // Q3: EV=0
-    'regelmatig',  // Q4: VM=3
-    'zelden',      // Q5: A=1
-    'regelmatig',  // Q6: VH=3
-    'zelden',      // Q7: ZA=1
-    'nooit',       // Q8: EV=0
-    'soms',        // Q9: VM=2
-    'zelden',      // Q10: A=1
-    'heel vaak',   // Q11: VH=4
-    'regelmatig',  // Q12: VH=3
-    'zelden',      // Q13: EV=1
-    'regelmatig',  // Q14: VM=3
-    'zelden',      // Q15: A=1
-    'heel vaak',   // Q16: VH=4
-    'soms',        // Q17: ZA=2
-    'zelden',      // Q18: EV=1
-    'regelmatig',  // Q19: VM=3
-    'zelden',      // Q20: A=1
-  ];
-  // Expected: VH=14, VM=11, ZA=5, A=4, EV=2
-  // Primary: valseHoop, Secondary: valseMacht (diff=3, within threshold)
-  for (const answer of answerPattern) {
-    await answerQuestion(page, answer);
-  }
-}
+/** Alias kept for readability at call sites that care about the score profile rather
+ * than about reaching the report path. Same profile either way — DUAL_PROFILE replaced
+ * this helper's hardcoded Dutch answer list, which could not be reused on the EN page. */
+const answerWithProfile = answerReportProfile;
 
 // ── B1: Landing Page ──────────────────────────────────────────
 
@@ -335,7 +339,7 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
 test.describe(`${SLUG} — Screen 3 (Profile)`, () => {
   test.beforeEach(async ({ page }) => {
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await page.waitForTimeout(500);
   });
 
@@ -394,7 +398,7 @@ test.describe(`${SLUG} — Screen 3 (Profile)`, () => {
 test.describe(`${SLUG} — Screen 4 (Conclusion)`, () => {
   test('conclusion text appears after profile screen (no loading state)', async ({ page }) => {
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
 
     // Conclusion should appear immediately — no loading spinner
@@ -406,7 +410,7 @@ test.describe(`${SLUG} — Screen 4 (Conclusion)`, () => {
 
   test('CTA button visible on conclusion screen', async ({ page }) => {
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
 
     await expect(
@@ -416,7 +420,7 @@ test.describe(`${SLUG} — Screen 4 (Conclusion)`, () => {
 
   test('bridge line visible on conclusion screen', async ({ page }) => {
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
 
     await expect(
@@ -426,7 +430,7 @@ test.describe(`${SLUG} — Screen 4 (Conclusion)`, () => {
 
   test('CTA transitions to Screen 5 (opt-in form)', async ({ page }) => {
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
 
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
@@ -446,14 +450,14 @@ test.describe(`${SLUG} — Gender-differentiated conclusion`, () => {
     test.setTimeout(120_000); // runs the full quiz flow twice (once per gender)
     // Man path
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreenWithGender(page, 'Man');
     await expect(page.getByText(/jouw uitkomst/i)).toBeVisible({ timeout: 5_000 });
     const manText = await getConclusionText(page);
 
     // Vrouw path — identical answers, only the gender selection differs
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreenWithGender(page, 'Vrouw');
     await expect(page.getByText(/jouw uitkomst/i)).toBeVisible({ timeout: 5_000 });
     const vrouwText = await getConclusionText(page);
@@ -466,7 +470,7 @@ test.describe(`${SLUG} — Gender-differentiated conclusion`, () => {
 
   test('EN male gender resolves a conclusion (male/female normalised to man/vrouw)', async ({ page }) => {
     await loadPage(page, TEST_PAGE_EN);
-    await answerAllQuestions(page, 'sometimes');
+    await answerReportProfile(page, DUAL_PROFILE, ANSWER_LABELS_EN);
     await fillProfileScreenWithGender(page, 'Male');
 
     // Reaching the conclusion screen — assert via the gender-invariant bridge line
@@ -538,7 +542,7 @@ test.describe(`${SLUG} — Scoring logic`, () => {
 test.describe(`${SLUG} — Screen 5 (Opt-in form)`, () => {
   test.beforeEach(async ({ page }) => {
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
@@ -641,7 +645,7 @@ test.describe(`${SLUG} — Screen 6 (Confirmation)`, () => {
   // Helper: fill and submit form to reach Screen 6
   async function reachScreen6(page) {
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
@@ -719,7 +723,7 @@ test.describe(`${SLUG} — i18n (English)`, () => {
 
   test('EN profile screen shows "A little about you" label', async ({ page }) => {
     await loadPage(page, TEST_PAGE_EN);
-    await answerAllQuestions(page, 'sometimes');
+    await answerReportProfile(page, DUAL_PROFILE, ANSWER_LABELS_EN);
     await page.waitForTimeout(500);
 
     await expect(page.getByText(/a little about you/i)).toBeVisible({ timeout: 5_000 });
@@ -727,7 +731,7 @@ test.describe(`${SLUG} — i18n (English)`, () => {
 
   test('EN form validation shows English error messages for name and email', async ({ page }) => {
     await loadPage(page, TEST_PAGE_EN);
-    await answerAllQuestions(page, 'sometimes');
+    await answerReportProfile(page, DUAL_PROFILE, ANSWER_LABELS_EN);
     // Fill profile screen (EN uses same dropdown structure)
     await fillProfileScreen(page);
     // NOTE: staging's EN `ctaButtonText` prop is currently un-localised and shows
@@ -758,7 +762,7 @@ test.describe(`${SLUG} — E2E: MailerSend API check`, () => {
     const testEmail = `will+nem-test-${Date.now()}@teamzzissou.io`;
 
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
@@ -819,7 +823,7 @@ test.describe(`${SLUG} — E2E: Gmail inbox check`, () => {
 
     // Submit quiz + profile + form
     await loadPage(page);
-    await answerAllQuestions(page, 'regelmatig');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);
@@ -914,7 +918,7 @@ test.describe(`${SLUG} — General`, () => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
 
     const realErrors = errors.filter(
       (e) => !e.includes('favicon') && !e.includes('third-party') && !e.includes('ERR_BLOCKED')
@@ -937,7 +941,7 @@ test.describe(`${SLUG} — General`, () => {
     // Playwright auto-scrolls to each answer, pushing the run past the 30s default
     await page.setViewportSize({ width: 375, height: 812 });
     await loadPage(page);
-    await answerAllQuestions(page, 'soms');
+    await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
     await page.waitForTimeout(600);

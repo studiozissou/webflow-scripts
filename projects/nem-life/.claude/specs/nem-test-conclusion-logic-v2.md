@@ -140,7 +140,17 @@ sheet and the code cannot drift.
 `projects/nem-life/.claude/research/nem-conclusion-ids.csv` in Alex's sheet row order,
 so the `key` and `ID` columns paste in line for line. The generated `key` column was
 diffed against the sheet's own key column on 2026-08-17 and is identical row for row.
-**Do not edit Alex's Google Sheet directly** — hand the CSV over and let him paste.
+
+The CSV is also published as a Google Sheet in Will's Drive, **`NEM_TEST_01_Conclusion_IDs`**
+([link](https://docs.google.com/spreadsheets/d/1vIfnZqCCcJ7goaIBsm0MYasTs85CRZcPns5ArOcqGVA/edit)),
+created 2026-08-17. Not yet shared with Alex.
+
+> **Alex's own sheet was not modified, and cannot be from here.** The Drive integration
+> exposes create, copy, read, share and *metadata* update only — there is no cell or
+> range write. Regenerating his sheet wholesale was rejected: it holds Christel's 27
+> finished Dutch texts, and the read path flattens in-cell paragraph breaks to spaces,
+> so a round-trip would silently destroy her paragraphing. The ID column has to be
+> pasted into his sheet by hand, by him or by Will.
 
 The same module owns `conclusionKeyFor`, so the keys the component looks up at runtime
 and the keys Christel writes against are produced by one function.

@@ -108,8 +108,17 @@ function contactLink(page) {
 /** Drive the whole flow to the conclusion screen in one call. */
 async function reachConclusion(page, { answers, gender = null, path = TEST_PAGE_NL, query = '' } = {}) {
   await loadPage(page, path, query);
-  await page.getByRole('button', { name: /start|begin/i }).first().click();
-  await page.waitForTimeout(600);
+
+  /* Question 1 renders immediately — there is no start screen on the live page, whatever
+   * the 6-screen description in the phase-b spec says. This suite was written from that
+   * spec and never run, so it clicked a start button that does not exist and every test
+   * died here rather than in its own assertion. Click it only if it is actually there. */
+  const start = page.getByRole('button', { name: /start|begin/i });
+  if (await start.count()) {
+    await start.first().click();
+    await page.waitForTimeout(600);
+  }
+
   if (typeof answers === 'function') await answers(page);
   else await answerAllQuestions(page, answers);
   await fillProfileScreen(page, gender);

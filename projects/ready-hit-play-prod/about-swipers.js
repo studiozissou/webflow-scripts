@@ -52,6 +52,8 @@
   function measureSlides(slider) {
     let imageH = 0;
     let captionH = 0;
+    let aspect = 0;
+    let boxW = 0;
     slider.querySelectorAll('.swiper-slide').forEach((slide) => {
       const imgWrap = slide.querySelector('.about_image-wrapper');
       if (imgWrap) {
@@ -61,11 +63,13 @@
         // fonts.ready re-measures below correct any early guess.
         const ratio = img?.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
         imageH = Math.max(imageH, width * ratio);
+        aspect = Math.max(aspect, img?.naturalWidth ? img.naturalWidth / img.naturalHeight : 1);
+        boxW = Math.max(boxW, width);
       }
       const cap = slide.querySelector('.spacer-medium');
       if (cap) captionH = Math.max(captionH, cap.offsetHeight);
     });
-    return { imageH, captionH };
+    return { imageH, captionH, aspect, boxW };
   }
 
   /** Drop every JS-set sizing property — tablet/mobile fall back to CSS auto height. */
@@ -77,6 +81,7 @@
     sectionEl.querySelectorAll('[data-slider]').forEach((slider) => {
       slider.style.removeProperty('--slide-max-height');
       slider.style.removeProperty('--slide-caption-height');
+      slider.style.removeProperty('--slide-image-width');
     });
     lastSizes = '';
   }
@@ -113,7 +118,7 @@
     const applied = [];
 
     sectionEl.querySelectorAll('[data-slider]').forEach((slider) => {
-      const { imageH, captionH } = measureSlides(slider);
+      const { imageH, captionH, aspect, boxW } = measureSlides(slider);
       if (!imageH) return;
 
       // Reserve the caption PLUS a title-height gap inside the slide box.
@@ -129,6 +134,18 @@
       // Also keeps captioned and uncaptioned images the same size and position.
       // Consumed by ready-hit-play.css § About slider image sizing.
       slider.style.setProperty('--slide-caption-height', reserved + 'px');
+
+      // Width the image actually renders at. When the slide box is short the
+      // image is height-capped, so `width: auto` shrinks it well inside the
+      // column (293px against a 479px column at a 650px viewport) while the
+      // caption still spans the full column. The caption is constrained to this
+      // so it always matches the image edge-for-edge.
+      const imageBoxH = slideH - reserved;
+      slider.style.setProperty(
+        '--slide-image-width',
+        Math.min(boxW, imageBoxH * aspect) + 'px'
+      );
+
       applied.push(Math.round(slideH));
     });
 

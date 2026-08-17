@@ -1362,6 +1362,14 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 @media (min-width: 992px) {
   .section_about-hero [data-slider] .slide-caption {
     justify-content: flex-start;
+    /* Match the caption to the image's rendered width. When the slide box is
+       short the image is height-capped and `width: auto` shrinks it inside the
+       column, but the caption would still span the full column and overhang it
+       (479px caption against a 293px image at a 650px viewport).
+       --slide-image-width is set by about-swipers.js. */
+    max-width: var(--slide-image-width, 100%);
+    margin-left: auto;
+    margin-right: auto;
   }
   .section_about-hero [data-slider] .slide-caption .about_image-wrapper {
     height: calc(100% - var(--slide-caption-height, 0px));

@@ -15,6 +15,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { buildComponent, SRC_DIR } from "../../tools/nem/build-component.js";
+import * as REAL_TEXTS from "../../projects/nem-life/src/nem-conclusion-texts.js";
 
 const bundle = buildComponent();
 
@@ -134,6 +135,55 @@ describe("Christel's copy reaches the bundle intact", () => {
 
   test("the component splits paragraphs rather than rendering one block", () => {
     assert.match(bundle, /conclusionText\.split\(\/\\n\{2,\}\/\)/);
+  });
+});
+
+describe("comments are stripped from production code", () => {
+  /* Everything below the provenance header should be code. The header is the only
+   * comment that survives, because without it nobody knows the file is generated. */
+  const body = bundle.slice(bundle.indexOf("*/") + 2);
+
+  test("no block comments survive in the body", () => {
+    assert.doesNotMatch(body, /\/\*/);
+  });
+
+  test("no line comments survive in the body", () => {
+    assert.doesNotMatch(body, /(^|[^:"'`\\])\/\/(?![^\n]*["'`])/m);
+  });
+
+  test("the provenance header itself is kept", () => {
+    assert.match(bundle, /GENERATED FILE/);
+    assert.ok(bundle.indexOf("GENERATED FILE") < bundle.indexOf("import "));
+  });
+
+  test("regex literals are not mistaken for comments", () => {
+    /* /\n{2,}/ and the email pattern both contain slashes a naive stripper would eat. */
+    assert.match(body, /conclusionText\.split\(\/\\n\{2,\}\/\)/);
+    assert.match(body, /\[\^\\s@\]\+@\[\^\\s@\]\+/);
+  });
+
+  test("Christel's copy survives byte for byte", () => {
+    for (const key of Object.keys(REAL_TEXTS.NL_VROUW)) {
+      assert.ok(
+        bundle.includes(JSON.stringify(REAL_TEXTS.NL_VROUW[key])),
+        `conclusion text for "${key}" was altered by comment stripping`,
+      );
+    }
+  });
+
+  test("all 27 texts are present, not just some", () => {
+    assert.equal(Object.keys(REAL_TEXTS.NL_VROUW).length, 27);
+  });
+
+  test("Dutch prose containing slashes is untouched", () => {
+    /* "(ver)oordelen" and similar bracket/slash constructions appear in her copy. */
+    assert.match(bundle, /\(ver\)oordelen/);
+  });
+
+  test("stripping actually removed something — the test is not vacuous", () => {
+    const withComments = readFileSync(resolve(SRC_DIR, "nem-test-scoring.js"), "utf8");
+    assert.match(withComments, /Fixed tiebreak order/);
+    assert.doesNotMatch(bundle, /Fixed tiebreak order/);
   });
 });
 

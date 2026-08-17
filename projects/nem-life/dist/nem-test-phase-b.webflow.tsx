@@ -2,7 +2,7 @@
  * GENERATED FILE — do not edit here. Paste this whole file into the Webflow
  * custom code component.
  *
- * Regenerate with:  node tools/nem/build-component.js
+ * Regenerate with:  npm run build:nem   (regenerates, then typechecks)
  *
  * Built from, and edit instead:
  *   projects/nem-life/src/nem-test-phase-b.tsx
@@ -19,31 +19,6 @@ import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
 import { useState, useMemo, useCallback, useEffect } from "react";
 
-/* ═══ inlined from nem-test-conclusion-ids.js ════════════════════════════════ */
-
-/* nem-test-conclusion-ids.js — conclusion keys and IDs for the NEM Test (engine v2).
- *
- * One source of truth for three things that must never drift apart:
- *   1. the conclusion key the component looks up in the text tables
- *   2. the conclusion ID Alex and Christel quote when discussing a specific text
- *   3. the 54-row enumeration that generates their Google Sheet
- *
- * Because the sheet is generated from the same functions the component calls at
- * runtime, a text can never be written against a key the engine cannot produce.
- *
- * Spec: projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md § 3
- * Tests: tests/nem/nem-conclusion-ids.test.js
- * Sheet: NEM_TEST_01_Default_texts (owner alex@nemlife.com)
- */
-
-/* ─── Mechanisms ─── */
-
-/* Sheet row order. This is the order Alex's sheet lists mechanisms in, and it drives
- * the row order of the generated ID column so the two paste together line for line.
- *
- * NOTE: this is NOT the tiebreak order. The spec's TIEBREAK_ORDER was inferred from
- * an earlier revision of the sheet and no longer matches it — see spec § 5. Keep the
- * two constants separate; they answer different questions. */
 const SHEET_ORDER = [
   "fear",
   "selfRejection",
@@ -52,8 +27,6 @@ const SHEET_ORDER = [
   "emotionalNumbing",
 ];
 
-/* Two letters throughout, deliberately: a single-letter code for fear would collide
- * with the `F` gender segment when read by eye. */
 const MECHANISM_CODE = {
   selfRejection: "SR",
   emotionalNumbing: "EM",
@@ -72,23 +45,10 @@ const MECHANISM_TO_KEY = {
 
 const GENDER_CODE = { female: "F", male: "M" };
 
-/* Flat outcomes have no mechanism — the whole point is that none stands out (low)
- * or none stands apart (high). Both skip the report and route to a contact link. */
 const FLAT_OUTCOME_CODE = { "flat-low": "LOW", "flat-high": "HIGH" };
 
-/* The text-set number. Alex's current sheet is set 01 ("Default texts"); the prefix
- * leaves room for alternate sets later without renumbering anything. */
 const TEXT_SET = "01";
 
-/* ─── Keys ─── */
-
-/* Build the conclusion-text key from an outcome.
- *
- * Dual keys are DIRECTIONAL — `fear_self-rejection` and `self-rejection_fear` are
- * different texts. The Phase B canonical-ordering fix is deliberately reversed here:
- * it existed because the table only held 10 unordered pairs, and it now holds all 20.
- * The blank-conclusion risk that fix guarded against is covered instead by a
- * completeness test over all 27 keys in every text table. */
 function conclusionKeyFor({ outcome, primary, secondary }) {
   if (outcome === "flat-low" || outcome === "flat-high") return outcome;
 
@@ -103,17 +63,6 @@ function conclusionKeyFor({ outcome, primary, secondary }) {
   return `${leading}_${following}`;
 }
 
-/* ─── IDs ─── */
-
-/* Build the conclusion ID: `{SET}{GENDER}-{MECH}[-{MECH}]`, or `{SET}{GENDER}-LOW|HIGH`.
- *
- *   01F-FR          female, single, fear
- *   01F-SR-FP       female, dual, self-rejection leading, false-power following
- *   01F-FP-SR       female, dual, the reverse — a different text
- *   01M-LOW         male, flat-low
- *
- * Derived from the outcome rather than the sheet row position, so reordering the
- * sheet cannot silently remap an ID onto a different text. */
 function conclusionIdFor(gender, { outcome, primary, secondary }, textSet = TEXT_SET) {
   const genderCode = GENDER_CODE[gender];
   if (!genderCode) throw new Error(`Unknown gender: ${gender}`);
@@ -134,12 +83,6 @@ function conclusionIdFor(gender, { outcome, primary, secondary }, textSet = TEXT
   return `${prefix}-${leading}-${following}`;
 }
 
-/* The 27 conclusion keys, in sheet order. Identical for both genders — gender selects
- * which text table to read, not which keys exist.
- *
- * The component builds its text tables from this list rather than hand-listing keys, so
- * a table can never be missing an outcome the engine can produce. That is the guard
- * replacing Phase B's canonical key rewriting. */
 const CONCLUSION_KEYS = [
   "flat-low",
   "flat-high",
@@ -151,15 +94,9 @@ const CONCLUSION_KEYS = [
   ),
 ];
 
-/* ─── Sheet enumeration ─── */
-
-/* Every conclusion row the engine can produce, in Alex's sheet order:
- * per gender — the two flat outcomes, the five singles, then the twenty duals
- * grouped by leading mechanism. 54 rows total. */
 function enumerateConclusionRows(textSet = TEXT_SET) {
-  const rows = [];
 
-  for (const gender of ["female", "male"]) {
+  return ["female", "male"].flatMap((gender) => {
     const row = (type, outcome, primary, secondary) => ({
       gender,
       type,
@@ -171,47 +108,19 @@ function enumerateConclusionRows(textSet = TEXT_SET) {
       id: conclusionIdFor(gender, { outcome, primary, secondary }, textSet),
     });
 
-    rows.push(row("flat", "flat-low"));
-    rows.push(row("flat", "flat-high"));
-
-    for (const mech of SHEET_ORDER) rows.push(row("single", "single", mech));
-
-    for (const leading of SHEET_ORDER) {
-      for (const following of SHEET_ORDER) {
-        if (leading === following) continue;
-        rows.push(row("dual", "dual", leading, following));
-      }
-    }
-  }
-
-  return rows;
+    return [
+      row("flat", "flat-low", null, null),
+      row("flat", "flat-high", null, null),
+      ...SHEET_ORDER.map((mech) => row("single", "single", mech, null)),
+      ...SHEET_ORDER.flatMap((leading) =>
+        SHEET_ORDER.filter((following) => following !== leading).map((following) =>
+          row("dual", "dual", leading, following),
+        ),
+      ),
+    ];
+  });
 }
 
-/* ═══ inlined from nem-test-scoring.js ═══════════════════════════════════════ */
-
-/* nem-test-scoring.js — pure scoring engine for the NEM Test Phase B component (v2).
- *
- * Extracted from nem-test-phase-b.tsx so the scoring logic can be unit-tested with
- * `node --test` (the .tsx cannot be imported directly — it carries React/Webflow deps).
- * The component imports { calculateScores } from this file. No React/Webflow imports here.
- *
- * Conclusion keys and IDs live in ./nem-test-conclusion-ids.js, which also generates
- * Alex's text sheet — so a text can never be written against a key this engine cannot
- * produce, and vice versa.
- *
- * Spec:  projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md § 4
- * Tests: tests/nem/nem-test-scoring.test.js
- */
-
-/* ─── Mechanism mapping ───
- *
- * Question indices are unchanged from Phase B — only the object keys moved from Dutch
- * to English (v2 item 5). The Dutch mechanism *names* remain in the user-facing NL copy;
- * this is a code-identifier change only.
- *
- * `bodyQ` and `situationalQ` are no longer used for tiebreaking (see TIEBREAK_ORDER) but
- * stay because the report prompt still references them, and they may return as a
- * second-level rule. */
 const MECHANISM_MAP = {
   selfRejection:    { questions: [0, 1, 6, 16], bodyQ: 16, situationalQ: 0 },
   emotionalNumbing: { questions: [2, 7, 12, 17], bodyQ: 12, situationalQ: 17 },
@@ -220,16 +129,6 @@ const MECHANISM_MAP = {
   falseHope:        { questions: [5, 10, 11, 15], bodyQ: 10, situationalQ: 15 },
 };
 
-/* Fixed tiebreak order, replacing Phase B's body + situational tiebreak.
- *
- * This is Christel's clinical order (confirmed by Will, 2026-08-17), which is also
- * MECHANISM_MAP declaration order. It is NOT derived from Alex's sheet row order —
- * that sheet reads fear → self-rejection → false-hope → false-power → emotional-numbing,
- * and an earlier draft of the spec wrongly cited it as the justification.
- *
- * Not to be confused with SHEET_ORDER in nem-test-conclusion-ids.js, which drives the
- * row order of the generated text sheet and nothing else. The two answer different
- * questions and must not be merged. */
 const TIEBREAK_ORDER = [
   "selfRejection",
   "emotionalNumbing",
@@ -238,37 +137,21 @@ const TIEBREAK_ORDER = [
   "falseHope",
 ];
 
-/* ─── Thresholds ─── */
-
-/* Out of 16 — the average of answering "soms" throughout. Below this, a mechanism is
- * not distinctive enough to name at all, as primary or secondary. */
 const MIN_MECHANISM_SCORE = 8;
 
-/* A secondary must sit within this many points of the primary to be named. */
 const SECONDARY_GAP = 3;
 
-/* max - min. At or below this, with every mechanism above the floor, the profile is
- * undifferentiated rather than led by anything. */
 const FLAT_SPREAD = 3;
 
-/* ─── Scoring engine ─── */
-
-/* Score the answers and resolve which conclusion text to render.
- *
- * `gender` is "female" | "male" — it only affects the conclusion ID, but it is required
- * rather than defaulted so a caller that forgets it fails loudly instead of silently
- * labelling everyone female.
- *
- * Evaluation order matters: flat-low is checked before flat-high, so 7,7,7,7,7 is
- * flat-low (nothing clears the floor) rather than flat-high (nothing stands apart). */
 function calculateScores(answers, gender) {
-  const scores = {};
-  for (const [mechanism, { questions }] of Object.entries(MECHANISM_MAP)) {
-    scores[mechanism] = questions.reduce((sum, qi) => sum + (answers?.[qi] ?? 0), 0);
-  }
 
-  /* Sort by score descending, ties broken by fixed order rather than by whatever
-   * order Object.entries happened to produce. */
+  const scores = Object.fromEntries(
+    Object.entries(MECHANISM_MAP).map(([mechanism, { questions }]) => [
+      mechanism,
+      questions.reduce((sum, qi) => sum + (answers?.[qi] ?? 0), 0),
+    ]),
+  );
+
   const sorted = Object.entries(scores).sort(
     (a, b) => b[1] - a[1] || TIEBREAK_ORDER.indexOf(a[0]) - TIEBREAK_ORDER.indexOf(b[0]),
   );
@@ -276,24 +159,25 @@ function calculateScores(answers, gender) {
   const max = sorted[0][1];
   const min = sorted[sorted.length - 1][1];
 
-  let outcome;
-  let primary = null;
-  let secondary = null;
+  const isFlatLow = max < MIN_MECHANISM_SCORE;
+  const isFlatHigh = !isFlatLow && min >= MIN_MECHANISM_SCORE && max - min <= FLAT_SPREAD;
+  const isFlat = isFlatLow || isFlatHigh;
 
-  if (max < MIN_MECHANISM_SCORE) {
-    outcome = "flat-low";
-  } else if (min >= MIN_MECHANISM_SCORE && max - min <= FLAT_SPREAD) {
-    outcome = "flat-high";
-  } else {
-    primary = sorted[0][0];
+  const primary = isFlat ? null : sorted[0][0];
 
-    const [candidate, candidateScore] = sorted[1];
-    if (candidateScore >= MIN_MECHANISM_SCORE && max - candidateScore <= SECONDARY_GAP) {
-      secondary = candidate;
-    }
+  const [candidate, candidateScore] = sorted[1];
+  const secondary =
+    !isFlat && candidateScore >= MIN_MECHANISM_SCORE && max - candidateScore <= SECONDARY_GAP
+      ? candidate
+      : null;
 
-    outcome = secondary ? "dual" : "single";
-  }
+  const outcome = isFlatLow
+    ? "flat-low"
+    : isFlatHigh
+      ? "flat-high"
+      : secondary
+        ? "dual"
+        : "single";
 
   return {
     scores,
@@ -302,30 +186,11 @@ function calculateScores(answers, gender) {
     outcome,
     conclusionKey: conclusionKeyFor({ outcome, primary, secondary }),
     conclusionId: conclusionIdFor(gender, { outcome, primary, secondary }),
-    /* Flat outcomes route to a contact link instead of the opt-in and report — the
-     * report is built around one clear mechanism, which is exactly what is absent. */
+
     skipsReport: outcome === "flat-low" || outcome === "flat-high",
     totalScore: Object.values(scores).reduce((a, b) => a + b, 0),
   };
 }
-
-/* ═══ inlined from nem-conclusion-texts.js ═══════════════════════════════════ */
-
-/* ─────────────────────────────────────────────────────────────────────────────
- * GENERATED FILE — do not edit here.
- *
- * Christel's conclusion copy, generated from
- *   projects/nem-life/.claude/research/nem-conclusion-texts.csv
- * which is a CSV export of Alex's sheet NEM_TEST_01_Default_texts.
- *
- * Regenerate with:  node tools/nem/build-conclusion-texts.js
- *
- * Keys are conclusion keys, so these tables are looked up directly by whatever
- * calculateScores() returns. Unwritten texts are omitted rather than emitted
- * empty, so the component's visible placeholder shows through instead of a blank.
- *
- * Coverage at generation: 27 of 108 texts written.
- * ───────────────────────────────────────────────────────────────────────────── */
 
 const NL_VROUW = {
   "flat-low": "Op basis van je antwoorden springt er niets duidelijk uit. De reacties die deze test meet liggen bij jou allemaal dicht bij elkaar, en geen ervan speelt een hoofdrol.\n\nDat kan verschillende dingen betekenen. Misschien herken je jezelf niet in de situaties die we je hebben voorgelegd. Misschien heb je al veel aan jezelf gewerkt en klopt deze uitkomst precies. En soms vangen twintig vragen nu eenmaal niet wat er bij jou speelt.\n\nEen persoonlijk rapport heeft hier weinig zin - dat wordt opgebouwd rond één duidelijke reactie, en die is er nu niet. Herken je je hier niet in, of wil je er toch over doorpraten? Laat het ons weten.",
@@ -363,13 +228,10 @@ const EN_VROUW = {};
 
 const EN_MAN = {};
 
-/* ═══ import aliases, re-declared after inlining ═══════════════════════ */
 const REAL_NL_VROUW = NL_VROUW;
 const REAL_NL_MAN = NL_MAN;
 const REAL_EN_VROUW = EN_VROUW;
 const REAL_EN_MAN = EN_MAN;
-
-/* ═══ nem-test-phase-b.tsx ══════════════════════════════════════════ */
 
 declare global {
   interface Window {
@@ -383,19 +245,6 @@ declare global {
   }
 }
 
-/* ─── Scoring engine ───
- * Lives in ./nem-test-scoring.js (mechanism mapping, thresholds, flat detection,
- * fixed-order tiebreak) so it can be unit-tested with `node --test`
- * (tests/nem/nem-test-scoring.test.js). Conclusion keys and IDs live alongside it in
- * ./nem-test-conclusion-ids.js, which also generates Alex's text sheet.
- *
- * ⚠️ DO NOT paste this file into Webflow. Everything in Webflow runs inside one custom
- * code component, so the relative imports below cannot resolve there. Run
- * `npm run build:nem` and paste projects/nem-life/dist/nem-test-phase-b.webflow.tsx,
- * which has the sibling modules inlined. Edit here; never edit the generated file. */
-
-/* ─── Gender normalisation ───
- * The Designer collects Dutch values; the engine and the text sheet speak English. */
 const GENDER_TO_TABLE: Record<string, "man" | "vrouw"> = {
   man: "man",
   vrouw: "vrouw",
@@ -410,22 +259,16 @@ const GENDER_TO_ENGINE: Record<string, "male" | "female"> = {
   female: "female",
 };
 
-/* ─── Analytics stubs ─── */
 const EVENTS = {
   TEST_COMPLETED: "nem_test_completed",
   REPORT_REQUESTED: "nem_report_requested",
 };
 
-/* ─── Debug mode ───
- * `?nemdebug=1` renders the conclusion ID, key and scores above the conclusion text, so
- * Alex and Christel can confirm which variant fired without Designer access, and
- * Playwright can assert on it. Replaces the unused `const DEBUG = false`. */
 function isDebugMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("nemdebug") === "1";
 }
 
-/* ─── Locale detection ─── */
 function getLocale(): "nl" | "en" {
   if (typeof window !== "undefined") {
     if (window.location.pathname.startsWith("/en/")) return "en";
@@ -434,7 +277,6 @@ function getLocale(): "nl" | "en" {
   return "nl";
 }
 
-/* ─── Translations ─── */
 interface SelectOption {
   value: string;
   label: string;
@@ -455,7 +297,7 @@ interface Translations {
   profileContinueButton: string;
   conclusionLabel: string;
   bridgeLine: string;
-  /* Shown instead of the report CTA on flat-low and flat-high outcomes. */
+
   flatBridgeLine: string;
   contactUrl: string;
   contactLinkLabel: string;
@@ -494,28 +336,11 @@ interface Translations {
   conclusions: GenderedConclusions;
 }
 
-/* ─── Conclusion text tables ───
- *
- * Built from CONCLUSION_KEYS rather than hand-listed, so a table can never be missing an
- * outcome the engine can produce. That completeness guarantee is what replaced Phase B's
- * canonical key rewriting — see the v2 spec § 2.
- *
- * Christel's copy goes in the REAL_* overlays. Anything not yet written falls through to
- * a visible placeholder, so a missing text reads as "not written yet" in QA rather than
- * as a blank screen in production. */
-
 type ConclusionTable = Record<string, string>;
 
 function placeholderTable(marker: string, note: string): ConclusionTable {
   return Object.fromEntries(CONCLUSION_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
 }
-
-/* Christel's finished texts, generated from a CSV export of Alex's sheet by
- * tools/nem/build-conclusion-texts.js. 27 of 108 written as of 2026-08-17 (female Dutch
- * complete); the rest fall through to the placeholders below.
- *
- * Never paste her copy in by hand: copy-paste and rendered reads both flatten in-cell
- * paragraph breaks into spaces. Re-export the CSV and regenerate instead. */
 
 const NL_CONCLUSIONS_MAN: ConclusionTable = {
   ...placeholderTable("DUMMY man", "tekst volgt."),
@@ -730,10 +555,8 @@ const translations: Record<"nl" | "en", Translations> = {
   },
 };
 
-/* ─── Fonts ─── */
 const fontLink = `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Lato:wght@400;700&display=swap');`;
 
-/* ─── Shared styles ─── */
 const fieldStyle: React.CSSProperties = {
   width: "100%",
   padding: "14px 16px",
@@ -793,7 +616,6 @@ const pillButtonStyle: React.CSSProperties = {
   width: "100%",
 };
 
-/* ─── Component ─── */
 function Quiz({
   submitWebhookUrl,
   reassuranceText,
@@ -819,9 +641,6 @@ function Quiz({
   const locale = getLocale();
   const t = translations[locale];
 
-  // Webflow code-component props are NOT localizable — a prop holds one value
-  // across every locale (its Dutch default). So the Designer props are honoured
-  // only on the primary NL locale; every other locale uses the code translations.
   const questions = useMemo(
     () => [
       question1, question2, question3, question4, question5,
@@ -835,23 +654,14 @@ function Quiz({
      question16, question17, question18, question19, question20, t.questions]
   );
 
-  // Same rule for the two marketing-copy props (reassurance line + CTA label):
-  // prop override on NL, code translation elsewhere.
   const reassurance = locale === "nl" ? (reassuranceText || t.reassurance) : t.reassurance;
   const ctaLabel = (locale === "nl" ? ctaButtonText : "") || t.submitButtonText;
 
-  /* ─── Reduced-motion detection ───
-     Note: the answer-pill responsive layout (row on desktop, column on mobile)
-     is handled purely in CSS via the `.nem-answers` media query below — NOT a
-     JS `isMobile` flag. Webflow server-renders the component with `window`
-     undefined, so a JS breakpoint check is stale on a direct mobile load and
-     the pills stayed in the desktop row. CSS media queries are immune to that. */
   const prefersReducedMotion =
     typeof window !== "undefined"
       ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
       : false;
 
-  /* ─── State ─── */
   const [phase, setPhase] = useState<"quiz" | "profile" | "conclusion" | "optin" | "confirmation">(
     !interactive ? "conclusion" : "quiz"
   );
@@ -870,7 +680,6 @@ function Quiz({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [debugMode] = useState(isDebugMode);
 
-  /* ─── Answer selection ─── */
   const selectAnswer = useCallback(
     (answerIndex: number) => {
       const updatedAnswers = answers.map((a, i) => (i === currentStep ? answerIndex : a));
@@ -885,10 +694,8 @@ function Quiz({
           if (currentStep < 19) {
             setCurrentStep((s) => s + 1);
           } else {
-            /* Scoring is NOT computed here. v2 conclusion IDs are gender-scoped, and
-             * gender is collected on the profile screen that comes next — so the result
-             * is derived (see `result` below) once both answers and gender exist. */
-            setPhase("profile"); // → profile screen, then conclusion
+
+            setPhase("profile");
           }
           setAnimating(false);
         }, fadeDuration);
@@ -903,19 +710,6 @@ function Quiz({
     }
   }, [currentStep]);
 
-  /* ─── Profile continue handler ─── */
-  /* ─── Derived: the conclusion outcome ───
-   *
-   * Computed from answers + gender rather than stored, so it cannot go stale if either
-   * changes. Gender is only known after the profile screen, which is why this is not
-   * resolved when the last question is answered.
-   *
-   * Declared above handleSubmit deliberately: that callback closes over `result` and
-   * lists it as a dependency, so the binding must exist first.
-   *
-   * Falls back to "male" for the engine when gender is not yet set. The outcome is only
-   * ever read after the profile screen has validated gender, so the fallback keeps the
-   * hook total and unconditional rather than labelling anyone. */
   const result = useMemo(
     () => calculateScores(answers, GENDER_TO_ENGINE[gender] || "male"),
     [answers, gender]
@@ -935,7 +729,6 @@ function Quiz({
     setPhase("conclusion");
   }, [gender, ageCategory, relationshipStatus, t.errors]);
 
-  /* ─── Form submission (opt-in: name + email + consent only) ─── */
   const handleSubmit = useCallback(async () => {
     const errors: Record<string, string> = {};
     if (!firstName.trim()) errors.firstName = t.errors.firstNameEmpty;
@@ -951,7 +744,6 @@ function Quiz({
       return;
     }
 
-    // Honeypot check
     if (honeypot) {
       setPhase("confirmation");
       return;
@@ -977,8 +769,7 @@ function Quiz({
       },
       primaryMechanism: result.primary,
       secondaryMechanism: result.secondary,
-      /* v2: the report engine sees exactly the outcome the user saw, so a report can
-       * never be written against a different conclusion than the one on screen. */
+
       outcome: result.outcome,
       conclusionKey: result.conclusionKey,
       conclusionId: result.conclusionId,
@@ -1010,10 +801,9 @@ function Quiz({
 
     setSubmitting(false);
     setPhase("confirmation");
-    // window.dataLayer?.push({ event: EVENTS.REPORT_REQUESTED, locale });
+
   }, [firstName, email, nemMattersConsent, honeypot, result, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
-  /* ─── Go back to optin (from confirmation, for wrong email) ─── */
   const goBackToOptin = useCallback(() => {
     setEmail("");
     setToken(crypto.randomUUID());
@@ -1027,17 +817,11 @@ function Quiz({
   const conclusionText =
     t.conclusions[genderKey as keyof GenderedConclusions]?.[result.conclusionKey] || "";
 
-  /* Flat outcomes route to a contact link instead of the opt-in: the report is built
-   * around one clear mechanism, which is precisely what a flat profile lacks. */
   const isFlatOutcome = result.skipsReport;
 
-  /* Same pattern as ctaLabel: the Designer prop is honoured on NL only, because Webflow
-   * code-component props are not localizable. EN falls back to the code translation. */
   const contactHref = (locale === "nl" ? contactUrl : "") || t.contactUrl;
   const contactLabel = (locale === "nl" ? contactLinkLabel : "") || t.contactLinkLabel;
 
-  /* Publish scores for page-level analytics. In an effect, not in render — assigning to
-   * window during render is a side effect and would fire on every re-render. */
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.__nemTestScores = {
@@ -1084,15 +868,12 @@ function Quiz({
         }
       `}</style>
 
-      {/* ═══════════════════════════════════════════
-          QUIZ — Q1–Q20
-      ═══════════════════════════════════════════ */}
       {phase === "quiz" && (
         <div
           key={currentStep}
           className={animating ? "quiz-fade-out" : "quiz-fade-in"}
         >
-          {/* Step indicator */}
+
           <div
             className="flex items-center justify-between mb-4"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -1129,7 +910,6 @@ function Quiz({
             )}
           </div>
 
-          {/* Progress bar */}
           <div
             style={{
               width: "100%",
@@ -1151,7 +931,6 @@ function Quiz({
             />
           </div>
 
-          {/* Question */}
           <h3
             style={{
               fontFamily: "'Montserrat', sans-serif",
@@ -1166,7 +945,6 @@ function Quiz({
             {questions[currentStep]}
           </h3>
 
-          {/* Reassurance text — only on Q1 */}
           {currentStep === 0 && reassurance && (
             <p
               style={{
@@ -1182,7 +960,6 @@ function Quiz({
           )}
           {currentStep > 0 && <div style={{ marginBottom: 28 }} />}
 
-          {/* Answer pill buttons — layout via .nem-answers CSS (row desktop / column mobile) */}
           <div className="nem-answers">
             {t.answers.map((label, i) => {
               const isSelected = answers[currentStep] === i;
@@ -1230,9 +1007,6 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          PROFILE — Gender, Age, Relationship
-      ═══════════════════════════════════════════ */}
       {phase === "profile" && (
         <div className="quiz-fade-in flex flex-col gap-6">
           <h2
@@ -1250,7 +1024,7 @@ function Quiz({
           </h2>
 
           <div className="flex flex-col gap-4">
-            {/* Gender */}
+
             <div>
               <label htmlFor="nem-gender" style={labelStyle}>
                 {t.genderLabel}
@@ -1286,7 +1060,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Age category */}
             <div>
               <label htmlFor="nem-age" style={labelStyle}>
                 {t.ageCategoryLabel}
@@ -1322,7 +1095,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Relationship status */}
             <div>
               <label htmlFor="nem-relationship" style={labelStyle}>
                 {t.relationshipLabel}
@@ -1358,7 +1130,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Continue button */}
             <button
               onClick={handleProfileContinue}
               style={pillButtonStyle}
@@ -1379,12 +1150,9 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          CONCLUSION
-      ═══════════════════════════════════════════ */}
       {phase === "conclusion" && (
         <div className="quiz-slide-up flex flex-col gap-6">
-          {/* Label */}
+
           <span
             style={{
               fontSize: 13,
@@ -1398,8 +1166,6 @@ function Quiz({
             {t.conclusionLabel}
           </span>
 
-          {/* Debug badge (?nemdebug=1). QA scaffolding, not content — absent from the DOM
-              entirely when off, so it can never leak to a real user via CSS. */}
           {debugMode && (
             <code
               data-element="conclusion-debug"
@@ -1424,12 +1190,6 @@ function Quiz({
             </code>
           )}
 
-          {/* Conclusion text (gender-differentiated).
-              Christel writes in paragraphs separated by blank lines. HTML collapses
-              whitespace, so they are split into separate <p>s rather than rendered as
-              one block — otherwise her three-paragraph flat texts arrive as a wall.
-              The data-element hook stays on a wrapper so tests still read the whole
-              conclusion in one locator. */}
           <div
             data-element="conclusion-text"
             style={{
@@ -1453,8 +1213,6 @@ function Quiz({
             ))}
           </div>
 
-          {/* Bridge line — flat outcomes get a different one, because there is no report
-              to bridge to. */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1467,9 +1225,6 @@ function Quiz({
             {isFlatOutcome ? t.flatBridgeLine : t.bridgeLine}
           </p>
 
-          {/* Flat outcomes route to contact and stop here: no opt-in, no report. The
-              report is built around one clear mechanism, which is what these lack.
-              A plain anchor, deliberately — an embedded form is a future nice-to-have. */}
           {isFlatOutcome ? (
             <a
               data-element="conclusion-contact-link"
@@ -1504,9 +1259,6 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          OPT-IN FORM (name + email + consent only)
-      ═══════════════════════════════════════════ */}
       {phase === "optin" && (
         <div className="quiz-fade-in flex flex-col gap-6">
           <div>
@@ -1535,7 +1287,6 @@ function Quiz({
             </p>
           </div>
 
-          {/* Generic error */}
           {fieldErrors.generic && (
             <div aria-live="polite" style={{ color: "#e53e3e", fontSize: "0.875rem" }}>
               {fieldErrors.generic}
@@ -1543,7 +1294,7 @@ function Quiz({
           )}
 
           <div className="flex flex-col gap-4">
-            {/* First name */}
+
             <div>
               <input
                 type="text"
@@ -1570,7 +1321,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Email */}
             <div>
               <input
                 type="email"
@@ -1602,7 +1352,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Honeypot */}
             <div style={{ position: "absolute", left: "-9999px", opacity: 0, pointerEvents: "none" }} aria-hidden="true">
               <input
                 type="text"
@@ -1614,7 +1363,6 @@ function Quiz({
               />
             </div>
 
-            {/* Consent checkbox */}
             <div>
               <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
                 <input
@@ -1643,7 +1391,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Submit button */}
             <button
               disabled={!nemMattersConsent || submitting}
               onClick={handleSubmit}
@@ -1661,24 +1408,17 @@ function Quiz({
               {submitting ? "..." : ctaLabel}
             </button>
 
-            {/* Relieve line */}
             <p style={{ fontSize: "0.875rem", color: "var(--_token---text-olive, #706d56)", textAlign: "center", margin: 0 }}>
               {t.relieveLine}
             </p>
 
-            {/* Disclaimer intentionally omitted here — it already appears once on
-                the landing page below the module; rendering it again produced a
-                visible duplicate. `t.disclaimer` is kept for potential future use. */}
           </div>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          CONFIRMATION
-      ═══════════════════════════════════════════ */}
       {phase === "confirmation" && (
         <div className="quiz-scale-in flex flex-col gap-5" style={{ paddingTop: 16, paddingBottom: 16 }}>
-          {/* Label */}
+
           <span
             style={{
               fontSize: 13,
@@ -1692,7 +1432,6 @@ function Quiz({
             {t.confirmationLabel}
           </span>
 
-          {/* Main text */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1704,7 +1443,6 @@ function Quiz({
             {t.confirmationMain}
           </p>
 
-          {/* Secondary text */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1716,7 +1454,6 @@ function Quiz({
             {t.confirmationSecondary}
           </p>
 
-          {/* No email received */}
           <p
             style={{
               fontSize: "0.875rem",
@@ -1728,7 +1465,6 @@ function Quiz({
             {t.noEmailReceived}
           </p>
 
-          {/* Wrong email correction */}
           <p
             style={{
               fontSize: "0.875rem",
@@ -1781,8 +1517,7 @@ export default declareComponent(Quiz, {
       name: "CTA Button Text",
       defaultValue: "Ontvang mijn rapport",
     }),
-    /* Flat-low and flat-high outcomes route here instead of to the report.
-       ⚠️ Verify both URLs against the live site — they are assumed, not confirmed. */
+
     contactUrl: propTypes.Text({
       name: "Contact URL (flat outcomes)",
       defaultValue: "/contact",

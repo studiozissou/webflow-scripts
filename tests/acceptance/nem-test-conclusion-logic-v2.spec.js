@@ -239,7 +239,7 @@ test.describe(`${SLUG} — C5: Gender differentiation`, () => {
   test('debug badge gender prefix matches the selected gender', async ({ page }) => {
     await reachConclusion(page, { answers: answerDualProfile, gender: 'Vrouw', query: '?nemdebug=1' });
     const badgeText = await page.locator('[data-element="conclusion-debug"]').innerText();
-    expect(badgeText).toMatch(/\bF-/);
+    expect(badgeText).toMatch(/01F-/);
   });
 });
 

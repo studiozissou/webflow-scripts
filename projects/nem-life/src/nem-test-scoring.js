@@ -73,10 +73,16 @@ export const FLAT_SPREAD = 3;
  * Evaluation order matters: flat-low is checked before flat-high, so 7,7,7,7,7 is
  * flat-low (nothing clears the floor) rather than flat-high (nothing stands apart). */
 export function calculateScores(answers, gender) {
-  const scores = {};
-  for (const [mechanism, { questions }] of Object.entries(MECHANISM_MAP)) {
-    scores[mechanism] = questions.reduce((sum, qi) => sum + (answers?.[qi] ?? 0), 0);
-  }
+  /* Built with Object.fromEntries rather than by mutating an empty object: `{}` infers
+   * as the empty type, so every later `scores[mech]` read comes back `unknown` and every
+   * arithmetic operation on it is a compile error once this module is inlined into the
+   * .tsx component. fromEntries gives { [k: string]: number }, which indexes and adds. */
+  const scores = Object.fromEntries(
+    Object.entries(MECHANISM_MAP).map(([mechanism, { questions }]) => [
+      mechanism,
+      questions.reduce((sum, qi) => sum + (answers?.[qi] ?? 0), 0),
+    ]),
+  );
 
   /* Sort by score descending, ties broken by fixed order rather than by whatever
    * order Object.entries happened to produce. */
@@ -87,24 +93,28 @@ export function calculateScores(answers, gender) {
   const max = sorted[0][1];
   const min = sorted[sorted.length - 1][1];
 
-  let outcome;
-  let primary = null;
-  let secondary = null;
+  /* Expressed as consts rather than reassigned lets: `let primary = null` infers the
+   * type `null`, so assigning a mechanism name to it later is a compile error once this
+   * module is inlined into the .tsx component. */
+  const isFlatLow = max < MIN_MECHANISM_SCORE;
+  const isFlatHigh = !isFlatLow && min >= MIN_MECHANISM_SCORE && max - min <= FLAT_SPREAD;
+  const isFlat = isFlatLow || isFlatHigh;
 
-  if (max < MIN_MECHANISM_SCORE) {
-    outcome = "flat-low";
-  } else if (min >= MIN_MECHANISM_SCORE && max - min <= FLAT_SPREAD) {
-    outcome = "flat-high";
-  } else {
-    primary = sorted[0][0];
+  const primary = isFlat ? null : sorted[0][0];
 
-    const [candidate, candidateScore] = sorted[1];
-    if (candidateScore >= MIN_MECHANISM_SCORE && max - candidateScore <= SECONDARY_GAP) {
-      secondary = candidate;
-    }
+  const [candidate, candidateScore] = sorted[1];
+  const secondary =
+    !isFlat && candidateScore >= MIN_MECHANISM_SCORE && max - candidateScore <= SECONDARY_GAP
+      ? candidate
+      : null;
 
-    outcome = secondary ? "dual" : "single";
-  }
+  const outcome = isFlatLow
+    ? "flat-low"
+    : isFlatHigh
+      ? "flat-high"
+      : secondary
+        ? "dual"
+        : "single";
 
   return {
     scores,

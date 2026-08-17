@@ -9,6 +9,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  CONCLUSION_KEYS,
   MECHANISM_CODE,
   MECHANISM_TO_KEY,
   SHEET_ORDER,
@@ -17,6 +18,20 @@ import {
   conclusionKeyFor,
   enumerateConclusionRows,
 } from "../../projects/nem-life/src/nem-test-conclusion-ids.js";
+
+describe("CONCLUSION_KEYS — what a text table must cover", () => {
+  test("holds 27 keys: 2 flat + 5 single + 20 dual", () => {
+    assert.equal(CONCLUSION_KEYS.length, 27);
+    assert.equal(new Set(CONCLUSION_KEYS).size, 27);
+  });
+
+  test("is exactly the key set one gender's rows produce", () => {
+    const femaleKeys = enumerateConclusionRows()
+      .filter((r) => r.gender === "female")
+      .map((r) => r.key);
+    assert.deepEqual(CONCLUSION_KEYS, femaleKeys);
+  });
+});
 
 describe("conclusionIdFor — combined format", () => {
   test("flat outcomes carry the set, gender and outcome only", () => {

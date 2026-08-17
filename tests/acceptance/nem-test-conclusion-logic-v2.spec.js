@@ -32,8 +32,8 @@ const TEST_PAGE_EN = '/en/zelftesten/waarom-reageer-ik-zo';
 const TOTAL_QUESTIONS = 20;
 
 // Conclusion ID grammar from the spec:
-//   F-S-SR | F-D-SR-FP | F-G-LOW | F-G-HIGH  (and the M- equivalents)
-const CONCLUSION_ID_RE = /\b[FM]-(?:S-(?:SR|EM|FP|FR|FH)|D-(?:SR|EM|FP|FR|FH)-(?:SR|EM|FP|FR|FH)|G-(?:LOW|HIGH))\b/;
+//   01F-SR | 01F-SR-FP | 01F-LOW | 01F-HIGH  (and the 01M- equivalents)
+const CONCLUSION_ID_RE = /\b01[FM]-(?:(?:SR|EM|FP|FR|FH)(?:-(?:SR|EM|FP|FR|FH))?|LOW|HIGH)\b/;
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -160,7 +160,7 @@ test.describe(`${SLUG} — C2: Flat-low outcome`, () => {
     await reachConclusion(page, { answers: 'nooit', query: '?nemdebug=1' });
     const badge = page.locator('[data-element="conclusion-debug"]');
     await expect(badge).toBeVisible({ timeout: 10_000 });
-    expect(await badge.innerText()).toMatch(/[FM]-G-LOW/);
+    expect(await badge.innerText()).toMatch(/01[FM]-LOW/);
   });
 });
 
@@ -183,7 +183,7 @@ test.describe(`${SLUG} — C3: Flat-high outcome`, () => {
     await reachConclusion(page, { answers: 'heel vaak', query: '?nemdebug=1' });
     const badge = page.locator('[data-element="conclusion-debug"]');
     await expect(badge).toBeVisible({ timeout: 10_000 });
-    expect(await badge.innerText()).toMatch(/[FM]-G-HIGH/);
+    expect(await badge.innerText()).toMatch(/01[FM]-HIGH/);
   });
 
   test('flat-high and flat-low render different copy', async ({ page }) => {
@@ -215,7 +215,7 @@ test.describe(`${SLUG} — C4: Debug mode`, () => {
     await reachConclusion(page, { answers: answerDualProfile, query: '?nemdebug=1' });
     const badgeText = await page.locator('[data-element="conclusion-debug"]').innerText();
     // false-hope leading, false-power following
-    expect(badgeText).toMatch(/[FM]-D-FH-FP/);
+    expect(badgeText).toMatch(/01[FM]-FH-FP/);
     expect(badgeText).toContain('false-hope_false-power');
   });
 

@@ -109,6 +109,21 @@ When the test passes with no errors:
 
 ## Gotchas
 
+- **CMS template schema fails silently.** A malformed Webflow binding token renders as an
+  empty string rather than erroring, so the Rich Results Test can report a clean pass on a
+  template whose fields are all blank. Always test a **real published CMS item URL**, not
+  the template, and eyeball that the values are populated — not just that the JSON parses.
+  Run `node tools/entity-audit/validate-schema.js <file>` first; it catches bare `{{ }}`
+  and invented `+{{Field}}` placeholders before they ship. Token format is documented in
+  the `webflow-embeds` skill (`cms_schema_bindings`).
+- **Rich Results Test only reports rich-result types.** `Person`, `Organization`, `WebSite`
+  and `WebPage` generate no rich results, so a page carrying a full entity graph may report
+  only "Breadcrumbs — 1 valid item". Zero errors is the pass signal, not the item count.
+- **Code mode tests without publishing.** The CODE tab validates a pasted HTML document, so
+  schema can be checked before it goes live. The editor is CodeMirror — set its value via
+  the instance (`document.querySelector('.CodeMirror').CodeMirror.setValue(...)`); writing
+  to the textarea does not register and leaves the test button disabled.
+
 - `evaluate_script` must use function wrapper syntax: `() => { ... }` or `async () => { ... }`
 - The Rich Results Test page is a Google SPA — DOM may change structure. If extraction fails, fall back to reading `document.body.innerText` and parsing the plain text.
 - Some warnings are informational (e.g. "Speakable" is in beta). Flag but don't treat as blockers.

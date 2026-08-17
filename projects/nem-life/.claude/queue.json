@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-07-09",
+  "updated": "2026-08-11",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -219,7 +219,20 @@
       "status": "Ready to Build",
       "title": "NEM Test report delivery: brand the covering email and the PDF report",
       "description": "In the /verify n8n workflow (nem-verify.workflow.json), style the two visual surfaces of report delivery. (1) Send Report node (MailerSend): the covering email is currently plain text only — add a branded html body using table-based layout and inline styles so it renders across email clients including Outlook, keeping the existing text as the plain-text fallback. (2) Build HTML node: upgrade the report HTML that PDFShift renders into the attached PDF — add NEM logo header, brand colours, and layout for the mechanism scores, using modern CSS (Chromium engine allows flexbox, web fonts, @page margins). Support NL and EN locales for both surfaces. Re-import the workflow into n8n after editing (or apply live via the n8n MCP if deployed).",
-      "created": "2026-07-08"
+      "created": "2026-07-08",
+      "updated": "2026-08-11",
+      "note": "Spec written 2026-08-11: projects/nem-life/.claude/specs/nem-verify-report-email-and-pdf-branding.md. The report chain works but looks like a debug fixture - the covering email is one line of plain text with no HTML part at all, and the PDF is an unbranded serif document with no logo, colour or footer. Brand both to NEM Life (calm, warm-neutral, muted olive/gold accent). Touches Build HTML and Send Report only. Three defects found while specifying: (1) Build HTML does paragraph splitting and no markdown handling, so any ## heading, **bold** or - list in Alex's real prompt output will print as literal characters - latent today only because the stub returns flat prose; (2) the PDF filename is hardcoded NEM-rapport.pdf even for EN users; (3) email analytics read 0.00% opened because there is no HTML part for a tracking pixel to live in - adding one is a precondition for any delivery reporting. SEQUENCING: land nem-report-prompt-escaping-and-token-limit (P0) first, then RE-PULL LIVE before editing - both tasks edit the same workflow and n8n has no version history, so editing from a stale copy silently destroys the other's work. Colour tokens are NOT in the repo (global.css yields only a stray #4d65ff); pull them from the Webflow site variables or Figma 8jRJkSvjuMQzYkA1gXc646 before writing CSS. Open question for Alex: should the email carry a link back to the site? Clicks are the trustworthy half of the analytics and there is nothing to click while the report is a bare attachment."
+    },
+    {
+      "id": "nem-n8n-api-key-authentication-failing",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P0",
+      "status": "Blocked",
+      "title": "n8n API key is failing authentication, blocking all workflow work",
+      "created": "2026-08-11",
+      "updated": "2026-08-11",
+      "note": "DIAGNOSED 2026-08-11: the key is present but EXPIRED. N8N_API_KEY is a JWT; its exp claim is 2026-08-05T22:00:00Z - 6 days ago. Issued 2026-07-07 (iss n8n, aud public-api), so it carried a ~29-day lifetime. Not a missing or malformed key, and not an outage: n8n_health_check still returns ok against https://reus.app.n8n.cloud, while n8n_get_workflow and n8n_list_workflows return AUTHENTICATION_ERROR. Blocks everything that touches n8n: the P0 prompt-escaping fix cannot take its live snapshot (the only rollback point that exists, since n8n holds no version history for uKkMgMYoH5nOLoCR), the P2 email/PDF branding task, and any re-sync of the repo workflow JSON to live. Fix: n8n -> Settings -> n8n API -> create a new key, then update the N8N_API_KEY environment variable (referenced as ${N8N_API_KEY} by the n8n block in .mcp.json) and restart the MCP server. Confirm with n8n_get_workflow on uKkMgMYoH5nOLoCR mode 'structure' - it should return the node graph. Note the expiry when creating it: n8n lets you set the lifetime, and a longer one avoids a repeat. Worth diarising the new expiry date."
     },
     {
       "id": "nem-report-prompt-escaping-and-token-limit",
@@ -230,7 +243,9 @@
       "title": "NEM Test report prompt: make the prompt safe to edit and lift the token limit",
       "description": "In the live /verify workflow the Anthropic system prompt is a single-quoted JavaScript string literal inside the Generate Report node's jsonBody expression, so the first apostrophe or newline in Alex's real prompt breaks the node silently (the browser already got its 302). Move the prompt into a Report Prompt Set node as a plain fixed-value string so JSON.stringify handles all escaping. Also lift max_tokens from the live value of 1024 to the intended 8000, switch $json references to explicit $('Validate Token') references, and re-sync the repo workflow JSON to live. Prerequisite for any mechanism that lets the client edit the prompt himself.",
       "spec": "projects/nem-life/.claude/specs/nem-report-prompt-escaping-and-token-limit.md",
-      "created": "2026-07-09"
+      "created": "2026-07-09",
+      "updated": "2026-08-11",
+      "note": "PREPARED, NOT APPLIED (2026-08-11). Fix is built and unit-tested; the live workflow is untouched. Everything to apply it is in projects/nem-life/.claude/backend/changesets/nem-report-prompt-escaping/ - read its README.md first. Two defects in Generate Report on the live /verify workflow (n8n id uKkMgMYoH5nOLoCR, active): (1) the report system prompt sits between single quotes inside a JS expression, so the first apostrophe in Alex's real prompt throws - silently, because the browser already has its 302 from Respond Confirmed; (2) live max_tokens is 1024, which truncates a full report mid-sentence (repo JSON says 8000 - drift). Fix moves the prompt into a Set node as a fixed value so JSON.stringify does all escaping, rewires Valid? true-branch -> Report Prompt -> Generate Report while leaving Respond Confirmed and Mark Consumed on the direct fan-out, and lifts max_tokens to 8000. Tests: tests/nem/nem-verify-report-body.test.js, 21 passing - evaluates the real expression the way n8n does against a torture-test prompt, and pins the defect by asserting the old inlined form throws a SyntaxError. BLOCKER: the n8n API key is failing authentication, so the live snapshot (the only rollback point - n8n has no version history for this workflow) cannot be taken yet. Refresh N8N_API_KEY first. Spec assertion corrected: the Set node is typeVersion 3.5, so the path is parameters.assignments.assignments[0].value, not the v2 parameters.fields the spec previously named. Apply as a node-level diff, never as a whole-workflow import - the repo JSON is stale against live."
     },
     {
       "id": "nem-mailersend-trial-account-blocks-report-delivery",

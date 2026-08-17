@@ -1,0 +1,64 @@
+{
+  "_comment": [
+    "Operations payload for mcp__n8n__n8n_update_partial_workflow.",
+    "Surgical node-level diff — deliberately NOT a whole-workflow import, because",
+    "the repo copy of nem-verify.workflow.json has drifted from live (see runbook).",
+    "A full import would clobber live-only changes (Add To Newsletter group ID,",
+    "Consent? gate, the current stub prompt).",
+    "",
+    "Apply with validateOnly: true FIRST, read the result, then apply for real.",
+    "",
+    "NOTE ON `node.parameters.assignments.assignments[0].value`: paste Alex's real",
+    "prompt there verbatim. It must NOT begin with `=`. In the n8n UI the field must",
+    "stay in fixed-value mode, not Expression mode. That is the entire point of this fix."
+  ],
+  "id": "uKkMgMYoH5nOLoCR",
+  "intent": "Move the report system prompt out of the JS expression into a Set node so it can contain any character, and lift max_tokens from 1024 to 8000",
+  "operations": [
+    {
+      "type": "addNode",
+      "node": {
+        "name": "Report Prompt",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [780, 360],
+        "parameters": {
+          "mode": "manual",
+          "includeOtherFields": true,
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a1b2c3d4-0000-4000-8000-00000000rp01",
+                "name": "systemPrompt",
+                "type": "string",
+                "value": "TEST MODE — clearly-labelled stub. This is not Alex's report prompt.\n\nYou are writing a NEM Test report. Produce a short placeholder headed \"TESTRAPPORT / TEST REPORT\" in the requested language, referencing the reader's first name, primary mechanism and total score, so the delivery chain can be verified end to end. Do not present this as a real psychological assessment.\n\nWrite at least 400 words."
+              }
+            ]
+          },
+          "options": {}
+        }
+      }
+    },
+    {
+      "_comment": "Valid? true-branch: Generate Report is displaced by Report Prompt. Respond Confirmed and Mark Consumed stay on the direct fan-out — do not touch them, or the 302 starts waiting on the report chain.",
+      "type": "rewireConnection",
+      "source": "Valid?",
+      "from": "Generate Report",
+      "to": "Report Prompt",
+      "branch": "true"
+    },
+    {
+      "type": "addConnection",
+      "source": "Report Prompt",
+      "target": "Generate Report"
+    },
+    {
+      "_comment": "system: reads the Set node. max_tokens 8000. $json.* -> $('Validate Token').first().json.* because Report Prompt upstream rebinds $json. Body text is identical to generate-report.jsonBody.txt, which tests/nem/nem-verify-report-body.test.js evaluates.",
+      "type": "updateNode",
+      "nodeName": "Generate Report",
+      "updates": {
+        "parameters.jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Locale: ' + $('Validate Token').first().json.locale + '. Write the full report in ' + ($('Validate Token').first().json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $('Validate Token').first().json.firstName + '\\nGender: ' + $('Validate Token').first().json.gender + '\\nAge category: ' + $('Validate Token').first().json.ageCategory + '\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $('Validate Token').first().json.scoresJson + '\\nPrimary mechanism: ' + $('Validate Token').first().json.primaryMechanism + '\\nSecondary mechanism: ' + ($('Validate Token').first().json.secondaryMechanism || 'none') + '\\nTotal score: ' + $('Validate Token').first().json.totalScore } ] }) }}"
+      }
+    }
+  ]
+}

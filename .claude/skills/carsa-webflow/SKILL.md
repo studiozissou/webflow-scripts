@@ -44,6 +44,20 @@ as a proper Webflow component. Want me to note this for the team?"
 
 Only permitted `DOM` usage: semantic inline elements like `<span>` or `<code>` inside text nodes.
 
+### Narrow carve-out — Acuity booking iframe only (added 2026-07-14)
+
+One exception to the absolute rule, approved as decision **D4** in the service-site
+migration spec (`projects/carsa/.claude/specs/carsa-service-migration.md`):
+
+- **Permitted:** an HTML Embed containing **solely** the third-party Acuity
+  Scheduling booking `<iframe>` on the `/mot-and-car-servicing/{slug}` location
+  pages. There is no native Webflow element for a third-party booking iframe, so
+  this is unavoidable. All surrounding layout stays native Client First elements.
+- **NOT covered by this carve-out:** JSON-LD schema. Schema is written as a
+  first-class page property via `data_pages_tool > bulk_update_pages_schema_markup`,
+  **not** an HTML Embed. Never add schema as a code embed.
+- Nothing else. This exception does not reopen embeds for any other purpose.
+
 <!-- ═══════════════════════════════════════════════════════ -->
 
 ## Anti-Patterns

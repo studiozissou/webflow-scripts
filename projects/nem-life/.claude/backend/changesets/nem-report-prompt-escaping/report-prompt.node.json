@@ -1,0 +1,22 @@
+{
+  "parameters": {
+    "mode": "manual",
+    "includeOtherFields": true,
+    "assignments": {
+      "assignments": [
+        {
+          "id": "a1b2c3d4-0000-4000-8000-00000000rp01",
+          "name": "systemPrompt",
+          "type": "string",
+          "value": "TEST MODE — clearly-labelled stub. This is not Alex's report prompt.\n\nYou are writing a NEM Test report. Produce a short placeholder headed \"TESTRAPPORT / TEST REPORT\" in the requested language, referencing the reader's first name, primary mechanism and total score, so the delivery chain can be verified end to end. Do not present this as a real psychological assessment.\n\nWrite at least 400 words."
+        }
+      ]
+    },
+    "options": {}
+  },
+  "id": "b2000000-0000-4000-8000-00000000000e",
+  "name": "Report Prompt",
+  "type": "n8n-nodes-base.set",
+  "typeVersion": 3.5,
+  "position": [780, 360]
+}

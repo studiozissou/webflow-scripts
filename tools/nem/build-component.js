@@ -29,8 +29,23 @@ const OUT = resolve(REPO_ROOT, "projects/nem-life/dist/nem-test-phase-b.webflow.
 const COMPONENT = "nem-test-phase-b.tsx";
 
 /* Dependency order: conclusion-ids defines what scoring calls, scoring defines what the
- * component calls. Inlined in this order so nothing is referenced before it is declared. */
-const MODULES = ["nem-test-conclusion-ids.js", "nem-test-scoring.js"];
+ * component calls. Inlined in this order so nothing is referenced before it is declared.
+ * nem-conclusion-texts.js is itself generated — run build-conclusion-texts.js first if
+ * Christel's copy has changed. */
+const MODULES = [
+  "nem-test-conclusion-ids.js",
+  "nem-test-scoring.js",
+  "nem-conclusion-texts.js",
+];
+
+/* The component imports the text tables under different local names. Aliased imports are
+ * stripped along with the rest, so the aliases are re-declared here after inlining. */
+const ALIASES = [
+  ["REAL_NL_VROUW", "NL_VROUW"],
+  ["REAL_NL_MAN", "NL_MAN"],
+  ["REAL_EN_VROUW", "EN_VROUW"],
+  ["REAL_EN_MAN", "EN_MAN"],
+];
 
 const read = (name) => readFileSync(resolve(SRC_DIR, name), "utf8");
 
@@ -89,10 +104,16 @@ export function buildComponent() {
       ].join("\n\n"),
   );
 
+  const aliases = [
+    "/* ═══ import aliases, re-declared after inlining ═══════════════════════ */",
+    ...ALIASES.map(([local, exported]) => `const ${local} = ${exported};`),
+  ].join("\n");
+
   return [
     header,
     imports.join("\n"),
     ...sections,
+    aliases,
     `/* ═══ ${COMPONENT} ${"═".repeat(Math.max(0, 62 - COMPONENT.length))} */`,
     bodyWithoutImports(component),
   ].join("\n\n").replace(/\n{3,}/g, "\n\n") + "\n";

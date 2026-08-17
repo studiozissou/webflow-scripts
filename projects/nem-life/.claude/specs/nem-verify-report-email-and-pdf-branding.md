@@ -9,6 +9,16 @@
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, **active**)
 **Repo file:** `projects/nem-life/.claude/backend/nem-verify.workflow.json`
 
+> **⚠️ Partially superseded 2026-08-17 by `nem-report-json-and-error-visibility`.**
+> Alex's 12 Aug restructure means Claude returns JSON content with no formatting, so
+> **Defect 1 (markdown rendering) is dead — do not build the converter.** The branding work
+> itself still stands: the covering email is still one line of plain text with no HTML part,
+> and the PDF is still an unbranded serif document.
+>
+> Both specs rewrite `Build HTML`. **Land the JSON contract first** — it changes the node's
+> input shape from one prose blob to five named fields, and branding a template whose data
+> shape is about to change is wasted work.
+
 ## Summary
 
 The report chain works end to end but looks like a debug fixture. The covering email is
@@ -52,28 +62,30 @@ No `html`, no `reply_to`, no `settings`, no `tags`.
 
 ## Defects to fix alongside the branding
 
-### Defect 1 — markdown from Anthropic renders as literal characters
+### ~~Defect 1 — markdown from Anthropic renders as literal characters~~ — SUPERSEDED 2026-08-17
 
-`Build HTML` does paragraph splitting and nothing else. It has no markdown handling, so
-any `## Heading`, `**bold**`, `- bullet`, or `1.` list in the model's output reaches the
-PDF as raw characters: a line reading `## Jouw primaire mechanisme` prints with the
-hashes visible.
+**No longer applicable. Do not build the markdown converter this section describes.**
 
-This is invisible today only because the stub prompt returns flat prose. Alex's real
-prompt is long-form structured therapy writing and will almost certainly ask for
-headings and lists — the failure arrives with the prompt, not before. It is the same
-detonation pattern as `nem-report-prompt-escaping-and-token-limit`: latent, and triggered
-by content rather than by a deploy.
+The defect was real and was confirmed live on 2026-08-13: with a realistic prompt, Claude
+returned `# Persoonlijk Rapport`, `**bold**` and `-` bullets, and `Build HTML` passed the
+characters through to the PDF verbatim.
 
-**Fix:** render a constrained markdown subset in `Build HTML` — headings `##`/`###`,
-`**bold**`, `*italic*`, unordered `-`/`*` lists, ordered lists, and paragraphs. Not a
-general markdown engine; a small deterministic converter with the output escaped for
-HTML first, so report text can never inject markup into the template. Anything
-unrecognised falls through as a paragraph, exactly as today.
+Alex's 12 Aug restructure removes it by construction rather than by conversion. Claude now
+returns **content only, as JSON** with five plain-Dutch values and no formatting of any
+kind; all formatting lives in the template. There is no markdown left to render.
 
-Coordinate with the prompt: whatever subset the converter supports should be stated in
-Alex's system prompt as the allowed formatting vocabulary. Worth raising with him when
-the real prompt lands.
+Full design in `nem-report-json-and-error-visibility.md`. `Build HTML` is rewritten there to
+consume five named fields instead of splitting one prose blob, so the two specs touch the
+same node — **whichever lands second must re-pull live first.**
+
+<details>
+<summary>Original fix, kept for the record</summary>
+
+Render a constrained markdown subset in `Build HTML` — headings `##`/`###`, `**bold**`,
+`*italic*`, lists, and paragraphs. Not a general markdown engine; a small deterministic
+converter with output HTML-escaped first, so report text could never inject markup.
+
+</details>
 
 ### Defect 2 — the PDF filename is not localised
 

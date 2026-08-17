@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-12",
+  "lastUpdated": "2026-08-17",
   "note": "tsc-leadership-modal scrollbar-width reserve (no page jump) deployed to tsc-v2.webflow.io (677502e)",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -301,6 +301,16 @@
       "critical": false,
       "description": "Coconut MTD Compliant Software service page rework - new H1/meta, 4 new long-form sections, 2 quarterly-table embeds (deadlines + thresholds), feature blocks H2 to H3, persona cards hidden, FAQ replaced with 10 items as H3; includes IX2 accordion interaction check and a /features/scan-receipts regression control for the shared CMS template",
       "created": "2026-08-12"
+    },
+    {
+      "slug": "nem-report-json-and-error-visibility",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-report-json-and-error-visibility.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-17",
+      "description": "Every completed test fires an anonymous completion beacon (scores, outcome, conclusion key, no personal details) once the twenty questions are answered, and the report intro line is selected client side on conclusion key alone rather than key plus gender."
     }
   ]
 }

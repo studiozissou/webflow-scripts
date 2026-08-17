@@ -1,8 +1,314 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * GENERATED FILE — do not edit here. Paste this whole file into the Webflow
+ * custom code component.
+ *
+ * Regenerate with:  node tools/nem/build-component.js
+ *
+ * Built from, and edit instead:
+ *   projects/nem-life/src/nem-test-phase-b.tsx
+ *   projects/nem-life/src/nem-test-conclusion-ids.js
+ *   projects/nem-life/src/nem-test-scoring.js
+ *
+ * The modules are inlined because everything in Webflow runs inside one component,
+ * so relative imports cannot resolve. They stay separate in the repo because the
+ * unit tests cannot import a .tsx.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { calculateScores } from "./nem-test-scoring.js";
-import { CONCLUSION_KEYS } from "./nem-test-conclusion-ids.js";
+
+/* ═══ inlined from nem-test-conclusion-ids.js ════════════════════════════════ */
+
+/* nem-test-conclusion-ids.js — conclusion keys and IDs for the NEM Test (engine v2).
+ *
+ * One source of truth for three things that must never drift apart:
+ *   1. the conclusion key the component looks up in the text tables
+ *   2. the conclusion ID Alex and Christel quote when discussing a specific text
+ *   3. the 54-row enumeration that generates their Google Sheet
+ *
+ * Because the sheet is generated from the same functions the component calls at
+ * runtime, a text can never be written against a key the engine cannot produce.
+ *
+ * Spec: projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md § 3
+ * Tests: tests/nem/nem-conclusion-ids.test.js
+ * Sheet: NEM_TEST_01_Default_texts (owner alex@nemlife.com)
+ */
+
+/* ─── Mechanisms ─── */
+
+/* Sheet row order. This is the order Alex's sheet lists mechanisms in, and it drives
+ * the row order of the generated ID column so the two paste together line for line.
+ *
+ * NOTE: this is NOT the tiebreak order. The spec's TIEBREAK_ORDER was inferred from
+ * an earlier revision of the sheet and no longer matches it — see spec § 5. Keep the
+ * two constants separate; they answer different questions. */
+const SHEET_ORDER = [
+  "fear",
+  "selfRejection",
+  "falseHope",
+  "falsePower",
+  "emotionalNumbing",
+];
+
+/* Two letters throughout, deliberately: a single-letter code for fear would collide
+ * with the `F` gender segment when read by eye. */
+const MECHANISM_CODE = {
+  selfRejection: "SR",
+  emotionalNumbing: "EM",
+  falsePower: "FP",
+  fear: "FR",
+  falseHope: "FH",
+};
+
+const MECHANISM_TO_KEY = {
+  selfRejection: "self-rejection",
+  emotionalNumbing: "emotional-numbing",
+  falsePower: "false-power",
+  fear: "fear",
+  falseHope: "false-hope",
+};
+
+const GENDER_CODE = { female: "F", male: "M" };
+
+/* Flat outcomes have no mechanism — the whole point is that none stands out (low)
+ * or none stands apart (high). Both skip the report and route to a contact link. */
+const FLAT_OUTCOME_CODE = { "flat-low": "LOW", "flat-high": "HIGH" };
+
+/* The text-set number. Alex's current sheet is set 01 ("Default texts"); the prefix
+ * leaves room for alternate sets later without renumbering anything. */
+const TEXT_SET = "01";
+
+/* ─── Keys ─── */
+
+/* Build the conclusion-text key from an outcome.
+ *
+ * Dual keys are DIRECTIONAL — `fear_self-rejection` and `self-rejection_fear` are
+ * different texts. The Phase B canonical-ordering fix is deliberately reversed here:
+ * it existed because the table only held 10 unordered pairs, and it now holds all 20.
+ * The blank-conclusion risk that fix guarded against is covered instead by a
+ * completeness test over all 27 keys in every text table. */
+function conclusionKeyFor({ outcome, primary, secondary }) {
+  if (outcome === "flat-low" || outcome === "flat-high") return outcome;
+
+  const leading = MECHANISM_TO_KEY[primary];
+  if (!leading) throw new Error(`Unknown mechanism: ${primary}`);
+
+  if (outcome === "single") return leading;
+
+  const following = MECHANISM_TO_KEY[secondary];
+  if (!following) throw new Error(`Unknown mechanism: ${secondary}`);
+
+  return `${leading}_${following}`;
+}
+
+/* ─── IDs ─── */
+
+/* Build the conclusion ID: `{SET}{GENDER}-{MECH}[-{MECH}]`, or `{SET}{GENDER}-LOW|HIGH`.
+ *
+ *   01F-FR          female, single, fear
+ *   01F-SR-FP       female, dual, self-rejection leading, false-power following
+ *   01F-FP-SR       female, dual, the reverse — a different text
+ *   01M-LOW         male, flat-low
+ *
+ * Derived from the outcome rather than the sheet row position, so reordering the
+ * sheet cannot silently remap an ID onto a different text. */
+function conclusionIdFor(gender, { outcome, primary, secondary }, textSet = TEXT_SET) {
+  const genderCode = GENDER_CODE[gender];
+  if (!genderCode) throw new Error(`Unknown gender: ${gender}`);
+
+  const prefix = `${textSet}${genderCode}`;
+
+  const flatCode = FLAT_OUTCOME_CODE[outcome];
+  if (flatCode) return `${prefix}-${flatCode}`;
+
+  const leading = MECHANISM_CODE[primary];
+  if (!leading) throw new Error(`Unknown mechanism: ${primary}`);
+
+  if (outcome === "single") return `${prefix}-${leading}`;
+
+  const following = MECHANISM_CODE[secondary];
+  if (!following) throw new Error(`Unknown mechanism: ${secondary}`);
+
+  return `${prefix}-${leading}-${following}`;
+}
+
+/* The 27 conclusion keys, in sheet order. Identical for both genders — gender selects
+ * which text table to read, not which keys exist.
+ *
+ * The component builds its text tables from this list rather than hand-listing keys, so
+ * a table can never be missing an outcome the engine can produce. That is the guard
+ * replacing Phase B's canonical key rewriting. */
+const CONCLUSION_KEYS = [
+  "flat-low",
+  "flat-high",
+  ...SHEET_ORDER.map((mech) => MECHANISM_TO_KEY[mech]),
+  ...SHEET_ORDER.flatMap((leading) =>
+    SHEET_ORDER.filter((following) => following !== leading).map(
+      (following) => `${MECHANISM_TO_KEY[leading]}_${MECHANISM_TO_KEY[following]}`,
+    ),
+  ),
+];
+
+/* ─── Sheet enumeration ─── */
+
+/* Every conclusion row the engine can produce, in Alex's sheet order:
+ * per gender — the two flat outcomes, the five singles, then the twenty duals
+ * grouped by leading mechanism. 54 rows total. */
+function enumerateConclusionRows(textSet = TEXT_SET) {
+  const rows = [];
+
+  for (const gender of ["female", "male"]) {
+    const row = (type, outcome, primary, secondary) => ({
+      gender,
+      type,
+      leading: primary ? MECHANISM_TO_KEY[primary] : "",
+      following: secondary ? MECHANISM_TO_KEY[secondary] : "",
+      leadingMechanism: primary ?? null,
+      followingMechanism: secondary ?? null,
+      key: conclusionKeyFor({ outcome, primary, secondary }),
+      id: conclusionIdFor(gender, { outcome, primary, secondary }, textSet),
+    });
+
+    rows.push(row("flat", "flat-low"));
+    rows.push(row("flat", "flat-high"));
+
+    for (const mech of SHEET_ORDER) rows.push(row("single", "single", mech));
+
+    for (const leading of SHEET_ORDER) {
+      for (const following of SHEET_ORDER) {
+        if (leading === following) continue;
+        rows.push(row("dual", "dual", leading, following));
+      }
+    }
+  }
+
+  return rows;
+}
+
+/* ═══ inlined from nem-test-scoring.js ═══════════════════════════════════════ */
+
+/* nem-test-scoring.js — pure scoring engine for the NEM Test Phase B component (v2).
+ *
+ * Extracted from nem-test-phase-b.tsx so the scoring logic can be unit-tested with
+ * `node --test` (the .tsx cannot be imported directly — it carries React/Webflow deps).
+ * The component imports { calculateScores } from this file. No React/Webflow imports here.
+ *
+ * Conclusion keys and IDs live in ./nem-test-conclusion-ids.js, which also generates
+ * Alex's text sheet — so a text can never be written against a key this engine cannot
+ * produce, and vice versa.
+ *
+ * Spec:  projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md § 4
+ * Tests: tests/nem/nem-test-scoring.test.js
+ */
+
+/* ─── Mechanism mapping ───
+ *
+ * Question indices are unchanged from Phase B — only the object keys moved from Dutch
+ * to English (v2 item 5). The Dutch mechanism *names* remain in the user-facing NL copy;
+ * this is a code-identifier change only.
+ *
+ * `bodyQ` and `situationalQ` are no longer used for tiebreaking (see TIEBREAK_ORDER) but
+ * stay because the report prompt still references them, and they may return as a
+ * second-level rule. */
+const MECHANISM_MAP = {
+  selfRejection:    { questions: [0, 1, 6, 16], bodyQ: 16, situationalQ: 0 },
+  emotionalNumbing: { questions: [2, 7, 12, 17], bodyQ: 12, situationalQ: 17 },
+  falsePower:       { questions: [3, 8, 13, 18], bodyQ: 13, situationalQ: 18 },
+  fear:             { questions: [4, 9, 14, 19], bodyQ: 14, situationalQ: 19 },
+  falseHope:        { questions: [5, 10, 11, 15], bodyQ: 10, situationalQ: 15 },
+};
+
+/* Fixed tiebreak order, replacing Phase B's body + situational tiebreak.
+ *
+ * This is Christel's clinical order (confirmed by Will, 2026-08-17), which is also
+ * MECHANISM_MAP declaration order. It is NOT derived from Alex's sheet row order —
+ * that sheet reads fear → self-rejection → false-hope → false-power → emotional-numbing,
+ * and an earlier draft of the spec wrongly cited it as the justification.
+ *
+ * Not to be confused with SHEET_ORDER in nem-test-conclusion-ids.js, which drives the
+ * row order of the generated text sheet and nothing else. The two answer different
+ * questions and must not be merged. */
+const TIEBREAK_ORDER = [
+  "selfRejection",
+  "emotionalNumbing",
+  "falsePower",
+  "fear",
+  "falseHope",
+];
+
+/* ─── Thresholds ─── */
+
+/* Out of 16 — the average of answering "soms" throughout. Below this, a mechanism is
+ * not distinctive enough to name at all, as primary or secondary. */
+const MIN_MECHANISM_SCORE = 8;
+
+/* A secondary must sit within this many points of the primary to be named. */
+const SECONDARY_GAP = 3;
+
+/* max - min. At or below this, with every mechanism above the floor, the profile is
+ * undifferentiated rather than led by anything. */
+const FLAT_SPREAD = 3;
+
+/* ─── Scoring engine ─── */
+
+/* Score the answers and resolve which conclusion text to render.
+ *
+ * `gender` is "female" | "male" — it only affects the conclusion ID, but it is required
+ * rather than defaulted so a caller that forgets it fails loudly instead of silently
+ * labelling everyone female.
+ *
+ * Evaluation order matters: flat-low is checked before flat-high, so 7,7,7,7,7 is
+ * flat-low (nothing clears the floor) rather than flat-high (nothing stands apart). */
+function calculateScores(answers, gender) {
+  const scores = {};
+  for (const [mechanism, { questions }] of Object.entries(MECHANISM_MAP)) {
+    scores[mechanism] = questions.reduce((sum, qi) => sum + (answers?.[qi] ?? 0), 0);
+  }
+
+  /* Sort by score descending, ties broken by fixed order rather than by whatever
+   * order Object.entries happened to produce. */
+  const sorted = Object.entries(scores).sort(
+    (a, b) => b[1] - a[1] || TIEBREAK_ORDER.indexOf(a[0]) - TIEBREAK_ORDER.indexOf(b[0]),
+  );
+
+  const max = sorted[0][1];
+  const min = sorted[sorted.length - 1][1];
+
+  let outcome;
+  let primary = null;
+  let secondary = null;
+
+  if (max < MIN_MECHANISM_SCORE) {
+    outcome = "flat-low";
+  } else if (min >= MIN_MECHANISM_SCORE && max - min <= FLAT_SPREAD) {
+    outcome = "flat-high";
+  } else {
+    primary = sorted[0][0];
+
+    const [candidate, candidateScore] = sorted[1];
+    if (candidateScore >= MIN_MECHANISM_SCORE && max - candidateScore <= SECONDARY_GAP) {
+      secondary = candidate;
+    }
+
+    outcome = secondary ? "dual" : "single";
+  }
+
+  return {
+    scores,
+    primary,
+    secondary,
+    outcome,
+    conclusionKey: conclusionKeyFor({ outcome, primary, secondary }),
+    conclusionId: conclusionIdFor(gender, { outcome, primary, secondary }),
+    /* Flat outcomes route to a contact link instead of the opt-in and report — the
+     * report is built around one clear mechanism, which is exactly what is absent. */
+    skipsReport: outcome === "flat-low" || outcome === "flat-high",
+    totalScore: Object.values(scores).reduce((a, b) => a + b, 0),
+  };
+}
+
+/* ═══ nem-test-phase-b.tsx ══════════════════════════════════════════ */
 
 declare global {
   interface Window {

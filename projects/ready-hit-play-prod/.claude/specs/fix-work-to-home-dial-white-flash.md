@@ -439,3 +439,36 @@ present, and are out of scope here:
 2. **`fix-home-restore-closed-project` → "home > about > home (no case study)
    stays generic"** times out after ~3 min and closes the browser. Fails the
    same way on CDN. The other 3 tests in that spec pass.
+
+### 4. Post-review fixes (three-lens code review, all PASS)
+
+- **`_parseSize` also returns `Infinity` for `'0'`.** Measured live:
+  `--dial-case-border-radius` is `2.5rem` on desktop but **`0`** at 375px and
+  768px, and `_parseSize('0')` falls through every branch to the trailing
+  `return Infinity` (only the literal string `'auto'` is special-cased). Both
+  dial animations were passing that straight into
+  `gsap.set(videoWrap, { borderRadius: ... })`, so on mobile the radius pin was
+  silently a no-op. Pre-existing in `runDialExpandAnimation`; the shrink copied
+  it. Both now resolve `v.caseBR` through `_resolveLengthPx`, which returns 0
+  for `0` and 40 for `2.5rem`.
+- **One probe instead of two.** `_withProbe(read)` owns the create/append/remove
+  cycle (with `finally`, so the node is removed even if a read throws), and
+  `_resolveBoxPx(w, h)` measures both axes off a single element — one reflow
+  rather than two, mid-transition inside `leave()`.
+- **`caseVideoHeight` is now guarded** (`> 0`) before the expand tween, matching
+  the shrink path.
+- **Dropped a dead fallback.** The `runAfterEnter` wrapper lookup had
+  `data.next.container.querySelector(...) || document.querySelector(...)`. Barba
+  guarantees `data.next.container` is attached by `afterEnter`, and every other
+  consumer in that function trusts it directly — the fallback could only ever
+  match the *outgoing* wrapper, so clearing its opacity was pointless.
+- **`ORCHESTRATOR_VERSION` bumped** to `2026.8.17.1`.
+
+One review suggestion was **rejected**: "try the cheap `_parseSize` first and
+fall back to the probe only on a non-finite result." Measured at 1280/1440/1920/
+375/768, `_parseSize(--dial-home-width)` is `NaN` at *every* viewport — the
+value is `clamp(180px, min(50svh, 70vw), ...)` on desktop and `min(65vw, 65svh)`
+below 768px, and `_parseSize`'s `min()` regex only matches
+`min(<int>vw, <float>rem)`. The fast path would never once be taken, so the
+branch would be dead code. Two of the three reviewers repeated the spec's
+original `37.5rem` claim, which is what made the suggestion look reasonable.

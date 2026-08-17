@@ -137,7 +137,7 @@ The glow is composited with `ctx.filter = 'blur(12px)'` (`work-dial.js:1340`), w
 
 1. On mobile, the lengthened ticks are locked to the active sector at the moment the dial appears, in canvas space, and rotate with the dial.
 2. No other tick ever grows or shrinks — the lengthened set is fixed for the lifetime of the dial instance.
-3. Arriving from a case study locks the bulge to **that** project's sector, appearing under `.dial_sector-dot` on arrival.
+3. **Revised 2026-08-17 (client):** the bulge KEEPS the position it travelled to across a Barba navigation — `work → home` must not move it. It is a permanent mark on a fixed set of ticks, not a selection indicator that re-homes to the dot. Rotation and the locked sector therefore persist for the life of the page session. *(Superseded: "arriving from a case study locks the bulge to that project's sector, appearing under `.dial_sector-dot` on arrival.")*
 4. The bulge grows in over ~0.5s when it first appears, rather than popping.
 5. No visual regression: the bulge is the same length and the same tick count as today.
 
@@ -148,7 +148,7 @@ The glow is composited with `ctx.filter = 'blur(12px)'` (`work-dial.js:1340`), w
 - Do not touch `transition-dial.js` or `about-dial-ticks.js` — both draw base-length ticks only and have no attraction logic (verified: no `maxLen` in either).
 - Do not unify the mobile and desktop sector→angle mappings.
 - Do not add a bulge per sector (considered and rejected — see Alternatives).
-- Do not persist rotation across Barba transitions.
+- ~~Do not persist rotation across Barba transitions.~~ **Reversed 2026-08-17 (client):** rotation *and* `bulgeSector` now persist across Barba navigations within a page session, because a bulge that re-homed to six o'clock on every return read as a jump. A real page load still starts fresh.
 
 ---
 
@@ -284,7 +284,7 @@ Call it in both restore paths, immediately after the existing `applyActive`:
 | Locked set | One bulge, on the active sector at first appearance | Client, confirmed |
 | Grow-in | ~0.5s eased, on first appearance and on handoff re-lock | Client, confirmed |
 | Prominence | `MOBILE_ATTR_EASE` stays 0.6 | Client, confirmed — and required by the glow-clip measurement |
-| Re-entry | Re-lock to screen-bottom / restored sector on each init | Client, confirmed |
+| Re-entry | ~~Re-lock to screen-bottom / restored sector on each init~~ → **Keep the travelled position**; rotation + `bulgeSector` survive init/destroy via module scope | Client, confirmed 2026-08-17 (reversed after review) |
 | Re-lock on drag | **Never** — the bulge is a fixed travelling mark, not a live selection indicator | Client's "permanent" framing |
 
 **Assumption flagged for review:** `hasAttrMobile` includes `!prefersReduced()` (`:1287`), so under `prefers-reduced-motion: reduce` there is **no bulge at all on mobile** today, and this spec preserves that. Arguably a *locked* bulge is a static visual mark rather than autonomous motion and could reasonably be shown under reduced motion, with only the grow-in suppressed (the `prefersReduced()` branch in the grow-in integrator above already handles that case by snapping to 1). Left as-is to avoid changing reduced-motion behaviour without a client decision. Raise with the client if they want the marker visible for reduced-motion users.
@@ -424,3 +424,84 @@ The entire code change is ~35 lines inside one function of one file (`work-dial.
 **None.** No new dependency, no new module, no cross-project pattern, no reversal cost — the change is a behaviour flip inside one existing draw branch, revertible by restoring one expression.
 
 The mobile-vs-desktop sector→angle divergence documented above is a pre-existing property of the module, not a decision introduced here. If a future task needs to unify the two mappings (e.g. to bring sector highlighting to mobile), *that* warrants an ADR.
+
+
+---
+
+## Revision — 2026-08-17: bulge must keep its travelled position
+
+Reported during build verification: on `work → home` the ticks showed the correct
+rotation and then jumped back to six o'clock.
+
+**Root cause.** Two separate resets, both of which only became *visible* once the
+bulge was baked into canvas space:
+
+1. `syncRotationToIndex()` forced `rotationDeg = idx · sectorSize` and cleared the
+   lock on every handoff restore, re-homing the bulge to the dot.
+2. `init()` built a fresh `state`, so any route that destroyed rather than
+   suspended the dial (anything via `/about`) came back at `rotationDeg = 0`.
+
+**Fix.**
+
+- `_persistedDial` at module scope (survives Barba, not a page load) carries
+  `{ rotationDeg, bulgeSector }` from `destroy()` into the next `init()`.
+  `bulgeEase` restores to 1 so the grow-in plays once, on first appearance only.
+- `syncRotationToIndexIfNeeded()` replaces the unconditional sync at both restore
+  sites. It only forces a sync when rotation and the arriving index genuinely
+  disagree — e.g. a fresh session landing straight on a case study. Rotating to a
+  project and opening it leaves them already in agreement, so the mark is left
+  alone.
+- `syncRotationToIndex()` writes `canvas.style.transform` synchronously.
+  `runAfterEnter`'s `clearProps` strips the canvas's inline styles, so waiting for
+  the next `draw()` left one frame rendered at no rotation with the previous
+  frame's ticks still in the bitmap.
+
+**Verified** on staging with worktree code, mobile 393x852:
+
+| step | rotation | bulge (90 = six o'clock) | index |
+|---|---|---|---|
+| arrived home (handoff idx 4) | 240 | 93.1 | 4 |
+| after drag | 300 | 153.1 | 5 |
+| opened `/work/microsoft` | — | — | 5 |
+| back at home | 300 | **153.1** | 5 |
+
+### Test-harness defects found and fixed
+
+- `dragDial()` grabbed the dial 40px from centre. `onPointerMoveMobile` bails on
+  `state.startedInInner`, so **no drag in the suite ever rotated the dial** and
+  every rotation assertion was vacuous, passing via `test.skip(applied < 10)`.
+  The grab point is now on the tick ring, outside `innerR`.
+- `measureTicks()` derived its baseline from `Math.min` of the 96 tick lengths.
+  The sub-pixel stroke antialiases across two rows on axis-aligned rays, so ticks
+  0/12/24/36... read 0 and `maxLen / minLen` was `null`. Now uses the median
+  non-zero length.
+- The grow-in test sampled once, ~550ms after morph, by which point the ~480ms
+  ramp had finished. Now takes a burst and uses the lowest peak.
+
+### Pre-existing issue, NOT fixed here
+
+`InvalidStateError: drawImage ... canvas element with a width or height of 0` is
+thrown during the home → work transition. Reproduced identically against the
+deployed CDN build, so it predates this work. Worth its own ticket: guard the
+glow composite when the ticks canvas measures 0.
+
+
+### Second pre-existing issue found: reduced motion is not a flat ring
+
+`hasAttrMobile = attractionEnabled && !prefersReduced()`, so on a reading of the
+code no tick should lengthen under `prefers-reduced-motion: reduce`. In practice
+the acceptance test measures ~18px of variation, and **the identical failure
+reproduces against the deployed CDN build**, which does not contain the
+permanent-bulge change. So the spec's flagged assumption ("there is no bulge at
+all on mobile under reduced motion") does not hold on the live site today.
+
+The test is left asserting the *intended* behaviour rather than being relaxed to
+match the bug. Needs its own ticket. Note this is an accessibility-facing
+behaviour, so weakening the assertion would hide it.
+
+Caveat on the evidence: a standalone probe using the same emulation (viewport,
+`isMobile`, `hasTouch`, `reducedMotion: 'reduce'`, matching user-agent) measured a
+*flat* ring (median 10.5, max 12.5, span 2.0) with `prefersReduced === true` and
+`RHP._dialIntroProgress === null`. The probe and the Playwright test therefore
+disagree, and that disagreement is unexplained. Whoever picks up the ticket
+should start there rather than trusting either number outright.

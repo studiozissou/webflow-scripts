@@ -7,7 +7,7 @@
    + Auto-hide controls + cursor on mouse inactivity
    ========================================= */
 (() => {
-  const VERSION = '2026.4.21.1';
+  const VERSION = '2026.8.12.1';
   window.RHP = window.RHP || {};
 
   const cleanups = [];
@@ -117,6 +117,11 @@
     const restart    = section.querySelector('.restart');
 
     if (!video || !playPause || !muteUnmute || !controlWrapper) return;
+
+    /* CMS-bound embeds can render src="" when the field is unbound or empty.
+       Wiring a sourceless video injects a dead scrub bar and fires a doomed
+       play() on every enter — bail instead. */
+    if (!video.currentSrc && !video.getAttribute('src') && !video.querySelector('source')) return;
 
     wiredVideos.add(video);
     syncIcons(video, playPause, muteUnmute);

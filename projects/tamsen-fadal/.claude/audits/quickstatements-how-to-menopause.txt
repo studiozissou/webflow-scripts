@@ -1,0 +1,15 @@
+CREATE
+LAST	Len	"How to Menopause"
+LAST	Den	"2025 book by Tamsen Fadal"
+LAST	P31	Q47461344	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+LAST	P50	Q7681850	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+LAST	P1476	en:"How to Menopause: Take Charge of Your Health, Reclaim Your Life, and Feel Even Better than Before"	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+LAST	P577	+2025-03-25T00:00:00Z/11	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+LAST	P123	Q1567078	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+LAST	P212	"978-0-306-83354-0"	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+LAST	P407	Q1860
+LAST	P921	Q177708
+LAST	P136	Q3739522
+LAST	P1104	384	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+LAST	P2679	Q65201723	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11
+Q7681850	P800	LAST	S854	"https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/"	S813	+2026-08-11T00:00:00Z/11

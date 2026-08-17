@@ -1,0 +1,64 @@
+{
+  "url": "https://www.getcoconut.com/mtd-software/cis-subcontractors",
+  "date": "2026-07-16",
+  "mode": "full",
+  "scores": {
+    "accessibility": 100,
+    "bestPractices": 77,
+    "seo": 92,
+    "agenticBrowsing": 97
+  },
+  "cwv": {
+    "lcpMs": 5912,
+    "lcpRenderDelayMs": 5736,
+    "ttfbMs": 44,
+    "cls": 0.109
+  },
+  "cls": 0.109,
+  "clsTraceFreshLoad": 0.0,
+  "consoleErrors": 0,
+  "consoleWarnings": 0,
+  "mobileOverflow": false,
+  "network": {
+    "requestCount": 61,
+    "firstPartyFailedRequests": 0,
+    "note": "many third-party analytics beacons ERR_INTERNET_DISCONNECTED (transient)"
+  },
+  "memory": {
+    "jsHeapUsedMB": 21.7,
+    "heapNodes": 446969
+  },
+  "keyboardA11y": {
+    "tabsWalked": 5,
+    "allFocusVisible": true,
+    "focusTrapOrLoss": false
+  },
+  "dom": {
+    "h1Count": 1,
+    "headingCount": 44,
+    "headingLevelSkips": 0,
+    "imgTotal": 53,
+    "imgMissingAlt": 0,
+    "imgEmptyAlt": 38,
+    "imgLazy": 53
+  },
+  "issues": {
+    "critical": 1,
+    "high": 1,
+    "medium": 2,
+    "low": 3,
+    "total": 7
+  },
+  "failedAudits": [
+    "lcp-render-delay",
+    "link-text",
+    "third-party-cookies",
+    "inspector-issues",
+    "cumulative-layout-shift"
+  ],
+  "screenshots": {
+    "desktop": ".claude/research/test-page/getcoconut-cis-subcontractors-desktop.png",
+    "mobile": ".claude/research/test-page/getcoconut-cis-subcontractors-mobile.png"
+  },
+  "report": ".claude/research/test-page/getcoconut-cis-subcontractors-report-2026-07-16.md"
+}

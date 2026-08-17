@@ -17,6 +17,7 @@
     "entity-audit": "node tools/entity-audit/index.js",
     "test:ea": "node --test 'tests/entity-audit/*.test.js'",
     "test:nem": "node --test 'tests/nem/*.test.js'",
+    "build:nem": "node tools/nem/build-component.js",
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",
     "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'"
   },

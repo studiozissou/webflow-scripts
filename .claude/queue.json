@@ -1,16 +1,16 @@
 {
   "version": "1.0.0",
   "updated": "2026-08-17",
-  "note": "fix-work-to-home-dial-white-flash planned (Ready to Build); acceptance test T1 confirmed failing against staging",
+  "note": "fix-work-to-home-dial-white-flash built and verified (Ready to Review); acceptance 10/10 vs worktree, 5/10 failing vs CDN baseline",
   "queue": [
     {
       "id": "fix-work-to-home-dial-white-flash",
       "project": "ready-hit-play-prod",
       "type": "bug",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Ready to Review",
       "title": "Stop the white box appearing inside the dial when leaving a work page",
-      "description": "Navigating work to home, a white box fills the dial for the whole 0.8s shrink. Measured cause: runDialShrinkAnimation calls setDialNs('home') while the old Barba container (about 4957px of case content) is still a sibling flex item inside .dial_layer-fg. The home CSS rule for #fg-video-wrap omits flex-shrink:0, so that sibling crushes the video wrap to 0px height from t=64ms until Barba removes the container at t=941ms, leaving the white .case-studies_wrapper child sections (section_case-title, section_case-intro, section_case-close) as the only thing in the dial. Fix: fade .case-studies_wrapper to 0 over 0.2s before the namespace flip, and pin plus tween #fg-video-wrap (width, height, flexShrink 0) so the video visibly shrinks into the circle. Defensive clearProps opacity on the incoming wrapper in runAfterEnter covers interrupted transitions.",
+      "description": "Navigating work to home, a white box fills the dial for the whole 0.8s shrink. Measured cause: runDialShrinkAnimation calls setDialNs('home') while the old Barba container (about 4957px of case content) is still a sibling flex item inside .dial_layer-fg. The home CSS rule for #fg-video-wrap omits flex-shrink:0, so that sibling crushes the video wrap to 0px height from t=64ms until Barba removes the container at t=941ms, leaving the white .case-studies_wrapper child sections (section_case-title, section_case-intro, section_case-close) as the only thing in the dial. Fix: fade .case-studies_wrapper to 0 over 0.2s before the namespace flip, and pin plus tween #fg-video-wrap (width, height, flexShrink 0) so the video visibly shrinks into the circle. Defensive clearProps opacity on the incoming wrapper in runAfterEnter covers interrupted transitions. BUILT 2026-08-17: shipped in orchestrator.js only - no CSS change. Two plan corrections: (1) _parseSize returns NaN for --dial-home-width (it aliases clamp(180px, min(50svh,70vw), ...)), so a new _resolveLengthPx probe helper resolves the home box instead; (2) the optional flex-shrink:0 CSS hardening was dropped as inert - on the home namespace .dial_layer-fg is display:grid, not flex, so the collapse is height:100% against an auto grid row, which the inline pixel pin already fixes. Acceptance suite 10/10 green against worktree code and 5/10 failing against deployed CDN code, so the before/after is proven. Two pre-existing unrelated bugs surfaced and logged in the spec: work-dial glow-canvas drawImage on a zero-sized canvas, and the 'home > about > home (no case study)' test in fix-home-restore-closed-project timing out (both reproduce on CDN).",
       "spec": "projects/ready-hit-play-prod/.claude/specs/fix-work-to-home-dial-white-flash.md",
       "created": "2026-08-17"
     },

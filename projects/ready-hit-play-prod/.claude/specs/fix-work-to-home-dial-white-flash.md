@@ -356,3 +356,86 @@ trivial. T4 (verify) gates on all three.
 
 None required. No new dependency, no new module, no cross-project pattern — this
 is a localised fix inside an existing animation function.
+
+---
+
+## Implementation notes (added during `/build`, 2026-08-17)
+
+Two things in the plan above turned out to be wrong once measured live. Both are
+corrected in the shipped code; the sections above are left as written so the
+original reasoning is still readable.
+
+### 1. `_parseSize(v.homeWidth)` returns `NaN`, not a usable pixel value
+
+The plan assumed `--dial-home-height` resolves to `37.5rem`. It does not — that
+is only the *fallback* argument to `_getCSSVar`, and the property is actually
+defined (`ready-hit-play.css:583`) as:
+
+```
+--dial-home-width:  var(--dial-large-width);   /* clamp(180px, min(50svh, 70vw), min(50svh, 70vw)) */
+--dial-home-height: var(--dial-large-height);
+```
+
+`getPropertyValue` returns that `clamp(...)` string with `var()` substituted.
+`_parseSize` sees `'vw'` in it, calls `parseFloat('clamp(180px, …')` and yields
+`NaN` — so the sketch's `width: _parseSize(v.homeWidth)` would have set the
+video box to `NaN`.
+
+Shipped instead: a small `_resolveLengthPx(value, axis)` helper that measures
+the value on a hidden probe element, which handles `clamp()`, `calc()`, `svh`
+and anything else the browser can lay out. `runDialExpandAnimation`'s existing
+inline temp-element block was folded into the same helper. The tween is guarded
+by `if (homeW > 0 && homeH > 0)`, which also rejects `NaN`.
+
+### 2. Task T5 (the "optional CSS hardening") was dropped — it would be inert
+
+The plan suggested adding `flex-shrink: 0` to the home `#fg-video-wrap` rule.
+`flex-shrink` only applies to flex items, and on the home namespace
+`.dial_layer-fg` is **`display: grid; place-items: center`**
+(`ready-hit-play.css:399`) — only the *work* namespace makes it
+`display: flex; flex-flow: column` (`ready-hit-play.css:819`). Confirmed live:
+computed `display` on `.dial_layer-fg` under `data-dial-ns="home"` is `grid`.
+
+So the collapse after the namespace flip is not a flex-shrink effect at all: it
+is `height: 100%` resolving against an auto-sized grid row that the oversized
+outgoing container has taken. An inline pixel height is what fixes it, and the
+JS pin already supplies that. No CSS change shipped.
+
+`flexShrink: 0` is still set alongside the pin, because at the moment the pin is
+applied the namespace is still `work` and the flex layout is live. It is cleared
+by the existing `clearProps: 'all'` in `runAfterEnter` (verified: no stale
+inline `width`/`height`/`flex-shrink` after the transition).
+
+### 3. Acceptance-test corrections
+
+- Deadlines are now anchored to **transition start** (first frame where
+  `data-dial-ns` flips to `home`) rather than to sampler start. The spec always
+  said "after transition start"; the test measured from `t=0`. Click round-trip
+  plus Barba startup is routinely 300-400 ms on staging, so the old form was
+  asserting against frames from *before* the transition, where the case page is
+  legitimately at opacity 1.
+- T4 no longer skips. The homepage exposes no `<a href="/work/...">` at all
+  (`a.dial_work-link` is `href="#"`; the dial navigates via `barba.go()` inside
+  work-dial.js), so the "find a work anchor" strategy always came up empty and
+  the test silently skipped itself — on the deployed build too. It now drives
+  `barba.go()`, the same entry point the dial uses. With that fixed the test
+  catches the bug on the second cycle against CDN code.
+- `loadPage` navigates with `waitUntil: 'domcontentloaded'` instead of the
+  default `'load'`. Case pages carry a dozen autoplaying videos, so `'load'`
+  regularly blew a 60 s budget on staging and failed runs before any assertion
+  ran. `waitForRHP` already polls the real readiness signal.
+
+### Known pre-existing issues surfaced (NOT caused by this fix)
+
+Both reproduce identically against the deployed CDN build with none of this fix
+present, and are out of scope here:
+
+1. **`drawImage` throws on a zero-sized canvas.** `Failed to execute 'drawImage'
+   on 'CanvasRenderingContext2D': The image argument is a canvas element with a
+   width or height of 0` — from work-dial.js's glow canvas
+   (`ctx.drawImage(glowCanvas, 0, 0)`, work-dial.js:1342 / 1426) during a
+   home → work → home cycle. T4 filters this one exact message via
+   `KNOWN_UNRELATED_ERRORS`; remove that filter when the bug is fixed.
+2. **`fix-home-restore-closed-project` → "home > about > home (no case study)
+   stays generic"** times out after ~3 min and closes the browser. Fails the
+   same way on CDN. The other 3 tests in that spec pass.

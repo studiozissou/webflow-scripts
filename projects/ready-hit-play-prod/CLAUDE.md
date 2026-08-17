@@ -53,6 +53,7 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | `transition-dial.js` | 2026.2.18.1 | Static teal canvas dial shown during Barba transitions |
 | `about-dial-ticks.js` | 2026.2.6.10 | Small 6rem static teal dial on about page |
 | `about-text-lines.js` | 2026.2.13.1 | Scroll-linked per-line text fade on about page (SplitText + Lenis scroll events) |
+| `about-swipers.js` | 2026.8.17.1 | Swiper crossfade sliders on about page **and** their desktop sizing — each `[data-slider]` gets its own `--slide-max-height`; also publishes `--accordion-title-height` for the sticky carousel |
 | `home-intro.js` | 2026.2.11.1 | One-time intro sequence on fresh home load (step text → ticks → video → nav) |
 | `intro-format.js` | — | Sanitise `[data-text="intro"]` HTML on case pages (decode entities, strip disallowed tags) |
 | `earth-parallax.js` | 2026.2.23.1 | Scroll-linked `.earth-image` parallax on case pages (ScrollTrigger) |
@@ -152,6 +153,14 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - Background video decode lag ~50ms (3-rAF re-sync tried and reverted)
 - `originalBgEl` deletion on pool swap + destroy (RC1 root cause)
 - 300ms `setTimeout` for `interactionUnlocked` — known hack, not yet replaced with event-driven approach
+
+### About page — accordions, sliders, sticky carousel
+- The about page scrolls **inside `[data-barba="container"]`** (`position: fixed; overflow: auto`), NOT the window. Anything that reads or sets scroll position must target that element, not `window.scrollY`.
+- `.accordion-title` elements are already `position: sticky` and stack at `0 / 1x / 2x / 3x` their own height. The WWCF carousel pins at `2x` to sit flush beneath the two titles above it.
+- `.accordion-content` ships from Webflow with `overflow: hidden`, which makes it the nearest scrollport and renders **any sticky descendant inert**. `ready-hit-play.css` overrides it to `visible` on desktop. Nothing overflows it (`scrollHeight === clientHeight` on every accordion), so this is safe — but don't reintroduce the hidden overflow or the sticky carousel silently dies.
+- The DOM is `.accordion-wrapper > (.accordion-title + .accordion-content)` as **flat siblings**. There is no `.accordion-block` — `about-scroll-accordions.js` still queries for it and is deliberately disabled in `orchestrator.js`.
+- Slider height is derived from **rendered column width x intrinsic image aspect ratio**, never from `max-width` (the wrapper's `max-width` is ~655px but it renders at ~479px, which previously inflated every slider by ~160px).
+- `about-swipers.js` re-measures via a `ResizeObserver` on the accordion column, not just `window.resize` — the resize event fires *before* the columns reflow, so measuring off it alone sizes a desktop slider from the old mobile width.
 
 ### Barba / DOM structure (namespace restructure shipped 2026-03-12)
 - `dial_component` + `dial_layer-fg` now persist OUTSIDE Barba container

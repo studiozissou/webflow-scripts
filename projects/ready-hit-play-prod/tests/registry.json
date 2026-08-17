@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "lastUpdated": "2026-05-06",
-  "lastPlanned": "perf-parallel-script-loading",
-  "lastRegistered": "perf-parallel-script-loading",
+  "lastUpdated": "2026-08-17",
+  "lastPlanned": "rhp-wwcf-sticky-carousel",
+  "lastRegistered": "rhp-wwcf-sticky-carousel",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
   "lastDeployed": "2026-05-06",
   "lastDeployedHash": "8904cdd",
@@ -546,6 +546,16 @@
       "slug": "perf-parallel-script-loading",
       "created": "2026-05-06",
       "description": "Parallel script loading — module presence, GSAP plugins, Barba transitions, loader dismiss, load timing"
+    },
+    {
+      "id": "rhp-wwcf-sticky-carousel",
+      "file": "tests/acceptance/rhp-wwcf-sticky-carousel.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-wwcf-sticky-carousel",
+      "created": "2026-08-17",
+      "description": "WWCF carousel sticky (top-aligned → pinned → released) + per-slider independent heights, across resize and Barba re-entry"
     }
   ]
 }

@@ -1292,8 +1292,10 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 /* Swiper sliders: max height = viewport minus 4 accordion titles.
    Fade mode uses position:absolute slides, so height lives on the container.
    Images keep natural aspect ratio, capped so they don't blow up on tall screens. */
-/* --slide-max-height is the smaller of viewport-minus-titles and image-max-width+caption,
-   set by JS after measuring .about_image-wrapper max-width + caption height. */
+/* --slide-max-height is set by about-swipers.js on EACH [data-slider] (not on the
+   section) so every slider is sized to its own tallest slide. Value is
+   min(viewport - titles, tallest image + caption), where image height is derived
+   from rendered width x intrinsic aspect ratio. */
 .section_about-hero [data-slider] {
   height: var(--slide-max-height, calc(100svh - var(--accordion-titles-height, 256px)));
 }
@@ -1337,5 +1339,39 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   }
   .section_about-hero [data-slider] .slide-caption {
     height: auto;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   About — sticky carousel ("Where We Come From")
+
+   The photo column pins while the taller copy column scrolls past it, then
+   releases at the bottom of the copy and travels up with it.
+
+   Desktop only: below 992px .accordion-column-wrapper becomes a column flex,
+   where sticky has no travel and align-items would control the HORIZONTAL axis.
+
+   Webflow sets .accordion-content { overflow: hidden }, which makes it the
+   nearest scrollport and renders any sticky descendant inert. Nothing overflows
+   it (scrollHeight === clientHeight on every accordion), so it is safe to clear.
+   The accordion titles are already sticky and unaffected — they are siblings of
+   .accordion-content, not children.
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 992px) {
+  .section_about-hero .accordion-content {
+    overflow: visible;
+  }
+
+  /* Top-align the columns so the photo starts level with the first line of copy */
+  .accordion-title.is-2 + .accordion-content .accordion-column-wrapper {
+    align-items: flex-start;
+  }
+
+  /* Pin below the two titles stacked above this one ("What we've learned" +
+     "Where we come from"). --accordion-title-height is set by about-swipers.js;
+     the fallback matches the measured 4.375rem title height. */
+  .accordion-title.is-2 + .accordion-content .accordion-column:last-child {
+    position: sticky;
+    top: calc(var(--accordion-title-height, 4.375rem) * 2);
   }
 }

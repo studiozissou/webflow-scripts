@@ -106,10 +106,8 @@
     // getBoundingClientRect (not offsetHeight) — offsetHeight rounds 65.479 to
     // 65, which would sit the carousel ~1px above the title stack.
     // See ready-hit-play.css § About — sticky carousel.
-    sectionEl.style.setProperty(
-      '--accordion-title-height',
-      titles[0].getBoundingClientRect().height + 'px'
-    );
+    const titleH = titles[0].getBoundingClientRect().height;
+    sectionEl.style.setProperty('--accordion-title-height', titleH + 'px');
 
     const viewportCap = window.innerHeight - titlesH;
     const applied = [];
@@ -117,11 +115,20 @@
     sectionEl.querySelectorAll('[data-slider]').forEach((slider) => {
       const { imageH, captionH } = measureSlides(slider);
       if (!imageH) return;
-      const slideH = Math.min(viewportCap, imageH + captionH);
+
+      // Reserve the caption PLUS a title-height gap inside the slide box.
+      // The gap has to live in the slide, not as padding on the column: the
+      // column is the sticky element, so while it is pinned the accordion's
+      // bottom rule scrolls up underneath and meets the caption regardless of
+      // any column padding. Reserved here it travels with the caption at every
+      // scroll position. Slides render image-then-caption from the top
+      // (justify-content: flex-start), so the spare band lands below the caption.
+      const reserved = captionH + titleH;
+      const slideH = Math.min(viewportCap, imageH + reserved);
       slider.style.setProperty('--slide-max-height', slideH + 'px');
-      // Reserved on every slide so captioned and uncaptioned images match.
+      // Also keeps captioned and uncaptioned images the same size and position.
       // Consumed by ready-hit-play.css § About slider image sizing.
-      slider.style.setProperty('--slide-caption-height', captionH + 'px');
+      slider.style.setProperty('--slide-caption-height', reserved + 'px');
       applied.push(Math.round(slideH));
     });
 

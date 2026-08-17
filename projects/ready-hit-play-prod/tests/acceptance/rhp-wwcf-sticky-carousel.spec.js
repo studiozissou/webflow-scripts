@@ -210,6 +210,24 @@ test.describe(`${SLUG} — Per-Slider Height`, () => {
     expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(2);
   });
 
+  test('caption has breathing room inside the slide box, not just on the column', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await loadPage(page);
+
+    const gap = await page.evaluate(() => {
+      const slider = document.querySelector('.accordion-title.is-2 + .accordion-content [data-slider]');
+      const cap = [...slider.querySelectorAll('.spacer-medium')][0];
+      if (!cap) return null;
+      return Math.round(slider.getBoundingClientRect().bottom - cap.getBoundingClientRect().bottom);
+    });
+
+    // The column is the sticky element, so padding on it only reads as spacing
+    // once the sticky releases. The gap must live inside the slide box to
+    // survive every scroll position. It was 0 before this fix.
+    expect(gap).not.toBeNull();
+    expect(gap).toBeGreaterThan(30);
+  });
+
   test('every slide places its image at the same vertical offset', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 700 });
     await loadPage(page);

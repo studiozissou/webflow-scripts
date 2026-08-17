@@ -1,0 +1,151 @@
+#!/usr/bin/env node
+/**
+ * gen-page-schema.js — Emit WebPage + BreadcrumbList blocks for simple pages
+ *
+ * The content pages (Speaking, Press, Shop, Contact, …) need no bespoke schema —
+ * just a WebPage node tied to the site graph and a breadcrumb trail. Hand-writing
+ * a dozen near-identical blocks invites copy-paste errors, so they are generated.
+ *
+ * Titles and descriptions are read from the LIVE page, so the output always
+ * matches what is actually published rather than what someone assumed.
+ *
+ * Usage:
+ *   node tools/entity-audit/gen-page-schema.js
+ *   node tools/entity-audit/gen-page-schema.js --out projects/tamsen-fadal/schema/static-pages.html
+ */
+
+import { writeFile, mkdir } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+
+import { extractTitle, extractMetaDescription, extractJsonLd } from './lib/extract.js';
+
+const ORIGIN = 'https://www.tamsenfadal.com';
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
+
+/**
+ * Pages that only need WebPage + BreadcrumbList.
+ * `type` overrides the default WebPage where a more specific type is accurate.
+ * `parent` builds the breadcrumb trail.
+ */
+const PAGES = [
+  { path: '/speaking', crumb: 'Speaking', type: 'WebPage' },
+  { path: '/press', crumb: 'Press & Media', type: 'CollectionPage' },
+  { path: '/blog', crumb: 'Blog', type: 'CollectionPage' },
+  { path: '/events', crumb: 'Events', type: 'CollectionPage' },
+  { path: '/menopause-education-hub', crumb: 'Education Hub', type: 'CollectionPage' },
+  { path: '/menopause-support-provider-directory', crumb: 'Provider Directory', type: 'CollectionPage' },
+  { path: '/shop', crumb: 'Shop', type: 'CollectionPage' },
+  { path: '/advocacy', crumb: 'Advocacy', type: 'WebPage' },
+  { path: '/themfactor', crumb: 'The M Factor', type: 'WebPage' },
+  { path: '/contact', crumb: 'Contact', type: 'ContactPage' },
+  { path: '/newsletter', crumb: 'Newsletter', type: 'WebPage' },
+  { path: '/book-how-to-menopause/free-resources', crumb: 'Free Resources', type: 'WebPage', parent: { crumb: 'How to Menopause', path: '/book-how-to-menopause' } },
+];
+
+async function fetchMeta(path) {
+  const url = `${ORIGIN}${path}`;
+  try {
+    const res = await fetch(url, { headers: { 'user-agent': UA } });
+    const html = await res.text();
+    return {
+      url,
+      status: res.status,
+      title: extractTitle(html),
+      description: extractMetaDescription(html),
+      existingLd: extractJsonLd(html).length,
+    };
+  } catch (err) {
+    return { url, status: null, error: err.message, title: null, description: null, existingLd: 0 };
+  }
+}
+
+/** Build the breadcrumb item list for a page. */
+function crumbsFor(page) {
+  const items = [{ name: 'Home', item: `${ORIGIN}/` }];
+  if (page.parent) items.push({ name: page.parent.crumb, item: `${ORIGIN}${page.parent.path}` });
+  items.push({ name: page.crumb, item: `${ORIGIN}${page.path}` });
+  return items.map((c, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: c.name,
+    item: c.item,
+  }));
+}
+
+function blockFor(page, meta) {
+  const graph = [
+    {
+      '@type': page.type,
+      '@id': `${ORIGIN}${page.path}#webpage`,
+      url: `${ORIGIN}${page.path}`,
+      name: meta.title || page.crumb,
+      ...(meta.description ? { description: meta.description } : {}),
+      inLanguage: 'en-US',
+      isPartOf: { '@id': `${ORIGIN}/#website` },
+      about: { '@id': `${ORIGIN}/#person` },
+      breadcrumb: { '@id': `${ORIGIN}${page.path}#breadcrumb` },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${ORIGIN}${page.path}#breadcrumb`,
+      itemListElement: crumbsFor(page),
+    },
+  ];
+
+  const json = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, null, 2);
+  const warn = meta.existingLd > 0 ? '  ⚠️ This page ALREADY has JSON-LD — review before adding a second block.\n' : '';
+
+  return [
+    `<!-- ${'═'.repeat(70)}`,
+    `     ${page.crumb.toUpperCase()}  →  ${page.path}`,
+    `     Live title: ${meta.title || '(none)'}`,
+    `     HTTP ${meta.status} | existing JSON-LD blocks: ${meta.existingLd}`,
+    warn ? warn.trimEnd() : `     Verified empty — safe to add.`,
+    `     ${'═'.repeat(70)} -->`,
+    '<script type="application/ld+json">',
+    json,
+    '</script>',
+    '',
+  ].join('\n');
+}
+
+async function main() {
+  const outArg = process.argv.includes('--out')
+    ? process.argv[process.argv.indexOf('--out') + 1]
+    : 'projects/tamsen-fadal/schema/static-pages.html';
+  const outPath = resolve(outArg);
+
+  console.log(`gen-page-schema: fetching ${PAGES.length} pages from ${ORIGIN}\n`);
+
+  const metas = await Promise.all(PAGES.map((p) => fetchMeta(p.path)));
+
+  const header = [
+    '<!--',
+    '  STATIC PAGE SCHEMA — WebPage + BreadcrumbList',
+    '  =============================================',
+    '  GENERATED by tools/entity-audit/gen-page-schema.js — do not hand-edit.',
+    '  Re-run after any title/meta change to keep these in sync with the live pages.',
+    '',
+    `  Generated: ${new Date().toISOString().slice(0, 10)}`,
+    '  Requires: sitewide-graph.html deployed site-wide (these reference #website / #person).',
+    '',
+    '  Each block goes on its own page: Page Settings → Custom Code → Before </body>',
+    '-->',
+    '',
+  ].join('\n');
+
+  const blocks = PAGES.map((p, i) => {
+    const m = metas[i];
+    console.log(`  ${p.path.padEnd(46)} HTTP ${m.status}  existing-ld:${m.existingLd}`);
+    return blockFor(p, m);
+  });
+
+  await mkdir(dirname(outPath), { recursive: true });
+  await writeFile(outPath, header + blocks.join('\n'), 'utf8');
+  console.log(`\n  wrote ${outPath}`);
+}
+
+main().catch((err) => {
+  console.error(`gen-page-schema failed: ${err.message}`);
+  process.exitCode = 1;
+});

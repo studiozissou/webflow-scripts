@@ -1,0 +1,128 @@
+<!--
+  SITEWIDE ENTITY GRAPH — Tamsen Fadal
+  ====================================
+  Place in: Webflow → Site Settings → Custom Code → Footer Code (ALL pages)
+
+  WHY THIS MOVES: this graph is currently on the HOMEPAGE ONLY. Every other page
+  on the site carries no structured data at all. Promoting it site-wide gives
+  every page a resolvable #person / #website / #publisher node, which is what the
+  per-page blocks reference by @id.
+
+  PERSON NODE IS UNCHANGED. The description below is the one already live on the
+  homepage — it has NOT been rewritten, because the bio wording is pending
+  Tamsen's team approval. When the approved bio lands, change `description` here
+  and it updates everywhere at once.
+
+  VERIFIED 2026-08-06 against https://www.tamsenfadal.com/ :
+    - 13x Emmy-winning journalist ........... stated on / and /about-tamsen
+    - NYT bestselling author ................ stated on / and /book-how-to-menopause
+    - Host of The Tamsen Show ............... stated on / and /podcast
+    - Take Flight Productions LLC ........... stated in /terms-conditions H1
+    - sameAs URLs ........................... carried over from live homepage graph
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.tamsenfadal.com/#website",
+      "url": "https://www.tamsenfadal.com/",
+      "name": "Tamsen Fadal",
+      "inLanguage": "en-US",
+      "publisher": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "about": { "@id": "https://www.tamsenfadal.com/#person" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.tamsenfadal.com/#publisher",
+      "name": "Take Flight Productions LLC",
+      "url": "https://www.tamsenfadal.com/",
+      "founder": { "@id": "https://www.tamsenfadal.com/#person" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://www.tamsenfadal.com/#person",
+      "name": "Tamsen Fadal",
+      "url": "https://www.tamsenfadal.com/",
+      "mainEntityOfPage": "https://www.tamsenfadal.com/",
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://cdn.prod.website-files.com/68a2d5617c9630d9c780ded5/68b1da357bdefc2a31da40a3_tamsen_cutout.avif"
+      },
+      "description": "Tamsen Fadal is a New York Times bestselling author, Emmy Award-winning journalist, podcast host, and menopause advocate. She is the author of How to Menopause and host of The Tamsen Show.",
+      "jobTitle": [
+        "Journalist",
+        "Author",
+        "Podcast Host",
+        "Keynote Speaker",
+        "Documentary Producer",
+        "Women's Health Advocate",
+        "Menopause Advocate"
+      ],
+      "knowsAbout": [
+        "Journalism",
+        "Menopause",
+        "Perimenopause",
+        "Women's Health",
+        "Broadcasting",
+        "Documentary Filmmaking",
+        "Podcasting",
+        "Hormone Health",
+        "Midlife Wellness"
+      ],
+      "award": [
+        "Emmy Award for Journalism",
+        "New York Times Bestselling Author",
+        "Ellis Island Medal of Honor (2016)",
+        "National Air Disaster Foundation Broadcast Journalism Award (2004)",
+        "University of South Florida Outstanding Young Alumnus (2004)"
+      ],
+      "alumniOf": {
+        "@type": "EducationalOrganization",
+        "name": "University of South Florida"
+      },
+      "nationality": { "@type": "Country", "name": "United States" },
+      "worksFor": { "@id": "https://www.tamsenfadal.com/#publisher" },
+      "sameAs": [
+        "https://en.wikipedia.org/wiki/Tamsen_Fadal",
+        "https://www.wikidata.org/wiki/Q7681850",
+        "https://www.imdb.com/name/nm2876731/",
+        "https://www.linkedin.com/in/tamsenfadal/",
+        "https://www.instagram.com/tamsenfadal/",
+        "https://www.youtube.com/@TamsenFadalTV",
+        "https://www.facebook.com/tamsenfadal/",
+        "https://www.tiktok.com/@tamsenfadal",
+        "https://open.spotify.com/show/7KuIU0g3CsUY0eAlzQaA5T",
+        "https://podcasts.apple.com/us/podcast/the-tamsen-show/id1799976761",
+        "https://music.amazon.com/podcasts/75bc8347-0c2b-40cb-a8f2-397fce8c3ec4/the-tamsen-show",
+        "https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/?lens=balance"
+      ]
+    }
+  ]
+}
+</script>
+
+<!--
+  REMOVED FROM THE LIVE HOMEPAGE VERSION, and why:
+
+  1. "birthDate": "1970-12-04" and "birthPlace" (Concord, Massachusetts)
+     Both are corroborated by Wikidata Q7681850 (P569, P19), so they are not
+     wrong — but neither is stated anywhere on the site, and schema is meant to
+     describe the page it sits on. Wikidata is already the authoritative home for
+     these, and Google reads it there. Left out here as a judgement call;
+     harmless to restore if Tamsen's team would rather assert them on-site.
+
+  2. "subjectOf"
+     Was truncated/unverified in the live markup. Re-add only with a real URL.
+
+  NOTE: once this graph is site-wide, DELETE the homepage-only copy so the
+  page does not emit the Person node twice.
+
+  3. X / Twitter (https://twitter.com/TamsenFadal)
+     Removed 11 Aug 2026. Confirmed by the client as no longer an active
+     official channel, and removed from Wikidata Q7681850 the same day.
+     sameAs should list channels the entity actually controls and uses — a
+     dormant profile is a weak corroboration signal at best.
+     This also narrows the footer-links task: restore LinkedIn only, not X.
+-->

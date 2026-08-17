@@ -323,6 +323,65 @@ Generated to `projects/nem-life/.claude/research/nem-conclusion-ids.csv` by a sm
 
 ---
 
+## Build Plan — remaining work (2026-08-17)
+
+Planned mid-build, after the pure-logic layer landed. This section is the ordered
+remainder; everything marked **Done** above is finished and green.
+
+### State
+
+| Layer | Status |
+|---|---|
+| Keys, IDs, 54-row enumeration | ✅ Done — 19 tests |
+| Scoring engine v2 | ✅ Done — 42 tests, all 10 worked examples |
+| Component (`nem-test-phase-b.tsx`) | 🟡 Edited, **unverified** |
+| Acceptance test | 🔴 Written, but 4 assertions use the superseded ID grammar |
+| Backend (2 workflows + CSV) | 🔴 Not started |
+| Christel's copy | ⛔ Blocked on a faithful export — not ours to write |
+
+### Ordered tasks
+
+| # | Task | Agent | Depends on | Parallel? |
+|---|---|---|---|---|
+| 1 | Verify the component edits — typecheck, imports resolve, no stale Dutch identifiers | qa | — | — |
+| 2 | Update the 4 stale ID assertions to the `01F-SR-FP` grammar | code-writer | — | ∥ with 1 |
+| 3 | Backend: 3 payload fields through `nem-submit`, plus data-table columns | code-writer | 1 | ∥ with 4 |
+| 4 | Backend: `nem-verify` passes `outcome` + `conclusionKey` to the report prompt | code-writer | 1 | ∥ with 3 |
+| 5 | `nem_test_profiles.csv` header + sample row | code-writer | 3 | — |
+| 6 | Mark the canonical-key decision superseded in `nem-test-phase-b.md` | pm | — | ∥ with all |
+| 7 | Code review + full test run | code-reviewer, qa | 1–6 | — |
+
+### Parallelisation map
+
+- **Stream A (logic):** tasks 1, 2 — local, no network, fast.
+- **Stream B (backend):** tasks 3, 4, 5 — all touch n8n. **Serialise against each other
+  in n8n itself**: both workflows must be re-pulled live before editing, because
+  `nem-report-prompt-escaping` already edited `nem-verify` and there is no version
+  history to recover from.
+- **Stream C (docs):** task 6 — independent of everything.
+- Worktrees: not needed. Agent teams: not needed — the work is small and the
+  serialisation constraint is in n8n, not in the repo.
+
+### Blockers carried into the build
+
+1. **Christel's copy cannot be loaded from the Drive read path** — it flattens in-cell
+   paragraph breaks to spaces. The component ships with placeholders in the `REAL_*`
+   overlays until a faithful CSV export exists. Not a code blocker; a content one.
+2. **The n8n API key expiry** — the key was refreshed for the 13 Aug prompt fix. Confirm
+   it is still valid before starting tasks 3–5, or they will fail at the first pull.
+3. **Contact URLs are assumed**, not confirmed: `/contact` and `/en/contact`. Verify
+   against the live site before sign-off.
+4. **`TIEBREAK_ORDER` is inferred** — see § 5. Does not block the build.
+
+### Deliberately out of scope
+
+- Writing any conclusion copy. That is Christel's, and the sheet is the source of truth.
+- A dedicated contact form for flat outcomes — the call agreed a plain anchor, with a
+  form as a future nice-to-have.
+- Migrating stored Dutch mechanism values in the data table (decision: 2026-08-10).
+
+---
+
 ## Task breakdown
 
 | # | Task | Agent | Depends on |

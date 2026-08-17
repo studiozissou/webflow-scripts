@@ -111,6 +111,23 @@ export function conclusionIdFor(gender, { outcome, primary, secondary }, textSet
   return `${prefix}-${leading}-${following}`;
 }
 
+/* The 27 conclusion keys, in sheet order. Identical for both genders — gender selects
+ * which text table to read, not which keys exist.
+ *
+ * The component builds its text tables from this list rather than hand-listing keys, so
+ * a table can never be missing an outcome the engine can produce. That is the guard
+ * replacing Phase B's canonical key rewriting. */
+export const CONCLUSION_KEYS = [
+  "flat-low",
+  "flat-high",
+  ...SHEET_ORDER.map((mech) => MECHANISM_TO_KEY[mech]),
+  ...SHEET_ORDER.flatMap((leading) =>
+    SHEET_ORDER.filter((following) => following !== leading).map(
+      (following) => `${MECHANISM_TO_KEY[leading]}_${MECHANISM_TO_KEY[following]}`,
+    ),
+  ),
+];
+
 /* ─── Sheet enumeration ─── */
 
 /* Every conclusion row the engine can produce, in Alex's sheet order:

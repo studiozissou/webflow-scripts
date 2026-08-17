@@ -228,6 +228,31 @@ test.describe(`${SLUG} — Per-Slider Height`, () => {
     expect(gap).toBeGreaterThan(30);
   });
 
+  test('caption matches the image width when the image is height-capped', async ({ page }) => {
+    // Short viewport: the slide box height binds, so `width: auto` shrinks the
+    // image inside the column. The caption used to keep the full column width
+    // and overhang the image by ~186px.
+    await page.setViewportSize({ width: 1440, height: 650 });
+    await loadPage(page);
+
+    const rows = await page.evaluate(() => {
+      const slider = document.querySelector('.accordion-title.is-2 + .accordion-content [data-slider]');
+      return [...slider.querySelectorAll('.swiper-slide')].map((s) => {
+        const img = s.querySelector('img');
+        const cap = s.querySelector('.spacer-medium');
+        if (!img || !cap) return null;
+        const r = img.getBoundingClientRect(), c = cap.getBoundingClientRect();
+        return { overhang: Math.round(c.width - r.width), leftDelta: Math.round(c.left - r.left) };
+      }).filter(Boolean);
+    });
+
+    expect(rows.length).toBeGreaterThan(0);
+    rows.forEach(({ overhang, leftDelta }) => {
+      expect(Math.abs(overhang)).toBeLessThanOrEqual(2);
+      expect(Math.abs(leftDelta)).toBeLessThanOrEqual(2);
+    });
+  });
+
   test('every slide places its image at the same vertical offset', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 700 });
     await loadPage(page);

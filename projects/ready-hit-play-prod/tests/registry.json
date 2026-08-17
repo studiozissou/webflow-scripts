@@ -616,6 +616,16 @@
       "slug": "fix-home-restore-closed-project",
       "created": "2026-08-13",
       "description": "Returning home from a case study must restore that project (dial sector, fg video, bg canvas mirror, step headline) instead of falling back to project 0 with the generic copy - covers both the destroy/init and suspend/resume return paths"
+    },
+    {
+      "id": "fix-work-to-home-dial-white-flash",
+      "file": "tests/acceptance/fix-work-to-home-dial-white-flash.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "slug": "fix-work-to-home-dial-white-flash",
+      "created": "2026-08-17",
+      "description": "work -> home: #fg-video-wrap must not collapse to 0px height when setDialNs('home') fires while the oversized Barba container is still a sibling flex item, and .case-studies_wrapper (white child sections) must fade out within 250ms so no white box shows inside the shrinking dial"
     }
   ]
 }

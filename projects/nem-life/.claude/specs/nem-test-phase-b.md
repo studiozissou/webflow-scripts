@@ -635,7 +635,7 @@ Manual trigger
 
 **Rollback:** none built — Notion page history is the rollback (Alex's call; a custom history was deemed overkill).
 
-**Relationship to the escaping fix:** `nem-report-prompt-escaping-and-token-limit.md` parks the prompt in a fixed-value **Set node** as a clean seam. This mechanism fills that seam: the Set node is superseded by the Data Table read that the Publish workflow writes. Land the escaping fix first (it also lifts `max_tokens` to 8000 and fixes `$json` references); the Data Table read then drops in where the Set node was.
+**Relationship to the escaping fix:** `nem-report-prompt-escaping-and-token-limit.md` parks the prompt in a fixed-value **Set node** as a clean seam. This mechanism fills that seam: the Set node is superseded by the Data Table read that the Publish workflow writes. ~~Land the escaping fix first~~ — **the escaping fix landed on 2026-08-13** (confirmed 2026-08-18), so the Set node seam already exists on live and the Data Table read drops straight in where it is.
 
 **Not yet built** — this section documents the agreed design only. ~~Building the Publish workflow depends on MailerSend being off its trial account (the test-PDF email needs it).~~ **That dependency cleared 2026-08-18** when Alex upgraded to a paid plan, so the Publish workflow is now buildable whenever it is prioritised.
 

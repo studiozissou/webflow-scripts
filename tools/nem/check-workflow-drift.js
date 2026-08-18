@@ -191,6 +191,23 @@ const INVARIANTS = {
           find(wf, "MailerLite: Send Verification")?.parameters?.url ?? "",
         ),
     },
+    {
+      /* The v2 component has sent these three since 2026-08-17, but Normalize dropped them
+       * for a day and nothing noticed — the payload arrived, was silently discarded, and
+       * the failure log's conclusionId column was left permanently unfillable. */
+      label: "Normalize keeps the v2 outcome, conclusionKey and conclusionId",
+      check: (wf) => {
+        const code = find(wf, "Normalize")?.parameters?.jsCode ?? "";
+        return ["outcome", "conclusionKey", "conclusionId"].every((f) => code.includes(f));
+      },
+    },
+    {
+      label: "Store Profile persists the v2 conclusion fields and the event type",
+      check: (wf) => {
+        const mapped = find(wf, "Store Profile")?.parameters?.columns?.value ?? {};
+        return ["outcome", "conclusionKey", "conclusionId", "event"].every((f) => f in mapped);
+      },
+    },
   ],
 };
 

@@ -3,9 +3,9 @@
   "lastUpdated": "2026-08-18",
   "lastPlanned": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
   "lastRegistered": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
-  "note": "Deploy 8a4134c (2026-08-18): fix-mobile-work-to-home-shrink (resolve dial CSS vars to px before GSAP tween + mobile content fade). Verified since-last-deploy scope: 70 passed / 26 failed / 2 flaky. Feature suite 8/8 green. All 26 failures pre-existing and unrelated: 13 x .nav_logo-link hidden on /about by ready-hit-play.css:103 (reproduced against old build b98c74a), 4 x canary missing STAGING_URL env, 4 x a11y WCAG content, 1 x mobile-tick reduced-motion (known failure documented in its spec), 4 x about-page slider/restore. About-page test-vs-design mismatch needs its own ticket.",
+  "note": "Deploy 6d7de7b (2026-08-18, v=2026.8.18.3): rhp-mobile-dial-circular-drag-and-spinner-arrows merged with fix-mobile-work-to-home-shrink (8a4134c) — the merge was required because the live head pointed at 8a4134c, which was NOT an ancestor of the feature branch; deploying the branch hash alone would have reverted the shrink fix. Feature verified against the deployed build via Chrome DevTools MCP: 360 continuous drag monotonic at 1:1, exact sector stepping, clean snap, inner-tap inert, multi-touch inert, Barba home-about-home clean, zero console errors, Lighthouse a11y 90. KNOWN ISSUE (not a product defect): the Tier-1 interaction tests cannot reach the interactive state in headless Chromium — the home intro word-cycle never completes headless (wrapper stuck on rhp-intro-started 60s+, rhp-home-ready never set, no page errors; the intro appears to gate on the Vimeo intro video, which headless cannot decode). All failures were timeouts; no assertion about drag behaviour ever failed. waitForHomeReady() in the feature spec now drives RHP.homeScrollMorph.skipToEnd() as a partial mitigation. Follow-up ticket needed: run dial-interaction specs headed, or stub the intro video. This likely also explains a share of the 13 pre-existing about-to-home failures written off in the previous deploy.",
   "lastDeployed": "2026-08-18",
-  "lastDeployedHash": "8a4134c",
+  "lastDeployedHash": "6d7de7b",
   "entries": [
     {
       "id": "smoke",

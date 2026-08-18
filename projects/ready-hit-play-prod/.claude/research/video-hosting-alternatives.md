@@ -156,11 +156,16 @@ page carries **2 full case films ≈ 41.5 MB**.
 the entire homepage dial does. My earlier estimate modelled only the dial and was wrong about
 where the money goes.
 
-### Session model: homepage + 3 work pages, 10,000 sessions/month
+### Actual traffic (client GA, provided 2026-08-18)
 
-The saving grace is that **the 6 dial videos are the same URLs on every page** (the dial CMS
-items live outside the Barba container). After the homepage they are browser cache hits and
-cost nothing again — so the `perf-fg-video-preload-on-transition` warming is already free.
+- ~3,400 sessions **year to date**
+- ~415 sessions / 430 users per month since the new site launched (May–Jul)
+- Full-year monthly average ~450 sessions
+- August tracking higher, but inflated by the team's own testing traffic
+- **Planning figure: 400–500 sessions/month**, growth expected from the marketing push
+  starting 18 Aug
+
+### Session model: homepage + 3 work pages
 
 | Stage | New bytes |
 |---|---|
@@ -170,18 +175,44 @@ cost nothing again — so the `perf-fg-video-preload-on-transition` warming is a
 | Work page 3 — dial cached, 2 case films | ~41.5 MB |
 | **Session total** | **~132 MB** |
 
-At 10,000 sessions/month → **~1.32 TB/month** → on Bunny at $0.010/GB EU/NA:
+### At real traffic: the bill is the account minimum
 
-> ### ~$13/month, plus negligible storage and the $1 minimum. Call it **$14/month.**
+450 sessions × 132 MB ≈ **59 GB/month** ≈ **$0.59** of delivery. The entire video library
+(6 dial clips in two renditions + 12 case films) is ~260 MB stored ≈ **$0.003**.
 
-That is an upper bound: `Content-Length` is the whole file, while progressive download means
-a visitor who scrolls past a film part-way fetches only part of it. Realistic billing is
-likely **$9–13/month**.
+> ### Total: **$1/month** — i.e. the $1 account minimum. Bandwidth and storage together do not reach it.
+>
+> For scale: at 3,400 sessions YTD, a full year of RHP's video traffic is ~449 GB ≈ **$4.50 for the year**.
 
-**The finding that actually matters:** at ~132 MB/session, Vimeo's 2 TB self-serve cap is
-reached at roughly **15,000 sessions/month**. At the assumed 10,000 they are already sitting
-at ~64% of the ceiling. A 50% traffic increase breaks the plan regardless of price. This is
-not a hypothetical future problem — it is close.
+The PAYG exposure that prompted this analysis is, at RHP's actual scale, not a real risk.
+Headroom before it becomes one:
+
+| Sessions / month | Transfer | Bunny cost | vs today |
+|---|---|---|---|
+| **450 (today)** | 59 GB | **$1** (minimum) | — |
+| 1,000 | 132 GB | $1.32 | 2× growth |
+| 2,500 | 330 GB | $3.30 | 5× |
+| 5,000 | 660 GB | $6.60 | 11× |
+| 10,000 | 1.32 TB | $13.20 | 22× |
+| 15,000 | 1.98 TB | ~$20 | 33× — **Vimeo's 2 TB cap breaks here** |
+
+Traffic would need to grow roughly **8× before the bill reaches $5/month**. The marketing
+push would have to be extraordinarily successful to make hosting cost a consideration, and
+if it is that successful, ~$20/month at 33× traffic is not the problem worth solving.
+
+### Footnote: at this scale Cloudflare R2 would literally be $0
+
+R2's permanent free tier covers 10 GB of storage with zero egress charges; RHP's whole
+library is ~260 MB. The trade-off is no transcoding, no renditions and no upload dashboard —
+we would hand-encode and upload every video. Bunny's ~$12/year buys the client self-serve
+uploads and automatic 360p/720p renditions. That is the right trade at this price.
+
+The saving grace is that **the 6 dial videos are the same URLs on every page** (the dial CMS
+items live outside the Barba container). After the homepage they are browser cache hits and
+cost nothing again — so the `perf-fg-video-preload-on-transition` warming is already free.
+
+All figures are an upper bound: `Content-Length` is the whole file, while progressive
+download means a visitor who scrolls past a film part-way fetches only part of it.
 
 ### Flagged: the case films have no mobile rendition
 

@@ -1,0 +1,73 @@
+<!--
+  ABOUT PAGE — ProfilePage + BreadcrumbList
+  =========================================
+  Place in: Webflow → /about-tamsen → Page Settings → Custom Code → Before </body>
+  Requires: sitewide-graph.html deployed site-wide (this references #person by @id)
+
+  ProfilePage is the correct type for the canonical "about this person" page. It
+  tells Google that this URL is the authoritative profile for the Person entity —
+  directly relevant to the branded-search problem.
+
+  VERIFIED 2026-08-06 against https://www.tamsenfadal.com/about-tamsen :
+    - "13x Emmy-award winning journalist" ........ H2 on page
+    - "NYT bestselling author"  .................. H1 on page
+    - "Global keynote speaker" ................... H1 on page
+    - "Podcast host" ............................. H1 on page
+    - 2008-2023 primetime TV anchor in NYC ....... timeline section
+    - 2022 launched Tamsen Fadal Media ........... timeline section
+    - 2023 wrote How To Menopause ................ timeline section
+    - No JSON-LD currently on this page .......... confirmed empty
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ProfilePage",
+      "@id": "https://www.tamsenfadal.com/about-tamsen#profilepage",
+      "url": "https://www.tamsenfadal.com/about-tamsen",
+      "name": "About Tamsen Fadal",
+      "description": "Tamsen Fadal is a 13x Emmy-winning journalist, New York Times bestselling author of How to Menopause, and host of The Tamsen Show Podcast.",
+      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
+      "mainEntity": { "@id": "https://www.tamsenfadal.com/#person" },
+      "about": { "@id": "https://www.tamsenfadal.com/#person" },
+      "breadcrumb": { "@id": "https://www.tamsenfadal.com/about-tamsen#breadcrumb" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/about-tamsen#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.tamsenfadal.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "About Tamsen Fadal",
+          "item": "https://www.tamsenfadal.com/about-tamsen"
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<!--
+  RELATED COPY FIX (not schema, but the highest-value single edit on this page):
+
+  The H1 is currently:
+      "NYT bestselling author. Global keynote speaker. Podcast host."
+
+  It does not contain her name. This is the exact issue GreenBanana flagged, and
+  it is still live. The old site's H1 was:
+      "Menopause advocate, Emmy Award winning TV journalist & Author ..."
+
+  Suggested H1, keeping the new site's rhythm and adding the entity name back:
+      "Tamsen Fadal — NYT bestselling author. Global keynote speaker. Podcast host."
+
+  Tamsen's team owns final wording. Recommendation only.
+-->

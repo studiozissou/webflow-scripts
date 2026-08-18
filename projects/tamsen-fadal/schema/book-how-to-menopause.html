@@ -1,0 +1,95 @@
+<!--
+  BOOK PAGE — Book + BreadcrumbList
+  =================================
+  Place in: Webflow → /book-how-to-menopause → Page Settings → Before </body>
+  Requires: sitewide-graph.html deployed site-wide (author references #person)
+
+  VERIFIED 2026-08-06 against https://www.tamsenfadal.com/book-how-to-menopause :
+    - Full title + subtitle ........ meta description on page
+    - Author: Tamsen Fadal ......... H1 "How to Menopause Book by Tamsen Fadal"
+    - "instant New York Times bestseller" ... H2 on page
+    - "translated into multiple languages" .. body copy on page
+    - Retailers listed ............. Amazon, Amazon Kindle, Audible, Barnes & Noble,
+                                     Target, Waterstones, Bookshop, Libro.fm,
+                                     Indigo, Books-A-Million
+    - ISBN 9780306833540 ........... from the Hachette URL already present in the
+                                     live homepage sameAs array
+    - No JSON-LD currently on this page ..... confirmed empty
+
+  DELIBERATELY OMITTED:
+    - aggregateRating / review. The page shows testimonial quotes, but self-hosted
+      review markup on your own product is exactly what Google's spam guidance
+      targets. Not worth the risk on the page that matters most commercially.
+    - datePublished. Not stated on the page; add once confirmed.
+    - numberOfPages, publisher imprint. Not stated on the page.
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Book",
+      "@id": "https://www.tamsenfadal.com/book-how-to-menopause#book",
+      "name": "How to Menopause",
+      "alternateName": "How to Menopause: Take Charge of Your Health, Reclaim Your Life, and Feel Even Better Than Before",
+      "url": "https://www.tamsenfadal.com/book-how-to-menopause",
+      "description": "The instant New York Times bestseller that guides you through perimenopause, menopause and beyond. A global bestselling book translated into multiple languages, drawing on cutting-edge research and advice from over 42 experts.",
+      "author": { "@id": "https://www.tamsenfadal.com/#person" },
+      "inLanguage": "en",
+      "isbn": "9780306833540",
+      "bookFormat": "https://schema.org/Hardcover",
+      "genre": ["Health", "Women's Health", "Self-Help"],
+      "about": [
+        "Menopause",
+        "Perimenopause",
+        "Women's Health",
+        "Midlife Wellness",
+        "Hormone Health"
+      ],
+      "sameAs": "https://www.hachettebookgroup.com/titles/tamsen-fadal/how-to-menopause/9780306833540/?lens=balance",
+      "mainEntityOfPage": { "@id": "https://www.tamsenfadal.com/book-how-to-menopause#webpage" },
+      "workExample": [
+        {
+          "@type": "Book",
+          "bookFormat": "https://schema.org/EBook",
+          "isbn": "9780306833540",
+          "inLanguage": "en"
+        },
+        {
+          "@type": "Book",
+          "bookFormat": "https://schema.org/AudiobookFormat",
+          "inLanguage": "en"
+        }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.tamsenfadal.com/book-how-to-menopause#webpage",
+      "url": "https://www.tamsenfadal.com/book-how-to-menopause",
+      "name": "How to Menopause by NYT Bestselling Author Tamsen Fadal",
+      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://www.tamsenfadal.com/#website" },
+      "about": { "@id": "https://www.tamsenfadal.com/book-how-to-menopause#book" },
+      "breadcrumb": { "@id": "https://www.tamsenfadal.com/book-how-to-menopause#breadcrumb" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.tamsenfadal.com/book-how-to-menopause#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.tamsenfadal.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "How to Menopause",
+          "item": "https://www.tamsenfadal.com/book-how-to-menopause"
+        }
+      ]
+    }
+  ]
+}
+</script>

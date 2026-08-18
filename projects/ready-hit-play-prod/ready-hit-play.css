@@ -1362,6 +1362,14 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
 @media (min-width: 992px) {
   .section_about-hero [data-slider] .slide-caption {
     justify-content: flex-start;
+    /* Match the caption to the image's rendered width. When the slide box is
+       short the image is height-capped and `width: auto` shrinks it inside the
+       column, but the caption would still span the full column and overhang it
+       (479px caption against a 293px image at a 650px viewport).
+       --slide-image-width is set by about-swipers.js. */
+    max-width: var(--slide-image-width, 100%);
+    margin-left: auto;
+    margin-right: auto;
   }
   .section_about-hero [data-slider] .slide-caption .about_image-wrapper {
     height: calc(100% - var(--slide-caption-height, 0px));
@@ -1379,16 +1387,11 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   flex-shrink: 0;
 }
 
-/* Breathing room under the caption. Without it the slide caption sits flush on
-   the accordion's bottom divider — most obvious on the sticky WWCF carousel,
-   which bottom-locks to the copy column when it releases.
-   Padding on the column (not margin on the slider) so it can't margin-collapse
-   out of the column box. One accordion-title height, matching the page rhythm. */
-@media (min-width: 992px) {
-  .section_about-hero .accordion-column:has([data-slider]) {
-    padding-bottom: var(--accordion-title-height, 4.375rem);
-  }
-}
+/* Breathing room under the caption is reserved INSIDE the slide box by
+   about-swipers.js (--slide-caption-height = caption + one title height), not
+   as padding on the column. The column is the sticky element: while it is
+   pinned the accordion's bottom rule scrolls up underneath it and meets the
+   caption, so column padding only reads as spacing once the sticky releases. */
 
 /* Mobile/tablet: auto height — content determines slider height, no JS cap */
 @media (max-width: 991px) {

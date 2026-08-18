@@ -29,3 +29,39 @@ html { font-size: 1.125rem; }
 @media screen and (max-width: 480px) {
   html { font-size: calc(0.7494780793319415rem + 0.8350730688935282vw); }
 }
+
+/* ── Contact modal scrollbar ─────────────────────────────────────────────
+ * .modal1_content-wrapper is overflow:auto with max-height:95vh, so the
+ * contact form scrolls once the viewport drops below ~780px tall.
+ * Recolour the default grey UA scrollbar to Ink (track) / Cyan (thumb).
+ *
+ * The standard properties are fenced behind @supports on purpose. Chrome
+ * now supports scrollbar-width/scrollbar-color, and when either is set it
+ * ignores the ::-webkit-scrollbar pseudo-elements entirely — which would
+ * silently drop the thumb's border-radius. The @supports query is false in
+ * Chrome/Safari (they do support ::-webkit-scrollbar) and true in Firefox,
+ * so each engine gets exactly one path. Firefox has no thumb radius control.
+ */
+
+@supports not selector(::-webkit-scrollbar) {
+  .modal1_content-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: var(--_🎨-color--base---accent--primary)
+                     var(--_🎨-color--base---base--dark-100);
+  }
+}
+
+.modal1_content-wrapper::-webkit-scrollbar {
+  width: 0.375rem;
+  height: 0.375rem;
+}
+
+.modal1_content-wrapper::-webkit-scrollbar-track,
+.modal1_content-wrapper::-webkit-scrollbar-corner {
+  background: var(--_🎨-color--base---base--dark-100);
+}
+
+.modal1_content-wrapper::-webkit-scrollbar-thumb {
+  background: var(--_🎨-color--base---accent--primary);
+  border-radius: 0.125rem;
+}

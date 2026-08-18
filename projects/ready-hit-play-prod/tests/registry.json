@@ -3,9 +3,9 @@
   "lastUpdated": "2026-08-18",
   "lastPlanned": "fix-mobile-work-to-home-shrink",
   "lastRegistered": "fix-mobile-work-to-home-shrink",
-  "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
-  "lastDeployed": "2026-08-12",
-  "lastDeployedHash": "179363b",
+  "note": "Deploy 8a4134c (2026-08-18): fix-mobile-work-to-home-shrink (resolve dial CSS vars to px before GSAP tween + mobile content fade). Verified since-last-deploy scope: 70 passed / 26 failed / 2 flaky. Feature suite 8/8 green. All 26 failures pre-existing and unrelated: 13 x .nav_logo-link hidden on /about by ready-hit-play.css:103 (reproduced against old build b98c74a), 4 x canary missing STAGING_URL env, 4 x a11y WCAG content, 1 x mobile-tick reduced-motion (known failure documented in its spec), 4 x about-page slider/restore. About-page test-vs-design mismatch needs its own ticket.",
+  "lastDeployed": "2026-08-18",
+  "lastDeployedHash": "8a4134c",
   "entries": [
     {
       "id": "smoke",

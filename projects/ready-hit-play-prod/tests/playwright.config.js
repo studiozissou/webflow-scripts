@@ -5,7 +5,14 @@ module.exports = defineConfig({
   testDir: '.',
   timeout: 30_000,
   expect: { timeout: 10_000 },
+  // `fullyParallel: false` only serialises tests WITHIN a file — Playwright still
+  // runs separate files concurrently, defaulting to ~half the CPU cores. On a full
+  // registry run that put ~13 workers against one Webflow staging site and produced
+  // mass 30s timeouts (2026-08-18: 113 of 115 distinct failures were timeouts, not
+  // assertion failures). Cap the workers so the stated intent actually holds.
+  // Override for a one-off: PW_WORKERS=4 npm run test:registry
   fullyParallel: false, // avoid hammering Webflow staging
+  workers: Number(process.env.PW_WORKERS) || 2,
   retries: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
 

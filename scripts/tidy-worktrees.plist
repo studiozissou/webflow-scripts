@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Weekly worktree tidy-up. Runs scripts/tidy-worktrees.sh every Monday at 09:17
+  local time. If the Mac is asleep at that moment, launchd runs the job on wake.
+
+  Install:
+    cp scripts/tidy-worktrees.plist ~/Library/LaunchAgents/io.teamzissou.tidy-worktrees.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.tidy-worktrees.plist
+
+  Run it once, right now, without waiting for Monday:
+    launchctl start io.teamzissou.tidy-worktrees
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.tidy-worktrees.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.tidy-worktrees.plist
+
+  Output is appended to ~/Library/Logs/tidy-worktrees.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.tidy-worktrees</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/tidy-worktrees.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>TIDY_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>17</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/tidy-worktrees.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/tidy-worktrees.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

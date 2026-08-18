@@ -1,7 +1,29 @@
 # Changeset — `nem-report-prompt-escaping-and-token-limit`
 
-Prepared 2026-08-11 for pick-up. Everything here is **ready to apply but unapplied**.
-Nothing in the live `/verify` workflow has been touched.
+> ## ✅ APPLIED — do not apply again
+>
+> Confirmed against live on **2026-08-18**: all three edits are present in the live
+> `/verify` workflow. It went in on **2026-08-13** (workflow `updatedAt` 15:03:50Z;
+> execution 45 at 15:02 already shows `Report Prompt` in its path), almost certainly by
+> hand in the n8n UI, which is why no commit here records it.
+>
+> **Re-sending `partial-update.operations.json` would add a second `Report Prompt` node
+> or fail outright.** The files below are kept as the record of what was applied and as
+> the reference for verifying it, not as a pending action.
+>
+> Live now matches: `Report Prompt` is a Set node on typeVersion 3.5 holding `systemPrompt`
+> as a fixed value (does not start with `=`); the `Valid?` true branch fans out to
+> `Respond Confirmed`, `Mark Consumed` and `Report Prompt`; `Generate Report` reads the Set
+> node, uses `$('Validate Token')` references and `max_tokens: 8000`.
+>
+> The stub text differs slightly in wording from `report-prompt.node.json` — consistent with
+> a hand-application. Both are clearly-labelled test stubs, so this is cosmetic.
+>
+> Still outstanding, and *not* this changeset: the value is a TEST MODE stub. Installing
+> Alex's real prompt is blocked on Notion access.
+
+Prepared 2026-08-11 for pick-up. ~~Everything here is **ready to apply but unapplied**.
+Nothing in the live `/verify` workflow has been touched.~~ (Superseded — see above.)
 
 **Spec:** `../../specs/nem-report-prompt-escaping-and-token-limit.md`
 **Workflow:** `NEM Test — /verify`, n8n id `uKkMgMYoH5nOLoCR`, **active**
@@ -9,16 +31,15 @@ Nothing in the live `/verify` workflow has been touched.
 
 ## Read this first — two things changed since the spec was written
 
-### 1. The n8n API key is failing auth
+### 1. ~~The n8n API key is failing auth~~ — resolved
 
-```
-mcp__n8n__n8n_get_workflow → AUTHENTICATION_ERROR: Failed to authenticate with n8n
-```
+The key worked fine on 2026-08-18 (read the workflow, listed executions, read and wrote
+Data Table rows). Whatever was stale on 2026-08-11 has since been refreshed.
 
-`n8n_health_check` succeeds (it doesn't authenticate), so the instance is up — it is
-the key that is stale. **Refresh `N8N_API_KEY` before anything else.** Until then,
-spec step 1 (snapshot live as the rollback point) cannot run, and there is no version
-history in n8n to fall back on. Do not edit the workflow before the snapshot exists.
+The advice that outlived it and is still worth keeping: **n8n has no version history for
+this workflow, so snapshot live and commit it before editing.** That is exactly how the
+already-applied state above was discovered — the snapshot came back with a node the repo
+copy did not have.
 
 ### 2. The spec asserts on a node shape that no longer exists
 
@@ -145,7 +166,7 @@ Then inspect the execution with `mcp__n8n__n8n_executions` (`action: "get"`,
 
 Then swap the torture prompt back out for the stub (or Alex's real prompt, if it has landed).
 
-### Two constraints on verification
+### Constraints on verification (historical — both now cleared)
 
 ~~**MailerSend is still on a trial account**~~ — **cleared 2026-08-18.** Alex upgraded to a
 paid "Hobby" plan and a live end-to-end send to a never-before-used recipient succeeded

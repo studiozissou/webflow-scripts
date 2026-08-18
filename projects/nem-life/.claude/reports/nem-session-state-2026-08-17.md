@@ -92,21 +92,34 @@ failed. Credential `699carSHScI1ng0W`, sending from `hallo@nemmatters.com`.
 **Watch instead:** the Hobby plan has a monthly send quota rather than a recipient cap. If it
 is ever hit, reports *and* the failure alerts ride the same account and go quiet together.
 
-### 2. jsDelivr is refusing to serve this repo — affects every client
+### 2. ~~jsDelivr is refusing to serve this repo~~ — NOT REPRODUCING (corrected 2026-08-18)
+
+**This was over-diagnosed. Do not quote it as a live outage.**
+
+On 17 Aug jsDelivr returned:
 
 ```
 GET cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@<sha>/…
 → 403  "Package size exceeded the configured limit of 50 MB."
 ```
 
-The repo is **672 MB**. `projects/nem-life` alone is 155 MB: 93 MB `audit/`, 37 MB
-`designs/`, 21 MB `debug/`, all tracked. Actual source is 176 KB.
+Real, and a specific error rather than a generic failure. But re-tested on 18 Aug it does
+not reproduce: four commit hashes including ones pushed minutes earlier all return 200,
+across both `projects/nem-life` and `projects/ready-hit-play-prod`, with a bogus path still
+404ing as a control. The live staging page's own `init.js` (hash `da2bc26`) serves fine.
 
-Every Webflow site in this monorepo that loads JS from jsDelivr is silently broken. Found
-via the NEM staging console (`init.js` refused, served as `text/plain`). **Not** a NEM
-Test problem and unrelated to the component — but the most serious thing found today.
-Needs a decision on where the binary assets should live; note jsDelivr sizes the whole
-package, so history matters, not just HEAD.
+So it was **transient**. The claim that a 672 MB repo permanently breaks script loading on
+every client site does not survive the evidence — brand-new commits serve. A session on
+30 Apr and another on 17 Aug both logged it as "a jsDelivr outage"; that reading now looks
+better than the size-limit explanation that replaced it.
+
+**Still worth doing, but as hygiene rather than an emergency:** the repo really is ~672 MB,
+with `projects/nem-life` alone holding 155 MB of tracked `audit/`, `designs/` and `debug/`
+PNGs against 176 KB of source. That may well be what tips jsDelivr over intermittently, and
+it makes every clone painful. It is not, on current evidence, breaking anything today.
+
+Re-test with a fresh commit hash before acting on it, and read the response body rather than
+the status alone.
 
 ### 3. Acceptance suite — 11 passed, 5 flaky, 4 failed
 

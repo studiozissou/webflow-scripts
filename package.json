@@ -20,7 +20,8 @@
     "build:nem": "node tools/nem/build-conclusion-texts.js && node tools/nem/build-component.js && npm run typecheck:nem",
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",
     "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'",
-    "typecheck:nem": "tsc -p projects/nem-life/dist/tsconfig.json"
+    "typecheck:nem": "tsc -p projects/nem-life/dist/tsconfig.json",
+    "check:nem-drift": "node tools/nem/check-workflow-drift.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

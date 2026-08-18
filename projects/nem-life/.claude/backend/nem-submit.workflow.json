@@ -8,22 +8,28 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000001",
+      "id": "16aa20eb-d7f2-4fe3-8b22-178786a04acc",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 320],
+      "position": [
+        -656,
+        192
+      ],
       "webhookId": "nem-submit"
     },
     {
       "parameters": {
-        "jsCode": "// Flatten the webhook payload + derive server-side fields.\nconst b = $json.body ?? $json;\nconst headers = $json.headers ?? {};\nconst xff = (headers['x-forwarded-for'] || headers['x-real-ip'] || '').toString();\nconst ip = xff.split(',')[0].trim() || 'unknown';\nconst now = new Date();\nconst expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();\n// Base URL of the /verify webhook. n8n Cloud blocks $env access, so hard-code it.\nconst base = 'https://reus.app.n8n.cloud/webhook/nem-verify';\nconst token = (b.token || '').toString();\nreturn [{\n  json: {\n    token,\n    email: (b.email || '').toString().trim().toLowerCase(),\n    firstName: (b.firstName || '').toString().trim(),\n    gender: b.gender || '',\n    ageCategory: b.ageCategory || '',\n    relationshipStatus: b.relationshipStatus || '',\n    locale: b.locale || 'nl',\n    scoresJson: JSON.stringify(b.scores || {}),\n    primaryMechanism: b.primaryMechanism || '',\n    secondaryMechanism: b.secondaryMechanism || '',\n    totalScore: b.totalScore ?? '',\n    nemMattersConsent: b.nemMattersConsent === true,\n    honeypot: (b.honeypot || '').toString(),\n    ip,\n    receivedAt: now.toISOString(),\n    expiresAt,\n    consumed: false,\n    verifyUrl: base + '?token=' + encodeURIComponent(token)\n  }\n}];"
+        "jsCode": "// Flatten the webhook payload + derive server-side fields.\nconst b = $json.body ?? $json;\nconst headers = $json.headers ?? {};\nconst xff = (headers['x-forwarded-for'] || headers['x-real-ip'] || '').toString();\nconst ip = xff.split(',')[0].trim() || 'unknown';\nconst now = new Date();\nconst expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();\n// Base URL of the /verify webhook. Set NEM_VERIFY_WEBHOOK_URL as an n8n env var,\n// or replace the fallback string below once the /verify workflow is deployed.\nconst base = 'https://reus.app.n8n.cloud/webhook/nem-verify';\nconst token = (b.token || '').toString();\nreturn [{\n  json: {\n    token,\n    email: (b.email || '').toString().trim().toLowerCase(),\n    firstName: (b.firstName || '').toString().trim(),\n    gender: b.gender || '',\n    ageCategory: b.ageCategory || '',\n    relationshipStatus: b.relationshipStatus || '',\n    locale: b.locale || 'nl',\n    scoresJson: JSON.stringify(b.scores || {}),\n    primaryMechanism: b.primaryMechanism || '',\n    secondaryMechanism: b.secondaryMechanism || '',\n    totalScore: b.totalScore ?? '',\n    nemMattersConsent: b.nemMattersConsent === true,\n    honeypot: (b.honeypot || '').toString(),\n    ip,\n    receivedAt: now.toISOString(),\n    expiresAt,\n    consumed: false,\n    verifyUrl: base + '?token=' + encodeURIComponent(token)\n  }\n}];"
       },
-      "id": "a1000000-0000-4000-8000-000000000002",
+      "id": "37746a0a-4b55-4f3e-b5be-c98ed8ed4e94",
       "name": "Normalize",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 320]
+      "position": [
+        -448,
+        192
+      ]
     },
     {
       "parameters": {
@@ -50,11 +56,14 @@
         },
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000003",
+      "id": "3b35361b-0df0-4aa2-83ba-dd0b1396ff5a",
       "name": "Honeypot filled?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [440, 320]
+      "position": [
+        -224,
+        192
+      ]
     },
     {
       "parameters": {
@@ -62,21 +71,27 @@
         "responseBody": "={{ { \"status\": \"ok\" } }}",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000004",
+      "id": "c6ad72fe-50b6-42db-8c41-8c8bf63ee103",
       "name": "Respond OK (honeypot)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [660, 140]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
         "jsCode": "// In-memory IP rate limit: max 3 submissions per IP per rolling hour.\n// Uses n8n workflow static data (persists across executions of this workflow).\nconst input = $json;\nconst ip = input.ip || 'unknown';\nconst store = $getWorkflowStaticData('global');\nstore.hits = store.hits || {};\nconst now = Date.now();\nconst windowMs = 60 * 60 * 1000;\nconst recent = (store.hits[ip] || []).filter(t => now - t < windowMs);\nconst rateLimited = recent.length >= 3;\nif (!rateLimited) {\n  recent.push(now);\n}\nstore.hits[ip] = recent;\nreturn [{ json: { ...input, rateLimited } }];"
       },
-      "id": "a1000000-0000-4000-8000-000000000005",
+      "id": "ea6a7d58-17a2-4fe5-afbd-99b8045b7118",
       "name": "Rate limit",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, 420]
+      "position": [
+        0,
+        288
+      ]
     },
     {
       "parameters": {
@@ -103,11 +118,14 @@
         },
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000006",
+      "id": "29c130b4-a3cd-4549-b7fd-b492a3f2ddd2",
       "name": "Rate limited?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [880, 420]
+      "position": [
+        224,
+        288
+      ]
     },
     {
       "parameters": {
@@ -115,24 +133,39 @@
         "responseBody": "={{ { \"status\": \"rate_limited\" } }}",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000007",
+      "id": "51003e2b-9793-492b-9edb-843922aba96c",
       "name": "Respond Rate Limited",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1100, 260]
+      "position": [
+        448,
+        128
+      ]
     },
     {
       "parameters": {
-        "operation": "insert",
+        "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "REPLACE_DATA_TABLE_ID",
+          "value": "ib5Yh0yEfNpDqeuU",
           "mode": "list",
-          "cachedResultName": "nem_test_profiles"
+          "cachedResultName": "nem_test_profiles",
+          "cachedResultUrl": "/projects/VNzIpvBdgt9it5VO/datatables/ib5Yh0yEfNpDqeuU"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token",
+              "keyValue": "={{ $json.token }}"
+            }
+          ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
+            "nemMattersConsent": "={{ $json.nemMattersConsent }}",
+            "consumed": "={{ $json.consumed }}",
+            "totalScore": "={{ $json.totalScore }}",
             "token": "={{ $json.token }}",
             "email": "={{ $json.email }}",
             "firstName": "={{ $json.firstName }}",
@@ -143,24 +176,197 @@
             "scoresJson": "={{ $json.scoresJson }}",
             "primaryMechanism": "={{ $json.primaryMechanism }}",
             "secondaryMechanism": "={{ $json.secondaryMechanism }}",
-            "totalScore": "={{ $json.totalScore }}",
-            "nemMattersConsent": "={{ $json.nemMattersConsent }}",
             "ip": "={{ $json.ip }}",
             "receivedAt": "={{ $json.receivedAt }}",
             "expiresAt": "={{ $json.expiresAt }}",
-            "consumed": "={{ $json.consumed }}",
             "verifyUrl": "={{ $json.verifyUrl }}"
           },
-          "matchingColumns": ["token"],
-          "schema": []
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "firstName",
+              "displayName": "firstName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "gender",
+              "displayName": "gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ageCategory",
+              "displayName": "ageCategory",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "relationshipStatus",
+              "displayName": "relationshipStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "locale",
+              "displayName": "locale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scoresJson",
+              "displayName": "scoresJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "primaryMechanism",
+              "displayName": "primaryMechanism",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "secondaryMechanism",
+              "displayName": "secondaryMechanism",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "totalScore",
+              "displayName": "totalScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "nemMattersConsent",
+              "displayName": "nemMattersConsent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ip",
+              "displayName": "ip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "receivedAt",
+              "displayName": "receivedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "expiresAt",
+              "displayName": "expiresAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "consumed",
+              "displayName": "consumed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "verifyUrl",
+              "displayName": "verifyUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000008",
+      "id": "59074752-ad20-42de-b264-884a89b3d79d",
       "name": "Store Profile",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
-      "position": [1100, 520]
+      "position": [
+        448,
+        384
+      ]
     },
     {
       "parameters": {
@@ -171,20 +377,35 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ email: $json.email, fields: { name: $json.firstName, nem_token: $json.token, nem_locale: $json.locale, nem_verify_url: $json.verifyUrl }, groups: [ '192344920326931926' ], status: 'active' }) }}",
+        "jsonBody": "={{ JSON.stringify({ email: $json.email, fields: { name: $json.firstName, nem_token: $json.token, nem_locale: $json.locale, nem_verify_url: $json.verifyUrl }, groups: [ '192344920326931926' ] }) }}",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000009",
+      "id": "cc885860-8b3a-47dc-8cd2-1ab2330e8bb1",
       "name": "MailerLite: Send Verification",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1320, 520]
+      "position": [
+        672,
+        384
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wQ0hWw0KfZHraJs1",
+          "name": "Header Auth account"
+        }
+      }
     },
     {
       "parameters": {
@@ -192,46 +413,115 @@
         "responseBody": "={{ { \"status\": \"ok\" } }}",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-00000000000a",
+      "id": "a6f5fe4c-8850-404c-9649-de82a919aeb9",
       "name": "Respond OK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1540, 520]
+      "position": [
+        880,
+        384
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "Normalize", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalize": {
-      "main": [[{ "node": "Honeypot filled?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Honeypot filled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Honeypot filled?": {
       "main": [
-        [{ "node": "Respond OK (honeypot)", "type": "main", "index": 0 }],
-        [{ "node": "Rate limit", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond OK (honeypot)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rate limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Rate limit": {
-      "main": [[{ "node": "Rate limited?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Rate limited?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Rate limited?": {
       "main": [
-        [{ "node": "Respond Rate Limited", "type": "main", "index": 0 }],
-        [{ "node": "Store Profile", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond Rate Limited",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Store Profile": {
-      "main": [[{ "node": "MailerLite: Send Verification", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "MailerLite: Send Verification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "MailerLite: Send Verification": {
-      "main": [[{ "node": "Respond OK", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
-  "settings": { "executionOrder": "v1" },
-  "pinData": {},
-  "meta": {
-    "templateCredsSetupCompleted": false
-  }
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {}
 }

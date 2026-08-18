@@ -190,7 +190,10 @@ describe("comments are stripped from production code", () => {
 describe("the bundle carries a provenance header", () => {
   test("says it is generated and names the command that regenerates it", () => {
     assert.match(bundle, /GENERATED FILE/);
-    assert.match(bundle, /tools\/nem\/build-component\.js/);
+    /* `npm run build:nem`, not the bare node command — the script also regenerates the
+     * texts module and runs the typecheck, and someone following the header must get all
+     * three or they will paste a file Webflow rejects. */
+    assert.match(bundle, /npm run build:nem/);
   });
 
   test("names the source modules so the reader knows where to edit", () => {

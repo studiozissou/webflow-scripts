@@ -9,7 +9,13 @@ Provide: client name, page type (home / about / case-study / blog-post / team / 
 3. **Generate schema** — use the `schema` agent to produce the JSON-LD. Every field must be backed by the live site or a clearly cited secondary source. Do NOT include unverifiable claims (employee counts, office addresses, support hours, founders) unless they appear on the live site.
 4. **Validate against live site** — compare every field in the generated schema against live site content. Fix any mismatches (e.g. wrong social URLs, description that doesn't match site copy, legalName that doesn't match footer). Run a structural JSON + Schema.org spec validation.
 5. Output the complete `<script type="application/ld+json">` block ready to paste.
-6. Specify where to place it in Webflow: Site Settings > Head Code (site-wide) or Page Settings > Head Code (page-specific).
+6. Specify where to place it in Webflow. Prefer the dedicated schema field over head code:
+   - **Site-wide** — Site Settings > Custom Code > Head. Append; never overwrite (that box usually holds GTM, site verification and Finsweet).
+   - **Static page** — Page Settings > the JSON-LD schema field. Writable in bulk via MCP `bulk_update_pages_schema_markup`; read current state first with `query_pages_schema_markup`.
+   - **CMS Collection Page template** — same field, but the value is a raw string in `rawJsonLdSchema` and needs Webflow's dynamic-binding tokens.
+6b. **If the schema is for a CMS template, load the `webflow-embeds` skill first** (`cms_schema_bindings`) and use the exact token format:
+   `{{wf {&quot;path&quot;:&quot;field-slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}`
+   Pull real field slugs with `get_collection_details` — do not guess them from display names. Bare `{{ field }}` is rejected by Webflow and publishes as an empty string.
 7. Save the schema to `projects/<client>/.claude/schema/<type>.json`.
 8. Provide a Google Rich Results Test link for the user to validate after deploying.
 9. **Rich Results feedback loop** — when the user confirms the schema is live:

@@ -1,0 +1,26 @@
+Hi Yoni, quick update on the entity work — good progress this week.
+
+*Live on the site now*
+Every page on tamsenfadal.com now carries a full entity graph telling Google that Tamsen, Take Flight Productions and the site are one connected entity. Previously only the homepage had this — 21 of 25 page templates had no structured data at all.
+
+*Fixed along the way*
+A few things we found in the existing markup and corrected:
+•  The podcast page linked to an Apple Podcasts URL that returns a 404
+•  One episode credited the wrong guest
+•  The page carried a self-assigned 5-star rating, which breaches Google's review policy and can trigger a manual penalty
+
+*Old vs new site audit — complete*
+We compared every equivalent page across both sites. The clearest losses:
+•  LinkedIn and X links were dropped from the footer sitewide
+•  The Provider Directory page lost Tamsen's name from both its title and description
+•  The About page H1 still doesn't include her name — Kevin's original flag
+
+*Wikidata — started*
+Her entry now has the official website linked, plus Instagram, Facebook, LinkedIn, TikTok and YouTube. That's the source Google reads for the Knowledge Panel.
+
+*Still waiting on*
+•  The approved bio — this is now the main thing holding us up. It gates the title/H1/meta recommendations and the final schema description
+•  Search Console access
+•  Google account logins for the Knowledge Panel claim
+
+Happy to jump on a call if that's easier than picking through it here.

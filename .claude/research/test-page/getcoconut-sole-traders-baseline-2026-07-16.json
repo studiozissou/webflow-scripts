@@ -1,0 +1,51 @@
+{
+  "url": "https://www.getcoconut.com/mtd-software/sole-traders",
+  "date": "2026-07-16",
+  "mode": "full",
+  "scores": {
+    "accessibility": 100,
+    "bestPractices": 73,
+    "seo": 100,
+    "agenticBrowsing": 96
+  },
+  "cwv": {
+    "lcpMs": 158,
+    "ttfbMs": 28,
+    "cls": 0.11
+  },
+  "cls": 0.11,
+  "consoleErrors": 0,
+  "consoleWarnings": 0,
+  "mobileOverflow": false,
+  "network": {
+    "requestCount": 101,
+    "failedRequests": 0
+  },
+  "memory": {
+    "jsHeapUsedMB": 23.2,
+    "domNodes": 1045
+  },
+  "keyboardA11y": {
+    "tabsWalked": 5,
+    "allFocusVisible": true,
+    "focusTrapOrLoss": false
+  },
+  "issues": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 4,
+    "total": 6
+  },
+  "failedAudits": [
+    "image-aspect-ratio",
+    "third-party-cookies",
+    "inspector-issues",
+    "cumulative-layout-shift"
+  ],
+  "screenshots": {
+    "desktop": ".claude/research/test-page/sole-traders-desktop.png",
+    "mobile": ".claude/research/test-page/sole-traders-mobile.png"
+  },
+  "report": ".claude/research/test-page/getcoconut-sole-traders-report-2026-07-16.md"
+}

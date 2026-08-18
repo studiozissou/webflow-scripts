@@ -1,13 +1,28 @@
 {
   "slack": {
+    "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time — every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
     "channels": [
       { "id": "C0973LJ2BTJ", "name": "carsa-tomek-rishi", "client": "Carsa" },
-      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa" },
-      { "id": "C09A7MZEK3P", "name": "skye-high-tamsen-fadal", "client": "Tamsen Fadal" }
+      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa" }
     ],
     "dms": [
-      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa" },
-      { "id": "D049YCR485C", "name": "Yoni", "client": "Tamsen Fadal" }
+      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa" }
+    ],
+    "manualCheck": [
+      {
+        "workspace": "Skye High",
+        "name": "#tamsen-web-dev",
+        "id": "C09A7MZEK3P",
+        "client": "Tamsen Fadal",
+        "note": "Slack API returned channel_not_found on 2026-08-05 — the ID may be wrong, or the Slack app is not installed in the Skye High workspace."
+      },
+      {
+        "workspace": "Skye High",
+        "name": "DM — Yoni",
+        "id": "D049YCR485C",
+        "client": "Tamsen Fadal",
+        "note": "Slack API returned channel_not_found on 2026-08-05. Yoni's jayshetty.me request arrived by email instead."
+      }
     ],
     "lookbackHours": 24
   },
@@ -22,8 +37,16 @@
     "lookaheadDays": 7
   },
   "trello": {
-    "enabled": false,
-    "boards": []
+    "enabled": true,
+    "boards": [
+      {
+        "id": "69bc0361e05a6a1648dc23e6",
+        "name": "I-com / Coconut",
+        "client": "Coconut",
+        "lists": ["Web development"],
+        "note": "Shared board with the I-com agency (108 cards). Scope scans to the Web development list only — the other lists are their SEO, content and PPC work."
+      }
+    ]
   },
   "notion": {
     "databaseName": "Tasks Tracker",

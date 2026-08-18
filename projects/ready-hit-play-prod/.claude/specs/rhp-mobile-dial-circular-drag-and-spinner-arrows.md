@@ -572,3 +572,28 @@ Machine-runnable version:
 13. `dial still spins after home to about to home`
 14. `prefers-reduced-motion: rotation works, snap is instant`
 15. `axe-core: no new violations on mobile home`
+
+---
+
+## Build addendum (2026-08-18, /build)
+
+Deviations from the spec above, all verified in the MCP loop:
+
+1. **Multi-touch guard added** (review finding, confidence 85): `state.pointerId`
+   tracks the gesture-owning finger. A second finger's `pointermove` could
+   otherwise inject up to ±180° into `rotationDeg` in one event (`shortestArc`
+   has no distance clamp — a severity regression vs the old damped mapping).
+   Latest finger takes ownership on `pointerdown` (re-seeded, no jump);
+   non-owning moves and lifts are ignored. Regression test appended to the
+   acceptance suite (`Multi-touch guard` describe).
+2. **Version is 2026.8.18.2, not .1** — the live Webflow head already ships
+   `@8a4134c` with `v=2026.8.18.1` (deployed earlier today by a parallel
+   session), so the planned version collided and would not have busted cache.
+3. **CSS resets added** to `.dial_sector-dot` (`background: transparent;
+   border-radius: 0`): the Webflow head hardcodes a jsDelivr copy of
+   `ready-hit-play.css` in addition to the init.js-loaded one, so removed
+   properties from a stale cached rule must be overridden, not just omitted.
+4. **Client tweak during build:** arrows moved down a further `2rem` and given
+   a resting opacity of `0.6` (CSS) with the fade-in tween target changed to
+   match (work-dial.js `setIntroComplete`). The "opacity reaches 1" verify
+   criterion is superseded — it now reads 0.6.

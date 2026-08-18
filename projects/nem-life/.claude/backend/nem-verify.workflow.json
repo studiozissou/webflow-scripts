@@ -521,11 +521,11 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemmatters.com', name: 'NEM Test' }, to: [ { email: 'alex@nemlife.com', name: 'Alex' } ], subject: 'NEM Test - report generation failed (' + $json.reason + ')', text: 'A NEM Test report could not be generated, so this user has NOT received one.' + '\\n\\nReason: ' + $json.reason + '\\nDetail: ' + $json.detail + '\\nUser: ' + ($json.firstName || '(no name)') + ' <' + ($json.email || 'no email') + '>' + '\\nLocale: ' + $json.locale + '\\nToken: ' + $json.token + '\\nExecution: ' + $json.executionId + '\\n\\nFirst 500 characters of the model response:\\n' + String($json.rawResponse || '').slice(0, 500) + '\\n\\nLogged in the nem_report_failures table.' }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemmatters.com', name: 'NEM Test' }, to: [ { email: 'will@teamzissou.io', name: 'Will' } ], subject: 'NEM Test - report generation failed (' + $json.reason + ')', text: 'A NEM Test report could not be generated, so this user has NOT received one.' + '\\n\\nReason: ' + $json.reason + '\\nDetail: ' + $json.detail + '\\nUser: ' + ($json.firstName || '(no name)') + ' <' + ($json.email || 'no email') + '>' + '\\nLocale: ' + $json.locale + '\\nToken: ' + $json.token + '\\nExecution: ' + $json.executionId + '\\n\\nFirst 500 characters of the model response:\\n' + String($json.rawResponse || '').slice(0, 500) + '\\n\\nLogged in the nem_report_failures table.' }) }}",
         "options": {}
       },
       "id": "c3000000-0000-4000-8000-00000000000a",
-      "name": "Alert Alex",
+      "name": "Alert Failure",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -713,7 +713,7 @@
       "main": [
         [
           {
-            "node": "Alert Alex",
+            "node": "Alert Failure",
             "type": "main",
             "index": 0
           }

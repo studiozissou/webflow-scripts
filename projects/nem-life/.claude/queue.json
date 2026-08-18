@@ -364,6 +364,17 @@
       "description": "The conclusion engine v2 component sends outcome, conclusionKey and conclusionId in the submit payload, but /submit's Normalize node does not map any of them and nem_test_profiles has no columns for them, so all three are discarded. Found 2026-08-18 while building the report JSON gate, when the failure log's conclusionId column turned out to be unfillable. Consequences: Alex cannot analyse results by conclusion, the report failure log cannot record which conclusion a failure belongs to, and the enriched payload shipped in v2 is doing nothing. Blocked-ish: n8n Data Table schemas are IMMUTABLE via the public API, so adding three columns may mean recreating nem_test_profiles, which holds live user rows. Establish whether the n8n UI allows adding columns before planning the migration.",
       "created": "2026-08-18",
       "note": "Same immutability constraint bites nem-anonymous-completion-logging, which also needs a new event column - worth solving both in one migration rather than twice."
+    },
+    {
+      "id": "nem-point-failure-alerts-at-alex-before-golive",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "BEFORE GO-LIVE: point report failure alerts back at Alex",
+      "description": "The Alert Failure node in /verify currently emails will@teamzissou.io. Will's call 2026-08-18: route failures to himself while the JSON contract is still being developed, so Alex is not pinged by test runs and by teething failures that are ours to fix. MUST BE REVERTED BEFORE LAUNCH. Alex explicitly asked on 2026-08-17 to be notified when a report fails - 'otherwise we won't know how often it happens, or that someone never got their report'. Shipping with alerts pointed at the developer means the client finds out from users instead, which is the exact failure mode the alert was built to prevent. Change the to: address in Alert Failure's jsonBody to alex@nemlife.com, or send to both. Consider both: Will wants to see the rate during early live traffic too.",
+      "created": "2026-08-18",
+      "note": "The drift check will NOT catch this - it is a deliberate value, not broken wiring, so an invariant would fail in dev on purpose. It lives in the go-live checklist in backend/README.md instead. Re-baseline with npm run check:nem-drift -- --write after changing it."
     }
   ]
 }

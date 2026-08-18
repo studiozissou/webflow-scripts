@@ -298,14 +298,14 @@ describe("checkInvariants — the report JSON gate", () => {
     node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
-    node("Build HTML"), node("Log Failure"), node("Alert Alex"),
+    node("Build HTML"), node("Log Failure"), node("Alert Failure"),
     node("Respond Confirmed"), node("Mark Consumed"),
   ], {
     "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }]] },
     "Generate Report": { main: [[{ node: "Parse Report" }]] },
     "Parse Report": { main: [[{ node: "Valid Report?" }]] },
     "Valid Report?": { main: [[{ node: "Build HTML" }], [{ node: "Log Failure" }]] },
-    "Log Failure": { main: [[{ node: "Alert Alex" }]] },
+    "Log Failure": { main: [[{ node: "Alert Failure" }]] },
   });
 
   test("passes on the gated workflow", () => {

@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.8.18.2';
+  const WORK_DIAL_VERSION = '2026.8.18.3';
   const debugGeom = () => !!window.__DEBUG_GEOM;
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';

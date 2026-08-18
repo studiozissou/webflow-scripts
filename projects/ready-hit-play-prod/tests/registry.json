@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-17",
-  "lastPlanned": "rhp-mobile-dial-permanent-lengthened-ticks",
-  "lastRegistered": "rhp-mobile-dial-permanent-lengthened-ticks",
+  "lastUpdated": "2026-08-18",
+  "lastPlanned": "fix-mobile-work-to-home-shrink",
+  "lastRegistered": "fix-mobile-work-to-home-shrink",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
   "lastDeployed": "2026-08-12",
   "lastDeployedHash": "179363b",
@@ -626,6 +626,16 @@
       "slug": "rhp-mobile-dial-permanent-lengthened-ticks",
       "created": "2026-08-17",
       "description": "Mobile dial bulge locked to the active sector in canvas space — rotates with the dial, other ticks never grow, no screen-edge overflow"
+    },
+    {
+      "id": "fix-mobile-work-to-home-shrink",
+      "file": "tests/acceptance/fix-mobile-work-to-home-shrink.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-mobile-work-to-home-shrink",
+      "created": "2026-08-18",
+      "description": "Mobile work→home Barba transition shrinks smoothly instead of collapsing to 1px; desktop unchanged; mobile-only content fade"
     }
   ]
 }

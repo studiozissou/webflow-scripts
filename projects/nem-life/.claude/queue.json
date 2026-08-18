@@ -328,7 +328,8 @@
       "description": "Spec section 4 of nem-report-json-and-error-visibility, split out of slice 1 on 2026-08-18 because it is materially bigger: it needs a new event column on nem_test_profiles, an answer on whether the email column accepts null, and it touches the component as well as both workflows. Fires one fire-and-forget beacon on answering question 20 for EVERY outcome, carrying token, locale, outcome, conclusionKey, the five scores and totalScore - no personal data, because none exists yet at that point. Two rows per user joined on token. Captures the drop-off between finishing the questions and opting in, which is currently invisible.",
       "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
       "created": "2026-08-18",
-      "note": "BLOCKER TO ANSWER FIRST: does Store Profile's email column accept null? n8n Data Table columns expose only a type through the API with no nullable flag, so this has to be answered by attempting a write, not by reading the schema. If it rejects null, every completion log 500s. Also note nem_test_profiles has NO event column today (17 columns, confirmed 2026-08-18) and n8n table schemas are immutable via the API - adding one may mean recreating the table, which holds live user rows. Establish that before promising a date."
+      "note": "UNBLOCKED 2026-08-18: the event column exists and a blank email saves fine, so both prerequisites are answered. /submit already accepts and stores event, defaulting to 'submission', so the beacon only needs to send event='completion'. ⚠️ DESIGN CONFLICT TO RESOLVE FIRST. The spec says 'two rows per user, joined on token'. Store Profile is an UPSERT keyed on token, so the second write UPDATES the first row rather than creating a second one - the completion row would be overwritten by the later submission, losing exactly the drop-off signal the feature exists to capture. Options: key the upsert on token+event, switch the completion path to a plain insert, or give completions their own table. Decide before building; this is not a detail that surfaces in testing, because with consent the two writes look like one working row.",
+      "updated": "2026-08-18"
     },
     {
       "id": "nem-intro-lines-client-side",
@@ -359,11 +360,12 @@
       "project": "nem-life",
       "type": "fix",
       "priority": "P1",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "/submit silently drops the v2 outcome, conclusionKey and conclusionId",
       "description": "The conclusion engine v2 component sends outcome, conclusionKey and conclusionId in the submit payload, but /submit's Normalize node does not map any of them and nem_test_profiles has no columns for them, so all three are discarded. Found 2026-08-18 while building the report JSON gate, when the failure log's conclusionId column turned out to be unfillable. Consequences: Alex cannot analyse results by conclusion, the report failure log cannot record which conclusion a failure belongs to, and the enriched payload shipped in v2 is doing nothing. Blocked-ish: n8n Data Table schemas are IMMUTABLE via the public API, so adding three columns may mean recreating nem_test_profiles, which holds live user rows. Establish whether the n8n UI allows adding columns before planning the migration.",
       "created": "2026-08-18",
-      "note": "Same immutability constraint bites nem-anonymous-completion-logging, which also needs a new event column - worth solving both in one migration rather than twice."
+      "note": "DONE 2026-08-18. Will added outcome, conclusionKey, conclusionId and event to nem_test_profiles through the n8n UI - so Data Table columns CAN be added after creation, even though the public API exposes no endpoint for it. Worth remembering: the API's immutability is an API limitation, not an n8n one. Blank email also saves fine, which unblocks anonymous completion logging. Normalize now maps all four (event defaults to 'submission' so the completion beacon can send 'completion' later without another change) and Store Profile persists them. Verified with a live submit: outcome=dual, conclusionKey=self-rejection__false-power, conclusionId=01F-SR-FP, event=submission all landed. Probe row deleted. Two new drift invariants guard it, so the fields cannot be silently dropped again.",
+      "updated": "2026-08-18"
     },
     {
       "id": "nem-point-failure-alerts-at-alex-before-golive",

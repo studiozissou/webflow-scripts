@@ -137,10 +137,11 @@ because n8n cannot import from the repo. `nem-report-parse.test.js` extracts the
 real source from the committed snapshot and runs it against the same fixtures, so the two
 cannot drift silently. **Edit the module, re-paste, re-baseline** — never only the node.
 
-⚠️ **`conclusionId` in the failure log is always empty today.** The v2 component sends
-`outcome`, `conclusionKey` and `conclusionId` in the submit payload, but `/submit`'s
-`Normalize` drops all three and `nem_test_profiles` has no columns for them. Tracked as
-`nem-submit-drops-v2-conclusion-fields`.
+✅ **`conclusionId` now reaches the failure log** (fixed 2026-08-18). `/submit` used to
+drop `outcome`, `conclusionKey` and `conclusionId` in `Normalize`, so the v2 payload was
+silently discarded; all three are now mapped and stored, along with `event`. Note for
+future schema work: **columns CAN be added to an existing Data Table through the n8n UI**,
+even though the public API offers no endpoint for it.
 
 🚧 **Alerts currently go to Will, not Alex — this is temporary.** Will's call
 (2026-08-18): route failures to himself while the contract is still being developed, so
@@ -159,7 +160,7 @@ Small, easy to forget, and each one is wrong in production. Check every line bef
 | 1 | **`Alert Failure` emails `will@teamzissou.io` and its subject is tagged `[DEV]`** | Set 2026-08-18 so test runs and teething failures do not ping the client, and so a test alert can never be mistaken for a production one — it sends from `hallo@nemmatters.com`, the client's own address, so the subject is the only tell. Alex asked to be notified; shipping like this means he learns about failures from users. | Node `Alert Failure` → `jsonBody`. **Two edits: the `to` address and the `[DEV]` prefix.** The drift check enforces that they agree, so it will fail if you change one and forget the other — but it cannot tell you *when* to flip them, which is why this row exists. |
 | 2 | **`Report Prompt` holds a TEST MODE stub** | Alex's real prompt lives in a Notion doc we cannot read. Reports currently say "TESTRAPPORT / TEST REPORT". | `LIVE-STATE.md`, or read the node |
 | 3 | **Christel's conclusion texts are 27 of 108** | Female Dutch only; the rest fall through to visible placeholders. | `src/nem-conclusion-texts.js` |
-| 4 | **`conclusionId` is never recorded** | `/submit` drops the v2 fields — see `nem-submit-drops-v2-conclusion-fields`. | `nem_report_failures` rows |
+| 4 | ~~`conclusionId` is never recorded~~ | **Fixed 2026-08-18** — `/submit` now maps and stores all the v2 fields. | — |
 
 Run `npm run check:nem-drift` alongside this — it covers the structural invariants, but
 none of the four above, because each is a deliberate value rather than broken wiring.

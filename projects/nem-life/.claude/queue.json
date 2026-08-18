@@ -258,6 +258,41 @@
       "created": "2026-07-09",
       "updated": "2026-08-18",
       "note": "RESOLVED 2026-08-18. Alex upgraded the MailerSend account to a paid 'Hobby' plan and offered to go higher if volume needs it. Verified end-to-end rather than taken on trust: inserted one nem_test_profiles row with a fresh token and a never-before-used recipient, fired GET /verify?token=..., and execution 48 ran all 14 nodes green including Send Report, with the report email arriving at 10:14:42Z. Probe row deleted afterwards. Testing with an already-seen address would have passed regardless, since the cap was on unique recipients - always probe with a new address. Two follow-ups this ticket raised are NOT done and are tracked elsewhere: (1) whether Mark Consumed should move back behind successful delivery, so a delivery failure leaves the token replayable instead of stranding the user - still on the fast path, still worth a decision; (2) failure alerting on the report branch, now specced in projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md. New thing to watch: the Hobby plan caps monthly volume rather than recipients, and reports plus failure alerts share the account, so hitting the quota silences both at once."
+    },
+    {
+      "id": "nem-mailerlite-subscriber-status-active",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P3",
+      "status": "Ready to Build",
+      "title": "Reconcile the missing MailerLite status:'active' on /submit",
+      "description": "The repo snapshot of /submit carried status:'active' in the MailerLite: Send Verification body; live does not. Found 2026-08-18 by the drift check, which showed the repo AHEAD of live rather than behind. LIKELY BENIGN: backend/README.md records that MailerLite double opt-in is disabled for API/integrations and subscribers land Active anyway, which would make the explicit status redundant - and verification mail has been arriving in practice. That README line is itself an undated hand-written claim though, so confirm the double opt-in setting in the MailerLite UI (a one-minute check, not an investigation) and then either push status:'active' to live for explicitness or note here that it is deliberately omitted. The point is to close an undocumented difference, not to chase a bug.",
+      "created": "2026-08-18",
+      "note": "Repo snapshot has been re-baselined from live, so the status:'active' text now exists only in git history: see the pre-2026-08-18 version of projects/nem-life/.claude/backend/nem-submit.workflow.json. Reproduce with npm run check:nem-drift. Downgraded from P1 to P3 the same day once the README's double-opt-in-disabled note was found."
+    },
+    {
+      "id": "nem-submit-normalize-comment-drift",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P3",
+      "status": "Ready to Build",
+      "title": "Push the corrected $env comment in /submit Normalize up to live",
+      "description": "The repo snapshot of the Normalize node carried a corrected comment - 'n8n Cloud blocks $env access, so hard-code it' - while live still reads 'Set NEM_VERIFY_WEBHOOK_URL as an n8n env var, or replace the fallback string below once the /verify workflow is deployed.' The live comment is misleading: it tells the next reader to do something n8n Cloud does not permit. Cosmetic, no behaviour change, but it is a small trap left in the client's workflow. Paste the corrected comment into the live Normalize node, then re-baseline with npm run check:nem-drift -- --write.",
+      "created": "2026-08-18",
+      "note": "Found 2026-08-18 by the drift check; the repo was ahead of live. The snapshot has since been re-baselined FROM live, so the corrected wording now lives only in git history - recover it from the pre-2026-08-18 nem-submit.workflow.json first."
+    },
+    {
+      "id": "nem-live-state-drift-check",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Stop the NEM docs going stale about live n8n",
+      "description": "Docs asserted live n8n state with no way to tell when anyone last checked, and three stale-claim failures landed in one week: the prompt-escaping changeset was applied by hand on 13 Aug while every doc still said PREPARED NOT APPLIED and the committed workflow JSON was missing a node; the MailerSend trial cap was recorded as a live blocker across seven files after it had been lifted; and the n8n API key blocker was stale too. Built tools/nem/check-workflow-drift.js (npm run check:nem-drift) which pulls both live workflows, diffs them against the committed snapshots, names the field that moved, checks a set of invariants, and exits non-zero. Never auto-syncs: drift ran in both directions, so an auto-fix would have destroyed real work. Generates backend/LIVE-STATE.md as the one place allowed to assert live state. Established a doc convention at the top of backend/README.md: dated Verified stamps, link to LIVE-STATE rather than restating node params, and strike through cleared blockers instead of deleting them.",
+      "spec": "projects/nem-life/.claude/specs/nem-live-state-drift-check.md",
+      "created": "2026-08-18",
+      "updated": "2026-08-18",
+      "note": "Done 2026-08-18. 33 new tests, suite now 160 passing. Audit found /submit drifting in three nodes in BOTH directions: Store Profile was a stale pre-deployment template (insert + REPLACE_DATA_TABLE_ID vs live upsert on the real table), while the repo was AHEAD of live on MailerLite status:'active' and on a corrected $env comment in Normalize. Snapshots re-baselined from live per Will's decision; the two repo-ahead items raised as nem-mailerlite-subscriber-status-active and nem-submit-normalize-comment-drift, both P3. The check needs N8N_API_KEY so it cannot run in plain CI - it is a before-you-work command. If it starts getting skipped, a pre-work hook is the next step, not CI."
     }
   ]
 }

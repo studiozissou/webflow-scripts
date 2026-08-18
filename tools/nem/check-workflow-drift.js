@@ -130,6 +130,29 @@ const INVARIANTS = {
         return targets.includes("Respond Confirmed") && targets.includes("Mark Consumed");
       },
     },
+    {
+      label: "Report Prompt demands JSON — without it every report fails validation",
+      check: (wf) => {
+        const a = find(wf, "Report Prompt")?.parameters?.assignments?.assignments?.[0];
+        return /json/i.test(String(a?.value ?? ""));
+      },
+    },
+    {
+      label: "Generate Report goes through Parse Report, not straight to Build HTML",
+      check: (wf) => fanOut(wf, "Generate Report").includes("Parse Report"),
+    },
+    {
+      label: "The Valid Report? failure branch cannot reach Build HTML or Send Report",
+      check: (wf) => {
+        const onFailure = ((wf.connections?.["Valid Report?"]?.main ?? [])[1] ?? [])
+          .map((c) => c.node);
+        return (
+          onFailure.length > 0 &&
+          !onFailure.includes("Build HTML") &&
+          !onFailure.includes("Send Report")
+        );
+      },
+    },
   ],
   submit: [
     {

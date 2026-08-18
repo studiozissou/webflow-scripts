@@ -187,6 +187,50 @@ describe("comments are stripped from production code", () => {
   });
 });
 
+describe("the anonymous completion beacon reaches the bundle", () => {
+  test("it fires and is tagged as a completion, not a submission", () => {
+    assert.match(bundle, /event: "completion"/);
+  });
+
+  test("it is sent on answering the last question, not at opt-in", () => {
+    /* Flat outcomes never reach the opt-in screen, and anyone who finishes the questions
+     * then abandons the form would otherwise be invisible. */
+    assert.match(bundle, /sendCompletionBeacon\(updatedAnswers\)/);
+  });
+
+  test("it carries no personal data — none of it exists at question 20", () => {
+    const beacon = bundle.slice(
+      bundle.indexOf("const sendCompletionBeacon"),
+      bundle.indexOf("const selectAnswer"),
+    );
+    assert.ok(beacon.length > 0, "beacon not found in the bundle");
+    for (const field of ["firstName", "email", "gender", "nemMattersConsent", "ageCategory"]) {
+      assert.doesNotMatch(beacon, new RegExp(`\\b${field}\\b`), `beacon leaks ${field}`);
+    }
+  });
+
+  test("it does not send conclusionId — the gender it needs is not known yet", () => {
+    /* Sending one would mean inventing the F/M segment. conclusionKey plus the gender on
+     * the identified row reconstructs it later. */
+    const beacon = bundle.slice(
+      bundle.indexOf("const sendCompletionBeacon"),
+      bundle.indexOf("const selectAnswer"),
+    );
+    assert.match(beacon, /conclusionKey/);
+    assert.doesNotMatch(beacon, /conclusionId/);
+  });
+
+  test("it is fire-and-forget — a slow webhook must not stall the quiz", () => {
+    const beacon = bundle.slice(
+      bundle.indexOf("const sendCompletionBeacon"),
+      bundle.indexOf("const selectAnswer"),
+    );
+    assert.doesNotMatch(beacon, /await fetch/, "awaiting would block the conclusion screen");
+    assert.match(beacon, /catch/);
+    assert.match(beacon, /keepalive: true/);
+  });
+});
+
 describe("the bundle carries a provenance header", () => {
   test("says it is generated and names the command that regenerates it", () => {
     assert.match(bundle, /GENERATED FILE/);

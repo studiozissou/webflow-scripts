@@ -680,6 +680,33 @@ function Quiz({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [debugMode] = useState(isDebugMode);
 
+  const sendCompletionBeacon = useCallback(
+    (finalAnswers: (number | null)[]) => {
+      if (!submitWebhookUrl) return;
+
+      const scored = calculateScores(finalAnswers, "male");
+      try {
+        fetch(submitWebhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            token,
+            locale,
+            event: "completion",
+            outcome: scored.outcome,
+            conclusionKey: scored.conclusionKey,
+            scores: scored.scores,
+            totalScore: scored.totalScore,
+          }),
+        }).catch(() => {});
+      } catch {
+
+      }
+    },
+    [submitWebhookUrl, token, locale]
+  );
+
   const selectAnswer = useCallback(
     (answerIndex: number) => {
       const updatedAnswers = answers.map((a, i) => (i === currentStep ? answerIndex : a));
@@ -695,13 +722,14 @@ function Quiz({
             setCurrentStep((s) => s + 1);
           } else {
 
+            sendCompletionBeacon(updatedAnswers);
             setPhase("profile");
           }
           setAnimating(false);
         }, fadeDuration);
       }, fadeDelay);
     },
-    [answers, currentStep, prefersReducedMotion]
+    [answers, currentStep, prefersReducedMotion, sendCompletionBeacon]
   );
 
   const goBack = useCallback(() => {

@@ -10,7 +10,7 @@
    - State machine: IDLE (mouse far, generic video) → ACTIVE (mouse near) → ENGAGED (fg hover)
    ========================================= */
 (() => {
-  const WORK_DIAL_VERSION = '2026.8.13.2';
+  const WORK_DIAL_VERSION = '2026.8.18.2';
   const debugGeom = () => !!window.__DEBUG_GEOM;
 
   const GENERIC_VIDEO_URL = 'https://player.vimeo.com/progressive_redirect/playback/1167326952/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&log_user=0&signature=b3d5bd2e912f695a5c67b919274edd03e87965c7e3328e5968057204b419e21f';
@@ -53,6 +53,11 @@
   const isMobile = () => window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
   const mod = (n, m) => ((n % m) + m) % m;
+
+  // Shortest signed arc between two angles (deg), in (-180, 180].
+  function shortestArc(from, to) {
+    return mod(to - from + 180, 360) - 180;
+  }
 
   // 0° at TOP, clockwise
   const angleTop0 = (dx, dy) => {
@@ -372,10 +377,17 @@
       if (genericVideo.readyState >= 2) { _earlyFadeIn(); }
       else { genericVideo.addEventListener('loadeddata', _earlyFadeIn, { once: true }); }
 
-      // White dot indicator (sector position at 6 o'clock — CSS handles visibility per breakpoint)
+      // Spin-direction indicator (sector position at 6 o'clock — CSS handles visibility
+      // per breakpoint). Class name kept as .dial_sector-dot for CSS/test continuity.
       let sectorDot = document.createElement('div');
       sectorDot.className = 'dial_sector-dot';
       sectorDot.setAttribute('aria-hidden', 'true');
+      sectorDot.innerHTML = '<svg width="53" height="19" viewBox="0 0 53 19" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">' +
+        '<path d="M42.6016 0.730957L51.3741 8.9189L43.1862 17.6914" stroke="currentColor" stroke-width="2"/>' +
+        '<line x1="50.6422" y1="9.23682" x2="35.6069" y2="9.22441" stroke="currentColor" stroke-width="2"/>' +
+        '<path d="M10.186 0.730957L1.41349 8.9189L9.60144 17.6914" stroke="currentColor" stroke-width="2"/>' +
+        '<line y1="-1" x2="15.0354" y2="-1" transform="matrix(1 -0.000824853 -0.000824853 -1 2.14453 8.23682)" stroke="currentColor" stroke-width="2"/>' +
+        '</svg>';
       // Hidden on fresh load; fades in after dial intro completes (setIntroComplete)
       if (!introComplete) sectorDot.style.opacity = '0';
       comp.appendChild(sectorDot);
@@ -464,9 +476,9 @@
         bulgeSector: null,
         bulgeEase: 0,
         dragActive: false,
-        dragStartX: 0,
-        dragStartY: 0,
-        dragStartRot: 0,
+        // per-gesture only: seeded on pointerdown, never persisted
+        lastAngleDeg: 0,
+        pointerId: null,
         startedInInner: false,
 
         // attraction ease (smooth in/out when pointer enters)
@@ -1165,21 +1177,31 @@
         }
       }
 
-      // Mobile dial: vertical drag rotates ticks only; update index per snap step (Variant B)
-      const ROTATE_PER_PX = 0.22; // deg per px (tune)
+      // Mobile dial: circular drag rotates ticks only; update index per snap step (Variant B)
+      const GAIN = 1.0; // 1:1 angular. Raise if browsing tests as too slow.
+      const CENTRE_DEADZONE_PX = 24; // atan2 is noise this close to the centre
       let _justActivatedMobile = false; // suppress click-to-navigate on activation tap
       _mobileActiveLocked = false; // reset on each init
+
+      // Viewport-space centre of the ticks canvas. Correct under CSS rotation:
+      // transform-origin is 50% 50%, so the rotated AABB shares the CSS box centre.
+      // Do NOT use rect.left + geom.cx — geom.cx is the untransformed layout centre.
+      function canvasCentre() {
+        const r = canvas.getBoundingClientRect();
+        return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+      }
+
       function onPointerDown(e) {
         if (!isMobile()) return;
         if (inCaseStudyMode()) return; // case study owns touch input, not the dial
-        // Kill in-flight snap tween so dragStartRot captures a stable value
+        // Kill in-flight snap tween so the drag starts from a stable rotation
         if (window.gsap) window.gsap.killTweensOf(state, 'rotationDeg');
 
         // Tap radius: within 4rem of dial outer edge → ACTIVE, outside → IDLE
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const dist = Math.hypot(x - geom.cx, y - geom.cy);
+        const { cx, cy } = canvasCentre();
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+        const dist = Math.hypot(dx, dy);
         const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
         const activeRadius = geom.innerR + geom.maxLen + (4 * rem);
 
@@ -1201,18 +1223,24 @@
         }
 
         state.dragActive = true;
-        state.dragStartX = e.clientX;
-        state.dragStartY = e.clientY;
-        state.dragStartRot = state.rotationDeg;
+        // Latest finger owns the gesture: a second touch re-seeds here, so its
+        // moves never feed a delta measured against the first finger's angle.
+        state.pointerId = e.pointerId;
+        state.lastAngleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
         state.startedInInner = (dist <= geom.innerR);
       }
 
-      function onPointerUp() {
+      function onPointerUp(e) {
         if (!isMobile()) return;
+        // A non-owning finger lifting must not end the owning finger's drag.
+        // (pointerId is null when no gesture is tracked — fall through and clear.)
+        if (state.pointerId != null && e && e.pointerId !== state.pointerId) return;
         // Always clear the drag flags, even in case-study mode — a stale
         // dragActive would keep preventTouchScroll() blocking case-study scroll.
         state.dragActive = false;
         state.startedInInner = false;
+        state.lastAngleDeg = 0;
+        state.pointerId = null;
         if (inCaseStudyMode()) return; // no snap-rotate behind a case study
 
         // Snap to nearest sector (kill any in-flight snap first)
@@ -1241,14 +1269,23 @@
 
       function onPointerMoveMobile(e) {
         if (!isMobile() || !state.dragActive) return;
+        if (e.pointerId !== state.pointerId) return; // only the gesture-owning finger rotates
         if (inCaseStudyMode()) return; // swiping a case study must not rotate the dial
-        if (state.startedInInner) return;
+        if (state.startedInInner) return; // inner circle is the tap-to-play zone
 
-        const dx = e.clientX - state.dragStartX;
-        const dy = e.clientY - state.dragStartY;
-        // y-axis: swipe down → clockwise; x-axis: swipe right → counterclockwise (inverted)
-        const delta = Math.abs(dy) >= Math.abs(dx) ? dy : -dx;
-        state.rotationDeg = state.dragStartRot + (delta * ROTATE_PER_PX);
+        const { cx, cy } = canvasCentre();
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+
+        // Guard the singularity: atan2 is meaningless at the exact centre and wildly
+        // noisy within a few px of it. Hold the previous angle rather than emit garbage.
+        if (Math.hypot(dx, dy) < CENTRE_DEADZONE_PX) return;
+
+        // Screen y grows downward, so atan2 increases clockwise — the same sense as
+        // the CSS rotate() draw() writes. Accumulate the delta directly; no sign inversion.
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        state.rotationDeg += shortestArc(state.lastAngleDeg, angle) * GAIN;
+        state.lastAngleDeg = angle;
 
         // Variant B: update active index as steps cross boundaries
         const stepped = Math.round(state.rotationDeg / sectorSize);
@@ -1774,11 +1811,12 @@
     function setIntroComplete() {
       introComplete = true;
       attractionEnabled = true; // Safety net: guarantee attraction enabled after intro
-      // Fade in the mobile sector dot after dial ticks have animated in
+      // Fade in the mobile spin indicator after dial ticks have animated in.
+      // 0.6 matches the CSS resting opacity on .dial_sector-dot.
       if (sectorDotRef && window.gsap) {
-        window.gsap.to(sectorDotRef, { opacity: 1, duration: 0.4, ease: 'power2.out' });
+        window.gsap.to(sectorDotRef, { opacity: 0.6, duration: 0.4, ease: 'power2.out' });
       } else if (sectorDotRef) {
-        sectorDotRef.style.opacity = '1';
+        sectorDotRef.style.opacity = '0.6';
       }
       // Fade in generic video now — on fresh load it was at opacity:0 waiting for intro to finish.
       // Show immediately if a frame is ready; otherwise wait for loadeddata then fade in.

@@ -195,11 +195,42 @@ POST /webhook/nem-submit
 No name, no email, no consent flag, no profile fields — none of them exist yet at question
 20, and waiting for them is what reintroduces the drop-off blind spot.
 
-**Two rows per user, joined on `token`.** The completion row above always fires. The existing
-identified submission still fires later, for the people who opt in, carrying `event:
-"submission"` alongside the personal details. Alex joins them on the token. `Store Profile`
-must therefore accept a row with a null email — **confirm that column is nullable before
-building, or every completion log will 500.**
+**Two rows per user, joined on `token` — in two separate tables.**
+
+> **⚠️ Design corrected 2026-08-18. This section originally specified one table.** It said
+> both rows land in `nem_test_profiles`, distinguished by an `event` column, and that
+> `Store Profile` "must accept a row with a null email". That does not work, and the way it
+> fails is quiet.
+>
+> `Store Profile` is an **upsert keyed on `token`**. The later identified submission would
+> therefore find the completion row and *update* it rather than adding a second row —
+> destroying exactly the completion-versus-submission gap the feature exists to measure.
+> Worse, it would not surface in testing: for a user who opts in, two writes onto one row
+> look like one perfectly good row.
+>
+> Keying the upsert on `token + event` fixes that but creates a second problem. `/verify`'s
+> `Get Profile` and `Mark Consumed` both look up **by token alone**, so with two rows per
+> token the lookup could return the anonymous one — which has no email — and a user who did
+> everything right would silently never receive their report. Fixing that means editing the
+> live report path, which has no version history.
+>
+> So completions go to their own table instead. `/verify` is untouched, `Get Profile` still
+> finds exactly one row per token, and all the new risk stays in new code.
+
+Completions are written to **`nem_test_completions`** (`bhwShLxPcsQ0xgXq`):
+`token`, `completedAt`, `locale`, `outcome`, `conclusionKey`, `scoresJson`, `totalScore`, `ip`.
+
+**There is no email, name or gender column, by design.** "Anonymous" stops being a promise
+we keep and becomes something the storage cannot hold — a later change cannot quietly start
+filling a field that does not exist. Given what the test asks people about, that is worth
+having structurally rather than by convention.
+
+Identified submissions continue to `nem_test_profiles` exactly as before, carrying
+`event: "submission"`. Alex joins the two on `token` — a spreadsheet operation, and he is
+exporting to analyse either way.
+
+*(For the record: a blank email does save fine in `nem_test_profiles`, confirmed
+2026-08-18. The one-table design was unsafe for the upsert reason above, not that one.)*
 
 Rejected: showing the opt-in to flat users so their email could be captured. It asks for an
 email and then gives a contact link rather than the promised report, and it contradicts the
@@ -246,7 +277,7 @@ and the fixed disclaimer.
 | File | Change |
 |---|---|
 | `projects/nem-life/.claude/backend/nem-verify.workflow.json` | `Report Prompt` demands strict JSON; new `Parse Report`, `Log Failure`, `Alert Alex` nodes; `Build HTML` consumes five fields |
-| `projects/nem-life/.claude/backend/nem-submit.workflow.json` | accept anonymous rows with a null email; `event` column to separate completions from submissions |
+| `projects/nem-life/.claude/backend/nem-submit.workflow.json` | branch on `event`: completions to `nem_test_completions`, submissions unchanged to `nem_test_profiles` |
 | `projects/nem-life/src/nem-test-phase-b.tsx` | fire the anonymous completion beacon on question 20; render the intro line |
 | `projects/nem-life/src/nem-intro-lines.js` | new — generated, 25 key-only lines |
 | `tools/nem/build-conclusion-texts.js` | extend to emit the intro-lines tab |
@@ -281,7 +312,9 @@ and the fixed disclaimer.
 - Answering question 20 produces a submit POST with `event: "completion"`, all five scores,
   `outcome`, `conclusionKey`, and no personal details — for **every** outcome, not just flat.
 - It fires before the profile screen, so `conclusionId` is absent and `gender` is null.
-- The row lands in the Data Table with a null email rather than erroring.
+- The row lands in `nem_test_completions`, and **no** row appears in `nem_test_profiles`.
+- The completion path does **not** trigger the MailerLite verification email — there is no
+  address to send one to.
 - Opting in later produces a **second** row with `event: "submission"` and the same `token`.
 - A flat outcome produces the completion row and no second row; no opt-in screen is shown.
 - The beacon is fire-and-forget: a slow or failing webhook must not block the conclusion

@@ -465,6 +465,92 @@
         880,
         384
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d4000000-0000-4000-8000-00000000000c",
+              "leftValue": "={{ $json.event }}",
+              "rightValue": "completion",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d4000000-0000-4000-8000-00000000000i",
+      "name": "Completion?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "bhwShLxPcsQ0xgXq",
+          "mode": "list",
+          "cachedResultName": "nem_test_completions",
+          "cachedResultUrl": "/projects/VNzIpvBdgt9it5VO/datatables/bhwShLxPcsQ0xgXq"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "token": "={{ $json.token }}",
+            "completedAt": "={{ $json.receivedAt }}",
+            "locale": "={{ $json.locale }}",
+            "outcome": "={{ $json.outcome }}",
+            "conclusionKey": "={{ $json.conclusionKey }}",
+            "scoresJson": "={{ $json.scoresJson }}",
+            "totalScore": "={{ $json.totalScore }}",
+            "ip": "={{ $json.ip }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d4000000-0000-4000-8000-00000000000l",
+      "name": "Log Completion",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        560,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ok\" } }}",
+        "options": {}
+      },
+      "id": "d4000000-0000-4000-8000-00000000000r",
+      "name": "Respond OK (completion)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        520
+      ]
     }
   ],
   "connections": {
@@ -530,7 +616,7 @@
         ],
         [
           {
-            "node": "Store Profile",
+            "node": "Completion?",
             "type": "main",
             "index": 0
           }
@@ -553,6 +639,35 @@
         [
           {
             "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Completion?": {
+      "main": [
+        [
+          {
+            "node": "Log Completion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Completion": {
+      "main": [
+        [
+          {
+            "node": "Respond OK (completion)",
             "type": "main",
             "index": 0
           }

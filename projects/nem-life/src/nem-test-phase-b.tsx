@@ -509,6 +509,49 @@ function Quiz({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [debugMode] = useState(isDebugMode);
 
+  /* ─── Anonymous completion beacon ───
+   *
+   * Fires the moment the twentieth question is answered, for every outcome. Two reasons it
+   * sits here rather than at opt-in: flat outcomes never reach the opt-in screen at all, and
+   * anyone who finishes the questions then abandons the form is otherwise invisible — that
+   * gap between completions and reports is the number worth watching.
+   *
+   * It carries no personal data because none exists yet: name, email and gender are all
+   * collected on later screens. `conclusionId` is deliberately NOT sent — its F/M segment
+   * needs a gender we do not have, so sending one would mean inventing it. `conclusionKey`
+   * plus the gender on the identified row reconstructs the ID later if anyone wants it.
+   *
+   * Fire-and-forget: a slow or failing webhook must never hold up the conclusion screen, so
+   * the promise is deliberately not awaited and errors are swallowed. `keepalive` lets it
+   * survive the user navigating away immediately afterwards. */
+  const sendCompletionBeacon = useCallback(
+    (finalAnswers: (number | null)[]) => {
+      if (!submitWebhookUrl) return;
+      /* Gender is passed only because the engine's signature requires it; every field read
+       * below is gender-independent. The gender-scoped conclusionId is not sent. */
+      const scored = calculateScores(finalAnswers, "male");
+      try {
+        fetch(submitWebhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            token,
+            locale,
+            event: "completion",
+            outcome: scored.outcome,
+            conclusionKey: scored.conclusionKey,
+            scores: scored.scores,
+            totalScore: scored.totalScore,
+          }),
+        }).catch(() => {});
+      } catch {
+        /* Never let telemetry break the quiz. */
+      }
+    },
+    [submitWebhookUrl, token, locale]
+  );
+
   /* ─── Answer selection ─── */
   const selectAnswer = useCallback(
     (answerIndex: number) => {
@@ -527,13 +570,14 @@ function Quiz({
             /* Scoring is NOT computed here. v2 conclusion IDs are gender-scoped, and
              * gender is collected on the profile screen that comes next — so the result
              * is derived (see `result` below) once both answers and gender exist. */
+            sendCompletionBeacon(updatedAnswers);
             setPhase("profile"); // → profile screen, then conclusion
           }
           setAnimating(false);
         }, fadeDuration);
       }, fadeDelay);
     },
-    [answers, currentStep, prefersReducedMotion]
+    [answers, currentStep, prefersReducedMotion, sendCompletionBeacon]
   );
 
   const goBack = useCallback(() => {

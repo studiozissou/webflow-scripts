@@ -228,11 +228,11 @@
       "project": "nem-life",
       "type": "fix",
       "priority": "P0",
-      "status": "Blocked",
+      "status": "Done",
       "title": "n8n API key is failing authentication, blocking all workflow work",
       "created": "2026-08-11",
-      "updated": "2026-08-11",
-      "note": "DIAGNOSED 2026-08-11: the key is present but EXPIRED. N8N_API_KEY is a JWT; its exp claim is 2026-08-05T22:00:00Z - 6 days ago. Issued 2026-07-07 (iss n8n, aud public-api), so it carried a ~29-day lifetime. Not a missing or malformed key, and not an outage: n8n_health_check still returns ok against https://reus.app.n8n.cloud, while n8n_get_workflow and n8n_list_workflows return AUTHENTICATION_ERROR. Blocks everything that touches n8n: the P0 prompt-escaping fix cannot take its live snapshot (the only rollback point that exists, since n8n holds no version history for uKkMgMYoH5nOLoCR), the P2 email/PDF branding task, and any re-sync of the repo workflow JSON to live. Fix: n8n -> Settings -> n8n API -> create a new key, then update the N8N_API_KEY environment variable (referenced as ${N8N_API_KEY} by the n8n block in .mcp.json) and restart the MCP server. Confirm with n8n_get_workflow on uKkMgMYoH5nOLoCR mode 'structure' - it should return the node graph. Note the expiry when creating it: n8n lets you set the lifetime, and a longer one avoids a repeat. Worth diarising the new expiry date."
+      "updated": "2026-08-18",
+      "note": "RESOLVED - the key works. Confirmed 2026-08-18 across a dozen calls: read both workflows, listed and inspected executions, inserted and deleted a data table row, and drove the new drift check. Whatever was stale on 2026-08-11 has since been refreshed. This was recorded as blocking ALL workflow work, so it is worth noting it sat open and stale for a week while the thing it blocked had already been done by hand - see nem-report-prompt-escaping-and-token-limit."
     },
     {
       "id": "nem-report-prompt-escaping-and-token-limit",
@@ -293,6 +293,17 @@
       "created": "2026-08-18",
       "updated": "2026-08-18",
       "note": "Done 2026-08-18. 33 new tests, suite now 160 passing. Audit found /submit drifting in three nodes in BOTH directions: Store Profile was a stale pre-deployment template (insert + REPLACE_DATA_TABLE_ID vs live upsert on the real table), while the repo was AHEAD of live on MailerLite status:'active' and on a corrected $env comment in Normalize. Snapshots re-baselined from live per Will's decision; the two repo-ahead items raised as nem-mailerlite-subscriber-status-active and nem-submit-normalize-comment-drift, both P3. The check needs N8N_API_KEY so it cannot run in plain CI - it is a before-you-work command. If it starts getting skipped, a pre-work hook is the next step, not CI."
+    },
+    {
+      "id": "nem-notion-source-doc-access",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Get access to Alex's Notion source doc for the NEM Test",
+      "description": "On 2026-08-17 Alex declared the Notion page 'NEM TEST 01 Waarom reageer ik zo? - source' authoritative over every earlier email: if it contradicts an email, the doc wins. It 404s for us - it sits in his workspace. Every spec we hold is therefore written from sources he has explicitly demoted, and the real report system prompt lives there, which is why live reports still read 'TESTRAPPORT / TEST REPORT' from a clearly-labelled stub. Ask him to share the page. NOT A DEV BLOCKER (Will, 2026-08-18): the JSON contract, error visibility, completion logging and intro-line work can all be built against the specs we have; only the prompt text itself waits on this. Installing the prompt when it arrives is a single fixed-value edit to the Report Prompt Set node, so nothing needs rearchitecting.",
+      "created": "2026-08-18",
+      "note": "Raise on the next email to Alex rather than as a standalone chase - he has been responsive (upgraded MailerSend within hours on 18 Aug). Once the prompt lands, paste it into Report Prompt as a FIXED VALUE, never an expression, or the escaping fix is undone; npm run check:nem-drift asserts exactly that and will fail if it regresses."
     }
   ]
 }

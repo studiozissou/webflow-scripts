@@ -137,25 +137,76 @@ from the code:
 So ~4 full downloads at rest, **plus one more for every dial rotation** as the window slides.
 Eight videos for an engaged visitor is a realistic figure, not a worst case.
 
-At 720p (~3.5 MB per ~10s loop) × 8 videos ≈ **28 MB per visit**, on Bunny's $0.010/GB EU/NA rate:
+### Measured file sizes (from live staging, 2026-08-18)
 
-| Visits / month | Transfer | Bunny cost |
-|---|---|---|
-| 10,000 | 280 GB | ~$2.80 |
-| 50,000 | 1.4 TB | ~$14 |
-| 100,000 | 2.8 TB | ~$28 |
-| 500,000 | 14 TB | ~$140 |
+Not estimates — these are `Content-Length` values pulled from the real Vimeo URLs on
+`rhpcircle.webflow.io`:
 
-**The comparison that matters:** Vimeo's self-serve plans carry a 2 TB/month bandwidth cap.
-At 28 MB/visit that cap is ~71,000 visits. Beyond that Vimeo does not stay cheap — it cuts
-off or forces an enterprise conversation. PAYG does not create the exposure, it just prices
-it honestly instead of capping it.
+| Asset | Size |
+|---|---|
+| Dial loop, 540p (desktop) | **1.08 MB** |
+| Dial loop, 360p (mobile) | **0.59 MB** |
+| Case film A (`1166421249`), 540p | **24.4 MB** |
+| Case film B (`1166421401`), 540p | **17.1 MB** |
+
+There are 6 dial videos (one per case study) plus the hardcoded generic clip, and each case
+page carries **2 full case films ≈ 41.5 MB**.
+
+**The dial loops are not the cost — the case films are.** A single case page moves ~40× what
+the entire homepage dial does. My earlier estimate modelled only the dial and was wrong about
+where the money goes.
+
+### Session model: homepage + 3 work pages, 10,000 sessions/month
+
+The saving grace is that **the 6 dial videos are the same URLs on every page** (the dial CMS
+items live outside the Barba container). After the homepage they are browser cache hits and
+cost nothing again — so the `perf-fg-video-preload-on-transition` warming is already free.
+
+| Stage | New bytes |
+|---|---|
+| Homepage — dial loops (desktop 540p, all 6 + generic) | ~7.6 MB |
+| Work page 1 — dial cached, 2 case films | ~41.5 MB |
+| Work page 2 — dial cached, 2 case films | ~41.5 MB |
+| Work page 3 — dial cached, 2 case films | ~41.5 MB |
+| **Session total** | **~132 MB** |
+
+At 10,000 sessions/month → **~1.32 TB/month** → on Bunny at $0.010/GB EU/NA:
+
+> ### ~$13/month, plus negligible storage and the $1 minimum. Call it **$14/month.**
+
+That is an upper bound: `Content-Length` is the whole file, while progressive download means
+a visitor who scrolls past a film part-way fetches only part of it. Realistic billing is
+likely **$9–13/month**.
+
+**The finding that actually matters:** at ~132 MB/session, Vimeo's 2 TB self-serve cap is
+reached at roughly **15,000 sessions/month**. At the assumed 10,000 they are already sitting
+at ~64% of the ceiling. A 50% traffic increase breaks the plan regardless of price. This is
+not a hypothetical future problem — it is close.
+
+### Flagged: the case films have no mobile rendition
+
+The dial loops ship 360p and 540p variants, but `1166421249` and `1166421401` exist **only at
+540p**. Phones download the full 24.4 MB and 17.1 MB files. That is simultaneously a cost
+item and a mobile-performance problem, and it is the single biggest lever available — Bunny
+generates a 360p rendition for free, which would roughly halve mobile traffic on the pages
+that dominate the bill.
 
 ### Hard protections (both worth configuring on day one)
 
-1. **Bunny is prepaid credit, not post-paid invoice.** You top up a balance and usage draws
-   it down. A runaway bill is structurally impossible — worst case the balance empties and
-   service suspends after warning emails. This is the single best answer to the risk.
+1. **Bunny is prepaid credit, not post-paid invoice** — confirmed against bunny.net's own
+   billing docs. You *"add credit to your account, and charges are deducted as you use
+   services"*, via Billing → Recharge Account (presets $10–$2000, card/PayPal/Apple Pay/BTC,
+   no fees). Credits never expire; the only floor is the $1/month minimum. You cannot receive
+   an invoice for money you have not already deposited.
+
+   **Two caveats to configure deliberately:**
+   - **Auto-recharge exists and defeats the cap.** If it is switched on, the account tops
+     itself up to avoid interruption — which is convenient but removes the hard ceiling.
+     Leave it off if the prepaid balance is the intended safety limit, or leave it on and
+     rely on the per-zone bandwidth limit below instead. Pick one deliberately.
+   - **Do not let the balance lapse.** Bunny's docs warn that failure to recharge leads to
+     suspension, disabled zones, and *deletion of stored data within days*. Keep a buffer and
+     keep masters archived elsewhere; never treat Bunny as the only copy of the videos.
 2. **Per-pull-zone monthly bandwidth limit.** Set a ceiling; the zone disables itself when
    reached and stops accruing charges. Setting this at e.g. 3 TB caps exposure at ~$30/mo
    by arithmetic, not by trust.

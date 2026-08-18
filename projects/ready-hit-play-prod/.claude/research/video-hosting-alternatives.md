@@ -165,40 +165,59 @@ where the money goes.
 - **Planning figure: 400–500 sessions/month**, growth expected from the marketing push
   starting 18 Aug
 
-### Session model: homepage + 3 work pages
+### Every page measured (live staging, 540p desktop, 2026-08-18)
 
-| Stage | New bytes |
-|---|---|
-| Homepage — dial loops (desktop 540p, all 6 + generic) | ~7.6 MB |
-| Work page 1 — dial cached, 2 case films | ~41.5 MB |
-| Work page 2 — dial cached, 2 case films | ~41.5 MB |
-| Work page 3 — dial cached, 2 case films | ~41.5 MB |
-| **Session total** | **~132 MB** |
+Each case page carries a different number of films at very different weights, so a single
+"representative" page is misleading. Measured `Content-Length` for every page-specific film:
+
+| Page | Films | Page-specific bytes |
+|---|---|---|
+| Home | 6 dial loops + generic | 7.6 MB |
+| About | none (reuses cached dial clips) | **0** |
+| Privacy policy | none | 0 |
+| /work/tommy-hilfiger | 1 | 12.6 MB |
+| /work/starfish-space | 3 (20.9 + 1.9 + 2.5) | 25.4 MB |
+| /work/microsoft | 2 (14.5 + 12.9) | 27.4 MB |
+| /work/overland-ai | 3 (21.3 + 1.9 + 6.0) | 29.2 MB |
+| /work/stoke-space | 2 (24.4 + 17.1) | 41.5 MB |
+| **/work/remote** | 3 (23.2 + **35.3** + 22.6) | **81.0 MB** |
+| **Whole site, every page** | 21 videos | **~225 MB** |
+
+Average case page is **36 MB**, not the 41.5 MB stoke-space figure used earlier — so the
+previous 3-page estimate of 132 MB was slightly conservative; a true average 3-page journey
+is ~116 MB.
+
+**Outlier worth acting on:** `/work/remote` is 81 MB — 6.4× the lightest case page, driven by
+a single 35.3 MB film. Compressing that one page would cut the site's total video payload by
+around 15%.
+
+### Worst case: every visitor views every page
+
+| Sessions / month | Transfer | Bunny cost |
+|---|---|---|
+| **450 (today)** | 101 GB | **~$1.01** |
+| 500 | 113 GB | ~$1.13 |
+| 1,000 | 225 GB | $2.25 |
+| 2,500 | 563 GB | $5.63 |
+| 5,000 | 1.13 TB | $11.25 |
+| ~9,100 | 2 TB | ~$20 — **Vimeo's cap breaks here** |
+
+Even on the assumption that every single visitor reads the entire site end to end, RHP at
+current traffic lands at **~$1/month** — still essentially the account minimum. Vimeo's 2 TB
+cap would not be reached until ~9,100 sessions/month, still **20× current traffic**.
 
 ### At real traffic: the bill is the account minimum
 
-450 sessions × 132 MB ≈ **59 GB/month** ≈ **$0.59** of delivery. The entire video library
-(6 dial clips in two renditions + 12 case films) is ~260 MB stored ≈ **$0.003**.
+A realistic journey (home + 3 work pages, ~116 MB) at 450 sessions is ~52 GB/month ≈ **$0.52**
+of delivery. The whole library — 14 case films, 6 dial clips in two renditions, the generic
+clip, ~228 MB of source, and perhaps 3× that once Bunny's renditions are generated — stores
+for well under **$0.01/month**.
 
-> ### Total: **$1/month** — i.e. the $1 account minimum. Bandwidth and storage together do not reach it.
+> ### Total: **$1/month** — the account minimum. Bandwidth and storage together do not reach it.
 >
-> For scale: at 3,400 sessions YTD, a full year of RHP's video traffic is ~449 GB ≈ **$4.50 for the year**.
+> Even the every-visitor-reads-everything worst case below only gets to ~$1.01.
 
 The PAYG exposure that prompted this analysis is, at RHP's actual scale, not a real risk.
-Headroom before it becomes one:
-
-| Sessions / month | Transfer | Bunny cost | vs today |
-|---|---|---|---|
-| **450 (today)** | 59 GB | **$1** (minimum) | — |
-| 1,000 | 132 GB | $1.32 | 2× growth |
-| 2,500 | 330 GB | $3.30 | 5× |
-| 5,000 | 660 GB | $6.60 | 11× |
-| 10,000 | 1.32 TB | $13.20 | 22× |
-| 15,000 | 1.98 TB | ~$20 | 33× — **Vimeo's 2 TB cap breaks here** |
-
-Traffic would need to grow roughly **8× before the bill reaches $5/month**. The marketing
-push would have to be extraordinarily successful to make hosting cost a consideration, and
-if it is that successful, ~$20/month at 33× traffic is not the problem worth solving.
 
 ### Footnote: at this scale Cloudflare R2 would literally be $0
 

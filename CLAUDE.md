@@ -10,6 +10,10 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 ## Workflow
 - IMPORTANT: Run `/plan` before any multi-file change
 - IMPORTANT: After implementing ANY change, verify it works — run tests, check for errors, or use the most relevant automated check available. If no automated check exists, tell the user exactly what to test and how. Never mark work done without verification.
+- Run `/tidy` to clear worktrees and branches already merged into main, and to pull
+  the main checkout up to date. Background jobs create a worktree each and never
+  remove it, so they accumulate. A weekly launchd agent
+  (`scripts/tidy-worktrees.plist`) does the same automatically.
 
 ## Queue Tasks
 - Follow the `queue-tasks` skill for all queue.json formatting and Notion sync

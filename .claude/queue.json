@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-12",
-  "note": "nem-test-conclusion-logic-v2 planned 2026-08-10 from the Alex/Christel call, the 6 Aug email chain and Alex's revised conclusion sheet. 5 tasks queued. BLOCKER: nem-test-scoring.js and its unit test are untracked in git - commit the baseline first. Open: Christel's tiebreak order inferred from sheet row order, contact page URLs unverified, flat outcomes generate no backend rows.",
+  "updated": "2026-08-17",
+  "note": "rhp-mobile-dial-permanent-lengthened-ticks planned + spec written (Ready to Build); side-space verified live, rotation/index desync found as blocking sub-fix",
   "queue": [
     {
       "id": "tsc-launch-metadata-schema",
@@ -1186,6 +1186,17 @@
       "verify": "tests/acceptance/tsc-image-resize-avif.verify.sh",
       "report": "projects/the-signalling-company/.claude/reports/tsc-image-inventory-2026-07-14.md",
       "created": "2026-07-14"
+    },
+    {
+      "id": "rhp-mobile-dial-permanent-lengthened-ticks",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Mobile dial: lock the lengthened ticks to the active sector so they rotate with the dial",
+      "description": "On mobile the lengthened dial ticks (the bulge) are pinned to screen-bottom because the target angle is recomputed every frame as mod(180 - rotationDeg, 360), cancelling out the CSS rotation on the ticks canvas. Replace that with a constant canvas-space angle captured from the active sector on the first frame attraction is live, so the bulge is baked into canvas pixels and turns with the dial while no other tick ever grows. Includes a mandatory sub-fix: the case-study handoff restores activeIndex without touching rotationDeg (work-dial.js:1501 and :1594), so rotation must be synced to the restored index or the locked bulge points at the wrong ticks. Grow-in is integrated in the draw loop rather than tweened, because killTweensOf(state) at the ACTIVE transition would freeze a GSAP tween part-grown. Side space verified live: bulge tip clearance is 5.86% of the smaller viewport dimension (23.0px at 393x852, 18.8px at 320x568), so nothing overflows at any rotation; the 0.6 length multiplier must stay as-is or the 12px glow clips at the screen edge.",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-mobile-dial-permanent-lengthened-ticks.md",
+      "created": "2026-08-17"
     }
   ]
 }

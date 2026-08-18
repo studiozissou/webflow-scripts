@@ -130,7 +130,7 @@ the real rate first.
 | Validator source of truth | `projects/nem-life/src/nem-report-parse.js` |
 | Unit tests (44) | `tests/nem/nem-report-parse.test.js` |
 | Failure log | Data Table `nem_report_failures` (`lzD76BzG472abwmA`) |
-| Alert | MailerSend → `alex@nemlife.com` |
+| Alert | MailerSend → **`will@teamzissou.io`** (node `Alert Failure`) |
 
 ⚠️ **The validator exists twice** — once in the module, once pasted into the Code node,
 because n8n cannot import from the repo. `nem-report-parse.test.js` extracts the node's
@@ -142,8 +142,27 @@ cannot drift silently. **Edit the module, re-paste, re-baseline** — never only
 `Normalize` drops all three and `nem_test_profiles` has no columns for them. Tracked as
 `nem-submit-drops-v2-conclusion-fields`.
 
-⚠️ **Testing the failure branch emails Alex**, since `Alert Alex` is hardcoded to his
-address. Point it at your own address first, or warn him.
+🚧 **Alerts currently go to Will, not Alex — this is temporary.** Will's call
+(2026-08-18): route failures to himself while the contract is still being developed, so
+Alex is not pinged by test runs and by teething failures that are ours to fix. **This must
+be switched back before go-live** — Alex explicitly asked to be notified, and shipping with
+alerts pointed at the developer means the client learns about failures from users instead.
+Tracked as `nem-point-failure-alerts-at-alex-before-golive` (P1) and in the go-live
+checklist below.
+
+### 🚦 Go-live checklist — things deliberately left in a dev-only state
+
+Small, easy to forget, and each one is wrong in production. Check every line before launch.
+
+| # | Item | Why it is like this | Verify |
+|---|---|---|---|
+| 1 | **`Alert Failure` emails `will@teamzissou.io`, not Alex** | Set 2026-08-18 so test runs and teething failures do not ping the client. Alex asked to be notified — shipping like this means he learns about failures from users. | Node `Alert Failure` → `jsonBody` → `to` |
+| 2 | **`Report Prompt` holds a TEST MODE stub** | Alex's real prompt lives in a Notion doc we cannot read. Reports currently say "TESTRAPPORT / TEST REPORT". | `LIVE-STATE.md`, or read the node |
+| 3 | **Christel's conclusion texts are 27 of 108** | Female Dutch only; the rest fall through to visible placeholders. | `src/nem-conclusion-texts.js` |
+| 4 | **`conclusionId` is never recorded** | `/submit` drops the v2 fields — see `nem-submit-drops-v2-conclusion-fields`. | `nem_report_failures` rows |
+
+Run `npm run check:nem-drift` alongside this — it covers the structural invariants, but
+none of the four above, because each is a deliberate value rather than broken wiring.
 
 ### 🌐 Known issue — every subscriber lands in the NL newsletter group
 

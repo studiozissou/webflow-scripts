@@ -1,6 +1,6 @@
 # NEM Life — live n8n state
 
-**Generated 2026-08-18T13:25:47.735Z** by `npm run check:nem-drift`.
+**Generated 2026-08-18T13:41:47.542Z** by `npm run check:nem-drift`.
 
 **Do not hand-edit this file.** It is written from the live n8n API and is the one
 place in this repo allowed to assert what the workflows currently do. Prose docs that
@@ -12,7 +12,7 @@ need a live fact should link here rather than restating it — restating is how 
 - n8n id: `uKkMgMYoH5nOLoCR`
 - active: yes
 - nodes: 19
-- last changed in n8n: 2026-08-18T13:24:09.434Z
+- last changed in n8n: 2026-08-18T13:41:01.614Z
 - committed snapshot: matches live
 
 | Invariant | State |

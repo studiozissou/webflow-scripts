@@ -49,7 +49,7 @@ Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club)
 | `orchestrator.js` | 2026.8.12.4 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
 | `lenis-manager.js` | 2026.2.6.10 | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
 | `cursor.js` | 2026.2.18.1 | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
-| `work-dial.js` | 2026.8.13.1 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover; inert while a case study is displayed (`inCaseStudyMode()`) |
+| `work-dial.js` | 2026.8.18.2 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover; inert while a case study is displayed (`inCaseStudyMode()`) |
 | `home-about-slide.js` | 2026.8.12.1 | Home↔about curtain/slide transitions; `leaveAboutToHome(data, opts)` takes an optional `{ duration }` |
 | `transition-dial.js` | 2026.8.12.1 | Static teal canvas dial shown during Barba transitions; also paints the static ring into the persistent `#dial_ticks-canvas` for the about→work via-home beat (`paintInto`/`clearCanvas`) |
 | `about-dial-ticks.js` | 2026.2.6.10 | Small 6rem static teal dial on about page |

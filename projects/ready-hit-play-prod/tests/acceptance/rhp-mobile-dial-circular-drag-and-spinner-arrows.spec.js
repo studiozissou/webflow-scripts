@@ -381,3 +381,58 @@ test.describe(`${SLUG} — Regression & a11y`, () => {
       .toHaveLength(0);
   });
 });
+
+// ── 4. Multi-touch regression ─────────────────────────────────
+// Found in review during /build: without pointerId tracking, a second
+// finger's pointermove was read as the tracked finger's and could inject
+// up to ±180° into rotationDeg in a single event (shortestArc has no
+// distance clamp). Guard: only the gesture-owning pointerId rotates.
+// Playwright's mouse API is single-pointer, so this dispatches raw
+// PointerEvents in-page, mirroring the MCP check that verified the fix.
+
+test.describe(`${SLUG} — Multi-touch guard`, () => {
+  test.use({ viewport: MOBILE, hasTouch: true, isMobile: true });
+
+  test('a second finger cannot inject rotation into an active drag', async ({ page }) => {
+    await loadPage(page);
+    const jumped = await page.evaluate(async () => {
+      const comp = document.querySelector('.dial_component');
+      const fg = document.querySelector('.dial_layer-fg');
+      const fr = fg.getBoundingClientRect();
+      const cx = fr.left + fr.width / 2, cy = fr.top + fr.height / 2;
+      const radius = Math.min(fr.width, fr.height) / 2 * 1.15;
+      const pt = (d) => ({
+        x: cx + Math.cos(d * Math.PI / 180) * radius,
+        y: cy + Math.sin(d * Math.PI / 180) * radius,
+      });
+      const readRot = () => {
+        const m = document.querySelector('#dial_ticks-canvas')
+          .style.transform.match(/rotate\((-?[\d.]+)deg\)/);
+        return m ? parseFloat(m[1]) : 0;
+      };
+      const fire = (type, target, d, pid) => {
+        const p = pt(d);
+        target.dispatchEvent(new PointerEvent(type, {
+          bubbles: true, cancelable: true, pointerId: pid,
+          pointerType: 'touch', clientX: p.x, clientY: p.y,
+        }));
+      };
+      const raf = () => new Promise(r => requestAnimationFrame(r));
+
+      // Finger A drags 30° of arc…
+      fire('pointerdown', comp, 0, 41);
+      for (let i = 1; i <= 6; i++) { fire('pointermove', comp, i * 5, 41); await raf(); }
+      const rotA = readRot();
+      // …then a stray finger B move lands on the opposite side of the dial.
+      fire('pointermove', comp, 180, 42);
+      await raf();
+      const rotAfterB = readRot();
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true, pointerId: 41, pointerType: 'touch',
+      }));
+      return Math.abs(rotAfterB - rotA);
+    });
+    // Pre-fix this was ~±180°; the owning-pointer guard makes it 0.
+    expect(jumped, `second finger injected ${jumped}° of rotation`).toBeLessThan(5);
+  });
+});

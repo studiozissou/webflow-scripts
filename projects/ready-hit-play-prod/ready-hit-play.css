@@ -1150,17 +1150,29 @@ main.main-wrapper:has([data-barba="container"][data-barba-namespace="home"]) .se
   }
 }
 
-/* ====== Mobile white dot indicator (sector position at 6 o'clock) ====== */
-/* Positioned below the max tick extension: dial radius * ~1.55 accounts for gap + 50%-longer maxLen */
+/* ====== Mobile spin indicator (sector position at 6 o'clock) ====== */
+/* Was an 8px white dot; now the spinner-arrows SVG. Class name retained
+   for CSS/test continuity — rename debt, tracked in the spec. */
+/* Positioned below the max tick extension: dial radius * ~1.55 accounts for
+   gap + 50%-longer maxLen. The -5.5px keeps the 19px-tall block centred where
+   the 8px dot's centre sat, so the gap to .dial_layer-ui is preserved. */
 .dial_sector-dot {
   position: absolute;
-  bottom: calc(50% - var(--dial-large-height) / 2 * 1.55 - 0.5rem + 1rem);
+  bottom: calc(50% - var(--dial-large-height) / 2 * 1.55 - 0.5rem + 1rem - 5.5px - 2rem);
   left: 50%;
   transform: translateX(-50%);
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #fff;
+  width: 53px;
+  height: 19px;
+  /* explicit resets: the Webflow head also hardcodes the CDN copy of this
+     stylesheet, so a stale cached rule's dot styling must be overridden,
+     not just omitted */
+  background: transparent;
+  border-radius: 0;
+  color: #fff;
+  /* resting opacity 60% — the fade-in tween in work-dial.js targets the same
+     value; Barba re-entry (no inline opacity) falls back to this rule */
+  opacity: 0.6;
+  line-height: 0;
   z-index: 5;
   pointer-events: none;
   display: none;

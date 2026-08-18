@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-17",
+  "lastUpdated": "2026-08-18",
   "lastPlanned": "rhp-mobile-dial-permanent-lengthened-ticks",
   "lastRegistered": "rhp-mobile-dial-permanent-lengthened-ticks",
   "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
@@ -626,6 +626,16 @@
       "slug": "rhp-mobile-dial-permanent-lengthened-ticks",
       "created": "2026-08-17",
       "description": "Mobile dial bulge locked to the active sector in canvas space — rotates with the dial, other ticks never grow, no screen-edge overflow"
+    },
+    {
+      "id": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+      "file": "tests/acceptance/rhp-mobile-dial-circular-drag-and-spinner-arrows.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "slug": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+      "created": "2026-08-18",
+      "description": "Mobile dial spins a continuous 360 via circular finger drag (no dominant-axis direction flip), and the 8px white dot at 6 o'clock is replaced by the 53x19 spinner-arrows SVG."
     }
   ]
 }

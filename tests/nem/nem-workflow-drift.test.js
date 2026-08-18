@@ -234,6 +234,7 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
     node("Build HTML"),
     node("Log Failure"),
+    node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - report generation failed' }) }}" }),
     node("Respond Confirmed"),
     node("Mark Consumed"),
   ], {
@@ -298,7 +299,8 @@ describe("checkInvariants — the report JSON gate", () => {
     node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
-    node("Build HTML"), node("Log Failure"), node("Alert Failure"),
+    node("Build HTML"), node("Log Failure"),
+    node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - report generation failed' }) }}" }),
     node("Respond Confirmed"), node("Mark Consumed"),
   ], {
     "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }]] },
@@ -326,6 +328,42 @@ describe("checkInvariants — the report JSON gate", () => {
     broken.connections["Valid Report?"].main[1] = [{ node: "Build HTML" }];
     const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
     assert.ok(failed.some((c) => /failure branch/i.test(c.label)));
+  });
+
+  test("catches the [DEV] tag and the alert recipient disagreeing", () => {
+    /* Alerts go to Will during development and must go to Alex at go-live, and the subject
+     * carries a [DEV] tag so a test can never be mistaken for a production failure. Those
+     * are two edits, which means one can be made and the other forgotten — a [DEV]-tagged
+     * alert reaching the client, or worse, an untagged test alert. Tie them together. */
+    const alerting = (to, subjectTag) => wf(
+      [node("Alert Failure", {
+        jsonBody: `={{ JSON.stringify({ to: [ { email: '${to}' } ], subject: '${subjectTag}NEM Test - report generation failed' }) }}`,
+      })],
+    );
+
+    const devConsistent = checkInvariants("verify", alerting("will@teamzissou.io", "[DEV] "));
+    assert.ok(
+      !devConsistent.find((c) => /\[DEV\]/.test(c.label) && !c.ok),
+      "dev recipient with a [DEV] tag should be consistent",
+    );
+
+    const liveConsistent = checkInvariants("verify", alerting("alex@nemlife.com", ""));
+    assert.ok(
+      !liveConsistent.find((c) => /\[DEV\]/.test(c.label) && !c.ok),
+      "client recipient with no tag should be consistent",
+    );
+
+    const untaggedDev = checkInvariants("verify", alerting("will@teamzissou.io", ""));
+    assert.ok(
+      untaggedDev.some((c) => /\[DEV\]/.test(c.label) && !c.ok),
+      "a dev recipient without the tag must fail",
+    );
+
+    const taggedClient = checkInvariants("verify", alerting("alex@nemlife.com", "[DEV] "));
+    assert.ok(
+      taggedClient.some((c) => /\[DEV\]/.test(c.label) && !c.ok),
+      "a [DEV]-tagged alert going to the client must fail",
+    );
   });
 
   test("catches a prompt that stops demanding JSON", () => {

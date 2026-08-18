@@ -142,6 +142,20 @@ const INVARIANTS = {
       check: (wf) => fanOut(wf, "Generate Report").includes("Parse Report"),
     },
     {
+      /* Two edits are needed at go-live: point the alert at Alex, and drop the [DEV] tag
+       * from the subject. Making one and forgetting the other gives either a [DEV]-tagged
+       * alert landing on the client, or an untagged test alert that reads as a real
+       * production failure. Tie them so neither can happen alone. */
+      label: "The alert's [DEV] subject tag agrees with who it is addressed to",
+      check: (wf) => {
+        const body = find(wf, "Alert Failure")?.parameters?.jsonBody ?? "";
+        if (!body) return false;
+        const toDeveloper = body.includes("will@teamzissou.io");
+        const tagged = body.includes("[DEV]");
+        return toDeveloper === tagged;
+      },
+    },
+    {
       label: "The Valid Report? failure branch cannot reach Build HTML or Send Report",
       check: (wf) => {
         const onFailure = ((wf.connections?.["Valid Report?"]?.main ?? [])[1] ?? [])

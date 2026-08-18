@@ -59,10 +59,18 @@ $99/mo add-on we don't need. Roughly $1/mo minimum account spend.
 Order-of-magnitude for RHP: 540p loops ≈ 2–3 MB each, ~10 clips fetched per visit ≈ 25 MB.
 At 10k visits/month ≈ 250 GB ≈ **~$2.50/mo delivery**. Storage of ~50 clips is cents.
 
+**Transcoding:** standard encoding is free and automatic, and produces a full adaptive
+ladder for HLS *plus* per-resolution direct MP4 files at **240p, 360p, 720p and 1080p**.
+This is the decisive feature — RHP picks a rendition per breakpoint from a plain URL, with
+no HLS library needed. Note the MP4 ladder has **no 480p/540p step**, and RHP currently
+serves Vimeo's 540p; closest equivalents are 720p (larger) or 360p (smaller). Decide which
+at migration time and measure against the current 540p payload.
+
 **Gotchas:**
 - MP4 Fallback must be enabled on the video library's Encoding tab **before** upload —
   only videos uploaded after enabling get MP4 files generated. Set this first.
-- MP4 fallback is capped at 720p on some library configs; 540p/720p is all RHP uses, fine.
+- Enabled resolutions must likewise be configured **before** upload; changing them later
+  does not retro-encode existing videos, they need re-uploading.
 - Security tab has *Allowed domains* (empty = unrestricted) and *Allowed referrers*. If we
   lock these down, add production, the `.webflow.io` staging host, and the local dev origin
   used by `/local`, or the pool videos will 403.
@@ -81,9 +89,20 @@ free; bandwidth included; no minimum. Notably, Cloudflare states content served 
 browser cache is not billable — which specifically covers short looping video, so RHP's
 loop pattern is cheaper here than the raw per-minute rate suggests.
 
-**Gotchas:** MP4 download must be enabled per video via an API call to `/downloads` —
-it is not a one-time library-wide setting like Bunny's, so client self-serve uploads would
-need a small automation. Only one `downloads/default.mp4` rendition, no per-resolution MP4s.
+**Transcoding:** Cloudflare does encode a full adaptive ladder — but *only for HLS/DASH*.
+The MP4 download is a **single `default.mp4` at the highest rendition only**; there is no
+way to request 720p or 360p as a direct MP4. Community requests for multi-resolution MP4s
+have gone unanswered, and the documented workaround is stitching HLS segments with ffmpeg.
+
+**Why this rules it out for RHP as a drop-in:** the dial holds up to 5 concurrent `<video>`
+elements. With one MP4 rendition we would push the 1080p file to phones five times over,
+which the mobile-readyState branches in `work-dial.js` exist specifically to avoid. Adopting
+Cloudflare Stream would mean rewriting the dial onto HLS (hls.js on non-Safari) rather than
+swapping URLs — a materially larger job than the Bunny path.
+
+**Other gotchas:** MP4 download must be enabled per video via a POST to `/downloads`, then
+polled until `status` is `ready` — not a one-time library-wide setting like Bunny's, so
+client self-serve uploads would need a small automation.
 
 ### 3. Mux — overkill here
 - https://www.mux.com/ · pricing: https://www.mux.com/pricing
@@ -107,13 +126,15 @@ handoff) for every new video. Viable if the client is happy for us to handle upl
 
 ## Recommendation
 
-**Bunny Stream.** It is the only option that hits all four of: permanent unsigned MP4 URLs,
-per-GB pricing that suits looping background video, free standard encoding with automatic
-poster thumbnails, and a self-serve upload dashboard the client can use without us.
-Expected cost is low single-digit dollars per month.
+**Bunny Stream.** It is the only option that hits all five of: permanent unsigned MP4 URLs,
+**per-resolution direct MP4s (240p/360p/720p/1080p)**, per-GB pricing that suits looping
+background video, free standard encoding with automatic poster thumbnails, and a self-serve
+upload dashboard the client can use without us. Expected cost is low single-digit dollars
+per month.
 
-Cloudflare Stream is the fallback if the client already has a Cloudflare account and wants
-one vendor — but the per-video MP4-enable API call makes client self-serve uploads clunkier.
+Cloudflare Stream is *not* a like-for-like fallback. Its single-rendition MP4 download would
+force the dial onto HLS to keep per-breakpoint resolutions, turning a URL swap into a player
+rewrite. Only revisit it if we decide to move to HLS for other reasons.
 
 ---
 

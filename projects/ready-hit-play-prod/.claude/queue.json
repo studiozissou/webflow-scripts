@@ -1,7 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-12",
+  "updated": "2026-08-13",
   "queue": [
+    {
+      "id": "rhp-nav-fade-in-on-work-page",
+      "project": "ready-hit-play-prod",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Fade the nav in on work pages and fix it staying hidden after landing on about",
+      "spec": ".claude/specs/rhp-nav-fade-in-on-work-page.md",
+      "agent": "code-writer",
+      "created": "2026-08-13",
+      "note": "Two parts. FIX: the About page carries page-level Webflow custom code with .nav{display:none!important}; Barba never swaps <head>, so it survives navigation away from about and hides the nav for the rest of the session. Verified live: direct load of a work page gives display flex, direct-land-about then click gives none. Home already has an override at ready-hit-play.css:111; add the same for work/case. FEAT: on about to work only, pre-hide the nav in beforeLeave then play the homepage choreography in afterEnter (about slides from left, contact from right, 0.7s power3.out, sequential) plus a logo fade, which the homepage deliberately leaves instant. 2 files, ~65 LOC. Follow-up: remove the page-level style in Designer so the workaround can be dropped."
+    },
     {
       "id": "feat-about-to-work-via-home-transition",
       "project": "ready-hit-play-prod",

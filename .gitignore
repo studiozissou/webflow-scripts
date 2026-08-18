@@ -28,3 +28,6 @@ projects/nem-life/.claude/research/phase-b-page-full.png
 *snapshot*.txt
 *-snapshot.html
 *-fullpage.html
+
+# Uncommitted diffs rescued by /tidy before removing a merged worktree — local only
+.claude/worktrees-backup/

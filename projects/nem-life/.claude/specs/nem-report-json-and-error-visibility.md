@@ -3,7 +3,7 @@
 **Client:** NEM Life
 **Slug:** `nem-report-json-and-error-visibility`
 **Created:** 2026-08-17
-**Status:** Ready to Build
+**Status:** Ready to Build — slice 1 (§1–3) planned 2026-08-18, see Build plan
 **Priority:** P0
 **Type:** feature
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, active) and `/submit` (`LDI1eWR35lwX6WLp`)
@@ -331,6 +331,73 @@ and the fixed disclaimer.
 N/A — no Barba transitions. The component is a self-contained React island; the rest is n8n.
 
 ---
+
+---
+
+## Build plan — slice 1 (planned 2026-08-18)
+
+Sections 1–3 only. Completion logging (§4), intro lines (§5) and the report template (§6)
+stay queued as separate work.
+
+### Decisions taken (Will, 2026-08-18)
+
+| Question | Answer | Consequence |
+|---|---|---|
+| The stub returns prose, which `Parse Report` will reject | **Rewrite the stub to emit the five-key JSON** | The whole chain stays exercisable now, and Alex's real prompt later drops in as a like-for-like replacement rather than a re-wiring. |
+| Alert channel | **MailerSend, SPOF recorded** | Matches what Alex asked for. If the send path is what broke, the alert dies with it — a known limit, not an oversight. Revisit only if the log shows it mattering. |
+| Slice size | **§1–3** | One coherent change to `/verify` plus one new Data Table. |
+
+### The thing that makes this urgent to get right
+
+`Parse Report` is a gate on the live report path. The moment it lands, **anything it rejects
+sends a user nothing**. So the stub prompt and the parser must change in the *same* apply —
+shipping the parser against the current prose-emitting stub would route every real user to
+the failure branch. That coupling is the whole risk in this slice.
+
+### Order of work
+
+1. **`tests/nem/nem-report-parse.test.js` first.** Pure validator, no n8n, no network:
+   the five-key happy path, and each of `not-json` / `missing-key` / `empty-value` /
+   `truncated`, plus `stop_reason: "max_tokens"` mapping to `truncated` rather than a bare
+   parse error. Whitespace-only values count as empty. This is where the real coverage lives.
+2. **Extract the validator to `projects/nem-life/src/nem-report-parse.js`** so the same code
+   is unit-tested here and pasted into the `Parse Report` Code node — not written twice.
+3. **Create the `nem_report_failures` Data Table.** ⚠️ **n8n's public API makes a table
+   schema immutable after creation** — there is no add-column. Get all nine columns right
+   first time: `timestamp`, `token`, `firstName`, `email`, `locale`, `conclusionId`,
+   `reason`, `rawResponse`, `executionId`. Confirmed 2026-08-18: only `nem_test_profiles`
+   exists today.
+4. **Rewrite the `Report Prompt` stub** to demand strict JSON in the contract shape, still
+   clearly labelled TEST MODE. Keep it a **fixed value** — an expression re-breaks the
+   escaping fix, and `npm run check:nem-drift` will fail if it regresses.
+5. **Add `Parse Report`, `Log Failure`, `Alert Alex`** and rewire `Generate Report`'s output.
+6. **Re-baseline** with `npm run check:nem-drift -- --write` and commit the snapshot.
+
+### Constraints carried in from what we already know
+
+- **Snapshot live before touching the workflow.** n8n keeps no version history, and on
+  2026-08-13 an unrecorded hand-edit meant the repo copy was missing a whole node. Run
+  `npm run check:nem-drift` first; if it reports drift, resolve that before editing.
+- **New nodes sit below y=360.** n8n v1 runs parallel branches in canvas y-order, so a node
+  above `Respond Confirmed` delays the 302 and leaves the token replayable.
+- **Apply as a node-level diff, never a whole-workflow import.**
+- **`nem-verify-report-email-and-pdf-branding` also rewrites `Build HTML`.** Whichever lands
+  second must re-pull live first. This slice should land first; it removes that spec's
+  Defect 1 by construction.
+- Pin `Generate Report`'s output to fixtures when testing the four failure modes rather than
+  burning Anthropic tokens on deliberately broken responses.
+
+### Not blocked by Notion
+
+The real prompt text is the only thing waiting on Alex's doc, and installing it is a single
+fixed-value edit to one node. Everything above is buildable now (Will, 2026-08-18).
+
+### Resolved from "Open questions"
+
+- **Q4, does `Store Profile`'s email column allow null?** Still open, but it belongs to §4
+  (completion logging), not this slice. Noted 2026-08-18: n8n Data Table columns expose only
+  a type (`string`/`number`/`boolean`/`date`) through the API, with no nullable flag, so this
+  has to be answered by trying a write rather than by reading the schema.
 
 ## Open questions
 

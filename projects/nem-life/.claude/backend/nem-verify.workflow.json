@@ -222,7 +222,7 @@
       ],
       "disabled": false,
       "parameters": {
-        "jsCode": "const res = $json;\nconst textBlock = (res.content || []).find(b => b.type === 'text');\nconst raw = textBlock ? textBlock.text : '';\nconst reportHtml = raw.split('\\n\\n').map(p => '<p>' + p.replace(/\\n/g, '<br>') + '</p>').join('');\nconst p = $('Validate Token').first().json;\nconst heading = p.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport';\nconst greeting = p.locale === 'en' ? 'Dear' : 'Beste';\nconst html = '<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:Georgia,serif;color:#292828;max-width:640px;margin:0 auto;padding:48px 40px;line-height:1.6;font-size:16px}h1{font-family:Montserrat,Arial,sans-serif;font-size:24px;color:#292828}p{margin:0 0 16px}</style></head><body><h1>' + heading + '</h1><p>' + greeting + ' ' + (p.firstName || '') + ',</p>' + reportHtml + '</body></html>';\nreturn [{ json: { html, reportText: raw, ...p } }];"
+        "jsCode": "// Consumes the five validated JSON sections. Formatting lives here, not in the prompt -\n// the model returns content only. Values are escaped: Christel's prose contains & and\n// quotes, which would otherwise break the document.\nconst p = $('Validate Token').first().json;\nconst r = $json.report;\nconst SECTIONS = ['opening', 'reaction', 'origin', 'cost', 'closing'];\n\nconst heading = p.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport';\nconst greeting = p.locale === 'en' ? 'Dear' : 'Beste';\n\nconst esc = (s) => String(s)\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\nconst para = (t) => esc(t)\n  .split(/\\n{2,}/)\n  .map(x => '<p>' + x.replace(/\\n/g, '<br>') + '</p>')\n  .join('');\n\nconst body = SECTIONS.map(k => para(r[k])).join('');\nconst reportText = SECTIONS.map(k => r[k]).join('\\n\\n');\n\nconst html = '<!doctype html><html><head><meta charset=\"utf-8\"><style>'\n  + 'body{font-family:Georgia,serif;color:#292828;max-width:640px;margin:0 auto;padding:48px 40px;line-height:1.6;font-size:16px}'\n  + 'h1{font-family:Montserrat,Arial,sans-serif;font-size:24px;color:#292828}'\n  + 'p{margin:0 0 16px}'\n  + '</style></head><body><h1>' + heading + '</h1>'\n  + '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>'\n  + body\n  + '</body></html>';\n\nreturn [{ json: Object.assign({ html: html, reportText: reportText }, p) }];"
       }
     },
     {
@@ -405,11 +405,138 @@
               "id": "a1b2c3d4-0000-4000-8000-00000000rp01",
               "name": "systemPrompt",
               "type": "string",
-              "value": "TEST MODE. The final NEM Test report system prompt (owned by Alex, stored in Notion) is not installed yet, so do NOT write the real report. Reply in the requested language, under 120 words, headed \"TESTRAPPORT / TEST REPORT\". State plainly that this is an automated test of the NEM verification pipeline and that the real personalised report will appear here once the final prompt is configured. To prove the data pipeline works, include the first name, primary mechanism, and total score taken from the details below."
+              "value": "TEST MODE. The final NEM Test report system prompt (owned by Alex, stored in Notion) is not installed yet, so do NOT write a real report.\n\nReturn ONLY a valid JSON object. No markdown, no code fences, no commentary before or after it. Exactly these five keys, every value a non-empty string:\n\n{\"opening\": \"...\", \"reaction\": \"...\", \"origin\": \"...\", \"cost\": \"...\", \"closing\": \"...\"}\n\nWrite each value as one or two short sentences of placeholder prose in the requested language, stating plainly that this is an automated test of the NEM verification pipeline and that the real personalised report will appear once the final prompt is configured. In \"opening\", include the reader's first name, primary mechanism and total score from the details below, so the data pipeline is proven end to end. Use no headings, markdown, bullet characters or formatting of any kind inside the values."
             }
           ]
         },
         "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validates the report JSON contract. Mirror of projects/nem-life/src/nem-report-parse.js,\n// which is unit-tested in tests/nem/nem-report-parse.test.js - keep the two in step.\n// This is a gate on the live report path: anything rejected here means the user gets\n// nothing, so it is strict about shape and tolerant about presentation.\nconst REPORT_KEYS = ['opening', 'reaction', 'origin', 'cost', 'closing'];\nconst RAW_LIMIT = 2000;\n\nfunction extractText(response) {\n  const blocks = response && response.content;\n  if (!Array.isArray(blocks)) return null;\n  const text = blocks\n    .filter(b => b && b.type === 'text' && typeof b.text === 'string')\n    .map(b => b.text)\n    .join('');\n  return text.length > 0 ? text : null;\n}\n\nfunction unwrap(text) {\n  const trimmed = text.trim();\n  const fenced = /^```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?```$/.exec(trimmed);\n  return (fenced ? fenced[1] : trimmed).trim();\n}\n\nfunction isPlainObject(v) {\n  return typeof v === 'object' && v !== null && !Array.isArray(v);\n}\n\nfunction fail(reason, detail, raw) {\n  return {\n    valid: false,\n    reason: reason,\n    detail: detail,\n    raw: String(raw == null ? '' : raw).slice(0, RAW_LIMIT)\n  };\n}\n\nfunction parseReport(response) {\n  const text = extractText(response);\n  // Checked before parsing: truncated JSON fails to parse anyway, but \"unexpected end of\n  // input\" tells nobody what to change, whereas this points straight at max_tokens.\n  if (response && response.stop_reason === 'max_tokens') {\n    return fail('truncated', 'Anthropic stopped at max_tokens - the report was cut short. Raise max_tokens or shorten the prompt.', text);\n  }\n  if (text === null) return fail('not-json', 'No text block in the model response.', '');\n  let parsed;\n  try {\n    parsed = JSON.parse(unwrap(text));\n  } catch (e) {\n    return fail('not-json', 'Response is not valid JSON: ' + e.message, text);\n  }\n  if (!isPlainObject(parsed)) {\n    return fail('not-json', 'Parsed to ' + (Array.isArray(parsed) ? 'an array' : typeof parsed) + ', expected an object.', text);\n  }\n  const missing = REPORT_KEYS.filter(k => !(k in parsed));\n  if (missing.length > 0) return fail('missing-key', 'Missing: ' + missing.join(', ') + '.', text);\n  const empty = REPORT_KEYS.filter(k => typeof parsed[k] !== 'string' || parsed[k].trim().length === 0);\n  if (empty.length > 0) return fail('empty-value', 'Empty or non-string: ' + empty.join(', ') + '.', text);\n  const report = {};\n  for (const k of REPORT_KEYS) report[k] = parsed[k];\n  return { valid: true, report: report };\n}\n\nconst result = parseReport($json);\nconst p = $('Validate Token').first().json;\n\nreturn [{\n  json: Object.assign({}, p, {\n    parseValid: result.valid,\n    report: result.valid ? result.report : null,\n    reason: result.valid ? '' : result.reason,\n    detail: result.valid ? '' : result.detail,\n    rawResponse: result.valid ? '' : result.raw,\n    executionId: String($execution.id),\n    failedAt: new Date().toISOString()\n  })\n}];"
+      },
+      "id": "c3000000-0000-4000-8000-00000000000p",
+      "name": "Parse Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1290,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c3000000-0000-4000-8000-00000000000v",
+              "leftValue": "={{ $json.parseValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c3000000-0000-4000-8000-00000000000q",
+      "name": "Valid Report?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "lzD76BzG472abwmA",
+          "mode": "list",
+          "cachedResultName": "nem_report_failures",
+          "cachedResultUrl": "/projects/VNzIpvBdgt9it5VO/datatables/lzD76BzG472abwmA"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.failedAt }}",
+            "token": "={{ $json.token }}",
+            "firstName": "={{ $json.firstName }}",
+            "email": "={{ $json.email }}",
+            "locale": "={{ $json.locale }}",
+            "conclusionId": "={{ $json.conclusionId || '' }}",
+            "reason": "={{ $json.reason }}",
+            "rawResponse": "={{ $json.rawResponse }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "c3000000-0000-4000-8000-00000000000l",
+      "name": "Log Failure",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mailersend.com/v1/email",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Requested-With",
+              "value": "XMLHttpRequest"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemmatters.com', name: 'NEM Test' }, to: [ { email: 'alex@nemlife.com', name: 'Alex' } ], subject: 'NEM Test - report generation failed (' + $json.reason + ')', text: 'A NEM Test report could not be generated, so this user has NOT received one.' + '\\n\\nReason: ' + $json.reason + '\\nDetail: ' + $json.detail + '\\nUser: ' + ($json.firstName || '(no name)') + ' <' + ($json.email || 'no email') + '>' + '\\nLocale: ' + $json.locale + '\\nToken: ' + $json.token + '\\nExecution: ' + $json.executionId + '\\n\\nFirst 500 characters of the model response:\\n' + String($json.rawResponse || '').slice(0, 500) + '\\n\\nLogged in the nem_report_failures table.' }) }}",
+        "options": {}
+      },
+      "id": "c3000000-0000-4000-8000-00000000000a",
+      "name": "Alert Alex",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        440
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "699carSHScI1ng0W",
+          "name": "MailerSend API"
+        }
       }
     }
   ],
@@ -479,7 +606,7 @@
       "main": [
         [
           {
-            "node": "Build HTML",
+            "node": "Parse Report",
             "type": "main",
             "index": 0
           }
@@ -547,6 +674,46 @@
         [
           {
             "node": "Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Report": {
+      "main": [
+        [
+          {
+            "node": "Valid Report?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Report?": {
+      "main": [
+        [
+          {
+            "node": "Build HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Failure": {
+      "main": [
+        [
+          {
+            "node": "Alert Alex",
             "type": "main",
             "index": 0
           }

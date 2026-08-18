@@ -3,7 +3,7 @@
 **Client:** NEM Life
 **Slug:** `nem-report-json-and-error-visibility`
 **Created:** 2026-08-17
-**Status:** Ready to Build — slice 1 (§1–3) planned 2026-08-18, see Build plan
+**Status:** Slice 1 (§1–3) **BUILT and verified live 2026-08-18** (execs 49 happy / 50 failure). §4–6 still Ready to Build.
 **Priority:** P0
 **Type:** feature
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, active) and `/submit` (`LDI1eWR35lwX6WLp`)

@@ -222,13 +222,25 @@ describe("formatReport", () => {
 describe("checkInvariants — the facts docs kept asserting by hand", () => {
   const verifyLive = wf([
     node("Report Prompt", {
-      assignments: { assignments: [{ name: "systemPrompt", type: "string", value: "TEST MODE." }] },
+      assignments: {
+        assignments: [{
+          name: "systemPrompt", type: "string",
+          value: "TEST MODE. Return ONLY a valid JSON object.",
+        }],
+      },
     }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
     node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
+    node("Parse Report", { jsCode: "parseReport($json)" }),
+    node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
+    node("Build HTML"),
+    node("Log Failure"),
     node("Respond Confirmed"),
     node("Mark Consumed"),
   ], {
     "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }]] },
+    "Generate Report": { main: [[{ node: "Parse Report" }]] },
+    "Parse Report": { main: [[{ node: "Valid Report?" }]] },
+    "Valid Report?": { main: [[{ node: "Build HTML" }], [{ node: "Log Failure" }]] },
   });
 
   test("passes on a live-shaped verify workflow", () => {
@@ -243,8 +255,7 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
     const rp = broken.nodes.find((n) => n.name === "Report Prompt");
     rp.parameters.assignments.assignments[0].value = "={{ 'oops' }}";
     const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
-    assert.equal(failed.length, 1);
-    assert.match(failed[0].label, /fixed value/i);
+    assert.ok(failed.some((c) => /fixed value/i.test(c.label)));
   });
 
   test("catches max_tokens being dropped back to the truncating value", () => {
@@ -268,6 +279,63 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
     const broken = wf([node("Generate Report", { jsonBody: "max_tokens: 8000" })]);
     const checks = checkInvariants("verify", broken);
     assert.ok(checks.some((c) => !c.ok));
+  });
+});
+
+describe("checkInvariants — the report JSON gate", () => {
+  /* Parse Report decides whether a user gets a report at all. The wiring that matters is
+   * that the failure branch cannot reach Send Report — a hand-edit reconnecting those
+   * would silently start posting half-built PDFs. */
+  const gated = wf([
+    node("Report Prompt", {
+      assignments: {
+        assignments: [{
+          name: "systemPrompt", type: "string",
+          value: "Return ONLY a valid JSON object with keys opening, reaction, origin, cost, closing.",
+        }],
+      },
+    }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
+    node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
+    node("Parse Report", { jsCode: "parseReport($json)" }),
+    node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
+    node("Build HTML"), node("Log Failure"), node("Alert Alex"),
+    node("Respond Confirmed"), node("Mark Consumed"),
+  ], {
+    "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }]] },
+    "Generate Report": { main: [[{ node: "Parse Report" }]] },
+    "Parse Report": { main: [[{ node: "Valid Report?" }]] },
+    "Valid Report?": { main: [[{ node: "Build HTML" }], [{ node: "Log Failure" }]] },
+    "Log Failure": { main: [[{ node: "Alert Alex" }]] },
+  });
+
+  test("passes on the gated workflow", () => {
+    const failed = checkInvariants("verify", gated).filter((c) => !c.ok);
+    assert.deepEqual(failed.map((c) => c.label), []);
+  });
+
+  test("catches Generate Report wired straight to Build HTML, bypassing the gate", () => {
+    const broken = structuredClone(gated);
+    broken.connections["Generate Report"] = { main: [[{ node: "Build HTML" }]] };
+    const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
+    assert.ok(failed.some((c) => /Parse Report/i.test(c.label)));
+  });
+
+  test("catches the failure branch being wired to Build HTML", () => {
+    /* Both outputs reaching Build HTML would send a PDF built from a rejected response. */
+    const broken = structuredClone(gated);
+    broken.connections["Valid Report?"].main[1] = [{ node: "Build HTML" }];
+    const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
+    assert.ok(failed.some((c) => /failure branch/i.test(c.label)));
+  });
+
+  test("catches a prompt that stops demanding JSON", () => {
+    /* Applies to Alex's real prompt too, not just the stub — if it does not ask for JSON,
+     * every report fails validation. */
+    const broken = structuredClone(gated);
+    const rp = broken.nodes.find((n) => n.name === "Report Prompt");
+    rp.parameters.assignments.assignments[0].value = "Write a warm two-page report.";
+    const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
+    assert.ok(failed.some((c) => /JSON/i.test(c.label)));
   });
 });
 

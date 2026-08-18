@@ -124,6 +124,61 @@ handoff) for every new video. Viable if the client is happy for us to handle upl
 
 ---
 
+## Cost risk: PAYG vs RHP's preloading dial
+
+The fair objection to usage billing is that RHP is a heavy consumer by design. Confirmed
+from the code:
+
+- `work-dial.js:319` — the two sliding-window pool videos are `preload="auto"` (full download)
+- `work-dial.js:349` — the generic video is `preload="auto"`
+- `work-dial.js:85` — all *other* videos on the page default to `preload="metadata"` (cheap)
+- The bg video mirrors the fg `src`, so it is a browser cache hit, **not** a second download
+
+So ~4 full downloads at rest, **plus one more for every dial rotation** as the window slides.
+Eight videos for an engaged visitor is a realistic figure, not a worst case.
+
+At 720p (~3.5 MB per ~10s loop) × 8 videos ≈ **28 MB per visit**, on Bunny's $0.010/GB EU/NA rate:
+
+| Visits / month | Transfer | Bunny cost |
+|---|---|---|
+| 10,000 | 280 GB | ~$2.80 |
+| 50,000 | 1.4 TB | ~$14 |
+| 100,000 | 2.8 TB | ~$28 |
+| 500,000 | 14 TB | ~$140 |
+
+**The comparison that matters:** Vimeo's self-serve plans carry a 2 TB/month bandwidth cap.
+At 28 MB/visit that cap is ~71,000 visits. Beyond that Vimeo does not stay cheap — it cuts
+off or forces an enterprise conversation. PAYG does not create the exposure, it just prices
+it honestly instead of capping it.
+
+### Hard protections (both worth configuring on day one)
+
+1. **Bunny is prepaid credit, not post-paid invoice.** You top up a balance and usage draws
+   it down. A runaway bill is structurally impossible — worst case the balance empties and
+   service suspends after warning emails. This is the single best answer to the risk.
+2. **Per-pull-zone monthly bandwidth limit.** Set a ceiling; the zone disables itself when
+   reached and stops accruing charges. Setting this at e.g. 3 TB caps exposure at ~$30/mo
+   by arithmetic, not by trust.
+
+Cloudflare Stream, by contrast, bills **post-paid** on minutes delivered — that is the model
+with genuine runaway-invoice risk, though its cached-loop exemption offsets some of it.
+
+### Levers on our side if volume climbs
+
+- Serve **360p to mobile** instead of 720p — roughly 4× cheaper, and phones are where the
+  concurrent-video load is worst anyway.
+- Shorten or more aggressively compress the loops; these are silent background clips where
+  bitrate can go a long way down before anyone notices.
+- Long cache TTLs on the pull zone: repeat visitors and `loop` playback re-serve from browser
+  cache and cost nothing.
+- The pool is already the minimum useful size (active ±1); shrinking it further would undo
+  the instant-switch behaviour from `.claude/specs/video-sync-homepage.md`.
+
+**Open question for the client:** current monthly traffic. Every figure above is a rate card
+until we put their real numbers through it.
+
+---
+
 ## Recommendation
 
 **Bunny Stream.** It is the only option that hits all five of: permanent unsigned MP4 URLs,

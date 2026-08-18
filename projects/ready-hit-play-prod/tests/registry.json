@@ -1,11 +1,11 @@
 {
   "version": 1,
   "lastUpdated": "2026-08-18",
-  "lastPlanned": "rhp-mobile-dial-permanent-lengthened-ticks",
-  "lastRegistered": "rhp-mobile-dial-permanent-lengthened-ticks",
-  "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
-  "lastDeployed": "2026-08-12",
-  "lastDeployedHash": "179363b",
+  "lastPlanned": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+  "lastRegistered": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+  "note": "Deploy 8a4134c (2026-08-18): fix-mobile-work-to-home-shrink (resolve dial CSS vars to px before GSAP tween + mobile content fade). Verified since-last-deploy scope: 70 passed / 26 failed / 2 flaky. Feature suite 8/8 green. All 26 failures pre-existing and unrelated: 13 x .nav_logo-link hidden on /about by ready-hit-play.css:103 (reproduced against old build b98c74a), 4 x canary missing STAGING_URL env, 4 x a11y WCAG content, 1 x mobile-tick reduced-motion (known failure documented in its spec), 4 x about-page slider/restore. About-page test-vs-design mismatch needs its own ticket.",
+  "lastDeployed": "2026-08-18",
+  "lastDeployedHash": "8a4134c",
   "entries": [
     {
       "id": "smoke",
@@ -626,6 +626,16 @@
       "slug": "rhp-mobile-dial-permanent-lengthened-ticks",
       "created": "2026-08-17",
       "description": "Mobile dial bulge locked to the active sector in canvas space — rotates with the dial, other ticks never grow, no screen-edge overflow"
+    },
+    {
+      "id": "fix-mobile-work-to-home-shrink",
+      "file": "tests/acceptance/fix-mobile-work-to-home-shrink.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-mobile-work-to-home-shrink",
+      "created": "2026-08-18",
+      "description": "Mobile work→home Barba transition shrinks smoothly instead of collapsing to 1px; desktop unchanged; mobile-only content fade"
     },
     {
       "id": "rhp-mobile-dial-circular-drag-and-spinner-arrows",

@@ -4,6 +4,84 @@
   "note": "rhp-mobile-dial-permanent-lengthened-ticks planned + spec written (Ready to Build); side-space verified live, rotation/index desync found as blocking sub-fix",
   "queue": [
     {
+      "id": "tsc-launch-metadata-schema",
+      "project": "the-signalling-company",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Launch metadata gap + Full JSON-LD schema + metadata re-audit",
+      "description": "WS-A: wrote seo-title/meta-description fields + copy for 11 RailOS Apps items and bound the template (title binding verified live). WS-B: Organization/WebSite live site-wide (client-pasted, Škoda parent, logo SVG + LinkedIn sameAs confirmed); WebPage/CollectionPage/AboutPage/ContactPage + BreadcrumbList + FAQPage(26) + Person(8, top-level) + SoftwareApplication(RailOS) via schema-markup API across static pages; per-item Product/Service/NewsArticle/CreativeWork/SoftwareApplication pasted into CMS-template custom-code heads by client (API can't bind {{wf}} in schema field / 406s on freeform <script>). Homepage deduped (WebPage+Breadcrumb only; Org/WebSite site-wide). WS-C: metadata re-audit report. Staging-only publish. ACCEPTANCE: 20/20 pass. Schema Rich-Results validation deferred to production launch (Google robots cache blocks RRT on .webflow.io staging). OPEN: Home B / Projects B published duplicates (unpublish decision); VideoObject omitted (no uploadDate).",
+      "spec": "projects/the-signalling-company/.claude/specs/tsc-launch-metadata-schema.md",
+      "report": "projects/the-signalling-company/.claude/audits/tsc-metadata-audit-2026-07-15.md",
+      "created": "2026-07-15"
+    },
+    {
+      "id": "tamsen-official-bio-rollout",
+      "project": "tamsen-fadal",
+      "type": "seo",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Roll the approved official bio across schema, metadata and Wikidata",
+      "description": "The approved bio unblocks Phases 1 to 3 of the branded search fix. Update Person.description in the site wide entity graph and enrich the Person node with the two documentaries, Tamsen Fadal Media, the PostYourPatch campaign and the 2026 NYWICI Matrix Award. Strip 13x Emmy wording from Home, About and Speaking metadata. Fix the Podcast trailing space and over long description, and the M Film v2 duplicated meta description. Add page level JSON-LD to the nine pages that only inherit the site wide graph. Update Wikidata Q7681850 directly. Deliver on page copy recommendations, a COI declared Wikipedia Talk page edit request and a third party profile alignment checklist as documents rather than live changes.",
+      "spec": "projects/tamsen-fadal/.claude/specs/official-bio-rollout.md",
+      "created": "2026-08-12"
+    },
+    {
+      "id": "nem-test-review-alex-notion-validations",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "NEM Test: review the outstanding validations Alex left in Notion",
+      "description": "Action item from the 2026-08-10 call - Alex asked whether the validations he left in Notion had been processed, and they have not. Read them, triage into fix now, fold into conclusion v2, or defer, and reply to Alex with the verdict.",
+      "spec": "projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md",
+      "created": "2026-08-10"
+    },
+    {
+      "id": "nem-test-retest-end-to-end-mail-blocker",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "NEM Test: retest the full end-to-end flow and check whether the mail sending blocker has lifted",
+      "description": "Action item from the 2026-08-10 call. Before the holiday there was a blocker inside the mail sending platform that stopped the end-to-end flow completing. Retest submit, verification email, report generation, PDF render and delivery on test accounts, and report where things stand. This gates the manual Tier 3 verification of the conclusion v2 work.",
+      "spec": "projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md",
+      "created": "2026-08-10"
+    },
+    {
+      "id": "nem-test-conclusion-sheet-identifiers",
+      "project": "nem-life",
+      "type": "content",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "NEM Test: generate the 54-row conclusion sheet with English keys and unique identifiers for Alex",
+      "description": "Alex is waiting on a go-ahead before he and Christel fill in the conclusion text. Generate the 54 rows with the key column translated to English and the ID column populated, derived programmatically from the same code that builds keys at runtime so the sheet and the component cannot drift. Output to projects/nem-life/.claude/research/nem-conclusion-ids.csv. Do not edit Alex's shared Google Sheet directly - confirm with Will how the CSV reaches Alex.",
+      "spec": "projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md",
+      "created": "2026-08-10"
+    },
+    {
+      "id": "nem-test-conclusion-logic-v2",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "NEM Test conclusion engine: directional dual texts, minimum score gate, flat outcomes, English keys, unique identifiers and debug mode",
+      "description": "Seven changes agreed on the 2026-08-10 call with Alex and Christel, priced at 480 euro excluding BTW. Dual conclusion keys become directional (leading_following), growing the table from 15 to 27 keys per gender. A mechanism cannot be named unless it scores at least 8 out of 16, applied to primary and secondary. Two new flat outcomes: flat-low when nothing clears the threshold, flat-high when everything is elevated and undifferentiated - both render a contact link and skip the report entirely. Mechanism and conclusion keys move from Dutch to English. Every one of the 54 conclusion rows gets a short decodable identifier such as F-D-SR-FP. A debug mode toggled by the nemdebug query parameter renders the identifier, key and scores next to the conclusion text. The submit payload gains outcome, conclusionKey and conclusionId so the report engine sees the same outcome the user saw.",
+      "spec": "projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md",
+      "created": "2026-08-10"
+    },
+    {
+      "id": "nem-test-commit-scoring-engine-baseline",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "NEM Test: commit the untracked scoring engine and its unit tests",
+      "description": "projects/nem-life/src/nem-test-scoring.js and tests/nem/nem-test-scoring.test.js are untracked in git - the 14 July scoring extraction was never committed, and nem-test-phase-b.tsx has uncommitted edits alongside them. Commit all three as the baseline before any conclusion v2 work starts, so the rewrite has a diffable starting point and the work is not one git clean away from being lost.",
+      "spec": "projects/nem-life/.claude/specs/nem-test-conclusion-logic-v2.md",
+      "created": "2026-08-10"
+    },
+    {
       "id": "tsc-leadership-modal",
       "project": "the-signalling-company",
       "type": "feature",

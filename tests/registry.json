@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-15",
+  "lastUpdated": "2026-08-12",
   "note": "tsc-leadership-modal scrollbar-width reserve (no page jump) deployed to tsc-v2.webflow.io (677502e)",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -259,6 +259,48 @@
       "critical": false,
       "description": "TSC launch metadata + schema — writes missing SEO title/meta for the 11 RailOS Apps CMS items, adds Full JSON-LD schema site-wide (Organization/WebSite/BreadcrumbList/Product/Service/FAQPage/NewsArticle/Person/SoftwareApplication/CreativeWork/VideoObject), and re-audits all existing meta for accuracy; verifies distinct app titles and parseable typed JSON-LD on sampled pages",
       "created": "2026-07-15"
+    },
+    {
+      "slug": "nem-test-conclusion-logic-v2",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-test-conclusion-logic-v2.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "created": "2026-08-10",
+      "description": "NEM Test conclusion engine v2 - directional dual keys, min-8 score gate, flat-low/flat-high outcomes routing to a contact link instead of the report, debug mode via ?nemdebug=1 showing the conclusion ID + key, and gender-differentiated copy."
+    },
+    {
+      "slug": "official-bio-rollout",
+      "url": "https://www.tamsenfadal.com/",
+      "spec": "tests/acceptance/official-bio-rollout.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-12",
+      "description": "Approved official bio is the single source of truth: Person.description matches byte-for-byte, the site-wide entity graph resolves once per page across 13 pages, documentaries emit Movie nodes credited to #person, pre-existing site head code (verification, GTM, Finsweet, styles) survives the read-append-write, no '13x' wording remains in metadata, and the Podcast and M Film v2 description bugs are fixed."
+    },
+    {
+      "slug": "getcoconut-sole-traders",
+      "url": "https://www.getcoconut.com/mtd-software/sole-traders",
+      "spec": "tests/acceptance/test-page-getcoconut-sole-traders.spec.js",
+      "baseline": ".claude/research/test-page/getcoconut-sole-traders-baseline-2026-07-16.json",
+      "report": ".claude/research/test-page/getcoconut-sole-traders-report-2026-07-16.md",
+      "type": "test-page",
+      "source": "test-page",
+      "critical": false,
+      "description": "MTD for Sole Traders landing page — Full-mode /test-page baseline (a11y 100, SEO 100, best-practices 73, LCP 158ms, CLS 0.11). Regression spec: JS errors, mobile overflow, CLS ceiling 0.15, heading hierarchy, img alt, SEO essentials.",
+      "created": "2026-07-16"
+    },
+    {
+      "slug": "coconut-mtd-compliant-software-page-rework",
+      "url": "https://getcoconut.webflow.io/features/mtd-compliant-software",
+      "spec": "tests/acceptance/coconut-mtd-compliant-software-page-rework.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut MTD Compliant Software service page rework - new H1/meta, 4 new long-form sections, 2 quarterly-table embeds (deadlines + thresholds), feature blocks H2 to H3, persona cards hidden, FAQ replaced with 10 items as H3; includes IX2 accordion interaction check and a /features/scan-receipts regression control for the shared CMS template",
+      "created": "2026-08-12"
     }
   ]
 }

@@ -248,11 +248,11 @@ source of truth. Express changes as node-level diffs via
 
 ## Blockers
 
-**MailerSend is still on a trial account** — `nem-mailersend-trial-account-blocks-report-delivery`
-(P0, Blocked). `Send Report` 422s for any recipient MailerSend has not already delivered
-to, so verification must use an already-seen address. Since this task changes the email
-body itself, it cannot be fully signed off until the account is upgraded and a genuinely
-new recipient receives the branded email.
+~~**MailerSend is still on a trial account**~~ — **cleared 2026-08-18.** Alex upgraded to a
+paid "Hobby" plan and a live end-to-end send to a never-before-used recipient succeeded
+(exec #48). Verification of this task is therefore no longer constrained: sign-off can and
+should use a genuinely new recipient receiving the branded email, which is exactly the
+check that was impossible before.
 
 ## Barba Impact
 

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-11",
+  "updated": "2026-08-18",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -252,10 +252,12 @@
       "project": "nem-life",
       "type": "fix",
       "priority": "P0",
-      "status": "Blocked",
+      "status": "Done",
       "title": "Report delivery is failing in production: MailerSend is on a trial account",
       "description": "Executions 30 and 35 on 2026-07-09 both failed at Send Report with 422 'You have reached trial account unique recipients limit. #MS42225'. Report generation, PDF render and encode all succeed; only delivery fails. Because Mark Consumed sits on the fast path, the token is consumed anyway, so the user sees the confirmed page, never receives a report, and cannot retry. Add To Newsletter also never runs, so consenting users are not subscribed. Blocked on Alex upgrading the MailerSend account off trial. Once unblocked, consider whether Mark Consumed should move back behind successful delivery, and add failure alerting to the report branch so silent failures surface. Corrects the backend README, which currently states MailerSend is production and that no credential work blocks go-live.",
-      "created": "2026-07-09"
+      "created": "2026-07-09",
+      "updated": "2026-08-18",
+      "note": "RESOLVED 2026-08-18. Alex upgraded the MailerSend account to a paid 'Hobby' plan and offered to go higher if volume needs it. Verified end-to-end rather than taken on trust: inserted one nem_test_profiles row with a fresh token and a never-before-used recipient, fired GET /verify?token=..., and execution 48 ran all 14 nodes green including Send Report, with the report email arriving at 10:14:42Z. Probe row deleted afterwards. Testing with an already-seen address would have passed regardless, since the cap was on unique recipients - always probe with a new address. Two follow-ups this ticket raised are NOT done and are tracked elsewhere: (1) whether Mark Consumed should move back behind successful delivery, so a delivery failure leaves the token replayable instead of stranding the user - still on the fast path, still worth a decision; (2) failure alerting on the report branch, now specced in projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md. New thing to watch: the Hobby plan caps monthly volume rather than recipients, and reports plus failure alerts share the account, so hitting the quota silences both at once."
     }
   ]
 }

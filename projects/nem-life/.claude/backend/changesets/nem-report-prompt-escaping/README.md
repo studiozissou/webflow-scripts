@@ -147,11 +147,15 @@ Then swap the torture prompt back out for the stub (or Alex's real prompt, if it
 
 ### Two constraints on verification
 
-**MailerSend is still on a trial account** (separate P0:
-`nem-mailersend-trial-account-blocks-report-delivery`). A full run **will 422 at
-`Send Report`** for any recipient MailerSend has not already seen — regardless of whether
-this fix works. Use an already-seen recipient, or disable `Send Report` and assert only
-through `Encode PDF`. **Do not read a `Send Report` 422 as a failure of this task.**
+~~**MailerSend is still on a trial account**~~ — **cleared 2026-08-18.** Alex upgraded to a
+paid "Hobby" plan and a live end-to-end send to a never-before-used recipient succeeded
+(exec #48), so `Send Report` no longer 422s and you can verify through the real send rather
+than stopping at `Encode PDF`. The old advice to use an already-seen recipient is now the
+*wrong* move — it would hide a genuine delivery regression. Use a fresh address.
+
+A `Send Report` failure is now meaningful and should be read as a real problem, though still
+check whether it is a delivery fault rather than a fault in *this* fix, which only touches
+the prompt and `max_tokens`.
 
 **Every run costs money.** `sandbox` was removed from PDFShift, so each run bills a
 credit, and Anthropic tokens bill against Alex's key. Keep it to a handful of runs.

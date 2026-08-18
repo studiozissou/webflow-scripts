@@ -128,6 +128,12 @@
     let _setDialStateFn = null; // closure set inside init(); used by forceActive()
     let _suspendFn = null;  // closure set inside init(), called by suspend()
     let _resumeFn = null;   // closure set inside init(), called by resume()
+    // The mobile bulge is a permanent travelling mark: once the user rotates it
+    // away from the dot it must KEEP that position across Barba navigations
+    // (work → home), so rotation and the locked sector have to outlive the
+    // init()/destroy() cycle. Module scope survives Barba; a real page load
+    // starts fresh, which is the intended reset.
+    let _persistedDial = null; // { rotationDeg, bulgeSector }
     let rafId = 0;
     let refs = null;
     let introMode = false;
@@ -400,6 +406,12 @@
       const sectorSize = 360 / N;
       const sectorOffset = sectorSize / 2; // centered wedge
 
+      // Mobile sector→canvas-angle map. On mobile the dot sits at screen 6 o'clock
+      // and rotation drives selection (activeIndex = round(rotationDeg / sectorSize)),
+      // so sector k's centre lives at canvas top-0 angle 180 − k·sectorSize.
+      // NOTE: NOT the desktop mapping — tickToSector() puts sector 0 at canvas 0°.
+      const bulgeCanvasAngle = (k) => mod(180 - k * sectorSize, 360);
+
       // Cursor (desktop only) - use cursor.js API
       let cursorIsPlay = false;
 
@@ -447,6 +459,10 @@
 
         // mobile dial
         rotationDeg: 0,
+        // mobile bulge: sector whose ticks are permanently lengthened.
+        // null = not yet locked; captured on the first frame attraction is live.
+        bulgeSector: null,
+        bulgeEase: 0,
         dragActive: false,
         dragStartX: 0,
         dragStartY: 0,
@@ -460,6 +476,16 @@
         frameCount: 0
       };
       _state = state; // expose to module-level destroy()
+
+      // Restore the travelling bulge from a previous init in this page session.
+      // bulgeEase starts at 1 so the mark does not replay its grow-in on every
+      // return — it only grows in the first time it appears.
+      if (_persistedDial && isMobile()) {
+        state.rotationDeg = _persistedDial.rotationDeg;
+        state.bulgeSector = _persistedDial.bulgeSector;
+        state.bulgeEase = 1;
+        if (canvas) canvas.style.transform = `rotate(${state.rotationDeg}deg)`;
+      }
 
       function setCursorPlay(isPlay) {
         if (isMobile()) return;
@@ -724,6 +750,34 @@
         }
         const desktopAttr = type === 'bg' ? 'data-video-bg' : 'data-video';
         return item.getAttribute(desktopAttr) || '';
+      }
+
+      /** Mobile: rotation encodes which sector sits at the dot. A case-study handoff
+       *  restores activeIndex without touching rotation, which would leave the locked
+       *  bulge pointing at the wrong ticks. Sync them and re-lock. */
+      function syncRotationToIndex(idx) {
+        if (!isMobile()) return;
+        state.rotationDeg = mod(idx * sectorSize, 360);
+        if (window.gsap) window.gsap.killTweensOf(state, 'rotationDeg');
+        state.bulgeSector = null;  // re-lock to the restored sector next frame
+        state.bulgeEase = 0;
+        // Write the transform NOW rather than waiting for the next draw(). On a
+        // Barba return, runAfterEnter's clearProps strips the canvas's inline
+        // styles, so between that and the next frame the canvas renders with no
+        // rotation at all while its bitmap still holds the previous frame's
+        // ticks — the bulge visibly jumps before settling.
+        if (canvas) canvas.style.transform = `rotate(${state.rotationDeg}deg)`;
+      }
+
+      /** Force a sync only when rotation and the restored index actually disagree.
+       *  Rotating the dial to a project and opening it leaves them already in
+       *  agreement, and syncing there would yank the travelling bulge back to six
+       *  o'clock. They diverge only when the arriving index was not the one the
+       *  dial was showing (e.g. a fresh session landing straight on a case). */
+      function syncRotationToIndexIfNeeded(idx) {
+        if (!isMobile()) return;
+        if (mod(Math.round(state.rotationDeg / sectorSize), N) === mod(idx, N)) return;
+        syncRotationToIndex(idx);
       }
 
       function applyActive(idx) {
@@ -1282,11 +1336,26 @@
         if (isMobile()) {
           canvas.style.transform = `rotate(${state.rotationDeg}deg)`;
 
-          // Mobile attraction: ticks always point toward the dot (screen-space bottom).
-          // Canvas rotates via CSS, so compensate: target = 180° - rotation in canvas coords.
+          // Mobile attraction: the lengthened ticks are LOCKED to the sector that was
+          // active when the dial appeared, in canvas space. The canvas rotates via CSS,
+          // so a fixed canvas angle turns with the dial. (Subtracting state.rotationDeg
+          // here is what used to cancel the rotation out and pin the bulge to
+          // screen-bottom — that is exactly the behaviour being removed.)
           const hasAttrMobile = attractionEnabled && !prefersReduced();
           const MOBILE_ATTR_EASE = 0.6;
-          const attractionTarget = mod(180 - state.rotationDeg, 360);
+          if (hasAttrMobile && state.bulgeSector === null) {
+            state.bulgeSector = mod(state.activeIndex, N);
+            state.bulgeEase = 0;
+          }
+          // Grow-in integrated in the draw loop, not GSAP: killTweensOf(state) at the
+          // ACTIVE transition (see setDialState) would otherwise freeze it part-grown.
+          if (state.bulgeSector !== null && state.bulgeEase < 1) {
+            state.bulgeEase = Math.min(1, state.bulgeEase + (prefersReduced() ? 1 : 0.035));
+          }
+          const bulgeGrow = 1 - Math.pow(1 - state.bulgeEase, 3); // ~0.58s power-out
+          const attractionTarget = state.bulgeSector === null
+            ? mod(180 - state.rotationDeg, 360)
+            : bulgeCanvasAngle(state.bulgeSector);
 
           if (inIntro) maxTickOpacity = 0;
           // draw ticks — intro scale + opacity when in intro mode; sector highlight gradient
@@ -1309,7 +1378,7 @@
               // degTop0: tick angle in top-0 frame (+90 converts canvas right-0 to top-0)
               const degTop0 = (i / T.bars * 360 + 90) % 360;
               const dAng = Math.min(Math.abs(degTop0 - attractionTarget), 360 - Math.abs(degTop0 - attractionTarget));
-              mobileInf = Math.max(0, 1 - dAng / T.angFalloff) * MOBILE_ATTR_EASE;
+              mobileInf = Math.max(0, 1 - dAng / T.angFalloff) * MOBILE_ATTR_EASE * bulgeGrow;
             }
             const len = (geom.baseLen + (geom.maxLen - geom.baseLen) * mobileInf) * tickScale;
 
@@ -1521,6 +1590,7 @@
           // Pre-write handoff time so applyActive/restoreVideoStateFromIndex picks it up
           RHP.videoState.byIndex[h.index] = { currentTime: h.currentTime, paused: false };
           applyActive(h.index);
+          syncRotationToIndexIfNeeded(h.index);
           // Step copy. applyActive() only rewrites it through scrambleStep on a
           // *non-initial* sector change, and booting at the handoff index makes
           // this the initial apply — so without this the restored project's
@@ -1644,6 +1714,7 @@
             paused: false
           };
           applyActive(handoff.index);
+          syncRotationToIndexIfNeeded(handoff.index);
 
           // Force exact seek
           if (visibleVideo) try { visibleVideo.currentTime = handoff.currentTime; } catch(e) {}
@@ -1768,6 +1839,10 @@
       stop();
       // Kill any in-flight GSAP tweens on the state object (e.g. attractionEase from ENGAGED)
       if (window.gsap && _state) window.gsap.killTweensOf(_state);
+      // Carry the travelling bulge over to the next init() in this session.
+      if (_state) {
+        _persistedDial = { rotationDeg: _state.rotationDeg, bulgeSector: _state.bulgeSector };
+      }
       _state = null;
       cleanup.forEach(fn => { try { fn(); } catch(e){} });
       cleanup = [];

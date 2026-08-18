@@ -49,7 +49,7 @@ email link hits the `/verify` webhook. See the full architecture in
 |---------|---------------|--------|-------|
 | **Anthropic** | `Anthropic API` (id `FPiOec7GU6JFfFFf`, Header Auth `x-api-key`) | ✅ **Transferred 2026-07-08** | Client's key in place (credential `updatedAt` 2026-07-08 13:37; verified by exec #28 immediately after, and again by exec #32). Value is the **raw key — no `Bearer` prefix**. Billing now lands on Alex. |
 | **PDFShift** | `PDFShift Header` (id `9e4Kcyv9XnvbS6zx`, Header Auth `X-API-Key`) | ✅ **Transferred 2026-07-09** | Client's key in place, verified exec #32. Value is the **raw `sk_…` key — no `Bearer` prefix**. `sandbox` removed, so every call now bills a credit; watch the plan's monthly credit cap and 1 MB/doc limit. |
-| **MailerSend** | `MailerSend API` (id `699carSHScI1ng0W`, Header Auth `Authorization`) | ✅ **Transferred 2026-07-09** | Client's token in place, scope **"Sending access"** (sufficient — only `POST /v1/email` is used). Value **must** read `Bearer mlsn.…`; a bare key returns 401. `nemmatters.com` verified in MailerSend + MailerLite; Send Report `from.email` = `hallo@nemmatters.com`. |
+| **MailerSend** | `MailerSend API` (id `699carSHScI1ng0W`, Header Auth `Authorization`) | ✅ **Transferred 2026-07-09** | Client's token in place, scope **"Sending access"** (sufficient — only `POST /v1/email` is used). Value **must** read `Bearer mlsn.…`; a bare key returns 401. `nemmatters.com` verified in MailerSend + MailerLite; Send Report `from.email` = `hallo@nemmatters.com`. **Paid "Hobby" plan since 2026-08-18** — the trial recipient cap is gone; watch the plan's monthly send quota instead. |
 
 **Auth prefix gotcha** — MailerSend needs a `Bearer ` prefix and the other two don't. Easiest thing to get wrong:
 
@@ -63,10 +63,9 @@ email link hits the `/verify` webhook. See the full architecture in
 
 > ⚠️ **Corrected 2026-08-11 — that last sentence is not true as written.** No *credential
 > transfer* work blocks go-live, but two account-level things do:
-> 1. **MailerSend is still on a trial account** and 422s on the first unseen recipient, so
->    in production every report email would fail. See the go-live blocker below. The
->    "✅ Production" row for MailerSend in the status table above should be read as "wired
->    and verified", not "ready for real traffic".
+> 1. ~~**MailerSend is still on a trial account** and 422s on the first unseen recipient, so
+>    in production every report email would fail.~~ **Resolved 2026-08-18** — Alex upgraded to
+>    a paid "Hobby" plan; verified end-to-end by exec #48. See the section below.
 > 2. **The n8n API key is failing authentication** (found 2026-08-11) — unrelated to the
 >    three client credentials above, but it blocks all workflow work until refreshed.
 
@@ -164,22 +163,29 @@ own system (HMAC-SHA256 `Signature` header; creatable from the dashboard, no API
 > stated in their docs**. Sending access is still definitely sufficient for `POST /v1/email`, which
 > is the only endpoint used. If API reads are ever wanted, just try the token and see if it 403s.
 
-### 🚨 Go-live blocker — MailerSend is still a trial account
+### ✅ Resolved 2026-08-18 — MailerSend trial cap (was the go-live blocker)
 
-Discovered 2026-07-09 (exec #35). Verifying `nemmatters.com` was necessary but **not sufficient**:
+**Alex upgraded the account to a paid "Hobby" plan on 2026-08-18** and offered to go higher if the
+volume needs it. Verified the same morning by a live end-to-end send, not by taking his word for it.
+
+History: discovered 2026-07-09 (exec #35). Verifying `nemmatters.com` was necessary but **not
+sufficient** — a trial account can only ever email a small, fixed set of *unique recipients*:
 
 ```
 422 — You have reached trial account unique recipients limit. #MS42225
 ```
 
-A MailerSend **trial** account can only ever email a small, fixed set of *unique recipients*. The
-domain is verified and the token is valid — sends to an already-seen recipient succeed (exec #37),
-but the first **new** address is refused. In production every user is a new unique recipient, so
-**every report email would fail** until the account is upgraded to a paid plan.
+Sends to an already-seen recipient succeeded (exec #37) while the first **new** address was refused,
+so in production every user would have failed. Last failure was exec #45 (2026-08-13).
 
-This is not something we can fix from n8n. **Alex must upgrade the MailerSend account.** Re-test with
-a never-before-used recipient afterwards to confirm the cap is lifted — testing with an old address
-will pass regardless and tell you nothing.
+**How it was verified (repeat this shape for any future send-path check):** a trial cap is a
+unique-**recipient** cap, so retesting with a known address passes regardless and tells you nothing.
+Insert one row straight into `nem_test_profiles` with a fresh token and a **never-before-used**
+recipient, GET `/verify?token=…`, then confirm both that `Send Report` succeeded in the execution
+**and** that the mail actually arrived — the webhook returns its 302 from `Respond Confirmed` long
+before the report chain finishes, so the HTTP response proves nothing. Delete the probe row after.
+Exec #48 (2026-08-18) is the passing reference run. Note the probe also trips `Add To Newsletter`
+if `nemMattersConsent` is true — set it false, or clean the subscriber up afterwards.
 
 **Design note (2026-07-07):** `Mark Consumed` was moved onto the *fast path* — it now fires alongside the confirm redirect, not at the tail of the report chain. Rationale: in the original graph `consumed` only flipped after the newsletter-add, so any failure in the report/PDF/email steps left the token replayable. The workflow JSON in this repo reflects the fix.
 

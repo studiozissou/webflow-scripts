@@ -148,10 +148,12 @@ Two outputs, both in n8n:
 the execution ID. One email per failure. If failures ever become frequent enough for that to
 be noise, batch them — but do not pre-solve that; the point of the log is to find out.
 
-> **⚠️ The alert shares the MailerSend account that is already capped.** An alert about a
-> failed report could itself fail to send, on the same trial-account limit. Alex's address is
-> almost certainly already in the unique-recipient set, so this should work — but it is a
-> real single point of failure, and another reason the MailerSend upgrade is P0.
+> **⚠️ The alert shares the MailerSend account the reports go out on.** ~~That account was
+> capped on a trial plan, so an alert about a failed report could itself fail to send.~~
+> **Resolved 2026-08-18** — Alex upgraded to a paid plan, so the recipient cap is gone and
+> this is no longer a live risk. It remains a real single point of failure in principle: if
+> the send path itself is what broke, the alert about it rides the same path. Worth revisiting
+> if the plan's monthly quota is ever hit, since that would silence reports and alerts together.
 
 ### 4. Anonymous completion logging — every completion, not just flat ones
 

@@ -72,24 +72,25 @@ are preserved in the data and then collapsed by HTML.
 
 ## Open, in priority order
 
-### 1. MailerSend trial cap — still the only thing blocking go-live
+### 1. ~~MailerSend trial cap~~ — RESOLVED 2026-08-18
 
-Verified today against live n8n. Execution 45 (13 Aug) is the most recent run that
-reached `Send Report`:
+**Alex upgraded to a paid "Hobby" plan** (his email, 18 Aug 09:46: *"If I need to upgrade to
+a higher package: just shoot."*) and it is **verified end-to-end**, not just taken on trust.
 
-```
-422 — "You have reached trial account unique recipients limit. #MS42225"
-```
+Probe run the same morning: one row inserted straight into `nem_test_profiles` with a fresh
+token and a never-before-used recipient, then `GET /verify?token=…`. Execution **48** shows
+all 14 nodes green including `Send Report`, and the report email arrived at 10:14:42Z. Probe
+row deleted afterwards. This is the check that matters, because the cap was on unique
+*recipients* — retesting with a known address would have passed even while broken.
 
-Everything upstream succeeded and produced a real PDF. Only delivery fails.
+Previously: exec 45 (13 Aug) 422'd with `#MS42225` after producing a real PDF; only delivery
+failed. Credential `699carSHScI1ng0W`, sending from `hallo@nemmatters.com`.
 
-**It is Alex's account, not ours.** Credential `699carSHScI1ng0W` holds the client's
-token, transferred 2026-07-09, sending from `hallo@nemmatters.com`. Will's own MailerSend
-trial account is a pre-handover leftover and is unrelated — though its token
-`nem-test-pdf-delivery` is still Active, All-domains, until Dec 2027 and should be revoked.
+**Still outstanding, unrelated:** Will's own pre-handover MailerSend trial token
+`nem-test-pdf-delivery` is Active, All-domains, until Dec 2027 and should be revoked.
 
-It is a unique-**recipient** cap, not a volume cap, which is why repeat tests to a known
-address pass and any new user fails.
+**Watch instead:** the Hobby plan has a monthly send quota rather than a recipient cap. If it
+is ever hit, reports *and* the failure alerts ride the same account and go quiet together.
 
 ### 2. jsDelivr is refusing to serve this repo — affects every client
 
@@ -143,7 +144,8 @@ Specced in `nem-report-json-and-error-visibility.md`, six queue tasks:
   plain Dutch, no formatting. A `Parse Report` node rejects four failure modes.
   Deliberately no self-repair pass.
 - **Error visibility** — Alex's direct request. Log every failure to a Data Table, email
-  him. Note the alert shares the capped MailerSend account.
+  him. Note the alert shares the same MailerSend account the reports go out on — no longer
+  capped, but still a shared point of failure if the plan quota is hit.
 - **Anonymous completion logging** — Will's steer, improved mid-session from flat-only to
   **every** completion, fired at question 20. `outcome` and `conclusionKey` are available
   there; `conclusionId` is not, because its gender segment comes from the profile screen

@@ -1,6 +1,6 @@
 # NEM Life — live n8n state
 
-**Generated 2026-08-18T12:50:45.692Z** by `npm run check:nem-drift`.
+**Generated 2026-08-18T13:25:47.735Z** by `npm run check:nem-drift`.
 
 **Do not hand-edit this file.** It is written from the live n8n API and is the one
 place in this repo allowed to assert what the workflows currently do. Prose docs that
@@ -11,8 +11,8 @@ need a live fact should link here rather than restating it — restating is how 
 
 - n8n id: `uKkMgMYoH5nOLoCR`
 - active: yes
-- nodes: 15
-- last changed in n8n: 2026-08-13T15:03:50.643Z
+- nodes: 19
+- last changed in n8n: 2026-08-18T13:24:09.434Z
 - committed snapshot: matches live
 
 | Invariant | State |
@@ -22,6 +22,9 @@ need a live fact should link here rather than restating it — restating is how 
 | Generate Report sets max_tokens to 8000, not the truncating 1024 | holds |
 | Generate Report reads the prompt from the Report Prompt node | holds |
 | Valid? keeps Respond Confirmed on the fast path, ahead of the report chain | holds |
+| Report Prompt demands JSON — without it every report fails validation | holds |
+| Generate Report goes through Parse Report, not straight to Build HTML | holds |
+| The Valid Report? failure branch cannot reach Build HTML or Send Report | holds |
 
 ## NEM Test — /submit
 

@@ -104,6 +104,47 @@ carry their original dates.
 > 2. **The n8n API key is failing authentication** (found 2026-08-11) — unrelated to the
 >    three client credentials above, but it blocks all workflow work until refreshed.
 
+### 🧪 The report JSON gate — `Parse Report` (Verified 18-08-2026)
+
+Claude returns report **content** as JSON; all formatting lives in `Build HTML`. `Parse
+Report` is the only place that output is trusted or rejected.
+
+```
+Generate Report ─▶ Parse Report ─▶ Valid Report? ─┬─ true ──▶ Build HTML ─▶ … ─▶ Send Report
+                                                  └─ false ─▶ Log Failure ─▶ Alert Alex
+```
+
+Rejects on four reasons: `not-json`, `missing-key`, `empty-value`, `truncated`
+(`stop_reason: max_tokens`, checked first because "unexpected end of input" tells nobody
+what to change). Tolerant about presentation — surrounding whitespace and ``` fences are
+unwrapped rather than failed, since binning a complete report over a code fence would be a
+self-inflicted outage. **No repair pass**: re-asking the model to fix its own JSON doubles
+latency and cost on the path already misbehaving, and the failure log exists to establish
+the real rate first.
+
+**On failure the user gets nothing, deliberately** — a half-built PDF is worse than none.
+`Send Report` is unreachable from the failure branch, and the drift check asserts that.
+
+| Piece | Where |
+|---|---|
+| Validator source of truth | `projects/nem-life/src/nem-report-parse.js` |
+| Unit tests (44) | `tests/nem/nem-report-parse.test.js` |
+| Failure log | Data Table `nem_report_failures` (`lzD76BzG472abwmA`) |
+| Alert | MailerSend → `alex@nemlife.com` |
+
+⚠️ **The validator exists twice** — once in the module, once pasted into the Code node,
+because n8n cannot import from the repo. `nem-report-parse.test.js` extracts the node's
+real source from the committed snapshot and runs it against the same fixtures, so the two
+cannot drift silently. **Edit the module, re-paste, re-baseline** — never only the node.
+
+⚠️ **`conclusionId` in the failure log is always empty today.** The v2 component sends
+`outcome`, `conclusionKey` and `conclusionId` in the submit payload, but `/submit`'s
+`Normalize` drops all three and `nem_test_profiles` has no columns for them. Tracked as
+`nem-submit-drops-v2-conclusion-fields`.
+
+⚠️ **Testing the failure branch emails Alex**, since `Alert Alex` is hardcoded to his
+address. Point it at your own address first, or warn him.
+
 ### 🌐 Known issue — every subscriber lands in the NL newsletter group
 
 `Add To Newsletter` hardcodes a single group and does **not** branch on `locale`:

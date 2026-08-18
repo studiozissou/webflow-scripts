@@ -310,12 +310,13 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P0",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "JSON report contract and Parse Report validation branch",
       "description": "Slice 1 of nem-report-json-and-error-visibility (spec sections 1-3), planned 2026-08-18. Claude returns report content as strict JSON with five keys (opening, reaction, origin, cost, closing); a Parse Report Code node becomes the only place that output is trusted or rejected, failing on not-json, missing-key, empty-value and truncated. Failures write a row to a new nem_report_failures Data Table and email Alex; Send Report must not fire, so nobody receives a half-built PDF. CRITICAL COUPLING: the live Report Prompt currently holds a TEST MODE stub that returns PROSE, so shipping Parse Report on its own would route every real user to the failure branch. The stub must be rewritten to emit the JSON contract in the SAME apply. Will's call 2026-08-18: rewrite the stub, so the chain is exercisable now and Alex's real prompt later drops in like-for-like. Alert rides the same MailerSend account as the reports - accepted as a known single point of failure rather than over-built for an unmeasured failure rate.",
       "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
       "created": "2026-08-18",
-      "note": "Order: unit tests first (tests/nem/nem-report-parse.test.js), validator extracted to projects/nem-life/src/nem-report-parse.js so the same code is tested here and pasted into the Code node, then the Data Table, then the workflow edits. WATCH: n8n's public API makes a Data Table schema IMMUTABLE after creation - no add-column - so get all nine nem_report_failures columns right first time. Only nem_test_profiles exists today (confirmed 2026-08-18). Run npm run check:nem-drift BEFORE editing the workflow and re-baseline after; n8n keeps no version history and a hand-edit on 13 Aug already caught us out. New nodes go below y=360 or the 302 waits on the report chain. Apply as a node-level diff, never a whole workflow import. Keep Report Prompt a FIXED VALUE - an expression re-breaks the escaping fix and the drift check asserts it. Land this before nem-verify-report-email-and-pdf-branding; both rewrite Build HTML and there is no version history to recover from."
+      "note": "BUILT AND VERIFIED LIVE 2026-08-18. Exec 49 (happy path): Parse Report valid, five sections through Build HTML, Send Report succeeded. Exec 50 (failure path, stub temporarily pointed at prose): reason not-json, row written to nem_report_failures, Alert Alex fired, and Send Report DID NOT RUN - the assertion that matters, since a half-built PDF is worse than none. Stub restored immediately afterwards and both probe rows deleted. 44 unit tests; suite now 199. The validator necessarily exists twice (module + pasted Code node, since n8n cannot import), so the tests extract the node's real source from the committed snapshot and run it against the same fixtures - edit the module, re-paste, re-baseline, never only the node. Three new drift invariants guard the gate: the prompt still demands JSON, Generate Report goes through Parse Report, and the failure branch cannot reach Build HTML or Send Report. NOTE: testing the failure path sent a real alert email to alex@nemlife.com at 13:23 - point Alert Alex at your own address next time.",
+      "updated": "2026-08-18"
     },
     {
       "id": "nem-anonymous-completion-logging",
@@ -352,6 +353,17 @@
       "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
       "created": "2026-08-18",
       "note": "Depends on the JSON contract landing first, since the five sections are the slots."
+    },
+    {
+      "id": "nem-submit-drops-v2-conclusion-fields",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "/submit silently drops the v2 outcome, conclusionKey and conclusionId",
+      "description": "The conclusion engine v2 component sends outcome, conclusionKey and conclusionId in the submit payload, but /submit's Normalize node does not map any of them and nem_test_profiles has no columns for them, so all three are discarded. Found 2026-08-18 while building the report JSON gate, when the failure log's conclusionId column turned out to be unfillable. Consequences: Alex cannot analyse results by conclusion, the report failure log cannot record which conclusion a failure belongs to, and the enriched payload shipped in v2 is doing nothing. Blocked-ish: n8n Data Table schemas are IMMUTABLE via the public API, so adding three columns may mean recreating nem_test_profiles, which holds live user rows. Establish whether the n8n UI allows adding columns before planning the migration.",
+      "created": "2026-08-18",
+      "note": "Same immutability constraint bites nem-anonymous-completion-logging, which also needs a new event column - worth solving both in one migration rather than twice."
     }
   ]
 }

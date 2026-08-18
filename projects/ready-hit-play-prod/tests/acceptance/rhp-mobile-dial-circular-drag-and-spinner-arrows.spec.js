@@ -17,6 +17,28 @@ const SLUG = 'rhp-mobile-dial-circular-drag-and-spinner-arrows';
 const STAGING_URL = process.env.STAGING_URL || 'https://rhpcircle.webflow.io';
 const MOBILE = { width: 390, height: 844 };
 
+// The home intro word-cycle + morph runs ~10-20s before the dial unlocks, and
+// several tests do two Barba navigations on top of that. The 30s default is
+// not enough to reach the state under test.
+//
+// The pageerror listener is attached here — before any describe's beforeEach
+// navigates — so load-time errors are captured on the FIRST page load. Tests
+// must never re-navigate just to start collecting: a second intro wait blows
+// the timeout.
+const pageErrors = new WeakMap();
+
+test.beforeEach(({ page }, testInfo) => {
+  testInfo.setTimeout(90_000);
+  const errs = [];
+  page.on('pageerror', (err) => errs.push(err));
+  pageErrors.set(page, errs);
+});
+
+/** JS errors seen on this page since before the first navigation. */
+function errorsFor(page) {
+  return pageErrors.get(page) || [];
+}
+
 // ── Helpers ───────────────────────────────────────────────────
 
 async function waitForRHP(page) {
@@ -26,16 +48,72 @@ async function waitForRHP(page) {
   );
 }
 
+/**
+ * Dismiss the Webflow cookie banner if present — it overlays the page and can
+ * swallow pointer events aimed at the top of the dial.
+ */
+async function dismissCookieBanner(page) {
+  const reject = page.getByRole('button', { name: /^Reject$/ });
+  if (await reject.count()) {
+    await reject.first().click({ timeout: 3000 }).catch(() => {});
+  }
+}
+
+const isHomeReady = () => {
+  const scope = document.querySelector('[data-barba="wrapper"]') || document.body;
+  return scope.classList.contains('rhp-home-ready');
+};
+
+/**
+ * The home dial is LOCKED until home-scroll-morph completes and sets
+ * .rhp-home-ready on the Barba wrapper — `scriptsOk` alone is far too early.
+ * Dragging before this lands hits an inert dial and reads as a false failure.
+ *
+ * Passively waiting does not work headless. Measured against the deployed site
+ * in headless Chromium at 390x844: the wrapper sits on `rhp-intro-started` for
+ * 60s+ and `rhp-home-ready` never arrives, with no page errors — the intro
+ * word-cycle stalls because headless cannot decode the Vimeo intro video.
+ *
+ * So drive the page into the unlocked state with the site's OWN public API —
+ * `RHP.homeScrollMorph.skipToEnd()`, the same call the Barba re-entry path
+ * makes for a returning visitor. That is exactly the state under test (dial
+ * unlocked and interactive); the intro sequence itself is out of scope for
+ * this spec and has its own coverage.
+ */
+async function waitForHomeReady(page) {
+  const ready = () => page.evaluate(isHomeReady);
+
+  // Warm/Barba loads often land ready on their own — take that if offered.
+  try {
+    await page.waitForFunction(isHomeReady, { timeout: 5_000 });
+  } catch { /* fall through to the explicit skip */ }
+
+  if (!(await ready())) {
+    await page.evaluate(() => {
+      const container = document.querySelector('[data-barba="container"]');
+      window.RHP?.homeScrollMorph?.skipToEnd?.(container);
+      window.RHP?.workDial?.setIntroComplete?.();
+      window.RHP?.workDial?.setAttractionEnabled?.(true);
+      window.RHP?.workDial?.setInteractionUnlocked?.(true);
+    });
+    // Do NOT hand-add .rhp-home-ready — skipToEnd() sets it once the dial is
+    // actually morphed into place. Forcing the class makes readiness lie: the
+    // check passes while .dial_layer-fg is still unpositioned, and the next
+    // locator call then hangs until the test timeout instead of failing fast.
+    await page.waitForFunction(isHomeReady, { timeout: 15_000 });
+  }
+
+  // The dial must be laid out, not merely flagged ready, before any drag.
+  await page.locator('.dial_layer-fg').waitFor({ state: 'visible', timeout: 10_000 });
+  await page.waitForTimeout(800); // indicator fade + snap settle
+}
+
 async function loadPage(page, path = '/') {
   await page.goto(`${STAGING_URL}${path}`);
   await waitForRHP(page);
-  await page.waitForTimeout(2000); // intro + GSAP settle
-}
-
-function collectErrors(page) {
-  const errors = [];
-  page.on('pageerror', (err) => errors.push(err));
-  return errors;
+  await dismissCookieBanner(page);
+  if (path === '/') await waitForHomeReady(page);
+  else await page.waitForTimeout(2000);
 }
 
 /** Centre + radius of the dial, in viewport coords. */
@@ -128,9 +206,8 @@ test.describe(`${SLUG} — Circular drag`, () => {
   });
 
   test('no console errors on mobile home at 390px', async ({ page }) => {
-    const errors = collectErrors(page);
-    await loadPage(page);
-    await page.waitForTimeout(500);
+    // Page already loaded by beforeEach; errors were collected from before it.
+    const errors = errorsFor(page);
     expect(errors, `JS errors: ${errors.map(e => e.message).join(', ')}`)
       .toHaveLength(0);
   });
@@ -324,13 +401,15 @@ test.describe(`${SLUG} — Regression & a11y`, () => {
   test.use({ viewport: MOBILE, hasTouch: true, isMobile: true });
 
   test('dial still spins after home to about to home', async ({ page }) => {
-    const errors = collectErrors(page);
+    const errors = errorsFor(page);
     await loadPage(page);
 
     await page.click('a[href="/about"]');
     await page.waitForTimeout(2500);
     await page.click('a[href="/"]');
-    await page.waitForTimeout(2500);
+    // Barba re-entry takes the home-intro skip() fast-path, which sets
+    // .rhp-home-ready immediately — but wait for it rather than guessing.
+    await waitForHomeReady(page);
 
     // Indicator came back, and came back exactly once.
     await expect(page.locator('.dial_sector-dot')).toHaveCount(1);

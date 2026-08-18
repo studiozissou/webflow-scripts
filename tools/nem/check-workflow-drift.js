@@ -37,6 +37,10 @@ export const WORKFLOWS = [
  * any real user submits the form. */
 export const SNAPSHOT_FIELDS = ["name", "nodes", "connections", "settings", "pinData"];
 
+/* The identified-profile table. Anonymous completions must never land here — see the
+ * "Completions are logged to their own table" invariant. */
+export const PROFILES_TABLE = "ib5Yh0yEfNpDqeuU";
+
 export function normaliseWorkflow(workflow) {
   const out = {};
   for (const field of SNAPSHOT_FIELDS) {
@@ -206,6 +210,37 @@ const INVARIANTS = {
       check: (wf) => {
         const mapped = find(wf, "Store Profile")?.parameters?.columns?.value ?? {};
         return ["outcome", "conclusionKey", "conclusionId", "event"].every((f) => f in mapped);
+      },
+    },
+    {
+      /* Completions go to their own table so the token lookup in /verify can never pick an
+       * anonymous row that has no email and leave a real user without their report. */
+      label: "Completions are logged to their own table, not to nem_test_profiles",
+      check: (wf) => {
+        const id = find(wf, "Log Completion")?.parameters?.dataTableId?.value ?? "";
+        return Boolean(id) && id !== PROFILES_TABLE;
+      },
+    },
+    {
+      /* "Anonymous" should be structural, not a promise. The completion row carries no
+       * identifying field, and there is nowhere in that table to put one. */
+      label: "The completion row carries no name, email or gender",
+      check: (wf) => {
+        const mapped = find(wf, "Log Completion")?.parameters?.columns?.value ?? {};
+        return !["email", "firstName", "gender", "relationshipStatus", "ageCategory"]
+          .some((f) => f in mapped);
+      },
+    },
+    {
+      label: "The completion path never triggers the verification email",
+      check: (wf) => {
+        const onCompletion = ((wf.connections?.["Completion?"]?.main ?? [])[0] ?? [])
+          .map((c) => c.node);
+        return (
+          onCompletion.length > 0 &&
+          !onCompletion.includes("MailerLite: Send Verification") &&
+          !onCompletion.includes("Store Profile")
+        );
       },
     },
   ],

@@ -304,6 +304,54 @@
       "description": "On 2026-08-17 Alex declared the Notion page 'NEM TEST 01 Waarom reageer ik zo? - source' authoritative over every earlier email: if it contradicts an email, the doc wins. It 404s for us - it sits in his workspace. Every spec we hold is therefore written from sources he has explicitly demoted, and the real report system prompt lives there, which is why live reports still read 'TESTRAPPORT / TEST REPORT' from a clearly-labelled stub. Ask him to share the page. NOT A DEV BLOCKER (Will, 2026-08-18): the JSON contract, error visibility, completion logging and intro-line work can all be built against the specs we have; only the prompt text itself waits on this. Installing the prompt when it arrives is a single fixed-value edit to the Report Prompt Set node, so nothing needs rearchitecting.",
       "created": "2026-08-18",
       "note": "Raise on the next email to Alex rather than as a standalone chase - he has been responsive (upgraded MailerSend within hours on 18 Aug). Once the prompt lands, paste it into Report Prompt as a FIXED VALUE, never an expression, or the escaping fix is undone; npm run check:nem-drift asserts exactly that and will fail if it regresses."
+    },
+    {
+      "id": "nem-report-json-contract-and-parse",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "JSON report contract and Parse Report validation branch",
+      "description": "Slice 1 of nem-report-json-and-error-visibility (spec sections 1-3), planned 2026-08-18. Claude returns report content as strict JSON with five keys (opening, reaction, origin, cost, closing); a Parse Report Code node becomes the only place that output is trusted or rejected, failing on not-json, missing-key, empty-value and truncated. Failures write a row to a new nem_report_failures Data Table and email Alex; Send Report must not fire, so nobody receives a half-built PDF. CRITICAL COUPLING: the live Report Prompt currently holds a TEST MODE stub that returns PROSE, so shipping Parse Report on its own would route every real user to the failure branch. The stub must be rewritten to emit the JSON contract in the SAME apply. Will's call 2026-08-18: rewrite the stub, so the chain is exercisable now and Alex's real prompt later drops in like-for-like. Alert rides the same MailerSend account as the reports - accepted as a known single point of failure rather than over-built for an unmeasured failure rate.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "Order: unit tests first (tests/nem/nem-report-parse.test.js), validator extracted to projects/nem-life/src/nem-report-parse.js so the same code is tested here and pasted into the Code node, then the Data Table, then the workflow edits. WATCH: n8n's public API makes a Data Table schema IMMUTABLE after creation - no add-column - so get all nine nem_report_failures columns right first time. Only nem_test_profiles exists today (confirmed 2026-08-18). Run npm run check:nem-drift BEFORE editing the workflow and re-baseline after; n8n keeps no version history and a hand-edit on 13 Aug already caught us out. New nodes go below y=360 or the 302 waits on the report chain. Apply as a node-level diff, never a whole workflow import. Keep Report Prompt a FIXED VALUE - an expression re-breaks the escaping fix and the drift check asserts it. Land this before nem-verify-report-email-and-pdf-branding; both rewrite Build HTML and there is no version history to recover from."
+    },
+    {
+      "id": "nem-anonymous-completion-logging",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Log every completed test anonymously at question 20",
+      "description": "Spec section 4 of nem-report-json-and-error-visibility, split out of slice 1 on 2026-08-18 because it is materially bigger: it needs a new event column on nem_test_profiles, an answer on whether the email column accepts null, and it touches the component as well as both workflows. Fires one fire-and-forget beacon on answering question 20 for EVERY outcome, carrying token, locale, outcome, conclusionKey, the five scores and totalScore - no personal data, because none exists yet at that point. Two rows per user joined on token. Captures the drop-off between finishing the questions and opting in, which is currently invisible.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "BLOCKER TO ANSWER FIRST: does Store Profile's email column accept null? n8n Data Table columns expose only a type through the API with no nullable flag, so this has to be answered by attempting a write, not by reading the schema. If it rejects null, every completion log 500s. Also note nem_test_profiles has NO event column today (17 columns, confirmed 2026-08-18) and n8n table schemas are immutable via the API - adding one may mean recreating the table, which holds live user rows. Establish that before promising a date."
+    },
+    {
+      "id": "nem-intro-lines-client-side",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Move the 25 report intro lines client-side, keyed on mechanism alone",
+      "description": "Spec section 5 of nem-report-json-and-error-visibility. The title-page teaser moves from Claude-generated to selected client-side, like the conclusion texts: 5 single mechanisms plus 20 directional duals. THE EASY THING TO GET WRONG: intro lines are looked up on KEY ALONE, not key + gender - the one asymmetry against the conclusion texts. 25 lines, not 26: both flat outcomes go to the contact link with no report (10 Aug call, confirmed 13 Aug). If Alex's Notion doc says 26, the doc contradicts the flat-routing decision - flag it, do not implement both.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "Generated from the same CSV export path as nem-conclusion-texts.js, from a new Intro lines tab in NEM_TEST_01_Default_texts. Extend tools/nem/build-conclusion-texts.js."
+    },
+    {
+      "id": "nem-webflow-report-template",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Build the Webflow report template as a design surface for Alex",
+      "description": "Spec section 6 of nem-report-json-and-error-visibility. Alex asked for a basic report template - structure and slots - and takes the formatting from there. Slots: title, first name, date, intro line, the five JSON sections, and the fixed disclaimer. TELL ALEX EXPLICITLY: the PDF generator does NOT pull the design from the live Webflow page. Once the design is final it gets exported to HTML/CSS and stored in the n8n workflow. The Webflow page is a design surface, not the runtime. This was sent 13 Aug but is the kind of thing worth repeating.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "Depends on the JSON contract landing first, since the five sections are the slots."
     }
   ]
 }

@@ -9,6 +9,7 @@
  *   projects/nem-life/src/nem-test-conclusion-ids.js
  *   projects/nem-life/src/nem-test-scoring.js
  *   projects/nem-life/src/nem-conclusion-texts.js
+ *   projects/nem-life/src/nem-intro-lines.js
  *
  * The modules are inlined because everything in Webflow runs inside one component,
  * so relative imports cannot resolve. They stay separate in the repo because the
@@ -93,6 +94,8 @@ const CONCLUSION_KEYS = [
     ),
   ),
 ];
+
+const INTRO_LINE_KEYS = CONCLUSION_KEYS.filter((key) => !(key in FLAT_OUTCOME_CODE));
 
 function enumerateConclusionRows(textSet = TEXT_SET) {
 
@@ -228,10 +231,16 @@ const EN_VROUW = {};
 
 const EN_MAN = {};
 
+const NL_INTRO = {};
+
+const EN_INTRO = {};
+
 const REAL_NL_VROUW = NL_VROUW;
 const REAL_NL_MAN = NL_MAN;
 const REAL_EN_VROUW = EN_VROUW;
 const REAL_EN_MAN = EN_MAN;
+const REAL_NL_INTRO = NL_INTRO;
+const REAL_EN_INTRO = EN_INTRO;
 
 declare global {
   interface Window {
@@ -334,6 +343,7 @@ interface Translations {
   wrongEmail: string;
   wrongEmailLink: string;
   conclusions: GenderedConclusions;
+  introLines: ConclusionTable;
 }
 
 type ConclusionTable = Record<string, string>;
@@ -360,6 +370,20 @@ const EN_CONCLUSIONS_MAN: ConclusionTable = {
 const EN_CONCLUSIONS_VROUW: ConclusionTable = {
   ...placeholderTable("DUMMY vrouw", "text to follow."),
   ...REAL_EN_VROUW,
+};
+
+function introPlaceholderTable(marker: string, note: string): ConclusionTable {
+  return Object.fromEntries(INTRO_LINE_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
+}
+
+const NL_INTRO_LINES: ConclusionTable = {
+  ...introPlaceholderTable("DUMMY intro", "regel volgt."),
+  ...REAL_NL_INTRO,
+};
+
+const EN_INTRO_LINES: ConclusionTable = {
+  ...introPlaceholderTable("DUMMY intro", "line to follow."),
+  ...REAL_EN_INTRO,
 };
 
 const translations: Record<"nl" | "en", Translations> = {
@@ -457,6 +481,7 @@ const translations: Record<"nl" | "en", Translations> = {
       man: NL_CONCLUSIONS_MAN,
       vrouw: NL_CONCLUSIONS_VROUW,
     },
+    introLines: NL_INTRO_LINES,
   },
   en: {
     answers: ["never", "rarely", "sometimes", "regularly", "very often"],
@@ -552,6 +577,7 @@ const translations: Record<"nl" | "en", Translations> = {
       man: EN_CONCLUSIONS_MAN,
       vrouw: EN_CONCLUSIONS_VROUW,
     },
+    introLines: EN_INTRO_LINES,
   },
 };
 
@@ -743,6 +769,11 @@ function Quiz({
     [answers, gender]
   );
 
+  const introLine = useMemo(
+    () => (result.skipsReport ? "" : t.introLines[result.conclusionKey] || ""),
+    [result.skipsReport, result.conclusionKey, t.introLines]
+  );
+
   const handleProfileContinue = useCallback(() => {
     const errors: Record<string, string> = {};
     if (!gender) errors.gender = t.errors.genderEmpty;
@@ -801,6 +832,8 @@ function Quiz({
       outcome: result.outcome,
       conclusionKey: result.conclusionKey,
       conclusionId: result.conclusionId,
+
+      introLine,
       totalScore: result.totalScore,
       nemMattersConsent,
       timestamp: new Date().toISOString(),
@@ -830,7 +863,7 @@ function Quiz({
     setSubmitting(false);
     setPhase("confirmation");
 
-  }, [firstName, email, nemMattersConsent, honeypot, result, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
+  }, [firstName, email, nemMattersConsent, honeypot, result, introLine, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
   const goBackToOptin = useCallback(() => {
     setEmail("");
@@ -1215,6 +1248,12 @@ function Quiz({
                 .map((m) => `${m} ${result.scores[m as keyof typeof result.scores]}`)
                 .join(" ")}{" "}
               · {result.outcome}
+              {introLine && (
+                <>
+                  <br />
+                  intro: {introLine}
+                </>
+              )}
             </code>
           )}
 

@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Also keeps existing Notion tasks current: proposes field updates when new information arrives and flags obsolete tasks for cancelling. Loaded by the /triage command. NEVER sends emails or Slack messages, and NEVER writes to Notion, without explicit user approval.
+description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Also keeps existing Notion tasks current: proposes field updates when new information arrives and flags obsolete tasks for cancelling. Flags sub-15-minute tasks as Quick, files them under a Quick Tasks mother task at P0 with an hours estimate so they can be sorted by size and cleared in a batch. Loaded by the /triage command. NEVER sends emails or Slack messages, and NEVER writes to Notion, without explicit user approval.
 ---
 
 <objective>
@@ -63,7 +63,8 @@ Required MCP tools (fully-qualified — these are the exact callable names on th
 Config files:
 - `.claude/triage/config.json` — source configuration (channels, lookback windows)
 - `.claude/triage/state.json` — last-processed timestamps per source, the Source ID dedup
-  ledger, and the `taskLinks` map from Source ID to Notion page URL
+  ledger, the `taskLinks` map from Source ID to Notion page URL, and `quickTasksParent`,
+  the cached page URL of the Quick Tasks mother task (`null` until first resolved)
 
 Skills to load:
 - `gmail-triage` — email classification, priority ranking, reply drafting, tone rules
@@ -91,7 +92,8 @@ will fail.
 | Source Context | text | 2-3 sentences: why this was flagged + key excerpt. The at-a-glance line in list views — the full brief goes in the page body, see <task_brief> |
 | Source ID | text | Dedup key: Gmail thread ID, Slack channel:ts, Calendar event ID |
 | Clients | relation | Two-way relation to Clients DB (collection://229e1848-bb51-8018-888c-000b6dbead72) |
-| Tags | multi_select | Flexible categorisation |
+| Tags | multi_select | Flexible categorisation. `Quick` marks a sub-15-minute task, see <quick_tasks> |
+| Hours Estimate | number | Hours, decimal. Quick tasks only — `0.25` for 15 min. Otherwise user-owned, see the exception note below |
 | Parent task | relation | Self-relation for subtask hierarchy. Limit 1 |
 | Sub-task | relation | Reverse of Parent task |
 | Blocked by | relation | Self-relation. Use only when the blocker is another task in this DB |
@@ -101,12 +103,18 @@ will fail.
 ### Properties triage must never write
 
 Tasks Tracker predates this skill and carries fields owned by the user or other workflows.
-Never set: `Description`, `Assignee`, `Person`, `Estimates`, `Hours Estimate`, `Price`,
+Never set: `Description`, `Assignee`, `Person`, `Estimates`, `Price`,
 `Task type`, `Scheduled for`, `Webflow Link`, `Figma File`, `Google Drive File`, `Notes`,
 `Attach file`, `AI keywords`, `Blocking`.
 
 In particular `Description` is the user's own field. Triage writes its short summary to
 `Source Context` and the full brief to the page body — never to `Description`.
+
+`Hours Estimate` is a narrow exception, not a free field. Triage writes it only for quick
+tasks, only when it is empty, and never overwrites a value the user has set. Everywhere
+else it stays user-owned. See <quick_tasks>. The `Estimates` select is a different field
+and remains off limits entirely — it is coarse (its smallest option is "S (< 1 hour)") and
+cannot express fifteen minutes.
 
 ### Doer classification
 
@@ -193,12 +201,16 @@ A message is NOT a task when:
 
 | Priority | Criteria |
 |----------|----------|
-| P0 | Deadline today/tomorrow, or someone is actively blocked by the user |
+| P0 | Deadline today/tomorrow, someone is actively blocked by the user, **or the task is quick** |
 | P1 | Deadline this week, or client waiting on a deliverable |
 | P2 | No urgent deadline, but real work that needs doing |
 | P3 | Nice-to-have, low urgency, or speculative |
 
 When priority is ambiguous, **ask the user**.
+
+P0 therefore carries two distinct meanings: "this is urgent" and "this is cheap, clear it
+in the next gap". They are told apart by the `Quick` tag and by sitting under the Quick
+Tasks mother task, not by the priority value. See <quick_tasks>.
 
 ## Subtask creation
 
@@ -219,6 +231,81 @@ When creating subtasks:
 2. Create each subtask with `Parent task` relation pointing to the parent
 3. Parent task status stays "Inbox" — subtasks drive progress
 4. If some subtasks are blocked, mark those individually, not the parent
+
+<quick_tasks>
+
+## Quick tasks
+
+A quick task is one the user can finish in a single sitting without having to think about
+it first. Catching them is worth doing because they are the tasks most likely to sit at P2
+behind ten bigger things when clearing them would have cost two minutes.
+
+### The test
+
+All four must hold:
+
+1. Under ~15 minutes of actual work
+2. A single step — one action, not a sequence
+3. No dependencies — nothing to wait on, nobody to chase
+4. No decision or research needed — the answer is already known
+
+If any one fails, it is not quick. A task that takes five minutes but needs a decision
+first is not quick, because the decision is the real work and it has no fixed size.
+
+Quick says nothing about whether the task matters. A quick task can still be urgent, and
+an urgent task is usually not quick. Do not use the tag to mean "unimportant".
+
+### What triage sets
+
+| Field | Value |
+|-------|-------|
+| `Priority` | `P0` |
+| `Hours Estimate` | `0.25` for a normal quick task, `0.1` for something near-instant |
+| `Tags` | add `Quick`, keeping any tags already there |
+| `Parent task` | the **Quick Tasks** mother task — see below |
+
+`Hours Estimate` is what makes the batch sortable by size, so it is set on the individual
+task, never only on the mother. Same for `Priority`: a P0-filtered view should show the
+quick tasks themselves, not one container row the user has to click into.
+
+### The Quick Tasks mother task
+
+One task in Tasks Tracker named exactly `Quick Tasks` holds them all.
+
+Resolving it, in order:
+
+1. `quickTasksParent` in state.json — the cached page URL
+2. `notion-search` scoped to the Tasks Tracker data source for a task named `Quick Tasks`
+3. If neither finds it, propose creating it as part of the approval batch, then cache the
+   URL in `quickTasksParent`
+
+The mother task itself: `Status` Inbox, `Priority` P0, `Doer` User, no `Due date`, no
+`Source`, no `Clients`. It is a container, not work. Never write a brief into its page
+body, never propose it as obsolete however long it sits, and never let it inherit a client
+relation from its children.
+
+### When a task already has a natural parent
+
+`Parent task` has a limit of 1, so a quick task that genuinely belongs to a project parent
+cannot also sit under Quick Tasks. **The project parent wins** — pulling a subtask out of
+the build it belongs to breaks the structure that build depends on, and saves nothing.
+
+That task still gets `P0`, `Hours Estimate`, and the `Quick` tag. The tag is what keeps it
+findable, which is precisely why the tag exists alongside the mother task rather than
+being redundant with it.
+
+### Limits
+
+- Never reparent an **existing** task into Quick Tasks during an update pass. A task the
+  user has already filed somewhere stays filed. Surface it as a proposal instead.
+- If a single run produces more than about eight quick tasks, say so rather than filing
+  them all. That many usually means the threshold is being applied too loosely, and a
+  Quick Tasks list that needs its own triage has defeated the point.
+- Write `Hours Estimate` only when it is empty. Never overwrite a number the user set.
+- Briefs for quick tasks use the **quick** depth from <task_brief> — the verbatim ask plus
+  the link. A fifteen-minute task does not need a full skeleton.
+
+</quick_tasks>
 
 ## Blocked detection
 
@@ -616,7 +703,11 @@ user approves against that column.
 ### Fields triage may update
 
 Only these: `Status`, `Priority`, `Due date`, `Source Context`, `Blocked Reason`,
-`Blocked by`, `Doer`, `Clients`, `Tags`, `Parent task`.
+`Blocked by`, `Doer`, `Clients`, `Tags`, `Parent task`, `Hours Estimate`.
+
+`Hours Estimate` may only be filled in when empty, and only on a task being classified as
+quick. `Parent task` may not be changed to Quick Tasks on an existing task — see the limits
+in <quick_tasks>.
 
 The never-write list in <notion_schema> applies on update exactly as on create.
 
@@ -715,11 +806,14 @@ Present each draft in a quoted block with:
 - Any [QUESTION FOR YOU: ...] flags inline
 
 ## New Tasks → Notion (approve before creating)
-| # | Task | Priority | Due | Client | Doer | Source | Parent task | Status | Brief |
-|---|------|----------|-----|--------|------|--------|-------------|--------|-------|
+| # | Task | Priority | Hrs | Due | Client | Doer | Source | Parent task | Status | Brief |
+|---|------|----------|-----|-----|--------|------|--------|-------------|--------|-------|
 
 `Brief` is the depth written for that task — quick / standard / parent — so the user can
 see at a glance which tasks got a full write-up.
+
+`Hrs` is `Hours Estimate`, and is populated only for quick tasks. Leave it blank for
+everything else rather than guessing a duration.
 
 ## Gaps in Briefs
 Every **Open questions** entry across all the briefs, grouped by task. These are the parts
@@ -742,6 +836,18 @@ Existing tasks that new source activity has changed. Omit the section entirely i
 Never bulk-approved. Omit the section entirely if empty.
 | # | Task | Age | Why it looks obsolete | Proposed |
 |---|------|-----|----------------------|----------|
+
+## Quick Tasks (under 15 min, filed under the mother task)
+Tasks that passed the quick test, sorted by `Hours Estimate` ascending. Omit the section
+entirely if empty.
+| # | Task | Hrs | Client | Doer | Filed under |
+|---|------|-----|--------|------|-------------|
+
+`Filed under` is `Quick Tasks`, or the natural parent when the task already had one.
+
+Distinct from Quick Wins below: this section is about **size** — short tasks, whoever does
+them. Quick Wins is about **who** — tasks Claude can execute now, at any size. A task can
+appear in both.
 
 ## Quick Wins (Claude can do now)
 List tasks where Doer is "Claude" with the command that would execute them.
@@ -796,7 +902,10 @@ After the triage is complete and tasks are created:
    source produced a task, not what became of it — Notion holds that
 9. If a task is trashed, remove its `taskLinks` entry but leave the Source ID in
    `processedSourceIds`, so the same message does not simply recreate it next run
-10. Write the updated state to `.claude/triage/state.json`
+10. If the Quick Tasks mother task was resolved or created this run, set
+    `quickTasksParent` to its page URL. If a lookup finds it missing — the user trashed
+    it — reset `quickTasksParent` to `null` rather than writing subtasks to a dead page
+11. Write the updated state to `.claude/triage/state.json`
 
 On next run, use these timestamps to only fetch new items since last triage.
 
@@ -828,6 +937,9 @@ For each approved task:
    - Set `Due date` only if explicitly confirmed
    - Set `Priority`
    - Set `Doer`
+   - If the task passes the quick test: set `Priority` P0, `Hours Estimate`, the `Quick`
+     tag, and `Parent task` to the Quick Tasks mother task unless it already has a natural
+     parent. Resolve or create the mother task first. See <quick_tasks>
 4. Log the created task name + Notion URL
 5. Record `taskLinks[sourceId]` with the new page URL
 

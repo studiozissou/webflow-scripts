@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-08-13T08:30:21+00:00",
+  "lastRun": "2026-08-17T00:00:00+00:00",
   "processedSourceIds": [
     "gmail:19f239a9bded3637#item10",
     "gmail:19f239a9bded3637#item27",
@@ -63,26 +63,48 @@
     "gmail:19ff5365a8fb8a2a",
     "manual:nem-mailersend-trial-upgrade",
     "manual:nem-report-email-pdf-branding",
-    "manual:webflow-scripts-repo-private"
+    "manual:webflow-scripts-repo-private",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#share-options-rishi",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#design-revisions",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#connect-gsc-semrush",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#gsc-metrics-report",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#review-seo-report",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#ai-unique-content",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#anchor-link-text",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#generative-location-pages",
+    "gmail:19ff6ec7b30729f9",
+    "gmail:19ff75cc7296ea68"
   ],
   "sources": {
     "gmail": {
-      "lastProcessed": "2026-08-11T07:55:36Z"
+      "lastProcessed": "2026-08-13T08:00:44Z"
     },
     "slack": {
       "channels": {
-        "C0973LJ2BTJ": "1786432681.510109",
+        "C0973LJ2BTJ": "1786439711.618659",
         "C08G8FGHX9Q": "1785320577.580049"
       },
       "dms": {
-        "D08SEJ6QTD2": "1786376245.587589"
+        "D08SEJ6QTD2": "1786549559.370289",
+        "D08RRQ1L8NT": "1786535887.769059"
       }
     },
     "calendar": {
-      "lastProcessed": "2026-08-11T08:32:47+00:00"
+      "lastProcessed": "2026-08-13T08:26:30Z"
     },
     "trello": {
       "lastProcessed": null
     }
+  },
+  "quickTasksParent": null,
+  "taskLinks": {
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#share-options-rishi": "https://app.notion.com/p/3bfe1848bb5181b0866bf1e6c4e309f6",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#design-revisions": "https://app.notion.com/p/3bfe1848bb51818a8a48ce7a0815e00a",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#connect-gsc-semrush": "https://app.notion.com/p/3bfe1848bb5181c9aebfd741756476a0",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#gsc-metrics-report": "https://app.notion.com/p/3bfe1848bb51815eba9fe6f9cf61974b",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#review-seo-report": "https://app.notion.com/p/3bfe1848bb5181d891dbeafb22e0410a",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#ai-unique-content": "https://app.notion.com/p/3bfe1848bb5181259ea7efb2f9290afc",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#anchor-link-text": "https://app.notion.com/p/3bfe1848bb5181339533e6fdaa57a13d",
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#generative-location-pages": "https://app.notion.com/p/3bfe1848bb51815aa17ff46cdc27010e"
   }
 }

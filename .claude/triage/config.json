@@ -2,11 +2,29 @@
   "slack": {
     "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time — every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
     "channels": [
-      { "id": "C0973LJ2BTJ", "name": "carsa-tomek-rishi", "client": "Carsa" },
-      { "id": "C08G8FGHX9Q", "name": "carsa-general-website", "client": "Carsa" }
+      {
+        "id": "C0973LJ2BTJ",
+        "name": "carsa-tomek-rishi",
+        "client": "Carsa"
+      },
+      {
+        "id": "C08G8FGHX9Q",
+        "name": "carsa-general-website",
+        "client": "Carsa"
+      }
     ],
     "dms": [
-      { "id": "D08SEJ6QTD2", "name": "Tomek", "client": "Carsa" }
+      {
+        "id": "D08SEJ6QTD2",
+        "name": "Tomek",
+        "client": "Carsa"
+      },
+      {
+        "id": "D08RRQ1L8NT",
+        "name": "Robin",
+        "client": null,
+        "note": "Web dev contractor - collaborator, not a client. No Clients relation."
+      }
     ],
     "manualCheck": [
       {
@@ -43,7 +61,9 @@
         "id": "69bc0361e05a6a1648dc23e6",
         "name": "I-com / Coconut",
         "client": "Coconut",
-        "lists": ["Web development"],
+        "lists": [
+          "Web development"
+        ],
         "note": "Shared board with the I-com agency (108 cards). Scope scans to the Web development list only — the other lists are their SEO, content and PPC work."
       }
     ]

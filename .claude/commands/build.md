@@ -4,11 +4,6 @@ Build a feature end-to-end using the appropriate agents.
 - **Opus max-effort** for all code-writing, hypothesising, and refactoring work (steps 3–5, bug fixes in the verify loop)
 - **Sonnet** for all 3 code-reviewer agents (step 6), qa-check, and verification passes (steps 6–7, steps 8–17)
 
-## Notion push: Building (if Notion connected)
-Update queue.json: set this slug's status to Building.
-Push to Notion: update Status to "Building", set Last Updated.
-If Notion fails, log warning and continue.
-
 ## Test inventory
 
 Before starting the build, read `tests/registry.json` and check for `tests/acceptance/SLUG.spec.js`.
@@ -226,10 +221,9 @@ Skip if no MCP bugs were found.
 - Never start writing code without reading existing files first
 - Always check `shared/utils.js` and the project orchestrator before adding new utilities
 - Leave no console.log statements in completed code
-- Mark all tasks complete in queue.json when done
 - Verify all selectors via Webflow MCP before writing JS that targets them (if MCP connected)
 - Use Client First spacer divs for vertical rhythm — no margin-top/bottom between components
-- **Log slug** (if `log-slug.sh` exists): After marking tasks complete, run `.claude/scripts/log-slug.sh build_end <feature-slug>`
+- **Log slug** (if `log-slug.sh` exists): When the build is complete, run `.claude/scripts/log-slug.sh build_end <feature-slug>`
 
 ## Wrap up
 
@@ -248,25 +242,3 @@ Before finishing, ask: "Status for SLUG?"
 Offer: in-progress / blocked / ready-for-review / done
 If blocked, ask: "What's blocking you?"
 Log (if `log-slug.sh` exists): `.claude/scripts/log-slug.sh status_CHOSEN SLUG`
-
-## Notion push: final status (if Notion connected)
-
-Based on the status the user chose in the wrap-up:
-
-- **ready-for-review:**
-  Update queue.json status to Ready to Review.
-  Push to Notion: Status "Ready to Review", clear Blocker field.
-
-- **blocked:**
-  Update queue.json status to Blocked.
-  Push to Notion: Status "Blocked", set Blocker to the reason the user gave.
-
-- **in-progress** (not done yet, just pausing):
-  Update queue.json status to Building.
-  Push to Notion: Status "Building".
-
-- **done:**
-  Update queue.json status to Done.
-  Push to Notion: Status "Done".
-
-Always set Last Updated. If Notion fails, log warning and continue.

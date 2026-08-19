@@ -105,10 +105,13 @@ Also: Christel's texts are 27 of 108.
   serve 200, across two clients, with a bogus path still 404ing as a control. It was
   transient. The 672 MB of tracked binaries is still poor hygiene, but it is not an outage
   and should not be told to a client as one.
-- **The acceptance suite points at a page with no quiz on it.** `TEST_PAGE_NL` is
-  `/zelftesten/waarom-reageer-ik-zo`; the component is on **`/quiz-test-phase-b`**. That is
-  probably the real cause of the original 20/20 failure, not the start button I "fixed".
-  Re-point the suite before diagnosing the three remaining failures.
+- ~~**The acceptance suite points at a page with no quiz on it.**~~ **Withdrawn 2026-08-19.**
+  Both `/zelftesten/waarom-reageer-ik-zo` and `/quiz-test-phase-b` serve the identical
+  `<code-island>` — same `submoduleId`, same 20 question props. Re-pointing the suite would
+  have been a wasted change chasing a false lead. A full run against the existing
+  `TEST_PAGE_NL` gives **14 passed, 4 failed, 2 flaky**, and the failure snapshots show the
+  quiz rendering normally ("Vraag 18 van 20"), so the page is not the problem.
+  See `nem-acceptance-failures-2026-08-19.md` for what the four failures actually are.
 - The component renders into a **shadow DOM**, so `innerText` and static HTML fetches show
   an empty container. Query `document.querySelector('code-island').shadowRoot`.
 

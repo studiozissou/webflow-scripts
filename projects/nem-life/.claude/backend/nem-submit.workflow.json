@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Flatten the webhook payload + derive server-side fields.\nconst b = $json.body ?? $json;\nconst headers = $json.headers ?? {};\nconst xff = (headers['x-forwarded-for'] || headers['x-real-ip'] || '').toString();\nconst ip = xff.split(',')[0].trim() || 'unknown';\nconst now = new Date();\nconst expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();\n// Base URL of the /verify webhook. Set NEM_VERIFY_WEBHOOK_URL as an n8n env var,\n// or replace the fallback string below once the /verify workflow is deployed.\nconst base = 'https://reus.app.n8n.cloud/webhook/nem-verify';\nconst token = (b.token || '').toString();\nreturn [{\n  json: {\n    token,\n    email: (b.email || '').toString().trim().toLowerCase(),\n    firstName: (b.firstName || '').toString().trim(),\n    gender: b.gender || '',\n    ageCategory: b.ageCategory || '',\n    relationshipStatus: b.relationshipStatus || '',\n    locale: b.locale || 'nl',\n    scoresJson: JSON.stringify(b.scores || {}),\n    primaryMechanism: b.primaryMechanism || '',\n    secondaryMechanism: b.secondaryMechanism || '',\n    // v2 conclusion engine fields. The component has sent these since 2026-08-17;\n    // they were silently dropped here until 2026-08-18.\n    outcome: b.outcome || '',\n    conclusionKey: b.conclusionKey || '',\n    conclusionId: b.conclusionId || '',\n    // 'submission' is an identified opt-in. The anonymous completion beacon will send\n    // 'completion' instead, so default rather than hard-code.\n    event: b.event || 'submission',\n    totalScore: b.totalScore ?? '',\n    nemMattersConsent: b.nemMattersConsent === true,\n    honeypot: (b.honeypot || '').toString(),\n    ip,\n    receivedAt: now.toISOString(),\n    expiresAt,\n    consumed: false,\n    verifyUrl: base + '?token=' + encodeURIComponent(token)\n  }\n}];"
+        "jsCode": "// Flatten the webhook payload + derive server-side fields.\nconst b = $json.body ?? $json;\nconst headers = $json.headers ?? {};\nconst xff = (headers['x-forwarded-for'] || headers['x-real-ip'] || '').toString();\nconst ip = xff.split(',')[0].trim() || 'unknown';\nconst now = new Date();\nconst expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();\n// Base URL of the /verify webhook. Set NEM_VERIFY_WEBHOOK_URL as an n8n env var,\n// or replace the fallback string below once the /verify workflow is deployed.\nconst base = 'https://reus.app.n8n.cloud/webhook/nem-verify';\nconst token = (b.token || '').toString();\nreturn [{\n  json: {\n    token,\n    email: (b.email || '').toString().trim().toLowerCase(),\n    firstName: (b.firstName || '').toString().trim(),\n    gender: b.gender || '',\n    ageCategory: b.ageCategory || '',\n    relationshipStatus: b.relationshipStatus || '',\n    locale: b.locale || 'nl',\n    scoresJson: JSON.stringify(b.scores || {}),\n    primaryMechanism: b.primaryMechanism || '',\n    secondaryMechanism: b.secondaryMechanism || '',\n    // v2 conclusion engine fields. The component has sent these since 2026-08-17;\n    // they were silently dropped here until 2026-08-18.\n    outcome: b.outcome || '',\n    conclusionKey: b.conclusionKey || '',\n    conclusionId: b.conclusionId || '',\n    // Selected client-side from the conclusion key alone — no gender. Empty until Alex's\n    // Intro lines tab is exported; Build HTML renders nothing rather than a gap.\n    introLine: (b.introLine || '').toString(),\n    // 'submission' is an identified opt-in. The anonymous completion beacon will send\n    // 'completion' instead, so default rather than hard-code.\n    event: b.event || 'submission',\n    totalScore: b.totalScore ?? '',\n    nemMattersConsent: b.nemMattersConsent === true,\n    honeypot: (b.honeypot || '').toString(),\n    ip,\n    receivedAt: now.toISOString(),\n    expiresAt,\n    consumed: false,\n    verifyUrl: base + '?token=' + encodeURIComponent(token)\n  }\n}];"
       },
       "id": "37746a0a-4b55-4f3e-b5be-c98ed8ed4e94",
       "name": "Normalize",
@@ -183,7 +183,8 @@
             "outcome": "={{ $json.outcome }}",
             "conclusionKey": "={{ $json.conclusionKey }}",
             "conclusionId": "={{ $json.conclusionId }}",
-            "event": "={{ $json.event }}"
+            "event": "={{ $json.event }}",
+            "introLine": "={{ $json.introLine }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -380,6 +381,16 @@
             {
               "id": "conclusionId",
               "displayName": "conclusionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "introLine",
+              "displayName": "introLine",
               "required": false,
               "defaultMatch": false,
               "display": true,

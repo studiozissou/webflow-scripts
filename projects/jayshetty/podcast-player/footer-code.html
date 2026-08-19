@@ -142,6 +142,12 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
       if (frame.src.indexOf("/video") === -1) return;
       try { controller.play(); } catch (err) {}
     });
+    /* Spotify's player offers to hand off to the native app ("Watch on
+       Spotify"), which makes Safari prompt "allow this website to open
+       Spotify?". Omitting allow-popups and allow-top-navigation blocks that
+       navigation; the three tokens below are what the embed needs to render
+       and to keep the iFrame API's play()/pause() working. */
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
     frame.src = videoSrc;
   }
 

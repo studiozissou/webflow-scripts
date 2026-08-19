@@ -1,0 +1,77 @@
+# The gate on main.
+#
+# Everything here is hermetic: no network, no secrets, no live Webflow or n8n. That is
+# deliberate — a required check that depends on a third party fails for reasons that have
+# nothing to do with the change under review, and a gate people learn to ignore is worse
+# than no gate at all.
+#
+# Deliberately NOT here, and why:
+#   npm run test:za        one pre-existing failure on main (scanner.test.js, "maps all
+#                          required fields to Notion property format"). Add it once that is
+#                          fixed — it is a real bug, not a flaky test.
+#   npm run lint           9 errors / 162 warnings on main. Add it once the backlog is clear.
+#   npm run check:nem-drift  needs live n8n API credentials.
+#   npm run test:sz        Playwright against live staging: minutes long, and it depends on
+#                          whatever is published rather than on the diff.
+
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Unit tests and generated-file check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # `node --test 'glob'` needs Node 21+; on 20 the quoted pattern is read as a literal
+      # path and every suite silently finds nothing to run.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: NEM Test
+        run: npm run test:nem
+
+      - name: Webflow
+        run: npm run test:wf
+
+      - name: Site review
+        run: npm run test:sr
+
+      - name: Entity audit
+        run: npm run test:ea
+
+      # Several NEM files are generated from a CSV and from the src modules, and the
+      # pasteable Webflow component is one of them. On 2026-08-19 the committed dist had
+      # drifted from src — invisible until someone pastes a stale component into the
+      # Designer weeks later. Regenerating and diffing catches that at the PR.
+      #
+      # Also covers typecheck: build:nem ends in tsc.
+      - name: Generated files match their sources
+        run: |
+          npm run build:nem
+          git diff --exit-code -- \
+            projects/nem-life/src/nem-conclusion-texts.js \
+            projects/nem-life/src/nem-intro-lines.js \
+            projects/nem-life/dist/

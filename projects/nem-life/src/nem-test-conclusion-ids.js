@@ -134,9 +134,13 @@ export const CONCLUSION_KEYS = [
  * per gender — the two flat outcomes, the five singles, then the twenty duals
  * grouped by leading mechanism. 54 rows total. */
 export function enumerateConclusionRows(textSet = TEXT_SET) {
-  const rows = [];
-
-  for (const gender of ["female", "male"]) {
+  /* Built with map/flatMap rather than push-into-an-empty-array so TypeScript can infer
+   * the row shape when this module is inlined into the .tsx component — an empty `[]`
+   * infers as never[], which is a compile error in Webflow.
+   *
+   * Every call passes all four arguments for the same reason: a bare parameter is
+   * required in TS, and defaulting it to null would type it `null` and reject a string. */
+  return ["female", "male"].flatMap((gender) => {
     const row = (type, outcome, primary, secondary) => ({
       gender,
       type,
@@ -148,18 +152,15 @@ export function enumerateConclusionRows(textSet = TEXT_SET) {
       id: conclusionIdFor(gender, { outcome, primary, secondary }, textSet),
     });
 
-    rows.push(row("flat", "flat-low"));
-    rows.push(row("flat", "flat-high"));
-
-    for (const mech of SHEET_ORDER) rows.push(row("single", "single", mech));
-
-    for (const leading of SHEET_ORDER) {
-      for (const following of SHEET_ORDER) {
-        if (leading === following) continue;
-        rows.push(row("dual", "dual", leading, following));
-      }
-    }
-  }
-
-  return rows;
+    return [
+      row("flat", "flat-low", null, null),
+      row("flat", "flat-high", null, null),
+      ...SHEET_ORDER.map((mech) => row("single", "single", mech, null)),
+      ...SHEET_ORDER.flatMap((leading) =>
+        SHEET_ORDER.filter((following) => following !== leading).map((following) =>
+          row("dual", "dual", leading, following),
+        ),
+      ),
+    ];
+  });
 }

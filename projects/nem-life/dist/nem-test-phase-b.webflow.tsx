@@ -1,14 +1,237 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * GENERATED FILE — do not edit here. Paste this whole file into the Webflow
+ * custom code component.
+ *
+ * Regenerate with:  npm run build:nem   (regenerates, then typechecks)
+ *
+ * Built from, and edit instead:
+ *   projects/nem-life/src/nem-test-phase-b.tsx
+ *   projects/nem-life/src/nem-test-conclusion-ids.js
+ *   projects/nem-life/src/nem-test-scoring.js
+ *   projects/nem-life/src/nem-conclusion-texts.js
+ *
+ * The modules are inlined because everything in Webflow runs inside one component,
+ * so relative imports cannot resolve. They stay separate in the repo because the
+ * unit tests cannot import a .tsx.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { calculateScores } from "./nem-test-scoring.js";
-import { CONCLUSION_KEYS } from "./nem-test-conclusion-ids.js";
-import {
-  NL_VROUW as REAL_NL_VROUW,
-  NL_MAN as REAL_NL_MAN,
-  EN_VROUW as REAL_EN_VROUW,
-  EN_MAN as REAL_EN_MAN,
-} from "./nem-conclusion-texts.js";
+
+const SHEET_ORDER = [
+  "fear",
+  "selfRejection",
+  "falseHope",
+  "falsePower",
+  "emotionalNumbing",
+];
+
+const MECHANISM_CODE = {
+  selfRejection: "SR",
+  emotionalNumbing: "EM",
+  falsePower: "FP",
+  fear: "FR",
+  falseHope: "FH",
+};
+
+const MECHANISM_TO_KEY = {
+  selfRejection: "self-rejection",
+  emotionalNumbing: "emotional-numbing",
+  falsePower: "false-power",
+  fear: "fear",
+  falseHope: "false-hope",
+};
+
+const GENDER_CODE = { female: "F", male: "M" };
+
+const FLAT_OUTCOME_CODE = { "flat-low": "LOW", "flat-high": "HIGH" };
+
+const TEXT_SET = "01";
+
+function conclusionKeyFor({ outcome, primary, secondary }) {
+  if (outcome === "flat-low" || outcome === "flat-high") return outcome;
+
+  const leading = MECHANISM_TO_KEY[primary];
+  if (!leading) throw new Error(`Unknown mechanism: ${primary}`);
+
+  if (outcome === "single") return leading;
+
+  const following = MECHANISM_TO_KEY[secondary];
+  if (!following) throw new Error(`Unknown mechanism: ${secondary}`);
+
+  return `${leading}_${following}`;
+}
+
+function conclusionIdFor(gender, { outcome, primary, secondary }, textSet = TEXT_SET) {
+  const genderCode = GENDER_CODE[gender];
+  if (!genderCode) throw new Error(`Unknown gender: ${gender}`);
+
+  const prefix = `${textSet}${genderCode}`;
+
+  const flatCode = FLAT_OUTCOME_CODE[outcome];
+  if (flatCode) return `${prefix}-${flatCode}`;
+
+  const leading = MECHANISM_CODE[primary];
+  if (!leading) throw new Error(`Unknown mechanism: ${primary}`);
+
+  if (outcome === "single") return `${prefix}-${leading}`;
+
+  const following = MECHANISM_CODE[secondary];
+  if (!following) throw new Error(`Unknown mechanism: ${secondary}`);
+
+  return `${prefix}-${leading}-${following}`;
+}
+
+const CONCLUSION_KEYS = [
+  "flat-low",
+  "flat-high",
+  ...SHEET_ORDER.map((mech) => MECHANISM_TO_KEY[mech]),
+  ...SHEET_ORDER.flatMap((leading) =>
+    SHEET_ORDER.filter((following) => following !== leading).map(
+      (following) => `${MECHANISM_TO_KEY[leading]}_${MECHANISM_TO_KEY[following]}`,
+    ),
+  ),
+];
+
+function enumerateConclusionRows(textSet = TEXT_SET) {
+
+  return ["female", "male"].flatMap((gender) => {
+    const row = (type, outcome, primary, secondary) => ({
+      gender,
+      type,
+      leading: primary ? MECHANISM_TO_KEY[primary] : "",
+      following: secondary ? MECHANISM_TO_KEY[secondary] : "",
+      leadingMechanism: primary ?? null,
+      followingMechanism: secondary ?? null,
+      key: conclusionKeyFor({ outcome, primary, secondary }),
+      id: conclusionIdFor(gender, { outcome, primary, secondary }, textSet),
+    });
+
+    return [
+      row("flat", "flat-low", null, null),
+      row("flat", "flat-high", null, null),
+      ...SHEET_ORDER.map((mech) => row("single", "single", mech, null)),
+      ...SHEET_ORDER.flatMap((leading) =>
+        SHEET_ORDER.filter((following) => following !== leading).map((following) =>
+          row("dual", "dual", leading, following),
+        ),
+      ),
+    ];
+  });
+}
+
+const MECHANISM_MAP = {
+  selfRejection:    { questions: [0, 1, 6, 16], bodyQ: 16, situationalQ: 0 },
+  emotionalNumbing: { questions: [2, 7, 12, 17], bodyQ: 12, situationalQ: 17 },
+  falsePower:       { questions: [3, 8, 13, 18], bodyQ: 13, situationalQ: 18 },
+  fear:             { questions: [4, 9, 14, 19], bodyQ: 14, situationalQ: 19 },
+  falseHope:        { questions: [5, 10, 11, 15], bodyQ: 10, situationalQ: 15 },
+};
+
+const TIEBREAK_ORDER = [
+  "selfRejection",
+  "emotionalNumbing",
+  "falsePower",
+  "fear",
+  "falseHope",
+];
+
+const MIN_MECHANISM_SCORE = 8;
+
+const SECONDARY_GAP = 3;
+
+const FLAT_SPREAD = 3;
+
+function calculateScores(answers, gender) {
+
+  const scores = Object.fromEntries(
+    Object.entries(MECHANISM_MAP).map(([mechanism, { questions }]) => [
+      mechanism,
+      questions.reduce((sum, qi) => sum + (answers?.[qi] ?? 0), 0),
+    ]),
+  );
+
+  const sorted = Object.entries(scores).sort(
+    (a, b) => b[1] - a[1] || TIEBREAK_ORDER.indexOf(a[0]) - TIEBREAK_ORDER.indexOf(b[0]),
+  );
+
+  const max = sorted[0][1];
+  const min = sorted[sorted.length - 1][1];
+
+  const isFlatLow = max < MIN_MECHANISM_SCORE;
+  const isFlatHigh = !isFlatLow && min >= MIN_MECHANISM_SCORE && max - min <= FLAT_SPREAD;
+  const isFlat = isFlatLow || isFlatHigh;
+
+  const primary = isFlat ? null : sorted[0][0];
+
+  const [candidate, candidateScore] = sorted[1];
+  const secondary =
+    !isFlat && candidateScore >= MIN_MECHANISM_SCORE && max - candidateScore <= SECONDARY_GAP
+      ? candidate
+      : null;
+
+  const outcome = isFlatLow
+    ? "flat-low"
+    : isFlatHigh
+      ? "flat-high"
+      : secondary
+        ? "dual"
+        : "single";
+
+  return {
+    scores,
+    primary,
+    secondary,
+    outcome,
+    conclusionKey: conclusionKeyFor({ outcome, primary, secondary }),
+    conclusionId: conclusionIdFor(gender, { outcome, primary, secondary }),
+
+    skipsReport: outcome === "flat-low" || outcome === "flat-high",
+    totalScore: Object.values(scores).reduce((a, b) => a + b, 0),
+  };
+}
+
+const NL_VROUW = {
+  "flat-low": "Op basis van je antwoorden springt er niets duidelijk uit. De reacties die deze test meet liggen bij jou allemaal dicht bij elkaar, en geen ervan speelt een hoofdrol.\n\nDat kan verschillende dingen betekenen. Misschien herken je jezelf niet in de situaties die we je hebben voorgelegd. Misschien heb je al veel aan jezelf gewerkt en klopt deze uitkomst precies. En soms vangen twintig vragen nu eenmaal niet wat er bij jou speelt.\n\nEen persoonlijk rapport heeft hier weinig zin - dat wordt opgebouwd rond één duidelijke reactie, en die is er nu niet. Herken je je hier niet in, of wil je er toch over doorpraten? Laat het ons weten.",
+  "flat-high": "Op basis van je antwoorden speelt er veel tegelijk. Waar bij de meeste mensen één reactie duidelijk bovenaan staat, scoor je op alle vijf hoog - ze zijn bij jou allemaal actief.\n\nDat is geen prettige uitkomst om te lezen, en waarschijnlijk voelt het ook niet zo. Het betekent meestal dat er op meerdere fronten tegelijk veel van je gevraagd wordt, en dat er weinig ruimte overblijft.\n\nJuist daarom sturen we je geen standaardrapport. Zo'n rapport gaat over één reactie, en dat doet geen recht aan wat er bij jou speelt. Wat hier wel past is een gesprek. Neem gerust contact met ons op.",
+  "fear": "Heel regelmatig zijn er momenten of situatie waar je tegenop ziet.  Je merkt dat er iets in je blokkeert als je je wilt uitspreken of iets wilt doen en in plaats daarvan hou je je stil. Vaak weet je wel dat de gebeurtenis die gaat komen, niet gevaarlijk is maar het roept toch veel spanning op. Je houdt de dingen graag overzichtelijk en veilig voor jezelf.",
+  "self-rejection": "Over het algemeen voel je je nogal futloos.  De energie die je hebt gaat vaak op aan piekeren. Als je met mensen in contact bent geweest, ga je het gesprek nog wel 10 x na om te kijken wat voor ‘gekke’ dingen je hebt gezegd. Je merkt dat je vaak twijfel over de keuzes die je maakt of vindt het per definitie lastig om een keuze te maken. Je vergelijkt jezelf vaak met anderen en voelt jezelf meestal de mindere.",
+  "false-hope": "Je zegt vaak al ja voordat je goed beseft wat je precies hebt beloofd - aan je kinderen, je partner, je werk. Rust voelt pas verdiend als het rijtje is afgevinkt. Er zit een drive in je die je voortdurend een gevoel van urgentie geeft.  Het kan zijn dat je het gevoel van ‘urgentie’ niet eens echt voelt omdat je niet beter weet, het voelt als normaal, zo ben ik nou eenmaal. Als ik dit nu maar eerst doe, dan komt het wel goed’ is jouw levensmotto.",
+  "false-power": "Als je eerlijk bent naar jezelf, heb je aardig wat temperament. Fysiek gezien kan je je vrij snel opwinden waardoor je stress ervaart. Deze energie richt zich meestal naar buiten toe en vertaalt zich voor een groot deel uit (ver)oordelen van de mensen om je heen. Daarnaast  ervaart regelmatig dat mensen je niet begrijpen en dat je er alleen voorstaat. Eigenlijk vind je ook dat je de meeste dingen beter kan dan anderen.",
+  "emotional-numbing": "Eigenlijk ervaar je niet veel lijdenslast. Ik vraag me zelfs af, of jezelf deze test wilde gaan doen of dat iemand anders je op deze test heeft geattendeerd. In de basis wil je niet moeilijk doen. Stiekem vind je vaak dat andere mensen al snel moeilijk doen. Als je al ergens ‘last’ van heb is het dat je kan zien dat mensen om je heen intensere emoties ervaren, wat je wellicht zelf ook wel zou willen, als het over fijne emoties gaat. ‘Niet moeilijk doen, het komt wel goed’ is jouw motto. Daarnaast kan je je in allerlei omstandigheden ontzettend goed aanpassen, ook al gaat dit eigenlijk ten koste van jezelf.",
+  "fear_self-rejection": "Regelmatig komt er een spanning bij je op. Deze spanning kan variëren van lichte tot zwaar. Doordat gevoel ga je snel situaties uit de weg. Ook al weet je dat je het eigenlijk best aan kan. Daardoor volgt er snel een verwijt aan jezelf, “waarom heb ik dit nu…wat ben ik toch een…!” Dit verwijt kan vervolgens weer een zwaar, onrustig gevoel in jezelf oproepen en zo zit je in een lus van gevoelens en gedachten die zichzelf in stand houdt.",
+  "fear_false-hope": "Je merkt regelmatig op dat je je in veel situaties gespannen voelt en het liefste wil terugtrekken of er helemaal niet naar toe wilt. Aan de andere kant voelen de consequenties van het ‘niet gaan’ veel groter, wat gaan ze dan over me denken. Niet gaan, voelt dus als geen optie. Ik zet gewoon mijn beste beentje voor en doe mijn best.",
+  "fear_false-power": "Je merkt regelmatig een voor jou bekende spanning op in je lichaam. Dit gebeurd met name op als het om situaties gaat waar je voor jouw gevoel geen grip op hebt. Die spanning zet zich dan al snel om in irritatie waarbij je verwijtend kan zijn.  Met name naar de mensen die dichtbij je staan. Als je je irritatie hebt geuit, ook al wil je dat eigenlijk niet, kan daarna een gevoel van angst opkomen omdat je je zo hebt gedragen.",
+  "fear_emotional-numbing": "Soms is ervaar je heel even een zeer onbehagelijk gevoel in je lichaam waar je heel snel van weg wil. Het lijkt op gevoelens van paniek. “Gelukkig” heb je het vermogen om dat gevoel snel weer te bagatelliseren en te bedenken dat het allemaal wel meevalt en dat het wel weer goed komt. Alleen, als je eerlijk bent, blijft er lichtelijk wel een naar gevoel hangen. Het bagataliseren ‘werkt’ totdat het niet meer werkt. Deze momenten komen eigenlijk steeds vaker voor en moet ik steeds meer moeite doen om mijn gevoel ‘weg te maken’.",
+  "self-rejection_fear": "Je herkend regelmatig dat je een nare gedachte over jezelf hebt- dat je iets niet goed hebt gedaan, dat je tekortschiet.  Die gedachte activeert al snel een golf van onrust en spanning in je lichaam. Een waakzame staat die niet zomaar wegzakt. Zo voedt het ene het andere: hoe harder je jezelf veroordeelt, hoe onrustiger je lichaam wordt. Het is een combinatie die je uitput: de overtuigende nare gedachte over jezelf die vervolgens een spanning opbouw in je lichaam teweeg brengt.",
+  "self-rejection_false-hope": "Regelmatig als er iets misgaat, is steevast de eerste gedachte dat het aan jou ligt - dat je tekort bent geschoten of iets niet goed hebt gedaan. Vlak daarna ga je harder je best doen, extra zorgen, extra regelen, alsof je het zo weer goed kan maken. Zo verandert twijfel over jezelf steeds in nog meer inzet voor een ander, zonder dat de twijfel zelf verdwijnt. Soms geeft dit je dan even een goed gevoel maar eigenlijk blijft het gevoel dat je nooit helemaal voldoet, hoe goed je je best ook doet bestaan.",
+  "self-rejection_false-power": "Jouw uitdaging zit hem in de gevoelens van je down voelen en vervolgens irritatie. Als je het idee hebt dat je iets niet goed hebt gedaan, kan dit je behoorlijk in de weg zitten. Je kan je dan klein en rot voelen over jezelf. Dit zijn geen fijne gedachten en gevoelens. Het lijkt er op dat je een ‘hulplijntje’ hebt ontwikkeld die dit nare gevoel omdraait. Ipv dat het nare gevoel:jezelf schuldig, onbenullig of iets dergelijks te vinden, richt je aandacht zich naar buiten toe. Er bouwt zich een irritatie op en je aandacht richt zich op de mensen om je heen. Zo treft jouw geen blaam meer maar ergens voelt het ook niet prettig.",
+  "self-rejection_emotional-numbing": "Met enige regelmaat voel je je niet echt happy en kan je sombere gedachtes hebben over jezelf zoals jezelf niet goed genoeg voelen. Je hebt er niet echt een reden voor en probeert jezelf af te leiden door dingen te gaan doen. Bijvoorbeeld door te shoppen, te scrollen op je telefoon ect. Je zoekt afleiding. In de basis vind je dan dat je je eigenlijk niet zo moet aanstellen en denkt dan vaak ‘het gaat wel voorbij, het komt wel goed’. Doordat je jezelf afleidt gaat het nare gevoel ook wel weg, maar het is toch gek.",
+  "false-hope_fear": "Je houdt liever alle ballen in de lucht dan dat je er eentje laat vallen. Dit kan betekenen dat je regelmatig over je eigen grens heen gaat om de controle te houden. Zonder dat je dit in eerste instantie door hebt. Stel dat je je rust gunt terwijl je de punten op je lijstje nog niet zijn afgevinkt voel je je onrustig worden. Onder die drive zit vaak een spanning die je liever niet toelaat: wellicht de angst dat het niet goed genoeg is, in de ogen van iemand anders.",
+  "false-hope_self-rejection": "Je probeert zo goed als het gaat alle ballen in de lucht te houden- het huishouden, de kinderen, je werk, de mensen om je heen -. Ook al wordt het je teveel, dan ga je nog ’liever’ je eigen grens over dan dat je het gevoel van ‘falen en te kort schieten’ toelaat. Je eerste gedachte is zelden dat er te veel op je bordje lag: je ‘gedachten gaan eerder naar ‘ik heb het niet goed gedaan.",
+  "false-hope_false-power": "Je bent een enorme bezige bij. En voelt je hier in eerste instantie heel goed bij. Je hebt oog en zorg voor iedereen om je heen. Je zou het best \"please gedrag\" kunnen noemen. Wat daarnaast bij je speelt, maar wellicht is dit niet zo zichtbaar voor je, dat je regelmatig verwachting hebt naar andere mensen toe. Als er niet aan die verwachtingen wordt voldaan, kan je vanuit een soort scherpte reageren op andere mensen. Herken je je in het patroon dat je eerst veel aan het geven bent? Maar als er niet iets voor terugkomt, dat je dan ook geïrriteerd kan raken.",
+  "false-hope_emotional-numbing": "Je merkt op dat je vaak geneigd bent om maar door te gaan met allerlei bezigheden. Je hoofd zegt je; Er is altijd nog wel iets te regelen of op te lossen.  Pas als je ergens gaat voelen dat je vermoeid wordt,  stop je. Maar ergens kan je dan wel voelen dat je je over een grens bent gegaan. Op dat moment kan een ontevredenheid, maar misschien ook wel een gevoel van onverschilligheid naar boven komen. De gedachte dat het allemaal niet meer zoveel uitmaakt. Dit lijkt een regelmatig terugkerend patroon te zijn.",
+  "false-power_fear": "Je merkt regelmatig opwind over de manier waarop de mensen om je heen iets zeggen. Je ervaart wat iemand anders zegt vrij snel als een ‘aanval’ waar tegen je je moet verdedigen. En dat doe je dan ook, reageren met een net ietwat te heftige reactie op de mensen om je heen. Het is een soort onbedwingbare impuls.  Het resultaat is dat je na z’n gebeurtenis je je vaak alleen en verdrietig voelt en dat je bang bent dat je dierbaren op een gegeven moment genoeg van je gaan krijgen. Met dat nare gevoel blijf je dan over. Helaas gebeurd dit met enige regelmaat.",
+  "false-power_self-rejection": "Je merkt regelmatig op dat je je irriteert aan de mensen om je heen. Ergens weet je wel dat ze het vaak goed bedoelen, maar je kan het vaak niet laten om er toch iets over te zeggen. De manier waarop je je mening over de ander kenbaar maakt, is vaak feller dan nodig en je bereikt ook nog eens het tegenovergestelde als wat je eigenlijk wil. Daar baal je dan stevig van en irriteer je je aan je eigen gedrag…’waarom doe ik dit toch aldoor’. Uiteindelijk blijft dit nare gevoel over jezelf best lang hangen.",
+  "false-power_false-hope": "Je merkt op dat je je stemming zich regelmatig afwisselend met gevoelens van ‘irritatie’ en ‘je best doen’. Een nare opmerking: heb je sneller geuit, dan dat je zou willen, ook als vind je vaak wel dat je gelijk hebt. Al snel na deze gebeurtenis probeer je je gedrag weer goed te maken. Je bied je excuses aan. Je merkt steeds vaker op dat degene waar je je excuses aan aanbiedt je dan niet echt meer serieus neemt. Dit irriteert je vervolgens weer. Het is een patroon dat zich maar blijft herhalen.",
+  "false-power_emotional-numbing": "Je merkt regelmatig op dat je je vrij snel kan irriteren aan andere mensen. Je vind het maar lastig om te zien dat andere mensen je vaak niet begrijpen of dat ze dingen zeggen of doen die in jou ogen nergens op slaan. Je hebt de overtuiging dat er toch niets aan te veranderen is en je schikt je maar naar de situatie. Meestal slik je je gevoel in en leidt je jezelf af met iets anders, tv kijken, scrollen, sporten, shoppen of iets dergelijks.",
+  "emotional-numbing_fear": "Over het algemeen voel je je best oke en ben je tevreden. Je leven gaat zijn gangetje, geen hoge toppen en geen diepe dalen. Als je eerlijk naar jezelf bent zijn er wel een paar dingen die je echt heel naar vindt, die je als het even kan probeert te vermijden. Een daarvan is dat je het lastig vind om over je gevoelens te praten. Als je in een situatie komt, bijvoorbeeld met je partner, wanneer dit wel echt belangrijk is, roept dit veel spanning bij je op.",
+  "emotional-numbing_self-rejection": "Over het algemeen voel je je best oke en ben je tevreden. Je leven gaat zijn gangetje, geen hoge toppen en geen diepe dalen. Dat is rustig en prettig, maar als je eerlijk naar jezelf bent komen er zo af en toe wel wat nare gedachten over jezelf voorbij. Die kunnen soms best een poosje blijven hangen waardoor je je down voelt. Je snapt eigenlijk niet echt waarom je je dan zo voelt. Je zou hier heel graag vanaf willen.",
+  "emotional-numbing_false-hope": "Over het algemeen voel je je best oké en ben je tevreden. Je leven gaat zijn gangetje, geen hoge toppen en geen diepe dalen. Als je eerlijk naar jezelf bent voel je je wel steeds vaker vermoeid. Je vindt het vrij lastig om je eigen grens te bepalen en bent meestal met name bezig voor de mensen om je heen. Aan het einde van de dag, als je eigenlijk (te) moe bent vul je je tijd het liefst met een serie of scrollen op je mobiel. Eindelijk even in je eigen bubbel. Eigenlijk is dit niet echt wat je wil, maar ja..",
+  "emotional-numbing_false-power": "Over het algemeen voel je je best oké. Je leven gaat zijn gangetje, geen hoge toppen en geen diepe dalen. Maar als je eerlijk naar jezelf bent kan je je zo nu en dan flink irriteren naar de mensen om je heen. Zeker degene die het dichtst bij je staan. Je vind het maar lastig om te ervaren als mensen je niet begrijpen of dat ze dingen zeggen of doen die in jou ogen nergens op slaan. Je probeert je dan vaak nog rustig te houden en te denken ‘laat maar’, maar je kan het dan toch niet laten om je op een ‘te heftige’ manier te uiten waardoor er dan gedoe ontstaat.",
+};
+
+const NL_MAN = {};
+
+const EN_VROUW = {};
+
+const EN_MAN = {};
+
+const REAL_NL_VROUW = NL_VROUW;
+const REAL_NL_MAN = NL_MAN;
+const REAL_EN_VROUW = EN_VROUW;
+const REAL_EN_MAN = EN_MAN;
 
 declare global {
   interface Window {
@@ -22,19 +245,6 @@ declare global {
   }
 }
 
-/* ─── Scoring engine ───
- * Lives in ./nem-test-scoring.js (mechanism mapping, thresholds, flat detection,
- * fixed-order tiebreak) so it can be unit-tested with `node --test`
- * (tests/nem/nem-test-scoring.test.js). Conclusion keys and IDs live alongside it in
- * ./nem-test-conclusion-ids.js, which also generates Alex's text sheet.
- *
- * ⚠️ DO NOT paste this file into Webflow. Everything in Webflow runs inside one custom
- * code component, so the relative imports below cannot resolve there. Run
- * `npm run build:nem` and paste projects/nem-life/dist/nem-test-phase-b.webflow.tsx,
- * which has the sibling modules inlined. Edit here; never edit the generated file. */
-
-/* ─── Gender normalisation ───
- * The Designer collects Dutch values; the engine and the text sheet speak English. */
 const GENDER_TO_TABLE: Record<string, "man" | "vrouw"> = {
   man: "man",
   vrouw: "vrouw",
@@ -49,22 +259,16 @@ const GENDER_TO_ENGINE: Record<string, "male" | "female"> = {
   female: "female",
 };
 
-/* ─── Analytics stubs ─── */
 const EVENTS = {
   TEST_COMPLETED: "nem_test_completed",
   REPORT_REQUESTED: "nem_report_requested",
 };
 
-/* ─── Debug mode ───
- * `?nemdebug=1` renders the conclusion ID, key and scores above the conclusion text, so
- * Alex and Christel can confirm which variant fired without Designer access, and
- * Playwright can assert on it. Replaces the unused `const DEBUG = false`. */
 function isDebugMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("nemdebug") === "1";
 }
 
-/* ─── Locale detection ─── */
 function getLocale(): "nl" | "en" {
   if (typeof window !== "undefined") {
     if (window.location.pathname.startsWith("/en/")) return "en";
@@ -73,7 +277,6 @@ function getLocale(): "nl" | "en" {
   return "nl";
 }
 
-/* ─── Translations ─── */
 interface SelectOption {
   value: string;
   label: string;
@@ -94,7 +297,7 @@ interface Translations {
   profileContinueButton: string;
   conclusionLabel: string;
   bridgeLine: string;
-  /* Shown instead of the report CTA on flat-low and flat-high outcomes. */
+
   flatBridgeLine: string;
   contactUrl: string;
   contactLinkLabel: string;
@@ -133,28 +336,11 @@ interface Translations {
   conclusions: GenderedConclusions;
 }
 
-/* ─── Conclusion text tables ───
- *
- * Built from CONCLUSION_KEYS rather than hand-listed, so a table can never be missing an
- * outcome the engine can produce. That completeness guarantee is what replaced Phase B's
- * canonical key rewriting — see the v2 spec § 2.
- *
- * Christel's copy goes in the REAL_* overlays. Anything not yet written falls through to
- * a visible placeholder, so a missing text reads as "not written yet" in QA rather than
- * as a blank screen in production. */
-
 type ConclusionTable = Record<string, string>;
 
 function placeholderTable(marker: string, note: string): ConclusionTable {
   return Object.fromEntries(CONCLUSION_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
 }
-
-/* Christel's finished texts, generated from a CSV export of Alex's sheet by
- * tools/nem/build-conclusion-texts.js. 27 of 108 written as of 2026-08-17 (female Dutch
- * complete); the rest fall through to the placeholders below.
- *
- * Never paste her copy in by hand: copy-paste and rendered reads both flatten in-cell
- * paragraph breaks into spaces. Re-export the CSV and regenerate instead. */
 
 const NL_CONCLUSIONS_MAN: ConclusionTable = {
   ...placeholderTable("DUMMY man", "tekst volgt."),
@@ -369,10 +555,8 @@ const translations: Record<"nl" | "en", Translations> = {
   },
 };
 
-/* ─── Fonts ─── */
 const fontLink = `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Lato:wght@400;700&display=swap');`;
 
-/* ─── Shared styles ─── */
 const fieldStyle: React.CSSProperties = {
   width: "100%",
   padding: "14px 16px",
@@ -432,7 +616,6 @@ const pillButtonStyle: React.CSSProperties = {
   width: "100%",
 };
 
-/* ─── Component ─── */
 function Quiz({
   submitWebhookUrl,
   reassuranceText,
@@ -458,9 +641,6 @@ function Quiz({
   const locale = getLocale();
   const t = translations[locale];
 
-  // Webflow code-component props are NOT localizable — a prop holds one value
-  // across every locale (its Dutch default). So the Designer props are honoured
-  // only on the primary NL locale; every other locale uses the code translations.
   const questions = useMemo(
     () => [
       question1, question2, question3, question4, question5,
@@ -474,23 +654,14 @@ function Quiz({
      question16, question17, question18, question19, question20, t.questions]
   );
 
-  // Same rule for the two marketing-copy props (reassurance line + CTA label):
-  // prop override on NL, code translation elsewhere.
   const reassurance = locale === "nl" ? (reassuranceText || t.reassurance) : t.reassurance;
   const ctaLabel = (locale === "nl" ? ctaButtonText : "") || t.submitButtonText;
 
-  /* ─── Reduced-motion detection ───
-     Note: the answer-pill responsive layout (row on desktop, column on mobile)
-     is handled purely in CSS via the `.nem-answers` media query below — NOT a
-     JS `isMobile` flag. Webflow server-renders the component with `window`
-     undefined, so a JS breakpoint check is stale on a direct mobile load and
-     the pills stayed in the desktop row. CSS media queries are immune to that. */
   const prefersReducedMotion =
     typeof window !== "undefined"
       ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
       : false;
 
-  /* ─── State ─── */
   const [phase, setPhase] = useState<"quiz" | "profile" | "conclusion" | "optin" | "confirmation">(
     !interactive ? "conclusion" : "quiz"
   );
@@ -509,26 +680,10 @@ function Quiz({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [debugMode] = useState(isDebugMode);
 
-  /* ─── Anonymous completion beacon ───
-   *
-   * Fires the moment the twentieth question is answered, for every outcome. Two reasons it
-   * sits here rather than at opt-in: flat outcomes never reach the opt-in screen at all, and
-   * anyone who finishes the questions then abandons the form is otherwise invisible — that
-   * gap between completions and reports is the number worth watching.
-   *
-   * It carries no personal data because none exists yet: name, email and gender are all
-   * collected on later screens. `conclusionId` is deliberately NOT sent — its F/M segment
-   * needs a gender we do not have, so sending one would mean inventing it. `conclusionKey`
-   * plus the gender on the identified row reconstructs the ID later if anyone wants it.
-   *
-   * Fire-and-forget: a slow or failing webhook must never hold up the conclusion screen, so
-   * the promise is deliberately not awaited and errors are swallowed. `keepalive` lets it
-   * survive the user navigating away immediately afterwards. */
   const sendCompletionBeacon = useCallback(
     (finalAnswers: (number | null)[]) => {
       if (!submitWebhookUrl) return;
-      /* Gender is passed only because the engine's signature requires it; every field read
-       * below is gender-independent. The gender-scoped conclusionId is not sent. */
+
       const scored = calculateScores(finalAnswers, "male");
       try {
         fetch(submitWebhookUrl, {
@@ -546,13 +701,12 @@ function Quiz({
           }),
         }).catch(() => {});
       } catch {
-        /* Never let telemetry break the quiz. */
+
       }
     },
     [submitWebhookUrl, token, locale]
   );
 
-  /* ─── Answer selection ─── */
   const selectAnswer = useCallback(
     (answerIndex: number) => {
       const updatedAnswers = answers.map((a, i) => (i === currentStep ? answerIndex : a));
@@ -567,11 +721,9 @@ function Quiz({
           if (currentStep < 19) {
             setCurrentStep((s) => s + 1);
           } else {
-            /* Scoring is NOT computed here. v2 conclusion IDs are gender-scoped, and
-             * gender is collected on the profile screen that comes next — so the result
-             * is derived (see `result` below) once both answers and gender exist. */
+
             sendCompletionBeacon(updatedAnswers);
-            setPhase("profile"); // → profile screen, then conclusion
+            setPhase("profile");
           }
           setAnimating(false);
         }, fadeDuration);
@@ -586,19 +738,6 @@ function Quiz({
     }
   }, [currentStep]);
 
-  /* ─── Profile continue handler ─── */
-  /* ─── Derived: the conclusion outcome ───
-   *
-   * Computed from answers + gender rather than stored, so it cannot go stale if either
-   * changes. Gender is only known after the profile screen, which is why this is not
-   * resolved when the last question is answered.
-   *
-   * Declared above handleSubmit deliberately: that callback closes over `result` and
-   * lists it as a dependency, so the binding must exist first.
-   *
-   * Falls back to "male" for the engine when gender is not yet set. The outcome is only
-   * ever read after the profile screen has validated gender, so the fallback keeps the
-   * hook total and unconditional rather than labelling anyone. */
   const result = useMemo(
     () => calculateScores(answers, GENDER_TO_ENGINE[gender] || "male"),
     [answers, gender]
@@ -618,7 +757,6 @@ function Quiz({
     setPhase("conclusion");
   }, [gender, ageCategory, relationshipStatus, t.errors]);
 
-  /* ─── Form submission (opt-in: name + email + consent only) ─── */
   const handleSubmit = useCallback(async () => {
     const errors: Record<string, string> = {};
     if (!firstName.trim()) errors.firstName = t.errors.firstNameEmpty;
@@ -634,7 +772,6 @@ function Quiz({
       return;
     }
 
-    // Honeypot check
     if (honeypot) {
       setPhase("confirmation");
       return;
@@ -660,8 +797,7 @@ function Quiz({
       },
       primaryMechanism: result.primary,
       secondaryMechanism: result.secondary,
-      /* v2: the report engine sees exactly the outcome the user saw, so a report can
-       * never be written against a different conclusion than the one on screen. */
+
       outcome: result.outcome,
       conclusionKey: result.conclusionKey,
       conclusionId: result.conclusionId,
@@ -693,10 +829,9 @@ function Quiz({
 
     setSubmitting(false);
     setPhase("confirmation");
-    // window.dataLayer?.push({ event: EVENTS.REPORT_REQUESTED, locale });
+
   }, [firstName, email, nemMattersConsent, honeypot, result, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
-  /* ─── Go back to optin (from confirmation, for wrong email) ─── */
   const goBackToOptin = useCallback(() => {
     setEmail("");
     setToken(crypto.randomUUID());
@@ -710,17 +845,11 @@ function Quiz({
   const conclusionText =
     t.conclusions[genderKey as keyof GenderedConclusions]?.[result.conclusionKey] || "";
 
-  /* Flat outcomes route to a contact link instead of the opt-in: the report is built
-   * around one clear mechanism, which is precisely what a flat profile lacks. */
   const isFlatOutcome = result.skipsReport;
 
-  /* Same pattern as ctaLabel: the Designer prop is honoured on NL only, because Webflow
-   * code-component props are not localizable. EN falls back to the code translation. */
   const contactHref = (locale === "nl" ? contactUrl : "") || t.contactUrl;
   const contactLabel = (locale === "nl" ? contactLinkLabel : "") || t.contactLinkLabel;
 
-  /* Publish scores for page-level analytics. In an effect, not in render — assigning to
-   * window during render is a side effect and would fire on every re-render. */
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.__nemTestScores = {
@@ -767,15 +896,12 @@ function Quiz({
         }
       `}</style>
 
-      {/* ═══════════════════════════════════════════
-          QUIZ — Q1–Q20
-      ═══════════════════════════════════════════ */}
       {phase === "quiz" && (
         <div
           key={currentStep}
           className={animating ? "quiz-fade-out" : "quiz-fade-in"}
         >
-          {/* Step indicator */}
+
           <div
             className="flex items-center justify-between mb-4"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -812,7 +938,6 @@ function Quiz({
             )}
           </div>
 
-          {/* Progress bar */}
           <div
             style={{
               width: "100%",
@@ -834,7 +959,6 @@ function Quiz({
             />
           </div>
 
-          {/* Question */}
           <h3
             style={{
               fontFamily: "'Montserrat', sans-serif",
@@ -849,7 +973,6 @@ function Quiz({
             {questions[currentStep]}
           </h3>
 
-          {/* Reassurance text — only on Q1 */}
           {currentStep === 0 && reassurance && (
             <p
               style={{
@@ -865,7 +988,6 @@ function Quiz({
           )}
           {currentStep > 0 && <div style={{ marginBottom: 28 }} />}
 
-          {/* Answer pill buttons — layout via .nem-answers CSS (row desktop / column mobile) */}
           <div className="nem-answers">
             {t.answers.map((label, i) => {
               const isSelected = answers[currentStep] === i;
@@ -913,9 +1035,6 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          PROFILE — Gender, Age, Relationship
-      ═══════════════════════════════════════════ */}
       {phase === "profile" && (
         <div className="quiz-fade-in flex flex-col gap-6">
           <h2
@@ -933,7 +1052,7 @@ function Quiz({
           </h2>
 
           <div className="flex flex-col gap-4">
-            {/* Gender */}
+
             <div>
               <label htmlFor="nem-gender" style={labelStyle}>
                 {t.genderLabel}
@@ -969,7 +1088,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Age category */}
             <div>
               <label htmlFor="nem-age" style={labelStyle}>
                 {t.ageCategoryLabel}
@@ -1005,7 +1123,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Relationship status */}
             <div>
               <label htmlFor="nem-relationship" style={labelStyle}>
                 {t.relationshipLabel}
@@ -1041,7 +1158,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Continue button */}
             <button
               onClick={handleProfileContinue}
               style={pillButtonStyle}
@@ -1062,12 +1178,9 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          CONCLUSION
-      ═══════════════════════════════════════════ */}
       {phase === "conclusion" && (
         <div className="quiz-slide-up flex flex-col gap-6">
-          {/* Label */}
+
           <span
             style={{
               fontSize: 13,
@@ -1081,8 +1194,6 @@ function Quiz({
             {t.conclusionLabel}
           </span>
 
-          {/* Debug badge (?nemdebug=1). QA scaffolding, not content — absent from the DOM
-              entirely when off, so it can never leak to a real user via CSS. */}
           {debugMode && (
             <code
               data-element="conclusion-debug"
@@ -1107,12 +1218,6 @@ function Quiz({
             </code>
           )}
 
-          {/* Conclusion text (gender-differentiated).
-              Christel writes in paragraphs separated by blank lines. HTML collapses
-              whitespace, so they are split into separate <p>s rather than rendered as
-              one block — otherwise her three-paragraph flat texts arrive as a wall.
-              The data-element hook stays on a wrapper so tests still read the whole
-              conclusion in one locator. */}
           <div
             data-element="conclusion-text"
             style={{
@@ -1136,8 +1241,6 @@ function Quiz({
             ))}
           </div>
 
-          {/* Bridge line — flat outcomes get a different one, because there is no report
-              to bridge to. */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1150,9 +1253,6 @@ function Quiz({
             {isFlatOutcome ? t.flatBridgeLine : t.bridgeLine}
           </p>
 
-          {/* Flat outcomes route to contact and stop here: no opt-in, no report. The
-              report is built around one clear mechanism, which is what these lack.
-              A plain anchor, deliberately — an embedded form is a future nice-to-have. */}
           {isFlatOutcome ? (
             <a
               data-element="conclusion-contact-link"
@@ -1187,9 +1287,6 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          OPT-IN FORM (name + email + consent only)
-      ═══════════════════════════════════════════ */}
       {phase === "optin" && (
         <div className="quiz-fade-in flex flex-col gap-6">
           <div>
@@ -1218,7 +1315,6 @@ function Quiz({
             </p>
           </div>
 
-          {/* Generic error */}
           {fieldErrors.generic && (
             <div aria-live="polite" style={{ color: "#e53e3e", fontSize: "0.875rem" }}>
               {fieldErrors.generic}
@@ -1226,7 +1322,7 @@ function Quiz({
           )}
 
           <div className="flex flex-col gap-4">
-            {/* First name */}
+
             <div>
               <input
                 type="text"
@@ -1253,7 +1349,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Email */}
             <div>
               <input
                 type="email"
@@ -1285,7 +1380,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Honeypot */}
             <div style={{ position: "absolute", left: "-9999px", opacity: 0, pointerEvents: "none" }} aria-hidden="true">
               <input
                 type="text"
@@ -1297,7 +1391,6 @@ function Quiz({
               />
             </div>
 
-            {/* Consent checkbox */}
             <div>
               <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
                 <input
@@ -1326,7 +1419,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Submit button */}
             <button
               disabled={!nemMattersConsent || submitting}
               onClick={handleSubmit}
@@ -1344,24 +1436,17 @@ function Quiz({
               {submitting ? "..." : ctaLabel}
             </button>
 
-            {/* Relieve line */}
             <p style={{ fontSize: "0.875rem", color: "var(--_token---text-olive, #706d56)", textAlign: "center", margin: 0 }}>
               {t.relieveLine}
             </p>
 
-            {/* Disclaimer intentionally omitted here — it already appears once on
-                the landing page below the module; rendering it again produced a
-                visible duplicate. `t.disclaimer` is kept for potential future use. */}
           </div>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          CONFIRMATION
-      ═══════════════════════════════════════════ */}
       {phase === "confirmation" && (
         <div className="quiz-scale-in flex flex-col gap-5" style={{ paddingTop: 16, paddingBottom: 16 }}>
-          {/* Label */}
+
           <span
             style={{
               fontSize: 13,
@@ -1375,7 +1460,6 @@ function Quiz({
             {t.confirmationLabel}
           </span>
 
-          {/* Main text */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1387,7 +1471,6 @@ function Quiz({
             {t.confirmationMain}
           </p>
 
-          {/* Secondary text */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1399,7 +1482,6 @@ function Quiz({
             {t.confirmationSecondary}
           </p>
 
-          {/* No email received */}
           <p
             style={{
               fontSize: "0.875rem",
@@ -1411,7 +1493,6 @@ function Quiz({
             {t.noEmailReceived}
           </p>
 
-          {/* Wrong email correction */}
           <p
             style={{
               fontSize: "0.875rem",
@@ -1464,8 +1545,7 @@ export default declareComponent(Quiz, {
       name: "CTA Button Text",
       defaultValue: "Ontvang mijn rapport",
     }),
-    /* Flat-low and flat-high outcomes route here instead of to the report.
-       ⚠️ Verify both URLs against the live site — they are assumed, not confirmed. */
+
     contactUrl: propTypes.Text({
       name: "Contact URL (flat outcomes)",
       defaultValue: "/contact",

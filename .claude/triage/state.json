@@ -71,23 +71,26 @@
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#review-seo-report",
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#ai-unique-content",
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#anchor-link-text",
-    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#generative-location-pages"
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#generative-location-pages",
+    "gmail:19ff6ec7b30729f9",
+    "gmail:19ff75cc7296ea68"
   ],
   "sources": {
     "gmail": {
-      "lastProcessed": "2026-07-13T21:02:25Z"
+      "lastProcessed": "2026-08-13T08:00:44Z"
     },
     "slack": {
       "channels": {
-        "C0973LJ2BTJ": "1783609502.696749",
-        "C08G8FGHX9Q": "1782402167.307479"
+        "C0973LJ2BTJ": "1786439711.618659",
+        "C08G8FGHX9Q": "1785320577.580049"
       },
       "dms": {
-        "D08SEJ6QTD2": "1783420744.376409"
+        "D08SEJ6QTD2": "1786549559.370289",
+        "D08RRQ1L8NT": "1786535887.769059"
       }
     },
     "calendar": {
-      "lastProcessed": "2026-07-14T11:00:00+00:00"
+      "lastProcessed": "2026-08-13T08:26:30Z"
     },
     "trello": {
       "lastProcessed": null

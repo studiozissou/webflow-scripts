@@ -97,6 +97,41 @@ const CONCLUSION_KEYS = [
 
 const INTRO_LINE_KEYS = CONCLUSION_KEYS.filter((key) => !(key in FLAT_OUTCOME_CODE));
 
+function introLineIdFor({ primary, secondary }, textSet = TEXT_SET) {
+  const leading = MECHANISM_CODE[primary];
+  if (!leading) throw new Error(`Unknown mechanism: ${primary}`);
+
+  if (!secondary) return `${textSet}-${leading}`;
+
+  const following = MECHANISM_CODE[secondary];
+  if (!following) throw new Error(`Unknown mechanism: ${secondary}`);
+
+  return `${textSet}-${leading}-${following}`;
+}
+
+function enumerateIntroLineRows(textSet = TEXT_SET) {
+  const row = (type, primary, secondary) => ({
+    type,
+    leading: MECHANISM_TO_KEY[primary],
+    following: secondary ? MECHANISM_TO_KEY[secondary] : "",
+    key: conclusionKeyFor({
+      outcome: secondary ? "dual" : "single",
+      primary,
+      secondary,
+    }),
+    id: introLineIdFor({ primary, secondary }, textSet),
+  });
+
+  return [
+    ...SHEET_ORDER.map((mech) => row("single", mech, null)),
+    ...SHEET_ORDER.flatMap((leading) =>
+      SHEET_ORDER.filter((following) => following !== leading).map((following) =>
+        row("dual", leading, following),
+      ),
+    ),
+  ];
+}
+
 function enumerateConclusionRows(textSet = TEXT_SET) {
 
   return ["female", "male"].flatMap((gender) => {

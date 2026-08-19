@@ -115,22 +115,59 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
     return link ? link.getAttribute("href") : "";
   }
 
+  /* Two WebKit problems, both measured in Safari on 19 Aug 2026:
+
+     1. Spotify's iFrame API asks macOS to open the native Spotify app, so
+        Safari shows "Do you want to allow this website to open Spotify?".
+        Calling createController alone reproduces it — no play() needed —
+        while a plain embed iframe on about:blank never prompts.
+     2. The /video embed renders with no <video> element and no play button
+        at all, so video is not on offer there in any case.
+
+     So WebKit gets a plain audio-embed iframe we build ourselves. The cost
+     is losing the API's play()/pause(): the visitor presses play inside the
+     embed (Safari blocks autoplay regardless), and "pause the others" tears
+     the iframe down instead of pausing it.
+
+     GestureEvent is WebKit-proprietary, making this a feature check on the
+     engine rather than UA sniffing. It deliberately catches every iOS
+     browser too, since they are all WebKit underneath. */
+  var USE_IFRAME_API = typeof window.GestureEvent === "undefined";
+
   /* The iFrame API only ever loads the audio embed, but these episodes are
      video podcasts, whose player lives at the /video embed URL (the one
      Spotify's own oEmbed returns). Point the API's iframe at it; the page
      speaks the same messaging protocol, so play()/pause() keep working.
-
      The URL is built from the episode id rather than patched out of the
-     existing src, and the swap is driven from playSpotify rather than from
-     createController's callback, because that callback does not appear to
-     fire in Safari — which left the audio embed on screen, un-sandboxed.
-     Retry until the iframe exists. */
+     existing src, and retries until the API has created the iframe. */
   function controllerFor(embedWrap) {
     var entry = spotifyControllers.filter(function (e) { return e.el === embedWrap; })[0];
     return entry ? entry.controller : null;
   }
 
+  /* WebKit path: our own iframe, mounted in place of the placeholder and
+     torn back down to a placeholder when something else starts playing. */
+  function mountPlainEmbed(item, embedWrap, id) {
+    if (embedWrap.querySelector("iframe")) return;
+    var placeholder = item.querySelector(".spotify-player-target");
+    if (!placeholder || !placeholder.parentNode) return;
+    var frame = document.createElement("iframe");
+    frame.setAttribute("allow", "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture");
+    frame.style.border = "0";
+    frame.src = "https://open.spotify.com/embed/episode/" + id;
+    placeholder.parentNode.replaceChild(frame, placeholder);
+  }
+
+  function unmountPlainEmbed(embedWrap) {
+    var frame = embedWrap.querySelector("iframe");
+    if (!frame || !frame.parentNode) return;
+    var placeholder = document.createElement("div");
+    placeholder.className = "spotify-player-target";
+    frame.parentNode.replaceChild(placeholder, frame);
+  }
+
   function useVideoEmbed(embedWrap, id, attempt) {
+    if (!USE_IFRAME_API) return;
     var frame = embedWrap.querySelector("iframe");
     if (!frame) {
       if ((attempt || 0) < 30) {
@@ -169,6 +206,10 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
   }
 
   function pauseAllSpotify() {
+    if (!USE_IFRAME_API) {
+      document.querySelectorAll(".podcast-list-spotify-embed").forEach(unmountPlainEmbed);
+      return;
+    }
     pruneControllers();
     spotifyControllers.forEach(function (entry) {
       try { entry.controller.pause(); } catch (err) {}
@@ -225,6 +266,17 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
     if (!embedWrap) return;
     embedWrap.classList.add("visible");
 
+    var id = episodeIdFrom(spotifyUrlFor(item));
+    if (!id) {
+      DEBUG && console.log("[player] no Spotify episode id on", embedWrap);
+      return;
+    }
+
+    if (!USE_IFRAME_API) {
+      mountPlainEmbed(item, embedWrap, id);
+      return;
+    }
+
     var existing = spotifyControllers.filter(function (entry) {
       return item.contains(entry.el);
     })[0];
@@ -236,11 +288,6 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
     var run = function () {
       var placeholder = item.querySelector(".spotify-player-target");
       if (!placeholder || !spotifyApi) return;
-      var id = episodeIdFrom(spotifyUrlFor(item));
-      if (!id) {
-        DEBUG && console.log("[player] no Spotify episode id on", embedWrap);
-        return;
-      }
       spotifyApi.createController(placeholder, {
         uri: "spotify:episode:" + id,
         width: "100%",
@@ -257,11 +304,9 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
           try { controller.play(); } catch (err) {}
         });
       });
-      /* Deliberately outside the createController callback: the swap and the
-         sandbox must land even if that callback never fires (it appears not
-         to in Safari, which left the un-sandboxed audio embed on screen).
-         Worst case the controller is missing and playback needs one tap on
-         the embed's own play button, but the right player is shown. */
+      /* Also driven from here, not only from the callback, so the swap
+         cannot be lost to callback timing. It is a no-op once the iframe
+         already points at the video embed. */
       useVideoEmbed(embedWrap, id);
     };
     spotifyApi ? run() : pendingSpotifyPlays.push(run);
@@ -269,12 +314,17 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
 
   function pauseItem(item, platform) {
     if (platform === "spotify") {
-      pruneControllers();
-      spotifyControllers.forEach(function (entry) {
-        if (item.contains(entry.el)) {
-          try { entry.controller.pause(); } catch (err) {}
-        }
-      });
+      if (USE_IFRAME_API) {
+        pruneControllers();
+        spotifyControllers.forEach(function (entry) {
+          if (item.contains(entry.el)) {
+            try { entry.controller.pause(); } catch (err) {}
+          }
+        });
+      } else {
+        var wrap = item.querySelector(".podcast-list-spotify-embed");
+        if (wrap) unmountPlainEmbed(wrap);
+      }
     } else {
       var frame = item.querySelector(".podcast-list-youtube-embed iframe");
       if (frame && frame.contentWindow) {
@@ -342,6 +392,27 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
   /* The untouched Omny block still binds $("body").on("click",
      ".is-podcast-watch-button", …) to pause Omny players when a watch
      button is pressed — no extra interop needed here. */
+
+  /* An episode's Omny Podcast Link field holds a Spotify web-player URL
+     rather than an omny.fm one (EP 853 as of 19 Aug 2026). Framing
+     open.spotify.com makes macOS ask "allow this website to open Spotify?"
+     on page load, in Safari, before anyone clicks anything. Drop any Omny
+     embed that is not actually an Omny URL: the player is broken either way,
+     and this stops bad CMS data from raising that prompt. Re-run after
+     Finsweet swaps items in, on the same beat the Omny block re-inits. */
+  function dropNonOmnyEmbeds() {
+    document.querySelectorAll("iframe.omny-embed").forEach(function (frame) {
+      if ((frame.src || "").indexOf("omny.fm") === -1) frame.remove();
+    });
+  }
+
+  dropNonOmnyEmbeds();
+  document.addEventListener("click", function (e) {
+    if (!e.target || !e.target.closest) return;
+    if (e.target.closest(".podcast-pagination-button, .category-item")) {
+      setTimeout(dropNonOmnyEmbeds, 1200);
+    }
+  });
 })();
 </script>
 <script>

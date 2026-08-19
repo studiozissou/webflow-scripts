@@ -635,9 +635,9 @@ Manual trigger
 
 **Rollback:** none built — Notion page history is the rollback (Alex's call; a custom history was deemed overkill).
 
-**Relationship to the escaping fix:** `nem-report-prompt-escaping-and-token-limit.md` parks the prompt in a fixed-value **Set node** as a clean seam. This mechanism fills that seam: the Set node is superseded by the Data Table read that the Publish workflow writes. Land the escaping fix first (it also lifts `max_tokens` to 8000 and fixes `$json` references); the Data Table read then drops in where the Set node was.
+**Relationship to the escaping fix:** `nem-report-prompt-escaping-and-token-limit.md` parks the prompt in a fixed-value **Set node** as a clean seam. This mechanism fills that seam: the Set node is superseded by the Data Table read that the Publish workflow writes. ~~Land the escaping fix first~~ — **the escaping fix landed on 2026-08-13** (confirmed 2026-08-18), so the Set node seam already exists on live and the Data Table read drops straight in where it is.
 
-**Not yet built** — this section documents the agreed design only. Building the Publish workflow depends on MailerSend being off its trial account (the test-PDF email needs it).
+**Not yet built** — this section documents the agreed design only. ~~Building the Publish workflow depends on MailerSend being off its trial account (the test-PDF email needs it).~~ **That dependency cleared 2026-08-18** when Alex upgraded to a paid plan, so the Publish workflow is now buildable whenever it is prioritised.
 
 ### Spam / bot protection
 
@@ -960,4 +960,4 @@ googleapis (for Gmail API)
 11. ~~MailerSend vs MailerLite~~ — resolved: MailerLite for verification email + newsletter; MailerSend for report delivery only (PDF attachment). MailerSend free tier = 500 emails/month.
 12. ~~Conclusion text identifiers~~ — resolved: Alex's convention confirmed. Single: `valse-hoop`. Dual: `valse-hoop_valse-macht`. All lowercase, hyphenated. 15 texts total.
 13. ~~Internationalisation~~ — resolved: NL + EN built in from start. Locale auto-detected, passed through to backend for emails + report language.
-14. ~~Prompt update mechanism~~ — resolved 2026-07-10 (Slack): Alex publishes from a dedicated clean Notion runtime page via a manual "Publish Prompt" n8n workflow that caches the prompt to a Data Table and emails him a test PDF; `/verify` reads the cached prompt, not Notion. No draft/approved toggle, no custom rollback (Notion page history). Full design in "Backend Architecture → Report prompt — runtime link & updates". Not yet built (test-PDF email needs MailerSend off trial).
+14. ~~Prompt update mechanism~~ — resolved 2026-07-10 (Slack): Alex publishes from a dedicated clean Notion runtime page via a manual "Publish Prompt" n8n workflow that caches the prompt to a Data Table and emails him a test PDF; `/verify` reads the cached prompt, not Notion. No draft/approved toggle, no custom rollback (Notion page history). Full design in "Backend Architecture → Report prompt — runtime link & updates". Not yet built — the MailerSend trial dependency cleared 2026-08-18, so this is now unblocked.

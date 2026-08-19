@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-11",
+  "updated": "2026-08-18",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -228,34 +228,155 @@
       "project": "nem-life",
       "type": "fix",
       "priority": "P0",
-      "status": "Blocked",
+      "status": "Done",
       "title": "n8n API key is failing authentication, blocking all workflow work",
       "created": "2026-08-11",
-      "updated": "2026-08-11",
-      "note": "DIAGNOSED 2026-08-11: the key is present but EXPIRED. N8N_API_KEY is a JWT; its exp claim is 2026-08-05T22:00:00Z - 6 days ago. Issued 2026-07-07 (iss n8n, aud public-api), so it carried a ~29-day lifetime. Not a missing or malformed key, and not an outage: n8n_health_check still returns ok against https://reus.app.n8n.cloud, while n8n_get_workflow and n8n_list_workflows return AUTHENTICATION_ERROR. Blocks everything that touches n8n: the P0 prompt-escaping fix cannot take its live snapshot (the only rollback point that exists, since n8n holds no version history for uKkMgMYoH5nOLoCR), the P2 email/PDF branding task, and any re-sync of the repo workflow JSON to live. Fix: n8n -> Settings -> n8n API -> create a new key, then update the N8N_API_KEY environment variable (referenced as ${N8N_API_KEY} by the n8n block in .mcp.json) and restart the MCP server. Confirm with n8n_get_workflow on uKkMgMYoH5nOLoCR mode 'structure' - it should return the node graph. Note the expiry when creating it: n8n lets you set the lifetime, and a longer one avoids a repeat. Worth diarising the new expiry date."
+      "updated": "2026-08-18",
+      "note": "RESOLVED - the key works. Confirmed 2026-08-18 across a dozen calls: read both workflows, listed and inspected executions, inserted and deleted a data table row, and drove the new drift check. Whatever was stale on 2026-08-11 has since been refreshed. This was recorded as blocking ALL workflow work, so it is worth noting it sat open and stale for a week while the thing it blocked had already been done by hand - see nem-report-prompt-escaping-and-token-limit."
     },
     {
       "id": "nem-report-prompt-escaping-and-token-limit",
       "project": "nem-life",
       "type": "fix",
       "priority": "P0",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "NEM Test report prompt: make the prompt safe to edit and lift the token limit",
       "description": "In the live /verify workflow the Anthropic system prompt is a single-quoted JavaScript string literal inside the Generate Report node's jsonBody expression, so the first apostrophe or newline in Alex's real prompt breaks the node silently (the browser already got its 302). Move the prompt into a Report Prompt Set node as a plain fixed-value string so JSON.stringify handles all escaping. Also lift max_tokens from the live value of 1024 to the intended 8000, switch $json references to explicit $('Validate Token') references, and re-sync the repo workflow JSON to live. Prerequisite for any mechanism that lets the client edit the prompt himself.",
       "spec": "projects/nem-life/.claude/specs/nem-report-prompt-escaping-and-token-limit.md",
       "created": "2026-07-09",
-      "updated": "2026-08-11",
-      "note": "PREPARED, NOT APPLIED (2026-08-11). Fix is built and unit-tested; the live workflow is untouched. Everything to apply it is in projects/nem-life/.claude/backend/changesets/nem-report-prompt-escaping/ - read its README.md first. Two defects in Generate Report on the live /verify workflow (n8n id uKkMgMYoH5nOLoCR, active): (1) the report system prompt sits between single quotes inside a JS expression, so the first apostrophe in Alex's real prompt throws - silently, because the browser already has its 302 from Respond Confirmed; (2) live max_tokens is 1024, which truncates a full report mid-sentence (repo JSON says 8000 - drift). Fix moves the prompt into a Set node as a fixed value so JSON.stringify does all escaping, rewires Valid? true-branch -> Report Prompt -> Generate Report while leaving Respond Confirmed and Mark Consumed on the direct fan-out, and lifts max_tokens to 8000. Tests: tests/nem/nem-verify-report-body.test.js, 21 passing - evaluates the real expression the way n8n does against a torture-test prompt, and pins the defect by asserting the old inlined form throws a SyntaxError. BLOCKER: the n8n API key is failing authentication, so the live snapshot (the only rollback point - n8n has no version history for this workflow) cannot be taken yet. Refresh N8N_API_KEY first. Spec assertion corrected: the Set node is typeVersion 3.5, so the path is parameters.assignments.assignments[0].value, not the v2 parameters.fields the spec previously named. Apply as a node-level diff, never as a whole-workflow import - the repo JSON is stale against live."
+      "updated": "2026-08-18",
+      "note": "APPLIED TO LIVE 2026-08-13, CONFIRMED 2026-08-18. The 2026-08-11 note below was wrong by the time anyone read it: the fix was applied by hand in the n8n UI on 13 Aug (workflow updatedAt 15:03:50Z; execution 45 at 15:02 already shows Report Prompt in its path), so no commit in this repo recorded it and every doc still said PREPARED, NOT APPLIED. Found by taking the pre-apply snapshot: the live pull came back with a node the repo copy did not have. DO NOT re-send partial-update.operations.json - it would add a second Report Prompt node or fail. Verified live: Report Prompt is a Set node typeVersion 3.5 with no legacy parameters.fields, holding systemPrompt as a fixed value that does not start with '='; Valid? true branch fans out to Respond Confirmed, Mark Consumed and Report Prompt so the 302 does not wait on the report chain; Generate Report reads the Set node, uses $('Validate Token') references and max_tokens 8000. The repo workflow JSON has been re-synced from the API. The old n8n API key blocker is also gone - the key works. STILL OUTSTANDING and tracked elsewhere: systemPrompt holds a clearly-labelled TEST MODE stub, so live reports read 'TESTRAPPORT / TEST REPORT'; installing Alex's real prompt is blocked on Notion access."
     },
     {
       "id": "nem-mailersend-trial-account-blocks-report-delivery",
       "project": "nem-life",
       "type": "fix",
       "priority": "P0",
-      "status": "Blocked",
+      "status": "Done",
       "title": "Report delivery is failing in production: MailerSend is on a trial account",
       "description": "Executions 30 and 35 on 2026-07-09 both failed at Send Report with 422 'You have reached trial account unique recipients limit. #MS42225'. Report generation, PDF render and encode all succeed; only delivery fails. Because Mark Consumed sits on the fast path, the token is consumed anyway, so the user sees the confirmed page, never receives a report, and cannot retry. Add To Newsletter also never runs, so consenting users are not subscribed. Blocked on Alex upgrading the MailerSend account off trial. Once unblocked, consider whether Mark Consumed should move back behind successful delivery, and add failure alerting to the report branch so silent failures surface. Corrects the backend README, which currently states MailerSend is production and that no credential work blocks go-live.",
-      "created": "2026-07-09"
+      "created": "2026-07-09",
+      "updated": "2026-08-18",
+      "note": "RESOLVED 2026-08-18. Alex upgraded the MailerSend account to a paid 'Hobby' plan and offered to go higher if volume needs it. Verified end-to-end rather than taken on trust: inserted one nem_test_profiles row with a fresh token and a never-before-used recipient, fired GET /verify?token=..., and execution 48 ran all 14 nodes green including Send Report, with the report email arriving at 10:14:42Z. Probe row deleted afterwards. Testing with an already-seen address would have passed regardless, since the cap was on unique recipients - always probe with a new address. Two follow-ups this ticket raised are NOT done and are tracked elsewhere: (1) whether Mark Consumed should move back behind successful delivery, so a delivery failure leaves the token replayable instead of stranding the user - still on the fast path, still worth a decision; (2) failure alerting on the report branch, now specced in projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md. New thing to watch: the Hobby plan caps monthly volume rather than recipients, and reports plus failure alerts share the account, so hitting the quota silences both at once."
+    },
+    {
+      "id": "nem-mailerlite-subscriber-status-active",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P3",
+      "status": "Ready to Build",
+      "title": "Reconcile the missing MailerLite status:'active' on /submit",
+      "description": "The repo snapshot of /submit carried status:'active' in the MailerLite: Send Verification body; live does not. Found 2026-08-18 by the drift check, which showed the repo AHEAD of live rather than behind. LIKELY BENIGN: backend/README.md records that MailerLite double opt-in is disabled for API/integrations and subscribers land Active anyway, which would make the explicit status redundant - and verification mail has been arriving in practice. That README line is itself an undated hand-written claim though, so confirm the double opt-in setting in the MailerLite UI (a one-minute check, not an investigation) and then either push status:'active' to live for explicitness or note here that it is deliberately omitted. The point is to close an undocumented difference, not to chase a bug.",
+      "created": "2026-08-18",
+      "note": "Repo snapshot has been re-baselined from live, so the status:'active' text now exists only in git history: see the pre-2026-08-18 version of projects/nem-life/.claude/backend/nem-submit.workflow.json. Reproduce with npm run check:nem-drift. Downgraded from P1 to P3 the same day once the README's double-opt-in-disabled note was found."
+    },
+    {
+      "id": "nem-submit-normalize-comment-drift",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P3",
+      "status": "Ready to Build",
+      "title": "Push the corrected $env comment in /submit Normalize up to live",
+      "description": "The repo snapshot of the Normalize node carried a corrected comment - 'n8n Cloud blocks $env access, so hard-code it' - while live still reads 'Set NEM_VERIFY_WEBHOOK_URL as an n8n env var, or replace the fallback string below once the /verify workflow is deployed.' The live comment is misleading: it tells the next reader to do something n8n Cloud does not permit. Cosmetic, no behaviour change, but it is a small trap left in the client's workflow. Paste the corrected comment into the live Normalize node, then re-baseline with npm run check:nem-drift -- --write.",
+      "created": "2026-08-18",
+      "note": "Found 2026-08-18 by the drift check; the repo was ahead of live. The snapshot has since been re-baselined FROM live, so the corrected wording now lives only in git history - recover it from the pre-2026-08-18 nem-submit.workflow.json first."
+    },
+    {
+      "id": "nem-live-state-drift-check",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Stop the NEM docs going stale about live n8n",
+      "description": "Docs asserted live n8n state with no way to tell when anyone last checked, and three stale-claim failures landed in one week: the prompt-escaping changeset was applied by hand on 13 Aug while every doc still said PREPARED NOT APPLIED and the committed workflow JSON was missing a node; the MailerSend trial cap was recorded as a live blocker across seven files after it had been lifted; and the n8n API key blocker was stale too. Built tools/nem/check-workflow-drift.js (npm run check:nem-drift) which pulls both live workflows, diffs them against the committed snapshots, names the field that moved, checks a set of invariants, and exits non-zero. Never auto-syncs: drift ran in both directions, so an auto-fix would have destroyed real work. Generates backend/LIVE-STATE.md as the one place allowed to assert live state. Established a doc convention at the top of backend/README.md: dated Verified stamps, link to LIVE-STATE rather than restating node params, and strike through cleared blockers instead of deleting them.",
+      "spec": "projects/nem-life/.claude/specs/nem-live-state-drift-check.md",
+      "created": "2026-08-18",
+      "updated": "2026-08-18",
+      "note": "Done 2026-08-18. 33 new tests, suite now 160 passing. Audit found /submit drifting in three nodes in BOTH directions: Store Profile was a stale pre-deployment template (insert + REPLACE_DATA_TABLE_ID vs live upsert on the real table), while the repo was AHEAD of live on MailerLite status:'active' and on a corrected $env comment in Normalize. Snapshots re-baselined from live per Will's decision; the two repo-ahead items raised as nem-mailerlite-subscriber-status-active and nem-submit-normalize-comment-drift, both P3. The check needs N8N_API_KEY so it cannot run in plain CI - it is a before-you-work command. If it starts getting skipped, a pre-work hook is the next step, not CI."
+    },
+    {
+      "id": "nem-notion-source-doc-access",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Get access to Alex's Notion source doc for the NEM Test",
+      "description": "On 2026-08-17 Alex declared the Notion page 'NEM TEST 01 Waarom reageer ik zo? - source' authoritative over every earlier email: if it contradicts an email, the doc wins. It 404s for us - it sits in his workspace. Every spec we hold is therefore written from sources he has explicitly demoted, and the real report system prompt lives there, which is why live reports still read 'TESTRAPPORT / TEST REPORT' from a clearly-labelled stub. Ask him to share the page. NOT A DEV BLOCKER (Will, 2026-08-18): the JSON contract, error visibility, completion logging and intro-line work can all be built against the specs we have; only the prompt text itself waits on this. Installing the prompt when it arrives is a single fixed-value edit to the Report Prompt Set node, so nothing needs rearchitecting.",
+      "created": "2026-08-18",
+      "note": "Raise on the next email to Alex rather than as a standalone chase - he has been responsive (upgraded MailerSend within hours on 18 Aug). Once the prompt lands, paste it into Report Prompt as a FIXED VALUE, never an expression, or the escaping fix is undone; npm run check:nem-drift asserts exactly that and will fail if it regresses."
+    },
+    {
+      "id": "nem-report-json-contract-and-parse",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Done",
+      "title": "JSON report contract and Parse Report validation branch",
+      "description": "Slice 1 of nem-report-json-and-error-visibility (spec sections 1-3), planned 2026-08-18. Claude returns report content as strict JSON with five keys (opening, reaction, origin, cost, closing); a Parse Report Code node becomes the only place that output is trusted or rejected, failing on not-json, missing-key, empty-value and truncated. Failures write a row to a new nem_report_failures Data Table and email Alex; Send Report must not fire, so nobody receives a half-built PDF. CRITICAL COUPLING: the live Report Prompt currently holds a TEST MODE stub that returns PROSE, so shipping Parse Report on its own would route every real user to the failure branch. The stub must be rewritten to emit the JSON contract in the SAME apply. Will's call 2026-08-18: rewrite the stub, so the chain is exercisable now and Alex's real prompt later drops in like-for-like. Alert rides the same MailerSend account as the reports - accepted as a known single point of failure rather than over-built for an unmeasured failure rate.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "BUILT AND VERIFIED LIVE 2026-08-18. Exec 49 (happy path): Parse Report valid, five sections through Build HTML, Send Report succeeded. Exec 50 (failure path, stub temporarily pointed at prose): reason not-json, row written to nem_report_failures, Alert Alex fired, and Send Report DID NOT RUN - the assertion that matters, since a half-built PDF is worse than none. Stub restored immediately afterwards and both probe rows deleted. 44 unit tests; suite now 199. The validator necessarily exists twice (module + pasted Code node, since n8n cannot import), so the tests extract the node's real source from the committed snapshot and run it against the same fixtures - edit the module, re-paste, re-baseline, never only the node. Three new drift invariants guard the gate: the prompt still demands JSON, Generate Report goes through Parse Report, and the failure branch cannot reach Build HTML or Send Report. NOTE: testing the failure path sent a real alert email to alex@nemlife.com at 13:23 - point Alert Alex at your own address next time.",
+      "updated": "2026-08-18"
+    },
+    {
+      "id": "nem-anonymous-completion-logging",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Log every completed test anonymously at question 20",
+      "description": "Spec section 4 of nem-report-json-and-error-visibility, split out of slice 1 on 2026-08-18 because it is materially bigger: it needs a new event column on nem_test_profiles, an answer on whether the email column accepts null, and it touches the component as well as both workflows. Fires one fire-and-forget beacon on answering question 20 for EVERY outcome, carrying token, locale, outcome, conclusionKey, the five scores and totalScore - no personal data, because none exists yet at that point. Two rows per user joined on token. Captures the drop-off between finishing the questions and opting in, which is currently invisible.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "BUILT 2026-08-18, awaiting a Webflow paste. Backend done and verified live: /submit branches on event, completions insert into the new nem_test_completions table (bhwShLxPcsQ0xgXq), submissions carry on to nem_test_profiles untouched. Live beacon test (exec 52): the row landed in completions, NO row appeared in profiles, and neither Store Profile nor MailerLite ran - so no stray verification email and no subscriber. Probe row deleted. Design changed from the spec's original one-table plan: Store Profile upserts on token, so the later submission would have overwritten the completion row and destroyed the drop-off signal - silently, since with consent two writes onto one row look like one good row. Keying on token+event would then have made /verify's token lookup ambiguous, risking a user getting no report. Separate table avoids both and leaves the live report path untouched. The completions table has no email/name/gender columns at all, so anonymity is structural. REMAINING: Will must paste projects/nem-life/dist/nem-test-phase-b.webflow.tsx into the Webflow component and publish - the beacon fires on answering question 20 and is not live until that paste happens.",
+      "updated": "2026-08-18"
+    },
+    {
+      "id": "nem-intro-lines-client-side",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Move the 25 report intro lines client-side, keyed on mechanism alone",
+      "description": "Spec section 5 of nem-report-json-and-error-visibility. The title-page teaser moves from Claude-generated to selected client-side, like the conclusion texts: 5 single mechanisms plus 20 directional duals. THE EASY THING TO GET WRONG: intro lines are looked up on KEY ALONE, not key + gender - the one asymmetry against the conclusion texts. 25 lines, not 26: both flat outcomes go to the contact link with no report (10 Aug call, confirmed 13 Aug). If Alex's Notion doc says 26, the doc contradicts the flat-routing decision - flag it, do not implement both.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "Generated from the same CSV export path as nem-conclusion-texts.js, from a new Intro lines tab in NEM_TEST_01_Default_texts. Extend tools/nem/build-conclusion-texts.js."
+    },
+    {
+      "id": "nem-webflow-report-template",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Build the Webflow report template as a design surface for Alex",
+      "description": "Spec section 6 of nem-report-json-and-error-visibility. Alex asked for a basic report template - structure and slots - and takes the formatting from there. Slots: title, first name, date, intro line, the five JSON sections, and the fixed disclaimer. TELL ALEX EXPLICITLY: the PDF generator does NOT pull the design from the live Webflow page. Once the design is final it gets exported to HTML/CSS and stored in the n8n workflow. The Webflow page is a design surface, not the runtime. This was sent 13 Aug but is the kind of thing worth repeating.",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "created": "2026-08-18",
+      "note": "Depends on the JSON contract landing first, since the five sections are the slots."
+    },
+    {
+      "id": "nem-submit-drops-v2-conclusion-fields",
+      "project": "nem-life",
+      "type": "fix",
+      "priority": "P1",
+      "status": "Done",
+      "title": "/submit silently drops the v2 outcome, conclusionKey and conclusionId",
+      "description": "The conclusion engine v2 component sends outcome, conclusionKey and conclusionId in the submit payload, but /submit's Normalize node does not map any of them and nem_test_profiles has no columns for them, so all three are discarded. Found 2026-08-18 while building the report JSON gate, when the failure log's conclusionId column turned out to be unfillable. Consequences: Alex cannot analyse results by conclusion, the report failure log cannot record which conclusion a failure belongs to, and the enriched payload shipped in v2 is doing nothing. Blocked-ish: n8n Data Table schemas are IMMUTABLE via the public API, so adding three columns may mean recreating nem_test_profiles, which holds live user rows. Establish whether the n8n UI allows adding columns before planning the migration.",
+      "created": "2026-08-18",
+      "note": "DONE 2026-08-18. Will added outcome, conclusionKey, conclusionId and event to nem_test_profiles through the n8n UI - so Data Table columns CAN be added after creation, even though the public API exposes no endpoint for it. Worth remembering: the API's immutability is an API limitation, not an n8n one. Blank email also saves fine, which unblocks anonymous completion logging. Normalize now maps all four (event defaults to 'submission' so the completion beacon can send 'completion' later without another change) and Store Profile persists them. Verified with a live submit: outcome=dual, conclusionKey=self-rejection__false-power, conclusionId=01F-SR-FP, event=submission all landed. Probe row deleted. Two new drift invariants guard it, so the fields cannot be silently dropped again.",
+      "updated": "2026-08-18"
+    },
+    {
+      "id": "nem-point-failure-alerts-at-alex-before-golive",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "BEFORE GO-LIVE: point failure alerts at Alex and drop the [DEV] subject tag",
+      "description": "The Alert Failure node in /verify emails will@teamzissou.io and prefixes its subject with [DEV]. Will's call 2026-08-18: route failures to himself while the JSON contract is still being developed, so Alex is not pinged by test runs and by teething failures that are ours to fix. The [DEV] tag exists because the alert sends from hallo@nemmatters.com - the client's own address - so the subject line is the only thing distinguishing a test from a real production failure. MUST BE REVERTED BEFORE LAUNCH, both parts together. Alex asked on 2026-08-17 to be notified when a report fails - 'otherwise we won't know how often it happens, or that someone never got their report'. Shipping with alerts pointed at the developer reinstates the exact failure mode the alert was built to prevent. Consider sending to both addresses: Will will want to see the rate during early live traffic too.",
+      "created": "2026-08-18",
+      "note": "The drift check ties the two edits together - an invariant asserts the [DEV] tag and the recipient agree, so changing one and forgetting the other FAILS the check. What it cannot know is WHEN to flip them, which is why this ticket and the go-live checklist in backend/README.md both exist. Re-baseline with npm run check:nem-drift -- --write afterwards."
     }
   ]
 }

@@ -321,6 +321,46 @@ Generated to `projects/nem-life/.claude/research/nem-conclusion-ids.csv` by a sm
 
 ---
 
+## Amendment — 2026-08-17 (Alex's 12 & 17 Aug emails)
+
+Two changes land on top of this spec. Both are specced in full in
+`nem-report-json-and-error-visibility.md`; recorded here because they change what this
+engine feeds and what the component does.
+
+### Flat outcomes must now log
+
+As built, a flat outcome renders the contact link and **sends nothing at all** —
+`handleSubmit` never runs, so there is no record that the test was taken. Alex therefore
+cannot see how often flat profiles occur, which is exactly the number needed to judge
+whether `MIN_MECHANISM_SCORE` and `FLAT_SPREAD` are set sensibly.
+
+**Decision (Will, 2026-08-17): fire an anonymous beacon when a flat conclusion renders.**
+Scores, outcome, `conclusionId`, and the profile fields already collected — but
+`firstName: null`, `email: null`, and `reportSkipped: true`. No opt-in screen, nothing extra
+asked of the user.
+
+This does **not** change the routing decision from the 10 Aug call: flat outcomes still skip
+the report and still go to the contact link. Only the silence changes.
+
+### Intro lines join the client-side lookup
+
+25 fixed lines (5 single + 20 directional duals), selected client-side like the conclusion
+texts. **Looked up on key alone — they are not gender-specific.** That asymmetry against the
+conclusion texts (key + gender) is the easiest thing here to get wrong.
+
+25, not 26: Alex asked whether flat-high should get one since it "does receive a report". It
+does not — this spec routes both flat outcomes to contact. Confirmed with him 13 Aug. If the
+new Notion source doc says otherwise, that is a contradiction to flag rather than implement.
+
+### Source of truth moved
+
+Alex has made the Notion doc *NEM TEST 01 Waarom reageer ik zo? — source* authoritative over
+all earlier emails. **We do not have access to it** (404 — it is in his workspace). Until
+that is fixed, this spec and its siblings are written from the email thread, which Alex has
+explicitly demoted. Get access before building anything downstream of it.
+
+---
+
 ## Build Plan — remaining work (2026-08-17)
 
 Planned mid-build, after the pure-logic layer landed. This section is the ordered

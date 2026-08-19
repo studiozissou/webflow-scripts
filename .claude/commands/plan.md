@@ -2,15 +2,7 @@ Plan a feature before writing any code.
 
 ## Model split
 - **Opus max-effort** for clarifying questions (step 2), spec writing + task breakdown + parallelisation map (steps 3–7), and Barba impact check
-- **Sonnet** for research agents (step 1), approach exploration agents (step 2.5), acceptance test generation (step 8 — MUST run, see below), and Notion pushes
-
-## Notion push: Planning (if Notion connected)
-Update queue.json: set this slug's status to Planning.
-Push to Notion: search by Slug + Client, update Status to "Planning",
-set Last Updated to now. If the row doesn't exist, create it with
-Task Name, Slug, Status, Client (search Clients DB by name from
-CLAUDE.md, link matching row), and Priority
-(ask user if not already set). If Notion fails, log warning and continue.
+- **Sonnet** for research agents (step 1), approach exploration agents (step 2.5), and acceptance test generation (step 8 — MUST run, see below)
 
 ## Process
 
@@ -99,7 +91,7 @@ Before writing the spec, explore 3 competing architectural approaches in paralle
 ### 3–7. Spec writing and task breakdown
 
 3. Once the approach is chosen, use **Opus max-effort** for spec writing and architectural analysis. Write a spec to `.claude/specs/<feature-slug>.md` using the pm agent spec format. Incorporate research findings into the spec — reference reusable code, confirmed selectors, and existing patterns.
-4. Break the feature into ordered tasks and append them to `.claude/queue.json`.
+4. Break the feature into ordered tasks.
 5. Identify which agents are needed for each task (code-writer, qa, seo, perf, etc.).
 5b. **Parallelisation analysis** — For every task in the breakdown, evaluate parallel potential. Reference the `parallelisation` skill. Produce a **Parallelisation Map** in the spec:
    - Independent streams (tasks that can run simultaneously) with agent, est. time, est. tokens
@@ -175,8 +167,7 @@ Every plan MUST produce a test plan with all 3 tiers. `/build`, `/debug`, and `/
    **Self-check before proceeding:** Re-read the verify loop section you wrote. If it doesn't answer "how does `/build` know this feature is working?", rewrite it.
 
 10. Present the plan summary to the user for approval. Use `AskUserQuestion` with the following options (in this order):
-    - **"Save spec, add to queue, and sync to Notion" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`, add tasks to `queue.json` using the `queue-tasks` skill for formatting (plain-English names, descriptive slugs, step-by-step Notion pages with embedded spec and Files section), and sync all new rows to Notion via the `notion-dashboard` skill.
-    - **"Save spec only"** — Write the spec file but do not touch queue.json or Notion.
+    - **"Save spec" (Recommended)** — Write the spec to `.claude/specs/<feature-slug>.md`.
     - **"Review changes first"** — Show a summary of what will be written before saving anything.
 
 ## Barba transition impact check
@@ -248,15 +239,9 @@ After generating the acceptance test, register it in the project's test registry
 4. Update the top-level `lastUpdated` to today's date
 5. Write `tests/registry.json`
 
-## Notion push: Ready to Build (if Notion connected)
-Update queue.json: set this slug's status to Ready to Build.
-Push to Notion: update Status to "Ready to Build", set Last Updated.
-If Notion fails, log warning and continue.
-
 ## Output
 - Spec file at `.claude/specs/<feature-slug>.md`
 - Acceptance test file at `tests/acceptance/<feature-slug>.spec.js` (if test infra exists)
 - Updated `tests/registry.json` with the new test entry
-- Updated `.claude/queue.json` with new tasks
 - List of agents needed
 - Any blockers or open questions

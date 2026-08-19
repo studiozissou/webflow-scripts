@@ -336,12 +336,12 @@
       "project": "nem-life",
       "type": "feature",
       "priority": "P2",
-      "status": "Ready to Build",
+      "status": "Ready to Review",
       "title": "Move the 25 report intro lines client-side, keyed on mechanism alone",
       "description": "Spec section 5 of nem-report-json-and-error-visibility. The title-page teaser moves from Claude-generated to selected client-side, like the conclusion texts: 5 single mechanisms plus 20 directional duals. THE EASY THING TO GET WRONG: intro lines are looked up on KEY ALONE, not key + gender - the one asymmetry against the conclusion texts. 25 lines, not 26: both flat outcomes go to the contact link with no report (10 Aug call, confirmed 13 Aug). If Alex's Notion doc says 26, the doc contradicts the flat-routing decision - flag it, do not implement both.",
       "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
       "created": "2026-08-18",
-      "note": "Generated from the same CSV export path as nem-conclusion-texts.js, from a new Intro lines tab in NEM_TEST_01_Default_texts. Extend tools/nem/build-conclusion-texts.js."
+      "note": "Built 2026-08-19 on worktree-nem-intro-lines. Pipeline complete and covered by 21 unit tests: INTRO_LINE_KEYS derived from CONCLUSION_KEYS, readIntroRows throws on a gender column and on a flat-outcome row, buildIntroLinesModule emits NL_INTRO and EN_INTRO, and the component selects introLine and sends it on /submit. BLOCKED ON COPY, NOT ON CODE: the Intro lines tab does not exist in NEM_TEST_01_Default_texts yet, so both tables generate empty and every key shows a placeholder. Send Alex the generated 25-row template at .claude/research/nem-intro-lines-template.csv, have Christel fill intro (NL) and intro (EN), export the tab over .claude/research/nem-intro-lines.csv, then re-run npm run build:nem. FOLLOW-UP SLICE: n8n Normalize does not read introLine yet, so it is inert until /submit stores it and Build HTML renders it on the title page."
     },
     {
       "id": "nem-webflow-report-template",

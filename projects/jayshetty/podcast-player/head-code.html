@@ -87,6 +87,12 @@ cursor:pointer;
     width: 100%;
     height: 100%;
 }
+/* Spotify's embed rounds its corners internally (transparent corners we
+   can't square off), so hide the cover art once the player is visible to
+   stop it peeking through */
+.podcasts_image-wrapper:has(.podcast-list-spotify-embed.visible) .image-cover {
+    opacity: 0;
+}
 @media screen and (max-width: 679px){
 	.swiper-pagination {
 		display: none;

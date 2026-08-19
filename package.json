@@ -21,7 +21,10 @@
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",
     "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'",
     "typecheck:nem": "tsc -p projects/nem-life/dist/tsconfig.json",
-    "check:nem-drift": "node tools/nem/check-workflow-drift.js"
+    "check:nem-drift": "node tools/nem/check-workflow-drift.js",
+    "format": "prettier --write",
+    "format:check": "prettier --check .",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -29,11 +32,15 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
     "@types/react": "^19.2.18",
     "dotenv": "^17.3.1",
+    "eslint": "^10.8.1",
+    "globals": "^17.11.0",
     "googleapis": "^173.0.0",
     "playwright": "^1.50.0",
+    "prettier": "^3.9.6",
     "typescript": "^5.9.3"
   }
 }

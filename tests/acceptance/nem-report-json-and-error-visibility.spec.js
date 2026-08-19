@@ -8,57 +8,47 @@
  * The JSON contract and the parse-failure alerting live in n8n and are covered by
  * tests/nem/nem-report-parse.test.js instead — Playwright cannot see inside a workflow.
  *
- * ⚠️ These fail until the feature is built. That is intended: written from the spec first.
- *
  * Spec: projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md
  * Tier 1 (Playwright, staging).
+ *
+ * The quiz-driving helpers live in ./helpers/nem-quiz.js, shared with the phase-b and
+ * conclusion-logic suites so they cannot drift apart again. Beacon assertions await the
+ * captured request rather than sleeping: the test proceeds the moment the POST lands and
+ * fails loudly if it never does, instead of asserting on an empty capture after 2s.
  */
 import { test, expect } from '@playwright/test';
-import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.test' });
+import {
+  TEST_PAGE_NL,
+  QUIZ_TEST_TIMEOUT_MS,
+  ANSWER_LABELS_NL,
+  loadPage,
+  answerAllQuestions,
+  answerByIndices,
+  fillProfileScreen,
+} from './helpers/nem-quiz.js';
 
 const SLUG = 'nem-report-json-and-error-visibility';
-const STAGING = process.env.STAGING_URL || 'https://nem-life-1.webflow.io';
-const TEST_PAGE_NL = '/zelftesten/waarom-reageer-ik-zo';
-
-const TOTAL_QUESTIONS = 20;
 const SUBMIT_WEBHOOK = /\/webhook\/nem-submit/;
-
-// ── Helpers ───────────────────────────────────────────────────
-
-async function loadPage(page, path = TEST_PAGE_NL, query = '') {
-  await page.goto(`${STAGING}${path}${query}`);
-  await page.waitForFunction(() => document.readyState === 'complete', { timeout: 20_000 });
-  await page.waitForTimeout(2000);
-}
-
-async function answerQuestion(page, label) {
-  await page.getByRole('button', { name: label }).click();
-  await page.waitForTimeout(600);
-}
-
-/** Every uniform answer is a flat outcome under v2: all "soms" → flat-high. */
-async function answerUniformly(page, label) {
-  for (let i = 0; i < TOTAL_QUESTIONS; i++) await answerQuestion(page, label);
-}
 
 /** An uneven profile that reaches the report path: false-hope leading, false-power following. */
 const DUAL_PROFILE = [4, 1, 2, 4, 4, 4, 0, 0, 4, 0, 4, 4, 0, 3, 0, 2, 0, 0, 0, 0];
-const LABELS_NL = ['nooit', 'zelden', 'soms', 'regelmatig', 'heel vaak'];
 
-async function answerReportProfile(page) {
-  for (let i = 0; i < TOTAL_QUESTIONS; i++) await answerQuestion(page, LABELS_NL[DUAL_PROFILE[i]]);
+/* See the note on QUIZ_TEST_TIMEOUT_MS in the helper module: a full run-through against
+ * live staging deserves headroom the 30s config default does not give it. */
+test.beforeEach(() => {
+  test.setTimeout(QUIZ_TEST_TIMEOUT_MS);
+});
+
+// ── Suite-specific helpers ────────────────────────────────────
+
+/** Every uniform answer is a flat outcome under v2: all "soms" → flat-high. */
+async function answerUniformly(page, label) {
+  await answerAllQuestions(page, label);
 }
 
-async function fillProfileScreen(page, genderLabel = 'Vrouw') {
-  await page.waitForTimeout(500);
-  await page.locator('[data-field="gender"]').selectOption({ label: genderLabel });
-  await page.locator('[data-field="age-category"]').selectOption({ index: 1 });
-  await page.locator('[data-field="relationship-status"]').selectOption({ index: 1 });
-  await page.waitForTimeout(300);
-  await page.getByRole('button', { name: /ga verder|continue/i }).click();
-  await page.waitForTimeout(600);
+async function answerReportProfile(page) {
+  await answerByIndices(page, DUAL_PROFILE, ANSWER_LABELS_NL);
 }
 
 /** Capture the submit webhook payload without letting it reach the backend. */
@@ -75,6 +65,11 @@ async function captureSubmit(page) {
   return captured;
 }
 
+/** Wait for the nth beacon to land — the moment it does, not a fixed 2s later. */
+async function expectCaptureCount(captured, count) {
+  await expect.poll(() => captured.length, { timeout: 10_000 }).toBe(count);
+}
+
 // ── A: Every completion logs anonymously ──────────────────────
 
 test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
@@ -82,11 +77,10 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await page.waitForTimeout(2000);
 
     /* Deliberately no fillProfileScreen: the whole point is that it fires before anyone
        can drop out, so waiting for the profile screen would hide a regression. */
-    expect(captured.length).toBe(1);
+    await expectCaptureCount(captured, 1);
     expect(captured[0].event).toBe('completion');
   });
 
@@ -94,7 +88,7 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await page.waitForTimeout(2000);
+    await expectCaptureCount(captured, 1);
 
     const payload = captured[0];
     expect(payload.outcome).toBe('flat-high');
@@ -109,7 +103,7 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await page.waitForTimeout(2000);
+    await expectCaptureCount(captured, 1);
 
     const payload = captured[0];
     expect(payload.firstName).toBeFalsy();
@@ -121,7 +115,7 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await page.waitForTimeout(2000);
+    await expectCaptureCount(captured, 1);
 
     expect(captured[0].conclusionId).toBeFalsy();
     expect(captured[0].gender).toBeFalsy();
@@ -131,7 +125,7 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerReportProfile(page);
-    await page.waitForTimeout(2000);
+    await expectCaptureCount(captured, 1);
 
     expect(captured[0].event).toBe('completion');
     expect(captured[0].outcome).toBe('dual');
@@ -142,7 +136,7 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerUniformly(page, 'nooit');
-    await page.waitForTimeout(2000);
+    await expectCaptureCount(captured, 1);
 
     expect(captured[0].outcome).toBe('flat-low');
   });
@@ -151,16 +145,16 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerReportProfile(page);
-    await fillProfileScreen(page);
+    await fillProfileScreen(page, 'Vrouw');
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(500);
+    /* fill() auto-waits for the opt-in form to render — no sleep needed between the CTA
+       click and the first field. */
     await page.getByPlaceholder(/voornaam/i).fill('Testpersoon');
     await page.getByPlaceholder(/e-?mail/i).fill('test@example.com');
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(2000);
+    await expectCaptureCount(captured, 2);
 
-    expect(captured.length).toBe(2);
     const [completion, submission] = captured;
     expect(completion.event).toBe('completion');
     expect(submission.event).toBe('submission');
@@ -172,11 +166,14 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     const captured = await captureSubmit(page);
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await fillProfileScreen(page);
-    await page.waitForTimeout(2000);
+    await fillProfileScreen(page, 'Vrouw');
 
-    expect(captured.length).toBe(1);
+    /* The completion beacon must have landed; the conclusion screen rendering is the
+       moment any wrongly-fired second row would have been sent, so assert the count
+       only after the contact link is visible. */
+    await expectCaptureCount(captured, 1);
     await expect(page.locator('[data-element="conclusion-contact-link"]')).toBeVisible({ timeout: 10_000 });
+    expect(captured.length).toBe(1);
     await expect(page.getByPlaceholder(/voornaam|e-?mail/i)).toHaveCount(0);
   });
 });
@@ -187,7 +184,7 @@ test.describe(`${SLUG} — B: Intro line selection`, () => {
   test('a dual outcome resolves an intro line', async ({ page }) => {
     await loadPage(page, TEST_PAGE_NL, '?nemdebug=1');
     await answerReportProfile(page);
-    await fillProfileScreen(page);
+    await fillProfileScreen(page, 'Vrouw');
 
     const intro = page.locator('[data-element="report-intro-line"]');
     await expect(intro).toBeVisible({ timeout: 10_000 });
@@ -212,7 +209,7 @@ test.describe(`${SLUG} — B: Intro line selection`, () => {
   test('flat outcomes have no intro line — they get no report', async ({ page }) => {
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await fillProfileScreen(page);
+    await fillProfileScreen(page, 'Vrouw');
 
     await expect(page.locator('[data-element="report-intro-line"]')).toHaveCount(0);
   });
@@ -226,11 +223,13 @@ test.describe(`${SLUG} — C: General`, () => {
     page.on('console', (msg) => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
-    await captureSubmit(page);
+    const captured = await captureSubmit(page);
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await fillProfileScreen(page);
-    await page.waitForTimeout(2000);
+    await fillProfileScreen(page, 'Vrouw');
+    /* The beacon landing is the last async thing the flow does — once it is in, any
+       console error it could have caused has been emitted. */
+    await expectCaptureCount(captured, 1);
 
     expect(errors).toEqual([]);
   });
@@ -244,7 +243,7 @@ test.describe(`${SLUG} — C: General`, () => {
     });
     await loadPage(page);
     await answerUniformly(page, 'soms');
-    await fillProfileScreen(page);
+    await fillProfileScreen(page, 'Vrouw');
 
     await expect(page.locator('[data-element="conclusion-contact-link"]')).toBeVisible({ timeout: 5_000 });
   });

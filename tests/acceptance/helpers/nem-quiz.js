@@ -75,26 +75,15 @@ export async function loadPage(page, path = TEST_PAGE_NL, query = '') {
  * doing nothing before the 30s budget killed them mid-quiz. That is what the "failures"
  * were — a timeout, not a defect.
  *
- * ⚠️ COMPONENT BEHAVIOUR, not a test workaround: a click that lands during the fade
- * between questions is swallowed and the quiz does not advance. A real user hits this as
- * a dead click that needs pressing twice, so it is worth fixing in the component. The old
- * blind sleep hid it completely. One retry here keeps the suite honest about genuine
- * failures without reporting the fade as one — and it is safe, because it only fires when
- * the question demonstrably did not change. Deleted once Part A of the transition-guard
- * spec ships: the retry disappearing without new flakiness is the proof the guard works. */
+ * No retry: the component now guards the transition (Part A of the transition-guard
+ * spec) — the pills are disabled while the fade is in flight, so Playwright's
+ * actionability check waits for the fresh node instead of clicking the doomed one. This
+ * helper used to carry one retry for the swallowed click; if it ever needs a second
+ * attempt again, the guard has regressed — fix the component, do not restore the retry. */
 export async function answerQuestion(page, answerLabel) {
   const before = await readQuestion(page);
-  const button = page.getByRole('button', { name: answerLabel, exact: true });
-
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    await button.click();
-    try {
-      await expect.poll(() => readQuestion(page), { timeout: 5_000 }).not.toBe(before);
-      return;
-    } catch (err) {
-      if (attempt === 1) throw err;
-    }
-  }
+  await page.getByRole('button', { name: answerLabel, exact: true }).click();
+  await expect.poll(() => readQuestion(page), { timeout: 5_000 }).not.toBe(before);
 }
 
 /** Answer all 20 questions with the same label — used for the flat profiles. */

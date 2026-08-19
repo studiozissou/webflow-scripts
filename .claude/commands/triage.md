@@ -128,6 +128,7 @@ Output the full triage report following the format in the triage skill:
 ## New Tasks → Notion (with Doer column)
 ## Task Updates → Notion (before/after per field; omit if empty)
 ## Possibly Obsolete (confirm individually; omit if empty)
+## Quick Tasks (under 15 min, sorted by hours; omit if empty)
 ## Quick Wins (Claude can do now)
 ## Blocked / Waiting Summary
 ## Flag / Action Items
@@ -266,12 +267,12 @@ Then provide tasks in any format:
 ### Flow
 
 1. Read the user's input (free text, bullets, pasted notes)
-2. Extract tasks using the same triage skill rules (task naming, priority, subtasks, blocked detection, Doer classification)
+2. Extract tasks using the same triage skill rules (task naming, priority, subtasks, quick-task classification, blocked detection, Doer classification)
 3. Auto-detect the client from context (project directory, names mentioned, or ask)
 4. Set Source to "Manual" and Source Context to a summary of the input
 5. Present the same approval table as the full triage:
    ```
-   | # | Task | Priority | Due | Client | Doer | Parent task | Status |
+   | # | Task | Priority | Hrs | Due | Client | Doer | Parent task | Status |
    ```
 6. Ask clarifying questions about anything ambiguous (priorities, dates, scope)
 7. On approval, create in Notion

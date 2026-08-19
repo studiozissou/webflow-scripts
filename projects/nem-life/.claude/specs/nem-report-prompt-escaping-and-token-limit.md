@@ -1,7 +1,7 @@
 # NEM Test report prompt: make the prompt safe to edit and lift the token limit
 
 **Slug:** `nem-report-prompt-escaping-and-token-limit`
-**Status:** Ready to Build
+**Status:** Done — applied to live 2026-08-13, confirmed 2026-08-18
 **Priority:** P0
 **Type:** fix
 **Created:** 2026-07-09
@@ -9,7 +9,36 @@
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, **active**)
 **Repo file:** `projects/nem-life/.claude/backend/nem-verify.workflow.json`
 
-## Prepared, not applied (2026-08-11)
+## Applied to live — confirmed 2026-08-18
+
+**This is done.** The section below was written on 2026-08-11 when the change was prepared
+but unapplied; it is kept for the record. The change was in fact applied to the live
+workflow on **2026-08-13** (workflow `updatedAt` 15:03:50Z; execution 45 at 15:02 already
+shows `Report Prompt` in its execution path), most likely by hand in the n8n UI — which is
+why no commit in this repo records it.
+
+Verified against live on 2026-08-18 by pulling the workflow from the n8n API:
+
+- `Report Prompt` exists — `n8n-nodes-base.set`, typeVersion **3.5**, no legacy
+  `parameters.fields`.
+- `assignments.assignments[0]` is `systemPrompt`, and its value **does not start with `=`**
+  — it is a fixed value, which is the entire point of the fix.
+- `Valid?` true branch fans out to `Respond Confirmed`, `Mark Consumed` **and**
+  `Report Prompt`, so the 302 still does not wait on the report chain.
+- `Generate Report.jsonBody` reads `$('Report Prompt').first().json.systemPrompt`, uses
+  `$('Validate Token').first().json.*` throughout, and sets `max_tokens: 8000`.
+
+The repo's `nem-verify.workflow.json` was stale against live for five days and has now been
+re-synced from the API. Note the drift table in the changeset README overstated the gap: the
+newsletter group id and the enabled `Consent?` / `Add To Newsletter` nodes already matched;
+the only structural difference was the missing `Report Prompt` node.
+
+**What is still outstanding is not this fix.** The `systemPrompt` value currently holds a
+clearly-labelled TEST MODE stub, so reports say "TESTRAPPORT / TEST REPORT" rather than
+anything real. Installing Alex's actual prompt is blocked on Notion access, tracked
+separately.
+
+### Original note (2026-08-11), superseded
 
 The change is built and unit-tested but **nothing in the live workflow has been touched**.
 Everything needed to apply it sits in

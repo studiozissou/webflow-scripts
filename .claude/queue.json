@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "updated": "2026-08-18",
-  "note": "rhp-mobile-dial-circular-drag-and-spinner-arrows planned + spec written (Ready to Build); root cause of the 360 spin failure confirmed as the dominant-axis dx/dy mapping in onPointerMoveMobile, plus a blocking sub-fix for the rotated-canvas centre in onPointerDown. Sensitivity change is large — needs a client demo before sign-off.",
+  "note": "Merged 2026-08-18. NEM Test: conclusion engine v2 live; MailerSend trial cap resolved and verified; the prompt-escaping changeset was found already applied by hand on 13 Aug; a workflow drift check now guards the live n8n workflows; the report JSON contract, Parse Report gate and failure logging are built and verified live; anonymous completion logging is built and awaiting a Webflow paste. RHP: mobile dial permanent lengthened ticks planned and spec written (Ready to Build), side-space verified live, rotation/index desync found as a blocking sub-fix. RHP mobile dial circular 360 drag + spinner arrows is built, QA-approved and deployed (6d7de7b, 2026.8.18.3); merged into main 2026-08-19.",
   "queue": [
     {
       "id": "tsc-launch-metadata-schema",
@@ -1186,6 +1186,78 @@
       "verify": "tests/acceptance/tsc-image-resize-avif.verify.sh",
       "report": "projects/the-signalling-company/.claude/reports/tsc-image-inventory-2026-07-14.md",
       "created": "2026-07-14"
+    },
+    {
+      "id": "nem-report-json-contract-and-parse-failure-handling",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "NEM Test report: parse Claude's JSON output and handle malformed responses",
+      "created": "2026-08-17",
+      "updated": "2026-08-17",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "description": "Alex restructured the report so Claude returns content only, as JSON with five keys: opening, reaction, origin, cost and closing, each plain Dutch with no formatting. Make the system prompt insist on strict JSON, add a Parse Report node to the verify workflow that validates the response, and rewrite Build HTML to consume five named fields instead of splitting one prose blob. Rejection covers four cases: not parseable as JSON, a missing key, an empty value, and a response truncated by the token limit. Do not build a repair pass that asks the model to fix its own JSON - it doubles latency and cost on the path that is already misbehaving, and the failure rate is not yet known. This also kills Defect 1 in the branding spec, so the markdown converter described there must not be built."
+    },
+    {
+      "id": "nem-report-failure-logging-and-alert-to-alex",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "NEM Test report: log every parse failure and email Alex when one happens",
+      "created": "2026-08-17",
+      "updated": "2026-08-17",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "description": "Alex asked on 17 August that malformed responses surface rather than fail silently, so that he knows how often it happens and that someone never received their report. Write a row to a new nem_report_failures Data Table holding the timestamp, token, first name, email, locale, conclusion identifier, a reason code, the first two thousand characters of the raw response, and the n8n execution identifier. Then send Alex a plain text MailerSend email naming the reason, the affected user and the execution. One email per failure until the log shows the real rate. Note the alert shares the MailerSend account that is already at its trial cap, so an alert about a failed report could itself fail to send."
+    },
+    {
+      "id": "nem-anonymous-completion-logging",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "NEM Test: log every completed test anonymously so Alex has the raw data",
+      "created": "2026-08-17",
+      "updated": "2026-08-17",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "description": "Fire an anonymous beacon to the submit webhook the moment the twentieth question is answered, for every outcome rather than only the flat ones. It carries the token, the five mechanism scores, the total, the outcome and the conclusion key, and nothing personal: no name, no email, no consent flag, none of which exist at that point in the flow. The conclusion identifier is deliberately absent too, because its gender segment comes from the profile screen that has not been shown yet; the conclusion key plus the gender on the later identified row reconstructs it when needed. Opting in later writes a second row against the same token carrying the personal details, so the two join. This replaces an earlier flat-only design: logging everything puts all the raw data in one table, removes the special case from the component, and makes the drop-off between finishing the questions and requesting a report visible for the first time. Confirm the email column in the profiles Data Table accepts null before building, because every completion row now arrives without one."
+    },
+    {
+      "id": "nem-intro-lines-client-side-lookup",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "NEM Test: select the report intro line client side from the sheet",
+      "created": "2026-08-17",
+      "updated": "2026-08-17",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "description": "The intro line is the teaser on the report title page. It moves from being generated by Claude to being selected client side, exactly like the conclusion texts, so it cannot be rephrased. There are twenty five lines, five single mechanisms and twenty directional duals, stored in a new Intro lines tab in the same Google Sheet. Unlike the conclusion texts they are not gender specific, so they are looked up on the conclusion key alone while conclusion texts are looked up on key plus gender. That asymmetry is the easiest thing here to get wrong. Twenty five and not twenty six: Alex asked whether flat high should get one, and it should not, because both flat outcomes route to the contact link rather than a report."
+    },
+    {
+      "id": "nem-report-template-webflow-page",
+      "project": "nem-life",
+      "type": "feature",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "NEM Test: build the report template page in Webflow for Alex to style",
+      "created": "2026-08-17",
+      "updated": "2026-08-17",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "description": "Alex asked for a basic version of the report template, structure and slots only, and will pick up the formatting from there. Expose slots for the title, first name, date, intro line, the five report sections and the fixed disclaimer. Make clear to Alex that the Webflow page is a design surface and not the runtime: once the design is final it must be exported as HTML and CSS and stored in the n8n workflow, because the PDF generator will not pull the design from the live page."
+    },
+    {
+      "id": "nem-request-notion-source-doc-access",
+      "project": "nem-life",
+      "type": "chore",
+      "priority": "P0",
+      "status": "Blocked",
+      "title": "NEM Test: get access to the Notion doc Alex has made the source of truth",
+      "created": "2026-08-17",
+      "updated": "2026-08-17",
+      "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
+      "description": "On 17 August Alex made the Notion document NEM TEST 01 Waarom reageer ik zo? - source authoritative over every earlier email, and asked that any contradiction be flagged because then the document is what needs fixing. We cannot read it: it lives in his own Notion workspace and fetching it returns a 404. Every specification written from the email thread is therefore working from a source he has explicitly demoted. Ask him to share the page before building anything downstream of it. This is the first thing to raise on Monday."
     },
     {
       "id": "rhp-mobile-dial-permanent-lengthened-ticks",

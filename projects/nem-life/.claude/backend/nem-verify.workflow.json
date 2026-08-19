@@ -2,25 +2,37 @@
   "name": "NEM Test — /verify",
   "nodes": [
     {
+      "id": "b2000000-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        360
+      ],
+      "webhookId": "nem-verify",
       "parameters": {
         "httpMethod": "GET",
         "path": "nem-verify",
         "responseMode": "responseNode",
         "options": {}
-      },
-      "id": "b2000000-0000-4000-8000-000000000001",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [0, 360],
-      "webhookId": "nem-verify"
+      }
     },
     {
+      "id": "b2000000-0000-4000-8000-000000000002",
+      "name": "Get Profile",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        220,
+        360
+      ],
+      "alwaysOutputData": true,
       "parameters": {
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "REPLACE_DATA_TABLE_ID",
+          "value": "ib5Yh0yEfNpDqeuU",
           "mode": "list",
           "cachedResultName": "nem_test_profiles"
         },
@@ -34,210 +46,103 @@
           ]
         },
         "options": {}
-      },
-      "id": "b2000000-0000-4000-8000-000000000002",
-      "name": "Get Profile",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [220, 360],
-      "alwaysOutputData": true
+      }
     },
     {
-      "parameters": {
-        "jsCode": "// Validate the token: must exist, not be expired, not be consumed.\nconst token = $('Webhook').first().json.query.token;\nconst rows = items.map(i => i.json).filter(r => r && r.token);\nconst row = rows.find(r => r.token === token) || null;\n\nlet valid = false;\nlet reason = 'not_found';\n\nif (row) {\n  const consumed = row.consumed === true || row.consumed === 'true';\n  const expired = row.expiresAt ? new Date(row.expiresAt).getTime() < Date.now() : false;\n  if (consumed) reason = 'already_consumed';\n  else if (expired) reason = 'expired';\n  else { valid = true; reason = 'ok'; }\n}\n\nreturn [{ json: { ...(row || {}), token, valid, reason, locale: (row && row.locale) || 'nl' } }];"
-      },
       "id": "b2000000-0000-4000-8000-000000000003",
       "name": "Validate Token",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 360]
+      "position": [
+        440,
+        360
+      ],
+      "parameters": {
+        "jsCode": "// Validate the token: must exist, not be expired, not be consumed.\nconst token = $('Webhook').first().json.query.token;\nconst rows = items.map(i => i.json).filter(r => r && r.token);\nconst row = rows.find(r => r.token === token) || null;\n\nlet valid = false;\nlet reason = 'not_found';\n\nif (row) {\n  const consumed = row.consumed === true || row.consumed === 'true';\n  const expired = row.expiresAt ? new Date(row.expiresAt).getTime() < Date.now() : false;\n  if (consumed) reason = 'already_consumed';\n  else if (expired) reason = 'expired';\n  else { valid = true; reason = 'ok'; }\n}\n\nreturn [{ json: { ...(row || {}), token, valid, reason, locale: (row && row.locale) || 'nl' } }];"
+      }
     },
     {
+      "id": "b2000000-0000-4000-8000-000000000004",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        360
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
           "conditions": [
             {
               "id": "d0000000-0000-4000-8000-000000000001",
               "leftValue": "={{ $json.valid }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "b2000000-0000-4000-8000-000000000004",
-      "name": "Valid?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [660, 360]
+      }
     },
     {
-      "parameters": {
-        "respondWith": "redirect",
-        "redirectURL": "={{ $json.locale === 'en' ? 'https://REPLACE_SITE/en/verificatie/bevestigd' : 'https://REPLACE_SITE/verificatie/bevestigd' }}",
-        "options": { "responseCode": 302 }
-      },
       "id": "b2000000-0000-4000-8000-000000000005",
       "name": "Respond Confirmed",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [900, 200]
-    },
-    {
+      "position": [
+        900,
+        180
+      ],
       "parameters": {
         "respondWith": "redirect",
-        "redirectURL": "={{ $json.locale === 'en' ? 'https://REPLACE_SITE/en/verificatie/verlopen' : 'https://REPLACE_SITE/verificatie/verlopen' }}",
-        "options": { "responseCode": 302 }
-      },
+        "redirectURL": "={{ $json.locale === 'en' ? 'https://nem-life-1.webflow.io/en/verificatie/bevestigd' : 'https://nem-life-1.webflow.io/verificatie/bevestigd' }}",
+        "options": {
+          "responseCode": 302
+        }
+      }
+    },
+    {
       "id": "b2000000-0000-4000-8000-000000000006",
       "name": "Respond Invalid",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [900, 520]
-    },
-    {
+      "position": [
+        900,
+        540
+      ],
       "parameters": {
-        "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "anthropic-version", "value": "2023-06-01" },
-            { "name": "content-type", "value": "application/json" }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, system: 'REPLACE_WITH_ALEX_SYSTEM_PROMPT_FROM_NOTION', messages: [ { role: 'user', content: 'Locale: ' + $json.locale + '. Write the full report in ' + ($json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $json.firstName + '\\nGender: ' + $json.gender + '\\nAge category: ' + $json.ageCategory + '\\nRelationship status: ' + $json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $json.scoresJson + '\\nPrimary mechanism: ' + $json.primaryMechanism + '\\nSecondary mechanism: ' + ($json.secondaryMechanism || 'none') + '\\nTotal score: ' + $json.totalScore } ] }) }}",
-        "options": {}
-      },
-      "id": "b2000000-0000-4000-8000-000000000007",
-      "name": "Generate Report",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [900, 360],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
+        "respondWith": "redirect",
+        "redirectURL": "={{ $json.locale === 'en' ? 'https://nem-life-1.webflow.io/en/verificatie/verlopen' : 'https://nem-life-1.webflow.io/verificatie/verlopen' }}",
+        "options": {
+          "responseCode": 302
+        }
+      }
     },
     {
-      "parameters": {
-        "jsCode": "// Pull the report text out of the Anthropic response and wrap it in HTML.\nconst res = $json;\nconst textBlock = (res.content || []).find(b => b.type === 'text');\nconst raw = textBlock ? textBlock.text : '';\nconst reportHtml = raw.split('\\n\\n').map(p => '<p>' + p.replace(/\\n/g, '<br>') + '</p>').join('');\nconst p = $('Validate Token').first().json;\nconst heading = p.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport';\nconst greeting = p.locale === 'en' ? 'Dear' : 'Beste';\nconst html = '<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:Georgia,\"Times New Roman\",serif;color:#292828;max-width:640px;margin:0 auto;padding:48px 40px;line-height:1.6;font-size:16px}h1{font-family:Montserrat,Arial,sans-serif;font-size:24px;color:#292828}p{margin:0 0 16px}</style></head><body><h1>' + heading + '</h1><p>' + greeting + ' ' + (p.firstName || '') + ',</p>' + reportHtml + '</body></html>';\nreturn [{ json: { html, reportText: raw, ...p } }];"
-      },
-      "id": "b2000000-0000-4000-8000-000000000008",
-      "name": "Build HTML",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1120, 360]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.pdfshift.io/v3/convert/pdf",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ source: $json.html }) }}",
-        "options": { "response": { "response": { "responseFormat": "file", "outputPropertyName": "data" } } }
-      },
-      "id": "b2000000-0000-4000-8000-000000000009",
-      "name": "Render PDF",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1340, 360]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Base64-encode the PDFShift binary so MailerSend can attach it.\n// (n8n Cloud stores binary on the filesystem, so $binary.data.data is a ref,\n// not base64 — read the buffer explicitly and encode it here.)\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const buf = await this.helpers.getBinaryDataBuffer(i, 'data');\n  out.push({ json: { ...items[i].json, pdfBase64: buf.toString('base64') } });\n}\nreturn out;"
-      },
-      "id": "b2000000-0000-4000-8000-00000000000e",
-      "name": "Encode PDF",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1450, 520]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.mailersend.com/v1/email",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "X-Requested-With", "value": "XMLHttpRequest" }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemmatters.com', name: 'NEM Life' }, to: [ { email: $('Validate Token').first().json.email, name: $('Validate Token').first().json.firstName } ], subject: $('Validate Token').first().json.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport', text: $('Validate Token').first().json.locale === 'en' ? 'Your personal report is attached as a PDF.' : 'Je persoonlijke rapport zit als PDF in de bijlage.', attachments: [ { content: $json.pdfBase64, filename: 'NEM-rapport.pdf', disposition: 'attachment' } ] }) }}",
-        "options": {}
-      },
-      "id": "b2000000-0000-4000-8000-00000000000a",
-      "name": "Send Report",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1560, 360]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
-          "conditions": [
-            {
-              "id": "d0000000-0000-4000-8000-000000000002",
-              "leftValue": "={{ $('Validate Token').first().json.nemMattersConsent }}",
-              "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "b2000000-0000-4000-8000-00000000000b",
-      "name": "Consent?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1780, 360]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://connect.mailerlite.com/api/subscribers",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Accept", "value": "application/json" }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ email: $('Validate Token').first().json.email, fields: { name: $('Validate Token').first().json.firstName }, groups: [ '157087585777223620' ], status: 'active' }) }}",
-        "options": {}
-      },
-      "id": "b2000000-0000-4000-8000-00000000000c",
-      "name": "Add To Newsletter",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [2000, 240]
-    },
-    {
+      "id": "b2000000-0000-4000-8000-00000000000d",
+      "name": "Mark Consumed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        900,
+        360
+      ],
       "parameters": {
         "operation": "update",
         "dataTableId": {
           "__rl": true,
-          "value": "REPLACE_DATA_TABLE_ID",
+          "value": "ib5Yh0yEfNpDqeuU",
           "mode": "list",
           "cachedResultName": "nem_test_profiles"
         },
@@ -252,47 +157,572 @@
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": { "consumed": true },
-          "matchingColumns": ["token"],
+          "value": {
+            "consumed": true
+          },
+          "matchingColumns": [
+            "token"
+          ],
           "schema": []
         },
         "options": {}
+      }
+    },
+    {
+      "id": "b2000000-0000-4000-8000-000000000007",
+      "name": "Generate Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        180
+      ],
+      "disabled": false,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Locale: ' + $('Validate Token').first().json.locale + '. Write the full report in ' + ($('Validate Token').first().json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $('Validate Token').first().json.firstName + '\\nGender: ' + $('Validate Token').first().json.gender + '\\nAge category: ' + $('Validate Token').first().json.ageCategory + '\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $('Validate Token').first().json.scoresJson + '\\nPrimary mechanism: ' + $('Validate Token').first().json.primaryMechanism + '\\nSecondary mechanism: ' + ($('Validate Token').first().json.secondaryMechanism || 'none') + '\\nTotal score: ' + $('Validate Token').first().json.totalScore } ] }) }}",
+        "options": {}
       },
-      "id": "b2000000-0000-4000-8000-00000000000d",
-      "name": "Mark Consumed",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FPiOec7GU6JFfFFf",
+          "name": "Anthropic API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "b2000000-0000-4000-8000-000000000008",
+      "name": "Build HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        180
+      ],
+      "disabled": false,
+      "parameters": {
+        "jsCode": "// Consumes the five validated JSON sections. Formatting lives here, not in the prompt -\n// the model returns content only. Values are escaped: Christel's prose contains & and\n// quotes, which would otherwise break the document.\nconst p = $('Validate Token').first().json;\nconst r = $json.report;\nconst SECTIONS = ['opening', 'reaction', 'origin', 'cost', 'closing'];\n\nconst heading = p.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport';\nconst greeting = p.locale === 'en' ? 'Dear' : 'Beste';\n\nconst esc = (s) => String(s)\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\nconst para = (t) => esc(t)\n  .split(/\\n{2,}/)\n  .map(x => '<p>' + x.replace(/\\n/g, '<br>') + '</p>')\n  .join('');\n\nconst body = SECTIONS.map(k => para(r[k])).join('');\nconst reportText = SECTIONS.map(k => r[k]).join('\\n\\n');\n\nconst html = '<!doctype html><html><head><meta charset=\"utf-8\"><style>'\n  + 'body{font-family:Georgia,serif;color:#292828;max-width:640px;margin:0 auto;padding:48px 40px;line-height:1.6;font-size:16px}'\n  + 'h1{font-family:Montserrat,Arial,sans-serif;font-size:24px;color:#292828}'\n  + 'p{margin:0 0 16px}'\n  + '</style></head><body><h1>' + heading + '</h1>'\n  + '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>'\n  + body\n  + '</body></html>';\n\nreturn [{ json: Object.assign({ html: html, reportText: reportText }, p) }];"
+      }
+    },
+    {
+      "id": "b2000000-0000-4000-8000-000000000009",
+      "name": "Render PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1620,
+        180
+      ],
+      "disabled": false,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: $json.html }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9e4Kcyv9XnvbS6zx",
+          "name": "PDFShift Header"
+        }
+      }
+    },
+    {
+      "id": "b2000000-0000-4000-8000-00000000000a",
+      "name": "Send Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        180
+      ],
+      "disabled": false,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mailersend.com/v1/email",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Requested-With",
+              "value": "XMLHttpRequest"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemmatters.com', name: 'NEM Life' }, to: [ { email: $('Validate Token').first().json.email, name: $('Validate Token').first().json.firstName } ], subject: $('Validate Token').first().json.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport', text: $('Validate Token').first().json.locale === 'en' ? 'Your personal report is attached as a PDF.' : 'Je persoonlijke rapport zit als PDF in de bijlage.', attachments: [ { content: $json.pdfBase64, filename: 'NEM-rapport.pdf', disposition: 'attachment' } ] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "699carSHScI1ng0W",
+          "name": "MailerSend API"
+        }
+      }
+    },
+    {
+      "id": "b2000000-0000-4000-8000-00000000000b",
+      "name": "Consent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2060,
+        180
+      ],
+      "disabled": false,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d0000000-0000-4000-8000-000000000002",
+              "leftValue": "={{ $('Validate Token').first().json.nemMattersConsent }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b2000000-0000-4000-8000-00000000000c",
+      "name": "Add To Newsletter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2280,
+        80
+      ],
+      "disabled": false,
+      "parameters": {
+        "method": "POST",
+        "url": "https://connect.mailerlite.com/api/subscribers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $('Validate Token').first().json.email, fields: { name: $('Validate Token').first().json.firstName }, groups: [ '157087585777223620' ], status: 'active' }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wQ0hWw0KfZHraJs1",
+          "name": "MailerLite API"
+        }
+      }
+    },
+    {
+      "id": "b2000000-0000-4000-8000-00000000000e",
+      "name": "Encode PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1730,
+        340
+      ],
+      "parameters": {
+        "jsCode": "// Base64-encode the PDFShift binary so MailerSend can attach it.\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const buf = await this.helpers.getBinaryDataBuffer(i, 'data');\n  out.push({ json: { ...items[i].json, pdfBase64: buf.toString('base64') } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "ae437372-20c6-4377-b988-f97e014b4e06",
+      "name": "Report Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1040,
+        460
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1b2c3d4-0000-4000-8000-00000000rp01",
+              "name": "systemPrompt",
+              "type": "string",
+              "value": "TEST MODE. The final NEM Test report system prompt (owned by Alex, stored in Notion) is not installed yet, so do NOT write a real report.\n\nReturn ONLY a valid JSON object. No markdown, no code fences, no commentary before or after it. Exactly these five keys, every value a non-empty string:\n\n{\"opening\": \"...\", \"reaction\": \"...\", \"origin\": \"...\", \"cost\": \"...\", \"closing\": \"...\"}\n\nWrite each value as one or two short sentences of placeholder prose in the requested language, stating plainly that this is an automated test of the NEM verification pipeline and that the real personalised report will appear once the final prompt is configured. In \"opening\", include the reader's first name, primary mechanism and total score from the details below, so the data pipeline is proven end to end. Use no headings, markdown, bullet characters or formatting of any kind inside the values."
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validates the report JSON contract. Mirror of projects/nem-life/src/nem-report-parse.js,\n// which is unit-tested in tests/nem/nem-report-parse.test.js - keep the two in step.\n// This is a gate on the live report path: anything rejected here means the user gets\n// nothing, so it is strict about shape and tolerant about presentation.\nconst REPORT_KEYS = ['opening', 'reaction', 'origin', 'cost', 'closing'];\nconst RAW_LIMIT = 2000;\n\nfunction extractText(response) {\n  const blocks = response && response.content;\n  if (!Array.isArray(blocks)) return null;\n  const text = blocks\n    .filter(b => b && b.type === 'text' && typeof b.text === 'string')\n    .map(b => b.text)\n    .join('');\n  return text.length > 0 ? text : null;\n}\n\nfunction unwrap(text) {\n  const trimmed = text.trim();\n  const fenced = /^```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?```$/.exec(trimmed);\n  return (fenced ? fenced[1] : trimmed).trim();\n}\n\nfunction isPlainObject(v) {\n  return typeof v === 'object' && v !== null && !Array.isArray(v);\n}\n\nfunction fail(reason, detail, raw) {\n  return {\n    valid: false,\n    reason: reason,\n    detail: detail,\n    raw: String(raw == null ? '' : raw).slice(0, RAW_LIMIT)\n  };\n}\n\nfunction parseReport(response) {\n  const text = extractText(response);\n  // Checked before parsing: truncated JSON fails to parse anyway, but \"unexpected end of\n  // input\" tells nobody what to change, whereas this points straight at max_tokens.\n  if (response && response.stop_reason === 'max_tokens') {\n    return fail('truncated', 'Anthropic stopped at max_tokens - the report was cut short. Raise max_tokens or shorten the prompt.', text);\n  }\n  if (text === null) return fail('not-json', 'No text block in the model response.', '');\n  let parsed;\n  try {\n    parsed = JSON.parse(unwrap(text));\n  } catch (e) {\n    return fail('not-json', 'Response is not valid JSON: ' + e.message, text);\n  }\n  if (!isPlainObject(parsed)) {\n    return fail('not-json', 'Parsed to ' + (Array.isArray(parsed) ? 'an array' : typeof parsed) + ', expected an object.', text);\n  }\n  const missing = REPORT_KEYS.filter(k => !(k in parsed));\n  if (missing.length > 0) return fail('missing-key', 'Missing: ' + missing.join(', ') + '.', text);\n  const empty = REPORT_KEYS.filter(k => typeof parsed[k] !== 'string' || parsed[k].trim().length === 0);\n  if (empty.length > 0) return fail('empty-value', 'Empty or non-string: ' + empty.join(', ') + '.', text);\n  const report = {};\n  for (const k of REPORT_KEYS) report[k] = parsed[k];\n  return { valid: true, report: report };\n}\n\nconst result = parseReport($json);\nconst p = $('Validate Token').first().json;\n\nreturn [{\n  json: Object.assign({}, p, {\n    parseValid: result.valid,\n    report: result.valid ? result.report : null,\n    reason: result.valid ? '' : result.reason,\n    detail: result.valid ? '' : result.detail,\n    rawResponse: result.valid ? '' : result.raw,\n    executionId: String($execution.id),\n    failedAt: new Date().toISOString()\n  })\n}];"
+      },
+      "id": "c3000000-0000-4000-8000-00000000000p",
+      "name": "Parse Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1290,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c3000000-0000-4000-8000-00000000000v",
+              "leftValue": "={{ $json.parseValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c3000000-0000-4000-8000-00000000000q",
+      "name": "Valid Report?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "lzD76BzG472abwmA",
+          "mode": "list",
+          "cachedResultName": "nem_report_failures",
+          "cachedResultUrl": "/projects/VNzIpvBdgt9it5VO/datatables/lzD76BzG472abwmA"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.failedAt }}",
+            "token": "={{ $json.token }}",
+            "firstName": "={{ $json.firstName }}",
+            "email": "={{ $json.email }}",
+            "locale": "={{ $json.locale }}",
+            "conclusionId": "={{ $json.conclusionId || '' }}",
+            "reason": "={{ $json.reason }}",
+            "rawResponse": "={{ $json.rawResponse }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "c3000000-0000-4000-8000-00000000000l",
+      "name": "Log Failure",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
-      "position": [900, 360]
+      "position": [
+        1660,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mailersend.com/v1/email",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Requested-With",
+              "value": "XMLHttpRequest"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: { email: 'hallo@nemmatters.com', name: 'NEM Test' }, to: [ { email: 'will@teamzissou.io', name: 'Will' } ], subject: '[DEV] NEM Test - report generation failed (' + $json.reason + ')', text: 'A NEM Test report could not be generated, so this user has NOT received one.' + '\\n\\nReason: ' + $json.reason + '\\nDetail: ' + $json.detail + '\\nUser: ' + ($json.firstName || '(no name)') + ' <' + ($json.email || 'no email') + '>' + '\\nLocale: ' + $json.locale + '\\nToken: ' + $json.token + '\\nExecution: ' + $json.executionId + '\\n\\nFirst 500 characters of the model response:\\n' + String($json.rawResponse || '').slice(0, 500) + '\\n\\nLogged in the nem_report_failures table.' }) }}",
+        "options": {}
+      },
+      "id": "c3000000-0000-4000-8000-00000000000a",
+      "name": "Alert Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        440
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "699carSHScI1ng0W",
+          "name": "MailerSend API"
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook": { "main": [[{ "node": "Get Profile", "type": "main", "index": 0 }]] },
-    "Get Profile": { "main": [[{ "node": "Validate Token", "type": "main", "index": 0 }]] },
-    "Validate Token": { "main": [[{ "node": "Valid?", "type": "main", "index": 0 }]] },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Profile": {
+      "main": [
+        [
+          {
+            "node": "Validate Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Token": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Valid?": {
       "main": [
         [
-          { "node": "Respond Confirmed", "type": "main", "index": 0 },
-          { "node": "Mark Consumed", "type": "main", "index": 0 },
-          { "node": "Generate Report", "type": "main", "index": 0 }
+          {
+            "node": "Respond Confirmed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mark Consumed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report Prompt",
+            "type": "main",
+            "index": 0
+          }
         ],
-        [{ "node": "Respond Invalid", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Respond Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Generate Report": { "main": [[{ "node": "Build HTML", "type": "main", "index": 0 }]] },
-    "Build HTML": { "main": [[{ "node": "Render PDF", "type": "main", "index": 0 }]] },
-    "Render PDF": { "main": [[{ "node": "Encode PDF", "type": "main", "index": 0 }]] },
-    "Encode PDF": { "main": [[{ "node": "Send Report", "type": "main", "index": 0 }]] },
-    "Send Report": { "main": [[{ "node": "Consent?", "type": "main", "index": 0 }]] },
+    "Generate Report": {
+      "main": [
+        [
+          {
+            "node": "Parse Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML": {
+      "main": [
+        [
+          {
+            "node": "Render PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Report": {
+      "main": [
+        [
+          {
+            "node": "Consent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Consent?": {
       "main": [
-        [{ "node": "Add To Newsletter", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Add To Newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
+      ]
+    },
+    "Render PDF": {
+      "main": [
+        [
+          {
+            "node": "Encode PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encode PDF": {
+      "main": [
+        [
+          {
+            "node": "Send Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Report": {
+      "main": [
+        [
+          {
+            "node": "Valid Report?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Report?": {
+      "main": [
+        [
+          {
+            "node": "Build HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Failure": {
+      "main": [
+        [
+          {
+            "node": "Alert Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
-  "active": false,
-  "settings": { "executionOrder": "v1" },
-  "pinData": {},
-  "meta": { "templateCredsSetupCompleted": false }
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": null
 }

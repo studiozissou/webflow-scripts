@@ -1,52 +1,32 @@
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { calculateScores } from "./nem-test-scoring.js";
-import { CONCLUSION_KEYS } from "./nem-test-conclusion-ids.js";
-import {
-  NL_VROUW as REAL_NL_VROUW,
-  NL_MAN as REAL_NL_MAN,
-  EN_VROUW as REAL_EN_VROUW,
-  EN_MAN as REAL_EN_MAN,
-} from "./nem-conclusion-texts.js";
 
 declare global {
   interface Window {
     __nemTestScores?: {
-      selfRejection: number;
-      emotionalNumbing: number;
-      falsePower: number;
-      fear: number;
-      falseHope: number;
+      zelfafwijzing: number;
+      emotioneleVerdoving: number;
+      valseMacht: number;
+      angst: number;
+      valseHoop: number;
     };
   }
 }
 
-/* ─── Scoring engine ───
- * Lives in ./nem-test-scoring.js (mechanism mapping, thresholds, flat detection,
- * fixed-order tiebreak) so it can be unit-tested with `node --test`
- * (tests/nem/nem-test-scoring.test.js). Conclusion keys and IDs live alongside it in
- * ./nem-test-conclusion-ids.js, which also generates Alex's text sheet.
- *
- * ⚠️ DO NOT paste this file into Webflow. Everything in Webflow runs inside one custom
- * code component, so the relative imports below cannot resolve there. Run
- * `npm run build:nem` and paste projects/nem-life/dist/nem-test-phase-b.webflow.tsx,
- * which has the sibling modules inlined. Edit here; never edit the generated file. */
+/* ─── Mechanism mapping + scoring engine ───
+ * Moved to ./nem-test-scoring.js so the scoring logic (mechanism mapping, tie-break,
+ * and canonical conclusion-key construction) can be unit-tested with `node --test`
+ * (tests/nem/nem-test-scoring.test.js). calculateScores is imported at the top.
+ * NOTE: this component now depends on that sibling module — sync both files to Webflow. */
 
-/* ─── Gender normalisation ───
- * The Designer collects Dutch values; the engine and the text sheet speak English. */
-const GENDER_TO_TABLE: Record<string, "man" | "vrouw"> = {
+/* ─── Gender normalisation for conclusion lookup ─── */
+const GENDER_TO_CONCLUSION_KEY: Record<string, string> = {
   man: "man",
   vrouw: "vrouw",
   male: "man",
   female: "vrouw",
-};
-
-const GENDER_TO_ENGINE: Record<string, "male" | "female"> = {
-  man: "male",
-  vrouw: "female",
-  male: "male",
-  female: "female",
 };
 
 /* ─── Analytics stubs ─── */
@@ -54,15 +34,9 @@ const EVENTS = {
   TEST_COMPLETED: "nem_test_completed",
   REPORT_REQUESTED: "nem_report_requested",
 };
+const DEBUG = false;
 
-/* ─── Debug mode ───
- * `?nemdebug=1` renders the conclusion ID, key and scores above the conclusion text, so
- * Alex and Christel can confirm which variant fired without Designer access, and
- * Playwright can assert on it. Replaces the unused `const DEBUG = false`. */
-function isDebugMode(): boolean {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("nemdebug") === "1";
-}
+/* calculateScores lives in ./nem-test-scoring.js (imported above). */
 
 /* ─── Locale detection ─── */
 function getLocale(): "nl" | "en" {
@@ -94,10 +68,6 @@ interface Translations {
   profileContinueButton: string;
   conclusionLabel: string;
   bridgeLine: string;
-  /* Shown instead of the report CTA on flat-low and flat-high outcomes. */
-  flatBridgeLine: string;
-  contactUrl: string;
-  contactLinkLabel: string;
   optinLabel: string;
   optinIntro: string;
   firstNamePlaceholder: string;
@@ -133,48 +103,49 @@ interface Translations {
   conclusions: GenderedConclusions;
 }
 
-/* ─── Conclusion text tables ───
- *
- * Built from CONCLUSION_KEYS rather than hand-listed, so a table can never be missing an
- * outcome the engine can produce. That completeness guarantee is what replaced Phase B's
- * canonical key rewriting — see the v2 spec § 2.
- *
- * Christel's copy goes in the REAL_* overlays. Anything not yet written falls through to
- * a visible placeholder, so a missing text reads as "not written yet" in QA rather than
- * as a blank screen in production. */
-
-type ConclusionTable = Record<string, string>;
-
-function placeholderTable(marker: string, note: string): ConclusionTable {
-  return Object.fromEntries(CONCLUSION_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
-}
-
-/* Christel's finished texts, generated from a CSV export of Alex's sheet by
- * tools/nem/build-conclusion-texts.js. 27 of 108 written as of 2026-08-17 (female Dutch
- * complete); the rest fall through to the placeholders below.
- *
- * Never paste her copy in by hand: copy-paste and rendered reads both flatten in-cell
- * paragraph breaks into spaces. Re-export the CSV and regenerate instead. */
-
-const NL_CONCLUSIONS_MAN: ConclusionTable = {
-  ...placeholderTable("DUMMY man", "tekst volgt."),
-  ...REAL_NL_MAN,
+const NL_CONCLUSIONS_SINGLE: Record<string, string> = {
+  zelfafwijzing: "[DUMMY man] Zelfafwijzing — Alex schrijft deze tekst nog.",
+  "emotionele-verdoving": "[DUMMY man] Emotionele Verdoving — Alex schrijft deze tekst nog.",
+  "valse-macht": "[DUMMY man] Valse Macht — Alex schrijft deze tekst nog.",
+  angst: "[DUMMY man] Angst — Alex schrijft deze tekst nog.",
+  "valse-hoop": "[DUMMY man] Valse Hoop — Alex schrijft deze tekst nog.",
+  "zelfafwijzing_emotionele-verdoving": "[DUMMY man] Zelfafwijzing + Emotionele Verdoving — Alex schrijft deze tekst nog.",
+  "zelfafwijzing_valse-macht": "[DUMMY man] Zelfafwijzing + Valse Macht — Alex schrijft deze tekst nog.",
+  "zelfafwijzing_angst": "[DUMMY man] Zelfafwijzing + Angst — Alex schrijft deze tekst nog.",
+  "zelfafwijzing_valse-hoop": "[DUMMY man] Zelfafwijzing + Valse Hoop — Alex schrijft deze tekst nog.",
+  "emotionele-verdoving_valse-macht": "[DUMMY man] Emotionele Verdoving + Valse Macht — Alex schrijft deze tekst nog.",
+  "emotionele-verdoving_angst": "[DUMMY man] Emotionele Verdoving + Angst — Alex schrijft deze tekst nog.",
+  "emotionele-verdoving_valse-hoop": "[DUMMY man] Emotionele Verdoving + Valse Hoop — Alex schrijft deze tekst nog.",
+  "valse-macht_angst": "[DUMMY man] Valse Macht + Angst — Alex schrijft deze tekst nog.",
+  "valse-macht_valse-hoop": "[DUMMY man] Valse Macht + Valse Hoop — Alex schrijft deze tekst nog.",
+  "angst_valse-hoop": "[DUMMY man] Angst + Valse Hoop — Alex schrijft deze tekst nog.",
 };
 
-const NL_CONCLUSIONS_VROUW: ConclusionTable = {
-  ...placeholderTable("DUMMY vrouw", "tekst volgt."),
-  ...REAL_NL_VROUW,
+const NL_CONCLUSIONS_VROUW: Record<string, string> = Object.fromEntries(
+  Object.entries(NL_CONCLUSIONS_SINGLE).map(([k, v]) => [k, v.replace("[DUMMY man]", "[DUMMY vrouw]")])
+);
+
+const EN_CONCLUSIONS_MAN: Record<string, string> = {
+  zelfafwijzing: "[DUMMY man] Self-rejection — Alex will write this.",
+  "emotionele-verdoving": "[DUMMY man] Emotional Numbing — Alex will write this.",
+  "valse-macht": "[DUMMY man] False Power — Alex will write this.",
+  angst: "[DUMMY man] Fear — Alex will write this.",
+  "valse-hoop": "[DUMMY man] False Hope — Alex will write this.",
+  "zelfafwijzing_emotionele-verdoving": "[DUMMY man] Self-rejection + Emotional Numbing — Alex will write this.",
+  "zelfafwijzing_valse-macht": "[DUMMY man] Self-rejection + False Power — Alex will write this.",
+  "zelfafwijzing_angst": "[DUMMY man] Self-rejection + Fear — Alex will write this.",
+  "zelfafwijzing_valse-hoop": "[DUMMY man] Self-rejection + False Hope — Alex will write this.",
+  "emotionele-verdoving_valse-macht": "[DUMMY man] Emotional Numbing + False Power — Alex will write this.",
+  "emotionele-verdoving_angst": "[DUMMY man] Emotional Numbing + Fear — Alex will write this.",
+  "emotionele-verdoving_valse-hoop": "[DUMMY man] Emotional Numbing + False Hope — Alex will write this.",
+  "valse-macht_angst": "[DUMMY man] False Power + Fear — Alex will write this.",
+  "valse-macht_valse-hoop": "[DUMMY man] False Power + False Hope — Alex will write this.",
+  "angst_valse-hoop": "[DUMMY man] Fear + False Hope — Alex will write this.",
 };
 
-const EN_CONCLUSIONS_MAN: ConclusionTable = {
-  ...placeholderTable("DUMMY man", "text to follow."),
-  ...REAL_EN_MAN,
-};
-
-const EN_CONCLUSIONS_VROUW: ConclusionTable = {
-  ...placeholderTable("DUMMY vrouw", "text to follow."),
-  ...REAL_EN_VROUW,
-};
+const EN_CONCLUSIONS_VROUW: Record<string, string> = Object.fromEntries(
+  Object.entries(EN_CONCLUSIONS_MAN).map(([k, v]) => [k, v.replace("[DUMMY man]", "[DUMMY vrouw]")])
+);
 
 const translations: Record<"nl" | "en", Translations> = {
   nl: {
@@ -209,10 +180,6 @@ const translations: Record<"nl" | "en", Translations> = {
     conclusionLabel: "Jouw uitkomst",
     bridgeLine:
       "Wil je begrijpen waar dit vandaan komt en wat het jou kost? Je persoonlijke rapport gaat daar dieper op in.",
-    flatBridgeLine:
-      "Een persoonlijk rapport past hier niet — dat wordt opgebouwd rond één duidelijke reactie. Een gesprek past wel.",
-    contactUrl: "/contact",
-    contactLinkLabel: "Neem contact met ons op",
     optinLabel: "Waar sturen we jouw rapport naartoe?",
     optinIntro:
       "Vul hieronder je gegevens in. Je ontvangt het binnen enkele minuten in je inbox.",
@@ -268,7 +235,7 @@ const translations: Record<"nl" | "en", Translations> = {
     wrongEmail: "Verkeerd e-mailadres opgegeven?",
     wrongEmailLink: "Vul het opnieuw in.",
     conclusions: {
-      man: NL_CONCLUSIONS_MAN,
+      man: NL_CONCLUSIONS_SINGLE,
       vrouw: NL_CONCLUSIONS_VROUW,
     },
   },
@@ -304,10 +271,6 @@ const translations: Record<"nl" | "en", Translations> = {
     conclusionLabel: "Your outcome",
     bridgeLine:
       "Want to understand where this comes from and what it costs you? Your personal report goes deeper.",
-    flatBridgeLine:
-      "A personal report does not fit here — it is built around one clear response. A conversation does.",
-    contactUrl: "/en/contact",
-    contactLinkLabel: "Get in touch",
     optinLabel: "Where should we send your report?",
     optinIntro:
       "Fill in your details below. You'll receive it in your inbox within minutes.",
@@ -437,8 +400,6 @@ function Quiz({
   submitWebhookUrl,
   reassuranceText,
   ctaButtonText,
-  contactUrl,
-  contactLinkLabel,
   question1, question2, question3, question4, question5,
   question6, question7, question8, question9, question10,
   question11, question12, question13, question14, question15,
@@ -447,8 +408,6 @@ function Quiz({
   submitWebhookUrl: string;
   reassuranceText: string;
   ctaButtonText: string;
-  contactUrl: string;
-  contactLinkLabel: string;
   question1: string; question2: string; question3: string; question4: string; question5: string;
   question6: string; question7: string; question8: string; question9: string; question10: string;
   question11: string; question12: string; question13: string; question14: string; question15: string;
@@ -507,50 +466,7 @@ function Quiz({
   const [submitting, setSubmitting] = useState(false);
   const [token, setToken] = useState(() => crypto.randomUUID());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [debugMode] = useState(isDebugMode);
-
-  /* ─── Anonymous completion beacon ───
-   *
-   * Fires the moment the twentieth question is answered, for every outcome. Two reasons it
-   * sits here rather than at opt-in: flat outcomes never reach the opt-in screen at all, and
-   * anyone who finishes the questions then abandons the form is otherwise invisible — that
-   * gap between completions and reports is the number worth watching.
-   *
-   * It carries no personal data because none exists yet: name, email and gender are all
-   * collected on later screens. `conclusionId` is deliberately NOT sent — its F/M segment
-   * needs a gender we do not have, so sending one would mean inventing it. `conclusionKey`
-   * plus the gender on the identified row reconstructs the ID later if anyone wants it.
-   *
-   * Fire-and-forget: a slow or failing webhook must never hold up the conclusion screen, so
-   * the promise is deliberately not awaited and errors are swallowed. `keepalive` lets it
-   * survive the user navigating away immediately afterwards. */
-  const sendCompletionBeacon = useCallback(
-    (finalAnswers: (number | null)[]) => {
-      if (!submitWebhookUrl) return;
-      /* Gender is passed only because the engine's signature requires it; every field read
-       * below is gender-independent. The gender-scoped conclusionId is not sent. */
-      const scored = calculateScores(finalAnswers, "male");
-      try {
-        fetch(submitWebhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          keepalive: true,
-          body: JSON.stringify({
-            token,
-            locale,
-            event: "completion",
-            outcome: scored.outcome,
-            conclusionKey: scored.conclusionKey,
-            scores: scored.scores,
-            totalScore: scored.totalScore,
-          }),
-        }).catch(() => {});
-      } catch {
-        /* Never let telemetry break the quiz. */
-      }
-    },
-    [submitWebhookUrl, token, locale]
-  );
+  const [conclusionKey, setConclusionKey] = useState("");
 
   /* ─── Answer selection ─── */
   const selectAnswer = useCallback(
@@ -567,17 +483,26 @@ function Quiz({
           if (currentStep < 19) {
             setCurrentStep((s) => s + 1);
           } else {
-            /* Scoring is NOT computed here. v2 conclusion IDs are gender-scoped, and
-             * gender is collected on the profile screen that comes next — so the result
-             * is derived (see `result` below) once both answers and gender exist. */
-            sendCompletionBeacon(updatedAnswers);
+            // Scoring computed here (does not depend on gender)
+            const result = calculateScores(updatedAnswers);
+            setConclusionKey(result.conclusionKey);
             setPhase("profile"); // → profile screen, then conclusion
+
+            window.__nemTestScores = {
+              zelfafwijzing: result.scores.zelfafwijzing,
+              emotioneleVerdoving: result.scores.emotioneleVerdoving,
+              valseMacht: result.scores.valseMacht,
+              angst: result.scores.angst,
+              valseHoop: result.scores.valseHoop,
+            };
+
+            // window.dataLayer?.push({ event: EVENTS.TEST_COMPLETED, primaryMechanism: result.primary, secondaryMechanism: result.secondary, totalScore: result.totalScore });
           }
           setAnimating(false);
         }, fadeDuration);
       }, fadeDelay);
     },
-    [answers, currentStep, prefersReducedMotion, sendCompletionBeacon]
+    [answers, currentStep, prefersReducedMotion]
   );
 
   const goBack = useCallback(() => {
@@ -587,23 +512,6 @@ function Quiz({
   }, [currentStep]);
 
   /* ─── Profile continue handler ─── */
-  /* ─── Derived: the conclusion outcome ───
-   *
-   * Computed from answers + gender rather than stored, so it cannot go stale if either
-   * changes. Gender is only known after the profile screen, which is why this is not
-   * resolved when the last question is answered.
-   *
-   * Declared above handleSubmit deliberately: that callback closes over `result` and
-   * lists it as a dependency, so the binding must exist first.
-   *
-   * Falls back to "male" for the engine when gender is not yet set. The outcome is only
-   * ever read after the profile screen has validated gender, so the fallback keeps the
-   * hook total and unconditional rather than labelling anyone. */
-  const result = useMemo(
-    () => calculateScores(answers, GENDER_TO_ENGINE[gender] || "male"),
-    [answers, gender]
-  );
-
   const handleProfileContinue = useCallback(() => {
     const errors: Record<string, string> = {};
     if (!gender) errors.gender = t.errors.genderEmpty;
@@ -642,6 +550,8 @@ function Quiz({
 
     setSubmitting(true);
 
+    const result = calculateScores(answers);
+
     const payload = {
       token,
       locale,
@@ -652,19 +562,14 @@ function Quiz({
       ageCategory,
       honeypot: "",
       scores: {
-        selfRejection: result.scores.selfRejection,
-        emotionalNumbing: result.scores.emotionalNumbing,
-        falsePower: result.scores.falsePower,
-        fear: result.scores.fear,
-        falseHope: result.scores.falseHope,
+        valseHoop: result.scores.valseHoop,
+        valseMacht: result.scores.valseMacht,
+        zelfafwijzing: result.scores.zelfafwijzing,
+        angst: result.scores.angst,
+        emotioneleVerdoving: result.scores.emotioneleVerdoving,
       },
       primaryMechanism: result.primary,
       secondaryMechanism: result.secondary,
-      /* v2: the report engine sees exactly the outcome the user saw, so a report can
-       * never be written against a different conclusion than the one on screen. */
-      outcome: result.outcome,
-      conclusionKey: result.conclusionKey,
-      conclusionId: result.conclusionId,
       totalScore: result.totalScore,
       nemMattersConsent,
       timestamp: new Date().toISOString(),
@@ -694,7 +599,7 @@ function Quiz({
     setSubmitting(false);
     setPhase("confirmation");
     // window.dataLayer?.push({ event: EVENTS.REPORT_REQUESTED, locale });
-  }, [firstName, email, nemMattersConsent, honeypot, result, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
+  }, [firstName, email, nemMattersConsent, honeypot, answers, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
   /* ─── Go back to optin (from confirmation, for wrong email) ─── */
   const goBackToOptin = useCallback(() => {
@@ -706,31 +611,9 @@ function Quiz({
     setPhase("optin");
   }, []);
 
-  const genderKey = GENDER_TO_TABLE[gender] || "man";
-  const conclusionText =
-    t.conclusions[genderKey as keyof GenderedConclusions]?.[result.conclusionKey] || "";
-
-  /* Flat outcomes route to a contact link instead of the opt-in: the report is built
-   * around one clear mechanism, which is precisely what a flat profile lacks. */
-  const isFlatOutcome = result.skipsReport;
-
-  /* Same pattern as ctaLabel: the Designer prop is honoured on NL only, because Webflow
-   * code-component props are not localizable. EN falls back to the code translation. */
-  const contactHref = (locale === "nl" ? contactUrl : "") || t.contactUrl;
-  const contactLabel = (locale === "nl" ? contactLinkLabel : "") || t.contactLinkLabel;
-
-  /* Publish scores for page-level analytics. In an effect, not in render — assigning to
-   * window during render is a side effect and would fire on every re-render. */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.__nemTestScores = {
-      selfRejection: result.scores.selfRejection,
-      emotionalNumbing: result.scores.emotionalNumbing,
-      falsePower: result.scores.falsePower,
-      fear: result.scores.fear,
-      falseHope: result.scores.falseHope,
-    };
-  }, [result]);
+  /* ─── Derived: gender-differentiated conclusion text ─── */
+  const genderKey = GENDER_TO_CONCLUSION_KEY[gender] || "man";
+  const conclusionText = t.conclusions[genderKey as keyof GenderedConclusions]?.[conclusionKey] || "";
 
   return (
     <div
@@ -1081,63 +964,20 @@ function Quiz({
             {t.conclusionLabel}
           </span>
 
-          {/* Debug badge (?nemdebug=1). QA scaffolding, not content — absent from the DOM
-              entirely when off, so it can never leak to a real user via CSS. */}
-          {debugMode && (
-            <code
-              data-element="conclusion-debug"
-              aria-hidden="true"
-              style={{
-                fontFamily: "monospace",
-                fontSize: 12,
-                lineHeight: 1.5,
-                padding: "0.5rem 0.75rem",
-                background: "#f4f3ef",
-                border: "1px solid #d8d5c8",
-                borderRadius: 4,
-                color: "#292828",
-                wordBreak: "break-word",
-              }}
-            >
-              {result.conclusionId} · {result.conclusionKey} ·{" "}
-              {["selfRejection", "emotionalNumbing", "falsePower", "fear", "falseHope"]
-                .map((m) => `${m} ${result.scores[m as keyof typeof result.scores]}`)
-                .join(" ")}{" "}
-              · {result.outcome}
-            </code>
-          )}
-
-          {/* Conclusion text (gender-differentiated).
-              Christel writes in paragraphs separated by blank lines. HTML collapses
-              whitespace, so they are split into separate <p>s rather than rendered as
-              one block — otherwise her three-paragraph flat texts arrive as a wall.
-              The data-element hook stays on a wrapper so tests still read the whole
-              conclusion in one locator. */}
-          <div
+          {/* Conclusion text (gender-differentiated) */}
+          <p
             data-element="conclusion-text"
             style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--_gaps---content-quarter, 0.75rem)",
+              fontSize: "var(--_typography---paragraph--standard, 1rem)",
+              lineHeight: 1.6,
+              color: "var(--_token---text-main, #292828)",
+              margin: 0,
             }}
           >
-            {conclusionText.split(/\n{2,}/).map((paragraph, i) => (
-              <p
-                key={i}
-                style={{
-                  fontSize: "var(--_typography---paragraph--standard, 1rem)",
-                  lineHeight: 1.6,
-                  color: "var(--_token---text-main, #292828)",
-                  margin: 0,
-                }}
-              >
-                {paragraph}
-              </p>
-            ))}
-          </div>
+            {conclusionText}
+          </p>
 
-          {/* Bridge line — flat outcomes get a different one, because there is no report
-              to bridge to. */}
+          {/* Bridge line */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1147,43 +987,26 @@ function Quiz({
               margin: 0,
             }}
           >
-            {isFlatOutcome ? t.flatBridgeLine : t.bridgeLine}
+            {t.bridgeLine}
           </p>
 
-          {/* Flat outcomes route to contact and stop here: no opt-in, no report. The
-              report is built around one clear mechanism, which is what these lack.
-              A plain anchor, deliberately — an embedded form is a future nice-to-have. */}
-          {isFlatOutcome ? (
-            <a
-              data-element="conclusion-contact-link"
-              href={contactHref}
-              style={{
-                ...pillButtonStyle,
-                display: "inline-block",
-                textAlign: "center",
-                textDecoration: "none",
-              }}
-            >
-              {contactLabel}
-            </a>
-          ) : (
-            <button
-              onClick={() => setPhase("optin")}
-              style={pillButtonStyle}
-              onMouseEnter={(e) => {
-                if (!prefersReducedMotion) {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              {ctaLabel}
-            </button>
-          )}
+          {/* CTA */}
+          <button
+            onClick={() => setPhase("optin")}
+            style={pillButtonStyle}
+            onMouseEnter={(e) => {
+              if (!prefersReducedMotion) {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            {ctaLabel}
+          </button>
         </div>
       )}
 
@@ -1463,16 +1286,6 @@ export default declareComponent(Quiz, {
     ctaButtonText: propTypes.Text({
       name: "CTA Button Text",
       defaultValue: "Ontvang mijn rapport",
-    }),
-    /* Flat-low and flat-high outcomes route here instead of to the report.
-       ⚠️ Verify both URLs against the live site — they are assumed, not confirmed. */
-    contactUrl: propTypes.Text({
-      name: "Contact URL (flat outcomes)",
-      defaultValue: "/contact",
-    }),
-    contactLinkLabel: propTypes.Text({
-      name: "Contact Link Label (flat outcomes)",
-      defaultValue: "Neem contact met ons op",
     }),
     question1: propTypes.Text({ name: "Question 1", defaultValue: "Na een gesprek dat niet lekker liep, blijf ik uren of dagen malen over wat ik fout deed." }),
     question2: propTypes.Text({ name: "Question 2", defaultValue: "Als iets in een relatie of op werk misgaat, ben ik de eerste die denkt dat het aan mij ligt." }),

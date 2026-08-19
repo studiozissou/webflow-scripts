@@ -96,6 +96,7 @@
       "lastProcessed": null
     }
   },
+  "quickTasksParent": null,
   "taskLinks": {
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#share-options-rishi": "https://app.notion.com/p/3bfe1848bb5181b0866bf1e6c4e309f6",
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#design-revisions": "https://app.notion.com/p/3bfe1848bb51818a8a48ce7a0815e00a",

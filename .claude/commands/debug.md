@@ -15,15 +15,14 @@
 ## Pre-Flight (read-only)
 
 1. **Read CLAUDE.md** — note deployment model, known gotchas, module load order
-2. **Check queue.json** — is there an existing item related to this problem? If yes, reference it throughout
-3. **Test inventory** — read `tests/registry.json`, check for existing acceptance tests related to the affected module/page. Present:
+2. **Test inventory** — read `tests/registry.json`, check for existing acceptance tests related to the affected module/page. Present:
    ```
    Test inventory:
      Registry entries: N total (M critical)
      Related tests:    [list any specs matching affected files/slugs, or "none"]
      Browser MCP:      [Chrome DevTools / Playwright / not connected]
    ```
-4. **Check recent git diff** — `git diff HEAD~3` — any changes that correlate with the problem appearing?
+3. **Check recent git diff** — `git diff HEAD~3` — any changes that correlate with the problem appearing?
 
 ### Verify-loop gate
 
@@ -44,7 +43,7 @@ If a spec exists for the affected feature (in `.claude/specs/`), check that it c
 
 If no spec exists at all, skip this gate — the debug command's built-in verify loop (post-fix steps a–i) serves as the verification mechanism.
 
-5. **Confirm environment** — ask if not obvious:
+4. **Confirm environment** — ask if not obvious:
    - Staging or production?
    - Localhost detection active? Is `npx serve .` running?
    - jsDelivr URL — does it match current `git rev-parse HEAD`?
@@ -53,15 +52,6 @@ If no spec exists at all, skip this gate — the debug command's built-in verify
    - Dynamically injected elements or CMS-rendered items
    - Any missing or unexpected DOM nodes relevant to the reported bug
    - If no browser MCP is connected, skip and continue — this step is optional
-
----
-
-## Notion push: Debugging
-If this debug session is related to a tracked task (user names a slug):
-Update queue.json status to Debugging.
-Push to Notion: Status "Debugging", set Last Updated.
-If Notion fails, log warning and continue.
-If not related to a tracked task, skip this step.
 
 ---
 
@@ -311,15 +301,14 @@ Skip if no regression test was generated.
 **Registry entry:** [id or "not registered"]
 **Manual tests:** [list or "none"]
 **Test design:** [H1: type — assertion / H2: type — assertion / None: reason]
-**Related queue item:** [slug or none]
 **Gotcha added to CLAUDE.md:** [yes / no — include entry if yes]
 ```
 
 2. **Update CLAUDE.md** — if root cause reveals a recurring pattern, add it to Known Gotchas
 
 3. **Promote if needed** — if the confirmed fix requires a proper build (non-trivial change, touches multiple files, needs QA):
-   - Ask: *"This looks non-trivial — shall I add it to the queue as Ready to Build?"*
-   - If yes: create queue item with slug, summary, and link to debug log
+   - Ask: *"This looks non-trivial — shall I plan it as a proper build?"*
+   - If yes: hand off to `/plan` with a summary and a link to the debug log
 
 ---
 
@@ -362,14 +351,6 @@ Before closing the session, assess and grow the project's test coverage:
 ## Tier 3 — Manual Test Checklist
 
 Before closing, present the **Tier 3 — Manual Test Checklist** from Post-Fix step 1a to the user with checkboxes. If there are no manual tests, note "No manual tests needed" and continue.
-
----
-
-## Notion push: post-debug status
-If this was related to a tracked task:
-Ask user for status (same as /build wrap-up: ready-for-review / blocked / building).
-Update queue.json and push to Notion accordingly.
-If Notion fails, log warning and continue.
 
 ---
 

@@ -2,13 +2,14 @@ import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { calculateScores } from "./nem-test-scoring.js";
-import { CONCLUSION_KEYS } from "./nem-test-conclusion-ids.js";
+import { CONCLUSION_KEYS, INTRO_LINE_KEYS } from "./nem-test-conclusion-ids.js";
 import {
   NL_VROUW as REAL_NL_VROUW,
   NL_MAN as REAL_NL_MAN,
   EN_VROUW as REAL_EN_VROUW,
   EN_MAN as REAL_EN_MAN,
 } from "./nem-conclusion-texts.js";
+import { NL_INTRO as REAL_NL_INTRO, EN_INTRO as REAL_EN_INTRO } from "./nem-intro-lines.js";
 
 declare global {
   interface Window {
@@ -131,6 +132,7 @@ interface Translations {
   wrongEmail: string;
   wrongEmailLink: string;
   conclusions: GenderedConclusions;
+  introLines: ConclusionTable;
 }
 
 /* ─── Conclusion text tables ───
@@ -174,6 +176,31 @@ const EN_CONCLUSIONS_MAN: ConclusionTable = {
 const EN_CONCLUSIONS_VROUW: ConclusionTable = {
   ...placeholderTable("DUMMY vrouw", "text to follow."),
   ...REAL_EN_VROUW,
+};
+
+/* ─── Report intro lines ───
+ *
+ * The teaser on the report's title page, e.g. for `fear`: "Je durft het echt niet te doen,
+ * ook al weet je dat het kan". Selected here rather than written by Claude, so the wording
+ * is fixed copy the client signed off — same move as the conclusion texts.
+ *
+ * Looked up on the conclusion key ALONE. There is no gendered table here, and that is not
+ * an oversight: it is the one asymmetry against the conclusion texts (spec § 5). Built from
+ * INTRO_LINE_KEYS, which is the 25 report-bearing keys — the flat outcomes are absent
+ * because they route to the contact link and never produce a report. */
+
+function introPlaceholderTable(marker: string, note: string): ConclusionTable {
+  return Object.fromEntries(INTRO_LINE_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
+}
+
+const NL_INTRO_LINES: ConclusionTable = {
+  ...introPlaceholderTable("DUMMY intro", "regel volgt."),
+  ...REAL_NL_INTRO,
+};
+
+const EN_INTRO_LINES: ConclusionTable = {
+  ...introPlaceholderTable("DUMMY intro", "line to follow."),
+  ...REAL_EN_INTRO,
 };
 
 const translations: Record<"nl" | "en", Translations> = {
@@ -271,6 +298,7 @@ const translations: Record<"nl" | "en", Translations> = {
       man: NL_CONCLUSIONS_MAN,
       vrouw: NL_CONCLUSIONS_VROUW,
     },
+    introLines: NL_INTRO_LINES,
   },
   en: {
     answers: ["never", "rarely", "sometimes", "regularly", "very often"],
@@ -366,6 +394,7 @@ const translations: Record<"nl" | "en", Translations> = {
       man: EN_CONCLUSIONS_MAN,
       vrouw: EN_CONCLUSIONS_VROUW,
     },
+    introLines: EN_INTRO_LINES,
   },
 };
 
@@ -604,6 +633,17 @@ function Quiz({
     [answers, gender]
   );
 
+  /* The report's title-page teaser, selected client-side so the wording is fixed copy the
+   * client signed off rather than something the model rephrases each run (spec § 5).
+   *
+   * Keyed on the conclusion key with NO gender segment — the one asymmetry against the
+   * conclusion texts above. Empty for flat outcomes: they route to the contact link and
+   * never produce a report, so there is no title page for a teaser to sit on. */
+  const introLine = useMemo(
+    () => (result.skipsReport ? "" : t.introLines[result.conclusionKey] || ""),
+    [result.skipsReport, result.conclusionKey, t.introLines]
+  );
+
   const handleProfileContinue = useCallback(() => {
     const errors: Record<string, string> = {};
     if (!gender) errors.gender = t.errors.genderEmpty;
@@ -665,6 +705,10 @@ function Quiz({
       outcome: result.outcome,
       conclusionKey: result.conclusionKey,
       conclusionId: result.conclusionId,
+      /* Sent as fixed copy rather than left for the report prompt to invent. n8n's
+       * Normalize does not read it yet, so it is inert until the backend slice lands —
+       * harmless, and it makes that slice a one-field change instead of a re-wiring. */
+      introLine,
       totalScore: result.totalScore,
       nemMattersConsent,
       timestamp: new Date().toISOString(),
@@ -694,7 +738,7 @@ function Quiz({
     setSubmitting(false);
     setPhase("confirmation");
     // window.dataLayer?.push({ event: EVENTS.REPORT_REQUESTED, locale });
-  }, [firstName, email, nemMattersConsent, honeypot, result, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
+  }, [firstName, email, nemMattersConsent, honeypot, result, introLine, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
   /* ─── Go back to optin (from confirmation, for wrong email) ─── */
   const goBackToOptin = useCallback(() => {
@@ -713,6 +757,7 @@ function Quiz({
   /* Flat outcomes route to a contact link instead of the opt-in: the report is built
    * around one clear mechanism, which is precisely what a flat profile lacks. */
   const isFlatOutcome = result.skipsReport;
+
 
   /* Same pattern as ctaLabel: the Designer prop is honoured on NL only, because Webflow
    * code-component props are not localizable. EN falls back to the code translation. */
@@ -1104,6 +1149,12 @@ function Quiz({
                 .map((m) => `${m} ${result.scores[m as keyof typeof result.scores]}`)
                 .join(" ")}{" "}
               · {result.outcome}
+              {introLine && (
+                <>
+                  <br />
+                  intro: {introLine}
+                </>
+              )}
             </code>
           )}
 

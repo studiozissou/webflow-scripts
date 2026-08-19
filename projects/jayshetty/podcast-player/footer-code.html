@@ -115,6 +115,16 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
     return link ? link.getAttribute("href") : "";
   }
 
+  /* Rewrites an embed iframe from the audio variant to the /video variant.
+     Returns true if a swap happened (the iframe reloads), false if it was
+     already the video embed or no iframe exists yet. */
+  function swapToVideoEmbed(embedWrap) {
+    var frame = embedWrap.querySelector("iframe");
+    if (!frame || frame.src.indexOf("/video") !== -1) return false;
+    frame.src = frame.src.replace(/\/embed\/episode\/([A-Za-z0-9]+)/, "/embed/episode/$1/video");
+    return true;
+  }
+
   function pruneControllers() {
     spotifyControllers = spotifyControllers.filter(function (entry) {
       if (document.contains(entry.el)) return true;
@@ -204,10 +214,15 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
         /* createController swaps the placeholder for an iframe; key the
            registry off the wrapper, which stays in the DOM */
         spotifyControllers.push({ el: embedWrap, controller: controller });
-        var started = false;
+        /* The API loads the audio embed, but these episodes are video
+           podcasts: Spotify's video player lives at the /video embed
+           variant (same messaging protocol, so play/pause keep working).
+           Swap the iframe now; "ready" fires per embed page load, so if
+           the audio page slips through first we swap there and play once
+           the video page announces ready. */
+        swapToVideoEmbed(embedWrap);
         controller.addListener("ready", function () {
-          if (started) return;
-          started = true;
+          if (swapToVideoEmbed(embedWrap)) return; // video page's ready will follow
           controller.play();
         });
       });

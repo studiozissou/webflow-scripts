@@ -31,6 +31,19 @@ How the player JS finds the episode URL (no extra Designer state):
   document-level delegated clicks (survive Finsweet v1 re-renders with zero
   re-init), per-platform targeting via `data-watch` / `data-pause`, lazy
   Spotify `createController` on first click with a pruned controller registry.
+- **Video, not audio:** the iFrame API only ever loads the audio embed, but
+  these episodes are Spotify *video* podcasts. Spotify's video player lives at
+  the undocumented-but-oEmbed-official `/embed/episode/{id}/video` URL
+  (`oembed` returns `"type": "video"` with that iframe src). After
+  `createController` the code swaps the injected iframe to the `/video`
+  variant — it speaks the same messaging protocol, so the controller's
+  `play()`/`pause()` keep working. The `ready` handler re-swaps and defers
+  play if the audio page ever loads first. Verified working 19 Aug 2026.
+- The head CSS overrides `.podcast-list-spotify-embed.is-cover { display:
+  block }` — the Designer class still carries `display:none` from when the
+  embed was broken. Conditional visibility still hides it on YouTube-era
+  items. (Cleaner long-term: remove the display:none from the class in
+  Designer, then this override can go.)
 - The stray video-player handlers that lived at the tail of the Omny script
   (`.image-cover` double bindings, `.videoplay` add) moved into the same IIFE;
   cover clicks now route to the item's *visible* watch button only.

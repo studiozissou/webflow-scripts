@@ -4,7 +4,7 @@
    + Lenis on all non-home pages
    ========================================= */
 (() => {
-  const ORCHESTRATOR_VERSION = '2026.8.12.4'; // bump when you deploy; check in console: RHP load check
+  const ORCHESTRATOR_VERSION = '2026.8.18.1'; // bump when you deploy; check in console: RHP load check
   window.RHP = window.RHP || {};
   const RHP = window.RHP;
   RHP.orchestratorVersion = ORCHESTRATOR_VERSION;
@@ -114,6 +114,31 @@
   /* -----------------------------
      Dial morph helpers (namespace restructure)
      ----------------------------- */
+  /** Resolve a CSS length expression (min()/clamp()/calc()/svh/dvh/...) to a pixel
+   *  number by probing a throwaway element.
+   *
+   *  GSAP cannot tween to a multi-term CSS function - it falls back to complex-string
+   *  interpolation and zero-fills the start value, which collapses the element. Always
+   *  resolve dial dimensions through here before handing them to gsap.to().
+   *
+   *  The probe is appended to document.body, never inside .dial_component: the dial
+   *  carries a transform: scale() during the home scroll-morph scrub, which would
+   *  skew the measurement.
+   *
+   *  @param {string} value CSS length expression.
+   *  @param {'width'|'height'} axis Axis to probe - vw/vh/svh/dvh resolve per-axis.
+   *  @returns {number|null} Pixels, or null if the value could not be resolved. */
+  const _resolveToPx = (value, axis) => {
+    if (!value) return null;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;top:0;left:0';
+    probe.style[axis] = value;
+    document.body.appendChild(probe);
+    const px = probe.getBoundingClientRect()[axis];
+    probe.remove();
+    return px > 0 ? px : null;
+  };
+
   function getDialVars() {
     return {
       homeWidth: _getCSSVar('--dial-home-width', '37.5rem'),
@@ -167,18 +192,15 @@
 
       // Tween videoWrap to case video height (leaves gap for title peek)
       if (videoWrap) {
-        // Resolve calc(--dial-case-height - --dial-case-title-gap) to pixels
-        const tempEl = document.createElement('div');
-        tempEl.style.height = 'calc(' + v.caseHeight + ' - ' + v.caseTitleGap + ')';
-        tempEl.style.position = 'absolute';
-        tempEl.style.visibility = 'hidden';
-        document.body.appendChild(tempEl);
-        const caseVideoHeight = tempEl.getBoundingClientRect().height;
-        document.body.removeChild(tempEl);
+        // Resolve calc(--dial-case-height - --dial-case-title-gap) to pixels.
+        // Falls back to the full case height (single-unit, GSAP-parseable).
+        const caseVideoHeight = _resolveToPx(
+          'calc(' + v.caseHeight + ' - ' + v.caseTitleGap + ')', 'height'
+        );
 
         gsap.to(videoWrap, {
           width: '100%',
-          height: caseVideoHeight,
+          height: caseVideoHeight ?? v.caseHeight,
           duration: dur,
           ease: 'power2.inOut',
           onComplete: function () {
@@ -231,7 +253,11 @@
     });
   }
 
-  function runDialShrinkAnimation() {
+  /** Shrink the dial from work (case study) size back to home dial size.
+   *  @param {Element} [outgoingContainer] The leaving Barba container, from
+   *         data.current.container. Faded out on mobile; falls back to a
+   *         lookup inside .dial_layer-fg when not supplied. */
+  function runDialShrinkAnimation(outgoingContainer) {
     const gsap = window.gsap;
     const dialFg = document.querySelector('.dial_layer-fg');
     const dialComp = document.querySelector('.dial_component');
@@ -284,9 +310,32 @@
         gsap.to(dialUI, { opacity: 1, duration: dur * 0.5, ease: 'power2.in', delay: dur * 0.3 });
       }
 
+      // At <=991px the case page is fullscreen (100vw x 100dvh) shrinking to a
+      // ~325px circle, so its text and images visibly squash on the way down.
+      // Fade the outgoing container - not .dial_layer-fg - so #fg-video-wrap
+      // (which lives outside the container) keeps morphing into the home dial.
+      // No cleanup needed: Barba discards the node once leave() resolves.
+      // 991px matches the CSS breakpoint, not a pointer query - a touch laptop
+      // is a desktop here.
+      const isMobile = window.matchMedia('(max-width: 991px)').matches;
+      const outgoing = outgoingContainer || dialFg.querySelector('[data-barba="container"]');
+      if (isMobile && outgoing && !reduced) {
+        gsap.to(outgoing, {
+          opacity: 0,
+          duration: dur * 0.6,
+          ease: 'power2.in'
+        });
+      }
+
+      // Resolve to px before tweening - see _resolveToPx. --dial-home-width is
+      // min(65vw, 65svh) at <=991px and clamp(180px, ...) above it; handing
+      // either to GSAP raw collapses the box to a zero-filled start.
+      const homeW = _resolveToPx(v.homeWidth, 'width');
+      const homeH = _resolveToPx(v.homeHeight, 'height');
+
       gsap.to(dialFg, {
-        width: v.homeWidth,
-        height: v.homeHeight,
+        width: homeW ?? v.homeWidth,
+        height: homeH ?? v.homeHeight,
         borderRadius: v.homeBR,
         duration: dur,
         ease: 'power2.inOut',
@@ -1933,8 +1982,8 @@
             if (typeof handoffIdx === 'number') _preloadFgVideos(handoffIdx);
           },
 
-          async leave() {
-            await runDialShrinkAnimation();
+          async leave(data) {
+            await runDialShrinkAnimation(data?.current?.container);
           },
 
           enter() {

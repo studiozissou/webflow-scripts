@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "updated": "2026-08-18",
-  "note": "Merged 2026-08-18. NEM Test: conclusion engine v2 live; MailerSend trial cap resolved and verified; the prompt-escaping changeset was found already applied by hand on 13 Aug; a workflow drift check now guards the live n8n workflows; the report JSON contract, Parse Report gate and failure logging are built and verified live; anonymous completion logging is built and awaiting a Webflow paste. RHP: mobile dial permanent lengthened ticks planned and spec written (Ready to Build), side-space verified live, rotation/index desync found as a blocking sub-fix.",
+  "note": "Merged 2026-08-18. NEM Test: conclusion engine v2 live; MailerSend trial cap resolved and verified; the prompt-escaping changeset was found already applied by hand on 13 Aug; a workflow drift check now guards the live n8n workflows; the report JSON contract, Parse Report gate and failure logging are built and verified live; anonymous completion logging is built and awaiting a Webflow paste. RHP: mobile dial permanent lengthened ticks planned and spec written (Ready to Build), side-space verified live, rotation/index desync found as a blocking sub-fix. RHP mobile dial circular 360 drag + spinner arrows is built, QA-approved and deployed (6d7de7b, 2026.8.18.3); merged into main 2026-08-19.",
   "queue": [
     {
       "id": "tsc-launch-metadata-schema",
@@ -1269,6 +1269,30 @@
       "description": "On mobile the lengthened dial ticks (the bulge) are pinned to screen-bottom because the target angle is recomputed every frame as mod(180 - rotationDeg, 360), cancelling out the CSS rotation on the ticks canvas. Replace that with a constant canvas-space angle captured from the active sector on the first frame attraction is live, so the bulge is baked into canvas pixels and turns with the dial while no other tick ever grows. Includes a mandatory sub-fix: the case-study handoff restores activeIndex without touching rotationDeg (work-dial.js:1501 and :1594), so rotation must be synced to the restored index or the locked bulge points at the wrong ticks. Grow-in is integrated in the draw loop rather than tweened, because killTweensOf(state) at the ACTIVE transition would freeze a GSAP tween part-grown. Side space verified live: bulge tip clearance is 5.86% of the smaller viewport dimension (23.0px at 393x852, 18.8px at 320x568), so nothing overflows at any rotation; the 0.6 length multiplier must stay as-is or the 12px glow clips at the screen edge.",
       "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-mobile-dial-permanent-lengthened-ticks.md",
       "created": "2026-08-17"
+    },
+    {
+      "id": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Done",
+      "title": "Mobile dial: spin it a full 360 with a circular finger drag, and swap the white dot for spinner arrows",
+      "description": "Two client-requested changes to the mobile homepage dial, both landing in work-dial.js. First, the dial cannot currently be spun a continuous 360 degrees: onPointerMoveMobile (work-dial.js:1243) uses a dominant-axis mapping, delta = Math.abs(dy) >= Math.abs(dx) ? dy : -dx, measured from a fixed touch-start origin. As a finger travels an arc the dominant axis swaps every 45 degrees and the term feeding delta changes identity, so the rotation reverses mid-gesture and the dial can never exceed roughly a quarter turn. Replace it with an incremental angular tracker: each pointermove, take atan2 about the dial centre, accumulate the shortest signed arc from the previous move, and add it to rotationDeg at 1 to 1. This is gated on a blocking sub-fix: onPointerDown (work-dial.js:1179) computes the dial centre as rect.left plus geom.cx, but the canvas carries transform rotate, so getBoundingClientRect returns the rotated axis-aligned bounding box. At 45 degrees that is roughly 20 percent of the dial width of error. Derive the centre from rect.left plus rect.width divided by 2 instead, which is rotation-safe because transform-origin is 50 percent 50 percent. Second, replace the 8px white dot at 6 o'clock with the supplied 53 by 19 spinner-arrows SVG, inlined into the existing .dial_sector-dot element with currentColor strokes. The class name is deliberately retained so the 4 CSS rules and 2 test files that reference it stay untouched. Note the sensitivity change is large and needs a client demo before sign-off: one sector goes from roughly a 273px straight swipe to one sector-angle of finger arc. The GAIN constant ships at 1.0 and is the single tuning knob if it tests as twitchy.",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-mobile-dial-circular-drag-and-spinner-arrows.md",
+      "created": "2026-08-18",
+      "qa": "approved",
+      "deployedHash": "6d7de7b",
+      "deployedVersion": "2026.8.18.3"
+    },
+    {
+      "id": "rhp-dial-interaction-tests-cannot-run-headless",
+      "project": "ready-hit-play-prod",
+      "type": "bug",
+      "priority": "P2",
+      "status": "Ready to Plan",
+      "title": "Dial interaction tests cannot reach the interactive state in headless Chromium",
+      "description": "Any acceptance test that needs the homepage dial to be interactive is unreliable in headless Chromium. Measured against the deployed site at 390x844: the Barba wrapper stays on rhp-intro-started for 60 seconds or more, rhp-home-ready is never set, and no page errors are raised. The home intro word cycle appears to gate on the Vimeo intro video, which headless Chromium cannot decode, so the morph that unlocks the dial never runs. Consequence: tests drag an inert dial and fail as timeouts rather than assertions, which reads as a product regression when it is not. Partial mitigation already committed in rhp-mobile-dial-circular-drag-and-spinner-arrows.spec.js: waitForHomeReady drives RHP.homeScrollMorph.skipToEnd and then waits for dial_layer-fg to be laid out so a not-ready dial fails fast. The arc-drag specs still time out. Options to evaluate: run the dial interaction specs in a headed Playwright project, stub or short-circuit the intro video in test builds, or expose a test-only hook that lands the home page in the unlocked state deterministically. This also likely explains a share of the 13 pre-existing about to home failures that were written off in the deploy before this one.",
+      "created": "2026-08-18"
     }
   ]
 }

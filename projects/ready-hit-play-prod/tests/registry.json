@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-17",
-  "lastPlanned": "rhp-mobile-dial-permanent-lengthened-ticks",
-  "lastRegistered": "rhp-mobile-dial-permanent-lengthened-ticks",
-  "note": "Deploy 8904cdd (2026-05-06): loader dismiss before health checks + loader CSS cleanup. Tests skipped by user.",
-  "lastDeployed": "2026-08-12",
-  "lastDeployedHash": "179363b",
+  "lastUpdated": "2026-08-18",
+  "lastPlanned": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+  "lastRegistered": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+  "note": "Deploy 6d7de7b (2026-08-18, v=2026.8.18.3): rhp-mobile-dial-circular-drag-and-spinner-arrows merged with fix-mobile-work-to-home-shrink (8a4134c) — the merge was required because the live head pointed at 8a4134c, which was NOT an ancestor of the feature branch; deploying the branch hash alone would have reverted the shrink fix. Feature verified against the deployed build via Chrome DevTools MCP: 360 continuous drag monotonic at 1:1, exact sector stepping, clean snap, inner-tap inert, multi-touch inert, Barba home-about-home clean, zero console errors, Lighthouse a11y 90. KNOWN ISSUE (not a product defect): the Tier-1 interaction tests cannot reach the interactive state in headless Chromium — the home intro word-cycle never completes headless (wrapper stuck on rhp-intro-started 60s+, rhp-home-ready never set, no page errors; the intro appears to gate on the Vimeo intro video, which headless cannot decode). All failures were timeouts; no assertion about drag behaviour ever failed. waitForHomeReady() in the feature spec now drives RHP.homeScrollMorph.skipToEnd() as a partial mitigation. Follow-up ticket needed: run dial-interaction specs headed, or stub the intro video. This likely also explains a share of the 13 pre-existing about-to-home failures written off in the previous deploy.",
+  "lastDeployed": "2026-08-18",
+  "lastDeployedHash": "6d7de7b",
   "entries": [
     {
       "id": "smoke",
@@ -626,6 +626,36 @@
       "slug": "rhp-mobile-dial-permanent-lengthened-ticks",
       "created": "2026-08-17",
       "description": "Mobile dial bulge locked to the active sector in canvas space — rotates with the dial, other ticks never grow, no screen-edge overflow"
+    },
+    {
+      "id": "fix-mobile-work-to-home-shrink",
+      "file": "tests/acceptance/fix-mobile-work-to-home-shrink.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "fix-mobile-work-to-home-shrink",
+      "created": "2026-08-18",
+      "description": "Mobile work→home Barba transition shrinks smoothly instead of collapsing to 1px; desktop unchanged; mobile-only content fade"
+    },
+    {
+      "id": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+      "file": "tests/acceptance/rhp-mobile-dial-circular-drag-and-spinner-arrows.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "slug": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
+      "created": "2026-08-18",
+      "description": "Mobile dial spins a continuous 360 via circular finger drag (no dominant-axis direction flip), and the 8px white dot at 6 o'clock is replaced by the 53x19 spinner-arrows SVG."
+    },
+    {
+      "id": "rhp-nav-fade-in-on-work-page",
+      "file": "tests/acceptance/rhp-nav-fade-in-on-work-page.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-nav-fade-in-on-work-page",
+      "created": "2026-08-13",
+      "description": "Nav on work pages: survives the stale about-page .nav display:none style, and fades/slides in (logo fade + about from left, contact from right) on about to work"
     }
   ]
 }

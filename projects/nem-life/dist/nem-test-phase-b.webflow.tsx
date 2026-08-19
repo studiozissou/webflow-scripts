@@ -18,7 +18,7 @@
 
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
 const SHEET_ORDER = [
   "fear",
@@ -729,6 +729,10 @@ function Quiz({
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => Array(20).fill(null));
   const [animating, setAnimating] = useState(false);
+
+  const transitionLock = useRef(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [relationshipStatus, setRelationshipStatus] = useState("");
@@ -770,34 +774,54 @@ function Quiz({
 
   const selectAnswer = useCallback(
     (answerIndex: number) => {
+      if (transitionLock.current) return;
+      transitionLock.current = true;
+      setIsTransitioning(true);
+
       const updatedAnswers = answers.map((a, i) => (i === currentStep ? answerIndex : a));
       setAnswers(updatedAnswers);
 
       const fadeDelay = prefersReducedMotion ? 0 : 200;
       const fadeDuration = prefersReducedMotion ? 0 : 300;
 
-      setTimeout(() => {
-        setAnimating(true);
+      timers.current.push(
         setTimeout(() => {
-          if (currentStep < 19) {
-            setCurrentStep((s) => s + 1);
-          } else {
+          setAnimating(true);
+          timers.current.push(
+            setTimeout(() => {
+              if (currentStep < 19) {
+                setCurrentStep((s) => s + 1);
+              } else {
 
-            sendCompletionBeacon(updatedAnswers);
-            setPhase("profile");
-          }
-          setAnimating(false);
-        }, fadeDuration);
-      }, fadeDelay);
+                sendCompletionBeacon(updatedAnswers);
+                setPhase("profile");
+              }
+              setAnimating(false);
+
+              transitionLock.current = false;
+              setIsTransitioning(false);
+            }, fadeDuration)
+          );
+        }, fadeDelay)
+      );
     },
     [answers, currentStep, prefersReducedMotion, sendCompletionBeacon]
   );
 
   const goBack = useCallback(() => {
+
+    if (transitionLock.current) return;
     if (currentStep > 0) {
       setCurrentStep((s) => s - 1);
     }
   }, [currentStep]);
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      pending.forEach(clearTimeout);
+    };
+  }, []);
 
   const result = useMemo(
     () => calculateScores(answers, GENDER_TO_ENGINE[gender] || "male"),
@@ -990,6 +1014,7 @@ function Quiz({
               <button
                 data-element="back-button"
                 onClick={goBack}
+                disabled={isTransitioning}
                 aria-label={t.back}
                 style={{
                   fontSize: "var(--_typography---paragraph--small, 0.875rem)",
@@ -997,7 +1022,8 @@ function Quiz({
                   color: "var(--_token---text-olive, #706d56)",
                   background: "none",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: isTransitioning ? "default" : "pointer",
+                  opacity: 1,
                   textDecoration: "none",
                 }}
               >
@@ -1064,6 +1090,7 @@ function Quiz({
                   key={i}
                   aria-selected={isSelected}
                   onClick={() => selectAnswer(i)}
+                  disabled={isTransitioning}
                   style={{
                     borderRadius: 999,
                     padding: "12px 24px",
@@ -1076,20 +1103,22 @@ function Quiz({
                       ? "var(--_token---accent-main, #fafa7d)"
                       : "white",
                     color: "var(--_token---text-main, #292828)",
-                    cursor: "pointer",
+
+                    cursor: isTransitioning ? "default" : "pointer",
+                    opacity: 1,
                     fontFamily: "'Lato', sans-serif",
                     fontSize: "var(--_typography---paragraph--standard, 1rem)",
                     transition: prefersReducedMotion ? "none" : "all 0.15s ease",
                   }}
                   onMouseEnter={(e) => {
-                    if (!isSelected) {
+                    if (!isSelected && !isTransitioning) {
                       e.currentTarget.style.borderColor = "var(--_token---accent-main, #fafa7d)";
                       e.currentTarget.style.backgroundColor =
                         "color-mix(in srgb, var(--_token---accent-main, #fafa7d) 20%, white)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isSelected) {
+                    if (!isSelected && !isTransitioning) {
                       e.currentTarget.style.borderColor = "var(--_token---accent-light-grey, #ecebe8)";
                       e.currentTarget.style.backgroundColor = "white";
                     }

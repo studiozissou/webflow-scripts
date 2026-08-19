@@ -1,6 +1,6 @@
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { calculateScores } from "./nem-test-scoring.js";
 import { CONCLUSION_KEYS, INTRO_LINE_KEYS } from "./nem-test-conclusion-ids.js";
 import {
@@ -526,6 +526,12 @@ function Quiz({
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => Array(20).fill(null));
   const [animating, setAnimating] = useState(false);
+  /* Transition guard — a ref for correctness, state for rendering. The ref is
+   * load-bearing: two clicks dispatched in the same tick both read the same render's
+   * `isTransitioning`, so state alone is not a lock. */
+  const transitionLock = useRef(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [relationshipStatus, setRelationshipStatus] = useState("");
@@ -581,39 +587,68 @@ function Quiz({
     [submitWebhookUrl, token, locale]
   );
 
-  /* ─── Answer selection ─── */
+  /* ─── Answer selection ───
+   *
+   * Guarded against re-entry: a second click inside the ~500ms fade window would
+   * otherwise overwrite the recorded answer AND schedule a second advance (skipping a
+   * question and leaving it null), and a click into the subtree being replaced at the
+   * `key={currentStep}` remount lands on a detached handler and does nothing. */
   const selectAnswer = useCallback(
     (answerIndex: number) => {
+      if (transitionLock.current) return;
+      transitionLock.current = true;
+      setIsTransitioning(true);
+
       const updatedAnswers = answers.map((a, i) => (i === currentStep ? answerIndex : a));
       setAnswers(updatedAnswers);
 
       const fadeDelay = prefersReducedMotion ? 0 : 200;
       const fadeDuration = prefersReducedMotion ? 0 : 300;
 
-      setTimeout(() => {
-        setAnimating(true);
+      timers.current.push(
         setTimeout(() => {
-          if (currentStep < 19) {
-            setCurrentStep((s) => s + 1);
-          } else {
-            /* Scoring is NOT computed here. v2 conclusion IDs are gender-scoped, and
-             * gender is collected on the profile screen that comes next — so the result
-             * is derived (see `result` below) once both answers and gender exist. */
-            sendCompletionBeacon(updatedAnswers);
-            setPhase("profile"); // → profile screen, then conclusion
-          }
-          setAnimating(false);
-        }, fadeDuration);
-      }, fadeDelay);
+          setAnimating(true);
+          timers.current.push(
+            setTimeout(() => {
+              if (currentStep < 19) {
+                setCurrentStep((s) => s + 1);
+              } else {
+                /* Scoring is NOT computed here. v2 conclusion IDs are gender-scoped, and
+                 * gender is collected on the profile screen that comes next — so the result
+                 * is derived (see `result` below) once both answers and gender exist. */
+                sendCompletionBeacon(updatedAnswers);
+                setPhase("profile"); // → profile screen, then conclusion
+              }
+              setAnimating(false);
+              /* Cleared in the same batch as the step change, so the freshly mounted node
+               * is already interactive. The guard costs no perceived latency. */
+              transitionLock.current = false;
+              setIsTransitioning(false);
+            }, fadeDuration)
+          );
+        }, fadeDelay)
+      );
     },
     [answers, currentStep, prefersReducedMotion, sendCompletionBeacon]
   );
 
   const goBack = useCallback(() => {
+    /* A back click mid-transition would decrement currentStep while a pending advance
+     * is still queued, and the two fight. */
+    if (transitionLock.current) return;
     if (currentStep > 0) {
       setCurrentStep((s) => s - 1);
     }
   }, [currentStep]);
+
+  /* The timer chain would otherwise leak two timers per question and fire state updates
+   * into an unmounted tree if the user navigates away mid-fade. */
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      pending.forEach(clearTimeout);
+    };
+  }, []);
 
   /* ─── Profile continue handler ─── */
   /* ─── Derived: the conclusion outcome ───
@@ -841,6 +876,7 @@ function Quiz({
               <button
                 data-element="back-button"
                 onClick={goBack}
+                disabled={isTransitioning}
                 aria-label={t.back}
                 style={{
                   fontSize: "var(--_typography---paragraph--small, 0.875rem)",
@@ -848,7 +884,8 @@ function Quiz({
                   color: "var(--_token---text-olive, #706d56)",
                   background: "none",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: isTransitioning ? "default" : "pointer",
+                  opacity: 1,
                   textDecoration: "none",
                 }}
               >
@@ -919,6 +956,7 @@ function Quiz({
                   key={i}
                   aria-selected={isSelected}
                   onClick={() => selectAnswer(i)}
+                  disabled={isTransitioning}
                   style={{
                     borderRadius: 999,
                     padding: "12px 24px",
@@ -931,20 +969,23 @@ function Quiz({
                       ? "var(--_token---accent-main, #fafa7d)"
                       : "white",
                     color: "var(--_token---text-main, #292828)",
-                    cursor: "pointer",
+                    /* The selected pill is the user's confirmation that the click
+                     * registered — it must not grey out while briefly disabled. */
+                    cursor: isTransitioning ? "default" : "pointer",
+                    opacity: 1,
                     fontFamily: "'Lato', sans-serif",
                     fontSize: "var(--_typography---paragraph--standard, 1rem)",
                     transition: prefersReducedMotion ? "none" : "all 0.15s ease",
                   }}
                   onMouseEnter={(e) => {
-                    if (!isSelected) {
+                    if (!isSelected && !isTransitioning) {
                       e.currentTarget.style.borderColor = "var(--_token---accent-main, #fafa7d)";
                       e.currentTarget.style.backgroundColor =
                         "color-mix(in srgb, var(--_token---accent-main, #fafa7d) 20%, white)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isSelected) {
+                    if (!isSelected && !isTransitioning) {
                       e.currentTarget.style.borderColor = "var(--_token---accent-light-grey, #ecebe8)";
                       e.currentTarget.style.backgroundColor = "white";
                     }

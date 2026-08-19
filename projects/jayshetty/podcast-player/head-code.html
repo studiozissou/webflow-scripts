@@ -70,6 +70,13 @@ cursor:pointer;
 .videoplay .podcast-list-youtube-embed {
     z-index: 2;
 }
+/* The Designer class still carries display:none from when the embed was
+   broken — restore parity with the YouTube embed. Webflow's conditional
+   visibility (w-condition-invisible, !important) still hides it on
+   YouTube-era items. */
+.podcast-list-spotify-embed.is-cover {
+    display: block;
+}
 /* Mirror the YouTube z-index rules for the Spotify embed */
 .showvideo .podcast-list-spotify-embed,
 .videoplay .podcast-list-spotify-embed {

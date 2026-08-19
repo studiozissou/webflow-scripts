@@ -146,6 +146,19 @@ const INVARIANTS = {
       check: (wf) => fanOut(wf, "Generate Report").includes("Parse Report"),
     },
     {
+      /* The intro line is the report's lead paragraph: between the <h1> and the greeting,
+       * through esc() (it is Christel's prose, full of & and quotes), and absent entirely
+       * when empty — no empty <p>, no stray margin. That last property is what lets the
+       * plumbing ship before Alex's copy exists. */
+      label: "Build HTML renders the intro line above the greeting, escaped",
+      check: (wf) => {
+        const code = find(wf, "Build HTML")?.parameters?.jsCode ?? "";
+        const intro = code.indexOf("introLine ? '<p class=\"intro\">' + esc(introLine)");
+        const greeting = code.indexOf("greeting + ' '");
+        return intro !== -1 && greeting !== -1 && intro < greeting;
+      },
+    },
+    {
       /* Two edits are needed at go-live: point the alert at Alex, and drop the [DEV] tag
        * from the subject. Making one and forgetting the other gives either a [DEV]-tagged
        * alert landing on the client, or an untagged test alert that reads as a real
@@ -213,6 +226,23 @@ const INVARIANTS = {
       },
     },
     {
+      /* The intro line is fixed editorial copy the component selects client-side. It rides
+       * the /submit payload into the profile row so /verify can render it — dropping it in
+       * Normalize would silently blank every report's lead paragraph. */
+      label: "Normalize keeps introLine",
+      check: (wf) => {
+        const code = find(wf, "Normalize")?.parameters?.jsCode ?? "";
+        return code.includes("introLine");
+      },
+    },
+    {
+      label: "Store Profile persists introLine",
+      check: (wf) => {
+        const mapped = find(wf, "Store Profile")?.parameters?.columns?.value ?? {};
+        return "introLine" in mapped;
+      },
+    },
+    {
       /* Completions go to their own table so the token lookup in /verify can never pick an
        * anonymous row that has no email and leave a real user without their report. */
       label: "Completions are logged to their own table, not to nem_test_profiles",
@@ -248,7 +278,7 @@ const INVARIANTS = {
 
 export function checkInvariants(key, workflow) {
   return (INVARIANTS[key] ?? []).map(({ label, check }) => {
-    let ok = false;
+    let ok;
     try {
       ok = Boolean(check(workflow));
     } catch {

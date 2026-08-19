@@ -1,0 +1,17 @@
+{
+  "value": {
+    "introLine": "={{ $json.introLine }}"
+  },
+  "schema": [
+    {
+      "id": "introLine",
+      "displayName": "introLine",
+      "required": false,
+      "defaultMatch": false,
+      "display": true,
+      "type": "string",
+      "readOnly": false,
+      "removed": false
+    }
+  ]
+}

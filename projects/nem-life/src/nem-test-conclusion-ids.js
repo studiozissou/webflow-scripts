@@ -128,6 +128,65 @@ export const CONCLUSION_KEYS = [
   ),
 ];
 
+/* The 25 keys that get a report intro line — spec § 5.
+ *
+ * Two things about this list are easy to get wrong, so both are derived rather than typed:
+ *
+ *   1. It is 25, not 26. Both flat outcomes route to the contact link with no report at
+ *      all, so neither has a title page to put a teaser on. If Alex's source doc says 26,
+ *      the doc and the flat-routing decision contradict each other — flag it.
+ *   2. Intro lines are keyed on the mechanism alone. Conclusion texts are looked up on
+ *      key + gender; this is the one asymmetry between the two tables.
+ *
+ * Derived from CONCLUSION_KEYS so adding a mechanism cannot leave the two out of step. */
+export const INTRO_LINE_KEYS = CONCLUSION_KEYS.filter((key) => !(key in FLAT_OUTCOME_CODE));
+
+/* The intro-line ID: `{SET}-{MECH}[-{MECH}]`, with no gender segment.
+ *
+ *   01-FR       fear
+ *   01-SR-FP    self-rejection leading, false-power following
+ *
+ * The missing `F`/`M` is the point, and is what makes an intro-line ID recognisable at a
+ * glance against a conclusion ID like `01F-SR-FP`. If one of these ever grows a gender
+ * letter, someone has copied the wrong tab. */
+export function introLineIdFor({ primary, secondary }, textSet = TEXT_SET) {
+  const leading = MECHANISM_CODE[primary];
+  if (!leading) throw new Error(`Unknown mechanism: ${primary}`);
+
+  if (!secondary) return `${textSet}-${leading}`;
+
+  const following = MECHANISM_CODE[secondary];
+  if (!following) throw new Error(`Unknown mechanism: ${secondary}`);
+
+  return `${textSet}-${leading}-${following}`;
+}
+
+/* The 25 intro-line rows in sheet order — the five singles, then the twenty duals grouped
+ * by leading mechanism. Generated into the CSV Alex pastes into the Intro lines tab, so a
+ * line can never be written against a key the scoring engine cannot produce. */
+export function enumerateIntroLineRows(textSet = TEXT_SET) {
+  const row = (type, primary, secondary) => ({
+    type,
+    leading: MECHANISM_TO_KEY[primary],
+    following: secondary ? MECHANISM_TO_KEY[secondary] : "",
+    key: conclusionKeyFor({
+      outcome: secondary ? "dual" : "single",
+      primary,
+      secondary,
+    }),
+    id: introLineIdFor({ primary, secondary }, textSet),
+  });
+
+  return [
+    ...SHEET_ORDER.map((mech) => row("single", mech, null)),
+    ...SHEET_ORDER.flatMap((leading) =>
+      SHEET_ORDER.filter((following) => following !== leading).map((following) =>
+        row("dual", leading, following),
+      ),
+    ),
+  ];
+}
+
 /* ─── Sheet enumeration ─── */
 
 /* Every conclusion row the engine can produce, in Alex's sheet order:

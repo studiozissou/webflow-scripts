@@ -80,8 +80,9 @@ died on that click, not on its own assertion.
 
 ## The fix
 
-All in `tests/acceptance/nem-test-conclusion-logic-v2.spec.js`. No component change — there
-was nothing wrong with the component.
+All in `tests/acceptance/nem-test-conclusion-logic-v2.spec.js`. Nothing here required a
+component change — none of the four failures was a defect in the quiz. (The suite did
+surface one genuine component behaviour along the way; see below.)
 
 - **`answerQuestion` waits for the question heading to change** instead of sleeping through
   the fade. Faster, and it fails loudly if a click is swallowed, which a blind sleep

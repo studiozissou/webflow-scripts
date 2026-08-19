@@ -377,6 +377,18 @@
       "description": "The Alert Failure node in /verify emails will@teamzissou.io and prefixes its subject with [DEV]. Will's call 2026-08-18: route failures to himself while the JSON contract is still being developed, so Alex is not pinged by test runs and by teething failures that are ours to fix. The [DEV] tag exists because the alert sends from hallo@nemmatters.com - the client's own address - so the subject line is the only thing distinguishing a test from a real production failure. MUST BE REVERTED BEFORE LAUNCH, both parts together. Alex asked on 2026-08-17 to be notified when a report fails - 'otherwise we won't know how often it happens, or that someone never got their report'. Shipping with alerts pointed at the developer reinstates the exact failure mode the alert was built to prevent. Consider sending to both addresses: Will will want to see the rate during early live traffic too.",
       "created": "2026-08-18",
       "note": "The drift check ties the two edits together - an invariant asserts the [DEV] tag and the recipient agree, so changing one and forgetting the other FAILS the check. What it cannot know is WHEN to flip them, which is why this ticket and the go-live checklist in backend/README.md both exist. Re-baseline with npm run check:nem-drift -- --write afterwards."
+    },
+    {
+      "id": "nem-swallowed-click-during-question-fade",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Answer clicks during the question fade are swallowed and the quiz does not advance",
+      "description": "Found 2026-08-19 while fixing the acceptance suite. Clicking an answer while the fade between questions is still running does nothing - the question does not advance and the user has to press again. It reads as a dead click, on the primary interaction of a twenty-question quiz, so some drop-off may be attributable to it. It was invisible until now because the acceptance helpers slept a flat 600ms after every click instead of waiting for the question to change; the blind sleep absorbed the lost click silently. The fix belongs in nem-test-phase-b.tsx - either keep the answer buttons live through the transition, or queue a click that arrives mid-fade and apply it when the transition ends. tests/acceptance/nem-test-conclusion-logic-v2.spec.js currently retries the click once and says so in a comment; remove that retry once the component handles it.",
+      "spec": "projects/nem-life/.claude/reports/nem-acceptance-failures-2026-08-19.md",
+      "created": "2026-08-19",
+      "note": "Verify by re-running npm run test:sz:acceptance with the retry removed - the flakiness should not come back."
     }
   ]
 }

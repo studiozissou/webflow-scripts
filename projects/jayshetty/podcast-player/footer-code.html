@@ -121,15 +121,21 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
      speaks the same messaging protocol, so play()/pause() keep working.
 
      The URL is built from the episode id rather than patched out of the
-     existing src: Safari has not always set src by the time the
-     createController callback runs, and a rewrite of an empty string
-     silently did nothing. Retry until the iframe exists. */
-  function useVideoEmbed(embedWrap, id, controller, attempt) {
+     existing src, and the swap is driven from playSpotify rather than from
+     createController's callback, because that callback does not appear to
+     fire in Safari — which left the audio embed on screen, un-sandboxed.
+     Retry until the iframe exists. */
+  function controllerFor(embedWrap) {
+    var entry = spotifyControllers.filter(function (e) { return e.el === embedWrap; })[0];
+    return entry ? entry.controller : null;
+  }
+
+  function useVideoEmbed(embedWrap, id, attempt) {
     var frame = embedWrap.querySelector("iframe");
     if (!frame) {
       if ((attempt || 0) < 30) {
         setTimeout(function () {
-          useVideoEmbed(embedWrap, id, controller, (attempt || 0) + 1);
+          useVideoEmbed(embedWrap, id, (attempt || 0) + 1);
         }, 100);
       }
       return;
@@ -140,7 +146,10 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
        iframe is repointed. */
     frame.addEventListener("load", function () {
       if (frame.src.indexOf("/video") === -1) return;
-      try { controller.play(); } catch (err) {}
+      var controller = controllerFor(embedWrap);
+      if (controller) {
+        try { controller.play(); } catch (err) {}
+      }
     });
     /* Spotify's player offers to hand off to the native app ("Watch on
        Spotify"), which makes Safari prompt "allow this website to open
@@ -240,15 +249,20 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
         /* createController swaps the placeholder for an iframe; key the
            registry off the wrapper, which stays in the DOM */
         spotifyControllers.push({ el: embedWrap, controller: controller });
-        useVideoEmbed(embedWrap, id, controller);
         /* "ready" fires per embed page load; play on each one. Firing it
            against a page already being replaced is harmless, and the video
            page's own ready then starts playback. */
         controller.addListener("ready", function () {
-          useVideoEmbed(embedWrap, id, controller);
+          useVideoEmbed(embedWrap, id);
           try { controller.play(); } catch (err) {}
         });
       });
+      /* Deliberately outside the createController callback: the swap and the
+         sandbox must land even if that callback never fires (it appears not
+         to in Safari, which left the un-sandboxed audio embed on screen).
+         Worst case the controller is missing and playback needs one tap on
+         the embed's own play button, but the right player is shown. */
+      useVideoEmbed(embedWrap, id);
     };
     spotifyApi ? run() : pendingSpotifyPlays.push(run);
   }

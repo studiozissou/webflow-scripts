@@ -7,27 +7,35 @@
  * responsive behaviour.
  *
  * 6-screen flow: start -> questions -> profile -> conclusion -> opt-in -> confirmation
+ * (On the live page question 1 renders immediately — there is no start screen.)
  *
  * Tier 1: Component tests (run against staging, no backend needed)
  * Tier 3: E2E signup flow tests marked @e2e-email (require live n8n + MailerSend + Gmail)
+ *
+ * The quiz-driving helpers live in ./helpers/nem-quiz.js, shared with the
+ * conclusion-logic and report-json suites so they cannot drift apart again. The fixed
+ * sleeps this file used to carry (45 of them, ~15.6s of pure sleep per run-through) are
+ * gone with them — every wait is now on the thing actually being waited for.
  */
 import { test, expect } from '@playwright/test';
-import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.test' });
+import {
+  TEST_PAGE_EN,
+  TOTAL_QUESTIONS,
+  QUIZ_TEST_TIMEOUT_MS,
+  ANSWER_LABELS_NL,
+  ANSWER_LABELS_EN,
+  waitForReady,
+  loadPage,
+  answerQuestion,
+  answerAllQuestions,
+  answerByIndices,
+  fillProfileScreen,
+  getConclusionText,
+} from './helpers/nem-quiz.js';
 
 // ── Config ────────────────────────────────────────────────────
 const SLUG = 'nem-test-phase-b';
-const STAGING = process.env.STAGING_URL || 'https://nem-life-1.webflow.io';
-const TEST_PAGE_NL = '/zelftesten/waarom-reageer-ik-zo';
-const TEST_PAGE_EN = '/en/zelftesten/waarom-reageer-ik-zo';
-
-const ANSWER_LABELS_NL = ['nooit', 'zelden', 'soms', 'regelmatig', 'heel vaak'];
-const ANSWER_LABELS_EN = ['never', 'rarely', 'sometimes', 'regularly', 'very often'];
-const TOTAL_QUESTIONS = 20;
-
-// Scoring: answer index maps to score value (0-4)
-const ANSWER_SCORES = [0, 1, 2, 3, 4];
 
 // Mechanism -> question indices (1-based).
 // Keys are English as of conclusion engine v2 — window.__nemTestScores publishes
@@ -48,108 +56,25 @@ const MECHANISM_MAP = {
  * the opt-in, confirmation or report screens at all.
  *
  * Every test that needs the report path therefore answers a deliberately uneven
- * profile. Verified against the engine: DUAL → false-hope_false-power (01?-FH-FP),
- * SINGLE → self-rejection (01?-SR). Both have skipsReport: false. */
-const DUAL_PROFILE_SCORES = {
-  selfRejection: 5,
-  emotionalNumbing: 2,
-  falsePower: 11,
-  fear: 4,
-  falseHope: 14,
-};
-
-// 0-based question order → answer index. Sums to DUAL_PROFILE_SCORES above.
+ * profile. Verified against the engine: false-hope 14, false-power 11, self-rejection 5,
+ * fear 4, emotional-numbing 2 → DUAL false-hope_false-power (01?-FH-FP), skipsReport
+ * false. 0-based question order → answer index. */
 const DUAL_PROFILE = [4, 1, 2, 4, 4, 4, 0, 0, 4, 0, 4, 4, 0, 3, 0, 2, 0, 0, 0, 0];
 
-const SECONDARY_THRESHOLD = 3;
+/* See the note on QUIZ_TEST_TIMEOUT_MS in the helper module: a full run-through against
+ * live staging deserves headroom the 30s config default does not give it. */
+test.beforeEach(() => {
+  test.setTimeout(QUIZ_TEST_TIMEOUT_MS);
+});
 
-// ── Helpers ───────────────────────────────────────────────────
-
-async function waitForReady(page) {
-  await page.waitForFunction(
-    () => document.readyState === 'complete',
-    { timeout: 20_000 }
-  );
-}
-
-async function loadPage(page, path = TEST_PAGE_NL) {
-  await page.goto(`${STAGING}${path}`);
-  await waitForReady(page);
-  await page.waitForTimeout(2000);
-}
-
-/** Answer the current question by clicking a pill button */
-async function answerQuestion(page, answerLabel = 'soms') {
-  await page.getByRole('button', { name: answerLabel }).click();
-  await page.waitForTimeout(600); // select + fade transition
-}
-
-/** Answer all 20 questions with the same answer.
- *
- * ⚠️ Under v2 every uniform pattern is a FLAT outcome, which routes to a contact link
- * and skips the report. Use answerReportProfile() for anything that needs the CTA. */
-async function answerAllQuestions(page, answerLabel = 'soms') {
-  for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-    await answerQuestion(page, answerLabel);
-  }
-}
+// ── Suite-specific helpers ────────────────────────────────────
 
 /** Answer all 20 questions with an uneven profile that reaches the report path.
  *
  * Defaults to DUAL_PROFILE (false-hope leading, false-power following). */
 async function answerReportProfile(page, profile = DUAL_PROFILE, labels = ANSWER_LABELS_NL) {
-  for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-    await answerQuestion(page, labels[profile[i]]);
-  }
+  await answerByIndices(page, profile, labels);
 }
-
-/** Fill the profile screen (Screen 3) — select gender, age category, relationship status */
-async function fillProfileScreen(page) {
-  await page.waitForTimeout(500);
-  // Select all 3 dropdowns (gender, age category, relationship status)
-  const selects = page.locator('select');
-  const selectCount = await selects.count();
-  for (let i = 0; i < selectCount; i++) {
-    await selects.nth(i).selectOption({ index: 1 });
-  }
-  await page.waitForTimeout(300);
-  // Continue button is "Ga verder" (NL) / "Continue" (EN)
-  await page.getByRole('button', { name: /ga verder|continue/i }).click();
-  await page.waitForTimeout(600);
-}
-
-/**
- * Fill the profile screen choosing a SPECIFIC gender by visible label
- * (NL: 'Man'/'Vrouw', EN: 'Male'/'Female'); age + relationship default to
- * the first real option. Used to exercise the gender-differentiated conclusion.
- */
-async function fillProfileScreenWithGender(page, genderLabel) {
-  await page.waitForTimeout(500);
-  await page.locator('[data-field="gender"]').selectOption({ label: genderLabel });
-  await page.locator('[data-field="age-category"]').selectOption({ index: 1 });
-  await page.locator('[data-field="relationship-status"]').selectOption({ index: 1 });
-  await page.waitForTimeout(300);
-  // Continue button is "Ga verder" (NL) / "Continue" (EN)
-  await page.getByRole('button', { name: /ga verder|continue/i }).click();
-  await page.waitForTimeout(600);
-}
-
-/**
- * Grab the rendered conclusion paragraph text. Prefers the precise
- * data-element="conclusion-text" hook; falls back to the whole quiz module
- * (the label/bridge/CTA around it are gender-invariant, so a diff still
- * isolates a change in the conclusion copy).
- */
-async function getConclusionText(page) {
-  const precise = page.locator('[data-element="conclusion-text"]');
-  if (await precise.count()) return (await precise.first().innerText()).trim();
-  return (await page.locator('[data-element="quiz-module"]').first().innerText()).trim();
-}
-
-/** Alias kept for readability at call sites that care about the score profile rather
- * than about reaching the report path. Same profile either way — DUAL_PROFILE replaced
- * this helper's hardcoded Dutch answer list, which could not be reused on the EN page. */
-const answerWithProfile = answerReportProfile;
 
 // ── B1: Landing Page ──────────────────────────────────────────
 
@@ -277,19 +202,17 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
 
   test('reassurance line NOT visible on Q2+', async ({ page }) => {
     await answerQuestion(page, 'soms');
-    await page.waitForTimeout(300);
+    await expect(page.getByText(/vraag 2 van 20/i)).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText('geen goed of fout')).not.toBeVisible();
   });
 
   test('back button pre-fills previous answer on Q1', async ({ page }) => {
     await answerQuestion(page, 'regelmatig');
-    await page.waitForTimeout(300);
 
     // Go back
     await page.locator('button:has-text("←"), [data-element="back-button"]').first().click();
-    await page.waitForTimeout(600);
 
-    await expect(page.getByText(/vraag 1 van 20/i)).toBeVisible();
+    await expect(page.getByText(/vraag 1 van 20/i)).toBeVisible({ timeout: 5_000 });
     // "regelmatig" should have selected state
     const selectedPill = page.locator(
       'button:has-text("regelmatig")[class*="selected"], ' +
@@ -305,9 +228,8 @@ test.describe(`${SLUG} — Screen 2 (Questions)`, () => {
 
     // Go back to Q2
     await page.locator('button:has-text("←"), [data-element="back-button"]').first().click();
-    await page.waitForTimeout(600);
 
-    await expect(page.getByText(/vraag 2 van 20/i)).toBeVisible();
+    await expect(page.getByText(/vraag 2 van 20/i)).toBeVisible({ timeout: 5_000 });
     const selectedPill = page.locator(
       'button:has-text("heel vaak")[class*="selected"], ' +
       'button:has-text("heel vaak")[aria-selected="true"], ' +
@@ -340,7 +262,6 @@ test.describe(`${SLUG} — Screen 3 (Profile)`, () => {
   test.beforeEach(async ({ page }) => {
     await loadPage(page);
     await answerReportProfile(page);
-    await page.waitForTimeout(500);
   });
 
   test('"Nog even over jou" label visible after Q20', async ({ page }) => {
@@ -367,9 +288,8 @@ test.describe(`${SLUG} — Screen 3 (Profile)`, () => {
   test('validation: continue without selecting shows Dutch errors', async ({ page }) => {
     // Click "Ga verder" without selecting any dropdown
     await page.getByRole('button', { name: /ga verder/i }).click();
-    await page.waitForTimeout(500);
 
-    await expect(page.getByText(/selecteer je geslacht/i)).toBeVisible();
+    await expect(page.getByText(/selecteer je geslacht/i)).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText(/selecteer je leeftijdscategorie/i)).toBeVisible();
     await expect(page.getByText(/selecteer je relatiestatus/i)).toBeVisible();
   });
@@ -381,10 +301,13 @@ test.describe(`${SLUG} — Screen 3 (Profile)`, () => {
     for (let i = 0; i < selectCount; i++) {
       await selects.nth(i).selectOption({ index: 1 });
     }
-    await page.waitForTimeout(300);
+    /* Continue rejects a click that lands before React commits the last selection —
+     * assert the committed values rather than timing them (see fillProfileScreen). */
+    for (let i = 0; i < selectCount; i++) {
+      await expect(selects.nth(i)).not.toHaveValue('');
+    }
 
     await page.getByRole('button', { name: /ga verder/i }).click();
-    await page.waitForTimeout(600);
 
     // Should now see conclusion text
     await expect(
@@ -434,7 +357,6 @@ test.describe(`${SLUG} — Screen 4 (Conclusion)`, () => {
     await fillProfileScreen(page);
 
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(600);
 
     // Should see form fields (voornaam or first name)
     await expect(
@@ -451,14 +373,14 @@ test.describe(`${SLUG} — Gender-differentiated conclusion`, () => {
     // Man path
     await loadPage(page);
     await answerReportProfile(page);
-    await fillProfileScreenWithGender(page, 'Man');
+    await fillProfileScreen(page, 'Man');
     await expect(page.getByText(/jouw uitkomst/i)).toBeVisible({ timeout: 5_000 });
     const manText = await getConclusionText(page);
 
     // Vrouw path — identical answers, only the gender selection differs
     await loadPage(page);
     await answerReportProfile(page);
-    await fillProfileScreenWithGender(page, 'Vrouw');
+    await fillProfileScreen(page, 'Vrouw');
     await expect(page.getByText(/jouw uitkomst/i)).toBeVisible({ timeout: 5_000 });
     const vrouwText = await getConclusionText(page);
 
@@ -471,7 +393,7 @@ test.describe(`${SLUG} — Gender-differentiated conclusion`, () => {
   test('EN male gender resolves a conclusion (male/female normalised to man/vrouw)', async ({ page }) => {
     await loadPage(page, TEST_PAGE_EN);
     await answerReportProfile(page, DUAL_PROFILE, ANSWER_LABELS_EN);
-    await fillProfileScreenWithGender(page, 'Male');
+    await fillProfileScreen(page, 'Male');
 
     // Reaching the conclusion screen — assert via the gender-invariant bridge line
     // (the conclusion label copy varies: staging currently renders "Your outcome").
@@ -545,7 +467,7 @@ test.describe(`${SLUG} — Screen 5 (Opt-in form)`, () => {
     await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(600);
+    await expect(page.getByPlaceholder(/voornaam/i)).toBeVisible({ timeout: 5_000 });
   });
 
   test('form fields present: voornaam, email, consent checkbox', async ({ page }) => {
@@ -575,38 +497,33 @@ test.describe(`${SLUG} — Screen 5 (Opt-in form)`, () => {
     // Tick checkbox
     const checkbox = page.locator('input[type="checkbox"]').first();
     await checkbox.check();
-    await page.waitForTimeout(300);
 
     const btn = page.getByRole('button', { name: /ontvang mijn rapport/i });
-    const isDisabled = await btn.isDisabled().catch(() => false);
-    expect(isDisabled).toBeFalsy();
+    await expect(btn).toBeEnabled({ timeout: 5_000 });
   });
 
   test('inline validation: empty voornaam shows Dutch error on blur', async ({ page }) => {
     const nameInput = page.getByPlaceholder(/voornaam/i);
     await nameInput.focus();
     await nameInput.blur();
-    await page.waitForTimeout(300);
 
-    await expect(page.getByText('Vul je voornaam in')).toBeVisible();
+    await expect(page.getByText('Vul je voornaam in')).toBeVisible({ timeout: 5_000 });
   });
 
   test('inline validation: empty email shows Dutch error on blur', async ({ page }) => {
     const emailInput = page.getByPlaceholder(/e-mailadres/i);
     await emailInput.focus();
     await emailInput.blur();
-    await page.waitForTimeout(300);
 
-    await expect(page.getByText('Vul je e-mailadres in')).toBeVisible();
+    await expect(page.getByText('Vul je e-mailadres in')).toBeVisible({ timeout: 5_000 });
   });
 
   test('inline validation: invalid email format shows error on blur', async ({ page }) => {
     const emailInput = page.getByPlaceholder(/e-mailadres/i);
     await emailInput.fill('not-an-email');
     await emailInput.blur();
-    await page.waitForTimeout(300);
 
-    await expect(page.getByText('Voer een geldig e-mailadres in')).toBeVisible();
+    await expect(page.getByText('Voer een geldig e-mailadres in')).toBeVisible({ timeout: 5_000 });
   });
 
   test('inline validation: error clears when field corrected', async ({ page }) => {
@@ -614,13 +531,11 @@ test.describe(`${SLUG} — Screen 5 (Opt-in form)`, () => {
     // Trigger error
     await emailInput.fill('bad');
     await emailInput.blur();
-    await page.waitForTimeout(300);
-    await expect(page.getByText('Voer een geldig e-mailadres in')).toBeVisible();
+    await expect(page.getByText('Voer een geldig e-mailadres in')).toBeVisible({ timeout: 5_000 });
 
     // Fix it
     await emailInput.fill('anna@example.com');
     await emailInput.blur();
-    await page.waitForTimeout(300);
     await expect(page.getByText('Voer een geldig e-mailadres in')).not.toBeVisible();
   });
 
@@ -648,16 +563,16 @@ test.describe(`${SLUG} — Screen 6 (Confirmation)`, () => {
     await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(600);
 
-    // Fill form (simplified: just name + email + consent)
+    // Fill form (simplified: just name + email + consent). fill() auto-waits for the
+    // opt-in form to render.
     await page.getByPlaceholder(/voornaam/i).fill('TestUser');
     await page.getByPlaceholder(/e-mailadres/i).fill('test@example.com');
     await page.locator('input[type="checkbox"]').first().check();
-    await page.waitForTimeout(300);
 
+    /* The submit button only enables once consent is committed, and click() waits for
+     * enabled — no sleep needed between the check and the click. */
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(2000);
   }
 
   (webhookUrl ? test : test.skip)('Screen 6 shows "Nog een stap" label', async ({ page }) => {
@@ -667,34 +582,31 @@ test.describe(`${SLUG} — Screen 6 (Confirmation)`, () => {
 
   (webhookUrl ? test : test.skip)('correction link returns to Screen 5 with name pre-filled', async ({ page }) => {
     await reachScreen6(page);
+    await expect(page.getByText(/nog één stap/i)).toBeVisible({ timeout: 10_000 });
 
     await page.getByText(/vul het opnieuw in/i).click();
-    await page.waitForTimeout(600);
 
     // Voornaam should be pre-filled
     const nameInput = page.getByPlaceholder(/voornaam/i);
-    const nameValue = await nameInput.inputValue();
-    expect(nameValue).toBe('TestUser');
+    await expect(nameInput).toBeVisible({ timeout: 5_000 });
+    expect(await nameInput.inputValue()).toBe('TestUser');
 
     // Email should be cleared
     const emailInput = page.getByPlaceholder(/e-mailadres/i);
-    const emailValue = await emailInput.inputValue();
-    expect(emailValue).toBe('');
+    expect(await emailInput.inputValue()).toBe('');
   });
 
   (webhookUrl ? test : test.skip)('correction resubmit works', async ({ page }) => {
     await reachScreen6(page);
+    await expect(page.getByText(/nog één stap/i)).toBeVisible({ timeout: 10_000 });
 
     await page.getByText(/vul het opnieuw in/i).click();
-    await page.waitForTimeout(600);
 
     // Fill corrected email
     await page.getByPlaceholder(/e-mailadres/i).fill('corrected@example.com');
     await page.locator('input[type="checkbox"]').first().check();
-    await page.waitForTimeout(300);
 
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(2000);
 
     // Should be back on Screen 6
     await expect(page.getByText(/nog één stap/i)).toBeVisible({ timeout: 10_000 });
@@ -724,7 +636,6 @@ test.describe(`${SLUG} — i18n (English)`, () => {
   test('EN profile screen shows "A little about you" label', async ({ page }) => {
     await loadPage(page, TEST_PAGE_EN);
     await answerReportProfile(page, DUAL_PROFILE, ANSWER_LABELS_EN);
-    await page.waitForTimeout(500);
 
     await expect(page.getByText(/a little about you/i)).toBeVisible({ timeout: 5_000 });
   });
@@ -739,14 +650,12 @@ test.describe(`${SLUG} — i18n (English)`, () => {
     // (code-driven) English error strings below. Localise the prop in the Webflow
     // EN locale to drop the Dutch fallback here.
     await page.getByRole('button', { name: /receive my report|get my report|ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(600);
 
     const emailInput = page.getByPlaceholder(/email/i);
     await emailInput.fill('bad');
     await emailInput.blur();
-    await page.waitForTimeout(300);
 
-    await expect(page.getByText(/enter a valid email/i)).toBeVisible();
+    await expect(page.getByText(/enter a valid email/i)).toBeVisible({ timeout: 5_000 });
   });
 });
 
@@ -765,18 +674,19 @@ test.describe(`${SLUG} — E2E: MailerSend API check`, () => {
     await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(600);
 
     // Fill form with test email (simplified: name + email + consent)
     await page.getByPlaceholder(/voornaam/i).fill('E2E Test');
     await page.getByPlaceholder(/e-mailadres/i).fill(testEmail);
     await page.locator('input[type="checkbox"]').first().check();
-    await page.waitForTimeout(300);
 
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(3000);
+    // The submit reaching the backend is what starts the send; the confirmation screen
+    // is the client-side signal that it did.
+    await expect(page.getByText(/nog één stap/i)).toBeVisible({ timeout: 10_000 });
 
-    // Poll MailerSend activity API for up to 30 seconds
+    // Poll MailerSend activity API for up to 30 seconds. The interval waits on an
+    // external API, not the page — a plain timer, deliberately not a page-clock sleep.
     let emailFound = false;
     for (let attempt = 0; attempt < 10; attempt++) {
       const response = await fetch('https://api.mailersend.com/v1/activity', {
@@ -790,7 +700,7 @@ test.describe(`${SLUG} — E2E: MailerSend API check`, () => {
         emailFound = true;
         break;
       }
-      await page.waitForTimeout(3000);
+      await new Promise((r) => setTimeout(r, 3_000));
     }
 
     expect(emailFound).toBeTruthy();
@@ -826,16 +736,15 @@ test.describe(`${SLUG} — E2E: Gmail inbox check`, () => {
     await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(600);
 
     await page.getByPlaceholder(/voornaam/i).fill('Gmail E2E');
     await page.getByPlaceholder(/e-mailadres/i).fill(testEmail);
     await page.locator('input[type="checkbox"]').first().check();
-    await page.waitForTimeout(300);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(3000);
+    await expect(page.getByText(/nog één stap/i)).toBeVisible({ timeout: 10_000 });
 
-    // Poll Gmail for verification email (up to 60 seconds)
+    // Poll Gmail for verification email (up to 60 seconds). Plain timers between
+    // attempts — the wait is on an external inbox, not the page.
     let verifyLink = null;
     for (let attempt = 0; attempt < 12; attempt++) {
       const res = await gmail.users.messages.list({
@@ -864,7 +773,7 @@ test.describe(`${SLUG} — E2E: Gmail inbox check`, () => {
           break;
         }
       }
-      await page.waitForTimeout(5000);
+      await new Promise((r) => setTimeout(r, 5_000));
     }
 
     expect(verifyLink).toBeTruthy();
@@ -874,8 +783,7 @@ test.describe(`${SLUG} — E2E: Gmail inbox check`, () => {
     await waitForReady(page);
 
     // Should redirect to /zelftest/bevestigd
-    await page.waitForTimeout(3000);
-    expect(page.url()).toContain('bevestigd');
+    await expect(page).toHaveURL(/bevestigd/, { timeout: 10_000 });
 
     // Poll Gmail for report delivery email (up to 90 seconds)
     let reportReceived = false;
@@ -889,7 +797,7 @@ test.describe(`${SLUG} — E2E: Gmail inbox check`, () => {
         reportReceived = true;
         break;
       }
-      await page.waitForTimeout(5000);
+      await new Promise((r) => setTimeout(r, 5_000));
     }
 
     expect(reportReceived).toBeTruthy();
@@ -937,18 +845,17 @@ test.describe(`${SLUG} — General`, () => {
   });
 
   test('mobile responsive: form fields usable at 375px', async ({ page }) => {
-    test.setTimeout(60_000); // full quiz flow at mobile width — pills stack, so
-    // Playwright auto-scrolls to each answer, pushing the run past the 30s default
+    // Full quiz flow at mobile width — pills stack, so Playwright auto-scrolls to each
+    // answer. Covered by the suite-wide QUIZ_TEST_TIMEOUT_MS budget.
     await page.setViewportSize({ width: 375, height: 812 });
     await loadPage(page);
     await answerReportProfile(page);
     await fillProfileScreen(page);
     await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
-    await page.waitForTimeout(600);
 
     // Form fields should be visible and usable
     const nameInput = page.getByPlaceholder(/voornaam/i);
-    await expect(nameInput).toBeVisible();
+    await expect(nameInput).toBeVisible({ timeout: 5_000 });
     const box = await nameInput.boundingBox();
     if (box) {
       expect(box.width).toBeGreaterThan(200); // not squished

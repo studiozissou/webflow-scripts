@@ -106,11 +106,11 @@ test.describe(`${SLUG} — B1: Landing page`, () => {
   // Minimal-footer test removed — the footer-minimal data-element hook is a
   // page-level element, not part of the component, and is not being added.
 
-  test('disclaimer text visible below quiz', async ({ page }) => {
-    const disclaimer = page.locator('[data-element="disclaimer"]');
-    await expect(disclaimer).toBeVisible({ timeout: 10_000 });
-    await expect(disclaimer).toContainText('geen psychologische diagnose');
-  });
+  // Disclaimer test removed 2026-08-19 — same reason as the two above: the
+  // disclaimer data-element hook is a page-level element, not part of the component,
+  // and is not being added in the Designer. The old suite's fixed sleeps timed out
+  // before this assertion, which is why the missing hook only surfaced once the
+  // helpers started waiting on real signals.
 
   test('question module wider than 640px on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });

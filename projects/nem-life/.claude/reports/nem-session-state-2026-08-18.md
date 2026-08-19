@@ -105,10 +105,13 @@ Also: Christel's texts are 27 of 108.
   serve 200, across two clients, with a bogus path still 404ing as a control. It was
   transient. The 672 MB of tracked binaries is still poor hygiene, but it is not an outage
   and should not be told to a client as one.
-- **The acceptance suite points at a page with no quiz on it.** `TEST_PAGE_NL` is
-  `/zelftesten/waarom-reageer-ik-zo`; the component is on **`/quiz-test-phase-b`**. That is
-  probably the real cause of the original 20/20 failure, not the start button I "fixed".
-  Re-point the suite before diagnosing the three remaining failures.
+- ~~**The acceptance suite points at a page with no quiz on it.**~~ **Withdrawn 2026-08-19.**
+  Both `/zelftesten/waarom-reageer-ik-zo` and `/quiz-test-phase-b` serve the identical
+  `<code-island>` — same `submoduleId`, same 20 question props. Re-pointing the suite would
+  have been a wasted change chasing a false lead. A full run against the existing
+  `TEST_PAGE_NL` gives **14 passed, 4 failed, 2 flaky**, and the failure snapshots show the
+  quiz rendering normally ("Vraag 18 van 20"), so the page is not the problem.
+  See `nem-acceptance-failures-2026-08-19.md` for what the four failures actually are.
 - The component renders into a **shadow DOM**, so `innerText` and static HTML fetches show
   an empty container. Query `document.querySelector('code-island').shadowRoot`.
 
@@ -116,12 +119,22 @@ Also: Christel's texts are 27 of 108.
 
 ## Next, in order
 
-1. **§5 intro lines** — 25 fixed teasers, generated from the same CSV path as the conclusion
-   texts. Keyed on **mechanism alone, not gender** — the one asymmetry, and the easiest thing
-   to get wrong. 25 not 26: both flat outcomes go to the contact link.
-2. **§6 report template** — structure and slots for Alex to style. Tell him again that the
-   Webflow page is a design surface, not the runtime; it gets exported into n8n.
-3. **The three acceptance failures** — re-point the suite first.
+1. ~~**§5 intro lines**~~ — **built 2026-08-19** on `worktree-nem-intro-lines`. Pipeline,
+   guards and 21 unit tests are done; blocked only on copy, since the Intro lines tab does
+   not exist in Alex's sheet yet. Send him
+   `.claude/research/nem-intro-lines-template.csv`. The n8n side (`Normalize` reading
+   `introLine`, `Build HTML` rendering it) is a separate follow-up slice.
+2. ~~**The acceptance failures**~~ — **fixed 2026-08-19**, 19 passed / 0 failed / 1 flaky.
+   They were the 30s per-test timeout, not a defect. See
+   `nem-acceptance-failures-2026-08-19.md`.
+3. **§6 report template** — structure and slots for Alex to style. Tell him again that the
+   Webflow page is a design surface, not the runtime; it gets exported into n8n. **This is
+   now the next build task.**
+4. **The swallowed click** (new, P2) — clicking an answer during the question fade does
+   nothing and the user has to press again. Found while fixing the suite; the blind sleep
+   had hidden it. `nem-swallowed-click-during-question-fade` in the queue.
+5. **The other two acceptance specs** carry their own copies of the same sleepy helpers and
+   the same 30s budget, and have not been re-run. Expect the same timeouts.
 
 External, unchanged: Notion access (P2, not blocking dev), Christel's remaining texts.
 

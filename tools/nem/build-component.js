@@ -38,6 +38,7 @@ const MODULES = [
   "nem-test-conclusion-ids.js",
   "nem-test-scoring.js",
   "nem-conclusion-texts.js",
+  "nem-intro-lines.js",
 ];
 
 /* The component imports the text tables under different local names. Aliased imports are
@@ -47,6 +48,8 @@ const ALIASES = [
   ["REAL_NL_MAN", "NL_MAN"],
   ["REAL_EN_VROUW", "EN_VROUW"],
   ["REAL_EN_MAN", "EN_MAN"],
+  ["REAL_NL_INTRO", "NL_INTRO"],
+  ["REAL_EN_INTRO", "EN_INTRO"],
 ];
 
 const read = (name) => readFileSync(resolve(SRC_DIR, name), "utf8");

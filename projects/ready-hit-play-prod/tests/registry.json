@@ -646,6 +646,16 @@
       "slug": "rhp-mobile-dial-circular-drag-and-spinner-arrows",
       "created": "2026-08-18",
       "description": "Mobile dial spins a continuous 360 via circular finger drag (no dominant-axis direction flip), and the 8px white dot at 6 o'clock is replaced by the 53x19 spinner-arrows SVG."
+    },
+    {
+      "id": "rhp-nav-fade-in-on-work-page",
+      "file": "tests/acceptance/rhp-nav-fade-in-on-work-page.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "slug": "rhp-nav-fade-in-on-work-page",
+      "created": "2026-08-13",
+      "description": "Nav on work pages: survives the stale about-page .nav display:none style, and fades/slides in (logo fade + about from left, contact from right) on about to work"
     }
   ]
 }

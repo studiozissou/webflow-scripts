@@ -59,11 +59,19 @@ hero does not regress (a11y is 3 points higher than baseline).
 
 ## Post-verify polish (Will, 19 Aug)
 
-Spotify's embed has built-in rounded corners (inside the cross-origin iframe, not
-restylable). Fixed by oversizing the iframe by 32px with -16px margins inside the
-`overflow:hidden` wrapper so the corners fall outside the visible hero, plus
-`background:#000` on the wrapper backing any transparent corner pixels.
-Verified live: corners flush on desktop.
+Spotify's embed has built-in rounded corners, inside the cross-origin iframe and
+therefore not restylable.
+
+First attempt oversized the iframe by 32px with -16px margins inside the
+`overflow:hidden` wrapper, pushing the corners out of view. **Reverted** — the
+crop also clipped the player's own chrome: the episode title and artwork sat
+flush against the left edge, the Spotify logo was cut at the right, and the play
+button and timestamp were chopped at the bottom. Spotify's internal padding is
+smaller than the crop needed to clear the radius, so no crop depth avoids this.
+
+**Shipped instead:** iframe at a true 100% × 100% with `background:#000` on the
+`overflow:hidden` wrapper, so the rounded corners show the black backing rather
+than the hero image behind. All player padding is preserved.
 
 ## Tier 3 — manual checklist (from spec)
 

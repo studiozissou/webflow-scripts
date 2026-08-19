@@ -73,8 +73,10 @@ before the build (no collision with the sibling list-page spec).
   sibling directly after the YouTube embed. No Webflow style classes, no
   conditional visibility — all styling/behaviour in page custom code.
 - Head appended block (`<!-- podcast-episode-hero-spotify -->`): CSS only —
-  wrapper hidden by default + absolute inset-0 z-2 positioning, `.is-active`
-  reveal, `.section_podcast-hero.spotify-hero-active { display:block !important }`
+  wrapper hidden by default + absolute inset-0 z-2 positioning + `overflow:hidden`
+  with `background:#000` (backs the embed's un-restylable rounded corners),
+  iframe at 100%/100%, `.is-active` reveal,
+  `.section_podcast-hero.spotify-hero-active { display:block !important }`
   override of `w-condition-invisible`, gradient `pointer-events:none` when active.
 - Footer appended block (`<!-- podcast-episode-hero-spotify -->`): IIFE reads
   Youtube ID + Spotify Link via `{{wf}}` tokens; if YouTube empty and a

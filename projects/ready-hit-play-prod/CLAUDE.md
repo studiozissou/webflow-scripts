@@ -4,14 +4,6 @@
 Production scripts for https://rhpcircle.webflow.io/ — a creative agency site for Ready Hit Play, Amsterdam.
 Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + modules in sequence.
 
-## Tech stack
-- **Barba.js** — SPA page transitions (3 page namespaces: home, about, case) + contact pullout panel
-- **GSAP 3.14.2** + ScrollTrigger + SplitText (Club) — all animations
-- **Lenis 1.3.17** — smooth scroll (about, case; NOT home)
-- **Webflow** — hosting, CMS, Designer-built DOM
-- **Vanilla ES2022+** — no build step, no jQuery, no TypeScript
-- **jsDelivr CDN** — production delivery, commit-hash pinned
-
 ## Deployment
 - `init.js` is the only script tag in Webflow (head). It self-loads everything.
 - jsDelivr serves files pinned to a commit hash (e.g. `...@abc1234/projects/ready-hit-play-prod/init.js?v=N`).
@@ -23,23 +15,8 @@ Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + 
 - **This folder** (`ready-hit-play-prod/`) is the single source of truth — dev and live.
 - `projects/ready-hit-play/` is legacy and not in use.
 
-## Module load order (defined in `init.js` `CONFIG.modules`)
-1. `lenis-manager.js`
-2. `cursor.js`
-3. `work-dial.js`
-4. `transition-dial.js`
-5. `about-dial-ticks.js`
-6. `about-text-lines.js`
-7. `home-intro.js`
-8. `intro-format.js`
-9. `earth-parallax.js`
-10. `case-video-controls.js`
-11. `video-loader.js`
-12. `orchestrator.js`
-13. `utils.js`
-14. `overland-ai.js` (only on `/case-studies/overland-ai`)
-
-Dependencies loaded before modules: GSAP 3.14.2, ScrollTrigger, SplitText (Club), Barba, Lenis 1.3.17, lottie-web 5.12.2 (light).
+## Module load order
+Defined in `init.js` -> `CONFIG.modules` (load order matters). Read it there; dependency scripts are loaded ahead of the module list in the same file.
 
 ## File responsibilities
 
@@ -93,30 +70,8 @@ There is **no separate contact page**. Contact is a slide-out panel built into t
 - Available on every page (lives outside Barba container in the nav)
 
 ## window.RHP shape
-Every module registers itself here before orchestrator runs. Key entries:
-```
-RHP.lenis          — { start, stop, resize, onScroll, offScroll, setupScrollTriggerProxy, version }
-RHP.cursor         — { init, destroy, refresh, setPosition, setState, setLockedToDot, getCurrentState, transitionDuration, version }
-RHP.workDial       — { init, destroy, getActiveIndex, setIntroComplete, setAttractionEnabled, setDeadzoneRatio, version }
-RHP.transitionDial — { init, destroy, resize, paintInto, clearCanvas, version }
-RHP.aboutDialTicks — { init, destroy, resize, version }
-RHP.aboutTextLines — { init, destroy, getThresholds, version }
-RHP.homeIntro      — { run }
-RHP.earthParallax  — { init, destroy, getParallaxAmount, version }
-RHP.caseVideoControls — { init, destroy, version }
-RHP.videoLoader    — { init, destroy, version }
-RHP.formatIntroText — Function
-RHP.scroll         — { lock, unlock }  (CSS-level, set by orchestrator)
-RHP.views          — { home, about, case } each { init, destroy } (contact is a pullout, not a view)
-RHP.videoState     — { byIndex: {}, caseHandoff: null }  (shared between work-dial and orchestrator)
-```
+Every module registers itself on `window.RHP` before orchestrator runs, and each exposes a `version` string plus `init(container)` / `destroy()`. For the exact surface of any module, read its registration block at the bottom of its own file.
 
-## CSS custom properties (key ones)
-- `--dial-large-width/height` — homepage dial size (clamp-based, responsive)
-- `--dial-small-width/height` — about page dial (6rem)
-- `--dial-case-width/height/border-radius/aspect-ratio` — case study dial targets for GSAP tween
-- `--transition-dial-bottom` — transition dial vertical offset
-- `--_primitives---colors--orange` — `#ff8200`, read by cursor.js via `getComputedStyle`
 
 State classes added by JS to `[data-barba="wrapper"]`:
 - `.rhp-home-ready` — home nav/dial visible and interactive
@@ -184,72 +139,4 @@ State classes added by JS to `[data-barba="wrapper"]`:
 `YYYY.M.D.N` — year, month, day, daily build number. Bump `CONFIG.version` in `init.js` on each deploy.
 
 ## Testing
-
-Playwright end-to-end tests run against the live Webflow staging site (`https://rhpcircle.webflow.io`).
-
-### Setup
-```bash
-cd projects/ready-hit-play-prod
-npm install          # installs @playwright/test + @axe-core/playwright
-npx playwright install chromium
-```
-
-### Running tests
-```bash
-npm test             # all tests
-npm run test:smoke   # smoke suite only
-npm run test:a11y    # accessibility suite only
-npm run test:report  # open last HTML report
-```
-
-### Test suites
-
-**`tests/smoke.test.js`** — Functional correctness
-- Homepage: no JS errors, all RHP modules loaded (`window.RHP.scriptsOk`), key DOM elements present
-- Dial: `dial_generic-video` created, `#dial_ticks-canvas` present
-- Nav: about-link and logo-link have valid hrefs
-- Barba transitions: home → about, about → home (no JS errors, correct namespace mounts)
-- About page: loads clean, dial canvas present
-
-**`tests/a11y.test.js`** — Accessibility (WCAG 2.1 AA)
-- axe-core WCAG 2.1 AA audit on homepage and about page
-- Canvas `#dial_ticks-canvas` has `aria-hidden="true"` (decorative)
-- Nav links are keyboard focusable (tabIndex ≥ 0)
-- `prefers-reduced-motion`: nav visible after intro, workDial initialised, about text not stuck invisible
-
-### How tests detect loaded scripts
-`waitForRHP(page)` polls `window.RHP?.scriptsOk === true` (set by `init.js` after all modules report in). Tests timeout at 20 s if scripts fail to load — check the Webflow head block or jsDelivr URL.
-
-### Known limitations / Webflow constraints
-- `.nav_logo-link` is rendered as a `<div>` by Webflow (not `<a>`), so it has no `href` attribute. The smoke test for this element checks keyboard/ARIA accessibility instead of href. Fix in Webflow designer: change it to a Link Block pointing to `/`.
-- `aria-label` on `<p>` and `<div>` elements is added automatically by GSAP SplitText v3.12+ for accessibility. These elements must have a `role` attribute that supports naming (e.g. `role="group"`) — set by our JS before calling SplitText.
-- Home intro animation hides the nav until the sequence completes. Tests that check nav visibility use Playwright's `toBeVisible()` which polls until the element appears (10 s default timeout).
-- Webflow's own generated HTML (badges, Finsweet attrs, etc.) may contribute WCAG violations outside our control. Add offending selectors to `EXCLUDE_FROM_AUDIT` in `a11y.test.js` only if the violation is provably from Webflow HTML, not our code.
-
-### When to run smoke tests
-- After pushing a fix and updating the jsDelivr URL in Webflow — confirms nothing is catastrophically broken before sign-off
-- Before marking any queue item `PENDING_HUMAN_REVIEW`
-- After a dependency update (GSAP, Lenis, Finsweet, Barba, etc.)
-
-### When to run a11y tests
-- A new page or section has been built
-- Copy or heading structure has changed
-- Before any client-facing review or launch
-
-### When NOT to run either
-- Mid-build, iterating locally — too slow, wrong feedback loop
-- Only a comment, variable name, or non-functional code changed
-
-**The rule:** commit → push → update jsDelivr hash → `npm run test:smoke` → if clean, human review. Playwright is a gate before sign-off, not a development tool.
-
-### Two-tier assertion model
-Follow the monorepo-level convention in `CLAUDE.md` § Page Testing Convention:
-- **Hard `expect()`** — functional breakage (404 links, missing forms, console errors, broken images, overflow, H1 issues)
-- **Soft `test.info().annotations`** — design drift (copy differences, nav labels, footer text). These log as `design-drift` warnings in the HTML report but never fail the run.
-
-### Adding a new test
-1. Add to the relevant suite (`smoke.test.js` for functional, `a11y.test.js` for a11y).
-2. Use `waitForRHP(page)` in `beforeEach` so tests only run after scripts are confirmed loaded.
-3. Keep timeouts generous for elements that animate in (use `await expect(el).toBeVisible()` rather than assuming immediate availability).
-4. Decide: hard failure or design drift? Use `expect()` for functional checks, `test.info().annotations.push({ type: 'design-drift', description })` for content/copy checks.
-5. Run `/qa-check` after the feature is built — the QA checklist includes running the test suite.
+Playwright e2e + a11y suites run against the live staging site. Full workflow, suite contents, and the when-to-run policy live in the `rhp-testing` skill — invoke it when testing this project.

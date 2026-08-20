@@ -71,7 +71,13 @@ test.beforeEach(() => {
 
 // ── Shadow-DOM helpers (page.evaluate does not pierce, locators do) ────────────
 
-/** Serialised into the page: finds the shadow root that actually holds the quiz. */
+/** Serialised into the page: finds the shadow root that actually holds the quiz.
+ *
+ * ⚠️ Rehydrate this with `new Function('return (' + src + ')')`, parens included. Without
+ * them the generated body is `return\n  () => …`, ASI ends the statement at the newline,
+ * the function returns undefined, and every call site dies with "(intermediate value)(...)
+ * is not a function" — before asserting anything. That bug silently no-op'd this entire
+ * spec on its first real run. */
 const QUIZ_ROOT_FN = `
   () => {
     for (const host of document.querySelectorAll('code-island')) {
@@ -92,7 +98,7 @@ const QUIZ_ROOT_FN = `
 async function clickAndSampleMidTransition(page, pillIndex, waitMs = MID_TRANSITION_MS) {
   return page.evaluate(
     async ([rootFnSrc, index, delay]) => {
-      const root = new Function('return ' + rootFnSrc)()();
+      const root = new Function('return (' + rootFnSrc + ')')()();
       if (!root) throw new Error('quiz shadow root not found');
 
       const pills = () => Array.from(root.querySelectorAll('.nem-answers button'));
@@ -130,7 +136,7 @@ async function clickAndSampleMidTransition(page, pillIndex, waitMs = MID_TRANSIT
 async function doubleClickInsideWindow(page, firstIndex, secondIndex, gapMs = 80) {
   return page.evaluate(
     async ([rootFnSrc, a, b, gap]) => {
-      const root = new Function('return ' + rootFnSrc)()();
+      const root = new Function('return (' + rootFnSrc + ')')()();
       const pills = () => Array.from(root.querySelectorAll('.nem-answers button'));
       const counter = () =>
         (root.querySelector('[aria-live="polite"]')?.textContent || '').trim();
@@ -151,7 +157,7 @@ async function doubleClickInsideWindow(page, firstIndex, secondIndex, gapMs = 80
 async function questionNumber(page) {
   const raw = await page.evaluate(
     ([rootFnSrc]) => {
-      const root = new Function('return ' + rootFnSrc)()();
+      const root = new Function('return (' + rootFnSrc + ')')()();
       if (!root) return null;
       return (root.querySelector('[aria-live="polite"]')?.textContent || '').trim();
     },
@@ -165,7 +171,7 @@ async function questionNumber(page) {
 async function pillsDisabled(page) {
   return page.evaluate(
     ([rootFnSrc]) => {
-      const root = new Function('return ' + rootFnSrc)()();
+      const root = new Function('return (' + rootFnSrc + ')')()();
       return Array.from(root.querySelectorAll('.nem-answers button')).map(
         (b) => b.disabled,
       );
@@ -178,7 +184,7 @@ async function pillsDisabled(page) {
 async function selectedPillLabel(page) {
   return page.evaluate(
     ([rootFnSrc]) => {
-      const root = new Function('return ' + rootFnSrc)()();
+      const root = new Function('return (' + rootFnSrc + ')')()();
       const sel = Array.from(root.querySelectorAll('.nem-answers button')).find(
         (b) => b.getAttribute('aria-selected') === 'true',
       );

@@ -176,18 +176,33 @@ The Today Show · Good Morning America · The Washington Post · Forbes
 3. **"multiple Emmy Award-winning"** — full bio says multiple, short bio and title say
    "Emmy Award-winning" (singular). Confirm the count so it can be stated consistently
    everywhere, including Wikidata.
-4. ~~**Social links**~~ — **resolved by investigation (2026-08-12).** All handles verified
-   against Wikidata Q7681850 and confirmed live. No client input needed:
+4. ~~**Social links**~~ — **resolved by investigation (2026-08-12), corrected 2026-08-20.**
+
+   > ⚠️ **The 12 Aug version of this table was wrong about Threads and the error shipped.**
+   > It listed `https://www.threads.net/@TamsenFadalTV` as corroborated by Wikidata `P11245`.
+   > **P11245 is the YouTube handle property, not Threads** — the value `TamsenFadalTV` is her
+   > YouTube handle. The Threads URL went into the live site's `sameAs` on that basis and ran
+   > on ~400 pages until it was caught and removed on 20 Aug.
+   >
+   > **The client has since confirmed she has no Threads account.** Do not re-add it.
+   >
+   > Lesson: check the property's actual label before treating a QID value as corroboration,
+   > and never put a profile in `sameAs` that isn't linked from the site itself. `sameAs` is
+   > an identity assertion — an unverified entry is worse than an omission.
+
+   Corrected table. Every row below is linked from the live site **and** present in Wikidata:
 
    | Platform | URL | Wikidata |
    | --- | --- | --- |
    | Instagram | https://www.instagram.com/tamsenfadal/ | P2003 |
    | Facebook | https://www.facebook.com/tamsenfadal/ | P2013 |
    | TikTok | https://www.tiktok.com/@tamsenfadal | P7085 |
-   | YouTube | https://www.youtube.com/@TamsenFadalTV | — (P2397 missing) |
+   | YouTube | https://www.youtube.com/@TamsenFadalTV | P2397 `UCcrYxvtT9tp60RBsK9HvpqQ` (added 20 Aug) · P11245 handle |
    | LinkedIn | https://www.linkedin.com/in/tamsenfadal/ | P6634 |
-   | Threads | https://www.threads.net/@TamsenFadalTV | P11245 |
    | Muck Rack | https://muckrack.com/tamsenfadal | P6005 |
+
+   **Not official channels:** X/Twitter (inactive, removed from both the site and Wikidata on
+   11 Aug 2026) and Threads (no account).
 
    X/Twitter confirmed inactive — deliberately removed from the site's `sameAs` and from
    Wikidata on 11 Aug 2026.

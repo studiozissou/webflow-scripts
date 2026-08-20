@@ -133,9 +133,12 @@ test.describe('semrush-audit-fixes-aug-2026: broken links', () => {
     }
   });
 
-  test('smoothie redirect-chain target is no longer linked', async ({ page }) => {
+  // The smoothie post is live at /blog/hot-girl-menopause-smoothie, so the fix was to
+  // repoint at it rather than unlink. What must be gone is the bare-domain URL that
+  // redirect-chained through to the homepage.
+  test('smoothie redirect-chain URL is no longer linked', async ({ page }) => {
     const { html } = await readMeta(page, '/blog/fight-inflammation-lose-weight-with-dr-daryl-gioffre');
-    expect(html).not.toContain('hot-girl-menopause-smoothie');
+    expect(html).not.toMatch(/href="https?:\/\/(www\.)?tamsenfadal\.com\/hot-girl-menopause-smoothie\/?"/);
   });
 
   test('no href contains a stray trailing space before the closing quote', async ({ page }) => {

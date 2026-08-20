@@ -14,6 +14,34 @@ the Webflow MCP (or by pasting in Designer page settings).
 | `footer-code.html` | Page settings → Before `</body>` tag — **via `build-footer.cjs`, see below** |
 | `spotify-embed.html` | HtmlEmbed `2356c0b9-cde5-734f-2373-b89173011785` (`.podcast-list-spotify-embed.is-cover`) |
 
+### How the player is attached (read this first)
+
+`podcast-player.js` is **not** in the footer field. It is registered as a
+hosted script and applied to the page through the Webflow scripts API:
+
+```
+register_hosted_script  -> id "jayshettypodcastplayer", version 1.0.0
+set_page_scripts        -> applied to page 6a85a907e42332f1eded63d7, footer
+```
+
+Two reasons. Webflow's freeform custom-code endpoint started returning HTTP
+406 on every write (any size, any content, byte-identical included) while
+reads, publishes and the scripts API all worked — so the footer can only be
+edited by hand right now. And when the script tag *was* pasted by hand, the
+Designer's code editor reformatted the block on save and truncated the long
+jsDelivr URL mid-path, which is a good reason to keep long URLs out of that
+field permanently.
+
+To ship a player change: edit `podcast-player.js`, push, then register a new
+version and re-apply it (jsDelivr caches, so bump the version rather than
+relying on a purge).
+
+**Outstanding:** the footer still contains the truncated
+`<script src=".../podcas?v=1">` line from that paste. It 404s harmlessly but
+should be deleted by hand in Page Settings. The CDN URL also pins the
+worktree branch, which disappears on merge — re-register against `@main`
+then.
+
 ### Deploying the footer
 
 Webflow's page custom-code field has a size ceiling that the commented source

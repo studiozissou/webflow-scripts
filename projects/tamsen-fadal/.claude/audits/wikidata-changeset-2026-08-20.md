@@ -101,6 +101,18 @@ Applied with `reference URL` + `retrieved`, verified present.
 
 ---
 
+## 2b. ✅ DONE — P648 Open Library author ID
+
+`OL3356737A`, applied with reference URL + retrieved, verified present.
+
+Identified via the Open Library search API and **confirmed by pulling the author's works**
+before use — the record lists *The New Single*, *Why Hasn't He Called?*, *Don't Date Dumb*
+and a Russian translation, matching her pre-menopause bibliography. It does not yet include
+*How to Menopause*, which is why an ISBN lookup on `9780306833540` returns 404 there.
+
+Worth having: it ties her to library catalogue data, the same class of signal as the VIAF,
+ISNI, Library of Congress and WorldCat IDs already on the item.
+
 ## 3. Not actionable yet — do not force these
 
 | Gap | Why it is parked |
@@ -109,6 +121,25 @@ Applied with `reference URL` + `retrieved`, verified present.
 | **P800 — the two documentaries and the podcast** | Each needs its own Wikidata item before it can be referenced. Item creation is subject to notability review, and speculative creation is how entries get deleted. Leave until there is independent sourcing to cite. |
 
 ---
+
+## Where the item stands, and why to stop here
+
+**Q7681850 now carries 35 properties.** A gap analysis on 20 Aug against the common Person
+property set found the item already well populated: date and place of birth, sex or gender,
+citizenship, image, educated at, given/family name, residence, relative, Commons category,
+and the VIAF / ISNI / Library of Congress / WorldCat / IMDb / Freebase authority chain — plus
+the six referenced occupations, YouTube channel ID and Open Library ID added in this pass.
+
+What remains is deliberately left alone:
+
+| Left undone | Why |
+| --- | --- |
+| **13 claims carry no references** (image, gender, citizenship, educated at, the Emmy, several identifiers) | Sourcing "sex or gender" or an authority-file ID to a client marketing site is padding with a mild spam signal. Identifier claims should cite the authority, not us. Low value. |
+| **P800 for the documentaries and the podcast** | Confirmed by search on 20 Aug: **no Wikidata items exist** for *The (M) Factor*, *Before the Pause* or *The Tamsen Show*. Each would need creating first, which is a notability case requiring independent coverage — not data entry. Do not create speculatively; that is how items get deleted. |
+| **P166 NYWICI Matrix Award** | No Wikidata item exists for the Matrix Awards either. Same reasoning. |
+
+**The remaining leverage on this project is not in Wikidata.** It is the site footer wording
+decision and publishing the approved bio on the Press page — both need the client.
 
 ## Verification after running
 

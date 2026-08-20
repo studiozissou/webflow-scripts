@@ -101,7 +101,12 @@ Webflow's site settings by hand. Until then SEMrush issue 219 stays open.
 
 ---
 
-## Known-dead links found but not yet fixed
+## Deferred — to be planned separately
+
+Agreed on 2026-08-20 to note these and schedule the fixes later. Nothing here blocks the
+five SEMrush issues.
+
+### Known-dead links found but not yet fixed
 
 These returned a genuine 404 from a responding server. None were in SEMrush's 82 rows —
 they were surfaced by the independent link test — so issue 12 should clear without them.
@@ -118,21 +123,44 @@ Ready-to-apply edits are in the build's working set; each is a single field writ
 | `functionalsobriety.com/book` | 1 | Unlink |
 | `www.tamsenfadal.com/menopause-symptom-tracker` + zero-width joiner | 1 | Strip the stray character |
 
+### Other deferred items
+
+- **`/themfactor2` carries no entity signal.** Its title —
+  *"The [M] Factor 2: Before The Pause | Perimenopause Documentary Film"* (67 chars) — is
+  the only page on the site without "Tamsen Fadal" in it. Pre-existing, and a gap against
+  `seo-branded-search-fix.md`. There are 3 characters of headroom, so it needs a rewrite
+  rather than an append.
+- **Byline mismatch on `/blog/it-was-never-your-fault`.** Its category-box name is
+  "Dr. Jason Fung" and its hero image is captioned "Jason and Tamsen", on an article about
+  GSM. Pre-existing and unrelated to this build, but visible on the blog index.
+
 ---
 
-## Open questions for the client
+## Decisions taken (user, 2026-08-20, after the build)
 
-1. **Pair 8 content duplication.** `/blog/it-was-never-your-fault` and
-   `/blog/everything-you-need-to-know-about-gsm-and-vaginal-estrogen` cover the same
-   subject. Both now have distinct descriptions, so the SEMrush flag clears, but the
-   underlying duplication is unresolved. Consolidate, or canonicalise one to the other?
-2. **Should `seo-title` be a required field?** It is optional today, per the spec. Because
-   Webflow has no fallback binding, a new post published with it empty will render a title
-   of just `| Tamsen Fadal`. Making the field required removes that risk permanently at the
-   cost of one extra step for editors — and would break any automation that creates posts
-   via the API without it.
-3. **Retired Apple Podcasts episodes.** Links now resolve to the current show rather than
-   the specific episode, which no longer exists anywhere. Acceptable, or unlink entirely?
+1. **`seo-title` is now required** on both collections, with the limit stated in the help
+   text: *"Required. The page title shown in search results. Maximum 55 characters —
+   ' | Tamsen Fadal' (15 characters) is added automatically, for a 70-character total.
+   Anything longer gets truncated by Google."* All 371 items already had a value, so the
+   change applied cleanly. A new post can no longer publish with an empty title.
+
+   > Watch for this: any automation that creates Blog or Podcast items through the API must
+   > now send `seo-title` or the write will be rejected.
+
+2. **Pair 8 — differentiated rather than consolidated.** Worth recording that the two posts
+   were not merely similar: their `post-content` was **byte-identical**, 8,252 characters
+   each. The same article had been published twice under two slugs. Per the decision, the
+   opening of `/blog/it-was-never-your-fault` was rewritten to lead with its own thesis
+   (the misnaming, and the self-blame that followed) instead of the explainer's opener. No
+   facts were added — the new intro is drawn entirely from the existing body, which is
+   otherwise untouched.
+
+   > Caveat: the remaining ~7,900 characters are still identical between the two pages.
+   > A distinct intro helps, but search engines may still treat them as near-duplicates.
+   > Canonicalising one to the other remains the durable fix if the flag returns.
+
+3. **Retired Apple Podcasts episodes — accepted as-is.** Links resolve to the current show
+   rather than the specific episode, which no longer exists anywhere.
 
 ## Still to verify
 

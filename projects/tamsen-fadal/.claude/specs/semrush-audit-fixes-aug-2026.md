@@ -395,3 +395,25 @@ Must not break:
    entirely given the referenced episodes no longer exist anywhere?
 3. `/blog/alloy-womens-health-…` was flagged as near-empty in the previous audit and is
    still thin. In scope for a separate content task?
+
+---
+
+## Build outcome — 2026-08-20
+
+Built and published. Full report, including three corrections to this spec, in
+[`../audits/semrush-remediation-2026-08-20.md`](../audits/semrush-remediation-2026-08-20.md).
+
+Corrections worth carrying forward:
+
+1. **Webflow SEO-title bindings have no fallback.** `{{Name}}` as a fallback for
+   `{{seo-title}}` is not a real feature. All 371 items were populated instead.
+2. **Pair 9 was mapped backwards.** The "30 years in heels" text belongs to
+   `your-feet-are-trying-to-tell-you-something`; `the-6-shoes-you-need-in-your-closet`
+   is the copy. Pair 3 was already distinct — the real tenth duplicate is a Dr. Gabrielle
+   Lyon text shared by `this-is-a-lesson-i-wish-i-learned-earlier` and
+   `how-getting-stronger-as-you-age-…`.
+3. **The smoothie page is not gone.** `/blog/hot-girl-menopause-smoothie` returns 200, so
+   the redirect chain was repointed rather than unlinked.
+
+Outstanding: `llms.txt` must be pasted into Webflow site settings by hand — it is not
+writable through the Data API, so issue 219 stays open until then.

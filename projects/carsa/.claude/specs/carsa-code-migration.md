@@ -35,7 +35,7 @@ Net: the repo side is ~40% done (capture, VDP file, test harness, loader pattern
 | D2 | Host everything in `studiozissou/webflow-scripts`, served by jsDelivr at pinned SHAs — **built portable from day one** so moving to Carsa's CloudFront (SST) later is a one-URL change. See *Portability* below. | `focalstrategy/carsa-website-support` is **private** → jsDelivr cannot serve it. Carsa already ships `carousel-embed` from `d1kcoelx4vkza6.cloudfront.net` via SST, so a handoff path exists when they want it. |
 | D3 | Loader-first, in the site **footer**, not the head. | Webflow injects jQuery, `webflow.js` and GSAP at the end of `<body>` *before* footer custom code. `vdp.js` calls `$()` at top level; a head loader would throw and abort whole modules. The 8 existing footer scripts already rely on this order. |
 | D4 | Re-capture and diff each page immediately before its swap; ask Tomek to freeze that page's embeds once it is on CDN. | Tomek edits embeds directly (APR hunt, 7 Jul). July snapshot is stale. |
-| D5 | Complex pages (VDP, SRP, Deals) each get their own publish; medium/low pages go 2–3 per publish. | ~12 publishes instead of ~21, without bisecting headaches on the pages that matter. |
+| D5 | Deep-check pages (VDP, SRP, Deals, Homepage) publish solo; the four form/calculator pages go as one batch; everything else is a 30-second check and ships in one or two batches. | 8 publishes total. Most pages have nothing to interact with beyond "loads, no errors, one link works". |
 | D6 | Effort is framed as **Claude / Will / Tomek's side**, not hours. | Most steps are automatable; Will's cost is spot-checks and go/no-go calls. |
 | D8 | Claude publishes staging **and** live via Webflow MCP. Will is the go/no-go gate before each live publish, not the clicker. | MCP publish is available in this setup. Live publishes are outward-facing, so they still wait for Will's explicit go. |
 | D7 | `battery-animation.js` gets pinned to a SHA in the same publish as the loader. | Unpinned `@main` is a live regression vector and has no immutable caching. |
@@ -157,28 +157,32 @@ Per page (or batch) loop — the same 9 steps every time:
 | c. Write page tests from the inline code: selectors it touches, links it builds, globals it sets, storage it writes, JSON-LD it emits | C |
 | d. Run tests against live (inline) → baseline green | C |
 | e. Via MCP: remove inline blocks from page body (leave config block if CMS page); bump footer SHA | C |
-| f. Publish staging (MCP) → tests → Will spot-checks → Will says go → publish live (MCP) | C publishes and tests; **W** spot-checks and gives the go |
+| f. Publish staging (MCP) → tests → Will checks (deep or 30-second, per the table below) → Will says go → publish live (MCP) | C publishes and tests; **W** checks and gives the go |
 | g. Re-run tests against live | C |
 | h. Ask Tomek not to edit that page's embeds again | **T** |
 | i. Tag commit `carsa-migration/{page}` | C |
 
-Order and batching (complex solo, others 2–3 per publish):
+Check depth per page:
+
+| Depth | Pages | What Will does on staging |
+|---|---|---|
+| **Deep** (~5 min) | VDP, SRP, Deals, Homepage | Finance calc numbers, gallery, make→model redirect, filters, PX/valuation links, mobile menu |
+| **Medium** (~2 min) | Finance Calculator, Get Started, Part Exchange, Value Car | Calculator output, URL-param prefill, form link builds, draw-line fires |
+| **Light** (~30 s) | FAQ, Car Finance, All Models, Models/Makes/Fuel/Near/Blog/Promotions templates, 24 global-only pages | Loads, no console errors, one link or dropdown works — Claude's tests already cover the rest |
+
+Order and batching:
 
 | Publish | Pages | Why here |
 |---|---|---|
 | 2 | VDP (redo) | Agreed with Tomek; module and 19 tests exist, need re-diff |
 | 3 | SRP | Agreed with Tomek; changed in Aug |
-| 4 | Deals | Differs from SRP by ~970 lines — own module, own publish |
+| 4 | Deals | Differs from SRP by ~970 lines — own module |
 | 5 | Homepage | `homepage.js` + 10 tests exist, re-diff |
-| 6 | Finance Calculator + Get Started | |
-| 7 | Part Exchange + Value Car + Car Finance | Share FAQ-schema and draw-line code |
-| 8 | FAQ Index + All Models | FAQ has an 83KB inline JSON-LD — decide whether it moves or stays (SEO: keep inline) |
-| 9 | Models + Makes templates | Config blocks; 5 sample slugs each |
-| 10 | Fuel + Near templates | Near folds in `near-location-redirect.js` |
-| 11 | Blog + Promotions templates | |
-| 12 | Sweep: 24 global-only pages verified by one batched test | C |
+| 6 | Finance Calculator + Get Started + Part Exchange + Value Car | Medium checks, share FAQ-schema / draw-line / valuation code |
+| 7 | FAQ + Car Finance + All Models + Models + Makes + Fuel + Near + Blog + Promotions | Light checks; config blocks on the templates; Near folds in `near-location-redirect.js`; FAQ's 83KB JSON-LD stays inline (SEO) |
+| 8 | Sweep: 24 global-only pages verified by one batched test, no Designer change | Automated |
 
-CMS templates: one swap per template (the template page, not per item); the 5 sample slugs are *verification* targets, not separate swaps.
+CMS templates: one swap per template (the template page, not per item); the 5 sample slugs are *verification* targets, not separate swaps. If publish 7 fails a test, Claude bisects by reverting routes in `init.js` — no Designer work needed.
 
 **Checkpoint:** zero inline JS in Webflow except config blocks, GTM/VWO/JSON-LD in the head, third-party tags.
 
@@ -215,7 +219,20 @@ Because of the portability rules, this is not really a phase: copy `projects/car
 | Code freeze per page | | ✅ Tomek |
 | Daily regression + Slack alert (visual suite) | ✅ once CI exists | CI secrets/webhook setup — Will, once |
 
-Rule of thumb: every page costs Will ~10 minutes clicking through the page's interactions on staging and one "go". Everything else — capture, code, tests, Webflow edits, both publishes, post-publish verification — is Claude.
+Rule of thumb: four pages cost Will ~5 minutes each, four cost ~2 minutes, the rest 30 seconds, plus one "go" per publish. Everything else — capture, code, tests, Webflow edits, both publishes, post-publish verification — is Claude.
+
+## Effort (working time, not elapsed)
+
+| Phase | Claude | Will | Notes |
+|---|---|---|---|
+| 0 Re-capture + reconcile | 30–45 min | 5 min | ~90 MCP pulls batched; you confirm the pruned page list |
+| 1 Loader + `global.js` | ~1 hr | 5 min | build, 12 tests, staging, live |
+| 2 Pages (7 publishes) | 3–4 hrs | ~35 min | 1:1 copies are minutes each; tests are the bulk; deep checks 4×5 min, medium 4×2 min, light ~5 min total |
+| **0–2 total** | **~5 hrs** | **~45 min** | fits in one day if done back-to-back |
+| 3 Modularise | 2–3 hrs | 3 × 1 min go | attribution has 6 variants — dedupe carefully, tests between each |
+| 4 Refactor | ~2 hrs | — | known VDP bugs, `DEBUG`, reduced-motion, unit tests for pure helpers |
+
+Elapsed time is whatever publish cadence you choose; nothing here needs to wait on anyone except Tomek's per-page code freeze.
 
 ## Rollback
 

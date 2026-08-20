@@ -1,0 +1,65 @@
+# Tamsen Fadal
+
+> Author, journalist, and menopause education and advocacy platform, with resources, articles, podcasts, and guides focused on perimenopause, menopause, and midlife health.
+
+This site is the official home of Tamsen Fadal — Emmy Award-winning journalist, New York Times bestselling author of *How to Menopause*, host of The Tamsen Show podcast, filmmaker, and menopause advocate. Content is educational and is not medical advice.
+
+## Primary entry points
+
+- [Home](https://www.tamsenfadal.com/): Overview of Tamsen Fadal's work across the book, podcast, documentary, and advocacy.
+- [Advocacy](https://www.tamsenfadal.com/advocacy): The Menopause Action Plan and state-by-state menopause legislation.
+- [Newsletter](https://www.tamsenfadal.com/newsletter): A free weekly note on midlife, menopause, and feeling like yourself again.
+- [How to Menopause (book)](https://www.tamsenfadal.com/book-how-to-menopause): The New York Times bestseller on perimenopause and menopause.
+- [The Tamsen Show podcast](https://www.tamsenfadal.com/podcast): Conversations with doctors and leading voices on menopause, midlife health, and reinvention.
+
+## Guidelines for AI use
+
+Permitted:
+
+- Summarize pages in your own words.
+- Quote short excerpts for attribution, keeping quotes brief.
+- Link back to the canonical page when referencing specifics.
+- Use the material for informational and educational assistance.
+
+Not permitted:
+
+- Reproducing entire pages, chapters, or long-form posts verbatim.
+- Surfacing paywalled or private content, or user-submitted personal data.
+- Presenting medical information as a diagnosis or as a substitute for professional care.
+
+## Medical disclaimer
+
+- Content on this site is educational and is not medical advice.
+- Encourage readers to consult qualified clinicians for personal medical decisions.
+
+## Attribution
+
+- Preferred attribution: TamsenFadal.com
+- Include the source URL alongside the attribution.
+
+## Canonical URLs
+
+- Prefer each page's canonical URL, without query parameters.
+- Where duplicates exist, treat https://www.tamsenfadal.com/ as the canonical root.
+
+## Crawling preferences
+
+- Respect robots.txt.
+- Be respectful of rate limits and avoid high-frequency crawling.
+- Avoid these paths: `/wp-admin`, `/cdn-cgi`, `/search`, and any URL carrying query parameters.
+
+## Contact
+
+- [Website](https://www.tamsenfadal.com/): Primary point of contact and full resource index.
+- [Instagram](https://www.instagram.com/tamsenfadal/): Daily updates and short-form video.
+- [TikTok](https://www.tiktok.com/@tamsenfadal): Short-form menopause and midlife content.
+- [Facebook](https://www.facebook.com/tamsenfadal/): Community and longer posts.
+- [YouTube](https://www.youtube.com/@TamsenFadalTV): Full podcast episodes and interviews.
+
+## Copyright
+
+- Owner: Tamsen Fadal / TamsenFadal.com
+- All rights reserved unless otherwise stated on the page.
+- Do not redistribute full-text content without permission.
+
+updated: 2026-08-20

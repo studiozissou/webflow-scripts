@@ -397,13 +397,13 @@
       "id": "nem-quiz-first-click-after-load-is-swallowed",
       "project": "nem-life",
       "type": "bug",
-      "priority": "P2",
-      "status": "Ready to Build",
-      "title": "Quiz: the first answer click after page load is sometimes swallowed",
-      "description": "The very first click on question one occasionally does nothing - the quiz does not advance and the user has to press again. This is NOT the fade race fixed by the transition guard: there is no transition in flight on a freshly loaded page, so there is nothing for the guard to disable. It looks like a hydration race - Webflow's federation renderer paints the component before React has attached the click handlers, so a fast click lands on nothing. Reproduce by loading the page and clicking an answer pill immediately. Likely fixes: gate the pills on a mounted flag so they are visibly inert until interactive, or capture and replay a click that arrives pre-hydration.",
+      "priority": "P1",
+      "status": "Ready to Review",
+      "title": "Quiz: clicks before hydration are lost — the pills are live in the server-rendered HTML",
+      "description": "CONFIRMED and fixed 2026-08-20, awaiting a Webflow paste and a verification run. Webflow SERVER-RENDERS this component: the quiz markup, including the answer pills and question one's text, is in the static HTML before any JavaScript runs, and React hydrates it afterwards. The pills are therefore visible and clickable for a window before their handlers exist, and a click in that window is lost outright - it does not queue and it does not replay. Measured on staging over ten loads: ONE CLICK IN TEN was lost entirely, still lost with a twenty-second budget; on that run the element carried no React fiber or props key, while the nine that worked did and advanced in a consistent ~550ms. Fix: a hydrated flag set in a mount effect, gating disabled={isTransitioning || !hydrated} on the pills and the back button. It works because the server render happens with hydrated false, so the static markup ships disabled - the browser will not dispatch a click on a disabled button at all.",
       "created": "2026-08-20",
       "updated": "2026-08-20",
-      "note": "Found 2026-08-20 by the transition-guard acceptance suite: 'pills re-enable as soon as the next question renders' went flaky because the click on question one never advanced within 5s, then passed on retry. It is the only flaky left in that spec, and it is a real user-facing dead click on the primary interaction, same symptom as the fade race but a different cause."
+      "note": "Priority history worth keeping, because the reasoning went wrong twice. Filed P2 as a presumed hydration race. Bumped toward P1 on frequency, then the bump was WITHDRAWN after loadEventEnd measured ~8.3s in a browser with extensions, which made the hydration window look impossible to hit. That measurement was from an unrepresentative environment: in a clean context the page loads in ~550ms and hydration lands squarely in the click window. The original diagnosis was right and the falsification was wrong. Now P1 on evidence rather than on a hypothesis. LESSON: measure in an environment that resembles the one the bug appears in. The temporary probe that settled it is tests/acceptance/_probe-first-click.spec.js - re-run it after the paste to confirm zero lost clicks, then delete it."
     },
     {
       "id": "nem-report-intro-line-render-hook-missing",

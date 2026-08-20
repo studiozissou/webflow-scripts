@@ -32,6 +32,12 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 ## Code Style
 - Named exports only (no default exports in `shared/`)
 - No `console.log` in committed code — use `DEBUG && console.log(...)` pattern
+- IMPORTANT: Production code carries no inline comments — one sentence at the
+  top of the file saying what it does, and nothing else. Webflow custom code
+  fields cap at 10,000 characters, so comments are not free.
+- The "why" still has to live somewhere: put it in the project README, next to
+  the code it explains. Hard-won findings (browser quirks, vendor bugs, why an
+  approach was rejected) go there, not into a comment block and not nowhere.
 
 ## Project knowledge (on-demand)
 Past-session knowledge, RHP gotchas, work-dial bug history, patterns, and

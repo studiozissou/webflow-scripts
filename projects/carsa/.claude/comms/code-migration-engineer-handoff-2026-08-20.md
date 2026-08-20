@@ -17,7 +17,7 @@ All of the custom JavaScript that used to live inline in Webflow page settings i
 
 ## Why it's on our repo, not yours
 
-jsDelivr only serves public GitHub repos; `carsa-website-support` is private. Serving from `studiozissou/webflow-scripts` works today with no dependency on your pipeline. The files themselves are dependency-free classic scripts — no build step, no TypeScript, no bundler — so they are portable.
+jsDelivr only serves public GitHub repos; `carsa-website-support` is private. Serving from `studiozissou/webflow-scripts` works today with no dependency on your pipeline. The files are written to be portable from the start: dependency-free classic scripts, no build step, no bundler, no hard-coded host or SHA anywhere in the code (the loader derives its base URL from its own `src`), and a flat folder that is the deployable unit as-is. Moving hosts is a copy plus one URL change in Webflow.
 
 ## Taking it over (optional)
 

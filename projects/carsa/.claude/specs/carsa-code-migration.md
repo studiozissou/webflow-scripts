@@ -32,11 +32,12 @@ Net: the repo side is ~40% done (capture, VDP file, test harness, loader pattern
 | # | Decision | Why |
 |---|---|---|
 | D1 | Scope is the whole site, all phases. | User choice. |
-| D2 | Serve from `studiozissou/webflow-scripts` via jsDelivr, pinned SHAs. Engineer handoff to Carsa's CloudFront (SST) is a later, optional phase. | `focalstrategy/carsa-website-support` is **private** → jsDelivr cannot serve it. Carsa already ships `carousel-embed` from `d1kcoelx4vkza6.cloudfront.net` via SST, so a handoff path exists. |
+| D2 | Host everything in `studiozissou/webflow-scripts`, served by jsDelivr at pinned SHAs — **built portable from day one** so moving to Carsa's CloudFront (SST) later is a one-URL change. See *Portability* below. | `focalstrategy/carsa-website-support` is **private** → jsDelivr cannot serve it. Carsa already ships `carousel-embed` from `d1kcoelx4vkza6.cloudfront.net` via SST, so a handoff path exists when they want it. |
 | D3 | Loader-first, in the site **footer**, not the head. | Webflow injects jQuery, `webflow.js` and GSAP at the end of `<body>` *before* footer custom code. `vdp.js` calls `$()` at top level; a head loader would throw and abort whole modules. The 8 existing footer scripts already rely on this order. |
 | D4 | Re-capture and diff each page immediately before its swap; ask Tomek to freeze that page's embeds once it is on CDN. | Tomek edits embeds directly (APR hunt, 7 Jul). July snapshot is stale. |
 | D5 | Complex pages (VDP, SRP, Deals) each get their own publish; medium/low pages go 2–3 per publish. | ~12 publishes instead of ~21, without bisecting headaches on the pages that matter. |
-| D6 | Effort is framed as **Claude / Will / Tomek's side**, not hours. | Most steps are automatable; the cost is Designer publishes and manual spot-checks. |
+| D6 | Effort is framed as **Claude / Will / Tomek's side**, not hours. | Most steps are automatable; Will's cost is spot-checks and go/no-go calls. |
+| D8 | Claude publishes staging **and** live via Webflow MCP. Will is the go/no-go gate before each live publish, not the clicker. | MCP publish is available in this setup. Live publishes are outward-facing, so they still wait for Will's explicit go. |
 | D7 | `battery-animation.js` gets pinned to a SHA in the same publish as the loader. | Unpinned `@main` is a live regression vector and has no immutable caching. |
 
 ## Architecture
@@ -86,6 +87,18 @@ Route paths for CMS collections must be confirmed against the live sitemap befor
 - CMS-token pages keep a minimal inline config block in Webflow (`window.__CARSA_VDP`, `__CARSA_MODELS`, `__CARSA_MAKES`, `__CARSA_FUEL`, `__CARSA_NEAR`, `__CARSA_BLOG`). Pattern already built for VDP in `specs/vdp-webflow-body-code.html`. The module reads the global; it never contains `{{wf ...}}`.
 - Pages needing a config block: VDP, Models, Makes, Fuel, Near, Blog, Promotions template. Pure swaps (no CMS tokens): Homepage, SRP, Deals, Finance Calculator, Get Started, Part Exchange, Value Car, FAQ, Car Finance, All Models.
 
+### Portability (hosting can move with one URL change)
+
+Rules every module and the loader follow from the first commit, so a handoff to Carsa's CloudFront — or anywhere — never requires touching code:
+
+- **No absolute self-references.** `init.js` derives `BASE` from `document.currentScript.src`; modules never hard-code `cdn.jsdelivr.net`, `studiozissou` or a SHA. Assets a module needs (none today) would be resolved from `BASE` too.
+- **Flat folder, no build.** `projects/carsa/*.js` is the deployable unit as-is. Copying the folder to another origin is the whole migration.
+- **One place to change.** The footer tag URL is the only reference to the host. Switching hosts = change that tag, publish.
+- **No jsDelivr-only features.** No `/combine/`, no `@latest`, no `.min` auto-minify paths. Plain files at plain paths.
+- **Cache contract documented, not assumed.** Tests assert `immutable` on pinned URLs; the handoff note says what to do if the new host prefers revalidate (relax one test).
+- **Repo-relative tests.** `STAGING_URL_CARSA` drives the suite; no test hard-codes the CDN host beyond the loader-pinning assertion, which is a single regex constant (`LOADER_RE`) to update.
+- `projects/carsa/README.md` (to be written in Phase 1) carries the route map, the contract above, and the three-step "move hosts" procedure from the engineer handoff note.
+
 ### Pinning and publishing
 
 - Every Webflow publish references exactly one SHA, in one place (the footer tag). Adding or changing a module = bump that SHA in site settings and publish. The bump rides along with the page's inline-removal publish, so no extra cycle.
@@ -103,7 +116,7 @@ Claude runs this; the only manual part is reading a non-empty diff.
 
 ## Phases and task breakdown
 
-Legend — **C** Claude (MCP, git, Playwright, file writing) · **W** Will (Designer publish, judgment, real-device checks) · **T** Tomek / Carsa side.
+Legend — **C** Claude (MCP incl. staging/live publish, git, Playwright, file writing) · **W** Will (go/no-go, judgment, real-device checks) · **T** Tomek / Carsa side.
 
 ### Phase 0 — Re-capture and reconcile (no site changes)
 
@@ -125,11 +138,11 @@ Legend — **C** Claude (MCP, git, Playwright, file writing) · **W** Will (Desi
 | 1.2 | Write `global.js` = the 8 footer scripts, 1:1 (model/promo links, store-list prepend, attribution saver, finance UTM appender, noopener, copyright year, menu scroll lock, n8n chat). Slider CSS stays in Webflow. | C |
 | 1.3 | Acceptance tests: loader 200 + pinned, `global.js` loaded once, footer behaviours present on 3 page types, zero console errors, no double-init | C |
 | 1.4 | Run tests against live as baseline (inline still in place) → green | C |
-| 1.5 | On **staging**: replace the 8 footer blocks with the loader tag via MCP `set_site_freeform_code`; pin `battery-animation.js` SHA on the VDP body code | C |
-| 1.6 | Publish staging only | **W** |
-| 1.7 | Run tests against `carsa-v2.webflow.io`; spot-check menu, chat widget, UTM storage | C, W (chat + menu feel) |
-| 1.8 | Publish live | **W** |
-| 1.9 | Re-run tests against live; drift check shows footer = loader tag only | C |
+| 1.5 | Replace the 8 footer blocks with the loader tag via MCP `set_site_freeform_code`; pin `battery-animation.js` SHA on the VDP body code; write `projects/carsa/README.md` | C |
+| 1.6 | Publish to **staging** via MCP | C |
+| 1.7 | Run tests against `carsa-v2.webflow.io`; spot-check menu, chat widget, UTM storage | C tests, **W** feel-check |
+| 1.8 | Go/no-go | **W** |
+| 1.9 | Publish **live** via MCP; re-run tests against live; drift check shows footer = loader tag only | C |
 
 **Checkpoint:** every page now loads `init.js` + `global.js` from cache on repeat visits. Zero per-page changes yet.
 
@@ -144,7 +157,7 @@ Per page (or batch) loop — the same 9 steps every time:
 | c. Write page tests from the inline code: selectors it touches, links it builds, globals it sets, storage it writes, JSON-LD it emits | C |
 | d. Run tests against live (inline) → baseline green | C |
 | e. Via MCP: remove inline blocks from page body (leave config block if CMS page); bump footer SHA | C |
-| f. Publish staging → tests + manual spot-check → publish live | **W** publishes; C tests; W spot-checks |
+| f. Publish staging (MCP) → tests → Will spot-checks → Will says go → publish live (MCP) | C publishes and tests; **W** spot-checks and gives the go |
 | g. Re-run tests against live | C |
 | h. Ask Tomek not to edit that page's embeds again | **T** |
 | i. Tag commit `carsa-migration/{page}` | C |
@@ -175,16 +188,16 @@ Extract the six duplicated helpers into shared files loaded by `init.js` before 
 
 | Who | What |
 |---|---|
-| C | All extraction, tests, commits |
-| W | SHA bump publishes (~3) |
+| C | All extraction, tests, commits, SHA bumps, staging + live publishes (~3) |
+| W | Go/no-go per publish |
 
 ### Phase 4 — Refactor (repo only)
 
 Per module: fix the known VDP issues (hardcoded `requestUuid`, unthrottled MutationObserver, two `formatCurrency`s), `DEBUG &&` logging, `prefers-reduced-motion`, ES2022 syntax, unit tests where logic is pure (URL builders, formatters). jQuery removal is **optional** — Webflow ships jQuery regardless, so it saves nothing; do it only for clarity where a module is being touched anyway.
 
-### Phase 5 — Engineer handoff (optional)
+### Phase 5 — Engineer handoff (optional, any time after Phase 1)
 
-Hand `projects/carsa/` to Carsa's engineer to serve from their SST/CloudFront pipeline. See `comms/code-migration-engineer-handoff-2026-08-20.md`. Only the footer tag URL changes.
+Because of the portability rules, this is not really a phase: copy `projects/carsa/` into Carsa's repo, serve it from their SST/CloudFront stack, change the footer tag URL, publish. See `comms/code-migration-engineer-handoff-2026-08-20.md`. Can happen whenever Tomek wants it, without pausing the migration.
 
 ## What is automatable vs manual
 
@@ -194,14 +207,15 @@ Hand `projects/carsa/` to Carsa's engineer to serve from their SST/CloudFront pi
 | Write modules (1:1 copy), loader, config blocks | ✅ | |
 | Write and run Playwright tests (presence, links, storage, console, schema shape, cache headers) | ✅ | |
 | Remove inline code / set footer tag in Webflow | ✅ MCP `set_*_freeform_code` | |
-| **Publish** (staging and live) | | ✅ Will — not exposed via MCP in this setup |
+| Publish staging | ✅ MCP | |
+| Publish live | ✅ MCP, after Will's go | ✅ Will — go/no-go only |
 | Finance calculator numbers, PX/valuation form submit, make→model redirect | | ✅ Will — hits live APIs / creates leads |
 | Safari, Firefox, real iOS/Android | | ✅ Will — Playwright runs Chromium |
 | Menu/chat/animation feel | | ✅ Will |
 | Code freeze per page | | ✅ Tomek |
 | Daily regression + Slack alert (visual suite) | ✅ once CI exists | CI secrets/webhook setup — Will, once |
 
-Rule of thumb: every page costs Will one staging publish, one live publish, and ~10 minutes of clicking through the page's interactions. Everything else is Claude.
+Rule of thumb: every page costs Will ~10 minutes clicking through the page's interactions on staging and one "go". Everything else — capture, code, tests, Webflow edits, both publishes, post-publish verification — is Claude.
 
 ## Rollback
 
@@ -215,7 +229,7 @@ Rule of thumb: every page costs Will one staging publish, one live publish, and 
 1. **Footer loader with dependency gate** (D3) — record because the July spec and TSC/RHP loaders differ on placement and gating; future projects should inherit the footer-plus-gate rule for Webflow sites that depend on platform-injected jQuery/GSAP.
 2. **Classic scripts now, ES modules later** — record so nobody converts to `type="module"` mid-migration and breaks the 1:1 guarantee.
 
-Both are small; `/architect` can write them before `/build` Phase 1.
+Both are small; run `/plan` for each before `/build` Phase 1 (`/architect` is deprecated).
 
 ## Barba Impact
 
@@ -323,9 +337,9 @@ Machine-runnable: `tests/acceptance/carsa-code-migration.spec.js`. Names as list
 
 1. Does the FAQ page's 83KB inline JSON-LD move to a module (smaller HTML) or stay inline (Google reads inline JSON-LD most reliably)? Default: stays.
 2. Which five sample slugs per CMS template? Pick at Phase 2 from the sitemap; include one sold/reserved VDP and one EV.
-3. Is the Webflow MCP able to publish in this setup? If it gains that capability, Will's per-page cost drops to spot-checks only.
-4. Does Tomek want the engineer handoff at all, or is jsDelivr from our repo acceptable long-term?
+3. ~~Can the Webflow MCP publish?~~ Resolved 20 Aug: yes, staging and live (D8).
+4. Does Tomek want the engineer handoff at all, or is jsDelivr from our repo acceptable long-term? Either works; portability rules make it a non-blocking question.
 
 ## Agents
 
-`code-writer` (modules, loader, MCP edits), `qa` (tests, verify loop), `architect` (two ADRs), `perf` (optional: confirm cache behaviour post-Phase 1), `pm` (queue entries if wanted later).
+`code-writer` (modules, loader, MCP edits and publishes), `qa` (tests, verify loop), `perf` (optional: confirm cache behaviour post-Phase 1), `pm` (queue entries if wanted later). ADRs via `/plan`.

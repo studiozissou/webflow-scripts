@@ -12,8 +12,8 @@ Hi Tomek, picking the code migration back up. Quick status and the plan, since t
 
 *What I need from you*
 •  Once a page has moved, please don't edit its code embeds in Webflow – send changes my way and I'll push them through the repo (same day turnaround for small things).
-•  Scripts are served from my GitHub via jsDelivr for now (your repo is private, which the CDN can't use). If your engineer wants them on the Carsa CloudFront later, I've written a short handoff note – just the one URL changes.
-•  A staging publish and a live publish per page from me, plus a quick click-through of each page before it goes live. I'll let you know before each one.
+•  Scripts are hosted on my GitHub and served via jsDelivr (your repo is private, which the CDN can't use). They're built to be portable – if your engineer ever wants them on the Carsa CloudFront, it's a copy of one folder and a one-line change in Webflow. I've written a short handoff note for when that day comes.
+•  Nothing else from your side. Each page goes to staging first, I check it, then it goes live – I'll give you a heads-up before each one.
 
 *On cost*
-Most of this is now automated on my side – the manual part is the publishes and the spot-checks. I'd rather bill the actual time per page than quote a fixed number up front. Happy to talk through any of it.
+Nearly all of this is automated on my side now – capture, code, tests, Webflow edits and publishes. My time per page is the check-through before it goes live. I'd rather bill the actual time per page than quote a fixed number up front. Happy to talk through any of it.

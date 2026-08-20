@@ -66,6 +66,19 @@ export async function loadPage(page, path = TEST_PAGE_NL, query = '') {
    * rather than sleeping 2s saves that 2s on every single load, which is most of why
    * these suites used to time out. */
   await expect(questionHeading(page)).toBeVisible({ timeout: 20_000 });
+
+  /* VISIBLE IS NOT INTERACTIVE, and that distinction cost a day.
+   *
+   * Webflow server-renders this component, so the heading and the pills are in the static
+   * HTML before any JavaScript runs — a click landing before React hydrates is lost
+   * outright. The component now ships `disabled` on the pills from the server render and
+   * clears it in a mount effect, so "pills are enabled" is the first moment the quiz can
+   * actually be driven. Wait for that, not merely for something to be on screen.
+   *
+   * A Playwright locator click would wait for enabled on its own, but the guard spec
+   * drives pills with raw `.click()` inside `page.evaluate` to sample the transition
+   * window — that path bypasses actionability entirely, so the wait has to live here. */
+  await expect(page.locator('.nem-answers button').first()).toBeEnabled({ timeout: 20_000 });
 }
 
 /* Wait for the question to actually change rather than sleeping through the fade.

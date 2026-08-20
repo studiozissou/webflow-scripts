@@ -125,15 +125,21 @@ Ready-to-apply edits are in the build's working set; each is a single field writ
 
 ### Other deferred items
 
-- **`/themfactor2` carries no entity signal.** Its title —
-  *"The [M] Factor 2: Before The Pause | Perimenopause Documentary Film"* (67 chars) — is
-  the only page on the site without "Tamsen Fadal" in it. Pre-existing, and a gap against
-  `seo-branded-search-fix.md`. There are 3 characters of headroom, so it needs a rewrite
-  rather than an append.
-- ~~Byline mismatch on `/blog/it-was-never-your-fault`~~ — moot, that post is now retired.
-  Worth noting the mismatch existed at all ("Dr. Jason Fung" as the category-box name and a
-  "Jason and Tamsen" hero image on a GSM article), since it suggests the duplicate was
-  created by copying an unrelated post and the same pattern may exist elsewhere.
+- **Copy-paste sweep across the Blogs collection.** The retired GSM duplicate carried
+  "Dr. Jason Fung" as its category-box name and a "Jason and Tamsen" hero image on an
+  article about GSM — evidence it was created by duplicating an unrelated post. Other items
+  may carry the same mismatched byline or image. This is an audit first: report before
+  changing anything.
+
+### Closed since
+
+- **`/themfactor2` entity signal — fixed 2026-08-20.** It was the only page on the site
+  without "Tamsen Fadal" in its title. Now
+  *"The [M] Factor 2: Before The Pause Documentary | Tamsen Fadal"* (61 characters, 9 to
+  spare). The film's full name is kept, since branded search is the point of
+  `seo-branded-search-fix.md`; the trade-off is the "Perimenopause" keyword, which the H1,
+  meta description, and body copy still carry. Keeping it in the title was possible only at
+  exactly 70 characters, which is the fragility that flagged this page in the first place.
 
 ---
 

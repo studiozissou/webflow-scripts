@@ -115,31 +115,19 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
     return link ? link.getAttribute("href") : "";
   }
 
-  /* Two WebKit problems, both measured in Safari on 19 Aug 2026:
-
-     1. Spotify's iFrame API asks macOS to open the native Spotify app, so
-        Safari shows "Do you want to allow this website to open Spotify?".
-        Calling createController alone reproduces it — no play() needed —
-        while a plain embed iframe on about:blank never prompts.
-     2. The /video embed renders with no <video> element and no play button
-        at all, so video is not on offer there in any case.
-
-     So WebKit gets a plain audio-embed iframe we build ourselves. The cost
-     is losing the API's play()/pause(): the visitor presses play inside the
-     embed (Safari blocks autoplay regardless), and "pause the others" tears
-     the iframe down instead of pausing it.
-
-     GestureEvent is WebKit-proprietary, making this a feature check on the
-     engine rather than UA sniffing. It deliberately catches every iOS
-     browser too, since they are all WebKit underneath. */
+  /* WebKit gets a plain audio embed we build ourselves: Spotify's iFrame API
+     makes Safari prompt to open the native app, and its /video embed is
+     UA-gated to nothing. Cost is no programmatic play/pause there — the
+     visitor presses play in the embed, and "pause others" tears it down.
+     GestureEvent is WebKit-only, so this checks the engine, not the UA
+     string, and catches iOS browsers too. See README for the evidence. */
   var USE_IFRAME_API = typeof window.GestureEvent === "undefined";
 
-  /* The iFrame API only ever loads the audio embed, but these episodes are
-     video podcasts, whose player lives at the /video embed URL (the one
-     Spotify's own oEmbed returns). Point the API's iframe at it; the page
-     speaks the same messaging protocol, so play()/pause() keep working.
-     The URL is built from the episode id rather than patched out of the
-     existing src, and retries until the API has created the iframe. */
+  /* The API only loads the audio embed; these are video podcasts, whose
+     player is the /video URL (what Spotify's own oEmbed returns). Repoint
+     the API's iframe there — same messaging protocol, so play()/pause()
+     keep working. Built from the episode id, retried until the iframe
+     exists (its creation timing varies by engine). */
   function controllerFor(embedWrap) {
     var entry = spotifyControllers.filter(function (e) { return e.el === embedWrap; })[0];
     return entry ? entry.controller : null;
@@ -166,8 +154,51 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
     frame.parentNode.replaceChild(placeholder, frame);
   }
 
+  /* Spotify's /video endpoint intermittently serves a dead card with no
+     player (seen 19 Aug 2026 in plain Chrome, audio embed unaffected), so
+     fall back to audio when that happens. A playback_update message proves
+     a real player is running: it latches __videoOk, after which this embed
+     never falls back. The clock starts on the video page's load event, so a
+     slow network delays the deadline rather than tripping it. */
+  var VIDEO_WATCHDOG_MS = 6000;
+
+  function watchForDegradedVideo(embedWrap, id) {
+    if (embedWrap.__videoWatchdog || embedWrap.__videoOk) return;
+
+    var onMessage = function (e) {
+      if (!e.data || (e.origin || "").indexOf("spotify.com") === -1) return;
+      var payload = e.data;
+      if (typeof payload === "string") {
+        try { payload = JSON.parse(payload); } catch (err) { return; }
+      }
+      if (!payload || payload.type !== "playback_update") return;
+      embedWrap.__videoOk = true; // real player: never fall back for this one
+      stop();
+    };
+
+    var stop = function () {
+      window.removeEventListener("message", onMessage);
+      clearTimeout(embedWrap.__videoWatchdog);
+      embedWrap.__videoWatchdog = null;
+    };
+
+    window.addEventListener("message", onMessage);
+    embedWrap.__videoWatchdog = setTimeout(function () {
+      stop();
+      if (embedWrap.__videoOk) return;
+      var frame = embedWrap.querySelector("iframe");
+      /* Nothing to rescue if the item was re-rendered or torn down */
+      if (!frame || !document.contains(frame) || frame.src.indexOf("/video") === -1) return;
+      DEBUG && console.log("[player] /video page silent, using audio embed", id);
+      embedWrap.__videoFellBack = true;
+      frame.removeAttribute("sandbox");
+      frame.src = "https://open.spotify.com/embed/episode/" + id;
+    }, VIDEO_WATCHDOG_MS);
+  }
+
   function useVideoEmbed(embedWrap, id, attempt) {
     if (!USE_IFRAME_API) return;
+    if (embedWrap.__videoFellBack) return; // degraded /video page detected earlier
     var frame = embedWrap.querySelector("iframe");
     if (!frame) {
       if ((attempt || 0) < 30) {
@@ -179,20 +210,18 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
     }
     var videoSrc = "https://open.spotify.com/embed/episode/" + id + "/video?utm_source=iframe-api";
     if (frame.src.indexOf("/embed/episode/" + id + "/video") !== -1) return;
-    /* Fallback for browsers where "ready" does not fire again after the
-       iframe is repointed. */
+    /* Covers engines where "ready" does not fire again after the repoint,
+       and starts the degraded-video watchdog. */
     frame.addEventListener("load", function () {
       if (frame.src.indexOf("/video") === -1) return;
       var controller = controllerFor(embedWrap);
       if (controller) {
         try { controller.play(); } catch (err) {}
       }
+      watchForDegradedVideo(embedWrap, id);
     });
-    /* Spotify's player offers to hand off to the native app ("Watch on
-       Spotify"), which makes Safari prompt "allow this website to open
-       Spotify?". Omitting allow-popups and allow-top-navigation blocks that
-       navigation; the three tokens below are what the embed needs to render
-       and to keep the iFrame API's play()/pause() working. */
+    /* Minimum tokens the embed needs; leaving out allow-popups and
+       allow-top-navigation blocks its "Watch on Spotify" app handoff. */
     frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
     frame.src = videoSrc;
   }
@@ -293,20 +322,18 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
         width: "100%",
         height: "100%"
       }, function (controller) {
-        /* createController swaps the placeholder for an iframe; key the
-           registry off the wrapper, which stays in the DOM */
+        /* Key the registry off the wrapper: createController replaces the
+           placeholder, but the wrapper stays put */
         spotifyControllers.push({ el: embedWrap, controller: controller });
-        /* "ready" fires per embed page load; play on each one. Firing it
-           against a page already being replaced is harmless, and the video
-           page's own ready then starts playback. */
+        /* "ready" fires per embed page load; playing against a page already
+           being replaced is harmless, and the video page's ready follows */
         controller.addListener("ready", function () {
           useVideoEmbed(embedWrap, id);
           try { controller.play(); } catch (err) {}
         });
       });
-      /* Also driven from here, not only from the callback, so the swap
-         cannot be lost to callback timing. It is a no-op once the iframe
-         already points at the video embed. */
+      /* Also driven here, not only from the callback, so callback timing
+         cannot lose the swap. No-op once already on the video embed. */
       useVideoEmbed(embedWrap, id);
     };
     spotifyApi ? run() : pendingSpotifyPlays.push(run);
@@ -393,13 +420,10 @@ $('#wf-form-Filter-Blog').on('submit', function(e) {
      ".is-podcast-watch-button", …) to pause Omny players when a watch
      button is pressed — no extra interop needed here. */
 
-  /* An episode's Omny Podcast Link field holds a Spotify web-player URL
-     rather than an omny.fm one (EP 853 as of 19 Aug 2026). Framing
-     open.spotify.com makes macOS ask "allow this website to open Spotify?"
-     on page load, in Safari, before anyone clicks anything. Drop any Omny
-     embed that is not actually an Omny URL: the player is broken either way,
-     and this stops bad CMS data from raising that prompt. Re-run after
-     Finsweet swaps items in, on the same beat the Omny block re-inits. */
+  /* EP 853's Omny Podcast Link field held a Spotify web-player URL (fixed in
+     the CMS 19 Aug 2026). Framing open.spotify.com made Safari ask to open
+     the native app on every page load. Drop any non-Omny "Omny" embed so the
+     same data slip cannot do it again; re-run on the beat Omny re-inits. */
   function dropNonOmnyEmbeds() {
     document.querySelectorAll("iframe.omny-embed").forEach(function (frame) {
       if ((frame.src || "").indexOf("omny.fm") === -1) frame.remove();

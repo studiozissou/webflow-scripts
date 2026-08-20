@@ -232,7 +232,7 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
     node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
-    node("Build HTML"),
+    node("Build HTML", { jsCode: "const html = '<h1>' + heading + '</h1>' + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '') + '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>';" }),
     node("Log Failure"),
     node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - report generation failed' }) }}" }),
     node("Respond Confirmed"),
@@ -299,7 +299,8 @@ describe("checkInvariants — the report JSON gate", () => {
     node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
-    node("Build HTML"), node("Log Failure"),
+    node("Build HTML", { jsCode: "const html = '<h1>' + heading + '</h1>' + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '') + '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>';" }),
+    node("Log Failure"),
     node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - report generation failed' }) }}" }),
     node("Respond Confirmed"), node("Mark Consumed"),
   ], {

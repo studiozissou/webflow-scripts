@@ -428,6 +428,30 @@
       "created": "2026-08-20",
       "updated": "2026-08-20",
       "note": "Found 2026-08-20 in the post-guard acceptance run. Priority P1 because if it reproduces outside the test harness it means real opt-ins are not being recorded, which is the conversion the whole funnel exists for. Verify against a real submission in the n8n execution log before assuming it is a test-harness artefact."
+    },
+    {
+      "id": "nem-report-engine-missing-conclusion-and-intro-context",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "The report engine is not sent the conclusion text or intro line it is specified to receive",
+      "description": "Source doc section 6.2 lists nine inputs the report engine receives per user. Three are not being sent: the conclusion key, the conclusion text shown on screen 4, and the intro line for that key. The doc is explicit about why they matter - 'The conclusion text and the intro line together set the register the report continues from: the report picks up where the conclusion text left off and is written in the spirit of the intro line.' Both are context only: neither is quoted, paraphrased or referred to, and the intro line must never appear in the output because the template already places it on the title page. Verify against Generate Report's jsonBody in nem-verify.workflow.json - it currently contains no conclusionKey, no conclusionText and no introLine. Fixing it needs the values to survive the whole hop: component payload, /submit Normalize, the nem_test_profiles columns, then Validate Token, which spreads the row and so passes them through for free.",
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "note": "Found 2026-08-20 reading Alex's source doc, captured at projects/nem-life/.claude/research/nem-test-01-source-doc-2026-08-20.md. Not a crash - every report generated so far is simply thinner than specified, written without the register the conclusion text set. That makes it a quality bug in the paid deliverable rather than a broken one, which is why nobody noticed. NOTE the introLine plumbing added 2026-08-20 carries it to the TEMPLATE (Build HTML) only; the engine hop is separate and still missing. conclusionText is not stored at all today - adding it means a new column on nem_test_profiles, which the n8n API cannot create (UI only)."
+    },
+    {
+      "id": "nem-flat-spread-threshold-may-be-one-point-too-wide",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Flat detection may be one point too wide, denying reports to users who should get one",
+      "description": "FLAT_SPREAD in nem-test-scoring.js is 3, so a profile whose highest and lowest mechanism scores differ by 3 is treated as flat - no mechanism named, no report, routed to the Tally contact link. Both worked examples in source doc section 4 describe the rule as 'within 2': example 4 (spread 4-2) and example 5 (spread 15-13) each say 'is 2 points - within 2, so nothing stands out'. If 2 is the rule, every spread-3 profile is currently being denied a report it should receive. ASK ALEX BEFORE CHANGING ANYTHING: the normative sentence defining the flat threshold was not found in the captured text and may sit in a section that could not be retrieved, or in the generic 'NEM TEST source' doc. Two worked examples agreeing is suggestive, not definitive.",
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "note": "Found 2026-08-20 reading Alex's source doc. P2 because it is unconfirmed, not because it is minor - if Alex confirms 'within 2' this becomes P1, since it means real users completing the test are being told there is nothing to report and pushed to a contact form instead of receiving the product. Note the direction of the error is the expensive one: too wide denies reports, too narrow would only give a weak report to someone who is genuinely undifferentiated. Changing FLAT_SPREAD to 2 is a one-line change plus the boundary tests in tests/nem/nem-test-scoring.test.js, which currently assert the 3 behaviour explicitly ('a spread of exactly FLAT_SPREAD is flat-high; one more is not') and would need updating with it."
     }
   ]
 }

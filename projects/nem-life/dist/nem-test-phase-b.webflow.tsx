@@ -168,11 +168,11 @@ const MECHANISM_MAP = {
 };
 
 const TIEBREAK_ORDER = [
-  "selfRejection",
-  "emotionalNumbing",
   "falsePower",
   "fear",
+  "selfRejection",
   "falseHope",
+  "emotionalNumbing",
 ];
 
 const MIN_MECHANISM_SCORE = 8;

@@ -4,12 +4,13 @@ Hi Yoni — update on the SEO work, against the five items we agreed.
 The old site said, in plain factual language, "Tamsen Fadal is a journalist, author, host of…". The redesign replaced that with a warmer first-person voice, which reads better but stripped out the signals Google uses to match a website to a real person. That's why her LinkedIn and other profiles were outranking her own site on her own name — Google wasn't confident tamsenfadal.com *was* her. Everything below is about rebuilding that confidence.
 
 *1. Old vs new entity audit + edits — done*
-Compared every equivalent page across both sites. Fixed: the Provider Directory had lost her name from its title and description entirely, the footer sentence had a typo and outdated wording, and several pages carried descriptions belonging to a different page.
-Two findings still open, both needing your team's sign-off on copy: the About page H1 still doesn't include her name, and the LinkedIn link is still missing from the footer.
+Compared every equivalent page across both sites. Fixed: the Provider Directory had lost her name from its title and description entirely, the footer sentence had a typo and outdated wording, the LinkedIn link that the old site had in the footer is back, and several pages carried descriptions belonging to a different page.
+One finding still open, and it needs your team's sign-off on the copy: the About page headline doesn't include her name. It currently reads "NYT bestselling author. Global keynote speaker. Podcast host." — accurate, but it never says who she is, on the page most likely to come up when someone searches her name. Suggestion below, happy to take yours instead:
+
+> Tamsen Fadal. Emmy Award-winning journalist. NYT bestselling author. Filmmaker.
 
 *2. Schema / structured data — done*
 Every page now carries a full entity graph — Person, WebSite, Organization, Book, PodcastSeries, Article and Breadcrumbs — with one consistent ID for Tamsen across all 400+ pages, linked out to her Wikidata entry, socials and book. Previously this only existed on the homepage. Both documentaries now have proper Film entries too.
-One exception: Event schema is on hold, as every event currently listed has already passed and there are no individual event pages. Easy to add when there are upcoming dates.
 
 *3. Wikidata — done*
 Official website, social profile IDs, YouTube channel, book, and two missing occupations (filmmaker, podcaster), all properly sourced. This is the database Google reads for the Knowledge Panel.

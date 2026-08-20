@@ -29,7 +29,7 @@ The 10 Aug progress log lists both as outstanding. Both were checked against
 
 ---
 
-## 1. Ready to run — P106 occupation
+## 1. ✅ DONE 2026-08-20 — P106 occupation
 
 The approved bio leads with filmmaker, and she hosts a weekly podcast. Neither is asserted.
 Both target QIDs were resolved and confirmed today.
@@ -44,6 +44,24 @@ Q7681850|P106|Q15077007|S854|"https://www.tamsenfadal.com/podcast"|S813|+2026-08
 - `Q1414443` = filmmaker (creator of a cinematic work)
 - `Q15077007` = podcaster (person who creates podcasts)
 - Each carries `reference URL` + `retrieved`, so it will not read as an unsourced drive-by edit.
+
+**Applied and verified 2026-08-20.** Added manually through the Wikidata UI rather than
+QuickStatements (see note below). Confirmed against `Special:EntityData`:
+
+```
+filmmaker   refs=1   P854=https://www.tamsenfadal.com/about-tamsen   P813=+2026-08-20
+podcaster   refs=1   P854=https://www.tamsenfadal.com/podcast        P813=+2026-08-20
+```
+
+P106 now carries six values. For context, the four pre-existing ones are less well sourced —
+only `journalist` has a reference (via Muck Rack, P6005, retrieved 2022); `news presenter`,
+`author` and `activist` carry none. Not urgent, but if these ever get challenged, those three
+are the weak ones, not ours.
+
+> **QuickStatements was not usable.** Batch mode requires an **autoconfirmed** account:
+> 50 edits *and* 4+ days since first edit. Wikidata's edit threshold is deliberately higher
+> than most wikis. The Studio Zissou account was on 49 edits — one short — so the claims were
+> added by hand. Crossing 50 in the process means batch mode is available from now on.
 
 ---
 

@@ -32,6 +32,8 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 ## Code Style
 - Named exports only (no default exports in `shared/`)
 - No `console.log` in committed code — use `DEBUG && console.log(...)` pattern
+- IMPORTANT: No inline comments in production code — one sentence at the top of
+  the file, nothing else. The "why" goes in the project README.
 
 ## Project knowledge (on-demand)
 Past-session knowledge, RHP gotchas, work-dial bug history, patterns, and

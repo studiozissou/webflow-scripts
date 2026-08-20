@@ -1,6 +1,7 @@
+/* NEM Test quiz component — see projects/nem-life/README.md for the design notes. */
 import { declareComponent, useWebflowContext } from "@webflow/react";
 import { props as propTypes } from "@webflow/data-types";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { calculateScores } from "./nem-test-scoring.js";
 import { CONCLUSION_KEYS, INTRO_LINE_KEYS } from "./nem-test-conclusion-ids.js";
 import {
@@ -23,19 +24,6 @@ declare global {
   }
 }
 
-/* ─── Scoring engine ───
- * Lives in ./nem-test-scoring.js (mechanism mapping, thresholds, flat detection,
- * fixed-order tiebreak) so it can be unit-tested with `node --test`
- * (tests/nem/nem-test-scoring.test.js). Conclusion keys and IDs live alongside it in
- * ./nem-test-conclusion-ids.js, which also generates Alex's text sheet.
- *
- * ⚠️ DO NOT paste this file into Webflow. Everything in Webflow runs inside one custom
- * code component, so the relative imports below cannot resolve there. Run
- * `npm run build:nem` and paste projects/nem-life/dist/nem-test-phase-b.webflow.tsx,
- * which has the sibling modules inlined. Edit here; never edit the generated file. */
-
-/* ─── Gender normalisation ───
- * The Designer collects Dutch values; the engine and the text sheet speak English. */
 const GENDER_TO_TABLE: Record<string, "man" | "vrouw"> = {
   man: "man",
   vrouw: "vrouw",
@@ -50,22 +38,16 @@ const GENDER_TO_ENGINE: Record<string, "male" | "female"> = {
   female: "female",
 };
 
-/* ─── Analytics stubs ─── */
 const EVENTS = {
   TEST_COMPLETED: "nem_test_completed",
   REPORT_REQUESTED: "nem_report_requested",
 };
 
-/* ─── Debug mode ───
- * `?nemdebug=1` renders the conclusion ID, key and scores above the conclusion text, so
- * Alex and Christel can confirm which variant fired without Designer access, and
- * Playwright can assert on it. Replaces the unused `const DEBUG = false`. */
 function isDebugMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("nemdebug") === "1";
 }
 
-/* ─── Locale detection ─── */
 function getLocale(): "nl" | "en" {
   if (typeof window !== "undefined") {
     if (window.location.pathname.startsWith("/en/")) return "en";
@@ -74,7 +56,6 @@ function getLocale(): "nl" | "en" {
   return "nl";
 }
 
-/* ─── Translations ─── */
 interface SelectOption {
   value: string;
   label: string;
@@ -95,7 +76,6 @@ interface Translations {
   profileContinueButton: string;
   conclusionLabel: string;
   bridgeLine: string;
-  /* Shown instead of the report CTA on flat-low and flat-high outcomes. */
   flatBridgeLine: string;
   contactUrl: string;
   contactLinkLabel: string;
@@ -135,28 +115,11 @@ interface Translations {
   introLines: ConclusionTable;
 }
 
-/* ─── Conclusion text tables ───
- *
- * Built from CONCLUSION_KEYS rather than hand-listed, so a table can never be missing an
- * outcome the engine can produce. That completeness guarantee is what replaced Phase B's
- * canonical key rewriting — see the v2 spec § 2.
- *
- * Christel's copy goes in the REAL_* overlays. Anything not yet written falls through to
- * a visible placeholder, so a missing text reads as "not written yet" in QA rather than
- * as a blank screen in production. */
-
 type ConclusionTable = Record<string, string>;
 
 function placeholderTable(marker: string, note: string): ConclusionTable {
   return Object.fromEntries(CONCLUSION_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
 }
-
-/* Christel's finished texts, generated from a CSV export of Alex's sheet by
- * tools/nem/build-conclusion-texts.js. 27 of 108 written as of 2026-08-17 (female Dutch
- * complete); the rest fall through to the placeholders below.
- *
- * Never paste her copy in by hand: copy-paste and rendered reads both flatten in-cell
- * paragraph breaks into spaces. Re-export the CSV and regenerate instead. */
 
 const NL_CONCLUSIONS_MAN: ConclusionTable = {
   ...placeholderTable("DUMMY man", "tekst volgt."),
@@ -177,17 +140,6 @@ const EN_CONCLUSIONS_VROUW: ConclusionTable = {
   ...placeholderTable("DUMMY vrouw", "text to follow."),
   ...REAL_EN_VROUW,
 };
-
-/* ─── Report intro lines ───
- *
- * The teaser on the report's title page, e.g. for `fear`: "Je durft het echt niet te doen,
- * ook al weet je dat het kan". Selected here rather than written by Claude, so the wording
- * is fixed copy the client signed off — same move as the conclusion texts.
- *
- * Looked up on the conclusion key ALONE. There is no gendered table here, and that is not
- * an oversight: it is the one asymmetry against the conclusion texts (spec § 5). Built from
- * INTRO_LINE_KEYS, which is the 25 report-bearing keys — the flat outcomes are absent
- * because they route to the contact link and never produce a report. */
 
 function introPlaceholderTable(marker: string, note: string): ConclusionTable {
   return Object.fromEntries(INTRO_LINE_KEYS.map((key) => [key, `[${marker}] ${key} — ${note}`]));
@@ -398,10 +350,8 @@ const translations: Record<"nl" | "en", Translations> = {
   },
 };
 
-/* ─── Fonts ─── */
 const fontLink = `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Lato:wght@400;700&display=swap');`;
 
-/* ─── Shared styles ─── */
 const fieldStyle: React.CSSProperties = {
   width: "100%",
   padding: "14px 16px",
@@ -461,7 +411,6 @@ const pillButtonStyle: React.CSSProperties = {
   width: "100%",
 };
 
-/* ─── Component ─── */
 function Quiz({
   submitWebhookUrl,
   reassuranceText,
@@ -487,9 +436,6 @@ function Quiz({
   const locale = getLocale();
   const t = translations[locale];
 
-  // Webflow code-component props are NOT localizable — a prop holds one value
-  // across every locale (its Dutch default). So the Designer props are honoured
-  // only on the primary NL locale; every other locale uses the code translations.
   const questions = useMemo(
     () => [
       question1, question2, question3, question4, question5,
@@ -503,29 +449,23 @@ function Quiz({
      question16, question17, question18, question19, question20, t.questions]
   );
 
-  // Same rule for the two marketing-copy props (reassurance line + CTA label):
-  // prop override on NL, code translation elsewhere.
   const reassurance = locale === "nl" ? (reassuranceText || t.reassurance) : t.reassurance;
   const ctaLabel = (locale === "nl" ? ctaButtonText : "") || t.submitButtonText;
 
-  /* ─── Reduced-motion detection ───
-     Note: the answer-pill responsive layout (row on desktop, column on mobile)
-     is handled purely in CSS via the `.nem-answers` media query below — NOT a
-     JS `isMobile` flag. Webflow server-renders the component with `window`
-     undefined, so a JS breakpoint check is stale on a direct mobile load and
-     the pills stayed in the desktop row. CSS media queries are immune to that. */
   const prefersReducedMotion =
     typeof window !== "undefined"
       ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
       : false;
 
-  /* ─── State ─── */
   const [phase, setPhase] = useState<"quiz" | "profile" | "conclusion" | "optin" | "confirmation">(
     !interactive ? "conclusion" : "quiz"
   );
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => Array(20).fill(null));
   const [animating, setAnimating] = useState(false);
+  const transitionLock = useRef(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [relationshipStatus, setRelationshipStatus] = useState("");
@@ -538,26 +478,9 @@ function Quiz({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [debugMode] = useState(isDebugMode);
 
-  /* ─── Anonymous completion beacon ───
-   *
-   * Fires the moment the twentieth question is answered, for every outcome. Two reasons it
-   * sits here rather than at opt-in: flat outcomes never reach the opt-in screen at all, and
-   * anyone who finishes the questions then abandons the form is otherwise invisible — that
-   * gap between completions and reports is the number worth watching.
-   *
-   * It carries no personal data because none exists yet: name, email and gender are all
-   * collected on later screens. `conclusionId` is deliberately NOT sent — its F/M segment
-   * needs a gender we do not have, so sending one would mean inventing it. `conclusionKey`
-   * plus the gender on the identified row reconstructs the ID later if anyone wants it.
-   *
-   * Fire-and-forget: a slow or failing webhook must never hold up the conclusion screen, so
-   * the promise is deliberately not awaited and errors are swallowed. `keepalive` lets it
-   * survive the user navigating away immediately afterwards. */
   const sendCompletionBeacon = useCallback(
     (finalAnswers: (number | null)[]) => {
       if (!submitWebhookUrl) return;
-      /* Gender is passed only because the engine's signature requires it; every field read
-       * below is gender-independent. The gender-scoped conclusionId is not sent. */
       const scored = calculateScores(finalAnswers, "male");
       try {
         fetch(submitWebhookUrl, {
@@ -575,70 +498,64 @@ function Quiz({
           }),
         }).catch(() => {});
       } catch {
-        /* Never let telemetry break the quiz. */
       }
     },
     [submitWebhookUrl, token, locale]
   );
 
-  /* ─── Answer selection ─── */
   const selectAnswer = useCallback(
     (answerIndex: number) => {
+      if (transitionLock.current) return;
+      transitionLock.current = true;
+      setIsTransitioning(true);
+
       const updatedAnswers = answers.map((a, i) => (i === currentStep ? answerIndex : a));
       setAnswers(updatedAnswers);
 
       const fadeDelay = prefersReducedMotion ? 0 : 200;
       const fadeDuration = prefersReducedMotion ? 0 : 300;
 
-      setTimeout(() => {
-        setAnimating(true);
+      timers.current.push(
         setTimeout(() => {
-          if (currentStep < 19) {
-            setCurrentStep((s) => s + 1);
-          } else {
-            /* Scoring is NOT computed here. v2 conclusion IDs are gender-scoped, and
-             * gender is collected on the profile screen that comes next — so the result
-             * is derived (see `result` below) once both answers and gender exist. */
-            sendCompletionBeacon(updatedAnswers);
-            setPhase("profile"); // → profile screen, then conclusion
-          }
-          setAnimating(false);
-        }, fadeDuration);
-      }, fadeDelay);
+          setAnimating(true);
+          timers.current.push(
+            setTimeout(() => {
+              if (currentStep < 19) {
+                setCurrentStep((s) => s + 1);
+              } else {
+                sendCompletionBeacon(updatedAnswers);
+                setPhase("profile");
+              }
+              setAnimating(false);
+              transitionLock.current = false;
+              setIsTransitioning(false);
+            }, fadeDuration)
+          );
+        }, fadeDelay)
+      );
     },
     [answers, currentStep, prefersReducedMotion, sendCompletionBeacon]
   );
 
   const goBack = useCallback(() => {
+    if (transitionLock.current) return;
     if (currentStep > 0) {
       setCurrentStep((s) => s - 1);
     }
   }, [currentStep]);
 
-  /* ─── Profile continue handler ─── */
-  /* ─── Derived: the conclusion outcome ───
-   *
-   * Computed from answers + gender rather than stored, so it cannot go stale if either
-   * changes. Gender is only known after the profile screen, which is why this is not
-   * resolved when the last question is answered.
-   *
-   * Declared above handleSubmit deliberately: that callback closes over `result` and
-   * lists it as a dependency, so the binding must exist first.
-   *
-   * Falls back to "male" for the engine when gender is not yet set. The outcome is only
-   * ever read after the profile screen has validated gender, so the fallback keeps the
-   * hook total and unconditional rather than labelling anyone. */
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      pending.forEach(clearTimeout);
+    };
+  }, []);
+
   const result = useMemo(
     () => calculateScores(answers, GENDER_TO_ENGINE[gender] || "male"),
     [answers, gender]
   );
 
-  /* The report's title-page teaser, selected client-side so the wording is fixed copy the
-   * client signed off rather than something the model rephrases each run (spec § 5).
-   *
-   * Keyed on the conclusion key with NO gender segment — the one asymmetry against the
-   * conclusion texts above. Empty for flat outcomes: they route to the contact link and
-   * never produce a report, so there is no title page for a teaser to sit on. */
   const introLine = useMemo(
     () => (result.skipsReport ? "" : t.introLines[result.conclusionKey] || ""),
     [result.skipsReport, result.conclusionKey, t.introLines]
@@ -658,7 +575,6 @@ function Quiz({
     setPhase("conclusion");
   }, [gender, ageCategory, relationshipStatus, t.errors]);
 
-  /* ─── Form submission (opt-in: name + email + consent only) ─── */
   const handleSubmit = useCallback(async () => {
     const errors: Record<string, string> = {};
     if (!firstName.trim()) errors.firstName = t.errors.firstNameEmpty;
@@ -674,7 +590,6 @@ function Quiz({
       return;
     }
 
-    // Honeypot check
     if (honeypot) {
       setPhase("confirmation");
       return;
@@ -700,14 +615,9 @@ function Quiz({
       },
       primaryMechanism: result.primary,
       secondaryMechanism: result.secondary,
-      /* v2: the report engine sees exactly the outcome the user saw, so a report can
-       * never be written against a different conclusion than the one on screen. */
       outcome: result.outcome,
       conclusionKey: result.conclusionKey,
       conclusionId: result.conclusionId,
-      /* Sent as fixed copy rather than left for the report prompt to invent. n8n's
-       * Normalize does not read it yet, so it is inert until the backend slice lands —
-       * harmless, and it makes that slice a one-field change instead of a re-wiring. */
       introLine,
       totalScore: result.totalScore,
       nemMattersConsent,
@@ -737,10 +647,8 @@ function Quiz({
 
     setSubmitting(false);
     setPhase("confirmation");
-    // window.dataLayer?.push({ event: EVENTS.REPORT_REQUESTED, locale });
   }, [firstName, email, nemMattersConsent, honeypot, result, introLine, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
-  /* ─── Go back to optin (from confirmation, for wrong email) ─── */
   const goBackToOptin = useCallback(() => {
     setEmail("");
     setToken(crypto.randomUUID());
@@ -754,18 +662,11 @@ function Quiz({
   const conclusionText =
     t.conclusions[genderKey as keyof GenderedConclusions]?.[result.conclusionKey] || "";
 
-  /* Flat outcomes route to a contact link instead of the opt-in: the report is built
-   * around one clear mechanism, which is precisely what a flat profile lacks. */
   const isFlatOutcome = result.skipsReport;
 
-
-  /* Same pattern as ctaLabel: the Designer prop is honoured on NL only, because Webflow
-   * code-component props are not localizable. EN falls back to the code translation. */
   const contactHref = (locale === "nl" ? contactUrl : "") || t.contactUrl;
   const contactLabel = (locale === "nl" ? contactLinkLabel : "") || t.contactLinkLabel;
 
-  /* Publish scores for page-level analytics. In an effect, not in render — assigning to
-   * window during render is a side effect and would fire on every re-render. */
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.__nemTestScores = {
@@ -812,15 +713,11 @@ function Quiz({
         }
       `}</style>
 
-      {/* ═══════════════════════════════════════════
-          QUIZ — Q1–Q20
-      ═══════════════════════════════════════════ */}
       {phase === "quiz" && (
         <div
           key={currentStep}
           className={animating ? "quiz-fade-out" : "quiz-fade-in"}
         >
-          {/* Step indicator */}
           <div
             className="flex items-center justify-between mb-4"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -841,6 +738,7 @@ function Quiz({
               <button
                 data-element="back-button"
                 onClick={goBack}
+                disabled={isTransitioning}
                 aria-label={t.back}
                 style={{
                   fontSize: "var(--_typography---paragraph--small, 0.875rem)",
@@ -848,7 +746,8 @@ function Quiz({
                   color: "var(--_token---text-olive, #706d56)",
                   background: "none",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: isTransitioning ? "default" : "pointer",
+                  opacity: 1,
                   textDecoration: "none",
                 }}
               >
@@ -857,7 +756,6 @@ function Quiz({
             )}
           </div>
 
-          {/* Progress bar */}
           <div
             style={{
               width: "100%",
@@ -879,7 +777,6 @@ function Quiz({
             />
           </div>
 
-          {/* Question */}
           <h3
             style={{
               fontFamily: "'Montserrat', sans-serif",
@@ -894,7 +791,6 @@ function Quiz({
             {questions[currentStep]}
           </h3>
 
-          {/* Reassurance text — only on Q1 */}
           {currentStep === 0 && reassurance && (
             <p
               style={{
@@ -910,7 +806,6 @@ function Quiz({
           )}
           {currentStep > 0 && <div style={{ marginBottom: 28 }} />}
 
-          {/* Answer pill buttons — layout via .nem-answers CSS (row desktop / column mobile) */}
           <div className="nem-answers">
             {t.answers.map((label, i) => {
               const isSelected = answers[currentStep] === i;
@@ -919,6 +814,7 @@ function Quiz({
                   key={i}
                   aria-selected={isSelected}
                   onClick={() => selectAnswer(i)}
+                  disabled={isTransitioning}
                   style={{
                     borderRadius: 999,
                     padding: "12px 24px",
@@ -931,20 +827,21 @@ function Quiz({
                       ? "var(--_token---accent-main, #fafa7d)"
                       : "white",
                     color: "var(--_token---text-main, #292828)",
-                    cursor: "pointer",
+                    cursor: isTransitioning ? "default" : "pointer",
+                    opacity: 1,
                     fontFamily: "'Lato', sans-serif",
                     fontSize: "var(--_typography---paragraph--standard, 1rem)",
                     transition: prefersReducedMotion ? "none" : "all 0.15s ease",
                   }}
                   onMouseEnter={(e) => {
-                    if (!isSelected) {
+                    if (!isSelected && !isTransitioning) {
                       e.currentTarget.style.borderColor = "var(--_token---accent-main, #fafa7d)";
                       e.currentTarget.style.backgroundColor =
                         "color-mix(in srgb, var(--_token---accent-main, #fafa7d) 20%, white)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isSelected) {
+                    if (!isSelected && !isTransitioning) {
                       e.currentTarget.style.borderColor = "var(--_token---accent-light-grey, #ecebe8)";
                       e.currentTarget.style.backgroundColor = "white";
                     }
@@ -958,9 +855,6 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          PROFILE — Gender, Age, Relationship
-      ═══════════════════════════════════════════ */}
       {phase === "profile" && (
         <div className="quiz-fade-in flex flex-col gap-6">
           <h2
@@ -978,7 +872,6 @@ function Quiz({
           </h2>
 
           <div className="flex flex-col gap-4">
-            {/* Gender */}
             <div>
               <label htmlFor="nem-gender" style={labelStyle}>
                 {t.genderLabel}
@@ -1014,7 +907,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Age category */}
             <div>
               <label htmlFor="nem-age" style={labelStyle}>
                 {t.ageCategoryLabel}
@@ -1050,7 +942,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Relationship status */}
             <div>
               <label htmlFor="nem-relationship" style={labelStyle}>
                 {t.relationshipLabel}
@@ -1086,7 +977,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Continue button */}
             <button
               onClick={handleProfileContinue}
               style={pillButtonStyle}
@@ -1107,12 +997,8 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          CONCLUSION
-      ═══════════════════════════════════════════ */}
       {phase === "conclusion" && (
         <div className="quiz-slide-up flex flex-col gap-6">
-          {/* Label */}
           <span
             style={{
               fontSize: 13,
@@ -1126,8 +1012,6 @@ function Quiz({
             {t.conclusionLabel}
           </span>
 
-          {/* Debug badge (?nemdebug=1). QA scaffolding, not content — absent from the DOM
-              entirely when off, so it can never leak to a real user via CSS. */}
           {debugMode && (
             <code
               data-element="conclusion-debug"
@@ -1158,12 +1042,6 @@ function Quiz({
             </code>
           )}
 
-          {/* Conclusion text (gender-differentiated).
-              Christel writes in paragraphs separated by blank lines. HTML collapses
-              whitespace, so they are split into separate <p>s rather than rendered as
-              one block — otherwise her three-paragraph flat texts arrive as a wall.
-              The data-element hook stays on a wrapper so tests still read the whole
-              conclusion in one locator. */}
           <div
             data-element="conclusion-text"
             style={{
@@ -1187,8 +1065,6 @@ function Quiz({
             ))}
           </div>
 
-          {/* Bridge line — flat outcomes get a different one, because there is no report
-              to bridge to. */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1201,9 +1077,6 @@ function Quiz({
             {isFlatOutcome ? t.flatBridgeLine : t.bridgeLine}
           </p>
 
-          {/* Flat outcomes route to contact and stop here: no opt-in, no report. The
-              report is built around one clear mechanism, which is what these lack.
-              A plain anchor, deliberately — an embedded form is a future nice-to-have. */}
           {isFlatOutcome ? (
             <a
               data-element="conclusion-contact-link"
@@ -1238,9 +1111,6 @@ function Quiz({
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          OPT-IN FORM (name + email + consent only)
-      ═══════════════════════════════════════════ */}
       {phase === "optin" && (
         <div className="quiz-fade-in flex flex-col gap-6">
           <div>
@@ -1269,7 +1139,6 @@ function Quiz({
             </p>
           </div>
 
-          {/* Generic error */}
           {fieldErrors.generic && (
             <div aria-live="polite" style={{ color: "#e53e3e", fontSize: "0.875rem" }}>
               {fieldErrors.generic}
@@ -1277,7 +1146,6 @@ function Quiz({
           )}
 
           <div className="flex flex-col gap-4">
-            {/* First name */}
             <div>
               <input
                 type="text"
@@ -1304,7 +1172,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Email */}
             <div>
               <input
                 type="email"
@@ -1336,7 +1203,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Honeypot */}
             <div style={{ position: "absolute", left: "-9999px", opacity: 0, pointerEvents: "none" }} aria-hidden="true">
               <input
                 type="text"
@@ -1348,7 +1214,6 @@ function Quiz({
               />
             </div>
 
-            {/* Consent checkbox */}
             <div>
               <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
                 <input
@@ -1377,7 +1242,6 @@ function Quiz({
               )}
             </div>
 
-            {/* Submit button */}
             <button
               disabled={!nemMattersConsent || submitting}
               onClick={handleSubmit}
@@ -1395,24 +1259,16 @@ function Quiz({
               {submitting ? "..." : ctaLabel}
             </button>
 
-            {/* Relieve line */}
             <p style={{ fontSize: "0.875rem", color: "var(--_token---text-olive, #706d56)", textAlign: "center", margin: 0 }}>
               {t.relieveLine}
             </p>
 
-            {/* Disclaimer intentionally omitted here — it already appears once on
-                the landing page below the module; rendering it again produced a
-                visible duplicate. `t.disclaimer` is kept for potential future use. */}
           </div>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-          CONFIRMATION
-      ═══════════════════════════════════════════ */}
       {phase === "confirmation" && (
         <div className="quiz-scale-in flex flex-col gap-5" style={{ paddingTop: 16, paddingBottom: 16 }}>
-          {/* Label */}
           <span
             style={{
               fontSize: 13,
@@ -1426,7 +1282,6 @@ function Quiz({
             {t.confirmationLabel}
           </span>
 
-          {/* Main text */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1438,7 +1293,6 @@ function Quiz({
             {t.confirmationMain}
           </p>
 
-          {/* Secondary text */}
           <p
             style={{
               fontSize: "var(--_typography---paragraph--standard, 1rem)",
@@ -1450,7 +1304,6 @@ function Quiz({
             {t.confirmationSecondary}
           </p>
 
-          {/* No email received */}
           <p
             style={{
               fontSize: "0.875rem",
@@ -1462,7 +1315,6 @@ function Quiz({
             {t.noEmailReceived}
           </p>
 
-          {/* Wrong email correction */}
           <p
             style={{
               fontSize: "0.875rem",
@@ -1515,8 +1367,6 @@ export default declareComponent(Quiz, {
       name: "CTA Button Text",
       defaultValue: "Ontvang mijn rapport",
     }),
-    /* Flat-low and flat-high outcomes route here instead of to the report.
-       ⚠️ Verify both URLs against the live site — they are assumed, not confirmed. */
     contactUrl: propTypes.Text({
       name: "Contact URL (flat outcomes)",
       defaultValue: "/contact",

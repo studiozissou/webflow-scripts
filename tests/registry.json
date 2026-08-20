@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-08-17",
-  "note": "tsc-leadership-modal scrollbar-width reserve (no page jump) deployed to tsc-v2.webflow.io (677502e)",
+  "lastUpdated": "2026-08-19",
+  "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
   "lastDeployedHash": "677502e",
@@ -311,6 +311,16 @@
       "critical": false,
       "created": "2026-08-17",
       "description": "Every completed test fires an anonymous completion beacon (scores, outcome, conclusion key, no personal details) once the twenty questions are answered, and the report intro line is selected client side on conclusion key alone rather than key plus gender."
+    },
+    {
+      "slug": "nem-quiz-transition-guard",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-quiz-transition-guard.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-19",
+      "description": "Guards the ~500ms question transition in the NEM Test quiz: answer pills and the back button go disabled for the window, a second click inside it neither skips a question nor overwrites the recorded answer, and twenty single clicks advance twenty questions with no retry."
     }
   ]
 }

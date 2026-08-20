@@ -341,7 +341,6 @@ interface Translations {
   profileContinueButton: string;
   conclusionLabel: string;
   bridgeLine: string;
-
   flatBridgeLine: string;
   contactUrl: string;
   contactLinkLabel: string;
@@ -729,7 +728,6 @@ function Quiz({
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => Array(20).fill(null));
   const [animating, setAnimating] = useState(false);
-
   const transitionLock = useRef(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -748,7 +746,6 @@ function Quiz({
   const sendCompletionBeacon = useCallback(
     (finalAnswers: (number | null)[]) => {
       if (!submitWebhookUrl) return;
-
       const scored = calculateScores(finalAnswers, "male");
       try {
         fetch(submitWebhookUrl, {
@@ -766,7 +763,6 @@ function Quiz({
           }),
         }).catch(() => {});
       } catch {
-
       }
     },
     [submitWebhookUrl, token, locale]
@@ -792,12 +788,10 @@ function Quiz({
               if (currentStep < 19) {
                 setCurrentStep((s) => s + 1);
               } else {
-
                 sendCompletionBeacon(updatedAnswers);
                 setPhase("profile");
               }
               setAnimating(false);
-
               transitionLock.current = false;
               setIsTransitioning(false);
             }, fadeDuration)
@@ -809,7 +803,6 @@ function Quiz({
   );
 
   const goBack = useCallback(() => {
-
     if (transitionLock.current) return;
     if (currentStep > 0) {
       setCurrentStep((s) => s - 1);
@@ -887,11 +880,9 @@ function Quiz({
       },
       primaryMechanism: result.primary,
       secondaryMechanism: result.secondary,
-
       outcome: result.outcome,
       conclusionKey: result.conclusionKey,
       conclusionId: result.conclusionId,
-
       introLine,
       totalScore: result.totalScore,
       nemMattersConsent,
@@ -921,7 +912,6 @@ function Quiz({
 
     setSubmitting(false);
     setPhase("confirmation");
-
   }, [firstName, email, nemMattersConsent, honeypot, result, introLine, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
   const goBackToOptin = useCallback(() => {
@@ -993,7 +983,6 @@ function Quiz({
           key={currentStep}
           className={animating ? "quiz-fade-out" : "quiz-fade-in"}
         >
-
           <div
             className="flex items-center justify-between mb-4"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -1103,7 +1092,6 @@ function Quiz({
                       ? "var(--_token---accent-main, #fafa7d)"
                       : "white",
                     color: "var(--_token---text-main, #292828)",
-
                     cursor: isTransitioning ? "default" : "pointer",
                     opacity: 1,
                     fontFamily: "'Lato', sans-serif",
@@ -1149,7 +1137,6 @@ function Quiz({
           </h2>
 
           <div className="flex flex-col gap-4">
-
             <div>
               <label htmlFor="nem-gender" style={labelStyle}>
                 {t.genderLabel}
@@ -1277,7 +1264,6 @@ function Quiz({
 
       {phase === "conclusion" && (
         <div className="quiz-slide-up flex flex-col gap-6">
-
           <span
             style={{
               fontSize: 13,
@@ -1425,7 +1411,6 @@ function Quiz({
           )}
 
           <div className="flex flex-col gap-4">
-
             <div>
               <input
                 type="text"
@@ -1549,7 +1534,6 @@ function Quiz({
 
       {phase === "confirmation" && (
         <div className="quiz-scale-in flex flex-col gap-5" style={{ paddingTop: 16, paddingBottom: 16 }}>
-
           <span
             style={{
               fontSize: 13,
@@ -1648,7 +1632,6 @@ export default declareComponent(Quiz, {
       name: "CTA Button Text",
       defaultValue: "Ontvang mijn rapport",
     }),
-
     contactUrl: propTypes.Text({
       name: "Contact URL (flat outcomes)",
       defaultValue: "/contact",

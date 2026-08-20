@@ -141,10 +141,23 @@ These came out of the audit and are the client's to decide on.
    valid Articles. But dates are a freshness signal, and AI-search engines weight recency
    heavily. Backfilling the seven is a five-minute CMS job.
 
-4. **`datePublished` on the blog is bound to the wrong field.** The blog template uses
-   Webflow's system `published-on`, which is the *last publish* date, not the original
-   publication date — so any future CMS edit silently moves a post's stated publication date
-   to that day. Six posts edited in this pass now show 2026-08-20. The durable fix is to
-   bind `datePublished` to the collection's own `publication-date` field, but that field is
-   empty on older posts, so it needs backfilling first. Low urgency, no penalty — worth
-   doing before the archive grows further.
+4. ~~**`datePublished` on the blog is bound to the wrong field.**~~ **Decision 2026-08-20:
+   leave it.** Recorded here so it is not re-raised.
+
+   The blog template binds `datePublished` to Webflow's system `published-on` — the *last
+   publish* date, not the original — so any CMS edit moves a post's stated publication date.
+   Six posts edited in this pass now read 2026-08-20.
+
+   **The original dates appear to be unrecoverable.** In a 12-post sample, **7 shared the
+   identical timestamp `2025-11-05T10:36:23.321Z`**, to the millisecond — a bulk migration
+   publish. So `published-on` never held true publication dates for imported posts, and the
+   collection's own `publication-date` field is null on those same posts. Neither field has
+   the answer.
+
+   Options considered and rejected:
+   - *Rebind to `publication-date`* — would trade a wrong date for no date on ~250 posts.
+   - *Recover from the Wayback Machine or the old site* — real effort for a weak signal.
+
+   `datePublished` is a hint, not a ranking factor, and Google validates the pages without
+   it. If this is ever revisited, the sane version is: rebind to `publication-date`, fill it
+   on new posts only, and accept that the archive has no dates. Do not retro-fix 250 posts.

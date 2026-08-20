@@ -465,6 +465,7 @@ function Quiz({
   const [animating, setAnimating] = useState(false);
   const transitionLock = useRef(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
@@ -549,6 +550,10 @@ function Quiz({
     return () => {
       pending.forEach(clearTimeout);
     };
+  }, []);
+
+  useEffect(() => {
+    setHydrated(true);
   }, []);
 
   const result = useMemo(
@@ -738,7 +743,7 @@ function Quiz({
               <button
                 data-element="back-button"
                 onClick={goBack}
-                disabled={isTransitioning}
+                disabled={isTransitioning || !hydrated}
                 aria-label={t.back}
                 style={{
                   fontSize: "var(--_typography---paragraph--small, 0.875rem)",
@@ -814,7 +819,7 @@ function Quiz({
                   key={i}
                   aria-selected={isSelected}
                   onClick={() => selectAnswer(i)}
-                  disabled={isTransitioning}
+                  disabled={isTransitioning || !hydrated}
                   style={{
                     borderRadius: 999,
                     padding: "12px 24px",

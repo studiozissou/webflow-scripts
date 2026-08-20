@@ -1,0 +1,19 @@
+Hi Yoni — this is all done and live:
+
+*Podcast + Episode pages*
+•  Netflix button added to both
+
+*Podcasts page*
+•  Watch button now plays the Spotify player inline when there's no YouTube ID
+•  Play/pause works exactly as it does with the YouTube player
+•  Listen link is removed when no Omny player link is set
+
+*Episode page*
+•  Spotify player shows when there's no YouTube ID
+•  Audio player is removed when no Omny player link is set (newer episodes only)
+
+*Two caveats*
+•  The Spotify player on the episode page can't start on its own. Browsers block audio and video from auto-starting until the visitor has clicked something on the page — that's a browser rule Spotify's player can't override. Visitors press play once.
+•  Safari shows the audio player rather than the video one. Spotify doesn't serve its video player to Safari at all — we confirmed it by making Chrome identify itself as Safari and getting the same audio-only player back. Chrome, Firefox and Edge all get video; Safari and iPhone/iPad get audio in the same spot.
+
+Let me know if you spot anything odd.

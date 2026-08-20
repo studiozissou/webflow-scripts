@@ -15,8 +15,8 @@ One exception: Event schema is on hold, as every event currently listed has alre
 Official website, social profile IDs, YouTube channel, book, and two missing occupations (filmmaker, podcaster), all properly sourced. This is the database Google reads for the Knowledge Panel.
 To be clear this is Wikidata, not Wikipedia — the Wikipedia article is separate and I can't edit it directly, as I'd have a conflict of interest. I can submit a sourced request to the editors if you'd like.
 
-*4. Technical cleanup — not started*
-Flagging honestly: this is bigger than the hour we quoted. The audit turned up 38 duplicate meta descriptions, 3 broken internal links, 540 pages buried more than three clicks deep, and the placeholder text is on blog posts too, not just Events. Happy to re-quote, or leave it — it isn't what's holding her back.
+*4. Technical cleanup — underway*
+Started this week. One thing to flag: it's bigger than the hour we quoted. The audit turned up 38 duplicate meta descriptions, 3 broken internal links, 540 pages buried more than three clicks deep, and the placeholder text is on blog posts too, not just Events. I'll do what fits the hour and come back to you with a number for the rest if it's worth doing — it's real housekeeping, but it isn't what's holding her back.
 
 *5. Knowledge Panel — blocked, need your help*
 Someone on your side already claimed it. Once we know who, they can either add me or share the account. It's the last piece.

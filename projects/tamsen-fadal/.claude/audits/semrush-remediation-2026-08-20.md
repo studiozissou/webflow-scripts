@@ -130,9 +130,10 @@ Ready-to-apply edits are in the build's working set; each is a single field writ
   the only page on the site without "Tamsen Fadal" in it. Pre-existing, and a gap against
   `seo-branded-search-fix.md`. There are 3 characters of headroom, so it needs a rewrite
   rather than an append.
-- **Byline mismatch on `/blog/it-was-never-your-fault`.** Its category-box name is
-  "Dr. Jason Fung" and its hero image is captioned "Jason and Tamsen", on an article about
-  GSM. Pre-existing and unrelated to this build, but visible on the blog index.
+- ~~Byline mismatch on `/blog/it-was-never-your-fault`~~ — moot, that post is now retired.
+  Worth noting the mismatch existed at all ("Dr. Jason Fung" as the category-box name and a
+  "Jason and Tamsen" hero image on a GSM article), since it suggests the duplicate was
+  created by copying an unrelated post and the same pattern may exist elsewhere.
 
 ---
 
@@ -147,17 +148,23 @@ Ready-to-apply edits are in the build's working set; each is a single field writ
    > Watch for this: any automation that creates Blog or Podcast items through the API must
    > now send `seo-title` or the write will be rejected.
 
-2. **Pair 8 — differentiated rather than consolidated.** Worth recording that the two posts
-   were not merely similar: their `post-content` was **byte-identical**, 8,252 characters
-   each. The same article had been published twice under two slugs. Per the decision, the
-   opening of `/blog/it-was-never-your-fault` was rewritten to lead with its own thesis
-   (the misnaming, and the self-blame that followed) instead of the explainer's opener. No
-   facts were added — the new intro is drawn entirely from the existing body, which is
-   otherwise untouched.
+2. **Pair 8 — consolidated.** The two posts were not merely similar: their `post-content`
+   was **byte-identical**, 8,252 characters each. The same article had been published twice
+   under two slugs. An initial attempt to differentiate one intro was superseded by the
+   correct fix — retire one and redirect:
 
-   > Caveat: the remaining ~7,900 characters are still identical between the two pages.
-   > A distinct intro helps, but search engines may still treat them as near-duplicates.
-   > Canonicalising one to the other remains the durable fix if the flag returns.
+   | Step | Detail |
+   | --- | --- |
+   | Kept | `/blog/everything-you-need-to-know-about-gsm-and-vaginal-estrogen` — the descriptive, keyword-bearing slug |
+   | Retired | `/blog/it-was-never-your-fault` — archived, removed from the sitemap |
+   | Redirect | 301 `/blog/it-was-never-your-fault` → the canonical post, added by hand in Site Settings (the Data API does not expose redirects) |
+
+   Verified live: the old path returns a single-hop 301, the canonical post returns 200,
+   the sitemap dropped from 413 to 412 URLs, and the blog index no longer links to the
+   retired post.
+
+   > Webflow gives 301 redirects precedence over an existing CMS item, so adding the
+   > redirect before archiving meant the URL never 404'd.
 
 3. **Retired Apple Podcasts episodes — accepted as-is.** Links resolve to the current show
    rather than the specific episode, which no longer exists anywhere.

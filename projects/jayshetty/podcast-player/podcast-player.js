@@ -12,6 +12,42 @@
     pendingSpotifyPlays.splice(0).forEach(function (fn) { fn(); });
   });
 
+  var PLAYER_CSS =
+    ".podcast-list-spotify-embed.is-cover{display:block}" +
+    ".showvideo .podcast-list-spotify-embed,.videoplay .podcast-list-spotify-embed{z-index:2}" +
+    ".podcast-list-spotify-embed iframe{width:100%;height:100%;border:0}" +
+    ".podcasts_image-wrapper:has(.podcast-list-spotify-embed.visible) .image-cover{opacity:0}";
+
+  function injectStyles() {
+    if (document.getElementById("js-podcast-player-css")) return;
+    var style = document.createElement("style");
+    style.id = "js-podcast-player-css";
+    style.textContent = PLAYER_CSS;
+    document.head.appendChild(style);
+  }
+
+  function ensureSpotifyApi() {
+    if (!USE_IFRAME_API || spotifyApi) return;
+    if (window.__spotifyIframeApi) {
+      spotifyApi = window.__spotifyIframeApi;
+      return;
+    }
+    var previous = window.onSpotifyIframeApiReady;
+    window.onSpotifyIframeApiReady = function (api) {
+      window.__spotifyIframeApi = api;
+      spotifyApi = api;
+      pendingSpotifyPlays.splice(0).forEach(function (fn) { fn(); });
+      if (typeof previous === "function") {
+        try { previous(api); } catch (err) {}
+      }
+    };
+    if (document.querySelector('script[src*="embed/iframe-api"]')) return;
+    var script = document.createElement("script");
+    script.src = "https://open.spotify.com/embed/iframe-api/v1";
+    script.async = true;
+    document.head.appendChild(script);
+  }
+
   function episodeIdFrom(url) {
     var m = /episode\/([A-Za-z0-9]+)/.exec(url || "");
     return m ? m[1] : null;
@@ -294,6 +330,8 @@
     });
   }
 
+  injectStyles();
+  ensureSpotifyApi();
   dropNonOmnyEmbeds();
   document.addEventListener("click", function (e) {
     if (!e.target || !e.target.closest) return;

@@ -1,0 +1,30 @@
+Hi Yoni — update on the SEO work, against the five items we agreed.
+
+*Why she wasn't showing up first for her own name*
+The old site said, in plain factual language, "Tamsen Fadal is a journalist, author, host of…". The redesign replaced that with a warmer first-person voice, which reads better but stripped out the signals Google uses to match a website to a real person. That's why her LinkedIn and other profiles were outranking her own site on her own name — Google wasn't confident tamsenfadal.com *was* her. Everything below is about rebuilding that confidence.
+
+*1. Old vs new entity audit + edits — done*
+Compared every equivalent page across both sites. Fixed: the Provider Directory had lost her name from its title and description entirely, the footer sentence had a typo and outdated wording, and several pages carried descriptions belonging to a different page.
+Two findings still open, both needing your team's sign-off on copy: the About page H1 still doesn't include her name, and the LinkedIn link is still missing from the footer.
+
+*2. Schema / structured data — done*
+Every page now carries a full entity graph — Person, WebSite, Organization, Book, PodcastSeries, Article and Breadcrumbs — with one consistent ID for Tamsen across all 400+ pages, linked out to her Wikidata entry, socials and book. Previously this only existed on the homepage. Both documentaries now have proper Film entries too.
+One exception: Event schema is on hold, as every event currently listed has already passed and there are no individual event pages. Easy to add when there are upcoming dates.
+
+*3. Wikidata — done*
+Official website, social profile IDs, YouTube channel, book, and two missing occupations (filmmaker, podcaster), all properly sourced. This is the database Google reads for the Knowledge Panel.
+To be clear this is Wikidata, not Wikipedia — the Wikipedia article is separate and I can't edit it directly, as I'd have a conflict of interest. I can submit a sourced request to the editors if you'd like.
+
+*4. Technical cleanup — not started*
+Flagging honestly: this is bigger than the hour we quoted. The audit turned up 38 duplicate meta descriptions, 3 broken internal links, 540 pages buried more than three clicks deep, and the placeholder text is on blog posts too, not just Events. Happy to re-quote, or leave it — it isn't what's holding her back.
+
+*5. Knowledge Panel — blocked, need your help*
+Someone on your side already claimed it. Once we know who, they can either add me or share the account. It's the last piece.
+
+*Also fixed:* tamsenfadal.com/subscribe was sending people to the homepage instead of the newsletter signup — and that URL is printed in her official bio.
+
+*On impact:* this work changes how Google understands who she is rather than pushing pages up the rankings directly. Expect it to show first in branded search and in how AI tools like ChatGPT describe her, over weeks rather than days.
+
+One question — Wikidata has a photo of her, but if there's an official one she'd prefer, send it over. It has to be one she owns the rights to and is happy to release publicly, as these are open databases.
+
+Happy to jump on a call if easier.

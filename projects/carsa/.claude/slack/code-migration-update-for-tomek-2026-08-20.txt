@@ -1,0 +1,8 @@
+Hi Tomek, picking the code migration back up. Short version:
+
+•  All custom code is captured in the repo with rollback copies. The VDP bundle is built, but live is back on inline code, so that step gets redone.
+•  No first-visit speed gain (June tests) – the value is version history, one-line rollback, tests on every change and cached scripts on repeat visits.
+•  Plan: one loader script in the site footer first (every page benefits in one publish), then page-by-page removal of the custom code from Webflow – VDP and VSRP first. Staging → check → live each time; rollback is one edit.
+•  From you: just some time to double check the VDP and VSRP. Nothing else needed.
+•  Hosted on my GitHub via CDN for time being; easily portable to nother host later.
+•  It's mostly automated now, so I think I can get the whole migration done in 2 hours.

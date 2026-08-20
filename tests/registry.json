@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-19",
+  "lastUpdated": "2026-08-20",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -206,8 +206,9 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Carsa code migration — page-by-page inline code externalisation to GitHub CDN, baseline and post-migration tests for all interactive features",
-      "created": "2026-07-06"
+      "description": "Carsa code migration v2 — footer init.js loader + global.js, then page-by-page inline removal; loader pinning/caching, footer behaviours, SRP/Deals/homepage baselines, per-page inline-removed guards",
+      "created": "2026-07-06",
+      "updated": "2026-08-20"
     },
     {
       "slug": "tsc-cms-seo-fields",

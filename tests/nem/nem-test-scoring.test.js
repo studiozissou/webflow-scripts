@@ -185,7 +185,28 @@ describe("the minimum score gate", () => {
 });
 
 describe("tiebreak — fixed order, not body/situational questions", () => {
+  /* The order is Christel's clinical one, and the authority for it is Alex's source
+   * doc § 4 (v2, 2026-08-19), which he declared authoritative over every earlier
+   * instruction. It reads:
+   *
+   *   False power → Fear → Self-rejection → False hope → Emotional numbing
+   *
+   * An earlier reading had self-rejection and emotional numbing leading, which
+   * silently resolved any tie involving them to the wrong mechanism — wrong
+   * conclusion text, wrong report. These tests pin the doc's order specifically,
+   * not merely "some fixed order". */
+  it("TIEBREAK_ORDER is the order in the source doc § 4", () => {
+    assert.deepEqual(TIEBREAK_ORDER, [
+      "falsePower",
+      "fear",
+      "selfRejection",
+      "falseHope",
+      "emotionalNumbing",
+    ]);
+  });
+
   it("an exact tie resolves by TIEBREAK_ORDER index", () => {
+    /* selfRejection and emotionalNumbing tie; selfRejection is earlier. */
     const result = evaluate([12, 12, 0, 0, 0]);
     assert.equal(result.primary, "selfRejection");
   });
@@ -194,6 +215,31 @@ describe("tiebreak — fixed order, not body/situational questions", () => {
     /* falsePower and fear tie; falsePower is earlier in TIEBREAK_ORDER. */
     const result = evaluate([0, 0, 12, 12, 0]);
     assert.equal(result.primary, "falsePower");
+  });
+
+  it("false power beats self-rejection on a tie — the doc's order, not the old one", () => {
+    /* The clearest case where the two orders disagree: the superseded order put
+     * selfRejection first, so this exact profile used to produce 01F-SR. */
+    const result = evaluate([12, 0, 12, 0, 0]);
+    assert.equal(result.primary, "falsePower");
+    assert.equal(result.secondary, "selfRejection");
+  });
+
+  it("emotional numbing is last — it never leads a tie", () => {
+    /* Superseded order had emotionalNumbing second, ahead of falsePower and fear. */
+    assert.equal(evaluate([0, 12, 12, 0, 0]).primary, "falsePower");
+    assert.equal(evaluate([0, 12, 0, 12, 0]).primary, "fear");
+    assert.equal(evaluate([0, 12, 0, 0, 12]).primary, "falseHope");
+  });
+
+  it("source doc § 4 example 3: false power leads false hope on a 13-13 tie", () => {
+    /* John, male: FP 13, FH 13, SR 8, EM 5, FR 4. The doc resolves this to
+     * primary false power, secondary false hope → 01M-FP-FH. */
+    const result = evaluate([8, 5, 13, 4, 13], "male");
+    assert.equal(result.primary, "falsePower");
+    assert.equal(result.secondary, "falseHope");
+    assert.equal(result.conclusionKey, "false-power_false-hope");
+    assert.equal(result.conclusionId, "01M-FP-FH");
   });
 
   it("tiebreaking is deterministic across repeated calls", () => {

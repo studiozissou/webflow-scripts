@@ -19,7 +19,6 @@
 import { test, expect } from '@playwright/test';
 
 import {
-  TEST_PAGE_NL,
   QUIZ_TEST_TIMEOUT_MS,
   ANSWER_LABELS_NL,
   loadPage,
@@ -179,41 +178,33 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
 });
 
 // ── B: Intro lines ────────────────────────────────────────────
-
-test.describe(`${SLUG} — B: Intro line selection`, () => {
-  test('a dual outcome resolves an intro line', async ({ page }) => {
-    await loadPage(page, TEST_PAGE_NL, '?nemdebug=1');
-    await answerReportProfile(page);
-    await fillProfileScreen(page, 'Vrouw');
-
-    const intro = page.locator('[data-element="report-intro-line"]');
-    await expect(intro).toBeVisible({ timeout: 10_000 });
-    expect((await intro.innerText()).trim().length).toBeGreaterThan(0);
-  });
-
-  test('the intro line ignores gender — same key, same line', async ({ page, context }) => {
-    await loadPage(page, TEST_PAGE_NL);
-    await answerReportProfile(page);
-    await fillProfileScreen(page, 'Vrouw');
-    const vrouw = (await page.locator('[data-element="report-intro-line"]').innerText()).trim();
-
-    const second = await context.newPage();
-    await loadPage(second, TEST_PAGE_NL);
-    await answerReportProfile(second);
-    await fillProfileScreen(second, 'Man');
-    const man = (await second.locator('[data-element="report-intro-line"]').innerText()).trim();
-
-    expect(vrouw).toBe(man);
-  });
-
-  test('flat outcomes have no intro line — they get no report', async ({ page }) => {
-    await loadPage(page);
-    await answerUniformly(page, 'soms');
-    await fillProfileScreen(page, 'Vrouw');
-
-    await expect(page.locator('[data-element="report-intro-line"]')).toHaveCount(0);
-  });
-});
+//
+// DELETED 2026-08-20. This block held three tests asserting a visible
+// [data-element="report-intro-line"] on the conclusion screen. That element does not
+// exist, and per Alex's source doc it should not: the intro line is the teaser on the
+// REPORT'S TITLE PAGE, never an on-screen element.
+//
+//   § 5.2  "The intro line is the teaser on the title page of the report."
+//   § 6.4  Title page: first name, date, the intro line, the fixed disclaimer.
+//   § 6.2  "the intro line never appears in the engine's output because the template
+//           already places it on the title page."
+//
+// Captured at projects/nem-life/.claude/research/nem-test-01-source-doc-2026-08-20.md.
+// The tests were written from the spec before the feature existed and encoded a wrong
+// reading of it; two failed against live and the third ("flat outcomes have no intro
+// line") passed VACUOUSLY, because an element that exists nowhere trivially has count 0
+// everywhere. A test that cannot fail is worse than no test — it reported the intro-line
+// path as covered.
+//
+// The rendering is now covered where it actually happens: tests/nem/nem-build-html.test.js
+// runs the real Build HTML jsCode and asserts the line appears between the <h1> and the
+// greeting, escaped, and absent entirely when empty.
+//
+// STILL UNCOVERED: that the component sends introLine in the /submit payload at all. The
+// right test is a payload assertion on captureSubmit, not a DOM one — deliberately not
+// added yet, because the submission POST is not currently observed at all
+// (nem-submit-second-row-not-written-on-optin, P1). Add it once that is fixed, or it
+// would land red for an unrelated reason.
 
 // ── C: General ────────────────────────────────────────────────
 

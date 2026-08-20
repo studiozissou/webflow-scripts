@@ -1,0 +1,182 @@
+<script>
+  $("#all-topics").prependTo("#topics-list");
+</script>
+
+<script>
+  $(".category-radio-button").click(function () {
+    $("#all-link").removeClass("is-active");
+  });
+</script>
+
+<script>
+  $("#all-link").click(function () {
+    $("#all-link").addClass("is-active");
+  });
+</script>
+
+<!-- Prevent filter form from submitting -->
+<script>
+// Prevent the form with ID #wf-form-Filter-Blog from submitting
+$('#wf-form-Filter-Blog').on('submit', function(e) {
+  e.preventDefault(); // Stop the form's default submit action
+});
+</script>
+
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+
+<!-- Initialize Swiper -->
+<script>
+  var swiper = new Swiper(".awards-swiper", {
+    slidesPerView: 1,
+    slidesPerGroup: 1,
+    centeredSlides: true,
+    autoHeight: true,
+    loop: true,
+    spaceBetween: 0,
+    navigation: {
+      nextEl: ".is-slider-next",
+      prevEl: ".is-slider-prev",
+    },
+    pagination: false,
+    breakpoints: {
+      680: {
+        slidesPerView: 2,
+        slidesPerGroup: 1,
+        centeredSlides: false,
+        autoHeight: false,
+      },
+      820: {
+        slidesPerView: 3,
+        slidesPerGroup: 1,
+        centeredSlides: false,
+        autoHeight: false,
+      },
+      1280: {
+        slidesPerView: 4,
+        slidesPerGroup: 1,
+        centeredSlides: false,
+        autoHeight: false,
+      },
+      1500: {
+        slidesPerView: 5,
+        slidesPerGroup: 1,
+        centeredSlides: false,
+        autoHeight: false,
+      },
+    },
+  });
+</script>
+
+<!-- jQuery script to copy testimonial content into modal -->
+<script>
+  $(document).ready(function () {
+    // Use event delegation to capture click events for .testimonial_card elements
+    $(document).on("click", ".testimonial_card", function () {
+      // Get the .testimonials_copy-content of the clicked card
+      const contentToCopy = $(this).find(".testimonials_copy-content").clone();
+
+      // Empty #modal-target and append the cloned content
+      $("#modal-target").empty().append(contentToCopy);
+    });
+  });
+</script>
+
+<!-- Podcast player: source in projects/jayshetty/podcast-player/podcast-player.js -->
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@jayshetty-podcast-player-v1.0.0/projects/jayshetty/podcast-player/podcast-player.js"></script>
+<script>
+  $(document).ready(function () {
+    var allDataAttribute = document.querySelectorAll("[data-omny-embed-id]");
+    $.each(allDataAttribute, function (i, value) {
+      $(this).attr("data-omny-embed-id", "omny-embed-" + (i + 1));
+    });
+    var allIframePlayer = document.querySelectorAll("iframe.omny-embed");
+    $.each(allIframePlayer, function (i, value) {
+      $(this).prop("id", "omny-embed-" + (i + 1));
+    });
+  });
+</script>
+<script>
+  function initPlayer() {
+    const playerList = {};
+
+    // store all running players
+    const currentPlayingList = {};
+
+    const playButtons = document.querySelectorAll(".is-podcast-play-button");
+    playButtons.forEach((playButton) => {
+      // create player
+      const player = new playerjs.Player(
+        document.getElementById(playButton.getAttribute("data-omny-embed-id"))
+      );
+
+      // store player to player list
+      playerList[playButton.getAttribute("data-omny-embed-id")] = player;
+
+      // add player to running player list o play
+      player.on("play", () => {
+        if (!currentPlayingList[playButton.getAttribute("data-omny-embed-id")])
+          currentPlayingList[playButton.getAttribute("data-omny-embed-id")] =
+            player;
+      });
+
+      // remove player to running player list o play
+      player.on("pause", () => {
+        if (currentPlayingList[playButton.getAttribute("data-omny-embed-id")]) {
+          delete currentPlayingList[
+            playButton.getAttribute("data-omny-embed-id")
+          ];
+        }
+      });
+
+      playButton.addEventListener("click", () => {
+        $(".podcast-list-youtube-embed iframe").each(function () {
+          $(this)[0].contentWindow.postMessage(
+            '{"event":"command","func":"' + "pauseVideo" + '","args":""}',
+            "*"
+          );
+
+          if (Object.keys(currentPlayingList).length > 0) {
+            Object.values(currentPlayingList).forEach((p) => p.pause());
+          }
+          // start new player
+          /*setTimeout(function () {
+            playerList[playButton.getAttribute("data-omny-embed-id")].play();
+          }, 1000); */
+        });
+        // pause currently running players
+      });
+			 $(".podcast-player_close").click(function () {
+      Object.values(currentPlayingList).forEach((p) => p.pause());
+    });
+    $("body").on("click", ".is-podcast-watch-button", function () {
+      Object.values(currentPlayingList).forEach((p) => p.pause());
+    });
+
+    });
+
+  }
+
+  $(document).ready(function () {
+    // store all player
+    initPlayer();
+    $(".podcast-pagination-button, .category-item").on("click", function () {
+
+        setTimeout(function () {
+
+        var allDataAttribute = document.querySelectorAll(
+            "[data-omny-embed-id]"
+        );
+        $.each(allDataAttribute, function (i, value) {
+            $(this).attr("data-omny-embed-id", "omny-embed-" + (i + 1));
+        });
+        var allIframePlayer = document.querySelectorAll("iframe.omny-embed");
+        $.each(allIframePlayer, function (i, value) {
+            $(this).prop("id", "omny-embed-" + (i + 1));
+        });
+            initPlayer();
+        }, 1000);
+    });
+
+  });
+</script>

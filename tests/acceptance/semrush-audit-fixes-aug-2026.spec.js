@@ -21,11 +21,15 @@ const PODCAST_PAGES = [
 ];
 
 const BLOG_PAGES = [
-  '/blog/it-was-never-your-fault',
   '/blog/everything-you-need-to-know-about-gsm-and-vaginal-estrogen',
   '/blog/hidden-reason-behind-midlife-weight-gain',
   '/blog/fight-inflammation-lose-weight-with-dr-daryl-gioffre',
 ];
+
+// Retired 2026-08-20: its body was byte-identical to the GSM explainer above, so it was
+// archived and 301'd to the canonical version rather than kept as a near-duplicate.
+const RETIRED_DUPLICATE = '/blog/it-was-never-your-fault';
+const CANONICAL_GSM = '/blog/everything-you-need-to-know-about-gsm-and-vaginal-estrogen';
 
 const DUPLICATE_PAIRS = [
   ['/podcast/from-sports-illustrated-to-sephora-how-molly-sims-reinvented-herself-in-midlife', '/podcast/choosing-a-child-free-life-5-things-i-wish-i-knew-earlier'],
@@ -35,7 +39,6 @@ const DUPLICATE_PAIRS = [
   ['/podcast/progesterone-101-the-hormone-behind-your-3am-wake-ups-your-anxiety-your-worst-pms', '/podcast/the-fertility-expert-egg-freezing-perimenopause-glp-1s-explained'],
   ['/podcast/the-glp-1-doctor-what-works-what-doesnt-whats-next', '/podcast/why-you-always-feel-behind-and-the-simple-tools-that-will-free-you'],
   ['/podcast/what-i-wish-i-knew-at-35-7-hard-truths-that-changed-my-life', '/podcast/the-hidden-reason-you-keep-choosing-emotionally-unavailable-people'],
-  ['/blog/everything-you-need-to-know-about-gsm-and-vaginal-estrogen', '/blog/it-was-never-your-fault'],
   ['/blog/the-6-shoes-you-need-in-your-closet', '/blog/your-feet-are-trying-to-tell-you-something'],
   ['/blog/the-hair-conversation-women-are-still-too-afraid-to-have', '/blog/the-space-between-who-you-were-and-who-youre-becoming'],
 ];
@@ -144,6 +147,20 @@ test.describe('semrush-audit-fixes-aug-2026: broken links', () => {
   test('no href contains a stray trailing space before the closing quote', async ({ page }) => {
     const { html } = await readMeta(page, '/podcast/the-heart-doctor-5-warning-signs-your-heart-is-in-trouble');
     expect(html).not.toMatch(/href="[^"]*\s"/);
+  });
+});
+
+test.describe('semrush-audit-fixes-aug-2026: duplicate content consolidation', () => {
+  test('retired duplicate 301s to the canonical GSM post', async ({ request }) => {
+    const res = await request.get(`${ORIGIN}${RETIRED_DUPLICATE}`, { maxRedirects: 0 });
+    expect(res.status()).toBe(301);
+    expect(res.headers()['location']).toContain(CANONICAL_GSM);
+  });
+
+  test('the canonical GSM post still resolves', async ({ page }) => {
+    const { title } = await readMeta(page, CANONICAL_GSM);
+    expect(title).toContain(ENTITY_SUFFIX);
+    expect(title.length).toBeLessThanOrEqual(MAX_TITLE);
   });
 });
 

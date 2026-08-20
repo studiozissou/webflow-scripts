@@ -1,19 +1,8 @@
-Hi Tomek, picking the code migration back up. Quick status and the plan, since the July estimate never went out and the approach has changed a bit.
+Hi Tomek, picking the code migration back up. Short version:
 
-*Where it stands*
-•  All custom code is captured in the repo (every page + site-wide), with rollback copies.
-•  The VDP bundle and its 19 automated tests are built, but the live VDP is back to inline code – either the swap never went live or it was re-pasted over. No harm done, just means we redo that step.
-•  June tests confirmed what we suspected: no first-visit speed gain, so this isn't a PageSpeed play. The value is version history, one-line rollback, tests on every change, and cached scripts on repeat visits.
-
-*The plan*
-•  *Step 1* – one loader script in the site footer that serves the 8 site-wide scripts from a cached, pinned file. One publish, every page benefits, nothing page-specific changes yet.
-•  *Step 2* – pages one at a time: VDP, then search results, then deals, then the rest in small batches. Each page is re-pulled and diffed right before it moves, tested before and after, and can be rolled back with one edit.
-•  *Step 3* – tidy up duplicated code and fix the known bugs, all in the repo with tests around it. No more Webflow edits needed for that.
-
-*What I need from you*
-•  Once a page has moved, please don't edit its code embeds in Webflow – send changes my way and I'll push them through the repo (same day turnaround for small things).
-•  Scripts are hosted on my GitHub and served via jsDelivr (your repo is private, which the CDN can't use). They're built to be portable – if your engineer ever wants them on the Carsa CloudFront, it's a copy of one folder and a one-line change in Webflow. I've written a short handoff note for when that day comes.
-•  Nothing else from your side. Each page goes to staging first, I check it, then it goes live – I'll give you a heads-up before each one.
-
-*On cost*
-Nearly all of this is automated on my side now – capture, code, tests, Webflow edits and publishes. My time per page is the check-through before it goes live. I'd rather bill the actual time per page than quote a fixed number up front. Happy to talk through any of it.
+•  All custom code is captured in the repo with rollback copies. The VDP bundle is built, but live is back on inline code, so that step gets redone.
+•  No first-visit speed gain (June tests) – the value is version history, one-line rollback, tests on every change and cached scripts on repeat visits.
+•  Plan: one loader script in the site footer first (every page benefits in one publish), then page by page – VDP, search results, deals, homepage, the rest in two batches. Staging → check → live each time; rollback is one edit.
+•  From you: once a page has moved, please don't edit its code embeds in Webflow – send changes to me instead. Nothing else needed.
+•  Hosted on my GitHub via CDN (yours is private); portable to your CloudFront later if your engineer wants it.
+•  It's mostly automated now, so I'll bill actual time per page rather than quote up front.

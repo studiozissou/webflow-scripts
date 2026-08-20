@@ -122,9 +122,36 @@ would decrement `currentStep` while a pending advance is still queued and the tw
 Timers are cleared on unmount — the chain otherwise leaks two timers per question and
 fires state updates into an unmounted tree if the user navigates away mid-fade.
 
-**Known, unfixed:** the very first click after page load is occasionally swallowed. That
-is a hydration race (the renderer paints before React attaches handlers), not the fade
-race, and the guard cannot help — there is no transition to block yet.
+### The hydration gate
+
+`disabled={isTransitioning || !hydrated}` — the `!hydrated` half is a second, unrelated
+guard, and it is why the pills carry `disabled` in the server-rendered HTML.
+
+**Webflow server-renders this component.** The quiz markup, including the answer pills and
+question one's text, is present in the static HTML before any JavaScript runs; React then
+hydrates it. So the pills are visible and clickable for a window before their handlers
+exist, and a click in that window is lost outright — it does not queue and it does not
+replay.
+
+Measured on staging 2026-08-20 over ten loads: **one click in ten was lost entirely**, and
+still lost with a twenty-second budget. On that run the element had no React fiber or props
+key attached; on the nine that worked it did, and they advanced in a consistent ~550 ms.
+This is a real user-facing fault on the first interaction of the quiz, not a test artefact.
+
+The fix works because the server render happens with `hydrated` false, so the static markup
+ships `disabled`. The browser will not dispatch a click on a disabled button at all, and
+Playwright's actionability check waits for it to enable. The `useEffect` that sets
+`hydrated` runs strictly after React has attached, so the gate opens at exactly the right
+moment.
+
+**Do not reach for a timeout here.** An arbitrary delay would either open the gate too early
+on a slow connection or leave the quiz needlessly inert on a fast one; the effect is the
+event we actually care about.
+
+⚠️ A false trail worth not repeating: `loadEventEnd` measured in a browser with extensions
+read ~8.3 s, which made the hydration window look impossible to hit. In a clean context the
+page loads in ~550 ms and hydration lands squarely in it. Measure in an environment that
+resembles the one the bug appears in.
 
 ### The completion beacon
 

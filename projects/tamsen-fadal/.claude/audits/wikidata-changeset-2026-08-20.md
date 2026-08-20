@@ -65,18 +65,39 @@ are the weak ones, not ours.
 
 ---
 
-## 2. Blocked on a lookup — P2397 YouTube channel ID
+## 1b. ✅ DONE — references added to the three unsourced occupation claims
 
-P2397 requires the `UC…` channel ID, **not** the `@TamsenFadalTV` handle. An automated
-fetch of the channel page was attempted today and YouTube served no `externalId` to a
-non-browser request.
-
-**To unblock (30 seconds, needs a browser):** open
-`https://www.youtube.com/@TamsenFadalTV`, View Source, search `externalId`. Then:
+Run as a QuickStatements batch once the account crossed 50 edits. `news presenter`, `author`
+and `activist` had carried no references since creation.
 
 ```
-Q7681850|P2397|"UC…"|S854|"https://www.youtube.com/@TamsenFadalTV"|S813|+2026-08-20T00:00:00Z/11
+Q7681850|P106|Q270389|S854|"https://www.tamsenfadal.com/about-tamsen"|S813|+2026-08-20T00:00:00Z/11
+Q7681850|P106|Q482980|S854|"https://www.tamsenfadal.com/book-how-to-menopause"|S813|+2026-08-20T00:00:00Z/11
+Q7681850|P106|Q15253558|S854|"https://www.tamsenfadal.com/advocacy"|S813|+2026-08-20T00:00:00Z/11
 ```
+
+**Verified: P106 holds 6 claims, no duplicates, all six referenced.** Confirms QuickStatements
+attaches a reference to an existing property+value pair rather than duplicating the statement —
+useful to know for future batches.
+
+## 2. ✅ DONE — P2397 YouTube channel ID
+
+P2397 requires the `UC…` channel ID, not the `@TamsenFadalTV` handle.
+
+**Resolved: `UCcrYxvtT9tp60RBsK9HvpqQ`**
+
+The channel page yields ten `UC…` strings — nine are recommended-channel sidebar entries.
+The correct one was identified by frequency (177 occurrences vs a handful each) and then
+**confirmed independently** against the channel's RSS feed:
+
+```
+https://www.youtube.com/feeds/videos.xml?channel_id=UCcrYxvtT9tp60RBsK9HvpqQ
+  <title>Tamsen Fadal</title>   channel created 2011-07-03
+```
+
+Never take the frequency heuristic on its own — always confirm via the feed.
+
+Applied with `reference URL` + `retrieved`, verified present.
 
 ---
 

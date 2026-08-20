@@ -1,0 +1,42 @@
+Hi Yoni — big update. Items 1 to 4 are done and live.
+
+Quick summary of what changed on the site today:
+
+• Tamsen's approved bio is now the official description Google reads, on every page of the site. That was the thing we were waiting on, so thanks for chasing it down.
+
+• The site now tells Google, on all 400+ pages, that this is *the* Tamsen Fadal — journalist, filmmaker, NYT bestselling author, host of The Tamsen Show — and links that to her Wikidata entry, her socials and her book. Before, that only really existed on the homepage.
+
+• Both documentaries now have their own proper entries, so The (M) Factor and Before the Pause can show up as films in search rather than just web pages.
+
+• 11 pages that had no structured data at all now have it, including Press, Speaking, Blog and the provider directory.
+
+• Fixed a batch of things that were quietly wrong: the Podcast page's description was about 900 characters (Google shows ~160), one film page was showing the Advocacy page's description word for word, the provider directory had lost Tamsen's name from its title entirely, and 11 blog and podcast pages had descriptions belonging to a completely different episode or guest. The Naomi Watts episode, for instance, was described as being about Bobbi Brown.
+
+• Wikidata's updated too — Google pulls from it for the Knowledge Panel — including her YouTube channel, and filmmaker and podcaster added to her listed occupations.
+
+• Also fixed: tamsenfadal.com/subscribe was sending people to the homepage instead of the newsletter signup. That URL is printed in her official bio, so anyone using it was landing in the wrong place.
+
+I've checked all of it through Google's own testing tool and it's coming back clean.
+
+—
+
+One thing I need a decision on, and it's the highest-impact item left.
+
+The sentence in the site footer — the one that appears on all 400+ pages — currently reads:
+
+"Tamsen Fadal is a NYT bestselling author, podcaster  13x Emmy-winning journalist, and keynote speaker helping women unlock their full potential."
+
+Two things there. It's got a double space and a missing comma after "podcaster", which is a visible typo on every page of the site. And it says "13x Emmy-winning", while the approved bio says "Emmy Award-winning" — so as of today the footer disagrees with everything else on the page.
+
+Either version is fine, but they need to match. So:
+
+(a) Change the footer to match the approved bio, or
+(b) Keep "13x" and we add it back into the bio everywhere
+
+Genuinely no wrong answer — a specific number is actually a stronger signal if the team is happy standing behind it. I just need to know which way to go.
+
+—
+
+I've also put together a short doc of on-page copy recommendations. The biggest one: the Press page's own description promises "media features, approved photos, bios and press inquiry contact", but there's no bio on the page at all. That's the first place a journalist or producer looks, the copy is already approved, so it's the easiest win available. Happy to send that over or walk through it.
+
+Last thing — still waiting to hear who on your side claimed the Knowledge Panel. No rush, but it's the one piece I can't move without.

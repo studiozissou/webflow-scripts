@@ -10,7 +10,7 @@
 
 ## Summary
 
-Move every piece of Carsa custom JavaScript out of Webflow and into `projects/carsa/` in `studiozissou/webflow-scripts`, served by jsDelivr pinned to commit SHAs. A single `init.js` in the site-wide **footer** owns a route map and loads one module per page type. Pages migrate one at a time (complex pages solo, others in batches of 2–3); each page is re-captured and diffed immediately before its swap, tested before and after, and can be rolled back with one edit. Refactoring happens last, inside the repo, behind the tests.
+Move every piece of Carsa custom JavaScript out of Webflow and into `projects/carsa/` in `studiozissou/webflow-scripts`, served by jsDelivr pinned to commit SHAs. A single `init.js` in the site-wide **footer** owns a route map and loads one module per page type. **The full acceptance suite is written and baselined green against the live site before anything changes.** Pages then migrate one at a time (deep-check pages solo, the rest in two batches); each page is re-captured and diffed immediately before its swap, the suite runs after, and any page can be rolled back with one edit. Refactoring happens last, inside the repo, behind the same tests.
 
 Performance is not the pitch. Cold-load LCP did not move when the VDP was externalised in June (+16ms, noise). The wins are version control, rollback, review, tests, cross-page caching on repeat visits, and an end to "hunt through Page Settings".
 
@@ -38,6 +38,7 @@ Net: the repo side is ~40% done (capture, VDP file, test harness, loader pattern
 | D5 | Deep-check pages (VDP, SRP, Deals, Homepage) publish solo; the four form/calculator pages go as one batch; everything else is a 30-second check and ships in one or two batches. | 8 publishes total. Most pages have nothing to interact with beyond "loads, no errors, one link works". |
 | D6 | Effort is framed as **Claude / Will / Tomek's side**, not hours. | Most steps are automatable; Will's cost is spot-checks and go/no-go calls. |
 | D8 | Claude publishes staging **and** live via Webflow MCP. Will is the go/no-go gate before each live publish, not the clicker. | MCP publish is available in this setup. Live publishes are outward-facing, so they still wait for Will's explicit go. |
+| D9 | **Tests first.** Every page's acceptance tests are written from the fresh captures and run green against live *before* the loader ships. Phase 2 is swaps only. | Cost is Claude time. A green suite before any change makes every later failure unambiguous, catches July→August drift up front, and automates everything except Tier 3. |
 | D7 | `battery-animation.js` gets pinned to a SHA in the same publish as the loader. | Unpinned `@main` is a live regression vector and has no immutable caching. |
 
 ## Architecture
@@ -118,7 +119,7 @@ Claude runs this; the only manual part is reading a non-empty diff.
 
 Legend — **C** Claude (MCP incl. staging/live publish, git, Playwright, file writing) · **W** Will (go/no-go, judgment, real-device checks) · **T** Tomek / Carsa side.
 
-### Phase 0 — Re-capture and reconcile (no site changes)
+### Phase 0 — Re-capture, reconcile, and baseline the full test suite (no site changes)
 
 | # | Task | Who | Notes |
 |---|---|---|---|
@@ -127,8 +128,11 @@ Legend — **C** Claude (MCP incl. staging/live publish, git, Playwright, file w
 | 0.3 | Prune the page list: drop drafts/backups (`home-autumn-deals`, `srp-backup`, `part-ex-dnu`, `search-demo`, etc.) — confirm with live sitemap | C, W confirms | Cruft in `rollback/` would otherwise become dead modules |
 | 0.4 | Diff existing repo files (`vdp.js`, `homepage.js`, `check-finance.js`, `near-location-redirect.js`, `menu-scroll-lock.js`, `faq-scrub.js`, `make-model*.js`) against fresh captures; mark each as current / stale / unused | C | `make-model.old.js` and empty `global.js` look like abandoned attempts |
 | 0.5 | Confirm CMS route paths against sitemap | C | |
+| 0.6 | **Write acceptance tests for every page** from the fresh captures — one `describe` per page, per the inventory in *Test Plan → Tier 1*. Each script block yields at least one assertion: the selector it touches, the link it builds, the storage it writes, the global it sets, the JSON-LD it emits. | C | Homepage (10), VDP (19), loader (12), SRP (8), Deals (3) already exist; ~12 pages to add |
+| 0.7 | Run the whole suite against **live** (inline code still in place). Fix selectors until green; mark anything that is genuinely flaky as `test.fixme` with the reason. | C | This is the baseline. Nothing proceeds until it is green. |
+| 0.8 | Register the suite in `tests/registry.json` and run it once against staging too | C | Staging baseline catches staging-only differences before Phase 1 |
 
-**Checkpoint:** fresh, pruned, diffed snapshot. Nothing changed on site.
+**Checkpoint:** fresh, pruned, diffed snapshot **and a green suite against live and staging**. Nothing changed on site. From here, any red test after a publish is caused by that publish.
 
 ### Phase 1 — Loader + site-wide scripts (publish 1)
 
@@ -136,8 +140,8 @@ Legend — **C** Claude (MCP incl. staging/live publish, git, Playwright, file w
 |---|---|---|
 | 1.1 | Write `init.js` (route map, dep gate, base URL, local switch) | C |
 | 1.2 | Write `global.js` = the 8 footer scripts, 1:1 (model/promo links, store-list prepend, attribution saver, finance UTM appender, noopener, copyright year, menu scroll lock, n8n chat). Slider CSS stays in Webflow. | C |
-| 1.3 | Acceptance tests: loader 200 + pinned, `global.js` loaded once, footer behaviours present on 3 page types, zero console errors, no double-init | C |
-| 1.4 | Run tests against live as baseline (inline still in place) → green | C |
+| 1.3 | Loader tests already written and baselined in 0.6–0.7; confirm `LOADER_RE` matches the SHA about to ship | C |
+| 1.4 | Re-run the full suite against live one last time → green | C |
 | 1.5 | Replace the 8 footer blocks with the loader tag via MCP `set_site_freeform_code`; pin `battery-animation.js` SHA on the VDP body code; write `projects/carsa/README.md` | C |
 | 1.6 | Publish to **staging** via MCP | C |
 | 1.7 | Run tests against `carsa-v2.webflow.io`; spot-check menu, chat widget, UTM storage | C tests, **W** feel-check |
@@ -146,21 +150,19 @@ Legend — **C** Claude (MCP incl. staging/live publish, git, Playwright, file w
 
 **Checkpoint:** every page now loads `init.js` + `global.js` from cache on repeat visits. Zero per-page changes yet.
 
-### Phase 2 — Page migration (publishes 2–12)
+### Phase 2 — Page migration (publishes 2–8)
 
-Per page (or batch) loop — the same 9 steps every time:
+Tests already exist and are green (Phase 0). Per page (or batch) loop — swaps only:
 
 | Step | Who |
 |---|---|
-| a. Drift check (pull, diff, fold changes) | C |
+| a. Drift check (pull, diff against the Phase 0 capture, fold changes into module and tests) | C |
 | b. Write module file (1:1), add route to `init.js`, commit | C |
-| c. Write page tests from the inline code: selectors it touches, links it builds, globals it sets, storage it writes, JSON-LD it emits | C |
-| d. Run tests against live (inline) → baseline green | C |
-| e. Via MCP: remove inline blocks from page body (leave config block if CMS page); bump footer SHA | C |
-| f. Publish staging (MCP) → tests → Will checks (deep or 30-second, per the table below) → Will says go → publish live (MCP) | C publishes and tests; **W** checks and gives the go |
-| g. Re-run tests against live | C |
-| h. Ask Tomek not to edit that page's embeds again | **T** |
-| i. Tag commit `carsa-migration/{page}` | C |
+| c. Via MCP: remove inline blocks from page body (leave config block if CMS page); bump footer SHA | C |
+| d. Publish staging (MCP) → full suite against staging → Will checks (deep or 30-second, per the table below) → Will says go → publish live (MCP) | C publishes and tests; **W** checks and gives the go |
+| e. Full suite against live; the page's `{page}-inline-removed` and `{page}-module-loaded-once` guards flip on | C |
+| f. Ask Tomek not to edit that page's embeds again | **T** |
+| g. Tag commit `carsa-migration/{page}` | C |
 
 Check depth per page:
 
@@ -225,10 +227,10 @@ Rule of thumb: four pages cost Will ~5 minutes each, four cost ~2 minutes, the r
 
 | Phase | Claude | Will | Notes |
 |---|---|---|---|
-| 0 Re-capture + reconcile | 30–45 min | 5 min | ~90 MCP pulls batched; you confirm the pruned page list |
-| 1 Loader + `global.js` | ~1 hr | 5 min | build, 12 tests, staging, live |
-| 2 Pages (7 publishes) | 3–4 hrs | ~35 min | 1:1 copies are minutes each; tests are the bulk; deep checks 4×5 min, medium 4×2 min, light ~5 min total |
-| **0–2 total** | **~5 hrs** | **~45 min** | fits in one day if done back-to-back |
+| 0 Re-capture + reconcile + **full test suite baselined** | 2.5–3 hrs | 5 min | ~90 MCP pulls batched; ~12 pages of tests written from captures and made green against live + staging; you confirm the pruned page list |
+| 1 Loader + `global.js` | ~45 min | 5 min | build, staging, live — tests already exist |
+| 2 Pages (7 publishes, swaps only) | 1.5–2 hrs | ~35 min | 1:1 copies are minutes each; suite runs per publish; deep checks 4×5 min, medium 4×2 min, light ~5 min total |
+| **0–2 total** | **~5 hrs** | **~45 min** | same total as before — the test work moved earlier, it did not grow |
 | 3 Modularise | 2–3 hrs | 3 × 1 min go | attribution has 6 variants — dedupe carefully, tests between each |
 | 4 Refactor | ~2 hrs | — | known VDP bugs, `DEBUG`, reduced-motion, unit tests for pure helpers |
 
@@ -257,13 +259,13 @@ N/A — no Barba transitions on Carsa.
 | Stream | Tasks | Agent | Depends on | Parallel? |
 |---|---|---|---|---|
 | S1 Capture | 0.1–0.5 | code-writer (MCP) | Webflow MCP connected | Sequential, one session |
-| S2 Loader | 1.1, 1.2 | code-writer | S1 | Can start from July snapshot while S1 runs; reconcile after |
-| S3 Loader tests | 1.3 | qa | 1.2 | Parallel with 1.2 after the footer script list is fixed |
-| S4 Page modules | 2.b per page | code-writer | Phase 1 live | Modules for several pages can be written in parallel in worktrees; **swaps are sequential** (one publish at a time) |
-| S5 Page tests | 2.c per page | qa | 2.b | Parallel with S4 per page |
+| S2 Page tests (all pages) | 0.6 | qa, one agent per 3–4 pages | 0.1–0.3 (fresh captures) | **Highly parallel** — pages are independent; merge into one spec file or one file per page |
+| S3 Baseline run | 0.7–0.8 | qa | S2 | Single run, fix loop |
+| S4 Loader + `global.js` | 1.1, 1.2 | code-writer | 0.1 | Parallel with S2 — needs only the footer capture |
+| S5 Page modules | 2.b per page | code-writer | Phase 1 live | Modules for several pages can be written in parallel in worktrees; **swaps are sequential** (one publish at a time) |
 | S6 Visual-regression CI | `carsa-visual-regression` spec | code-writer + qa | none | Fully independent of this spec; can run alongside |
 
-Recommendation: worktrees yes for S4/S5 (one per page); agent teams no; publishes strictly sequential and gated on Will.
+Recommendation: worktrees yes for S2 (tests by page group) and S5 (modules by page); agent teams no; publishes strictly sequential and gated on Will.
 
 ## Test Plan
 
@@ -285,9 +287,28 @@ Runs against `STAGING_URL_CARSA` (default `https://www.carsa.co.uk`). Already pr
 | `srp-no-errors`, `srp-results-counter`, `srp-mobile-filter-toggle`, `srp-vrm-sanitiser`, `srp-valuation-link`, `srp-check-finance-hover` | SRP baseline before/after swap |
 | `deals-no-errors`, `deals-promo-cards` | Deals baseline |
 | `vdp-*` | Delegated to `carsa-vdp-script-externalisation.spec.js` (19 tests) — re-run unchanged |
-| `{page}-no-errors`, `{page}-inline-removed` | Generic pair added per page as it migrates |
+| `{page}-no-errors`, `{page}-module-loaded-once`, `{page}-inline-removed` | Generic triple per page, driven by the `MIGRATED` array; a page is added to the array in the same commit as its swap |
 
-Pre-swap these run against inline code and must be green (baseline); post-swap they must stay green.
+**Per-page inventory to write in Phase 0.6** (from the captured inline code; final selectors come from the fresh captures):
+
+| Page | Tests |
+|---|---|
+| Finance Calculator | no-errors; calculator inputs present; output element updates after changing deposit/term; APR element populated; mobile CTA scrolls to calculator; check-finance link → `quote.carsa.co.uk/eligibility` |
+| Get Started | no-errors; `?vrm=` and `?location=` params prefill the form fields; radio styler toggles active class; page title updated from params; draw-line container present |
+| Part Exchange | no-errors; PX links carry attribution params and base `quote.carsa.co.uk`; FAQ JSON-LD present and valid JSON with `FAQPage` type; draw-line + draw-shape containers present |
+| Value Car | no-errors; valuation links base `sellcar.carsa.co.uk/new-order?vrm=`; FAQ JSON-LD valid; draw-line + draw-shape present |
+| FAQ Index | no-errors; `?q=` or hash scrolls to the matching question; category list reorder puts the flagged category first; inline JSON-LD still present (stays in Webflow) |
+| Car Finance | no-errors; FAQ JSON-LD valid `FAQPage` |
+| All Models | no-errors; dropdown label updates on selection |
+| Models template (5 slugs) | no-errors; `window.__CARSA_MODELS` has `makeName`/`modelName`; meta description contains make + model; similar-cars link carries make/model filters; check-finance link |
+| Makes template (5 slugs) | no-errors; `__CARSA_MAKES` set; search link carries make filter |
+| Fuel template (5 slugs) | no-errors; `__CARSA_FUEL` set; search link carries fuel filter; check-finance link |
+| Near template (5 slugs) | no-errors; `__CARSA_NEAR` set; location button href; zero-count facet wrappers hidden (already in `carsa-near-location-redirect.spec.js` — reuse) |
+| Blog template (5 posts) | no-errors; tooltip widget mounts on hover target; inline finance calculator (if present) renders |
+| Promotions template | no-errors; `__CARSA_PROMO` set; promo link builder output |
+| 24 global-only pages | one parameterised `no-errors` + `global-loaded-once` sweep over the sitemap |
+
+All of these run green against inline code in Phase 0 (baseline) and must stay green after each swap.
 
 ### Tier 2 — Auto: CDN regression
 
@@ -348,7 +369,7 @@ Each page in Phase 2 passes when:
 
 ## Acceptance Tests
 
-Machine-runnable: `tests/acceptance/carsa-code-migration.spec.js`. Names as listed in Tier 1. Do not run until `/build`; Phase 1 baseline run happens against live with inline code still in place.
+Machine-runnable: `tests/acceptance/carsa-code-migration.spec.js` (loader, homepage, SRP, Deals, generic guards — written) plus the per-page inventory above (written in `/build` Phase 0.6 from fresh captures). Do not run until `/build`; the first run is the Phase 0.7 baseline against live with inline code still in place.
 
 ## Open questions
 

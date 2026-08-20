@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-18",
+  "updated": "2026-08-20",
   "queue": [
     {
       "id": "nem-blog-insights-item-page",
@@ -279,7 +279,8 @@
       "title": "Push the corrected $env comment in /submit Normalize up to live",
       "description": "The repo snapshot of the Normalize node carried a corrected comment - 'n8n Cloud blocks $env access, so hard-code it' - while live still reads 'Set NEM_VERIFY_WEBHOOK_URL as an n8n env var, or replace the fallback string below once the /verify workflow is deployed.' The live comment is misleading: it tells the next reader to do something n8n Cloud does not permit. Cosmetic, no behaviour change, but it is a small trap left in the client's workflow. Paste the corrected comment into the live Normalize node, then re-baseline with npm run check:nem-drift -- --write.",
       "created": "2026-08-18",
-      "note": "Found 2026-08-18 by the drift check; the repo was ahead of live. The snapshot has since been re-baselined FROM live, so the corrected wording now lives only in git history - recover it from the pre-2026-08-18 nem-submit.workflow.json first."
+      "note": "Found 2026-08-18 by the drift check; the repo was ahead of live. The snapshot has since been re-baselined FROM live, so the corrected wording now lives only in git history - recover it from the pre-2026-08-18 nem-submit.workflow.json first. UPDATE 2026-08-20: the direction has flipped. A --write re-baseline had already pulled the misleading live comment down over the corrected repo one, and the intro-line changeset then propagated it back to live, so BOTH sides now carry the wrong comment. Still a one-line fix, now needed in the repo snapshot and the live node together. This is the clobber hazard the drift tool warns about, observed in the wild - --write overwrites the repo from live, so never run it to 'tidy up' drift that represents prepared-but-unapplied work.",
+      "updated": "2026-08-20"
     },
     {
       "id": "nem-live-state-drift-check",
@@ -328,20 +329,21 @@
       "description": "Spec section 4 of nem-report-json-and-error-visibility, split out of slice 1 on 2026-08-18 because it is materially bigger: it needs a new event column on nem_test_profiles, an answer on whether the email column accepts null, and it touches the component as well as both workflows. Fires one fire-and-forget beacon on answering question 20 for EVERY outcome, carrying token, locale, outcome, conclusionKey, the five scores and totalScore - no personal data, because none exists yet at that point. Two rows per user joined on token. Captures the drop-off between finishing the questions and opting in, which is currently invisible.",
       "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
       "created": "2026-08-18",
-      "note": "BUILT 2026-08-18, awaiting a Webflow paste. Backend done and verified live: /submit branches on event, completions insert into the new nem_test_completions table (bhwShLxPcsQ0xgXq), submissions carry on to nem_test_profiles untouched. Live beacon test (exec 52): the row landed in completions, NO row appeared in profiles, and neither Store Profile nor MailerLite ran - so no stray verification email and no subscriber. Probe row deleted. Design changed from the spec's original one-table plan: Store Profile upserts on token, so the later submission would have overwritten the completion row and destroyed the drop-off signal - silently, since with consent two writes onto one row look like one good row. Keying on token+event would then have made /verify's token lookup ambiguous, risking a user getting no report. Separate table avoids both and leaves the live report path untouched. The completions table has no email/name/gender columns at all, so anonymity is structural. REMAINING: Will must paste projects/nem-life/dist/nem-test-phase-b.webflow.tsx into the Webflow component and publish - the beacon fires on answering question 20 and is not live until that paste happens.",
-      "updated": "2026-08-18"
+      "note": "BUILT 2026-08-18, awaiting a Webflow paste. Backend done and verified live: /submit branches on event, completions insert into the new nem_test_completions table (bhwShLxPcsQ0xgXq), submissions carry on to nem_test_profiles untouched. Live beacon test (exec 52): the row landed in completions, NO row appeared in profiles, and neither Store Profile nor MailerLite ran - so no stray verification email and no subscriber. Probe row deleted. Design changed from the spec's original one-table plan: Store Profile upserts on token, so the later submission would have overwritten the completion row and destroyed the drop-off signal - silently, since with consent two writes onto one row look like one good row. Keying on token+event would then have made /verify's token lookup ambiguous, risking a user getting no report. Separate table avoids both and leaves the live report path untouched. The completions table has no email/name/gender columns at all, so anonymity is structural. REMAINING: Will must paste projects/nem-life/dist/nem-test-phase-b.webflow.tsx into the Webflow component and publish - the beacon fires on answering question 20 and is not live until that paste happens. 2026-08-20: still Ready to Review, but one acceptance test against live fails - 'opting in writes a second row against the same token' captures only the completion POST, never the submission one, so the two-rows-per-user contract is unproven. See nem-submit-second-row-not-written-on-optin.",
+      "updated": "2026-08-20"
     },
     {
       "id": "nem-intro-lines-client-side",
       "project": "nem-life",
       "type": "feature",
       "priority": "P2",
-      "status": "Ready to Review",
+      "status": "Ready to Build",
       "title": "Move the 25 report intro lines client-side, keyed on mechanism alone",
       "description": "Spec section 5 of nem-report-json-and-error-visibility. The title-page teaser moves from Claude-generated to selected client-side, like the conclusion texts: 5 single mechanisms plus 20 directional duals. THE EASY THING TO GET WRONG: intro lines are looked up on KEY ALONE, not key + gender - the one asymmetry against the conclusion texts. 25 lines, not 26: both flat outcomes go to the contact link with no report (10 Aug call, confirmed 13 Aug). If Alex's Notion doc says 26, the doc contradicts the flat-routing decision - flag it, do not implement both.",
       "spec": "projects/nem-life/.claude/specs/nem-report-json-and-error-visibility.md",
       "created": "2026-08-18",
-      "note": "Built 2026-08-19 on worktree-nem-intro-lines. Pipeline complete and covered by 21 unit tests: INTRO_LINE_KEYS derived from CONCLUSION_KEYS, readIntroRows throws on a gender column and on a flat-outcome row, buildIntroLinesModule emits NL_INTRO and EN_INTRO, and the component selects introLine and sends it on /submit. BLOCKED ON COPY, NOT ON CODE: the Intro lines tab does not exist in NEM_TEST_01_Default_texts yet, so both tables generate empty and every key shows a placeholder. Send Alex the generated 25-row template at .claude/research/nem-intro-lines-template.csv, have Christel fill intro (NL) and intro (EN), export the tab over .claude/research/nem-intro-lines.csv, then re-run npm run build:nem. FOLLOW-UP SLICE: n8n Normalize does not read introLine yet, so it is inert until /submit stores it and Build HTML renders it on the title page."
+      "note": "Built 2026-08-19 on worktree-nem-intro-lines. Pipeline complete and covered by 21 unit tests: INTRO_LINE_KEYS derived from CONCLUSION_KEYS, readIntroRows throws on a gender column and on a flat-outcome row, buildIntroLinesModule emits NL_INTRO and EN_INTRO, and the component selects introLine and sends it on /submit. BLOCKED ON COPY, NOT ON CODE: the Intro lines tab does not exist in NEM_TEST_01_Default_texts yet, so both tables generate empty and every key shows a placeholder. Send Alex the generated 25-row template at .claude/research/nem-intro-lines-template.csv, have Christel fill intro (NL) and intro (EN), export the tab over .claude/research/nem-intro-lines.csv, then re-run npm run build:nem. FOLLOW-UP SLICE DONE 2026-08-20: the n8n half is applied and live - Normalize keeps introLine, Store Profile persists it, Build HTML renders it escaped between the h1 and the greeting, absent entirely when empty. Both workflows IN SYNC. STATUS CORRECTED 2026-08-20, was wrongly Ready to Review. Only the payload half shipped: the component resolves introLine and sends it in the /submit body, and the n8n server half is now applied and live (Normalize keeps it, Store Profile persists it, Build HTML renders it escaped above the greeting). What was never built is the CLIENT-SIDE RENDER: there is no [data-element=\"report-intro-line\"] element anywhere in the component - introLine appears only inside the ?nemdebug=1 badge as 'intro: ...'. Two acceptance tests in nem-report-json-and-error-visibility.spec.js assert that element and fail against live. Also still blocked on copy: NL_INTRO and EN_INTRO are both {} until Alex exports the Intro lines tab.",
+      "updated": "2026-08-20"
     },
     {
       "id": "nem-webflow-report-template",
@@ -383,12 +385,73 @@
       "project": "nem-life",
       "type": "bug",
       "priority": "P2",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Answer clicks during the question fade are swallowed and the quiz does not advance",
       "description": "Found 2026-08-19 while fixing the acceptance suite. Clicking an answer while the fade between questions is still running does nothing - the question does not advance and the user has to press again. It reads as a dead click, on the primary interaction of a twenty-question quiz, so some drop-off may be attributable to it. It was invisible until now because the acceptance helpers slept a flat 600ms after every click instead of waiting for the question to change; the blind sleep absorbed the lost click silently. The fix belongs in nem-test-phase-b.tsx - either keep the answer buttons live through the transition, or queue a click that arrives mid-fade and apply it when the transition ends. tests/acceptance/nem-test-conclusion-logic-v2.spec.js currently retries the click once and says so in a comment; remove that retry once the component handles it.",
       "spec": "projects/nem-life/.claude/reports/nem-acceptance-failures-2026-08-19.md",
       "created": "2026-08-19",
-      "note": "Verify by re-running npm run test:sz:acceptance with the retry removed - the flakiness should not come back."
+      "note": "Fixed and merged 2026-08-20 (PR #11, d5edb65). Reading the component rather than the symptom turned up a SECOND defect the failures report had not separated out: selectAnswer was also re-entrant, so a second click inside the window overwrote the recorded answer AND scheduled a second advance - the quiz skipped a question and left it null, into calculateScores and the completion beacon. A data bug, not only a dead click. One guard closed both: a transitionLock ref (state alone is not a lock - two clicks in the same tick read the same render) plus disabled={isTransitioning} on the pills and back button, which is what makes Playwright wait out the key={currentStep} remount. Verified live: the double-click case that previously advanced 1->3 now lands on 2. Guard spec 8 passed, 1 flaky, 0 failed. The remaining flaky is a DIFFERENT bug - see nem-quiz-first-click-after-load-is-swallowed.",
+      "updated": "2026-08-20"
+    },
+    {
+      "id": "nem-quiz-first-click-after-load-is-swallowed",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Quiz: the first answer click after page load is sometimes swallowed",
+      "description": "The very first click on question one occasionally does nothing - the quiz does not advance and the user has to press again. This is NOT the fade race fixed by the transition guard: there is no transition in flight on a freshly loaded page, so there is nothing for the guard to disable. It looks like a hydration race - Webflow's federation renderer paints the component before React has attached the click handlers, so a fast click lands on nothing. Reproduce by loading the page and clicking an answer pill immediately. Likely fixes: gate the pills on a mounted flag so they are visibly inert until interactive, or capture and replay a click that arrives pre-hydration.",
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "note": "Found 2026-08-20 by the transition-guard acceptance suite: 'pills re-enable as soon as the next question renders' went flaky because the click on question one never advanced within 5s, then passed on retry. It is the only flaky left in that spec, and it is a real user-facing dead click on the primary interaction, same symptom as the fade race but a different cause."
+    },
+    {
+      "id": "nem-report-intro-line-render-hook-missing",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Report intro line is never rendered to the user, only inside the debug badge",
+      "description": "The component resolves introLine correctly and sends it to the backend, but never renders it as visible copy. There is no [data-element=\"report-intro-line\"] element in nem-test-phase-b.tsx; the only place introLine reaches the DOM is inside the ?nemdebug=1 badge. Decide first whether the intro line is supposed to appear on the conclusion screen at all, or only in the emailed PDF report - the spec's section 5 language reads as though it is a report title-page teaser, in which case the two acceptance tests asserting a visible element are wrong and should be deleted rather than the component changed. Do not add the element just to make the tests pass.",
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "note": "Found 2026-08-20. Two tests in nem-report-json-and-error-visibility.spec.js fail against live for this reason: 'a dual outcome resolves an intro line' and 'the intro line ignores gender - same key, same line'. Both were written from the spec before the feature existed. Note the tests would fail even with the element present, because NL_INTRO and EN_INTRO are both {} until Alex's copy lands - so resolving this needs the copy question answered too."
+    },
+    {
+      "id": "nem-submit-second-row-not-written-on-optin",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "Opting in does not appear to send the second submit request",
+      "description": "The anonymous-completion design writes two rows per user against one token: a completion beacon at question 20, then an identified submission at opt-in. Against live staging only the first is observed. Reproduce with the acceptance test 'opting in writes a second row against the same token', which intercepts the submit webhook and waits up to 10s for a second POST that never arrives. Establish first whether the request is genuinely not fired, or fired and failing validation client-side before dispatch - the opt-in form blocks submission on its own field validation, so a silently failing validation would look identical from the network side.",
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "note": "Found 2026-08-20 in the post-guard acceptance run. Priority P1 because if it reproduces outside the test harness it means real opt-ins are not being recorded, which is the conversion the whole funnel exists for. Verify against a real submission in the n8n execution log before assuming it is a test-harness artefact."
+    },
+    {
+      "id": "nem-report-engine-missing-conclusion-and-intro-context",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P1",
+      "status": "Ready to Build",
+      "title": "The report engine is not sent the conclusion text or intro line it is specified to receive",
+      "description": "Source doc section 6.2 lists nine inputs the report engine receives per user. Three are not being sent: the conclusion key, the conclusion text shown on screen 4, and the intro line for that key. The doc is explicit about why they matter - 'The conclusion text and the intro line together set the register the report continues from: the report picks up where the conclusion text left off and is written in the spirit of the intro line.' Both are context only: neither is quoted, paraphrased or referred to, and the intro line must never appear in the output because the template already places it on the title page. Verify against Generate Report's jsonBody in nem-verify.workflow.json - it currently contains no conclusionKey, no conclusionText and no introLine. Fixing it needs the values to survive the whole hop: component payload, /submit Normalize, the nem_test_profiles columns, then Validate Token, which spreads the row and so passes them through for free.",
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "note": "Found 2026-08-20 reading Alex's source doc, captured at projects/nem-life/.claude/research/nem-test-01-source-doc-2026-08-20.md. Not a crash - every report generated so far is simply thinner than specified, written without the register the conclusion text set. That makes it a quality bug in the paid deliverable rather than a broken one, which is why nobody noticed. NOTE the introLine plumbing added 2026-08-20 carries it to the TEMPLATE (Build HTML) only; the engine hop is separate and still missing. conclusionText is not stored at all today - adding it means a new column on nem_test_profiles, which the n8n API cannot create (UI only)."
+    },
+    {
+      "id": "nem-flat-spread-threshold-may-be-one-point-too-wide",
+      "project": "nem-life",
+      "type": "bug",
+      "priority": "P2",
+      "status": "Ready to Build",
+      "title": "Flat detection may be one point too wide, denying reports to users who should get one",
+      "description": "FLAT_SPREAD in nem-test-scoring.js is 3, so a profile whose highest and lowest mechanism scores differ by 3 is treated as flat - no mechanism named, no report, routed to the Tally contact link. Both worked examples in source doc section 4 describe the rule as 'within 2': example 4 (spread 4-2) and example 5 (spread 15-13) each say 'is 2 points - within 2, so nothing stands out'. If 2 is the rule, every spread-3 profile is currently being denied a report it should receive. ASK ALEX BEFORE CHANGING ANYTHING: the normative sentence defining the flat threshold was not found in the captured text and may sit in a section that could not be retrieved, or in the generic 'NEM TEST source' doc. Two worked examples agreeing is suggestive, not definitive.",
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "note": "Found 2026-08-20 reading Alex's source doc. P2 because it is unconfirmed, not because it is minor - if Alex confirms 'within 2' this becomes P1, since it means real users completing the test are being told there is nothing to report and pushed to a contact form instead of receiving the product. Note the direction of the error is the expensive one: too wide denies reports, too narrow would only give a weak report to someone who is genuinely undifferentiated. Changing FLAT_SPREAD to 2 is a one-line change plus the boundary tests in tests/nem/nem-test-scoring.test.js, which currently assert the 3 behaviour explicitly ('a spread of exactly FLAT_SPREAD is flat-high; one more is not') and would need updating with it."
     }
   ]
 }

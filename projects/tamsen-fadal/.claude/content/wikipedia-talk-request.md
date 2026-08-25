@@ -32,12 +32,72 @@ likely to be actioned than a general plea to rebalance framing.
 
 ## Before posting
 
-1. Re-read the current article and delete any request below that has since been satisfied.
+1. **Post the paid-editing disclosure first** — see the section below. It is a Terms of Use
+   requirement, and posting an edit request before disclosing is the wrong order.
+2. Re-read the current article and delete any request below that has since been satisfied.
    The article is actively edited — this draft went stale in under three weeks.
-2. Every request must cite an **independent, published** source. Her own website does not
+3. Every request must cite an **independent, published** source. Her own website does not
    count as independent for biographical claims — it is usable only for uncontroversial
    self-description, and even then weakly.
-3. Post once. Do not re-post or ping if it sits unanswered; the queue is slow by design.
+4. Post once. Do not re-post or ping if it sits unanswered; the queue is slow by design.
+
+---
+
+## Do this FIRST — paid-editing disclosure
+
+**Mandatory, and it is a Terms of Use requirement rather than a guideline.** Undisclosed paid
+editing is the most common reason connected accounts get blocked. Post both of the following
+before the edit request in the next section.
+
+**Account:** `Studio Zissou` — registered 2026-08-10, 55 edits, all on Wikidata. Wikimedia
+uses unified login, so the same account works on en.wikipedia with no separate signup.
+
+### A. User page — `https://en.wikipedia.org/wiki/User:Studio_Zissou`
+
+Does not exist yet. Create it and paste this in full:
+
+```wikitext
+{{Paid|employer=Studio Zissou|client=Tamsen Fadal|article=Tamsen Fadal}}
+
+This account is operated by a member of [https://teamzissou.io Studio Zissou], a web
+development and SEO studio.
+
+'''Paid-editing disclosure, per the Wikimedia Foundation Terms of Use and [[WP:PAID]]:'''
+
+* '''Employer:''' Studio Zissou
+* '''Client:''' Tamsen Fadal
+* '''Affiliation:''' paid contractor engaged to work on the client's official website,
+  <nowiki>https://www.tamsenfadal.com</nowiki>
+
+This disclosure covers all edits made from this account, including edits to
+[[d:Q7681850]] on Wikidata.
+
+I do not edit articles about clients directly. Where I believe an article contains an
+error or omission, I raise it on the article's talk page using {{tl|edit COI}} and leave
+the decision to independent editors. If I have got that process wrong anywhere, please
+tell me on my talk page and I will correct it.
+```
+
+### B. Article talk page — same page as the edit request
+
+Standard practice is to flag the connection on the article's talk page too. Add this at the
+**top** of `Talk:Tamsen Fadal`, above the existing sections — not inside your edit request:
+
+```wikitext
+{{Connected contributor (paid)|User1=Studio Zissou|U1-employer=Studio Zissou|U1-client=Tamsen Fadal|U1-banned=no|U1-otherlinks=Wikidata item [[d:Q7681850]].}}
+```
+
+### One loose end worth closing
+
+Two Wikidata edits to Q7681850 on 2026-08-20 (the `filmmaker` and `podcaster` occupation
+claims) were saved while logged out and are attributed to a temporary account,
+`~2026-45568-00`, not to `Studio Zissou`. The edits themselves are benign — referenced
+occupation claims — but an undisclosed connected edit is the kind of thing that looks worse
+when someone else finds it than when you name it yourself.
+
+The user-page text above already covers this with "all edits made from this account", which
+those were not. If you want it airtight, add a line to the user page naming the temp account
+as yours. Low urgency, but cheap.
 
 ---
 
@@ -46,9 +106,11 @@ likely to be actioned than a general plea to rebalance framing.
 ```wikitext
 {{edit COI|answered=no}}
 
-'''Declaration:''' I have a conflict of interest. I do professional web and SEO work for
-Tamsen Fadal's official website and am not editing the article directly. Posting here as
-the COI guideline asks. Please apply only what independent editors judge to be due weight.
+'''Paid-editing disclosure:''' Per the Wikimedia Foundation Terms of Use and [[WP:PAID]]:
+my employer is Studio Zissou, my client is Tamsen Fadal, and my affiliation is that of a
+paid contractor providing web development and SEO services for her official website. I have
+a conflict of interest and am not editing the article directly. Posting here as [[WP:COI]]
+asks. Please apply only what independent editors judge to be due weight.
 
 '''1. Please remove the external link to my client's site from the article body.'''
 The Career section links the podcast title as a bare external link:
@@ -95,8 +157,6 @@ would be the natural home. Not currently mentioned.
 
 Thank you for considering these.
 ```
-
----
 
 ## Notes for whoever files it
 

@@ -140,6 +140,11 @@ read as the one-line identity, and it is the weakest wording anywhere in the ent
 `content/wikipedia-talk-request.md` as items 1 and 2 — that draft was rewritten on 2026-08-25
 because three of its five original requests had already been satisfied by other editors.
 
+**Prerequisite:** the `Studio Zissou` account has no en.wikipedia user page and no paid-editing
+disclosure. Disclosure is a Wikimedia Terms of Use requirement, and posting an edit request
+without it is the most common way connected accounts get blocked. Ready-to-paste user-page and
+talk-page text is in `content/wikipedia-talk-request.md` under "Do this FIRST".
+
 ---
 
 ## On-site — one content gap

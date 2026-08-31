@@ -508,9 +508,26 @@ Three test bugs were fixed along the way, all test-side, not content:
 - OptinMonster 404s and complains about the referrer on the `webflow.io` domain because it is registered to `getcoconut.com`. Staging-only noise, filtered.
 - The Help Centre link returns 403 to *any* automated request — Cloudflare bot protection (`__cf_chl_rt_tk`, title "Just a moment..."), confirmed in real headless Chromium. The link is fine for users; 403 is now accepted for that host.
 
+### 2026-08-31 — landlords question reworded, bridging schema prepared
+
+**Landlords merge now keeps Anna's approved question.** The original rationale for keeping the old wording ("already live and picked up by Google") did not survive checking and is withdrawn:
+
+- On five of the seven pages the questions are `div._25-collapse-title` — **not headings**, so there is no heading-level signal to preserve. Only `mtd-compliant-software` uses a real `<h3>`.
+- `/mtd-software/landlords` and `/mtd-software/sole-traders` have **no FAQPage schema at all**.
+- `/free-making-tax-digital-software` has 13 schema questions and **none** of them is "What's included free vs paid?" — its schema is a stale, unrelated set. Same on `/mtd-software`: 19 schema questions, 8 visible, no overlap.
+
+So on landlords the visible question was reworded to the approved "Can Coconut track income and expenses separately for each property?" (string element `6a05835d-…bdda`; `set_text` must target the String child, not the `_25-collapse-title` div, which returns "This element doesn't support text"). The other two merges stand: free-MTD keeps the broader existing umbrella question, and mtd-compliant-software's is a real `<h3>` with near-identical intent.
+
+**Bridging FAQPage schema — prepared but NOT applied. Blocked on permissions.** `/mtd-software/bridging-software` was the one page whose schema exactly mirrored its visible FAQs (11 and 11); it now shows 14 visible against 11 in schema. The schema lives in Webflow's native page `jsonLdSchema` field, readable via `query_pages_schema_markup` but **`bulk_update_pages_schema_markup` returns 403 `insufficient_permissions`** — the API token cannot write it.
+
+Corrected JSON (11 → 14 questions, all 5 `@graph` nodes preserved, `dateModified` bumped) is generated at `.claude/schema/bridging-faqpage-2026-08-31.json`, built programmatically from the live schema so the base is exact. It needs pasting into Page settings → Custom code / Schema markup by hand, or a token with page-write scope.
+
+**Test result: 51/51 pass**, no flakes.
+
 ### Remaining
 
 - **T9 — publish to the live custom domains. NOT DONE, user-gated.** Staging carries the change; `getcoconut.com` does not.
+- Paste `bridging-faqpage-2026-08-31.json` into the bridging page's schema field (blocked on token permissions).
 - T11 — Trello comment (user-gated).
 - Deleting the 3 orphaned FAQ CMS items (user-gated).
 

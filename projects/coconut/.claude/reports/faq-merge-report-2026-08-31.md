@@ -1,4 +1,4 @@
-# FAQ content — what changed, and two answers we merged
+# FAQ content — what changed, and three answers we merged
 
 **Date:** 31 August 2026
 **Trello card:** Content to review: New FAQ content
@@ -22,16 +22,16 @@ Everything else was added exactly as approved.
 
 ---
 
-## The two merges
+## The three merges
 
 ### 1. MTD Software for Landlords
 
 **Page:** getcoconut.com/mtd-software/landlords
 
-- **New question in the doc:** "Can Coconut track income and expenses separately for each property?"
-- **Question already on the page:** "Can I track multiple properties in Coconut?"
+- **Question now shown:** "Can Coconut track income and expenses separately for each property?" — the approved wording from the doc
+- **Question folded away:** "Can I track multiple properties in Coconut?" — the older, vaguer phrasing
 
-These are the same question asked two ways. We kept the existing question wording, because it is already live and picked up by Google, and used the new, more detailed answer.
+These are close, but the approved question is the more specific of the two, and it matches the answer better. We kept your wording and folded the old question into it, so the page gains the detail without carrying two near-identical questions.
 
 **Before:**
 
@@ -47,7 +47,7 @@ These are the same question asked two ways. We kept the existing question wordin
 >
 > This makes it easier to manage your property income in one place, instead of keeping separate spreadsheets or trying to piece everything together at the end of the tax year.
 
-**What actually changed:** the new answer is more specific — it names income streams, explains assigning transactions per property, and mentions portfolio totals. The original closing sentence was kept.
+**What actually changed:** the question is now the one from your document, and the answer is more specific — it names income streams, explains assigning transactions per property, and mentions portfolio totals. The original closing sentence was kept.
 
 ---
 

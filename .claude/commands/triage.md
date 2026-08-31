@@ -49,7 +49,7 @@ If `config.notion.databaseId` is null:
 Spawn parallel agents to scan each source:
 
 **Agent 1 — Gmail** (uses gmail-triage skill Steps 1-4):
-- Run the two parallel Gmail searches from config
+- Run the two parallel Gmail searches from config — the whole inbox, read and unread, plus starred
 - Classify every thread: REPLY NEEDED / FLAG / ACTION / NOISE
 - Priority-rank REPLY NEEDED threads
 - Load project context from `projects/{client}/.claude/` for reply drafting
@@ -88,6 +88,29 @@ Using the results from all agents:
    - Gmail: follow gmail-triage skill Step 6 rules
    - Slack: shorter, more casual, no formal sign-off
 5. **Flag questions** — anything unclear goes in the questions list
+
+### Step 4b — Inbox cleanup
+
+Clear bulk newsletters out of the inbox, following the triage skill's `<inbox_cleanup>`
+section in full. Run this after Step 4 so anything that produced a task, draft, or flag is
+already known and automatically protected.
+
+1. Read `config.gmail.cleanup`. Skip the pass if `enabled` is false, or if `--no-delete`
+   or `--dry-run` was passed (in those cases still report what would have gone)
+2. Search `{cleanup.query} newer_than:{cleanup.lookbackDays}d`, oldest first, capped at
+   `maxPerRun`
+3. Drop anything that is not broadcast mail — a real person's message is never a candidate
+4. `get_thread` on every remaining candidate and read the body. A subject line never
+   decides this
+5. Keep anything holding a discount code, a receipt, a reminder, or anything actionable;
+   anything from mymind; anything in `neverDelete` or `learnedKeep`; anything starred,
+   important, labelled, or replied to; anything client-related; anything this run touched
+6. `trash_thread` what is left — trash only, recoverable for 30 days. Never permanently
+   delete, never mark as spam
+7. Report every trashed and kept thread in the Inbox Cleanup section
+
+If in doubt about any single thread, keep it. The full reasoning and the complete keep
+tests live in the skill; do not shortcut them from this summary.
 
 ### Step 5 — Dedup against Notion
 
@@ -134,6 +157,7 @@ Output the full triage report following the format in the triage skill:
 ## Flag / Action Items
 ## Questions for You
 ## Noise Summary
+## Inbox Cleanup (trashed + kept, with reasons; omit if nothing eligible)
 ## Check Manually
 ```
 
@@ -232,6 +256,7 @@ After executing approved actions, if any tasks have Doer = "Claude":
    Drafts created: D
    Blocked/Waiting: B items
    Questions remaining: Q
+   Newsletters trashed: N of M scanned (recoverable 30 days — top of Gmail's Trash)
    ```
 
 ## Arguments
@@ -248,6 +273,10 @@ The `/triage` command accepts optional arguments:
 - `/triage --no-drafts` — extract tasks but skip reply drafting
 - `/triage --dry-run` — scan and classify but don't create or change anything in Notion or Gmail
 - `/triage --no-updates` — propose new tasks only; skip the update and obsolete passes
+- `/triage --no-delete` — run everything else normally, but report the newsletter cleanup
+  instead of trashing anything. Use this on the first run, or after changing the keep
+  rules, to check the judgement before it acts
+- `/triage cleanup` — the newsletter cleanup pass only, no task extraction or drafting
 
 ## Manual Input Mode (`/triage add`)
 
@@ -316,6 +345,29 @@ Process Notion call recordings, meeting notes, and AI-generated meeting summarie
    - Source Context: key excerpt from the meeting note explaining the task
    - Source ID: `notion-meeting:{page-id}` for dedup
 6. For decisions and non-task items, offer to add them as comments on existing related tasks or as notes in the project's `.claude/` directory
+
+## Cleanup Mode (`/triage cleanup`)
+
+Just the newsletter sweep — no task extraction, no drafting, no Notion. Run Step 4b on its
+own and output only the Inbox Cleanup section.
+
+Because nothing else has run, the "touched by this triage run" protection has nothing to
+draw on, so lean harder on the other keep tests. `/triage cleanup --no-delete` reports
+without trashing.
+
+## Scheduled runs
+
+The launchd agent in `scripts/triage-morning.plist` runs `/triage` on weekday mornings
+with nobody watching. Two things change when the run is unattended:
+
+- **Nothing that needs approval happens.** No Notion writes, no Slack sends, no email
+  sends. The run produces the report and the Gmail drafts, and everything requiring a
+  decision waits in it for the user
+- **The newsletter cleanup still runs**, because it is safe by construction rather than by
+  approval — trash only, recoverable for 30 days, with the keep tests doing the work
+
+The report is written to `.claude/triage/reports/{date}.md` so the user reads it when they
+sit down. Set up or change the schedule with `scripts/triage-morning.plist`.
 
 ## Error handling
 

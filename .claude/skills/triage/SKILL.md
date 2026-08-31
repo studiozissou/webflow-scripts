@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Also keeps existing Notion tasks current: proposes field updates when new information arrives and flags obsolete tasks for cancelling. Flags sub-15-minute tasks as Quick, files them under a Quick Tasks mother task at P0 with an hours estimate so they can be sorted by size and cleared in a batch. Loaded by the /triage command. NEVER sends emails or Slack messages, and NEVER writes to Notion, without explicit user approval.
+description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Also keeps existing Notion tasks current: proposes field updates when new information arrives and flags obsolete tasks for cancelling. Flags sub-15-minute tasks as Quick, files them under a Quick Tasks mother task at P0 with an hours estimate so they can be sorted by size and cleared in a batch. Reads the whole inbox, read and unread, and clears bulk newsletters out of it — keeping anything holding a discount code, a receipt, a reminder, mymind, or anything else actionable, and keeping anything it is unsure about. Loaded by the /triage command. NEVER sends emails or Slack messages, and NEVER writes to Notion, without explicit user approval. Deleted mail is only ever moved to Gmail's trash, never purged.
 ---
 
 <objective>
@@ -37,6 +37,23 @@ Group questions by source at the end of the triage output, not scattered through
 - NEVER write to a field in the never-write list in <notion_schema>. That list applies on
   update exactly as it does on create.
 
+## Email deletion is trash-only, and newsletters only
+
+The inbox cleanup pass in <inbox_cleanup> is the one place triage removes something
+without asking first, because it is meant to run unattended on a schedule. It stays safe
+by being narrow and reversible, not by being approved:
+
+- Only bulk marketing mail is ever eligible. A message from a real person is never a
+  candidate, whatever it looks like.
+- Deleting means `trash_thread` — recoverable in Gmail for 30 days. Never permanently
+  delete, never empty the trash, never mark as spam.
+- Read the body before trashing. A discount code, receipt, reminder, or anything
+  actionable makes it a keep, and none of those are reliably visible in a subject line.
+- When in doubt, keep it. The full keep tests are in <inbox_cleanup>, and every one of
+  them beats a hunch that something looks like junk.
+- Every trashed thread appears in the report with the recovery search, so a mistake is
+  visible and fixable the moment the user reads it.
+
 ## Notion is the source of truth
 
 - Do not maintain a local task list. Notion is the only store. `state.json` is a dedup
@@ -54,7 +71,7 @@ Group questions by source at the end of the triage output, not scattered through
 <prerequisites>
 
 Required MCP tools (fully-qualified — these are the exact callable names on the connected servers):
-- Gmail: `mcp__claude_ai_Gmail__search_threads`, `mcp__claude_ai_Gmail__get_thread`, `mcp__claude_ai_Gmail__create_draft`, `mcp__claude_ai_Gmail__list_labels`
+- Gmail: `mcp__claude_ai_Gmail__search_threads`, `mcp__claude_ai_Gmail__get_thread`, `mcp__claude_ai_Gmail__create_draft`, `mcp__claude_ai_Gmail__list_labels`, `mcp__claude_ai_Gmail__trash_thread` (inbox cleanup only — see <inbox_cleanup>)
 - Slack: `mcp__plugin_slack_slack__slack_read_channel`, `mcp__plugin_slack_slack__slack_read_thread`, `mcp__plugin_slack_slack__slack_search_public_and_private`, `mcp__plugin_slack_slack__slack_send_message`
 - Google Calendar: `list_events`, `get_event`
 - Notion: `notion-search`, `notion-create-pages`, `notion-fetch`, `notion-update-page`, `notion-query-database-view`
@@ -462,15 +479,24 @@ filler.
 ## Gmail
 
 Handled by the `gmail-triage` skill. Load it and run Steps 1-4 from that skill:
-1. Scan inbox (unread + starred, parallel queries from config)
+1. Scan the whole inbox — read and unread alike — plus starred, using the parallel
+   queries from config
 2. Classify: REPLY NEEDED / FLAG / ACTION / NOISE
 3. Priority-rank REPLY NEEDED threads
 4. Load project context from `projects/{client}/.claude/`
 
+Read every thread in the window, not only the unread ones. Mail the user opened on their
+phone and never dealt with is exactly the mail that goes missing, and the cleanup pass
+needs to see read mail too — that is where old newsletters sit.
+
 After gmail-triage classification:
 - REPLY NEEDED threads → extract task + draft reply
 - FLAG / ACTION threads → extract task (no reply needed)
-- NOISE → skip
+- NOISE → skip, then hand the bulk-marketing part of it to <inbox_cleanup>
+
+NOISE is a mixed bag: newsletters sit in it alongside receipts, security codes, and
+delivery notices. Only the cleanup pass decides what leaves the inbox, and it re-reads
+each candidate rather than trusting this classification.
 
 ## Slack
 
@@ -589,6 +615,228 @@ Process call recordings and meeting notes stored in Notion.
    - Or add as a comment on an existing related Notion task
 
 </source_scanning>
+
+<inbox_cleanup>
+
+## Clearing newsletters out of the inbox
+
+Triage reads the whole inbox, not just what is unread, so it sees the drift of
+bulk mail that builds up between runs. This pass removes that drift, and nothing
+else. It exists to save the user from scrolling past forty pieces of marketing to
+find the one email that matters — so the bar for removing something is high, and
+the cost of the two possible mistakes is very lopsided:
+
+- Keeping a newsletter that could have gone costs one line in a summary.
+- Trashing a receipt, a discount the user wanted, or a reminder they needed costs
+  them real money or a missed commitment, and they may not notice for weeks.
+
+So **when in doubt, keep it.** That is the governing rule of this whole section,
+and it beats every heuristic below. A pass that trashes eight obvious newsletters
+and leaves twelve borderline ones is a good pass. A pass that clears the inbox
+completely and takes one receipt with it is a bad one.
+
+### But doubt is not the same as reluctance
+
+The point of the pass is a quieter inbox. A version that keeps everything is not cautious,
+it is useless — it costs the user the scroll it was meant to save, and it teaches them to
+stop reading the report.
+
+So spend the doubt where the cost is real. The categories above — codes, receipts,
+reminders, anything actionable — stay absolute, because getting one of those wrong costs
+money or a missed commitment. Everywhere else, "it looks vaguely professional", "it
+mentions a date", "it is from a brand the user likes" are not doubt. They are a newsletter,
+and the user subscribed to a lot of newsletters.
+
+When a call really is close, do not resolve it by silently keeping. Trash it or keep it on
+the rules, then say so in the Borderline table with the reason. A flagged call the user
+can overturn in one line is worth far more than a quiet keep they never see — and their
+corrections are what tune this over time, via `learnedKeep`.
+
+### Delete means trash, never purge
+
+Use `mcp__claude_ai_Gmail__trash_thread`. Mail goes to the Gmail Trash and is
+recoverable for 30 days. Never use permanent-deletion tools, never empty the
+trash, and never mark anything as spam as a shortcut — marking spam teaches
+Gmail's filters and affects mail the user has not seen yet.
+
+### Step 1 — Gather candidates
+
+Read `config.gmail.cleanup`. If `enabled` is false, skip this pass entirely.
+
+Search with the configured query, scoped to `lookbackDays` and capped at
+`maxPerRun`:
+
+```
+search_threads(query: "{cleanup.query} newer_than:{cleanup.lookbackDays}d",
+               pageSize: {cleanup.maxPerRun})
+```
+
+The configured query already excludes starred and important mail, because the
+user has told Gmail those matter. Take the oldest threads first — recent
+newsletters may still be unread and unconsidered.
+
+If the first run turns up far more than `maxPerRun`, do not raise the cap to
+clear the backlog in one go. Work through it over several runs and say so in the
+report. A large first sweep is exactly where a bad delete hides.
+
+### Step 2 — Confirm it is actually bulk mail
+
+Only broadcast mail is ever a candidate. Look for the signals that mark a
+send-to-thousands template rather than a message written to the user:
+
+- a `List-Unsubscribe` header, or an unsubscribe/preferences link in the body
+- a no-reply, marketing, news, or campaign-style sender address
+- "view this email in your browser", tracking pixels, a template layout
+- one of many near-identical sends from the same sender over time
+
+Anything that fails this test — a message from a real person, a reply in a thread
+the user took part in, a one-off transactional message — is not a newsletter and
+is out of scope. Leave it where it is.
+
+### Step 3 — Read the body before deciding
+
+The subject line is not enough. "Your March update" can contain a 20% code, and
+"Weekly digest" can contain a renewal notice. Nothing is trashed on its subject alone.
+
+Work in two passes, because newsletter bodies are large — 15-25k tokens each is normal,
+so reading all sixty upfront costs more than the whole rest of the triage:
+
+**Pass A — the snippet, which can only ever save a thread.** The search results carry a
+snippet, and a code or a renewal notice is often visible right there ("10% off your next
+online purchase" needs no further reading). If the snippet triggers any keep test, keep
+the thread and move on without fetching it. A snippet may promote a thread to *keep*; it
+may never condemn one. That asymmetry is what makes the shortcut safe.
+
+**Pass B — the full body, for whatever still looks trashable.** Call `get_thread` on each
+survivor and read it properly before trashing. Prefer `messageFormat: PLAIN_TEXT`.
+
+Some newsletters are HTML-only and come back as "text version of this email is not
+supported". Retry those once with `FULL_CONTENT` and read the HTML — otherwise a whole
+class of newsletters becomes permanently un-trashable for a reason that has nothing to do
+with their contents. If it is still unreadable after the retry, keep it: an unread body is
+the definition of doubt.
+
+### Step 4 — Apply the keep tests
+
+A candidate is kept if **any** of these is true. Check all of them; one hit is
+enough.
+
+**Discounts and offers.** A discount code, voucher, promo code, coupon, gift
+card, referral credit, a percentage or amount off, free shipping, an early-access
+or member sale, or a stated deadline on any of those. This is the user's most
+common reason for wanting a marketing email later, so read for it generously — a
+code buried in the footer of an otherwise dull newsletter is still a keep.
+
+**Receipts and money.** Order confirmations, invoices, payment taken, payment
+failed, refunds, subscription renewals and their prices, price changes,
+statements, tax documents, delivery and dispatch notes with a tracking number.
+These are records, and records are worth keeping even when they look automated.
+
+**Reminders and dates.** Appointments, bookings, RSVPs, events the user signed up to,
+renewal and expiry dates, trial endings, deadlines, anything that says "in three days" or
+names a date the user has to act on.
+
+The test is commitment, not the presence of a date. A booking, a renewal, a delivery slot,
+an event with the user's name on it — keep. A newsletter that merely *mentions* dates the
+user has not committed to, like a conference they could attend or an event the sender is
+speaking at, is marketing with a calendar in it. That goes.
+
+**Anything actionable.** It needs a click, a decision, a login, a confirmation, a
+password reset, a verification code, a security or account alert, a change to
+terms, privacy, pricing, or a service being deprecated or shut down. If the user
+would be worse off for not having seen it, keep it.
+
+**mymind.** Anything from mymind (see `cleanup.neverDelete.senders`). The user
+reads these for pleasure rather than scanning them for actions, so the usual "no
+action needed" reasoning does not apply. Keep every one.
+
+**Configured keeps.** Any sender or domain in `cleanup.neverDelete` or
+`cleanup.learnedKeep`.
+
+**Already engaged with.** The user starred it, marked it important, labelled it,
+replied to that sender before, or the thread contains a message from the user.
+
+**Touched by this triage run.** It produced a task, a draft reply, a flag, or an
+update earlier in this run. Triage should never delete its own evidence.
+
+**Client or project mail.** The sender is a client, sits on a client domain, or
+the body names a client or project from `config`. Client mail is never noise even
+when it arrives in a templated wrapper.
+
+### Step 5 — Trash what is left, and log it
+
+Everything that reached this point is bulk marketing with no code, no receipt, no
+reminder, and nothing to act on. Trash it.
+
+Record every trashed thread in the report — subject, sender, date — so the user
+can scan the list in a few seconds and spot a mistake. Give them the recovery
+route in the same breath: the thread is in Gmail's Trash for 30 days, and
+opening Trash in Gmail shows this run's batch at the top, because that view is
+ordered by when things were deleted.
+
+Do not offer `in:trash newer_than:1d` as the recovery search. Gmail's date operators filter
+on when a message *arrived*, not when it was trashed, so a two-week-old newsletter deleted
+thirty seconds ago does not match it. That is precisely the mail this pass removes, so the
+search would look reassuring and return almost nothing at the moment the user most needs
+it. The listed subjects and senders in the report are the reliable handle: `in:trash` plus
+a sender or subject from the table finds a specific thread.
+
+Also list what was considered and kept, one line each with the reason, so the
+user can see the pass is working and correct it if a keep rule is too eager.
+
+Then pull the close calls out into their own short Borderline list — which way each went
+and why. These are the rows worth the user's attention: the obvious ones need no review,
+and a borderline call buried in a table of forty is a call nobody makes. Keep it to the
+genuinely arguable few, and name the specific thing that made it close ("names conference
+dates, but nothing booked"), so a one-line answer is enough to settle it. Then act on that
+answer: `learnedKeep` for a sender to spare, and simply trashing it next time for one to
+stop flagging.
+
+### If trashing is refused for lack of scope
+
+`trash_thread` needs the Gmail connector to hold `gmail.modify`. A read-and-draft
+connection has enough scope for the rest of triage but not for this, and it fails with
+"Insufficient scope" rather than doing nothing quietly.
+
+If that happens, stop trashing immediately — do not retry, and do not try `trash_message`
+or a label change as a way around it, because the missing permission is the point. Finish
+the run and report the cleanup exactly as a `--no-delete` pass, saying plainly at the top
+of the section that nothing could be trashed and why, and that the user needs to
+reauthorise the Gmail connector with modify permission to enable it.
+
+This matters most on a scheduled run, where nobody sees the failure as it happens. A
+report that quietly lists threads as trashed when they are all still sitting in the inbox
+is worse than one that says the permission is missing.
+
+### Step 6 — Learn from corrections
+
+When the user says a sender should always be kept, append it to `cleanup.learnedKeep` in
+config.json so the next run keeps it without being asked. That applies whether they are
+rescuing something already trashed or naming a sender up front — either way it is a
+standing instruction, not a one-off. Record the domain rather than the full address, so a
+change of sending address does not silently drop the rule.
+
+Never remove an entry from that list on your own — the user put it there. And prefer
+adding to it over arguing the sender looks like a newsletter: it plainly is one, and the
+user has decided they read it.
+
+If the user says a whole sender should always go, that is a Gmail filter, not a
+config entry. Suggest they set one up; a filter that skips the inbox is better
+than triage deleting the same sender every morning.
+
+### Running unattended
+
+This pass is designed to be safe on a schedule, when nobody is there to approve
+each decision — that safety comes entirely from the keep tests, not from a human
+checking. When triage runs unattended, still write the full report, so the user
+reads it later and can restore anything wrong within the 30-day window.
+
+`--no-delete` reports what would have gone without trashing anything, and
+`--dry-run` does the same across the whole triage. Use `--no-delete` on the first
+run against an unfamiliar inbox, or after changing the keep rules, so the user
+can check the judgement before it acts.
+
+</inbox_cleanup>
 
 <reply_drafting>
 
@@ -868,6 +1116,31 @@ Numbered list, grouped by source. Everything that was unclear during scanning.
 ## Noise Summary
 Brief counts by category per source. No detail needed.
 
+## Inbox Cleanup
+What the newsletter pass did. Omit the section entirely if cleanup is disabled or nothing
+was eligible.
+
+Trashed — recoverable for 30 days, at the top of Gmail's Trash (that view sorts by when
+things were deleted; date operators like `newer_than:` do not, so they will not find these):
+| # | Subject | From | Date |
+|---|---------|------|------|
+
+Kept, and why — so a keep rule that is too eager is visible and fixable:
+| # | Subject | From | Kept because |
+|---|---------|------|--------------|
+
+Borderline — the close calls, which way each went, and what made it close. Omit if there
+were none. These are the rows to actually read:
+| # | Subject | From | Went | What made it close |
+|---|---------|------|------|--------------------|
+
+Invite a correction in one line: naming any row here either spares that sender for good or
+stops it being flagged again.
+
+Close with a one-liner: how many were scanned, trashed, and kept, and whether a backlog
+remains beyond `maxPerRun` for the next run. On a `--no-delete` or `--dry-run` pass, say
+plainly that nothing was actually trashed.
+
 ## ⚠️ Check These Slack Channels Manually
 Always present. Lists every source flagged `manualCheck` in config.json.
 ```
@@ -1008,4 +1281,11 @@ If `notion.databaseId` is null in config.json:
   nothing invented, gaps declared under Open questions
 - Briefs for Claude-doable tasks name the command that would run them
 - The user could work each task, or hand it to someone else, without opening another tool
+- The whole inbox was read for the window, not just the unread part
+- Nothing was trashed except bulk marketing mail whose body was actually read
+- Nothing holding a discount code, receipt, reminder, or anything actionable was trashed,
+  and nothing from mymind was
+- Every trashed thread is listed in the report with the 30-day recovery search, and every
+  kept candidate is listed with the reason it was kept
+- Anything doubtful was kept
 </success_criteria>

@@ -635,6 +635,23 @@ and it beats every heuristic below. A pass that trashes eight obvious newsletter
 and leaves twelve borderline ones is a good pass. A pass that clears the inbox
 completely and takes one receipt with it is a bad one.
 
+### But doubt is not the same as reluctance
+
+The point of the pass is a quieter inbox. A version that keeps everything is not cautious,
+it is useless — it costs the user the scroll it was meant to save, and it teaches them to
+stop reading the report.
+
+So spend the doubt where the cost is real. The categories above — codes, receipts,
+reminders, anything actionable — stay absolute, because getting one of those wrong costs
+money or a missed commitment. Everywhere else, "it looks vaguely professional", "it
+mentions a date", "it is from a brand the user likes" are not doubt. They are a newsletter,
+and the user subscribed to a lot of newsletters.
+
+When a call really is close, do not resolve it by silently keeping. Trash it or keep it on
+the rules, then say so in the Borderline table with the reason. A flagged call the user
+can overturn in one line is worth far more than a quiet keep they never see — and their
+corrections are what tune this over time, via `learnedKeep`.
+
 ### Delete means trash, never purge
 
 Use `mcp__claude_ai_Gmail__trash_thread`. Mail goes to the Gmail Trash and is
@@ -715,9 +732,14 @@ failed, refunds, subscription renewals and their prices, price changes,
 statements, tax documents, delivery and dispatch notes with a tracking number.
 These are records, and records are worth keeping even when they look automated.
 
-**Reminders and dates.** Appointments, bookings, RSVPs, events the user signed up
-to, renewal and expiry dates, trial endings, deadlines, anything that says "in
-three days" or names a date the user has to act on.
+**Reminders and dates.** Appointments, bookings, RSVPs, events the user signed up to,
+renewal and expiry dates, trial endings, deadlines, anything that says "in three days" or
+names a date the user has to act on.
+
+The test is commitment, not the presence of a date. A booking, a renewal, a delivery slot,
+an event with the user's name on it — keep. A newsletter that merely *mentions* dates the
+user has not committed to, like a conference they could attend or an event the sender is
+speaking at, is marketing with a calendar in it. That goes.
 
 **Anything actionable.** It needs a click, a decision, a login, a confirmation, a
 password reset, a verification code, a security or account alert, a change to
@@ -753,6 +775,14 @@ route in the same breath: the thread is in Gmail's Trash for 30 days, and
 
 Also list what was considered and kept, one line each with the reason, so the
 user can see the pass is working and correct it if a keep rule is too eager.
+
+Then pull the close calls out into their own short Borderline list — which way each went
+and why. These are the rows worth the user's attention: the obvious ones need no review,
+and a borderline call buried in a table of forty is a call nobody makes. Keep it to the
+genuinely arguable few, and name the specific thing that made it close ("names conference
+dates, but nothing booked"), so a one-line answer is enough to settle it. Then act on that
+answer: `learnedKeep` for a sender to spare, and simply trashing it next time for one to
+stop flagging.
 
 ### If trashing is refused for lack of scope
 
@@ -1089,6 +1119,14 @@ Trashed — recoverable in Gmail for 30 days, find this batch with `in:trash new
 Kept, and why — so a keep rule that is too eager is visible and fixable:
 | # | Subject | From | Kept because |
 |---|---------|------|--------------|
+
+Borderline — the close calls, which way each went, and what made it close. Omit if there
+were none. These are the rows to actually read:
+| # | Subject | From | Went | What made it close |
+|---|---------|------|------|--------------------|
+
+Invite a correction in one line: naming any row here either spares that sender for good or
+stops it being flagged again.
 
 Close with a one-liner: how many were scanned, trashed, and kept, and whether a backlog
 remains beyond `maxPerRun` for the next run. On a `--no-delete` or `--dry-run` pass, say

@@ -188,17 +188,27 @@ export function readIntroRows(csvPath = INTRO_CSV) {
     );
   }
 
-  const index = (name) => {
+  const index = (...names) => {
+    for (const name of names) {
+      const i = header.indexOf(name);
+      if (i !== -1) return i;
+    }
+    throw new Error(`Intro lines CSV is missing the "${names[0]}" column`);
+  };
+
+  /* The tab came back spelling the copy columns the way the conclusion tab spells them, and
+   * without the template's ID column. Both spellings are accepted because the ID is never
+   * read past this function, and the keys — the part that has to be right — validate below. */
+  const optional = (name) => {
     const i = header.indexOf(name);
-    if (i === -1) throw new Error(`Intro lines CSV is missing the "${name}" column`);
-    return i;
+    return i === -1 ? null : i;
   };
 
   const cols = {
     key: index("key"),
-    id: index("ID"),
-    nl: index("intro (NL)"),
-    en: index("intro (EN)"),
+    id: optional("ID"),
+    nl: index("intro (NL)", "text (NL)"),
+    en: index("intro (EN)", "text (EN)"),
   };
 
   return rows
@@ -216,7 +226,12 @@ export function readIntroRows(csvPath = INTRO_CSV) {
         throw new Error(`Intro lines CSV has an unusable key: ${why}`);
       }
 
-      return { key, id: row[cols.id], nl: row[cols.nl] ?? "", en: row[cols.en] ?? "" };
+      return {
+        key,
+        id: cols.id === null ? "" : (row[cols.id] ?? ""),
+        nl: row[cols.nl] ?? "",
+        en: row[cols.en] ?? "",
+      };
     });
 }
 

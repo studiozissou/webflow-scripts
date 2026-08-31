@@ -103,7 +103,12 @@ test.describe('carsa-code-migration — Homepage', () => {
 
 // ── Phase 1: footer loader + global.js ────────────────────────
 
-const LOADER_RE = /cdn\.jsdelivr\.net\/gh\/studiozissou\/webflow-scripts@[0-9a-f]{7,40}\/projects\/carsa\/init\.js$/;
+// Hosting moved to Carsa's CloudFront at SHA-versioned paths on 27 Aug 2026 (spec D2a).
+// These two constants are the only place the host and path shape are named.
+const LOADER_RE = /\/webflow\/[0-9a-f]{7,40}\/init\.js$/;
+const LOADER_PATH_RE = /\/webflow\/[0-9a-f]{7,40}\/init\.js/;
+const LOADER_SEL = 'script[src*="/webflow/"][src$="/init.js"]';
+const moduleSel = (file) => `script[src*="/webflow/"][src$="/${file}"]`;
 const LOADER_PAGES = ['/', '/used-cars'];
 
 async function firstVdpPath(page) {
@@ -116,19 +121,24 @@ async function firstVdpPath(page) {
 test.describe('carsa-code-migration — Loader (Phase 1)', () => {
   test('loader-present-and-pinned: init.js tag points at a commit SHA, not @main', async ({ page }) => {
     await loadPage(page, '/');
-    const srcs = await page.$$eval('script[src*="/projects/carsa/init.js"]', (els) => els.map((e) => e.src));
+    const srcs = await page.$$eval(LOADER_SEL, (els) => els.map((e) => e.src));
     expect(srcs, 'init.js tag missing from footer').toHaveLength(1);
     expect(srcs[0]).toMatch(LOADER_RE);
-    expect(srcs[0]).not.toContain('@main');
+    for (const moving of ['@main', '@latest', '/webflow/latest/']) {
+      expect(srcs[0]).not.toContain(moving);
+    }
   });
 
   test('loader-returns-200-immutable: init.js and global.js served with immutable cache headers', async ({ page }) => {
     await loadPage(page, '/');
-    const src = await page.$eval('script[src*="/projects/carsa/init.js"]', (e) => e.src);
+    const src = await page.$eval(LOADER_SEL, (e) => e.src);
     for (const file of ['init.js', 'global.js']) {
       const res = await page.request.get(src.replace('init.js', file));
       expect(res.status(), file).toBe(200);
-      expect(res.headers()['cache-control'] || '', file).toContain('immutable');
+      const cc = res.headers()['cache-control'] || '';
+      expect(cc, file).toContain('immutable');
+      // Guard against the versioned prefix inheriting PR #138's carousel rule (spec D10).
+      expect(cc, `${file} must not revalidate on a versioned path`).not.toContain('must-revalidate');
     }
   });
 
@@ -137,7 +147,7 @@ test.describe('carsa-code-migration — Loader (Phase 1)', () => {
     const order = await page.$$eval('script[src]', (els) => els.map((e) => e.src));
     const jq = order.findIndex((s) => /jquery-3\.5\.1/.test(s));
     const gsap = order.findIndex((s) => /\/gsap\.min\.js/.test(s));
-    const loader = order.findIndex((s) => /\/projects\/carsa\/init\.js/.test(s));
+    const loader = order.findIndex((s) => LOADER_PATH_RE.test(s));
     expect(loader).toBeGreaterThan(jq);
     expect(loader).toBeGreaterThan(gsap);
     const ready = await page.evaluate(() => ({ jq: !!window.jQuery, gsap: !!window.gsap }));
@@ -147,7 +157,7 @@ test.describe('carsa-code-migration — Loader (Phase 1)', () => {
   for (const path of LOADER_PAGES) {
     test(`global-loaded-once: exactly one global.js on ${path}`, async ({ page }) => {
       await loadPage(page, path);
-      const count = await page.locator('script[src*="/projects/carsa/global.js"]').count();
+      const count = await page.locator(moduleSel('global.js')).count();
       expect(count).toBe(1);
     });
   }
@@ -156,7 +166,7 @@ test.describe('carsa-code-migration — Loader (Phase 1)', () => {
     const vdp = await firstVdpPath(page);
     test.skip(!vdp, 'no VDP in sitemap');
     await loadPage(page, vdp);
-    expect(await page.locator('script[src*="/projects/carsa/global.js"]').count()).toBe(1);
+    expect(await page.locator(moduleSel('global.js')).count()).toBe(1);
   });
 
   test('global-copyright-year: #year shows the current year', async ({ page }) => {
@@ -213,7 +223,7 @@ test.describe('carsa-code-migration — Loader (Phase 1)', () => {
     const stray = await page.evaluate(() => {
       const scripts = [...document.scripts];
       const runtime = scripts.findIndex((s) => /\/js\/webflow\./.test(s.src));
-      const loader = scripts.findIndex((s) => /\/projects\/carsa\/init\.js/.test(s.src));
+      const loader = scripts.findIndex((s) => LOADER_PATH_RE.test(s.src));
       if (runtime < 0 || loader < 0) return ['marker-missing'];
       return scripts
         .slice(runtime + 1, loader)
@@ -339,7 +349,7 @@ for (const { path, module } of MIGRATED) {
 
     test(`${path}-module-loaded-once: ${module} loaded exactly once`, async ({ page }) => {
       await loadPage(page, path);
-      expect(await page.locator(`script[src*="/projects/carsa/${module}"]`).count()).toBe(1);
+      expect(await page.locator(moduleSel(module)).count()).toBe(1);
     });
 
     test(`${path}-inline-removed: no inline scripts other than a __CARSA_ config block`, async ({ page }) => {

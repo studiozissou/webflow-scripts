@@ -28,7 +28,7 @@ search_threads(query: "in:inbox newer_than:7d", pageSize: 50)
 search_threads(query: "is:starred -in:sent", pageSize: 50)
 ```
 
-The first pulls recent inbox threads (default 7 days — adjust if the user specifies a different range). The second pulls all starred threads regardless of age — these are threads the user has pinned for follow-up.
+The first pulls recent inbox threads (default 7 days — adjust if the user specifies a different range). Note it is deliberately not scoped to `is:unread`: mail the user opened on their phone and never dealt with is exactly the mail that goes missing, so read threads get classified too. The second pulls all starred threads regardless of age — these are threads the user has pinned for follow-up.
 
 Merge the two result sets, deduplicating by thread ID. Any starred thread where the last message is NOT from the user counts as **unanswered** and should be auto-promoted to REPLY NEEDED in Step 2 (regardless of age).
 
@@ -58,6 +58,12 @@ No action needed:
 - Automated platform notifications (LinkedIn views, Webflow comments from self)
 - Security codes and verification emails
 - Sales outreach / cold emails
+
+NOISE means "nothing for the user to do", not "safe to throw away". Receipts, delivery
+notes, and security codes all land here and are all worth keeping. When triage runs the
+inbox cleanup pass, it re-reads each candidate against its own keep tests rather than
+treating this bucket as a delete list — so classify freely here without worrying that it
+decides anything's fate.
 
 ## Step 3 — Priority-rank REPLY NEEDED threads
 

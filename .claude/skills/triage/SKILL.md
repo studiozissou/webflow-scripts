@@ -772,9 +772,15 @@ is worse than one that says the permission is missing.
 
 ### Step 6 — Learn from corrections
 
-If the user says something should not have been trashed, append that sender to
-`cleanup.learnedKeep` in config.json so the next run keeps it without being
-asked. Never remove an entry from that list on your own — the user put it there.
+When the user says a sender should always be kept, append it to `cleanup.learnedKeep` in
+config.json so the next run keeps it without being asked. That applies whether they are
+rescuing something already trashed or naming a sender up front — either way it is a
+standing instruction, not a one-off. Record the domain rather than the full address, so a
+change of sending address does not silently drop the rule.
+
+Never remove an entry from that list on your own — the user put it there. And prefer
+adding to it over arguing the sender looks like a newsletter: it plainly is one, and the
+user has decided they read it.
 
 If the user says a whole sender should always go, that is a Gmail filter, not a
 config entry. Suggest they set one up; a filter that skips the inbox is better

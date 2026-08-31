@@ -66,8 +66,10 @@
         "_sendersComment": "Always keep. Newsletters here are read for pleasure, not scanned for actions, so the usual 'no action needed' test does not apply to them. Match on the domain, not the full address \u2014 mymind sends from updates@mymind.email, and a sending address can change without the brand changing.",
         "domains": []
       },
-      "learnedKeep": [],
-      "_learnedKeepComment": "Senders the user has rescued from a previous cleanup run. Append the sender address when the user says a trashed newsletter should have been kept; never remove an entry automatically."
+      "learnedKeep": [
+        "permanentstyle.com"
+      ],
+      "_learnedKeepComment": "Senders the user has said to always keep \u2014 either rescued from a cleanup run or named directly. Match on the domain so a change of sending address does not silently drop the rule. Append when the user rescues a sender; never remove an entry automatically, because the user put it there."
     }
   },
   "calendar": {

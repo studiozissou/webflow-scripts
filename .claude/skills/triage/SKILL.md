@@ -679,9 +679,25 @@ is out of scope. Leave it where it is.
 ### Step 3 — Read the body before deciding
 
 The subject line is not enough. "Your March update" can contain a 20% code, and
-"Weekly digest" can contain a renewal notice. Call `get_thread` on every
-candidate and read it before it becomes eligible for trashing. If a thread cannot
-be read for any reason, keep it — an unread body is the definition of doubt.
+"Weekly digest" can contain a renewal notice. Nothing is trashed on its subject alone.
+
+Work in two passes, because newsletter bodies are large — 15-25k tokens each is normal,
+so reading all sixty upfront costs more than the whole rest of the triage:
+
+**Pass A — the snippet, which can only ever save a thread.** The search results carry a
+snippet, and a code or a renewal notice is often visible right there ("10% off your next
+online purchase" needs no further reading). If the snippet triggers any keep test, keep
+the thread and move on without fetching it. A snippet may promote a thread to *keep*; it
+may never condemn one. That asymmetry is what makes the shortcut safe.
+
+**Pass B — the full body, for whatever still looks trashable.** Call `get_thread` on each
+survivor and read it properly before trashing. Prefer `messageFormat: PLAIN_TEXT`.
+
+Some newsletters are HTML-only and come back as "text version of this email is not
+supported". Retry those once with `FULL_CONTENT` and read the HTML — otherwise a whole
+class of newsletters becomes permanently un-trashable for a reason that has nothing to do
+with their contents. If it is still unreadable after the retry, keep it: an unread body is
+the definition of doubt.
 
 ### Step 4 — Apply the keep tests
 

@@ -59,11 +59,11 @@
       "maxPerRun": 60,
       "neverDelete": {
         "senders": [
-          "mymind.com",
-          "hello@mymind.com",
-          "no-reply@mymind.com"
+          "mymind.email",
+          "updates@mymind.email",
+          "mymind.com"
         ],
-        "_sendersComment": "Always keep. Newsletters here are read for pleasure, not scanned for actions, so the usual 'no action needed' test does not apply to them.",
+        "_sendersComment": "Always keep. Newsletters here are read for pleasure, not scanned for actions, so the usual 'no action needed' test does not apply to them. Match on the domain, not the full address \u2014 mymind sends from updates@mymind.email, and a sending address can change without the brand changing.",
         "domains": []
       },
       "learnedKeep": [],

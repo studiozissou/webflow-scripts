@@ -98,17 +98,33 @@ iFrame API is usable in WebKit, and `createController` does not raise the
 
 ## Still unresolved: whether Safari renders video
 
-The `0` in that table is **not** proof that Safari is denied video.
+Human-run probe results (Will, 31 Aug), which sharpen the picture:
 
-Safari blocks autoplay, and the probe was driven by a synthetic
-`.click()` from AppleScript — not a real user gesture — so `controller.play()`
-was refused before any video could report playback. Chrome permits autoplay,
-which is why it reports 18. A `/video` page that renders perfectly but sits
-paused emits zero `playback_update` messages, so this run cannot distinguish
-"Spotify degraded the page" from "Safari refused to autoplay it".
+| | Chrome | Safari |
+| --- | --- | --- |
+| `ready` after swap to `/video` | yes | **yes** |
+| `playback_started` | yes | no |
+| `playback_update` | 754 | 0 |
 
-Cross-origin isolation means the iframe's contents can't be inspected from the
-parent, so no amount of scripting settles it. It needs a human to look.
+The Safari `ready (after swap)` is the important line. Spotify's `/video` page
+**loads and completes the controller handshake in Safari** — it is not the
+dead card the 19 Aug README assumed. Whatever is happening, the page is alive.
+
+The `0` is still **not** proof that Safari is denied video:
+
+- Safari blocks autoplay, and `controller.play()` is called from an async
+  `ready` handler, so the click's user-gesture token has already expired. A
+  `/video` page that renders perfectly but sits paused emits zero
+  `playback_update` messages.
+- Chrome permits autoplay, which is the whole reason it reports 754.
+
+Top-level inspection is a dead end in every browser. Loading
+`/embed/episode/{id}/video?utm_source=iframe-api` **top-level** in Chrome —
+the exact production URL, param included — also yields 0 `<video>` elements
+(9935 bytes). The page only comes alive inside an iframe with a live controller
+handshake, and that instance is cross-origin, so nothing can inspect it.
+
+This cannot be resolved by script. It needs a human to press play and look.
 
 **Do not ship a flag flip until the manual test below is run.**
 

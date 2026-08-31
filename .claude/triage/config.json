@@ -56,7 +56,7 @@
       "_comment": "Newsletter cleanup. Trashes bulk marketing mail only, and only when it passes every keep test in the triage skill's <inbox_cleanup> section. Trash is recoverable in Gmail for 30 days.",
       "query": "in:inbox -is:starred -is:important",
       "lookbackDays": 14,
-      "maxPerRun": 5,
+      "maxPerRun": 100,
       "neverDelete": {
         "senders": [
           "mymind.email",

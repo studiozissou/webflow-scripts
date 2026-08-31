@@ -430,6 +430,37 @@ Tests run against `STAGING_URL` (default `https://www.getcoconut.com`). Coconut 
 - Removing the `!` from `!Coconut` sitewide — separate Trello card.
 - The other "Content to review" cards on the board (CIS anchor text, MTD-vs-bank-account blog posts, online sellers).
 
+## Build log
+
+### 2026-08-31 — Stream A complete (not published)
+
+**T1 — 5 FAQ CMS items created.** All staged (`lastPublished: null`), all `featured-on-*` switches left `false` so they cannot surface on other pages.
+
+| Item ID | Question | Destination |
+|---|---|---|
+| `6a958233752834e3c5bd1f15` | Is support included in my plan and during the free trial? | tax-help-support |
+| `6a958233752834e3c5bd1f17` | Can Coconut support help me switch from spreadsheets or another provider? | tax-help-support |
+| `6a958233752834e3c5bd1f19` | Can I manage multiple income streams, such as self-employment and property, in one account? | mtd-compliant-software |
+| `6a958233752834e3c5bd1f1b` | Does Coconut show my tax bill in real time as I go? | mtd-compliant-software |
+| `6a958233752834e3c5bd1f1d` | How does Coconut keep my financial data secure? | mtd-compliant-software |
+
+**T2 — references appended.** Read-modify-write confirmed safe: `update_collection_items` uses PATCH semantics, so unlisted fields are preserved (verified — SEO fields, icon, product shot, background colour, `feature-highlights`, `hmrc-recognised-for-mtd` and `new-layout` all intact).
+
+- `tax-help-support` (`6989e5c0148e0f7f2d2b0e44`): `common-questions` 9 → 11
+- `mtd-compliant-software` (`6960ebc2f28cea4d0560c493`): `common-questions` 8 → 11
+
+All original IDs present in original order; new IDs appended last. Verified against a re-read taken immediately before the write.
+
+**T3 — publish: NOT DONE, deliberately.** Gated on user confirmation per the Risks table and the `webflow-mcp` skill rule ("never auto-publish"). The 5 items and both reference updates are staged and invisible on the live site until a publish runs.
+
+**T10 — merge report written:** `.claude/reports/faq-merge-report-2026-08-31.md`.
+
+### Remaining
+
+- T4–T8 — the 5 static pages. **Blocked**: Webflow Designer MCP not connected. Needs an open, foregrounded Designer tab.
+- T9 — site publish (user-gated; check for unrelated pending changes first).
+- T11 — Trello comment (user-gated).
+
 ## Agents needed
 
 `content` (copy fidelity, merge report), `code-writer` (Webflow MCP execution), `qa` (verify loop).

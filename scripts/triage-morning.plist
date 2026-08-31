@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Morning triage. Runs scripts/triage-morning.sh at 08:30 local time, Monday to
+  Thursday. If the Mac is asleep at that moment, launchd runs the job on wake.
+
+  NOT INSTALLED BY DEFAULT. Installing is the deliberate step that turns the
+  automation on; until then this file is inert and nothing is scheduled.
+
+  To get the same report without any schedule, run the script by hand whenever
+  you want it:
+    bash scripts/triage-morning.sh
+    TRIAGE_ARGS="--no-delete" bash scripts/triage-morning.sh
+
+  Install:
+    cp scripts/triage-morning.plist ~/Library/LaunchAgents/io.teamzissou.triage-morning.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.triage-morning.plist
+
+  Run it once, right now, without waiting for tomorrow:
+    launchctl start io.teamzissou.triage-morning
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.triage-morning.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.triage-morning.plist
+
+  The triage report lands in .claude/triage/reports/{date}.md.
+  Run output and errors are appended to ~/Library/Logs/triage-morning.log
+
+  To let the first few runs report newsletter deletions without acting on them, set
+  TRIAGE_ARGS to --no-delete below, then remove it once the judgement looks right.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.triage-morning</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/triage-morning.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>TRIAGE_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+        <key>TRIAGE_ARGS</key>
+        <string></string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Weekday</key>
+            <integer>1</integer>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>2</integer>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>3</integer>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>4</integer>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-morning.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-morning.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

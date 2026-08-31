@@ -771,7 +771,15 @@ reminder, and nothing to act on. Trash it.
 Record every trashed thread in the report — subject, sender, date — so the user
 can scan the list in a few seconds and spot a mistake. Give them the recovery
 route in the same breath: the thread is in Gmail's Trash for 30 days, and
-`in:trash newer_than:1d` finds this run's batch.
+opening Trash in Gmail shows this run's batch at the top, because that view is
+ordered by when things were deleted.
+
+Do not offer `in:trash newer_than:1d` as the recovery search. Gmail's date operators filter
+on when a message *arrived*, not when it was trashed, so a two-week-old newsletter deleted
+thirty seconds ago does not match it. That is precisely the mail this pass removes, so the
+search would look reassuring and return almost nothing at the moment the user most needs
+it. The listed subjects and senders in the report are the reliable handle: `in:trash` plus
+a sender or subject from the table finds a specific thread.
 
 Also list what was considered and kept, one line each with the reason, so the
 user can see the pass is working and correct it if a keep rule is too eager.
@@ -1112,7 +1120,8 @@ Brief counts by category per source. No detail needed.
 What the newsletter pass did. Omit the section entirely if cleanup is disabled or nothing
 was eligible.
 
-Trashed — recoverable in Gmail for 30 days, find this batch with `in:trash newer_than:1d`:
+Trashed — recoverable for 30 days, at the top of Gmail's Trash (that view sorts by when
+things were deleted; date operators like `newer_than:` do not, so they will not find these):
 | # | Subject | From | Date |
 |---|---------|------|------|
 

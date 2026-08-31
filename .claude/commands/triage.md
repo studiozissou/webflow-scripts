@@ -256,7 +256,7 @@ After executing approved actions, if any tasks have Doer = "Claude":
    Drafts created: D
    Blocked/Waiting: B items
    Questions remaining: Q
-   Newsletters trashed: N of M scanned (recoverable 30 days — in:trash newer_than:1d)
+   Newsletters trashed: N of M scanned (recoverable 30 days — top of Gmail's Trash)
    ```
 
 ## Arguments

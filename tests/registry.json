@@ -341,7 +341,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-08-31",
-      "description": "Desktop wheel-up gesture in completed home state reverse-plays the intro morph back to the landing view; forward scroll re-completes it. Expected to fail until the feature ships (awaiting Ryan approval)."
+      "description": "Desktop wheel-up in completed home state re-arms the intro scrub; native scroll scrubs the morph back to the landing view and forward again to complete. Expected to fail until the feature ships (awaiting Ryan approval)."
     }
   ]
 }

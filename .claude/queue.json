@@ -1,8 +1,31 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-18",
+  "updated": "2026-08-31",
   "note": "Merged 2026-08-18. NEM Test: conclusion engine v2 live; MailerSend trial cap resolved and verified; the prompt-escaping changeset was found already applied by hand on 13 Aug; a workflow drift check now guards the live n8n workflows; the report JSON contract, Parse Report gate and failure logging are built and verified live; anonymous completion logging is built and awaiting a Webflow paste. RHP: mobile dial permanent lengthened ticks planned and spec written (Ready to Build), side-space verified live, rotation/index desync found as a blocking sub-fix. RHP mobile dial circular 360 drag + spinner arrows is built, QA-approved and deployed (6d7de7b, 2026.8.18.3); merged into main 2026-08-19.",
   "queue": [
+    {
+      "id": "rhp-reply-to-ryan-homepage-scroll-back-estimate",
+      "project": "ready-hit-play-prod",
+      "type": "chore",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Reply to Ryan with the estimate for scrolling back from the circle to the homepage landing view",
+      "description": "Due 2026-09-01. Ryan asked (2026-08-26) what it would take to scroll back and forth between the RHP landing view and the circle, instead of clicking the horizontal logo. Analysis done 2026-08-31: desktop only, wheel-up gesture reuses the existing replay() reverse morph — quote 2 hours (1 is possible but tight). Caveat to include: quote covers the gesture-triggered version, not a scrubbed 1:1 reverse (half a day plus). Spec ready at the linked path.",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-home-scroll-back-to-intro.md",
+      "created": "2026-08-31"
+    },
+    {
+      "id": "rhp-home-scroll-back-to-intro",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Blocked",
+      "title": "Home: scroll back from the dial to the intro landing view (desktop only)",
+      "description": "Wheel-up gesture in the completed home state triggers the existing replay() reverse morph; forward scroll then works again (back-and-forth). Desktop only — mobile keeps the locked-scroll dial model. Single file change in home-scroll-morph.js (~40 LOC) plus init.js version bump. Estimated 2 hours including QA and deploy.",
+      "blockedOn": "awaiting-ryan-approval",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-home-scroll-back-to-intro.md",
+      "created": "2026-08-31"
+    },
     {
       "id": "tsc-launch-metadata-schema",
       "project": "the-signalling-company",

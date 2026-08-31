@@ -8,9 +8,9 @@
       "project": "ready-hit-play-prod",
       "type": "chore",
       "priority": "P0",
-      "status": "Ready to Build",
+      "status": "Done",
       "title": "Reply to Ryan with the estimate for scrolling back from the circle to the homepage landing view",
-      "description": "Due 2026-09-01. Ryan asked (2026-08-26) what it would take to scroll back and forth between the RHP landing view and the circle, instead of clicking the horizontal logo. Analysis 2026-08-31 (revised: forward morph scrubs on desktop, so the way back must scrub too): wheel-up re-arms the intro ScrollTrigger scrub so native scroll drives the morph both ways, reusing most of replay(). Quote 2 hours; flag it could run into a third if the complete-state restoration fights back. 1 hour is not credible for the scrubbed version. Spec ready at the linked path.",
+      "description": "Due 2026-09-01. Ryan asked (2026-08-26) what it would take to scroll back and forth between the RHP landing view and the circle, instead of clicking the horizontal logo. Analysis 2026-08-31 (revised: forward morph scrubs on desktop, so the way back must scrub too): wheel-up re-arms the intro ScrollTrigger scrub so native scroll drives the morph both ways, reusing most of replay(). Quote 2 hours; flag it could run into a third if the complete-state restoration fights back. 1 hour is not credible for the scrubbed version. Spec ready at the linked path. UPDATE 2026-08-31: estimate sent to Ryan by Will — done ahead of the 09-01 due date. Feature task remains blocked on his go-ahead.",
       "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-home-scroll-back-to-intro.md",
       "created": "2026-08-31"
     },

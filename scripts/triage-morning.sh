@@ -27,12 +27,18 @@ echo "=== triage-morning $(date '+%Y-%m-%d %H:%M:%S') ==="
 # schedule silently.
 export PATH="$HOME/.claude/local:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-CLAUDE_BIN=$(command -v claude 2>/dev/null)
+# type -P searches PATH only, ignoring the shell function that wraps claude in the user's
+# interactive profile — launchd will not have it, but a manual test run would.
+CLAUDE_BIN=$(type -P claude 2>/dev/null)
 if [ -z "$CLAUDE_BIN" ]; then
   echo "FATAL: 'claude' not found on PATH. Add its directory to the PATH line above,"
   echo "       or set it in the plist's EnvironmentVariables."
   exit 1
 fi
+
+# The interactive shell wrapper unsets this so Claude Code uses the OAuth login rather
+# than API-key billing. Match that here, so a scheduled run bills the same way.
+unset ANTHROPIC_API_KEY
 
 mkdir -p "$REPORT_DIR"
 

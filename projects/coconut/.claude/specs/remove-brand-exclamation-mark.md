@@ -78,6 +78,15 @@ The median page has **8** meaningful occurrences, and **6 of those 8 are shared*
 After the five shared edits, a typical page drops to 2 — both in the excluded FCA line.
 Only **7 pages** have more than 20 meaningful occurrences.
 
+**Edge case — `/search`.** It renders a stripped template with no navbar or footer, so it
+carries only 4 occurrences and the shared component fixes will not touch it. Check it
+separately during verification rather than assuming the shared edits covered it.
+
+**Sitemap shape:** 231 URLs — `/knowledge-hub/` 172, root-level 20, `/features/` 9,
+`/legal/` 8, `/categories/` 8, `/coconut-for/` 7, `/mtd-software/` 5, `/tools/` 4,
+`/blog-categories/` 4, homepage 1. There is no `/about` and no `/blog/` path; articles
+live under `/knowledge-hub/`.
+
 ### 3.3 Top pages by page-specific work
 
 | Meaningful | Page |
@@ -134,12 +143,19 @@ Exact current strings, for direct rewriting:
 Note `/partners` carries a copy-pasted webinars description. Flag to Anna; correcting
 it is out of scope here.
 
+**Open Graph needs no separate work.** On all of these pages the OG fields are set to
+`titleCopied: true` / `descriptionCopied: true`, so they inherit the SEO string at publish
+time. The raw `openGraph.title` / `openGraph.description` fields are themselves empty and
+contain no `!Coconut`. Fixing `seo.title` / `seo.description` therefore fixes the rendered
+OG tags too — **do not** write OG fields directly, or you will break the copy-from-SEO link.
+
 ### 3.6 JSON-LD
 
 | Where | Contains | Editable via |
 |---|---|---|
 | `/` page schema (`jsonLdSchema` object) | `SoftwareApplication.name: "!Coconut"` | ✅ API — `bulk_update_pages_schema_markup` |
-| `/pricing` page schema (`rawJsonLdSchema` string) | ~11 hits: WebPage name/description, `Product.name`, `brand.name`, 4 FAQPage Q&As, `SoftwareApplication.name` | ✅ API |
+| `/pricing` page schema (`rawJsonLdSchema` string) | **13 hits**: WebPage name/description, `Product.name`, `brand.name`, 4 FAQPage Q&As, `about.name` | ✅ API |
+| `/accountant-software` page schema (`684c3935ca3ce547daec1be8`) | 1 hit, but it is the logo asset URL only | ❌ D1 — no edit |
 | **Site Settings → Custom Code → Head** | Organization block: `alternateName` (keep, D6) + 2 asset URLs (skip, D1) | ❌ **Manual** — not exposed by the Data API |
 | Knowledge Hub / Categories / Tags templates | CMS bindings only, zero hardcoded hits | — no change |
 
@@ -147,7 +163,14 @@ it is out of scope here.
 
 ## 4. What is explicitly out of scope
 
-- The logo wordmark artwork and all `!`-containing asset filenames (D1).
+- The logo wordmark artwork and all `!`-containing asset filenames (D1). Four assets on the
+  Webflow CDN carry `!` in their filename, and no others anywhere on the site:
+  - `…694962c84409e6fb387dfa61_!Coconut_2025_logo_RGB_Full_Logo_Black%26White%201.webp` — nav logo
+  - `…69493cf1cd472728f6fc499c_!Coconut_2025_logo_RGB_Full_Logo_White.png` — footer logo
+  - `…694965edc5fef9e634fda00b_!Coconut_2025_logo_RGB_Blue%20Square%20Coconut.png` — apple-touch-icon
+  - `…6949654e62c23bf834ab8e32_!Coconut_2025_logo_RGB_Blue%20Square%20Coconut.png` — near-duplicate
+    of the above, uploaded twice under different asset IDs. Asset hygiene, not a brand issue;
+    noted only so it is not mistaken for a missed occurrence.
 - The FCA footer disclosure sentence (D3).
 - `"legalName": "@Coconut Platform Ltd"` and the `@Coconut` styling generally — the card
   is about `!` only. Raised with Anna in the same note as the FCA line (§9).
@@ -224,6 +247,11 @@ Confirmed by API query. These five edits clear 1,131 of the 2,215 meaningful occ
 ## 7. The replacement rule
 
 Replace the exact string `!Coconut` with `Coconut`, then normalise whitespace.
+
+**Character encoding is confirmed safe.** Verified at byte level across the live HTML:
+the `!` is literal ASCII `0x21` and the `@` in `@Coconut` is literal ASCII `0x40`. They are
+not HTML entities (`&excl;` / `&commat;`) and not Unicode lookalikes. A plain string match
+on `!Coconut` is therefore exact and complete — no normalisation or entity decoding needed.
 
 **Edge cases the build must handle:**
 

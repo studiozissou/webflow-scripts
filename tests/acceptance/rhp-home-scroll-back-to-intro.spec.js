@@ -1,7 +1,8 @@
 /**
  * Acceptance tests for rhp-home-scroll-back-to-intro
- * Desktop wheel-up gesture in the completed home state reverse-plays the intro
- * morph back to the landing view; forward scroll re-completes it (back-and-forth).
+ * Desktop wheel-up in the completed home state re-arms the intro scrub and
+ * scrolling scrubs the morph back to the landing view; scrolling down scrubs
+ * forward and re-completes it (back-and-forth, both directions scrubbed).
  * Expected to FAIL until the feature ships (registered in registry.json per convention).
  *
  * Requires: STAGING_URL in .env.test (falls back to the live RHP staging site).
@@ -24,9 +25,9 @@ async function completeForwardMorph(page) {
 }
 
 async function wheelBackGesture(page) {
-  for (let i = 0; i < 4; i++) {
-    await page.mouse.wheel(0, -150);
-    await page.waitForTimeout(80);
+  for (let i = 0; i < 10; i++) {
+    await page.mouse.wheel(0, -250);
+    await page.waitForTimeout(100);
   }
 }
 

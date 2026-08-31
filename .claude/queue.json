@@ -10,7 +10,7 @@
       "priority": "P0",
       "status": "Ready to Build",
       "title": "Reply to Ryan with the estimate for scrolling back from the circle to the homepage landing view",
-      "description": "Due 2026-09-01. Ryan asked (2026-08-26) what it would take to scroll back and forth between the RHP landing view and the circle, instead of clicking the horizontal logo. Analysis done 2026-08-31: desktop only, wheel-up gesture reuses the existing replay() reverse morph — quote 2 hours (1 is possible but tight). Caveat to include: quote covers the gesture-triggered version, not a scrubbed 1:1 reverse (half a day plus). Spec ready at the linked path.",
+      "description": "Due 2026-09-01. Ryan asked (2026-08-26) what it would take to scroll back and forth between the RHP landing view and the circle, instead of clicking the horizontal logo. Analysis 2026-08-31 (revised: forward morph scrubs on desktop, so the way back must scrub too): wheel-up re-arms the intro ScrollTrigger scrub so native scroll drives the morph both ways, reusing most of replay(). Quote 2 hours; flag it could run into a third if the complete-state restoration fights back. 1 hour is not credible for the scrubbed version. Spec ready at the linked path.",
       "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-home-scroll-back-to-intro.md",
       "created": "2026-08-31"
     },
@@ -21,7 +21,7 @@
       "priority": "P1",
       "status": "Blocked",
       "title": "Home: scroll back from the dial to the intro landing view (desktop only)",
-      "description": "Wheel-up gesture in the completed home state triggers the existing replay() reverse morph; forward scroll then works again (back-and-forth). Desktop only — mobile keeps the locked-scroll dial model. Single file change in home-scroll-morph.js (~40 LOC) plus init.js version bump. Estimated 2 hours including QA and deploy.",
+      "description": "Wheel-up in the completed home state re-arms the intro scrub: restore scroll to the trigger end, keep ScrollTrigger enabled, unlock scroll — native scroll then scrubs the morph both ways, matching the scrubbed forward direction. Refactors replay() into a shared _prepareReverse() so logo-click replay is unchanged. Desktop only. Single file (~60-80 LOC) plus init.js version bump. Estimated 2 hours, may stretch to 3.",
       "blockedOn": "awaiting-ryan-approval",
       "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-home-scroll-back-to-intro.md",
       "created": "2026-08-31"

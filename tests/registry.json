@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-20",
+  "lastUpdated": "2026-08-31",
   "note": "nem-quiz-transition-guard planned 2026-08-19 \u2014 expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -332,6 +332,16 @@
       "critical": false,
       "created": "2026-08-20",
       "description": "SEMrush remediation for tamsenfadal.com: title tags under 70 chars while keeping the '| Tamsen Fadal' entity suffix, 10 duplicate meta description pairs made distinct, llms.txt rewritten to llmstxt.org Markdown, retired Apple Podcasts id1560877893 links repointed, and the hot-girl-menopause-smoothie redirect chain removed."
+    },
+    {
+      "slug": "coconut-remove-brand-exclamation-mark",
+      "url": "https://getcoconut.webflow.io/",
+      "spec": "tests/acceptance/coconut-remove-brand-exclamation-mark.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-31",
+      "description": "Removes the leading '!' from the Coconut brand name across copy, CMS, SEO fields and JSON-LD. Includes regression guards asserting the FCA footer disclosure (D3), logo asset filenames (D1) and Organization alternateName (D6) are deliberately left unchanged."
     }
   ]
 }

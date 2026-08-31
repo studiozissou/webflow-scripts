@@ -3,6 +3,14 @@
   Morning triage. Runs scripts/triage-morning.sh at 08:30 local time, Monday to
   Thursday. If the Mac is asleep at that moment, launchd runs the job on wake.
 
+  NOT INSTALLED BY DEFAULT. Installing is the deliberate step that turns the
+  automation on; until then this file is inert and nothing is scheduled.
+
+  To get the same report without any schedule, run the script by hand whenever
+  you want it:
+    bash scripts/triage-morning.sh
+    TRIAGE_ARGS="--no-delete" bash scripts/triage-morning.sh
+
   Install:
     cp scripts/triage-morning.plist ~/Library/LaunchAgents/io.teamzissou.triage-morning.plist
     launchctl load ~/Library/LaunchAgents/io.teamzissou.triage-morning.plist

@@ -45,9 +45,13 @@ mkdir -p "$REPORT_DIR"
 # --dangerously-skip-permissions is what makes an unattended run possible at all: there is
 # nobody to answer a permission prompt at 08:30. The triage skill is what keeps that safe —
 # it never sends or writes anything needing approval, and only ever trashes newsletters.
+#
+# stderr goes to the launchd log, not into the report. The report is something the user
+# actually reads over coffee, and a stray warning spliced into the middle of a table is
+# enough to make it look broken.
 "$CLAUDE_BIN" -p "/triage $ARGS" \
   --dangerously-skip-permissions \
-  > "$REPORT" 2>&1
+  > "$REPORT"
 status=$?
 
 if [ $status -ne 0 ]; then

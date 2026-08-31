@@ -126,7 +126,17 @@ handshake, and that instance is cross-origin, so nothing can inspect it.
 
 This cannot be resolved by script. It needs a human to press play and look.
 
-**Do not ship a flag flip until the manual test below is run.**
+## Resolved: Safari plays video (31 Aug, human-run)
+
+Will ran `safari-video-compare.html` in Safari 18.6: the `/video` frame showed a
+moving video picture and played on an in-frame tap — **40 `playback_update`
+messages** against 0 for the untouched audio frame, engine confirmed WebKit.
+The audio card flashes briefly before the swap, matching production Chrome.
+
+The gate comes out. Build spec: `../specs/podcast-safari-video-path.md` —
+including the watchdog fix this investigation surfaced (its `playback_update`
+latch would tear down a healthy paused video in Safari, where autoplay never
+starts it).
 
 ## How to settle it (2 minutes, Safari)
 

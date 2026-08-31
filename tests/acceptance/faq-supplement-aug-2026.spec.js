@@ -108,10 +108,12 @@ const PAGES = [
     kind: 'static',
     expectedCount: 13,
     added: ['Which landlord/property expenses can I claim, and does Coconut categorise them?'],
+    // The approved wording from the doc is kept here as the visible question;
+    // the older, vaguer phrasing is the one folded away.
     merged: {
-      question: 'Can I track multiple properties in Coconut?',
+      question: 'Can Coconut track income and expenses separately for each property?',
       mustContain: 'automatic totals across your portfolio',
-      foldedIn: 'Can Coconut track income and expenses separately for each property?',
+      foldedIn: 'Can I track multiple properties in Coconut?',
     },
     existing: ['Do landlords have to use MTD software?', 'What records do landlords need to keep for MTD?'],
   },

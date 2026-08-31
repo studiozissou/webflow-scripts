@@ -520,7 +520,16 @@ So on landlords the visible question was reworded to the approved "Can Coconut t
 
 **Bridging FAQPage schema — prepared but NOT applied. Blocked on permissions.** `/mtd-software/bridging-software` was the one page whose schema exactly mirrored its visible FAQs (11 and 11); it now shows 14 visible against 11 in schema. The schema lives in Webflow's native page `jsonLdSchema` field, readable via `query_pages_schema_markup` but **`bulk_update_pages_schema_markup` returns 403 `insufficient_permissions`** — the API token cannot write it.
 
-Corrected JSON (11 → 14 questions, all 5 `@graph` nodes preserved, `dateModified` bumped) is generated at `.claude/schema/bridging-faqpage-2026-08-31.json`, built programmatically from the live schema so the base is exact. It needs pasting into Page settings → Custom code / Schema markup by hand, or a token with page-write scope.
+Corrected JSON (11 → 14 questions, all 5 `@graph` nodes preserved, `dateModified` bumped) is generated at `.claude/schema/bridging-faqpage-2026-08-31.json`, built programmatically from the live schema so the base is exact. It needs pasting into Page settings → Schema markup by hand, or a token with page-write scope.
+
+**Two write routes tried, both fail — and one fails silently:**
+
+| Route | Result |
+|---|---|
+| `bulk_update_pages_schema_markup` | `403 insufficient_permissions` — explicit, safe |
+| `update_page_settings` with `jsonLdSchema` (typed as a **string**, not an object) | **Returns a success-shaped page object and writes nothing** |
+
+The second is a trap: validation accepts the field, the response looks like a normal successful page update, and `lastUpdated` does not move. Verified by re-querying `query_pages_schema_markup` — still 11 questions, `dateModified` still `2026-07-09`. **Always re-query after this call; never trust its return value.**
 
 **Test result: 51/51 pass**, no flakes.
 

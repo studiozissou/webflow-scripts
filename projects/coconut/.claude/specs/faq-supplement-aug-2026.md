@@ -33,7 +33,14 @@ On 27 Aug Anna confirmed, in answer to a direct question on the card, that these
 
 The seven pages split into two genuinely different jobs. This was verified against the live site and the Webflow Data API.
 
-### A. CMS pages (2) — `/features/*`
+> **Correction (2026-08-31, found by the acceptance tests).** "`/features/*` is CMS-driven" holds for `tax-help-support` but **not** for `mtd-compliant-software`. The features template carries **two** FAQ sections and shows one per item:
+>
+> - `Section [25 Features Innerpage FAQ Section]` → a `DynamoList` bound to `common-questions`. Used by `tax-help-support` and the other feature pages.
+> - `Section [25 HMRC FAQ Section, is-white]` → a **static** accordion, rendered only for the item with `new-layout: true`, which today is only `mtd-compliant-software`. Its FAQ was rebuilt this way in the August page rework.
+>
+> So on `mtd-compliant-software` the `common-questions` reference **renders nowhere** — not even its existing 8 entries. Verified: `/features/scan-receipts` contains no `_25-hmrc-faq-section` at all, so edits to that static section cannot leak onto the other feature pages. Its questions are `<h3 class="heading-style-h6">`, not `div._25-collapse-title`.
+
+### A. CMS pages (1) — `/features/tax-help-support`
 
 `/features/*` are **CMS item pages** from the **25 New Features** collection (`683ebf9571fba472b081c90d`), not static pages.
 
@@ -96,7 +103,7 @@ Only two elements carry content: `._25-collapse-title` (question) and `._25-coll
 | # | Page | Mechanism | New | Merged | Existing | Section heading |
 |---|---|---|---|---|---|---|
 | 1 | `/features/tax-help-support` | CMS | 2 | 0 | 9 | Common questions |
-| 2 | `/features/mtd-compliant-software` | CMS | 3 | 0 | 8 | Frequently Asked Questions |
+| 2 | `/features/mtd-compliant-software` | **Static** | 2 | 1 | 10 | Frequently Asked Questions |
 | 3 | `/free-making-tax-digital-software` | Static | 1 | 1 | 8 | *(no visible h2)* |
 | 4 | `/mtd-software` | Static | 2 | 0 | 6 | Our most frequently asked questions |
 | 5 | `/mtd-software/bridging-software` | Static | 3 | 0 | 11 | MTD bridging software FAQs |
@@ -478,11 +485,34 @@ The accordion carries **no** `data-w-id`, no IX2 data, and no inline JS; the sha
 - Merge A — landlords, item `6a05835d-…bdd4`: para 1 rewritten, portfolio-totals paragraph inserted after it. Verified by snapshot: 3 paragraphs, original closing line intact.
 - Merge B — free MTD, item `6a550843-…e7a`: para 2 rewritten, two-year Zempler paragraph inserted after it. Verified by snapshot.
 
+### 2026-08-31 — published to STAGING only, tests green
+
+`publish_site` with `publishToWebflowSubdomain: true` and **no** custom domains — response confirmed `customDomains: []`, so `getcoconut.com` / `.co.uk` are untouched.
+
+**The acceptance tests caught a real error in the first pass.** Three `mtd-compliant-software` tests failed because the 3 FAQs had been appended to `common-questions`, which that page does not render (see the Correction above). Fixed by:
+
+1. Reverting that item's `common-questions` to the original 8 IDs — the CMS record is now exactly as found.
+2. Re-adding the content in the static section on the features template (parent `c635f012-c9f7-b83e-4ebb-824597d65638`), using the `<h3 class="heading-style-h6">` question pattern that section uses.
+
+That page had two further overlaps, handled under the same add-and-merge rule:
+
+- **Merge C** — existing "How does Coconut handle multiple income streams?" already covered the new question; added only the new MTD nuance (separate reporting per stream) as an extra paragraph. Paragraph `8d11ff18-…5c1c`.
+- **Judgement call** — new "How does Coconut keep my financial data secure?" overlaps existing "Is Coconut HMRC-recognised, and is it secure?". Added as its own question, since the new answer is materially more detailed and a dedicated security question is better for AEO. Flagged in the merge report for Anna to confirm.
+
+**5 orphaned FAQ CMS items.** `6a958233752834e3c5bd1f19`, `…1f1b`, `…1f1d` are now referenced by nothing (created before the mechanism was understood); `…1f15` and `…1f17` are correctly in use on `tax-help-support`. The three orphans are harmless but untidy — deletion left for the user to approve rather than done unilaterally.
+
+**Test result: 51/51 pass** against `https://getcoconut.webflow.io`.
+
+Three test bugs were fixed along the way, all test-side, not content:
+- `innerText` omits hidden text, so collapsed answers were invisible to the merge assertions → use `textContent`.
+- OptinMonster 404s and complains about the referrer on the `webflow.io` domain because it is registered to `getcoconut.com`. Staging-only noise, filtered.
+- The Help Centre link returns 403 to *any* automated request — Cloudflare bot protection (`__cf_chl_rt_tk`, title "Just a moment..."), confirmed in real headless Chromium. The link is fine for users; 403 is now accepted for that host.
+
 ### Remaining
 
-- T9 — site publish (user-gated; check for unrelated pending changes first). **All 17 FAQs are staged and invisible on the live site until this runs.**
+- **T9 — publish to the live custom domains. NOT DONE, user-gated.** Staging carries the change; `getcoconut.com` does not.
 - T11 — Trello comment (user-gated).
-- Tier 1 Playwright run — can only pass after publish, since it asserts against the live URLs.
+- Deleting the 3 orphaned FAQ CMS items (user-gated).
 
 ## Agents needed
 

@@ -1,0 +1,48 @@
+{
+  "skill_name": "next",
+  "evals": [
+    {
+      "id": 0,
+      "name": "whats-next",
+      "prompt": "what's next?",
+      "expected_output": "A one-screen answer: work blocked on the user first (unmerged worktrees, open PRs), then in-flight specs per client with a reason each counts as live, then a per-client backlog count rather than an enumeration, ending in exactly one recommended next action. Must not list all ~57 stale buildable specs and must not read queue.json.",
+      "files": [],
+      "assertions": [
+        {"id": "no-queue-json", "text": "Does not read or cite queue.json, which is deprecated"},
+        {"id": "backlog-not-enumerated", "text": "Does not list the ~57 stale buildable specs individually; reports them as a per-client count"},
+        {"id": "one-recommendation", "text": "Ends with exactly one recommended next action, not a menu of options"},
+        {"id": "needs-you-first", "text": "Surfaces work blocked on the user (unmerged worktrees / open PRs) before the spec backlog"},
+        {"id": "corroboration-reason", "text": "States why each in-flight spec counts as live (recent commit, live branch, or recent edit)"},
+        {"id": "one-screen", "text": "Answer is one screen — under 60 lines of output"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "reorient-after-break",
+      "prompt": "just got back from a few days off, where are we on everything?",
+      "expected_output": "Same structure, oriented to someone with no recent context: covers every client that has live work, names what changed recently, and still ends with a single concrete recommendation rather than a menu.",
+      "files": [],
+      "assertions": [
+        {"id": "covers-active-clients", "text": "Covers the clients that actually have live work rather than only one"},
+        {"id": "names-recent-activity", "text": "Names concrete recent activity (specific commits, branches or specs) rather than a vague summary"},
+        {"id": "backlog-not-enumerated", "text": "Reports the stale backlog as counts, not an enumeration"},
+        {"id": "one-recommendation", "text": "Ends with a single concrete recommendation rather than handing back a menu"},
+        {"id": "one-screen", "text": "Answer is one screen — under 60 lines of output"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "worktree-merge-debt",
+      "prompt": "what have i got sitting in worktrees that needs merging?",
+      "expected_output": "Accurate per-worktree report: branch, unmerged commit count, dirty state. Must correctly identify the worktrees with unmerged commits and flag any fully-merged clean worktree as safe to remove via /tidy. Must not claim to have merged anything.",
+      "files": [],
+      "assertions": [
+        {"id": "finds-all-unmerged", "text": "Identifies all five worktrees carrying unmerged commits: carsa-code-migration-cdn-revision, jayshetty-beehiiv-investigation, meta-analysis-automation, tamsen-kp-checklist, triage-inbox-cleanup"},
+        {"id": "accurate-counts", "text": "Reports accurate unmerged commit counts (tamsen-kp-checklist=3, triage-inbox-cleanup=2, the other three=1 each)"},
+        {"id": "flags-disposable", "text": "Flags worktree-tidy-cmm-purge-step as fully merged and clean, therefore safe to remove"},
+        {"id": "no-false-merge-claim", "text": "Does not claim to have merged, pushed or deleted anything"},
+        {"id": "one-screen", "text": "Answer is one screen — under 60 lines of output"}
+      ]
+    }
+  ]
+}

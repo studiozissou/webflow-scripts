@@ -754,6 +754,22 @@ route in the same breath: the thread is in Gmail's Trash for 30 days, and
 Also list what was considered and kept, one line each with the reason, so the
 user can see the pass is working and correct it if a keep rule is too eager.
 
+### If trashing is refused for lack of scope
+
+`trash_thread` needs the Gmail connector to hold `gmail.modify`. A read-and-draft
+connection has enough scope for the rest of triage but not for this, and it fails with
+"Insufficient scope" rather than doing nothing quietly.
+
+If that happens, stop trashing immediately — do not retry, and do not try `trash_message`
+or a label change as a way around it, because the missing permission is the point. Finish
+the run and report the cleanup exactly as a `--no-delete` pass, saying plainly at the top
+of the section that nothing could be trashed and why, and that the user needs to
+reauthorise the Gmail connector with modify permission to enable it.
+
+This matters most on a scheduled run, where nobody sees the failure as it happens. A
+report that quietly lists threads as trashed when they are all still sitting in the inbox
+is worse than one that says the permission is missing.
+
 ### Step 6 — Learn from corrections
 
 If the user says something should not have been trashed, append that sender to

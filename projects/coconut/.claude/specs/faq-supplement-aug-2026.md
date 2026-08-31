@@ -97,7 +97,7 @@ Only two elements carry content: `._25-collapse-title` (question) and `._25-coll
 |---|---|---|---|---|---|---|
 | 1 | `/features/tax-help-support` | CMS | 2 | 0 | 9 | Common questions |
 | 2 | `/features/mtd-compliant-software` | CMS | 3 | 0 | 8 | Frequently Asked Questions |
-| 3 | `/free-making-tax-digital-software` | Static | 1 | 1 | 9 | *(no visible h2)* |
+| 3 | `/free-making-tax-digital-software` | Static | 1 | 1 | 8 | *(no visible h2)* |
 | 4 | `/mtd-software` | Static | 2 | 0 | 6 | Our most frequently asked questions |
 | 5 | `/mtd-software/bridging-software` | Static | 3 | 0 | 11 | MTD bridging software FAQs |
 | 6 | `/mtd-software/sole-traders` | Static | 3 | 0 | 9 | Frequently Asked Questions |
@@ -358,7 +358,9 @@ Streams A and B are fully independent and can run simultaneously — different m
 1. **Presence** — each of the 15 net-new question strings appears exactly once in the rendered HTML of its target page.
 2. **No duplicates** — no question string appears twice on any page (guards against a double-paste in the Designer, the most likely manual error).
 3. **Counts match** — visible `._25-collapse-item` count per static page equals `existing + new`:
-   - `/mtd-software` 6 → 8 · `/bridging-software` 11 → 14 · `/sole-traders` 9 → 12 · `/landlords` 12 → 13 · `/free-making-tax-digital-software` 9 → 10
+   - `/mtd-software` 6 → 8 · `/bridging-software` 11 → 14 · `/sole-traders` 9 → 12 · `/landlords` 12 → 13 · `/free-making-tax-digital-software` 8 → 9
+
+   > Counts are taken from the Webflow Designer element tree, which is authoritative. An earlier estimate scraped from rendered HTML read 9 existing items on `/free-making-tax-digital-software`; that regex had picked up two question-shaped headings ("Want !Coconut for free for 2 years?", "Ready to make MTD simple?") that are not FAQ entries. The real count is 8.
 4. **CMS order** — on both `/features/*` pages the new questions render **last**, confirming append-not-prepend.
 5. **Merges applied** — both merged answers contain their new sentences, and the two folded-in question strings appear **nowhere** on their page.
 6. **Accordion works** — clicking `._25-collapse-trigger` on a new item expands `._25-collapse-text-content`.
@@ -455,11 +457,32 @@ All original IDs present in original order; new IDs appended last. Verified agai
 
 **T10 — merge report written:** `.claude/reports/faq-merge-report-2026-08-31.md`.
 
+### 2026-08-31 — Stream B complete (not published)
+
+**Method — important correction to the spec's original assumption.** `data_element_builder` is the wrong tool: it **silently ignores** `styles`, `text` and `attributes`. A first attempt produced an unclassed block with Webflow's default RichText placeholder (H1–H6, lorem ipsum, lists) and the default "This is some text inside of a div block." It was removed immediately (element `e0963e99-…a61c7`), leaving the page as found.
+
+**Use `data_whtml_builder` instead.** It accepts the raw HTML block and applies the existing `_25-collapse-*` classes correctly. Verified by snapshot: type styles, plus icon and brand-teal links all render as on existing items. Omit Webflow's own `w-inline-block` / `w-richtext` classes — Webflow adds those itself.
+
+The accordion carries **no** `data-w-id`, no IX2 data, and no inline JS; the shared stylesheet has no rule hiding `._25-collapse-text-content` either. Behaviour therefore comes from class/structure alone, which is why an identically-classed block works. Confirmed by the site owner.
+
+| Page | Parent element ID | Items |
+|---|---|---|
+| `/mtd-software` | `cb17b50d-12f9-fea2-8853-7ac5db88c65f` | 6 → 8 |
+| `/mtd-software/bridging-software` | `6c1acab8-5b90-70ef-70dc-493f4367bb33` | 11 → 14 |
+| `/mtd-software/sole-traders` | `63729154-1db9-a6c3-e1d9-b87f251db3b9` | 9 → 12 |
+| `/mtd-software/landlords` | `6a05835d-bb69-f8d1-b1c8-a4370b70bd99` | 12 → 13 |
+| `/free-making-tax-digital-software` | `6a550843-f8fa-d198-f632-ac72f3d62e3b` | 8 → 9 |
+
+**Merges applied.** Both done as `set_text` on the existing paragraph plus an inserted sibling paragraph, so the existing question and the original closing paragraph are untouched.
+
+- Merge A — landlords, item `6a05835d-…bdd4`: para 1 rewritten, portfolio-totals paragraph inserted after it. Verified by snapshot: 3 paragraphs, original closing line intact.
+- Merge B — free MTD, item `6a550843-…e7a`: para 2 rewritten, two-year Zempler paragraph inserted after it. Verified by snapshot.
+
 ### Remaining
 
-- T4–T8 — the 5 static pages. **Blocked**: Webflow Designer MCP not connected. Needs an open, foregrounded Designer tab.
-- T9 — site publish (user-gated; check for unrelated pending changes first).
+- T9 — site publish (user-gated; check for unrelated pending changes first). **All 17 FAQs are staged and invisible on the live site until this runs.**
 - T11 — Trello comment (user-gated).
+- Tier 1 Playwright run — can only pass after publish, since it asserts against the live URLs.
 
 ## Agents needed
 

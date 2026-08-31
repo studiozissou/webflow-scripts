@@ -47,7 +47,7 @@ const PAGES = [
   {
     path: '/free-making-tax-digital-software',
     kind: 'static',
-    expectedCount: 10,
+    expectedCount: 9,
     added: ["What happens to my records if I don't continue paying?"],
     merged: {
       question: "What's included free vs paid?",

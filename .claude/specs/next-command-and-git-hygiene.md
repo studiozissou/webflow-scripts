@@ -285,10 +285,17 @@ by execution instead:
 
 1. Is 21 days the right corroboration window? It is one full work cycle for this
    repo, but it is a judgement call, tunable in one place.
-2. Should `/next` read Notion? It is the live source of truth for tasks since
-   `queue.json` was retired, but adds an MCP dependency to a command that must
-   never stall — MCP flakiness cost 51 messages in the same window. **Assumption
-   taken: no Notion read in v1**; `/next` stays fast and offline-safe.
+2. ~~Should `/next` read Notion?~~ **Resolved 2026-08-31 — yes.** Notion is read
+   by the skill, but deliberately *not* by `gather.py`, which stays fast and
+   offline-safe; a Notion outage degrades the report instead of failing it.
+
+   It earned its place immediately: Notion is the only source that knows about
+   other people. The first run surfaced four chase-ups (Rishi 12 days overdue,
+   Yoni, Tomek ×3, Ryan due same day) that neither git nor the specs can see.
+   Cross-checking it against git also caught **two P0 tasks still open whose work
+   had already shipped** — NEM conclusion engine v2 (`e877442`, 17 Aug) and the
+   MailerSend upgrade (`fe0a49f`, 18 Aug). That cross-check is now part of the
+   skill.
 
 ## Out of Scope
 

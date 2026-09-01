@@ -88,9 +88,25 @@ separate, manual publish.
 
 ### Deploy log
 
-| Date       | Version | Published to         | Notes                                                            |
-| ---------- | ------- | -------------------- | ---------------------------------------------------------------- |
-| 2026-09-01 | 1.0.0   | jayshetty.webflow.io | First deploy. Verified — see below. Custom domain NOT published. |
+| Date       | Version | Published to         | Notes                                                                                       |
+| ---------- | ------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| 2026-09-01 | 1.0.0   | jayshetty.webflow.io | First deploy. Verified — see below. Custom domain NOT published.                            |
+| 2026-09-01 | 1.1.0   | jayshetty.webflow.io | Appended the email unencoded while chasing a dropped survey response. Ruled out as a cause. |
+| 2026-09-01 | 1.0.0   | jayshetty.webflow.io | Reverted to encoding. **Current.**                                                          |
+
+### Encoding was not the bug
+
+A real signup produced a survey response beehiiv did not record, and the encoded
+`?email=` parameter was the first suspect. It is not the cause. The same address was
+pushed through both versions on staging, minutes apart:
+
+| Version | URL parameter                    | Value beehiiv rendered into the field |
+| ------- | -------------------------------- | ------------------------------------- |
+| 1.0.0   | `will%2Bsurvey3%40teamzissou.io` | `will+survey3@teamzissou.io`          |
+| 1.1.0   | `will+survey3@teamzissou.io`     | `will+survey3@teamzissou.io`          |
+
+beehiiv parses both to the same address, so the form always received the right one.
+Encoding is kept because an unencoded `&` in an address would truncate the parameter.
 
 ## Testing
 
@@ -121,9 +137,38 @@ created:
 - No new console errors: staging shows the same pre-existing SVG attribute warnings
   as production, and fewer 404s.
 
-Still outstanding, and the reason this is not signed off: **one real end-to-end
-signup** confirming the survey actually submits with the prefilled address. That
-writes to the client's live beehiiv, so it is a deliberate human step.
+### End-to-end signup, 2026-09-01
+
+Will ran a real signup on staging: redirected correctly, subscribed, survey opened
+prefilled. **The survey response did not record.** A separate run, opening the survey
+URL directly in incognito with an address that was already a subscriber, recorded
+fine.
+
+**Cause (probable, not proven): a race.** The survey posts to `/post_subscribe_form`
+and, per beehiiv's own `no_subscription_error_message`, validates the address against
+an existing subscriber **at submit time**. Signups reach beehiiv asynchronously via
+Webflow → Zapier, and this redirect fires 1.2s after Webflow accepts the form — so a
+brand-new subscriber may not exist in beehiiv yet when the survey is submitted. That
+fits both runs: already-subscribed recorded, brand-new did not.
+
+**Decision: not fixing (Will, 2026-09-01).** The subscription itself is never at risk.
+The redirect happens after Webflow has accepted the form, so the Zapier sync fires
+regardless and nobody fails to subscribe. The only exposure is a survey response
+silently not recording, and in practice Zapier lands well inside the minute or two it
+takes to answer nine questions. The one dropped response was most likely an unusually
+fast submit.
+
+Two things that make this worth a glance later rather than never:
+
+- Will's understanding is that the Zapier automation **only creates subscribers and
+  does not update them** — unverified, no Zapier access from here. If so, a response
+  lost to the race is lost permanently; nothing backfills it.
+- The failure is silent. There is no error surfaced to us, only an absent response.
+
+**Watch signal:** survey responses trailing signup volume. If that shows up, the fix
+is to route signups through beehiiv's own subscribe flow (its homepage form posts to
+`/create`, and this survey _is_ beehiiv's post-subscribe form) so the subscriber
+exists synchronously and Zapier leaves the critical path.
 
 **Careful when re-testing the survey by hand:** beehiiv remembers an address across
 visits, so a no-param load after a `?email=` load still shows the field prefilled.

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-20",
+  "lastUpdated": "2026-08-31",
   "note": "nem-quiz-transition-guard planned 2026-08-19 \u2014 expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -332,6 +332,16 @@
       "critical": false,
       "created": "2026-08-20",
       "description": "SEMrush remediation for tamsenfadal.com: title tags under 70 chars while keeping the '| Tamsen Fadal' entity suffix, 10 duplicate meta description pairs made distinct, llms.txt rewritten to llmstxt.org Markdown, retired Apple Podcasts id1560877893 links repointed, and the hot-girl-menopause-smoothie redirect chain removed."
+    },
+    {
+      "slug": "faq-supplement-aug-2026",
+      "url": "https://www.getcoconut.com/mtd-software",
+      "spec": "tests/acceptance/faq-supplement-aug-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-31",
+      "description": "Coconut supplementary FAQ content (August 2026): 15 new FAQ entries plus 2 merged answers across 7 landing pages — 2 CMS pages via the 25 New Features common-questions multi-reference (appended last) and 5 static pages via duplicated _25-collapse-item accordion blocks. Asserts per-page item counts, no duplicate questions, merged copy present with the folded-in questions absent, pre-existing questions retained, and the 4 new links resolving."
     }
   ]
 }

@@ -1,12 +1,12 @@
-# For Anna — three things to decide before the "!Coconut" change goes live
+# For Anna — two decisions and one heads-up before the "!Coconut" change goes live
 
 **Date:** 2026-08-31
 **Re:** [Trello card 123 — removing the `!` from `!Coconut`](https://trello.com/c/887uZsDt/123-from-from-anywhere-on-the-website-coconut-is-mentioned)
 **Spec:** `projects/coconut/.claude/specs/remove-brand-exclamation-mark.md`
 
 We're removing the `!` from `Coconut` everywhere it appears in copy across the site.
-Leah confirmed on 14 July that there's no SEO downside. Three things need a decision
-from you before, or shortly after, it goes live.
+Leah confirmed on 14 July that there's no SEO downside. Two things need a decision
+from you before, or shortly after, it goes live, and one is just for your awareness.
 
 ---
 
@@ -32,15 +32,15 @@ or a corrected version of the sentence from whoever owns your regulatory copy.
 
 ---
 
-## 2. What about `@Coconut`?
+## 2. `@Coconut` — we're leaving it alone
 
-The same footer sentence uses `@Coconut`, and your Organization structured data lists
-the company as `@Coconut Platform Ltd`. Companies House has it as **Coconut Platform Ltd**,
-with no `@`.
+The same footer sentence uses `@Coconut`, your Organization structured data lists the
+company as `@Coconut Platform Ltd`, and the legal pages say `@Coconut Platform Limited`.
+Companies House has it as **Coconut Platform Ltd**, with no `@`.
 
-The card only asked about the `!`, so `@` is currently out of scope. But it's the same
-kind of problem, and if you want both cleaned up it's much cheaper to do in one pass
-than to come back to the footer twice.
+The card only asked about the `!`, so we're **not** touching the `@` — just flagging it
+so you know it's there and that leaving it was deliberate. If you ever want it changed,
+it's a small, separate job.
 
 ---
 

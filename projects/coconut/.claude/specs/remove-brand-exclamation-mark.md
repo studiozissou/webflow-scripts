@@ -38,6 +38,7 @@ Confirmed with Will on 2026-08-31 before this spec was written.
 | D4 | All four surfaces in scope: static page copy + nav/footer components, CMS items, SEO/OG/JSON-LD, and image alt text. | Matches Leah's consistency requirement. |
 | D5 | **Claude does every edit, including Designer edits. Will publishes.** | Publishing pushes the *whole* site live including other people's unpublished work — see R1 in §10. |
 | D6 | Keep `"alternateName": "!Coconut"` in the Organization schema. Recommendation, one-line flip if rejected. | `alternateName` is schema.org's designated field for an alias. Retaining the old form helps Google reconcile legacy citations of `!Coconut` to the same entity. `"name"` is already `"Coconut"` and stays that way. |
+| D7 | **`@Coconut` is out of scope.** Confirmed by Will 2026-08-31. | The card asks about `!` only. Measured for the record: 697 live occurrences from 3 sources — FCA footer line (460), Organization `legalName` (231), legal page body copy (6). Zero in CMS or page settings. Fixable in ~15 min if ever reopened, but it is a legal-name question, not a brand-copy one. |
 
 **No ADR required.** This is a content change with no structural or architectural impact.
 
@@ -172,8 +173,9 @@ OG tags too — **do not** write OG fields directly, or you will break the copy-
     of the above, uploaded twice under different asset IDs. Asset hygiene, not a brand issue;
     noted only so it is not mistaken for a missed occurrence.
 - The FCA footer disclosure sentence (D3).
-- `"legalName": "@Coconut Platform Ltd"` and the `@Coconut` styling generally — the card
-  is about `!` only. Raised with Anna in the same note as the FCA line (§9).
+- `@Coconut` in every form — `"legalName": "@Coconut Platform Ltd"`, the FCA footer line,
+  and `@Coconut Platform Limited` in legal page copy (D7). Mentioned to Anna for awareness
+  only (§9); no action planned.
 - External profiles (Google Business Profile, App Store, Play Store, social bios). Leah
   recommended these; they are not web-dev work. Listed for Anna in §9.
 - Archived and style-guide pages under `/archive-2025/*` and `/style-guide/*` — all
@@ -262,7 +264,12 @@ on `!Coconut` is therefore exact and complete — no normalisation or entity dec
   in most places — preserve the existing character, do not normalise it.
 - Never touch a match inside `src=`, `href=`, `srcset=`, or any `https://` value.
 - Never touch the FCA disclaimer element `f1f900fd-…` (D3).
-- Do not alter `@Coconut` anywhere.
+- Do not alter `@Coconut` anywhere (D7).
+- **Where D2 and D7 collide — leave it looking odd.** `/legal/terms` is in scope and
+  contains `@Coconut Platform Limited trading as !Coconut (…)`. Applying the rule yields
+  `@Coconut Platform Limited trading as Coconut`, which reads inconsistently. That is the
+  correct output: the `!` goes, the `@` stays. Do not "tidy" the `@`, and do not skip the
+  `!` to preserve symmetry. Same applies to the privacy and partnership legal pages.
 
 ---
 
@@ -311,9 +318,9 @@ Written to `projects/coconut/.claude/comms/fca-footer-and-brand-styling-2026-08-
    This is a visible inconsistency and the main reason to get an answer quickly.
    The sentence also names `!Coconut` as a *trading name*, so removing it is a legal
    question, not a copy question.
-2. **`@Coconut` styling.** Appears in the same footer line and as `legalName` in the
-   Organization schema. Out of scope for this card, but it is the same class of issue and
-   Anna may want it handled in one pass.
+2. **`@Coconut` styling — for awareness, not action (D7).** Appears in the same footer
+   line, as `legalName` in the Organization schema, and in legal page copy. Out of scope;
+   left as-is. Mentioned so Anna knows it exists and is deliberate.
 3. **Two FAQ items near regulated wording** — `697b52260f39470b2a4be284`
    (data access/sharing) and `6964de4220525fd63c741c28` (FCA-regulated Open Banking).
    Being changed, but flagged for a read rather than a blind replace.
@@ -490,9 +497,8 @@ largest. Realistic wall-clock with parallelism: **~4 hours** against 6–8 hours
 
 1. **Does Anna approve changing the FCA footer line?** Blocks nothing, but the site ships
    visibly inconsistent until answered. Highest priority.
-2. **Should `@Coconut` be dealt with in the same pass?** Out of scope as written.
-3. **Who owns the external profiles** Leah recommended updating?
-4. **Is `/mtd-for-sole-traders` (draft) still wanted?** Included on the assumption it is.
+2. **Who owns the external profiles** Leah recommended updating?
+3. **Is `/mtd-for-sole-traders` (draft) still wanted?** Included on the assumption it is.
 
 ---
 

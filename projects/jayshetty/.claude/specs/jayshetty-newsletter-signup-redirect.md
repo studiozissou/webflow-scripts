@@ -4,7 +4,7 @@
 **Site:** Webflow site `64c10a2010e1a379d08bf030` (jayshetty.webflow.io / www.jayshetty.me)
 **Slug:** `jayshetty-newsletter-signup-redirect`
 **Date:** 2026-09-01
-**Status:** Deployed and verified on jayshetty.webflow.io (2026-09-01). Live custom domain NOT published — awaiting one manual end-to-end signup, then sign-off.
+**Status:** Deployed and verified on jayshetty.webflow.io (2026-09-01). End-to-end signup confirmed working. Live custom domain NOT yet published.
 **Related:** `projects/jayshetty/.claude/research/beehiiv-welcome-survey-not-triggering.md` (2026-08-27)
 
 ---

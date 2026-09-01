@@ -1,0 +1,159 @@
+<!doctype html>
+<!-- Standalone probe: runs the production Spotify video path in whatever browser opens it, so the Safari video question can be answered by looking. Serve over http, not file://. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spotify video path — browser probe</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         margin: 0; padding: 24px; max-width: 900px; }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  .sub { opacity: .7; margin: 0 0 20px; }
+  #stage { width: 100%; aspect-ratio: 16/9; background: #111; border-radius: 10px;
+           overflow: hidden; margin: 16px 0; }
+  #stage iframe { width: 100%; height: 100%; border: 0; display: block; }
+  button { font: inherit; padding: 9px 18px; border-radius: 7px; border: 1px solid currentColor;
+           background: transparent; color: inherit; cursor: pointer; }
+  button:disabled { opacity: .45; cursor: default; }
+  .verdict { padding: 12px 14px; border-radius: 8px; font-weight: 600; margin: 14px 0;
+             border: 1px solid; }
+  .wait { opacity: .7; }
+  .yes  { color: #0a7f3f; }
+  .no   { color: #b3261e; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td { padding: 3px 10px 3px 0; vertical-align: top; }
+  td:first-child { opacity: .65; white-space: nowrap; width: 1%; }
+  pre { background: rgba(128,128,128,.12); padding: 10px; border-radius: 7px;
+        max-height: 220px; overflow: auto; font-size: 12px; }
+  label { display: block; margin: 10px 0 4px; opacity: .7; font-size: 13px; }
+  input { font: inherit; padding: 7px 9px; width: 100%; box-sizing: border-box;
+          border-radius: 6px; border: 1px solid rgba(128,128,128,.5);
+          background: transparent; color: inherit; }
+</style>
+</head>
+<body>
+
+<h1>Spotify <code>/video</code> embed — browser probe</h1>
+<p class="sub">Runs the exact path the Jay Shetty podcast player uses in Chrome:
+<code>createController</code>, then swap the iframe to <code>/video</code>.
+Open this in <strong>Safari</strong> to settle whether Safari can play video.</p>
+
+<label for="ep">Spotify episode id</label>
+<input id="ep" value="0QrCDajVXiP1XDvof7Q1Qg">
+
+<p style="margin-top:16px"><button id="run">Run the video path</button></p>
+
+<div id="verdict" class="verdict wait">Not started.</div>
+<div id="stage"><div id="target"></div></div>
+
+<table>
+  <tr><td>Engine</td><td id="engine"></td></tr>
+  <tr><td>iFrame API</td><td id="api">not loaded</td></tr>
+  <tr><td>Controller</td><td id="ctl">none</td></tr>
+  <tr><td>ready fired</td><td id="rdy">no</td></tr>
+  <tr><td>iframe src</td><td id="src">—</td></tr>
+  <tr><td>playback_update</td><td id="pu">0 before swap / 0 after</td></tr>
+</table>
+
+<p style="margin:16px 0 4px;opacity:.7;font-size:13px">Messages from Spotify</p>
+<pre id="log">(none yet)</pre>
+
+<script>
+var S = { before: 0, after: 0, swapped: false, ready: false, lines: [] };
+var $ = function (id) { return document.getElementById(id); };
+
+$("engine").textContent = (typeof window.GestureEvent !== "undefined")
+  ? "WebKit — GestureEvent present (this is the branch that skips video in production)"
+  : "non-WebKit — GestureEvent absent (production gives this browser video)";
+
+function log(msg) {
+  S.lines.unshift(new Date().toLocaleTimeString() + "  " + msg);
+  $("log").textContent = S.lines.slice(0, 40).join("\n");
+}
+
+function verdict() {
+  var v = $("verdict");
+  if (S.after > 0) {
+    v.className = "verdict yes";
+    v.textContent = "VIDEO WORKS HERE — " + S.after +
+      " playback updates from the /video page. Safari can be moved onto the video path.";
+  } else if (S.swapped && S.ready) {
+    v.className = "verdict no";
+    v.textContent = "Swapped to /video but no playback reported yet. " +
+      "If the frame above stays audio-only, this browser is being degraded by Spotify.";
+  } else if (S.ready) {
+    v.className = "verdict wait";
+    v.textContent = "Controller ready on the audio embed. Swapping to /video…";
+  }
+}
+
+window.addEventListener("message", function (e) {
+  if ((e.origin || "").indexOf("spotify.com") === -1) return;
+  var p = e.data;
+  if (typeof p === "string") { try { p = JSON.parse(p); } catch (err) { return; } }
+  if (!p || !p.type) return;
+  if (p.type === "playback_update") {
+    S.swapped ? S.after++ : S.before++;
+    $("pu").textContent = S.before + " before swap / " + S.after + " after";
+  } else {
+    log(p.type + (S.swapped ? "  (after swap)" : ""));
+  }
+  verdict();
+});
+
+$("run").addEventListener("click", function () {
+  var EP = $("ep").value.trim();
+  if (!EP) return;
+  this.disabled = true;
+  $("verdict").textContent = "Loading Spotify iFrame API…";
+
+  window.onSpotifyIframeApiReady = function (api) {
+    $("api").textContent = "loaded";
+    log("iFrame API ready");
+    api.createController($("target"),
+      { uri: "spotify:episode:" + EP, width: "100%", height: "100%" },
+      function (controller) {
+        $("ctl").textContent = "created";
+        log("controller created");
+
+        controller.addListener("ready", function () {
+          if (S.ready) return;
+          S.ready = true;
+          $("rdy").textContent = "yes";
+          log("controller ready — swapping to /video");
+          verdict();
+
+          var frame = document.querySelector("#stage iframe");
+          if (!frame) { log("ERROR: no iframe to swap"); return; }
+          frame.removeAttribute("loading");
+          frame.addEventListener("load", function () {
+            log("/video page loaded");
+            try { controller.play(); } catch (err) {}
+          });
+          frame.src = "https://open.spotify.com/embed/episode/" + EP +
+                      "/video?utm_source=iframe-api";
+          S.swapped = true;
+          $("src").textContent = "/embed/episode/" + EP + "/video?utm_source=iframe-api";
+          try { controller.play(); } catch (err) {}
+
+          setTimeout(function () {
+            if (S.after === 0) {
+              log("no playback from /video after 8s — production would fall back to audio here");
+              verdict();
+            }
+          }, 8000);
+        });
+      });
+  };
+
+  var s = document.createElement("script");
+  s.src = "https://open.spotify.com/embed/iframe-api/v1";
+  s.async = true;
+  s.onerror = function () { log("ERROR: iFrame API script failed to load"); };
+  document.head.appendChild(s);
+});
+</script>
+</body>
+</html>

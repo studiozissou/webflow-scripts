@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>NEM Test — rapport template (voorbeeld)</title>
+<style>
+  @page { size: A4; margin: 0; }
+
+  :root {
+    --color--black: #292828;
+    --color--white: #ffffff;
+    --color--light-grey: #ecebe8;
+    --color--grey: #9f9c8b;
+    --color--olive-medium: #706d56;
+    --color--accent: #fafa7d;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color--white);
+    color: var(--color--black);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .report_wrap { max-width: 640px; margin: 0 auto; padding: 64px 40px 48px; }
+
+  .report_cover { padding-bottom: 40px; margin-bottom: 40px; border-bottom: 1px solid var(--color--light-grey); }
+  .report_logo { display: block; height: 32px; width: auto; margin-bottom: 48px; }
+  .report_title {
+    font-family: Montserrat, Arial, Helvetica, sans-serif;
+    font-size: 28px;
+    line-height: 1.25;
+    font-weight: 600;
+    margin: 0 0 16px;
+  }
+  .report_meta { font-size: 14px; color: var(--color--olive-medium); margin: 0; }
+  .report_meta span { white-space: nowrap; }
+
+  .report_intro {
+    font-size: 18px;
+    font-style: italic;
+    color: var(--color--olive-medium);
+    border-left: 2px solid var(--color--accent);
+    padding-left: 20px;
+    margin: 0 0 40px;
+  }
+  .report_intro p { margin: 0; }
+
+  .report_section { margin: 0 0 32px; break-inside: avoid; }
+  .report_section-label {
+    font-family: Montserrat, Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color--olive-medium);
+    margin: 0 0 12px;
+    break-after: avoid;
+  }
+  .report_section-body p { margin: 0 0 16px; }
+  .report_section-body p:last-child { margin-bottom: 0; }
+
+  .report_footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color--light-grey);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--color--grey);
+  }
+  .report_disclaimer { margin: 0 0 8px; }
+  .report_site { margin: 0; color: var(--color--olive-medium); }
+</style>
+</head>
+<body>
+
+<div class="report_wrap">
+
+  <header class="report_cover">
+    <img class="report_logo" data-slot="logo" src="https://cdn.prod.website-files.com/REPLACE/nem-life-logo.svg" alt="NEM Life">
+    <h1 class="report_title" data-slot="title">Jouw NEM Test rapport</h1>
+    <p class="report_meta">
+      <span data-slot="first-name">Sanne</span> &middot; <span data-slot="date">1 september 2026</span>
+    </p>
+  </header>
+
+  <div class="report_intro" data-slot="intro-line" data-slot-optional="true">
+    <p>Ik voel spanning zodra ik iets wil doen - terwijl ik weet dat het onnodig is</p>
+  </div>
+
+  <section class="report_section">
+    <h2 class="report_section-label" data-slot="label-opening" data-slot-optional="true">Wat je herkent</h2>
+    <div class="report_section-body" data-slot="opening">
+      <p>Placeholder. Twee tot vier alinea's die de lezer bij naam aanspreken en benoemen wat de test heeft laten zien. Deze tekst komt uit het veld opening.</p>
+      <p>Een tweede alinea, zodat regelafstand en marges in de export kloppen.</p>
+    </div>
+  </section>
+
+  <section class="report_section">
+    <h2 class="report_section-label" data-slot="label-reaction" data-slot-optional="true">Hoe je reageert</h2>
+    <div class="report_section-body" data-slot="reaction">
+      <p>Placeholder voor het veld reaction.</p>
+      <p>Een tweede alinea.</p>
+    </div>
+  </section>
+
+  <section class="report_section">
+    <h2 class="report_section-label" data-slot="label-origin" data-slot-optional="true">Waar het vandaan komt</h2>
+    <div class="report_section-body" data-slot="origin">
+      <p>Placeholder voor het veld origin.</p>
+      <p>Een tweede alinea.</p>
+    </div>
+  </section>
+
+  <section class="report_section">
+    <h2 class="report_section-label" data-slot="label-cost" data-slot-optional="true">Wat het je kost</h2>
+    <div class="report_section-body" data-slot="cost">
+      <p>Placeholder voor het veld cost.</p>
+      <p>Een tweede alinea.</p>
+    </div>
+  </section>
+
+  <section class="report_section">
+    <h2 class="report_section-label" data-slot="label-closing" data-slot-optional="true">Wat nu</h2>
+    <div class="report_section-body" data-slot="closing">
+      <p>Placeholder voor het veld closing.</p>
+      <p>Een tweede alinea.</p>
+    </div>
+  </section>
+
+  <footer class="report_footer">
+    <p class="report_disclaimer" data-slot="disclaimer">Dit rapport is geen psychologische diagnose. Het is een spiegel op basis van jouw antwoorden - bedoeld als beginpunt voor reflectie, niet als eindoordeel.</p>
+    <p class="report_site" data-slot="site-url">nemmatters.com</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

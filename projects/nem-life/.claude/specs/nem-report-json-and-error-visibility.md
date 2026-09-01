@@ -3,7 +3,7 @@
 **Client:** NEM Life
 **Slug:** `nem-report-json-and-error-visibility`
 **Created:** 2026-08-17
-**Status:** Ready to Build — §7 (prompt input contract, added 2026-09-01). §1–3 built and verified live 2026-08-18 (execs 49 happy / 50 failure); §4–5 built 2026-08-18/19; §6 still Ready to Build.
+**Status:** §7 built 2026-09-01 as changeset `backend/changesets/nem-prompt-input-contract/` — **prepared, not yet applied to live** (Will applies by hand; `npm run check:nem-drift` reports drift until then). §1–3 built and verified live 2026-08-18 (execs 49 happy / 50 failure); §4–5 built 2026-08-18/19; §6 still Ready to Build, blocked on Alex's design.
 **Priority:** P0
 **Type:** feature
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, active) and `/submit` (`LDI1eWR35lwX6WLp`)

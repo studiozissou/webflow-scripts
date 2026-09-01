@@ -4,7 +4,7 @@
 **Site:** Webflow site `64c10a2010e1a379d08bf030` (jayshetty.webflow.io / www.jayshetty.me)
 **Slug:** `jayshetty-newsletter-signup-redirect`
 **Date:** 2026-09-01
-**Status:** Approach chosen (script) — snippet written, awaiting deploy
+**Status:** Deployed and verified on jayshetty.webflow.io (2026-09-01). Live custom domain NOT published — awaiting one manual end-to-end signup, then sign-off.
 **Related:** `projects/jayshetty/.claude/research/beehiiv-welcome-survey-not-triggering.md` (2026-08-27)
 
 ---
@@ -292,8 +292,8 @@ across `/`, `/about-jay`, `/press`, `/speaking`, `/connect`, `/blog`, `/podcast`
 |---|---|---|---|
 | 0 | ~~Decide: script or native redirect~~ — **done, script chosen** (§3.4) | — (Will) | — |
 | 2 | Write the footer snippet to `projects/jayshetty/newsletter-redirect/footer-code.html` as the git mirror of what is pasted into Webflow | code-writer | 0 |
-| 3 | Deploy: paste into Project Settings → Custom Code → Footer; publish to **jayshetty.webflow.io only** | — (manual, Will) | 2 |
-| 4 | Verify on the Webflow subdomain — all three forms, real email, Tier 1 + Tier 3 | qa | 3 |
+| 3 | ~~Deploy~~ — **done.** Registered inline script `jayshettynewsletterredirect` v1.0.0, applied site-wide footer, published to jayshetty.webflow.io | Claude | 2 |
+| 4 | ~~Verify on the Webflow subdomain~~ — **done** for everything automatable; see README "Verified on staging". One manual end-to-end signup still outstanding | Claude / Will | 3 |
 | 5 | Publish to the custom domain once signed off | — (manual, Will) | 4 |
 | 6 | Write `projects/jayshetty/newsletter-redirect/README.md` recording the deploy surface and the 406 gotcha | code-writer | 2 |
 

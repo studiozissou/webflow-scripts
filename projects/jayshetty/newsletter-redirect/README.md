@@ -3,9 +3,9 @@
 Source of truth for the snippet deployed to **jayshetty.me** site-wide footer code.
 Spec: `projects/jayshetty/.claude/specs/jayshetty-newsletter-signup-redirect.md`.
 
-| File               | Deploys to                                                     |
-| ------------------ | -------------------------------------------------------------- |
-| `footer-code.html` | Project Settings → Custom Code → **Footer** (before `</body>`) |
+| File               | Deploys as                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `footer-code.html` | Registered **inline script** `jayshettynewsletterredirect`, applied site-wide, footer |
 
 Site `64c10a2010e1a379d08bf030`. Site-wide, not per-page — the three forms it targets
 are in global components and appear on every page.
@@ -60,19 +60,37 @@ attribution.
 
 ## Deploying
 
-Paste `footer-code.html` into Project Settings → Custom Code → Footer, then publish.
+Deployed via the Webflow **scripts API**, not the freeform footer field. This avoids
+both of the client-specific gotchas recorded in
+`projects/jayshetty/podcast-player/README.md` — the HTTP 406 on freeform custom-code
+writes, and the Designer's code editor reformatting a pasted block and truncating a
+long URL mid-path. It is also additive: it does not touch the site's existing inline
+footer scripts (Hotjar, Meta Pixel, the popup scheduler, and so on).
 
-Two client-specific gotchas, carried over from `projects/jayshetty/podcast-player/README.md`:
+The JS body of `footer-code.html` (without the HTML comment and `<script>` tags) is
+registered as an inline script and applied site-wide:
 
-- Webflow's freeform custom-code API has been returning **HTTP 406** on every write
-  for this site while reads and publishes work, so the footer field has to be edited
-  by hand.
-- The Designer's code editor has previously reformatted a pasted block and truncated
-  a long URL mid-path. After pasting, re-open the field and confirm the survey URL is
-  intact and ends in `...f8890e18bd5e`.
+```
+register_inline_script  -> id "jayshettynewsletterredirect", version 1.0.0
+set_site_scripts        -> applied site-wide, location "footer"
+```
+
+`set_site_scripts` was used rather than `add_site_script` because the site had no
+site-level custom code block at all, and `add_site_script` 404s in that case. Nothing
+was displaced — `get_site_scripts` returned the same 404 beforehand, confirming there
+were no existing site-level scripts. **On any future change, use `add_site_script`,**
+now that the block exists; `set_site_scripts` replaces the whole list.
+
+To ship a change: edit `footer-code.html`, then register a new version and re-apply it.
 
 Publish to **jayshetty.webflow.io only** until signed off; the custom domain is a
 separate, manual publish.
+
+### Deploy log
+
+| Date       | Version | Published to         | Notes                                                            |
+| ---------- | ------- | -------------------- | ---------------------------------------------------------------- |
+| 2026-09-01 | 1.0.0   | jayshetty.webflow.io | First deploy. Verified — see below. Custom domain NOT published. |
 
 ## Testing
 
@@ -86,9 +104,26 @@ npx playwright test --config=tests/acceptance/playwright.config.js jayshetty-new
 
 Per repo `CLAUDE.md`, ask before running Playwright.
 
-Manual checks that cannot be automated are listed in the spec's Tier 3, the important
-one being a single real end-to-end signup confirming the survey submits with the
-prefilled address.
+### Verified on staging, 2026-09-01
+
+Tested against `jayshetty.webflow.io` with the real submission blocked at the event
+and XHR/fetch layers, so no Webflow submission, Zapier run or beehiiv subscriber was
+created:
+
+- All three forms (footer, popup, banner) redirect to the survey with the email
+  appended; beehiiv renders it as a hidden, prefilled field on arrival.
+- Plus-addressed emails survive the round trip — `will+staging@teamzissou.io` encodes
+  to `%2B` and decodes correctly at beehiiv rather than arriving with a space.
+- Revealing `.w-form-fail` does not redirect, tested on a page where nothing had
+  succeeded so the once-only guard was untouched.
+- Revealing the search form's success panel does not redirect.
+- Suggest-a-Topic on `/podcast` does not redirect, and does not match the selector.
+- No new console errors: staging shows the same pre-existing SVG attribute warnings
+  as production, and fewer 404s.
+
+Still outstanding, and the reason this is not signed off: **one real end-to-end
+signup** confirming the survey actually submits with the prefilled address. That
+writes to the client's live beehiiv, so it is a deliberate human step.
 
 **Careful when re-testing the survey by hand:** beehiiv remembers an address across
 visits, so a no-param load after a `?email=` load still shows the field prefilled.

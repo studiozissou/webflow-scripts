@@ -16,6 +16,7 @@ import { resolve } from "node:path";
 
 import { buildComponent, SRC_DIR } from "../../tools/nem/build-component.js";
 import * as REAL_TEXTS from "../../projects/nem-life/src/nem-conclusion-texts.js";
+import { readTextRows } from "../../tools/nem/build-conclusion-texts.js";
 
 const bundle = buildComponent();
 
@@ -125,8 +126,14 @@ describe("Christel's copy reaches the bundle intact", () => {
     );
   });
 
+  /* Taken from the CSV rather than quoted inline: Christel revises this copy, and a test
+   * that pins her exact wording fails on an edit that is not a defect. What matters is
+   * that her text reached the bundle instead of a placeholder. */
   test("real Dutch copy is present, not just placeholders", () => {
-    assert.match(bundle, /Op basis van je antwoorden springt er niets duidelijk uit/);
+    const flatLow = readTextRows().find((r) => r.gender === "female" && r.key === "flat-low");
+    const opening = flatLow.nl.split("\n\n")[0].slice(0, 60);
+    assert.ok(opening.length > 40, "expected the flat-low Dutch text to be written");
+    assert.ok(bundle.includes(opening), "flat-low Dutch copy did not reach the bundle");
   });
 
   test("paragraph breaks survive into the bundle as escaped newlines", () => {

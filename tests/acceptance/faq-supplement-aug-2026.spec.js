@@ -42,18 +42,18 @@ const PAGES = [
     // features template, shown only for the new-layout item. Its
     // common-questions reference renders nowhere.
     path: '/features/mtd-compliant-software',
+    // Final client decision: the merge was undone in favour of the approved
+    // question, which replaced the older "How does Coconut handle multiple
+    // income streams?" wording. The merged paragraph was kept in the answer.
     kind: 'static',
     expectedCount: 12,
     added: [
+      'Can I manage multiple income streams, such as self-employment and property, in one account?',
       'Does Coconut show my tax bill in real time as I go?',
       'How does Coconut keep my financial data secure?',
     ],
-    merged: {
-      question: 'How does Coconut handle multiple income streams?',
-      mustContain: 'may need to be reported separately',
-      foldedIn:
-        'Can I manage multiple income streams, such as self-employment and property, in one account?',
-    },
+    absent: ['How does Coconut handle multiple income streams?'],
+    mustContain: ['may need to be reported separately'],
     existing: [
       'What makes software officially MTD compliant?',
       'Do I still need an accountant if I use MTD software?',
@@ -61,15 +61,22 @@ const PAGES = [
   },
   {
     path: '/free-making-tax-digital-software',
+    // Final client decision: merge undone. Both questions stand, because they
+    // answer slightly different things. The existing answer was reverted to its
+    // original second paragraph so the two do not share a verbatim sentence.
     kind: 'static',
-    expectedCount: 9,
-    added: ["What happens to my records if I don't continue paying?"],
-    merged: {
-      question: "What's included free vs paid?",
-      mustContain: 'two-year Zempler offer',
-      foldedIn: 'On the free options, can I actually submit MTD updates or just do bookkeeping?',
-    },
-    existing: ['What is the Zempler + Coconut offer?', 'Who is eligible for the Zempler offer?'],
+    expectedCount: 10,
+    added: [
+      "What happens to my records if I don't continue paying?",
+      'On the free options, can I actually submit MTD updates or just do bookkeeping?',
+    ],
+    mustContain: ["you won't be able to submit MTD updates or file a Self Assessment"],
+    noDuplicateSentence: 'explore the bookkeeping and MTD features',
+    existing: [
+      'What is the Zempler + Coconut offer?',
+      'Who is eligible for the Zempler offer?',
+      "What's included free vs paid?",
+    ],
   },
   {
     path: '/mtd-software',
@@ -205,6 +212,34 @@ for (const p of PAGES) {
         for (const q of p.added) {
           expect(tail, `new CMS question not appended last on ${p.path}: ${q}`).toContain(norm(q));
         }
+      });
+    }
+
+    if (p.mustContain) {
+      test('required copy is present', async ({ page }) => {
+        const text = await pageText(page);
+        for (const frag of p.mustContain) {
+          expect(text, `missing required copy on ${p.path}: ${frag}`).toContain(norm(frag));
+        }
+      });
+    }
+
+    if (p.absent) {
+      test('retired questions are gone', async ({ page }) => {
+        const titles = await questionTitles(page, p.titleSel);
+        for (const q of p.absent) {
+          expect(titles, `retired question still on ${p.path}: ${q}`).not.toContain(norm(q));
+        }
+      });
+    }
+
+    // Un-merging left two answers sharing a verbatim sentence once. Guard it.
+    if (p.noDuplicateSentence) {
+      test('no sentence is duplicated across answers', async ({ page }) => {
+        const text = await pageText(page);
+        const frag = norm(p.noDuplicateSentence);
+        const count = text.split(frag).length - 1;
+        expect(count, `"${p.noDuplicateSentence}" appears ${count}x on ${p.path}`).toBe(1);
       });
     }
 

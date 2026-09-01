@@ -110,6 +110,12 @@ visitor would very likely fill in eight questions and hit a wall.
 error string. The no-email submission was *not* actually performed, to avoid
 writing junk into the client's live beehiiv. Task 1 below proves it before rollout.
 
+No existing subscription is needed to run that test — a refusal is a refusal
+whoever submits it, and an acceptance from a non-subscriber would settle the
+question just as well. It does need a **private window**: a beehiiv cookie from a
+prior visit to `news.jayshetty.me` could identify the tester as a subscriber and
+let a submission through that would be blocked for a stranger.
+
 **Architectural consequence:** Webflow's native per-form "Redirect to URL" setting
 takes a static URL. It cannot carry the address the visitor just typed. Using it
 would deliver every visitor to a survey they cannot submit. **The no-code option is
@@ -266,7 +272,7 @@ across `/`, `/about-jay`, `/press`, `/speaking`, `/connect`, `/blog`, `/podcast`
 
 | # | Task | Agent | Depends on |
 |---|---|---|---|
-| 1 | **Prove the no-email failure.** Load the survey with no `?email=`, submit with a real address, confirm it errors. Settles §3.4's caveat. | — (manual, Will) | — |
+| 1 | **Prove the no-email failure.** In a private window, open the survey with no `?email=` param, answer the eight questions, submit. Confirm it errors. Settles §3.4's caveat. | — (manual, Will) | — |
 | 2 | Write the footer snippet to `projects/jayshetty/newsletter-redirect/footer-code.html` as the git mirror of what is pasted into Webflow | code-writer | 1 |
 | 3 | Deploy: paste into Project Settings → Custom Code → Footer; publish to **jayshetty.webflow.io only** | — (manual, Will) | 2 |
 | 4 | Verify on the Webflow subdomain — all three forms, real email, Tier 1 + Tier 3 | qa | 3 |

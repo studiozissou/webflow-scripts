@@ -169,3 +169,41 @@ test("the template's own rows survive a round trip through the reader", () => {
   const path = writeCsv(HEADER + body + "\n");
   assert.equal(readIntroRows(path).length, 25);
 });
+
+/* ─── The shape the sheet actually arrives in ─── */
+
+/* Christel filled the Intro lines tab with the conclusion tab's column names rather than
+ * the template's, and without an ID column. The copy is correct and the keys are right, so
+ * the reader accepts both spellings instead of making a re-export the price of a build. */
+
+const SHEET_HEADER = "type,key,text (NL),text (EN)\n";
+
+test('accepts "text (NL)" as the sheet spells it, not only "intro (NL)"', () => {
+  const path = writeCsv(SHEET_HEADER + "single,fear,Nederlandse regel,English line\n");
+  const rows = readIntroRows(path);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].key, "fear");
+  assert.equal(rows[0].nl, "Nederlandse regel");
+  assert.equal(rows[0].en, "English line");
+});
+
+test("an absent ID column is not fatal — nothing downstream reads it", () => {
+  const path = writeCsv(SHEET_HEADER + "single,fear,Nederlandse regel,\n");
+  assert.doesNotThrow(() => readIntroRows(path));
+});
+
+test("the sheet's own shape still rejects a flat outcome", () => {
+  const path = writeCsv(SHEET_HEADER + "flat,flat-high,Iets,\n");
+  assert.throws(() => readIntroRows(path), /flat-high/);
+});
+
+test("a missing text column is still an error, whichever spelling is used", () => {
+  const path = writeCsv("type,key\nsingle,fear\n");
+  assert.throws(() => readIntroRows(path), /intro \(NL\)/);
+});
+
+test("the real export carries all 25 Dutch lines", () => {
+  const rows = readIntroRows();
+  assert.equal(rows.length, 25);
+  assert.equal(rows.filter((r) => r.nl.trim()).length, 25);
+});

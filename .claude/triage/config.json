@@ -1,6 +1,6 @@
 {
   "slack": {
-    "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time \u2014 every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
+    "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time — every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
     "channels": [
       {
         "id": "C0973LJ2BTJ",
@@ -32,11 +32,11 @@
         "name": "#tamsen-web-dev",
         "id": "C09A7MZEK3P",
         "client": "Tamsen Fadal",
-        "note": "Slack API returned channel_not_found on 2026-08-05 \u2014 the ID may be wrong, or the Slack app is not installed in the Skye High workspace."
+        "note": "Slack API returned channel_not_found on 2026-08-05 — the ID may be wrong, or the Slack app is not installed in the Skye High workspace."
       },
       {
         "workspace": "Skye High",
-        "name": "DM \u2014 Yoni",
+        "name": "DM — Yoni",
         "id": "D049YCR485C",
         "client": "Tamsen Fadal",
         "note": "Slack API returned channel_not_found on 2026-08-05. Yoni's jayshetty.me request arrived by email instead."
@@ -56,20 +56,20 @@
       "_comment": "Newsletter cleanup. Trashes bulk marketing mail only, and only when it passes every keep test in the triage skill's <inbox_cleanup> section. Trash is recoverable in Gmail for 30 days.",
       "query": "in:inbox -is:starred -is:important",
       "lookbackDays": 14,
-      "maxPerRun": 5,
+      "maxPerRun": 100,
       "neverDelete": {
         "senders": [
           "mymind.email",
           "updates@mymind.email",
           "mymind.com"
         ],
-        "_sendersComment": "Always keep. Newsletters here are read for pleasure, not scanned for actions, so the usual 'no action needed' test does not apply to them. Match on the domain, not the full address \u2014 mymind sends from updates@mymind.email, and a sending address can change without the brand changing.",
+        "_sendersComment": "Always keep. Newsletters here are read for pleasure, not scanned for actions, so the usual 'no action needed' test does not apply to them. Match on the domain, not the full address — mymind sends from updates@mymind.email, and a sending address can change without the brand changing.",
         "domains": []
       },
       "learnedKeep": [
         "permanentstyle.com"
       ],
-      "_learnedKeepComment": "Senders the user has said to always keep \u2014 either rescued from a cleanup run or named directly. Match on the domain so a change of sending address does not silently drop the rule. Append when the user rescues a sender; never remove an entry automatically, because the user put it there."
+      "_learnedKeepComment": "Senders the user has said to always keep — either rescued from a cleanup run or named directly. Match on the domain so a change of sending address does not silently drop the rule. Append when the user rescues a sender; never remove an entry automatically, because the user put it there."
     }
   },
   "calendar": {
@@ -85,7 +85,7 @@
         "lists": [
           "Web development"
         ],
-        "note": "Shared board with the I-com agency (108 cards). Scope scans to the Web development list only \u2014 the other lists are their SEO, content and PPC work."
+        "note": "Shared board with the I-com agency (108 cards). Scope scans to the Web development list only — the other lists are their SEO, content and PPC work."
       }
     ]
   },
@@ -94,6 +94,13 @@
     "databaseId": "226e1848-bb51-80ab-8c0e-e431e66548d4",
     "dataSourceId": "collection://226e1848-bb51-80e6-b02b-000bf42f3fca",
     "clientsDbDataSourceId": "collection://229e1848-bb51-8018-888c-000b6dbead72",
-    "defaultStatus": "Inbox"
+    "defaultStatus": "Inbox",
+    "comments": {
+      "_comment": "Reads the user's own comments on Notion tasks each run and acts on them. Only comments authored by userNotionId count as instructions; anyone else's are context, and triage's own replies are never read back in. maxPagesPerRun caps how many watched pages are checked, oldest-checked first, so a backlog drains over runs.",
+      "enabled": true,
+      "maxPagesPerRun": 40,
+      "includeBlockComments": true,
+      "replyAfterActing": true
+    }
   }
 }

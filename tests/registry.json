@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-20",
+  "lastUpdated": "2026-09-01",
   "note": "nem-quiz-transition-guard planned 2026-08-19 \u2014 expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -332,6 +332,46 @@
       "critical": false,
       "created": "2026-08-20",
       "description": "SEMrush remediation for tamsenfadal.com: title tags under 70 chars while keeping the '| Tamsen Fadal' entity suffix, 10 duplicate meta description pairs made distinct, llms.txt rewritten to llmstxt.org Markdown, retired Apple Podcasts id1560877893 links repointed, and the hot-girl-menopause-smoothie redirect chain removed."
+    },
+    {
+      "slug": "faq-supplement-aug-2026",
+      "url": "https://www.getcoconut.com/mtd-software",
+      "spec": "tests/acceptance/faq-supplement-aug-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-31",
+      "description": "Coconut supplementary FAQ content (August 2026): 15 new FAQ entries plus 2 merged answers across 7 landing pages \u2014 2 CMS pages via the 25 New Features common-questions multi-reference (appended last) and 5 static pages via duplicated _25-collapse-item accordion blocks. Asserts per-page item counts, no duplicate questions, merged copy present with the folded-in questions absent, pre-existing questions retained, and the 4 new links resolving."
+    },
+    {
+      "slug": "coconut-remove-brand-exclamation-mark",
+      "url": "https://getcoconut.webflow.io/",
+      "spec": "tests/acceptance/coconut-remove-brand-exclamation-mark.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-31",
+      "description": "Removes the leading '!' from the Coconut brand name across copy, CMS, SEO fields and JSON-LD. Includes regression guards asserting the FCA footer disclosure (D3), logo asset filenames (D1) and Organization alternateName (D6) are deliberately left unchanged."
+    },
+    {
+      "slug": "rhp-home-scroll-back-to-intro",
+      "url": "https://rhpcircle.webflow.io/",
+      "spec": "tests/acceptance/rhp-home-scroll-back-to-intro.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-31",
+      "description": "Desktop wheel-up in completed home state re-arms the intro scrub; native scroll scrubs the morph back to the landing view and forward again to complete. Expected to fail until the feature ships (awaiting Ryan approval)."
+    },
+    {
+      "slug": "jayshetty-newsletter-signup-redirect",
+      "url": "https://jayshetty.webflow.io/",
+      "spec": "tests/acceptance/jayshetty-newsletter-signup-redirect.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-01",
+      "description": "Newsletter signup (footer/popup/banner) redirects to the beehiiv welcome survey with ?email= appended; tour, search, filter and contact forms excluded."
     }
   ]
 }

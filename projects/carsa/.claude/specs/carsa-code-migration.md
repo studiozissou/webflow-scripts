@@ -4,13 +4,13 @@
 **Client:** Carsa (Tomek Stacharski)
 **Status:** Planning — approved approach, awaiting build
 **Priority:** P1
-**Created:** 2026-07-06 · **Revised:** 2026-08-20
+**Created:** 2026-07-06 · **Revised:** 2026-08-27
 **Supersedes:** v1 of this file (7 Jul, per-page tags first) and `github-migration.md` (7 Apr proposal)
 **Related:** `carsa-vdp-script-externalisation.md`, `carsa-visual-regression.md`, `reports/vdp-externalisation-findings-2026-06-25.md`
 
 ## Summary
 
-Move every piece of Carsa custom JavaScript out of Webflow and into `projects/carsa/` in `studiozissou/webflow-scripts`, served by jsDelivr pinned to commit SHAs. A single `init.js` in the site-wide **footer** owns a route map and loads one module per page type. **The full acceptance suite is written and baselined green against the live site before anything changes.** Pages then migrate one at a time (deep-check pages solo, the rest in two batches); each page is re-captured and diffed immediately before its swap, the suite runs after, and any page can be rolled back with one edit. Refactoring happens last, inside the repo, behind the same tests.
+Move every piece of Carsa custom JavaScript out of Webflow and into `focalstrategy/carsa-website-support`, served from Carsa's own CloudFront distribution at SHA-versioned paths. Development still happens in `projects/carsa/` in `studiozissou/webflow-scripts`; production-ready files are PR'd across (see D11). A single `init.js` in the site-wide **footer** owns a route map and loads one module per page type. **The full acceptance suite is written and baselined green against the live site before anything changes.** Pages then migrate one at a time (deep-check pages solo, the rest in two batches); each page is re-captured and diffed immediately before its swap, the suite runs after, and any page can be rolled back with one edit. Refactoring happens last, inside the repo, behind the same tests.
 
 Performance is not the pitch. Cold-load LCP did not move when the VDP was externalised in June (+16ms, noise). The wins are version control, rollback, review, tests, cross-page caching on repeat visits, and an end to "hunt through Page Settings".
 
@@ -24,22 +24,29 @@ Performance is not the pitch. Cold-load LCP did not move when the VDP was extern
 | 7 Jul | Slack to Tomek: MCP can now read code blocks; Tomek: "yes please" to a new estimate. **Estimate drafts never sent** (blank numbers). | `slack/code-migration-estimate-for-tomek-2026-07-07.txt` |
 | 5 Aug | Tomek: "All the VSRP are now served client side", AT prices now in CMS. SRP/VDP code has drifted since the 7 Jul snapshot. | Slack DM |
 | 20 Aug | **Live VDP is back to inline.** 27 inline `<script>` blocks, no `__CARSA_VDP`, no `vdp.js` tag. Only `battery-animation.js` loads from CDN — from `@main`, unpinned. Same on staging. | `curl https://www.carsa.co.uk/vehicles/used/a26eta` |
+| 20 Aug | Tomek opens #carsa-proj-webflow thread for sign-off. Rishi 👍 on 21 Aug, against Will's framing of **2 hours of his own time**. | [Slack](https://app.slack.com/archives/C08G8FGHX9Q/p1787239056087669) |
+| 24 Aug | Stephen Putman: the blocker is not repo access, it is that assets must be deployed **from the repo to a CDN**. Asks Will to open a PR. Will Wayman points at PR #138 as prior art. | [Slack](https://app.slack.com/archives/C08G8FGHX9Q/p1787565553106209) |
+| 27 Aug | **D2 reversed** — host in Carsa's repo, serve from their CloudFront. D10/D11/D12 added. D3 re-examined and left standing. | This revision |
 
 Net: the repo side is ~40% done (capture, VDP file, test harness, loader pattern elsewhere in the monorepo). The Webflow side is at zero. Nothing has shipped to live.
 
-## Decisions (20 Aug)
+## Decisions (20 Aug, revised 27 Aug)
 
 | # | Decision | Why |
 |---|---|---|
 | D1 | Scope is the whole site, all phases. | User choice. |
-| D2 | Host everything in `studiozissou/webflow-scripts`, served by jsDelivr at pinned SHAs — **built portable from day one** so moving to Carsa's CloudFront (SST) later is a one-URL change. See *Portability* below. | `focalstrategy/carsa-website-support` is **private** → jsDelivr cannot serve it. Carsa already ships `carousel-embed` from `d1kcoelx4vkza6.cloudfront.net` via SST, so a handoff path exists when they want it. |
+| ~~D2 (20 Aug)~~ | ~~Host everything in `studiozissou/webflow-scripts`, served by jsDelivr at pinned SHAs.~~ **Reversed 27 Aug — see D2a.** | ~~Their repo is private → jsDelivr cannot serve it.~~ Superseded: privacy stops *jsDelivr*, not *CloudFront*. |
+| **D2a** | Host in `focalstrategy/carsa-website-support`, served from Carsa's CloudFront (SST `StaticSite`) at **SHA-versioned paths**: `https://{CARSA_WEBFLOW_CDN}/webflow/{sha}/init.js`. The portability rules below are unchanged and now pay off in this direction. | Stephen Putman, 24 Aug: the real constraint was never repo access, it was that assets must be deployed from the repo to a CDN. Their repo being private is irrelevant to CloudFront, which serves from S3. Carsa already ships `carousel-embed` from `d1kcoelx4vkza6.cloudfront.net` via the same mechanism, so this reuses a proven path rather than introducing a second one. It also removes a live dependency on *our* repo staying public — see the ⚠️ note under *Pinning and publishing*. |
 | D3 | Loader-first, in the site **footer**, not the head. | Webflow injects jQuery, `webflow.js` and GSAP at the end of `<body>` *before* footer custom code. `vdp.js` calls `$()` at top level; a head loader would throw and abort whole modules. The 8 existing footer scripts already rely on this order. |
 | D4 | Re-capture and diff each page immediately before its swap; ask Tomek to freeze that page's embeds once it is on CDN. | Tomek edits embeds directly (APR hunt, 7 Jul). July snapshot is stale. |
 | D5 | Deep-check pages (VDP, SRP, Deals, Homepage) publish solo; the four form/calculator pages go as one batch; everything else is a 30-second check and ships in one or two batches. | 8 publishes total. Most pages have nothing to interact with beyond "loads, no errors, one link works". |
 | D6 | Effort is framed as **Claude / Will / Tomek's side**, not hours. | Most steps are automatable; Will's cost is spot-checks and go/no-go calls. |
 | D8 | Claude publishes staging **and** live via Webflow MCP. Will is the go/no-go gate before each live publish, not the clicker. | MCP publish is available in this setup. Live publishes are outward-facing, so they still wait for Will's explicit go. |
 | D9 | **Tests first.** Every page's acceptance tests are written from the fresh captures and run green against live *before* the loader ships. Phase 2 is swaps only. | Cost is Claude time. A green suite before any change makes every later failure unambiguous, catches July→August drift up front, and automates everything except Tier 3. |
-| D7 | `battery-animation.js` gets pinned to a SHA in the same publish as the loader. | Unpinned `@main` is a live regression vector and has no immutable caching. |
+| D7 | `battery-animation.js` gets pinned to a SHA in the same publish as the loader. | Unpinned `@main` is a live regression vector and has no immutable caching. **Raised to urgent by D2a** — while it points at `studiozissou/webflow-scripts@main`, the live site depends on our repo staying public. |
+| **D10** | **SHA-versioned prefix + `immutable`**, not the carousel's fixed-URL + revalidate model. Every release deploys to a new `/webflow/{sha}/` prefix; the Webflow footer tag names the SHA. | Preserves the entire pinning, rollback and gating model that the rest of this spec is built on — one SHA per publish, rollback by one footer edit, Will's go/no-go before anything reaches users. PR #138 chose revalidate for the carousel because `/bundle.js` is a *fixed, non-hashed* URL that cannot be versioned; versioned paths do not have that problem, so the reasoning behind #138 does not transfer. Cost: the SST build must emit a SHA-prefixed directory, which their flat `dist` build does not do today. |
+| **D11** | **Source of truth stays in `studiozissou/webflow-scripts`.** Develop and test in `projects/carsa/`; copy production-ready files into `webflow/` in Carsa's repo and PR them across, per `client.md` §10. | Keeps the Playwright suite, specs, worktrees and `/build` flow working unchanged. Splitting tooling across two repos would cost more than the duplication does. |
+| **D12** | **Open, not decided:** who can merge to `main` and trigger the SST deploy. | Stephen said Will Wayman "might take a look on how we can deploy to cdn" — unresolved. If Carsa must deploy every change, each phase gains a handoff and a wait, and **D8's gating model changes**. Settle before Phase 1. |
 
 ## Architecture
 
@@ -49,7 +56,7 @@ Reuse `projects/the-signalling-company/init.js` and `projects/ready-hit-play-pro
 
 ```
 <!-- Webflow → Site settings → Custom code → Footer (before </body>) -->
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@{SHA}/projects/carsa/init.js"></script>
+<script src="https://{CARSA_WEBFLOW_CDN}/webflow/{SHA}/init.js"></script>
 ```
 
 - Derives `BASE` from its own `src` so every module loads from the same pinned SHA.
@@ -92,10 +99,10 @@ Route paths for CMS collections must be confirmed against the live sitemap befor
 
 Rules every module and the loader follow from the first commit, so a handoff to Carsa's CloudFront — or anywhere — never requires touching code:
 
-- **No absolute self-references.** `init.js` derives `BASE` from `document.currentScript.src`; modules never hard-code `cdn.jsdelivr.net`, `studiozissou` or a SHA. Assets a module needs (none today) would be resolved from `BASE` too.
+- **No absolute self-references.** `init.js` derives `BASE` from `document.currentScript.src`; modules never hard-code a CDN host, a repo name or a SHA. Assets a module needs (none today) would be resolved from `BASE` too.
 - **Flat folder, no build.** `projects/carsa/*.js` is the deployable unit as-is. Copying the folder to another origin is the whole migration.
 - **One place to change.** The footer tag URL is the only reference to the host. Switching hosts = change that tag, publish.
-- **No jsDelivr-only features.** No `/combine/`, no `@latest`, no `.min` auto-minify paths. Plain files at plain paths.
+- **No host-specific features.** No jsDelivr `/combine/`, no `@latest`, no auto-minify paths; equally, nothing that assumes CloudFront behaviour. Plain files at plain paths.
 - **Cache contract documented, not assumed.** Tests assert `immutable` on pinned URLs; the handoff note says what to do if the new host prefers revalidate (relax one test).
 - **Repo-relative tests.** `STAGING_URL_CARSA` drives the suite; no test hard-codes the CDN host beyond the loader-pinning assertion, which is a single regex constant (`LOADER_RE`) to update.
 - `projects/carsa/README.md` (to be written in Phase 1) carries the route map, the contract above, and the three-step "move hosts" procedure from the engineer handoff note.
@@ -103,8 +110,12 @@ Rules every module and the loader follow from the first commit, so a handoff to 
 ### Pinning and publishing
 
 - Every Webflow publish references exactly one SHA, in one place (the footer tag). Adding or changing a module = bump that SHA in site settings and publish. The bump rides along with the page's inline-removal publish, so no extra cycle.
-- jsDelivr serves pinned commits with `cache-control: public, max-age=31536000, immutable`. Old SHAs never disappear, which is the rollback mechanism.
-- Never reference `@main` from Webflow.
+- Each release deploys to its own immutable prefix, `/webflow/{sha}/`. SST `fileOptions` must keep that prefix on `cache-control: public, max-age=31536000, immutable`. Old prefixes are never deleted — that is the rollback mechanism.
+- **Do not inherit PR #138's revalidate rule for this prefix.** #138 set `max-age=0, no-cache, must-revalidate` across the carousel site because `/bundle.js` is a fixed, non-hashed URL that could otherwise be cached stale for a year. Versioned paths solve that problem by construction; applying #138's rule here would throw away the caching benefit that motivates the migration.
+- Deploying a new prefix changes nothing for users until the Webflow footer tag names it. That separation **is** Will's go/no-go gate (D8) — keep it.
+- Never reference a moving target (`@main`, `latest`, an unversioned path) from Webflow.
+
+⚠️ **Live dependency to clear.** `battery-animation.js` currently loads on every VDP from `cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@main/...`. Until D7 lands, making `studiozissou/webflow-scripts` private would break the live Carsa site. Verified 27 Aug: repo is public, that URL returns 200, and `projects/carsa/init.js` is 404 (not yet written).
 
 ### Drift check (before every swap, and weekly after)
 
@@ -138,11 +149,15 @@ Legend — **C** Claude (MCP incl. staging/live publish, git, Playwright, file w
 
 | # | Task | Who |
 |---|---|---|
+| 1.0a | **Settle D12** — confirm who merges and deploys. Blocks everything below. | **W** with Stephen / Will Wayman |
+| 1.0b | Pull latest `~/carsa-website-support/` (local clone is stale — lacks PR #138) and read `stacks/CarouselStack.ts` | C |
+| 1.0c | Add an SST `StaticSite` (or extend the existing stack) that publishes `webflow/` to `/webflow/{sha}/` with `immutable` `fileOptions`; capture the distribution domain as `CARSA_WEBFLOW_CDN` | C, reviewed by Carsa |
 | 1.1 | Write `init.js` (route map, dep gate, base URL, local switch) | C |
 | 1.2 | Write `global.js` = the 8 footer scripts, 1:1 (model/promo links, store-list prepend, attribution saver, finance UTM appender, noopener, copyright year, menu scroll lock, n8n chat). Slider CSS stays in Webflow. | C |
 | 1.3 | Loader tests already written and baselined in 0.6–0.7; confirm `LOADER_RE` matches the SHA about to ship | C |
 | 1.4 | Re-run the full suite against live one last time → green | C |
-| 1.5 | Replace the 8 footer blocks with the loader tag via MCP `set_site_freeform_code`; pin `battery-animation.js` SHA on the VDP body code; write `projects/carsa/README.md` | C |
+| 1.4b | Open the PR to `focalstrategy/carsa-website-support` (`webflow/` folder, per `client.md` §10); merge and deploy per D12; confirm `/webflow/{sha}/init.js` returns 200 + `immutable` | C, deploy per D12 |
+| 1.5 | Replace the 8 footer blocks with the loader tag via MCP `set_site_freeform_code`; **repoint `battery-animation.js` at the new CloudFront prefix** (closes D7 and the jsDelivr dependency in one move); write `projects/carsa/README.md` | C |
 | 1.6 | Publish to **staging** via MCP | C |
 | 1.7 | Run tests against `carsa-v2.webflow.io`; spot-check menu, chat widget, UTM storage | C tests, **W** feel-check |
 | 1.8 | Go/no-go | **W** |
@@ -201,9 +216,11 @@ Extract the six duplicated helpers into shared files loaded by `init.js` before 
 
 Per module: fix the known VDP issues (hardcoded `requestUuid`, unthrottled MutationObserver, two `formatCurrency`s), `DEBUG &&` logging, `prefers-reduced-motion`, ES2022 syntax, unit tests where logic is pure (URL builders, formatters). jQuery removal is **optional** — Webflow ships jQuery regardless, so it saves nothing; do it only for clarity where a module is being touched anyway.
 
-### Phase 5 — Engineer handoff (optional, any time after Phase 1)
+### Phase 5 — ~~Engineer handoff~~ (absorbed into Phase 1 by D2a)
 
-Because of the portability rules, this is not really a phase: copy `projects/carsa/` into Carsa's repo, serve it from their SST/CloudFront stack, change the footer tag URL, publish. See `comms/code-migration-engineer-handoff-2026-08-20.md`. Can happen whenever Tomek wants it, without pausing the migration.
+**No longer a phase.** D2a moves hosting to Carsa's CloudFront from the start, so the handoff this phase existed to describe now happens in tasks 1.0b–1.4b. The portability rules earned their keep: they are what made the reversal a URL change rather than a rewrite.
+
+What remains of it: `comms/code-migration-engineer-handoff-2026-08-20.md` still documents the move procedure, and is now the reference for Carsa's engineers reviewing the SST stack change — not a future migration plan. The reverse move (back to jsDelivr from our own repo) stays available on the same one-URL basis if their deploy path proves too slow to iterate against.
 
 ## What is automatable vs manual
 
@@ -229,17 +246,20 @@ Rule of thumb: four pages cost Will ~5 minutes each, four cost ~2 minutes, the r
 |---|---|---|---|
 | 0 Re-capture + reconcile + **full test suite baselined** | 2.5–3 hrs | 5 min | ~90 MCP pulls batched; ~12 pages of tests written from captures and made green against live + staging; you confirm the pruned page list |
 | 1 Loader + `global.js` | ~45 min | 5 min | build, staging, live — tests already exist |
+| **1 (D2a additions)** | **+1–1.5 hrs** | **+15 min, plus a wait** | **New in this revision.** SST `StaticSite` + `fileOptions` for the versioned prefix (1.0c), first PR into someone else's repo (1.4b), and their review cycle. One-off — Phases 2–4 inherit the pipeline. The *wait* on Carsa's review is not working time and is not in this column. |
 | 2 Pages (7 publishes, swaps only) | 1.5–2 hrs | ~35 min | 1:1 copies are minutes each; suite runs per publish; deep checks 4×5 min, medium 4×2 min, light ~5 min total |
-| **0–2 total** | **~5 hrs** | **~45 min** | same total as before — the test work moved earlier, it did not grow |
+| **0–2 total** | **~6–6.5 hrs** | **~60 min** | was ~5 hrs / ~45 min before D2a; the delta is the one-off CDN pipeline set-up |
 | 3 Modularise | 2–3 hrs | 3 × 1 min go | attribution has 6 variants — dedupe carefully, tests between each |
 | 4 Refactor | ~2 hrs | — | known VDP bugs, `DEBUG`, reduced-motion, unit tests for pure helpers |
 
-Elapsed time is whatever publish cadence you choose; nothing here needs to wait on anyone except Tomek's per-page code freeze.
+Elapsed time is whatever publish cadence you choose, **with two dependencies introduced by D2a**: Carsa reviewing and merging the SST stack change and the first `webflow/` PR (once, in Phase 1), and — if D12 resolves against us — their team triggering a deploy for every subsequent SHA bump. Add Tomek's per-page code freeze, and those are the only waits.
+
+**Budget note.** The 2 hours Rishi approved on 21 Aug were quoted against the old D2, where the whole path was ours. D2a adds roughly an hour of one-off pipeline work and a review cycle we do not control. That is worth saying to Tomek and Rishi *before* starting — see Open question 8.
 
 ## Rollback
 
 - Per page: restore `rollback/{slug}-body.html` via MCP, publish. One command: "roll back {page}".
-- Whole site: set footer tag back to the previous SHA, publish. Old SHAs are immutable on jsDelivr.
+- Whole site: set footer tag back to the previous SHA, publish. Old `/webflow/{sha}/` prefixes are immutable and are never pruned. This is why D10 keeps versioned paths — under the carousel's fixed-URL model this rollback would instead require a revert-and-redeploy through Carsa's pipeline.
 - Before Phase 1 publishes live, `rollback/site-footer.html` (7 Jul) plus its dated re-capture are the restore points.
 - Every page swap is one commit and one tag; no force pushes.
 
@@ -247,8 +267,9 @@ Elapsed time is whatever publish cadence you choose; nothing here needs to wait 
 
 1. **Footer loader with dependency gate** (D3) — record because the July spec and TSC/RHP loaders differ on placement and gating; future projects should inherit the footer-plus-gate rule for Webflow sites that depend on platform-injected jQuery/GSAP.
 2. **Classic scripts now, ES modules later** — record so nobody converts to `type="module"` mid-migration and breaks the 1:1 guarantee.
+3. **Versioned prefix + `immutable` on a shared CloudFront distribution** (D10) — record because it deliberately diverges from the rule PR #138 established on the same distribution, and the next person to touch `fileOptions` will otherwise "fix" the inconsistency. The ADR should state the distinction plainly: fixed non-hashed URLs must revalidate, versioned paths must not.
 
-Both are small; run `/plan` for each before `/build` Phase 1 (`/architect` is deprecated).
+All three are small; run `/plan` for each before `/build` Phase 1 (`/architect` is deprecated).
 
 ## Barba Impact
 
@@ -275,7 +296,7 @@ Runs against `STAGING_URL_CARSA` (default `https://www.carsa.co.uk`). Already pr
 
 | Test | Checks |
 |---|---|
-| `loader-present-and-pinned` | Footer tag points at `cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@{40-hex or 7-hex}/projects/carsa/init.js`, never `@main` |
+| `loader-present-and-pinned` | Footer tag points at `{CARSA_WEBFLOW_CDN}/webflow/{40-hex or 7-hex}/init.js`, never an unversioned path. `LOADER_RE` is the single constant to update (D2a changed it once already) |
 | `loader-returns-200-immutable` | `init.js` response 200 with `immutable` cache-control |
 | `global-loaded-once` | Exactly one `global.js` script element after load, on `/`, `/used-cars`, a VDP |
 | `global-copyright-year` | Footer year element shows current year |
@@ -330,8 +351,8 @@ Registered in `tests/registry.json` as `carsa-code-migration`. `/deploy` runs it
 ### Pass/fail criteria
 
 Phase 1 (loader) passes when, on live, all of:
-1. `document.querySelector('script[src*="/projects/carsa/init.js"]')` exists and its `src` contains `@` followed by a hex SHA, not `main`.
-2. `init.js` and `global.js` return 200 with `cache-control` containing `immutable`.
+1. `document.querySelector('script[src*="/webflow/"][src$="/init.js"]')` exists and its `src` contains a `/webflow/{hex-sha}/` segment, not an unversioned path.
+2. `init.js` and `global.js` return 200 from `CARSA_WEBFLOW_CDN` with `cache-control` containing `immutable` — **not** the `must-revalidate` that PR #138 applies to the carousel site (D10).
 3. Zero `pageerror` events on `/`, `/used-cars`, one `/vehicles/*`, one `/used-cars/near/*`.
 4. Footer behaviours observable: year element = current year; all external `_blank` links have `noopener`; `localStorage` attribution keys set after a `?utm_source=` visit; chat root mounted.
 5. Site footer custom code (via MCP) contains only the loader tag and the slider CSS.
@@ -346,7 +367,7 @@ Each page in Phase 2 passes when:
 ### Reproduction steps (Phase 1 on staging)
 
 1. Open `https://carsa-v2.webflow.io/` with DevTools Network tab.
-2. Confirm `init.js` then `global.js` load after `webflow.*.js` and the GSAP files; both from `cdn.jsdelivr.net`.
+2. Confirm `init.js` then `global.js` load after `webflow.*.js` and the GSAP files; both from `CARSA_WEBFLOW_CDN`.
 3. Reload — both show "(disk cache)" / 0 B transferred.
 4. Open the mobile menu at 375px; body should not scroll behind it.
 5. Scroll to footer: year is current; open the chat bubble.
@@ -376,7 +397,11 @@ Machine-runnable: `tests/acceptance/carsa-code-migration.spec.js` (loader, homep
 1. Does the FAQ page's 83KB inline JSON-LD move to a module (smaller HTML) or stay inline (Google reads inline JSON-LD most reliably)? Default: stays.
 2. Which five sample slugs per CMS template? Pick at Phase 2 from the sitemap; include one sold/reserved VDP and one EV.
 3. ~~Can the Webflow MCP publish?~~ Resolved 20 Aug: yes, staging and live (D8).
-4. Does Tomek want the engineer handoff at all, or is jsDelivr from our repo acceptable long-term? Either works; portability rules make it a non-blocking question.
+4. ~~Does Tomek want the engineer handoff at all?~~ Resolved 27 Aug: yes, and it happens up front (D2a). Phase 5 is absorbed into Phase 1.
+5. **Blocker — D12: who merges and deploys?** If Will cannot trigger the SST deploy, every SHA bump needs Carsa's pipeline, and the effort table above understates elapsed time for Phases 1–3. Settle before writing any code.
+6. **What is `CARSA_WEBFLOW_CDN`?** A new SST `StaticSite` gets its own distribution domain; the carousel's `d1kcoelx4vkza6.cloudfront.net` is not it. The value comes out of task 1.0c and must not be guessed.
+7. Will Carsa accept an append-only `/webflow/{sha}/` prefix in S3? Storage is trivial (a few hundred KB per release) but it grows without bound, and it is their bucket. Offer a prune-after-N-releases policy if they object — noting that pruning a prefix destroys the rollback target for that release.
+8. Does the 2-hour budget survive D2a? It was quoted against jsDelivr-from-our-repo, where Will controlled the whole path. Adding an SST stack change, a PR into someone else's repo, and a review cycle is real extra work — most of it in Phase 1, once. Worth re-stating to Tomek and Rishi before starting rather than after.
 
 ## Agents
 

@@ -1,0 +1,845 @@
+<title>Coconut Schema Fixes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#FBFCFC; --panel:#FFFFFF; --ink:#0F1A1C; --muted:#5A6B6B;
+  --line:#DBE5E4; --accent:#0F8A80; --accent-soft:#E4F3F1;
+  --warn:#8A5A06; --warn-soft:#FBF0DA; --code-bg:#F4F8F8; --shadow:rgba(15,26,28,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1618; --panel:#141F21; --ink:#E6EFEF; --muted:#93A7A7;
+    --line:#243334; --accent:#4ECFC3; --accent-soft:#12302E;
+    --warn:#E0AE5C; --warn-soft:#2B2313; --code-bg:#0A1213; --shadow:rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1618; --panel:#141F21; --ink:#E6EFEF; --muted:#93A7A7;
+  --line:#243334; --accent:#4ECFC3; --accent-soft:#12302E;
+  --warn:#E0AE5C; --warn-soft:#2B2313; --code-bg:#0A1213; --shadow:rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink); margin:0;
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:960px; margin:0 auto; padding:48px 24px 96px;
+  display:flex; flex-direction:column; gap:32px}
+header{display:flex; flex-direction:column; gap:10px}
+.eyebrow{font-family:'JetBrains Mono',ui-monospace,monospace; font-size:11px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:600}
+h1{font-size:clamp(28px,4.4vw,40px); line-height:1.12; margin:0; font-weight:700;
+  letter-spacing:-.02em; text-wrap:balance}
+.lede{color:var(--muted); margin:0; max-width:62ch}
+.stats{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:8px;
+  padding:10px 14px; display:flex; flex-direction:column; gap:2px; min-width:118px}
+.stat b{font-family:'JetBrains Mono',ui-monospace,monospace; font-size:20px;
+  font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+.stat span{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
+.guards{border:1px solid var(--line); border-left:3px solid var(--warn);
+  background:var(--warn-soft); border-radius:8px; padding:16px 18px;
+  display:flex; flex-direction:column; gap:8px}
+.guards h2{font-size:13px; margin:0; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--warn); font-weight:700}
+.guards ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
+.guards li{font-size:14px}
+code.inl{font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.88em;
+  background:var(--code-bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:12px;
+  box-shadow:0 1px 2px var(--shadow); overflow:hidden}
+.card.done{opacity:.6}
+.card-head{display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+  padding:16px 18px; border-bottom:1px solid var(--line)}
+.path{font-family:'JetBrains Mono',ui-monospace,monospace; font-weight:600;
+  font-size:15px; letter-spacing:-.01em}
+.pill{font-family:'JetBrains Mono',ui-monospace,monospace; font-size:11px;
+  padding:3px 8px; border-radius:20px; background:var(--accent-soft);
+  color:var(--accent); font-weight:600; font-variant-numeric:tabular-nums}
+.pageid{font-family:'JetBrains Mono',ui-monospace,monospace; font-size:11px;
+  color:var(--muted)}
+.spacer{flex:1}
+button{font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+  border-radius:6px; border:1px solid var(--line); background:var(--ground);
+  color:var(--ink); padding:7px 12px; transition:background .12s,border-color .12s}
+button:hover{border-color:var(--accent); color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+button.copy{background:var(--accent); border-color:var(--accent); color:#fff}
+button.copy:hover{filter:brightness(1.08); color:#fff}
+pre{margin:0; padding:18px; background:var(--code-bg); overflow-x:auto;
+  max-height:340px; overflow-y:auto}
+code{font-family:'JetBrains Mono',ui-monospace,monospace; font-size:12.5px;
+  line-height:1.65; white-space:pre}
+.foot{color:var(--muted); font-size:14px; border-top:1px solid var(--line);
+  padding-top:20px; display:flex; flex-direction:column; gap:8px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Webflow &middot; page settings &middot; structured data</div>
+    <h1>Corrected JSON-LD for the five blocked pages</h1>
+    <p class="lede">The Webflow API refuses these writes, so here they are ready to paste.
+      Each block was generated from the live page markup &mdash; no retyping.
+      Open the page in Webflow, go to <strong>Page settings &rarr; structured data</strong>,
+      replace what&rsquo;s there, then publish.</p>
+    <div class="stats">
+      <div class="stat"><b>41</b><span>occurrences</span></div>
+      <div class="stat"><b>5</b><span>pages</span></div>
+      <div class="stat"><b id="progress">0 / 5</b><span>pasted</span></div>
+    </div>
+  </header>
+
+  <div class="guards">
+    <h2>Two things deliberately left alone</h2>
+    <ul>
+      <li>On <code class="inl">/pricing</code>, the logo URL keeps its <code class="inl">!</code>
+        &mdash; it&rsquo;s an asset filename, and rewriting it breaks the image (D1).</li>
+      <li>The site-wide Organization block is <em>not</em> included here. It lives in
+        Site settings, not page settings, and its
+        <code class="inl">"alternateName": "!Coconut"</code> is kept on purpose (D6).</li>
+    </ul>
+  </div>
+
+  <section class="card" data-slug="mtd-software">
+    <div class="card-head">
+      <span class="path">/mtd-software</span>
+      <span class="pill">20 fixed</span>
+      <span class="pageid">686d341bc775236fb65fcfe7</span>
+      <span class="spacer"></span>
+      <button class="mark" type="button">Mark done</button>
+      <button class="copy" type="button" data-target="c-mtd-software">Copy</button>
+    </div>
+    <pre><code id="c-mtd-software">&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "MTD for Income tax software | Coconut",
+  "description": "Get ready for Making Tax Digital for Income Tax. Coconut makes it easy for sole traders to stay compliant with HMRC's digital tax rules.",
+  "url": "/mtd-software",
+  "inLanguage": "en",
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Making Tax Digital for Income Tax"
+      }
+    ]
+  },
+  "about": {
+    "@type": "SoftwareApplication",
+    "name": "Coconut",
+    "applicationCategory": "BusinessApplication",
+    "description": "Accounting and tax app for self-employed people and landlords, built specifically to help with Making Tax Digital for Income Tax",
+    "operatingSystem": "iOS, Android, Web",
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Essentials",
+        "price": "99.99",
+        "priceCurrency": "GBP",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "99.99",
+          "priceCurrency": "GBP",
+          "unitText": "per year"
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "+MTD",
+        "price": "129.99",
+        "priceCurrency": "GBP",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "unitText": "per year"
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "+Self Assessment",
+        "price": "129.99",
+        "priceCurrency": "GBP",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "unitText": "per year"
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "Full",
+        "price": "159.99",
+        "priceCurrency": "GBP",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "159.99",
+          "priceCurrency": "GBP",
+          "unitText": "per year"
+        }
+      }
+    ],
+    "featureList": [
+      "Automatic income and expense tracking",
+      "Connect your bank in 30 seconds",
+      "Expenses categorised for you",
+      "Friendly UK expert support",
+      "Self-employment tax estimate",
+      "Send quarterly MTD updates to HMRC",
+      "Submit your MTD year-end return",
+      "Submit Self Assessment direct to HMRC",
+      "Snap and store receipts instantly",
+      "Unlimited professional invoices",
+      "Mobile app (iOS &amp; Android)",
+      "Access from any web browser"
+    ]
+  },
+  "mainEntity": {
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Making Tax Digital for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Making Tax Digital for Income Tax is a new way of reporting income to HMRC. Instead of submitting one tax return each year, sole traders and landlords will need to keep digital records and send quarterly updates to HMRC using Making Tax Digital for Income Tax compatible software."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Coconut help with Making Tax Digital for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Coconut tracks your income and expenses, helps you stay organised, and is HMRC-recognised for Making Tax Digital for Income Tax submissions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How will Making Tax Digital for Income Tax affect my business?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You'll need to manage your finances digitally, but tools like Coconut can simplify tax reporting and reduce admin time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Who does Making Tax Digital for Income Tax apply to?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Making Tax Digital for Income Tax will apply to sole traders and landlords who earn more than £50,000 in total business and/or property income per year from April 2026. Those earning between £30,000 and £50,000 will need to join Making Tax Digital for Income Tax from April 2027. Those earning between £20,000 and £30,000 will need to join Making Tax Digital for Income Tax from April 2028."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When does Making Tax Digital for Income Tax for Income Tax start?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The rollout starts in: April 2026 for those earning over £50,000, April 2027 for those earning £30,000–£50,000, April 2028 for those earning £20,000-£30,000."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I still need to do a Self Assessment tax return for Making Tax Digital for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Under Making Tax Digital for Income Tax, you won't submit the traditional Self Assessment return. Instead, you'll: Send quarterly updates of income and expenses, Submit an End of Period Statement (EOPS) for each business, Submit a Final Declaration (to report any other income and claim reliefs)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What kind of records do I need to keep for Making Tax Digital for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You must keep digital records of your income and expenses. These should be stored in Making Tax Digital for Income Tax compatible software, like Coconut. You can still keep paper receipts, but the data must be recorded and stored digitally."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What counts as Making Tax Digital for Income Tax compatible software?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Coconut is fully Making Tax Digital for Income Tax compatible. This means it lets you: Easily record income and expenses digitally, Send quarterly updates to HMRC, Submit your End of Period Statement and Final Declaration."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use spreadsheets for Making Tax Digital for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can use spreadsheets only if they're connected to bridging software that can send updates directly to HMRC. However, most people find it easier to use purpose-built apps like Coconut."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I comply with Making Tax Digital for Income Tax if I have multiple income sources?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "If you have more than one business or a mix of business and property income: You'll need to keep separate digital records for each income source, Submit a separate EOPS for each, Then submit one Final Declaration to confirm your total income and tax due."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens if I don't comply with Making Tax Digital for Income Tax rules?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "HMRC will apply a points-based penalty system. If you miss deadlines or fail to comply: You'll get a point for each failure, Once you hit a threshold (e.g. 4 points), you'll receive a fine, Points expire after a certain time if you stay compliant."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Will Making Tax Digital for Income Tax make my taxes more complicated?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Initially, there may be a learning curve. But using Coconut to track income and expenses regularly can make managing your tax smoother, reduce surprises and even help you save money."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can an accountant still help me under Making Tax Digital for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, absolutely. Many accountants are already using Coconut to support clients. They can: Review your quarterly reports, Submit declarations on your behalf."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to do anything right now?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "If you're affected, it's a good idea to start preparing now by choosing Making Tax Digital for Income Tax compatible software like Coconut. You could also prepare by: Starting to keep digital records, Speaking to your accountant to get prepared early."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What support does Coconut offer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can reach our support team via chat or email, Monday to Friday, for help with Making Tax Digital for Income Tax and using Coconut."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do you sign up for Making Tax Digital for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You'll need the user ID and password you got when you signed up for Self Assessment. You may be asked to provide further proof of your identity to use this service."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Will Coconut remind me when my MTD updates are due?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Coconut provides reminders for upcoming quarterly MTD updates and key tax deadlines."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I correct errors or resubmit a quarterly update in Coconut?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. If you need to correct information, Coconut allows you to update your records and submit corrections in the next quarterly update, in line with HMRC's MTD rules."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How much does Coconut cost for MTD for Income Tax?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Coconut offers clear, subscription‑based pricing with plans that include MTD submissions and Self Assessment tax return filing. Pricing is shown upfront before you upgrade."
+        }
+      }
+    ]
+  }
+}
+&lt;/script&gt;</code></pre>
+  </section>
+
+  <section class="card" data-slug="pricing">
+    <div class="card-head">
+      <span class="path">/pricing</span>
+      <span class="pill">12 fixed</span>
+      <span class="pageid">683ef56fe874d977c1c221e1 · 2 blocks</span>
+      <span class="spacer"></span>
+      <button class="mark" type="button">Mark done</button>
+      <button class="copy" type="button" data-target="c-pricing">Copy</button>
+    </div>
+    <pre><code id="c-pricing">&lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Sole trader accounting app | Pricing | Coconut",
+    "description": "See how much Coconut costs and what's included. Choose the right plan for your business with tools to track income, expenses, tax and more.",
+    "url": "/pricing",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Pricing"
+        }
+      ]
+    },
+    "mainEntity": {
+      "@type": "Product",
+      "name": "Coconut Accounting App",
+      "description": "Accounting and tax app for self-employed people and landlords with automatic income and expense tracking, MTD compliance, and Self Assessment support",
+      "image": "https://cdn.prod.website-files.com/6069af2a39978132d0155fd7/694962c84409e6fb387dfa61_!Coconut_2025_logo_RGB_Full_Logo_Black%26White%201.webp",
+      "brand": {
+        "@type": "Organization",
+        "name": "Coconut"
+      },
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Essentials",
+          "price": "99.99",
+          "priceCurrency": "GBP",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "99.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          },
+          "availability": "https://schema.org/InStock",
+          "url": "/pricing",
+          "description": "Automatic income and expense tracking, connect your bank in 30 seconds, expenses categorised for you, friendly UK expert support, self-employment tax estimate"
+        },
+        {
+          "@type": "Offer",
+          "name": "Essentials Monthly",
+          "price": "16.99",
+          "priceCurrency": "GBP",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "16.99",
+            "priceCurrency": "GBP",
+            "unitText": "per month"
+          },
+          "availability": "https://schema.org/InStock",
+          "url": "/pricing",
+          "description": "Automatic income and expense tracking, connect your bank in 30 seconds, expenses categorised for you, friendly UK expert support, self-employment tax estimate"
+        },
+        {
+          "@type": "Offer",
+          "name": "+MTD",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "129.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          },
+          "availability": "https://schema.org/InStock",
+          "url": "/pricing",
+          "description": "Everything in Essentials, plus send quarterly MTD updates to HMRC, submit your MTD year-end return, dedicated MTD expert help, multiple income streams, in year tax estimates, HMRC recognised for MTD"
+        },
+        {
+          "@type": "Offer",
+          "name": "+MTD Monthly",
+          "price": "21.99",
+          "priceCurrency": "GBP",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "21.99",
+            "priceCurrency": "GBP",
+            "unitText": "per month"
+          },
+          "availability": "https://schema.org/InStock",
+          "url": "/pricing",
+          "description": "Everything in Essentials, plus send quarterly MTD updates to HMRC, submit your MTD year-end return, dedicated MTD expert help, multiple income streams, in year tax estimates, HMRC recognised for MTD"
+        },
+        {
+          "@type": "Offer",
+          "name": "+Self Assessment",
+          "price": "129.99",
+          "priceCurrency": "GBP",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "129.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          },
+          "availability": "https://schema.org/InStock",
+          "url": "/pricing",
+          "description": "Everything in Essentials, plus submit Self Assessment direct to HMRC, built-in tax saving suggestions, all tax forms supported"
+        },
+        {
+          "@type": "Offer",
+          "name": "Full",
+          "price": "159.99",
+          "priceCurrency": "GBP",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "159.99",
+            "priceCurrency": "GBP",
+            "unitText": "per year"
+          },
+          "availability": "https://schema.org/InStock",
+          "url": "/pricing",
+          "description": "Everything in Essentials, MTD &amp; Self Assessment - submit Self Assessment direct to HMRC, send quarterly MTD updates to HMRC, submit your MTD year-end return"
+        }
+      ]
+    },
+    "about": {
+      "@type": "SoftwareApplication",
+      "name": "Coconut",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "iOS, Android, Web",
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "99.99",
+        "highPrice": "159.99",
+        "priceCurrency": "GBP",
+        "offerCount": 6
+      }
+    }
+  }
+&lt;/script&gt;
+
+&lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Are there different Coconut plans for MTD users vs non‑MTD users?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Coconut offers different plans depending on whether you need full MTD functionality or basic accounting and banking features."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I downgrade or cancel if I don't need MTD features yet?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. You can change, downgrade, or cancel your plan in line with Coconut's terms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to pay extra for landlord functionality in Coconut?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Landlord functionality is included in relevant Coconut plans, with pricing made clear before you subscribe."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can I see what I'm paying for before upgrading to an MTD plan?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "All plan features and pricing are clearly shown in the Coconut app and on the Coconut website before you upgrade."
+        }
+      }
+    ]
+  }
+&lt;/script&gt;</code></pre>
+  </section>
+
+  <section class="card" data-slug="webinars-and-events">
+    <div class="card-head">
+      <span class="path">/webinars-and-events</span>
+      <span class="pill">7 fixed</span>
+      <span class="pageid">695d2d199f7ed1b38f85c1c9</span>
+      <span class="spacer"></span>
+      <button class="mark" type="button">Mark done</button>
+      <button class="copy" type="button" data-target="c-webinars-and-events">Copy</button>
+    </div>
+    <pre><code id="c-webinars-and-events">&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Coconut webinars and events",
+  "description": "Stay up to date with Making Tax Digital for Income Tax, tax changes, accounting tips and expert guidance for self-employed people, CIS subcontractors and landlords. Join live sessions or catch up on past webinars anytime.",
+  "url": "/webinars-and-events",
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Webinars and events"
+      }
+    ]
+  },
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {
+        "@type": "VideoObject",
+        "position": 1,
+        "name": "HMRC MTD for Income Tax webinar February 2026",
+        "description": "From April 2026, Making Tax Digital (MTD) for Income Tax becomes mandatory for those earning over £50,000. Watch HMRC live with Coconut to get answers straight from the experts. Learn what's changing, who needs to act and how Coconut simplifies record-keeping.",
+        "contentUrl": "https://www.youtube.com/watch?v=ZP7b64P5tMM",
+        "thumbnailUrl": "https://cdn.prod.website-files.com/6069c9a7f45cd3c33e6f6dc1/695e6ac13f51a79ec00ee9c2_Tax%20is%20changing%20for%20self-employed%20people%20and%20landlords.webp"
+      },
+      {
+        "@type": "VideoObject",
+        "position": 2,
+        "name": "Preparing for Making Tax Digital with HMRC November 2025",
+        "description": "HMRC experts explain what's changing and what you need to do. Get practical guidance and answers to your MTD questions in this Making Tax Digital webinar.",
+        "contentUrl": "https://www.youtube.com/watch?v=BbHuUaxmY7M&amp;t=1s",
+        "thumbnailUrl": "https://cdn.prod.website-files.com/6069c9a7f45cd3c33e6f6dc1/695e5283f2cd5f6e0944bed5_6911b3f1a40bfe290a54aa88_HMRC_top%20banner%20illustration.png"
+      },
+      {
+        "@type": "VideoObject",
+        "position": 3,
+        "name": "How to prepare for Making Tax Digital for Income Tax October 2025",
+        "description": "Big changes are coming for self-employed people and landlords. Learn the key steps to stay compliant and how Coconut makes it simple in this Making Tax Digital webinar.",
+        "contentUrl": "https://www.youtube.com/watch?v=eU-Sq1G2jjE&amp;t=1s",
+        "thumbnailUrl": "https://cdn.prod.website-files.com/6069c9a7f45cd3c33e6f6dc1/695e5270a1a87366667c79b7_68f9ec4bf32eb53e53cd8015_Watch%20the%20discussion.webp"
+      },
+      {
+        "@type": "VideoObject",
+        "position": 4,
+        "name": "How to use Coconut September 2025",
+        "description": "Discover how easy it is to manage your accounts, track expenses, and stay MTD-compliant with Coconut. Watch our quick guide to see it in action.",
+        "contentUrl": "https://youtu.be/yKKPKZsKAIY",
+        "thumbnailUrl": "https://cdn.prod.website-files.com/6069c9a7f45cd3c33e6f6dc1/695e724f3695db3e10ab9b15_68c2ce31ba927771cc59f785_Who%20should%20join_.webp"
+      }
+    ]
+  },
+  "about": {
+    "@type": "Organization",
+    "name": "Coconut",
+    "description": "The accounting &amp; tax app for self-employed people and landlords"
+  }
+}
+&lt;/script&gt;</code></pre>
+  </section>
+
+  <section class="card" data-slug="home">
+    <div class="card-head">
+      <span class="path">/</span>
+      <span class="pill">1 fixed</span>
+      <span class="pageid">68307bf37726cd11f285d580</span>
+      <span class="spacer"></span>
+      <button class="mark" type="button">Mark done</button>
+      <button class="copy" type="button" data-target="c-home">Copy</button>
+    </div>
+    <pre><code id="c-home">&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Coconut",
+  "url": "/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "iOS, Android, Web",
+  "description": "Self employed accounting software for sole traders and landlords. Manage tax, invoicing and expenses with simple mobile app and desktop access. MTD ready and HMRC recognised.",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Essentials",
+      "price": "99.99",
+      "priceCurrency": "GBP",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "99.99",
+        "priceCurrency": "GBP",
+        "unitText": "per year"
+      }
+    },
+    {
+      "@type": "Offer",
+      "name": "+MTD",
+      "price": "129.99",
+      "priceCurrency": "GBP",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "129.99",
+        "priceCurrency": "GBP",
+        "unitText": "per year"
+      }
+    },
+    {
+      "@type": "Offer",
+      "name": "+Self Assessment",
+      "price": "129.99",
+      "priceCurrency": "GBP",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "129.99",
+        "priceCurrency": "GBP",
+        "unitText": "per year"
+      }
+    },
+    {
+      "@type": "Offer",
+      "name": "Full",
+      "price": "159.99",
+      "priceCurrency": "GBP",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "159.99",
+        "priceCurrency": "GBP",
+        "unitText": "per year"
+      }
+    }
+  ],
+  "featureList": [
+    "Automatic income and expense tracking",
+    "Connect your bank in 30 seconds",
+    "Expenses categorised for you",
+    "Friendly UK expert support",
+    "Self-employment tax estimate",
+    "Send quarterly MTD updates to HMRC",
+    "Submit your MTD year-end return",
+    "Submit Self Assessment direct to HMRC",
+    "Snap and store receipts instantly",
+    "Unlimited professional invoices",
+    "Real-time profit overview",
+    "Mobile app (iOS &amp; Android)",
+    "Access from any web browser",
+    "Secure bank-level encryption"
+  ]
+}
+&lt;/script&gt;</code></pre>
+  </section>
+
+  <section class="card" data-slug="hmrc-free-mtd-software-comparison">
+    <div class="card-head">
+      <span class="path">/hmrc-free-mtd-software-comparison</span>
+      <span class="pill">1 fixed</span>
+      <span class="pageid">69ba8b8a4bd205cd2e6c5dec</span>
+      <span class="spacer"></span>
+      <button class="mark" type="button">Mark done</button>
+      <button class="copy" type="button" data-target="c-hmrc-free-mtd-software-comparison">Copy</button>
+    </div>
+    <pre><code id="c-hmrc-free-mtd-software-comparison">&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Comparing HMRC free MTD software: Which bookkeeping tool is right for you?",
+  "description": "Compare bookkeeping tools for sole traders, landlords and CIS subcontractors, including features, pricing and MTD compliance.",
+  "url": "/hmrc-free-mtd-software-comparison",
+  "inLanguage": "en",
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Competitor comparison",
+        "item": "/hmrc-free-mtd-software-comparison"
+      }
+    ]
+  },
+  "about": {
+    "@type": "SoftwareApplication",
+    "name": "Coconut",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web, iOS, Android",
+    "description": "Accounting &amp; tax app for self-employed people and landlords with MTD compliance",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "GBP",
+      "description": "14-day free trial, no card details required"
+    },
+    "featureList": [
+      "MTD for Income Tax ready",
+      "Quarterly updates",
+      "End of year MTD tax return",
+      "Multiple income streams in one account",
+      "Unlimited invoicing",
+      "Unlimited receipt capture",
+      "Unlimited bank connections",
+      "Auto transaction categorisation",
+      "Tax estimation",
+      "Landlord features",
+      "Accountant access",
+      "UK-based support"
+    ]
+  },
+  "mainEntity": {
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is MTD?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Making Tax Digital (MTD) is a UK government initiative designed to make it easier for businesses to manage their taxes digitally. Using HMRC free MTD software or other MTD-compliant tools ensures your quarterly updates and end-of-year submissions are simpler, faster and more accurate."
+        }
+      }
+    ]
+  }
+}
+&lt;/script&gt;</code></pre>
+  </section>
+
+  <div class="foot">
+    <div>Ordered by how much each page changes. After pasting all five, publish once
+      &mdash; that clears the last 41 occurrences and takes the site to zero
+      outside the three intended exclusions.</div>
+    <div>Progress is remembered in this browser only.</div>
+  </div>
+</div>
+<script>
+function flash(btn, msg){ const o=btn.textContent; btn.textContent=msg;
+  setTimeout(()=>{btn.textContent=o;},1400); }
+document.querySelectorAll('button.copy').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const code=document.getElementById(btn.dataset.target).textContent;
+    navigator.clipboard.writeText(code).then(()=>flash(btn,'Copied'))
+      .catch(()=>flash(btn,'Press Cmd+C'));
+  });
+});
+function load(){ try{ return JSON.parse(localStorage.getItem('coconut-schema')||'{}'); }
+  catch(e){ return {}; } }
+function save(s){ try{ localStorage.setItem('coconut-schema',JSON.stringify(s)); }catch(e){} }
+let state=load();
+function paint(){
+  let n=0;
+  document.querySelectorAll('.card').forEach(c=>{
+    const k=c.dataset.slug, done=!!state[k];
+    c.classList.toggle('done',done);
+    const b=c.querySelector('button.mark');
+    if(b) b.textContent = done ? 'Done \u2713' : 'Mark done';
+    if(done) n++;
+  });
+  const el=document.getElementById('progress');
+  if(el) el.textContent = n + ' / ' + document.querySelectorAll('.card').length;
+}
+document.querySelectorAll('button.mark').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const k=btn.closest('.card').dataset.slug;
+    state[k]=!state[k]; save(state); paint();
+  });
+});
+paint();
+</script>

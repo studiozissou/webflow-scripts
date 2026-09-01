@@ -1,7 +1,7 @@
 # NEM Test report delivery: brand the covering email and the PDF report
 
 **Slug:** `nem-verify-report-email-and-pdf-branding`
-**Status:** Ready to Build
+**Status:** Ready to Build — **unblocked 2026-09-01**, see the note below
 **Priority:** P2
 **Type:** feature
 **Created:** 2026-08-11
@@ -18,6 +18,15 @@
 > Both specs rewrite `Build HTML`. **Land the JSON contract first** — it changes the node's
 > input shape from one prose blob to five named fields, and branding a template whose data
 > shape is about to change is wasted work.
+>
+> **Blocker cleared 2026-09-01.** The JSON contract has landed and is live: `Build HTML`
+> now reads the five named sections (`opening`, `reaction`, `origin`, `cost`, `closing`)
+> plus `introLine`, and `npm run check:nem-drift` reports `/verify` IN SYNC. The data shape
+> this spec was waiting on is now fixed, so the branding work can start against it.
+>
+> Still true as of that check: `Send Report` sends a `text` body only, with no `html` part
+> (`'Je persoonlijke rapport zit als PDF in de bijlage.'`), and `Build HTML` carries no logo,
+> no brand colour and no footer — only a Georgia/Montserrat base and the `.intro` rule.
 
 ## Summary
 

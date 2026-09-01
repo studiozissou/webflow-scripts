@@ -83,8 +83,8 @@ now that the block exists; `set_site_scripts` replaces the whole list.
 
 To ship a change: edit `footer-code.html`, then register a new version and re-apply it.
 
-Publish to **jayshetty.webflow.io only** until signed off; the custom domain is a
-separate, manual publish.
+Publish to **jayshetty.webflow.io** first; the custom domain is a separate publish.
+Live since 2026-09-01.
 
 ### Deploy log
 
@@ -92,7 +92,8 @@ separate, manual publish.
 | ---------- | ------- | -------------------- | ------------------------------------------------------------------------------------------- |
 | 2026-09-01 | 1.0.0   | jayshetty.webflow.io | First deploy. Verified — see below. Custom domain NOT published.                            |
 | 2026-09-01 | 1.1.0   | jayshetty.webflow.io | Appended the email unencoded while chasing a dropped survey response. Ruled out as a cause. |
-| 2026-09-01 | 1.0.0   | jayshetty.webflow.io | Reverted to encoding. **Current.**                                                          |
+| 2026-09-01 | 1.0.0   | jayshetty.webflow.io | Reverted to encoding.                                                                       |
+| 2026-09-01 | 1.0.0   | **www.jayshetty.me** | Published live by Will. Verified in production. **Current.**                                |
 
 ### Encoding was not the bug
 
@@ -136,6 +137,19 @@ created:
 - Suggest-a-Topic on `/podcast` does not redirect, and does not match the selector.
 - No new console errors: staging shows the same pre-existing SVG attribute warnings
   as production, and fewer 404s.
+
+### Verified in production, 2026-09-01
+
+After Will published to the custom domain, re-checked on `www.jayshetty.me` with the
+submission blocked at both the event and XHR/fetch layers (`postsAttempted: []`), so
+no Webflow submission, Zapier run or beehiiv subscriber was created:
+
+- Script present and serving **v1.0.0**.
+- Selector matches exactly the three global forms; catches none of search, filter,
+  Suggest-a-Topic or Book-Jay.
+- Footer form success redirects to the survey; beehiiv rendered the hidden field as
+  `will+liveverify@teamzissou.io`, so the plus-addressed round trip holds in production.
+- No console errors on the page.
 
 ### End-to-end signup, 2026-09-01
 

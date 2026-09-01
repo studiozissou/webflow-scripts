@@ -86,40 +86,53 @@ survey. **The selector must be scoped.**
 Because it keys on the shared `.footer2_form` class rather than element IDs, any
 new signup form built from the same class is covered automatically.
 
-### 3.4 The survey requires the email in the URL — this is the decisive constraint
+### 3.4 The email param is a UX win, not a requirement
+
+> **Corrected 2026-09-01.** An earlier version of this section claimed the survey
+> could not be submitted without `?email=`, and used that to rule out Webflow's
+> native redirect. **That was wrong.** The original check enumerated only
+> `input[type=hidden]`, so a *visible* email input was invisible to it, and
+> beehiiv's `no_subscription_error_message` config string was misread as evidence
+> of a gate. Re-tested in a clean browser context with no cookies — see below.
 
 The destination is beehiiv's welcome survey, titled **"One Final Step! | The Daily Wisdom"**
 — an 8-question survey (region, age, gender, occupation, challenges, preferences,
 two free-text). It posts to `https://news.jayshetty.me/post_subscribe_form`.
 
-Tested directly:
+Tested in an isolated browser context with no cookies:
 
-| Request | Result |
+| Request | `email` field renders as |
 |---|---|
-| `/forms/c63ba936-…?email=test@example.com` | Renders `<input type="hidden" name="email" value="test@example.com">` |
-| `/forms/c63ba936-…` (no param) | **The `email` field is absent from the DOM entirely** |
-| `/forms/c63ba936-…?e=test@example.com` | Ignored — the param name is exactly `email` |
+| `/forms/c63ba936-…?email=test@example.com` | `<input type="hidden" name="email" value="test@example.com">` — prefilled, not shown |
+| `/forms/c63ba936-…` (no param) | `<input type="email" name="email" required placeholder="Email">` — **visible and required**, first field on the form |
+| `/forms/c63ba936-…?e=test@example.com` | Visible field, as above — the param name is exactly `email` |
 
-The page also ships a built-in beehiiv error string:
-`no_subscription_error_message = "Please subscribe to submit this form."`
+So the survey is submittable either way. Without the param the visitor simply types
+their address; with it, the field is hidden and prefilled.
 
-So without `?email=`, the survey has no subscriber to attach answers to and a
-visitor would very likely fill in eight questions and hit a wall.
-
-**Confidence caveat:** this is inferred from the missing field plus beehiiv's own
-error string. The no-email submission was *not* actually performed, to avoid
-writing junk into the client's live beehiiv. Task 1 below proves it before rollout.
-
-No existing subscription is needed to run that test — a refusal is a refusal
-whoever submits it, and an acceptance from a non-subscriber would settle the
-question just as well. It does need a **private window**: a beehiiv cookie from a
-prior visit to `news.jayshetty.me` could identify the tester as a subscriber and
-let a submission through that would be blocked for a stranger.
+**Cookie caveat, learned the hard way:** beehiiv remembers an address across visits.
+After loading the page once with `?email=test@example.com`, a subsequent *no-param*
+load still rendered the field hidden and prefilled with that address. Any manual
+check of this behaviour must use a private window or an isolated context, or it will
+report the prefilled state for a visitor who would actually see an empty field.
 
 **Architectural consequence:** Webflow's native per-form "Redirect to URL" setting
-takes a static URL. It cannot carry the address the visitor just typed. Using it
-would deliver every visitor to a survey they cannot submit. **The no-code option is
-therefore ruled out** — this needs a small site-wide script.
+is genuinely viable — it takes a static URL, and the survey copes with that. The
+script's advantage is narrower than first stated:
+
+| | Native Webflow redirect | Footer script |
+|---|---|---|
+| Effort | Set Redirect URL on 3 forms in the Designer | ~30 lines of site footer code |
+| Visitor experience | Retypes the address just submitted, as the first field of a 9-question form | Email prefilled and hidden; one less step |
+| New signup forms | Each needs the setting adding by hand | Covered automatically by the class selector |
+| Reversibility | Clear the field | Delete the block |
+
+**Recommendation: the script**, on the grounds that re-asking for an address the
+visitor entered seconds earlier, at the top of a long survey, is a predictable
+drop-off point and the whole purpose here is survey completion. But this is now a
+judgement call about conversion, **not** a functional necessity. If the priority is
+shipping today, the native redirect is a legitimate choice and this spec should be
+closed in favour of a Designer change.
 
 ### 3.5 Success detection
 
@@ -256,9 +269,10 @@ Paste into **Project Settings → Custom Code → Footer**, before `</body>`.
   history, and in beehiiv's own server logs and page analytics. Accepted per §4; it
   is the visitor's own address and never a third party's.
 - **Fallback when no email was captured.** The visitor still reaches the survey, just
-  without the prefill, and will likely hit the "Please subscribe" wall. Preferred over
-  stranding them on jayshetty.me with no next step. Should be rare — the email field
-  is required on all three forms.
+  without the prefill — beehiiv then shows its own visible, required email field and
+  the visitor types the address themselves (§3.4). A degraded but working path, which
+  is why the fallback redirects rather than aborting. Should be rare in any case: the
+  email field is required on all three Webflow forms.
 
 ## 7. Barba impact
 
@@ -272,22 +286,23 @@ across `/`, `/about-jay`, `/press`, `/speaking`, `/connect`, `/blog`, `/podcast`
 
 | # | Task | Agent | Depends on |
 |---|---|---|---|
-| 1 | **Prove the no-email failure.** In a private window, open the survey with no `?email=` param, answer the eight questions, submit. Confirm it errors. Settles §3.4's caveat. | — (manual, Will) | — |
-| 2 | Write the footer snippet to `projects/jayshetty/newsletter-redirect/footer-code.html` as the git mirror of what is pasted into Webflow | code-writer | 1 |
+| 0 | **Decide: script or native redirect** (§3.4). The native option is viable; the script buys the email prefill. | — (Will) | — |
+| 2 | Write the footer snippet to `projects/jayshetty/newsletter-redirect/footer-code.html` as the git mirror of what is pasted into Webflow | code-writer | 0 |
 | 3 | Deploy: paste into Project Settings → Custom Code → Footer; publish to **jayshetty.webflow.io only** | — (manual, Will) | 2 |
 | 4 | Verify on the Webflow subdomain — all three forms, real email, Tier 1 + Tier 3 | qa | 3 |
 | 5 | Publish to the custom domain once signed off | — (manual, Will) | 4 |
 | 6 | Write `projects/jayshetty/newsletter-redirect/README.md` recording the deploy surface and the 406 gotcha | code-writer | 2 |
 
-Task 1 gates everything: if the survey turns out to accept submissions without an
-email, the far simpler Webflow-native redirect becomes viable again and this whole
-approach should be reconsidered.
+Task 0 gates everything. Tasks 2–6 describe the **script** route. If the native
+Webflow redirect is chosen instead, all of them collapse into a single Designer
+change — set the Redirect URL to the survey on each of the three forms in §3.1,
+publish, and close this spec.
 
 ### Parallelisation map
 
 Barely parallel — it is one ~30-line snippet.
 
-- **Sequential chain:** 1 → 2 → 3 → 4 → 5. Each genuinely gates the next.
+- **Sequential chain:** 0 → 2 → 3 → 4 → 5. Each genuinely gates the next.
 - **Can run alongside:** Task 6 (README) in parallel with Task 3/4.
 - **Recommendation:** sequential, single agent, **no worktree fan-out, no agent team.**
   Spawning parallel executors would cost more than the build.
@@ -325,7 +340,7 @@ change, trivially reversible by deleting the block. It does not meet the bar for
 ### Tier mapping
 
 **Tier 1 — automated (Playwright, `tests/acceptance/jayshetty-newsletter-signup-redirect.spec.js`)**
-10 tests. Runs without ever creating a real subscriber: the Webflow form POST is
+11 tests. Runs without ever creating a real subscriber: the Webflow form POST is
 aborted at the network layer, the survey response is stubbed, and the success state
 is revealed by hand to drive the MutationObserver. See §11 for the full index.
 
@@ -335,8 +350,9 @@ is revealed by hand to drive the MutationObserver. See §11 for the full index.
 **Tier 3 — manual (cannot be automated, and why)**
 - **A real end-to-end signup**, because the only honest test creates a live beehiiv
   subscriber and a real Webflow submission. Must be done once with a real address.
-- **The survey actually submits** with the prefilled email — proves §3.4, and lives on
-  beehiiv's servers, outside any test harness here.
+- **The survey actually submits** with the prefilled email — it posts to beehiiv's
+  servers, outside any test harness here, and the only honest check writes a real
+  response into the client's live publication.
 - **Turnstile behaviour** on the popup and banner — a real challenge cannot be driven
   headlessly.
 - **The popup's own trigger timing** — cookie/schedule-driven by existing footer script.
@@ -360,7 +376,7 @@ is revealed by hand to drive the MutationObserver. See §11 for the full index.
 
 `tests/acceptance/jayshetty-newsletter-signup-redirect.spec.js`
 
-10 tests, verified to parse and register with `--list` (not run — see below).
+11 tests, verified to parse and register with `--list` (not run — see below).
 
 | # | Test | Asserts |
 |---|---|---|
@@ -373,14 +389,15 @@ is revealed by hand to drive the MutationObserver. See §11 for the full index.
 | 7 | `popup form redirects to the survey with the email appended` | As above, popup form |
 | 8 | `banner form redirects to the survey with the email appended` | As above, banner form |
 | 9 | `does not redirect on the failure state` | Revealing `.w-form-fail` navigates nowhere |
-| 10 | `survey prefills the email from the query param` | Live beehiiv page renders `input[name=email]` with the value |
+| 10 | `survey prefills the email from the query param` | Live beehiiv page renders hidden `input[name=email]` with the value |
+| 11 | `survey shows a visible required email field without the param` | Guards §3.4's correction — if this fails, the param has become mandatory |
 
-Tests 2–5 and 10 should pass **today**, against the un-modified site — they assert the
+Tests 2–5, 10 and 11 should pass **today**, against the un-modified site — they assert the
 selector's scoping and beehiiv's prefill behaviour, both of which already hold. Tests
 1 and 6–9 **fail until the snippet is deployed** (Task 3), which is the intended TDD
 red state.
 
-Test 10 is the only one that touches a live external service, and it only reads.
+Tests 10 and 11 are the only ones touching a live external service, and both only read.
 
 Per repo `CLAUDE.md`, Playwright must not be run without asking first — these have
 been written and parse-checked, but deliberately not executed.

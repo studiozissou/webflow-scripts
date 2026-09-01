@@ -201,4 +201,23 @@ test.describe('jayshetty-newsletter-signup-redirect', () => {
 
     expect(value).toBe(email);
   });
+
+  // Guards the corrected finding in spec §3.4: the survey does NOT require the
+  // param — without it beehiiv renders a visible, required email field and the
+  // visitor types the address. If this ever starts failing, the param has become
+  // mandatory and the native-redirect fallback is no longer viable.
+  //
+  // Needs a cookie-free context: beehiiv remembers an address across visits and
+  // will render the field hidden and prefilled for anyone who arrived with the
+  // param earlier. Playwright gives each test a fresh context, which is enough.
+  test('survey shows a visible required email field without the param', async ({
+    page,
+  }) => {
+    await page.goto(SURVEY, { waitUntil: 'domcontentloaded' });
+
+    const field = page.locator('input[name="email"]').first();
+    await expect(field).toBeVisible();
+    await expect(field).toHaveAttribute('type', 'email');
+    await expect(field).toHaveJSProperty('required', true);
+  });
 });

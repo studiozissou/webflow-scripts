@@ -1,0 +1,144 @@
+<!doctype html>
+<!-- Side-by-side probe: the same episode mounted as the audio embed and as the /video embed, so a human can see whether Spotify serves this browser a real video player. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spotify audio vs video — side by side</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         margin: 0 auto; padding: 24px; max-width: 1100px; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  .sub { opacity: .7; margin: 0 0 18px; }
+  ol { background: rgba(128,128,128,.1); border-radius: 9px; padding: 14px 14px 14px 34px; margin: 0 0 20px; }
+  ol li { margin: 4px 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .panel { border: 1px solid rgba(128,128,128,.35); border-radius: 11px; overflow: hidden; }
+  .panel h2 { font-size: 14px; margin: 0; padding: 10px 13px;
+              background: rgba(128,128,128,.12); font-weight: 600; }
+  .panel h2 span { font-weight: 400; opacity: .65; }
+  .frame { aspect-ratio: 16/9; background: #111; }
+  .frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .meta { padding: 10px 13px; font-size: 13px; }
+  .meta b { font-variant-numeric: tabular-nums; }
+  button { font: inherit; padding: 9px 18px; border-radius: 7px; border: 1px solid currentColor;
+           background: transparent; color: inherit; cursor: pointer; }
+  button:disabled { opacity: .45; cursor: default; }
+  .verdict { padding: 13px 15px; border-radius: 9px; font-weight: 600; margin: 20px 0 0;
+             border: 1px solid; }
+  .wait { opacity: .75; }
+  .yes { color: #0a7f3f; }
+  .no { color: #b3261e; }
+  label { display: block; margin: 0 0 4px; opacity: .7; font-size: 13px; }
+  input { font: inherit; padding: 7px 9px; width: 320px; max-width: 100%;
+          border-radius: 6px; border: 1px solid rgba(128,128,128,.5);
+          background: transparent; color: inherit; }
+  .engine { font-size: 13px; opacity: .75; margin: 14px 0 0; }
+</style>
+</head>
+<body>
+
+<h1>Spotify audio vs video — same episode, side by side</h1>
+<p class="sub">Nothing autoplays. Both frames are mounted exactly the way the Jay Shetty
+player mounts them in production, then you press play in each one yourself.</p>
+
+<ol>
+  <li>Press <strong>Mount both players</strong>.</li>
+  <li>Press play <strong>inside the left frame</strong>, then <strong>inside the right frame</strong>.</li>
+  <li>Compare them. Left is the audio embed. Right is the video embed.</li>
+</ol>
+
+<label for="ep">Spotify episode id</label>
+<input id="ep" value="0QrCDajVXiP1XDvof7Q1Qg">
+<p style="margin:14px 0 20px"><button id="run">Mount both players</button></p>
+
+<div class="grid">
+  <div class="panel">
+    <h2>Left — audio embed <span>/embed/episode/{id}</span></h2>
+    <div class="frame" id="slotA"></div>
+    <div class="meta">playback updates: <b id="puA">0</b> · <span id="stA">not mounted</span></div>
+  </div>
+  <div class="panel">
+    <h2>Right — video embed <span>/embed/episode/{id}/video</span></h2>
+    <div class="frame" id="slotB"><div id="targetB"></div></div>
+    <div class="meta">playback updates: <b id="puB">0</b> · <span id="stB">not mounted</span></div>
+  </div>
+</div>
+
+<div id="verdict" class="verdict wait">Not started.</div>
+<p class="engine" id="engine"></p>
+
+<script>
+var A = { frame: null, count: 0 }, B = { frame: null, count: 0 };
+var $ = function (id) { return document.getElementById(id); };
+
+$("engine").textContent = (typeof window.GestureEvent !== "undefined")
+  ? "Engine: WebKit — GestureEvent present. This is the branch production currently denies video."
+  : "Engine: non-WebKit — GestureEvent absent. Production gives this browser video.";
+
+function verdict() {
+  var v = $("verdict");
+  if (B.count > 0) {
+    v.className = "verdict yes";
+    v.textContent = "The video embed is playing here (" + B.count + " updates). " +
+      "If the right frame shows a moving picture, this browser can be moved onto the video path.";
+  } else if (A.count > 0) {
+    v.className = "verdict no";
+    v.textContent = "Audio plays (" + A.count + " updates) but the video embed has reported nothing. " +
+      "If the right frame looks identical to the left, Spotify is degrading video for this browser.";
+  } else {
+    v.className = "verdict wait";
+    v.textContent = "Mounted. Now press play inside each frame.";
+  }
+}
+
+window.addEventListener("message", function (e) {
+  if ((e.origin || "").indexOf("spotify.com") === -1) return;
+  var p = e.data;
+  if (typeof p === "string") { try { p = JSON.parse(p); } catch (err) { return; } }
+  if (!p || p.type !== "playback_update") return;
+  if (A.frame && e.source === A.frame.contentWindow) { A.count++; $("puA").textContent = A.count; $("stA").textContent = "playing"; }
+  if (B.frame && e.source === B.frame.contentWindow) { B.count++; $("puB").textContent = B.count; $("stB").textContent = "playing"; }
+  verdict();
+});
+
+$("run").addEventListener("click", function () {
+  var EP = $("ep").value.trim();
+  if (!EP) return;
+  this.disabled = true;
+
+  var a = document.createElement("iframe");
+  a.setAttribute("allow", "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture");
+  a.src = "https://open.spotify.com/embed/episode/" + EP;
+  $("slotA").appendChild(a);
+  A.frame = a;
+  $("stA").textContent = "mounted, press play";
+
+  window.onSpotifyIframeApiReady = function (api) {
+    api.createController($("targetB"),
+      { uri: "spotify:episode:" + EP, width: "100%", height: "100%" },
+      function (controller) {
+        controller.addListener("ready", function () {
+          var f = $("slotB").querySelector("iframe");
+          if (!f || f.src.indexOf("/video") !== -1) return;
+          f.removeAttribute("loading");
+          f.src = "https://open.spotify.com/embed/episode/" + EP + "/video?utm_source=iframe-api";
+          B.frame = f;
+          $("stB").textContent = "mounted, press play";
+          verdict();
+        });
+      });
+  };
+
+  var s = document.createElement("script");
+  s.src = "https://open.spotify.com/embed/iframe-api/v1";
+  s.async = true;
+  s.onerror = function () { $("stB").textContent = "API failed to load"; };
+  document.head.appendChild(s);
+  verdict();
+});
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-08-17T00:00:00+00:00",
+  "lastRun": "2026-09-01T07:05:00Z",
   "processedSourceIds": [
     "gmail:19f239a9bded3637#item10",
     "gmail:19f239a9bded3637#item27",
@@ -73,30 +73,58 @@
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#anchor-link-text",
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#generative-location-pages",
     "gmail:19ff6ec7b30729f9",
-    "gmail:19ff75cc7296ea68"
+    "gmail:19ff75cc7296ea68",
+    "slack:C08G8FGHX9Q:1787565553.106209",
+    "slack:C08G8FGHX9Q:1787557898.899339",
+    "slack:D08SEJ6QTD2:1787576555.834739",
+    "slack:D08SEJ6QTD2:1787577864.286629",
+    "slack:D08SEJ6QTD2:1787555923.331769",
+    "slack:D08SEJ6QTD2:1787583974.679309",
+    "gmail:19ff118c0756a78e#prep",
+    "gmail:1a0381a22d0d574a",
+    "gmail:1a028476b7ce0533",
+    "gmail:1a0325bb24a86087",
+    "trello:0tkEbcsk",
+    "calendar:65bd33e044f04ef4814890f3500b5264_20260901",
+    "trello:6a8dae89df21d98c3e28e437",
+    "gmail:1a03e425f5b9a16b",
+    "trello:6a886072f4172a30a11591c4",
+    "trello:6a75f5a4fea0190dae036e12",
+    "gmail:1a0524447ae5f33d",
+    "gmail:1a05240b7d8e186f",
+    "slack:D08SEJ6QTD2:1787826538.934959",
+    "gmail:1a046faebfbc833c",
+    "trello:6a05d60157ebe300986ee9b4",
+    "calendar:49cde1b500c544ac913d2427ed474bae",
+    "trello:69f31e18860895800dc276d5",
+    "trello:6a58c9edb6d17a8a9b480a26",
+    "gmail:1a059fd801421169",
+    "gmail:1a059fd801421169#estimate",
+    "gmail:1a05843e5514ffe6",
+    "notion-comment:3cde1848-bb51-8014-b4d0-001daa9a6e39"
   ],
   "sources": {
     "gmail": {
-      "lastProcessed": "2026-08-13T08:00:44Z"
+      "lastProcessed": "2026-09-01T06:23:40Z"
     },
     "slack": {
       "channels": {
-        "C0973LJ2BTJ": "1786439711.618659",
-        "C08G8FGHX9Q": "1785320577.580049"
+        "C0973LJ2BTJ": "1787218601.240929",
+        "C08G8FGHX9Q": "1787239056.087669"
       },
       "dms": {
-        "D08SEJ6QTD2": "1786549559.370289",
+        "D08SEJ6QTD2": "1787826538.934959",
         "D08RRQ1L8NT": "1786535887.769059"
       }
     },
     "calendar": {
-      "lastProcessed": "2026-08-13T08:26:30Z"
+      "lastProcessed": "2026-09-01T07:05:00Z"
     },
     "trello": {
-      "lastProcessed": null
+      "lastProcessed": "2026-09-01T07:05:00Z"
     }
   },
-  "quickTasksParent": null,
+  "quickTasksParent": "https://app.notion.com/p/3c7e1848bb51817d868bed28aead883c",
   "taskLinks": {
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#share-options-rishi": "https://app.notion.com/p/3bfe1848bb5181b0866bf1e6c4e309f6",
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#design-revisions": "https://app.notion.com/p/3bfe1848bb51818a8a48ce7a0815e00a",
@@ -105,18 +133,92 @@
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#review-seo-report": "https://app.notion.com/p/3bfe1848bb5181d891dbeafb22e0410a",
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#ai-unique-content": "https://app.notion.com/p/3bfe1848bb5181259ea7efb2f9290afc",
     "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#anchor-link-text": "https://app.notion.com/p/3bfe1848bb5181339533e6fdaa57a13d",
-    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#generative-location-pages": "https://app.notion.com/p/3bfe1848bb51815aa17ff46cdc27010e"
+    "notion-meeting:3bbe1848bb5180e79a84e8fef0027c84#generative-location-pages": "https://app.notion.com/p/3bfe1848bb51815aa17ff46cdc27010e",
+    "slack:C08G8FGHX9Q:1787565553.106209": "https://app.notion.com/p/3c7e1848bb5181fc8da9d73be1f809dd",
+    "slack:C08G8FGHX9Q:1787557898.899339": "https://app.notion.com/p/3c7e1848bb518135ad6bc09f8c42ef5e",
+    "slack:D08SEJ6QTD2:1787576555.834739": "https://app.notion.com/p/3c7e1848bb518110a9dbd0de6f5e48db",
+    "slack:D08SEJ6QTD2:1787577864.286629": "https://app.notion.com/p/3c7e1848bb5181e4a5dcc4459b642511",
+    "slack:D08SEJ6QTD2:1787555923.331769": "https://app.notion.com/p/3c7e1848bb5181289dbee2c52018630e",
+    "slack:D08SEJ6QTD2:1787583974.679309": "https://app.notion.com/p/3c7e1848bb5181edbb7ff6b28c577bb1",
+    "gmail:19ff118c0756a78e#prep": "https://app.notion.com/p/3c7e1848bb5181a880baf2021dce9262",
+    "gmail:1a0381a22d0d574a": "https://app.notion.com/p/3c7e1848bb5181c08b7aeb657677ad24",
+    "gmail:1a028476b7ce0533": "https://app.notion.com/p/3c7e1848bb5181b0ac93d508874f45ca",
+    "gmail:1a0325bb24a86087": "https://app.notion.com/p/3c7e1848bb5181d4ac3ff10a9965b93e",
+    "trello:0tkEbcsk": "https://app.notion.com/p/3c7e1848bb5181ae9950f11d68c56ca7",
+    "calendar:65bd33e044f04ef4814890f3500b5264_20260901": "https://app.notion.com/p/3c7e1848bb5181cbacf2fef9c01026ae",
+    "trello:6a8dae89df21d98c3e28e437": "https://app.notion.com/p/3c9e1848bb51812ab0f7c92ef556343a",
+    "gmail:1a03e425f5b9a16b": "https://app.notion.com/p/3c9e1848bb5181528526de3ddacdcbbd",
+    "trello:6a886072f4172a30a11591c4": "https://app.notion.com/p/3c9e1848bb5181d9bccbf3e5567972e9",
+    "trello:6a75f5a4fea0190dae036e12": "https://app.notion.com/p/3c9e1848bb51819b9414cfdab0ed08d1",
+    "gmail:1a0524447ae5f33d": "https://app.notion.com/p/3cde1848bb5181248988f55fee8b41b5",
+    "gmail:1a05240b7d8e186f": "https://app.notion.com/p/3cde1848bb5181c89cfbcd35076d4e7f",
+    "slack:D08SEJ6QTD2:1787826538.934959": "https://app.notion.com/p/3cde1848bb51812f91f6c2e612e85c5c",
+    "gmail:1a046faebfbc833c": "https://app.notion.com/p/3cde1848bb5181b9a050ced8f83f0bd9",
+    "trello:6a05d60157ebe300986ee9b4": "https://app.notion.com/3b3e1848bb5181708593e444c5322669",
+    "calendar:49cde1b500c544ac913d2427ed474bae": "https://app.notion.com/p/3cde1848bb51817c98eaf36d38916214",
+    "trello:69f31e18860895800dc276d5": "https://app.notion.com/p/3b3e1848bb5181d48431dca9204d24cf",
+    "trello:6a58c9edb6d17a8a9b480a26": "https://app.notion.com/p/3b3e1848bb518191a50cc18ebb8a7c87",
+    "gmail:1a059fd801421169": "https://app.notion.com/p/3cee1848bb51815f9fcae3f876fb7d3a",
+    "gmail:1a059fd801421169#estimate": "https://app.notion.com/p/3cee1848bb5181dea12ef533bee2f6e2",
+    "gmail:1a05843e5514ffe6": "https://app.notion.com/p/3cee1848bb5181508605f71dccd30505",
+    "notion-comment:3cde1848-bb51-8014-b4d0-001daa9a6e39": "https://app.notion.com/p/3cee1848bb5181bdbf88e1b628bf8a8b"
   },
-  "userNotionId": null,
-  "processedComments": [],
+  "userNotionId": "9dde1fcb-9a58-4b04-8be0-1e0f93f6f344",
+  "processedComments": [
+    "3cde1848-bb51-8014-b4d0-001daa9a6e39",
+    "3cde1848-bb51-80c4-b7f6-001d47afbe05"
+  ],
   "commentWatch": {
-    "https://app.notion.com/p/3bfe1848bb5181b0866bf1e6c4e309f6": null,
-    "https://app.notion.com/p/3bfe1848bb51818a8a48ce7a0815e00a": null,
-    "https://app.notion.com/p/3bfe1848bb5181c9aebfd741756476a0": null,
-    "https://app.notion.com/p/3bfe1848bb51815eba9fe6f9cf61974b": null,
-    "https://app.notion.com/p/3bfe1848bb5181d891dbeafb22e0410a": null,
-    "https://app.notion.com/p/3bfe1848bb5181259ea7efb2f9290afc": null,
-    "https://app.notion.com/p/3bfe1848bb5181339533e6fdaa57a13d": null,
-    "https://app.notion.com/p/3bfe1848bb51815aa17ff46cdc27010e": null
+    "https://app.notion.com/p/3bfe1848bb5181b0866bf1e6c4e309f6": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3bfe1848bb51818a8a48ce7a0815e00a": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3bfe1848bb5181c9aebfd741756476a0": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3bfe1848bb51815eba9fe6f9cf61974b": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3bfe1848bb5181d891dbeafb22e0410a": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3bfe1848bb5181259ea7efb2f9290afc": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3bfe1848bb5181339533e6fdaa57a13d": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3bfe1848bb51815aa17ff46cdc27010e": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181fc8da9d73be1f809dd": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb518135ad6bc09f8c42ef5e": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb518110a9dbd0de6f5e48db": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181e4a5dcc4459b642511": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181289dbee2c52018630e": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181edbb7ff6b28c577bb1": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181a880baf2021dce9262": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181c08b7aeb657677ad24": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181b0ac93d508874f45ca": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181ae9950f11d68c56ca7": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c7e1848bb5181cbacf2fef9c01026ae": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c9e1848bb51812ab0f7c92ef556343a": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c9e1848bb5181528526de3ddacdcbbd": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c9e1848bb5181d9bccbf3e5567972e9": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3c9e1848bb51819b9414cfdab0ed08d1": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3cde1848bb5181248988f55fee8b41b5": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3cde1848bb5181c89cfbcd35076d4e7f": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3cde1848bb51812f91f6c2e612e85c5c": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3cde1848bb5181b9a050ced8f83f0bd9": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/3b3e1848bb5181708593e444c5322669": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3cde1848bb51817c98eaf36d38916214": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3b3e1848bb5181d48431dca9204d24cf": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3b3e1848bb518191a50cc18ebb8a7c87": "2026-09-01T07:05:00Z",
+    "https://app.notion.com/p/3cee1848bb51815f9fcae3f876fb7d3a": null,
+    "https://app.notion.com/p/3cee1848bb5181dea12ef533bee2f6e2": null,
+    "https://app.notion.com/p/3cee1848bb5181508605f71dccd30505": null,
+    "https://app.notion.com/p/3cee1848bb5181bdbf88e1b628bf8a8b": null,
+    "https://app.notion.com/p/3b3e1848bb518110b54ed093ed896553": null,
+    "https://app.notion.com/p/3b3e1848bb51813e986ed7f4bdc4ceaa": null,
+    "https://app.notion.com/p/3b4e1848bb518120a783c26db0ec8d82": null,
+    "https://app.notion.com/p/39ee1848bb5181b78885f5bbc33397a8": null,
+    "https://app.notion.com/p/3b4e1848bb5181eca93de6fae6a2971d": null,
+    "https://app.notion.com/p/3bbe1848bb51810aab87dae9c93c8e18": null,
+    "https://app.notion.com/p/39ce1848bb5180419ffee53b1c6cc32f": null,
+    "https://app.notion.com/p/3b8e1848bb5181c9bdb8f7e38a3b0ce4": null,
+    "https://app.notion.com/p/bd0807eda223429aaea49f2a29b7f621": null,
+    "https://app.notion.com/p/286e1848bb5180118d33f5cea7c207e7": null,
+    "https://app.notion.com/p/28fe1848bb5180639b40d2eb1f5b16f9": null,
+    "https://app.notion.com/p/3c8e1848bb518003a3aee7ad28ac46d0": null,
+    "https://app.notion.com/p/30ae1848bb5180ef8720cc9cc04df617": null,
+    "https://app.notion.com/p/27de1848bb5180eda110f724d002af43": null,
+    "https://app.notion.com/p/3b3e1848bb5181718dead788185d7b1d": null,
+    "https://app.notion.com/p/3b3e1848bb5181d18a45e239d1f52120": "2026-09-01T07:05:00Z"
   }
 }

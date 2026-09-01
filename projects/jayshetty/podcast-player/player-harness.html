@@ -1,0 +1,125 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>podcast-player.js harness</title>
+<!-- Mounts the real ./podcast-player.js against a mock podcast-list DOM so the
+     Spotify /video swap and watchdog can be exercised in any browser without a
+     Webflow deploy. Serve this directory over HTTP (Spotify's embed refuses
+     file://) and open the page; the panel below reports what the player did. -->
+<style>
+  body { font: 14px/1.4 -apple-system, system-ui, sans-serif; margin: 24px; color: #111; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .podcasts_item { width: 480px; max-width: 100%; }
+  .podcasts_image-wrapper { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #222; }
+  .image-cover { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; color: #fff; cursor: pointer; transition: opacity .2s; }
+  .podcast-list-spotify-embed { position: absolute; inset: 0; display: none; }
+  .podcast-list-spotify-embed.is-cover { display: block; }
+  .podcasts_video-wrapper { margin-top: 8px; display: flex; gap: 8px; }
+  .is-podcast-pause-button { display: none; }
+  .show-btn .is-podcast-watch-button { display: none; }
+  .show-btn .is-podcast-pause-button { display: inline-block; }
+  #log { margin-top: 24px; padding: 12px; background: #f3f3f3; white-space: pre-wrap; font: 12px/1.5 ui-monospace, monospace; max-height: 40vh; overflow: auto; }
+  #status { margin-top: 12px; font-weight: 600; }
+</style>
+
+<h1>podcast-player.js harness</h1>
+<p id="engine"></p>
+<div class="row">
+  <div class="podcasts_item" data-item="A">
+    <div class="podcasts_image-wrapper">
+      <div class="image-cover">Item A cover — click to play</div>
+      <div class="podcast-list-spotify-embed is-cover"><div class="spotify-player-target"></div></div>
+    </div>
+    <div class="podcasts_video-wrapper">
+      <a class="button is-link is-podcast-watch-button" data-watch="spotify" href="https://open.spotify.com/episode/0QrCDajVXiP1XDvof7Q1Qg">Watch A</a>
+      <a class="button is-link is-podcast-pause-button" data-pause="spotify" href="#">Pause A</a>
+    </div>
+  </div>
+  <div class="podcasts_item" data-item="B">
+    <div class="podcasts_image-wrapper">
+      <div class="image-cover">Item B cover — click to play</div>
+      <div class="podcast-list-spotify-embed is-cover"><div class="spotify-player-target"></div></div>
+    </div>
+    <div class="podcasts_video-wrapper">
+      <a class="button is-link is-podcast-watch-button" data-watch="spotify" href="https://open.spotify.com/episode/3AY6yzAVnOwe8pCQkWJI9U">Watch B</a>
+      <a class="button is-link is-podcast-pause-button" data-pause="spotify" href="#">Pause B</a>
+    </div>
+  </div>
+</div>
+<div id="status">Waiting for a Watch click.</div>
+<pre id="log"></pre>
+
+<script>
+(function () {
+  var t0 = performance.now();
+  var log = document.getElementById("log");
+  var status = document.getElementById("status");
+  var counts = {};
+  window.__harness = { messages: counts, events: [] };
+
+  function line(msg) {
+    var stamp = ((performance.now() - t0) / 1000).toFixed(2) + "s";
+    window.__harness.events.push(stamp + " " + msg);
+    log.textContent += stamp + " " + msg + "\n";
+    log.scrollTop = log.scrollHeight;
+  }
+
+  document.getElementById("engine").textContent = (typeof window.GestureEvent !== "undefined")
+    ? "Engine: WebKit (GestureEvent present) — the branch v1.1.0 denied video."
+    : "Engine: non-WebKit (GestureEvent absent).";
+
+  function itemOf(win) {
+    var frames = document.querySelectorAll(".podcast-list-spotify-embed iframe");
+    for (var i = 0; i < frames.length; i++) {
+      if (frames[i].contentWindow === win) return frames[i].closest(".podcasts_item").getAttribute("data-item");
+    }
+    return "?";
+  }
+
+  window.addEventListener("message", function (e) {
+    if ((e.origin || "").indexOf("spotify.com") === -1) return;
+    var p = e.data;
+    if (typeof p === "string") { try { p = JSON.parse(p); } catch (err) { return; } }
+    var type = (p && p.type) || "unknown";
+    var key = itemOf(e.source) + ":" + type;
+    counts[key] = (counts[key] || 0) + 1;
+    if (counts[key] === 1 || type === "ready") line("message from item " + itemOf(e.source) + ": " + type);
+  });
+
+  document.addEventListener("click", function (e) {
+    var w = e.target.closest && e.target.closest(".is-podcast-watch-button");
+    if (w) { e.preventDefault(); line("Watch clicked on item " + w.closest(".podcasts_item").getAttribute("data-item")); }
+    var p = e.target.closest && e.target.closest(".is-podcast-pause-button");
+    if (p) { e.preventDefault(); line("Pause clicked on item " + p.closest(".podcasts_item").getAttribute("data-item")); }
+  });
+
+  window.__harnessState = function () {
+    return Array.prototype.map.call(document.querySelectorAll(".podcasts_item"), function (item) {
+      var wrap = item.querySelector(".podcast-list-spotify-embed");
+      var frame = wrap.querySelector("iframe");
+      return {
+        item: item.getAttribute("data-item"),
+        src: frame ? frame.src : null,
+        video: !!(frame && frame.src.indexOf("/video") !== -1),
+        sandbox: frame ? frame.getAttribute("sandbox") : null,
+        videoOk: !!wrap.__videoOk,
+        watchdogArmed: !!wrap.__videoWatchdog,
+        fellBack: !!wrap.__videoFellBack,
+        showBtn: !!item.querySelector(".podcasts_video-wrapper.show-btn")
+      };
+    });
+  };
+
+  setInterval(function () {
+    var s = window.__harnessState();
+    status.textContent = s.map(function (x) {
+      return x.item + ": " + (x.src ? (x.video ? "/video" : "audio") : "no iframe") +
+        (x.videoOk ? " ✓latched" : x.watchdogArmed ? " ⏱watchdog" : "") +
+        (x.fellBack ? " ✗FELL BACK" : "");
+    }).join("   |   ");
+  }, 250);
+
+  line("harness ready; cssInjected=" + !!document.getElementById("js-podcast-player-css"));
+})();
+</script>
+<script src="./podcast-player.js"></script>

@@ -14,20 +14,17 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script type="text/javascript" src="https://cdn.embed.ly/player-0.1.0.min.js"></script>
 <!-- Spotify iFrame API (podcast inline player). The ready stub must be defined
-     before the API script so the callback is never missed.
-     WebKit does not use the API at all — it gets a plain embed iframe (see
-     the footer player script for why) — so the script is not loaded there. -->
+     before the API script so the callback is never missed. Loaded in every
+     browser — Safari takes the same API + /video path as Chrome. -->
 <script>
   window.onSpotifyIframeApiReady = function (api) {
     window.__spotifyIframeApi = api;
     document.dispatchEvent(new CustomEvent("spotify-api-ready"));
   };
-  if (typeof window.GestureEvent === "undefined") {
-    var spotifyApiScript = document.createElement("script");
-    spotifyApiScript.src = "https://open.spotify.com/embed/iframe-api/v1";
-    spotifyApiScript.async = true;
-    document.head.appendChild(spotifyApiScript);
-  }
+  var spotifyApiScript = document.createElement("script");
+  spotifyApiScript.src = "https://open.spotify.com/embed/iframe-api/v1";
+  spotifyApiScript.async = true;
+  document.head.appendChild(spotifyApiScript);
 </script>
 <!-- Link Swiper's CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />

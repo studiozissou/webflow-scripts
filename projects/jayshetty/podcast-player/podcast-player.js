@@ -1,4 +1,4 @@
-// Dual-platform inline podcast player for the Jay Shetty podcast list: YouTube via postMessage, Spotify via its iFrame API, with a WebKit path and a video-to-audio fallback. See README.md for why each branch exists.
+// Dual-platform inline podcast player for the Jay Shetty podcast list: YouTube via postMessage, Spotify via its iFrame API swapped to the /video embed in every browser, with a video-to-audio fallback. See README.md for why each branch exists.
 
 (function () {
   var DEBUG = false;
@@ -27,7 +27,7 @@
   }
 
   function ensureSpotifyApi() {
-    if (!USE_IFRAME_API || spotifyApi) return;
+    if (spotifyApi) return;
     if (window.__spotifyIframeApi) {
       spotifyApi = window.__spotifyIframeApi;
       return;
@@ -60,44 +60,20 @@
     return link ? link.getAttribute("href") : "";
   }
 
-  var USE_IFRAME_API = typeof window.GestureEvent === "undefined";
-
   function controllerFor(embedWrap) {
     var entry = spotifyControllers.filter(function (e) { return e.el === embedWrap; })[0];
     return entry ? entry.controller : null;
-  }
-
-  function mountPlainEmbed(item, embedWrap, id) {
-    if (embedWrap.querySelector("iframe")) return;
-    var placeholder = item.querySelector(".spotify-player-target");
-    if (!placeholder || !placeholder.parentNode) return;
-    var frame = document.createElement("iframe");
-    frame.setAttribute("allow", "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture");
-    frame.style.border = "0";
-    frame.src = "https://open.spotify.com/embed/episode/" + id;
-    placeholder.parentNode.replaceChild(frame, placeholder);
-  }
-
-  function unmountPlainEmbed(embedWrap) {
-    var frame = embedWrap.querySelector("iframe");
-    if (!frame || !frame.parentNode) return;
-    var placeholder = document.createElement("div");
-    placeholder.className = "spotify-player-target";
-    frame.parentNode.replaceChild(placeholder, frame);
   }
 
   var VIDEO_WATCHDOG_MS = 6000;
 
   function watchForDegradedVideo(embedWrap, id) {
     if (embedWrap.__videoWatchdog || embedWrap.__videoOk) return;
+    var frame = embedWrap.querySelector("iframe");
+    if (!frame) return;
 
     var onMessage = function (e) {
-      if (!e.data || (e.origin || "").indexOf("spotify.com") === -1) return;
-      var payload = e.data;
-      if (typeof payload === "string") {
-        try { payload = JSON.parse(payload); } catch (err) { return; }
-      }
-      if (!payload || payload.type !== "playback_update") return;
+      if (!frame.contentWindow || e.source !== frame.contentWindow) return;
       embedWrap.__videoOk = true;
       stop();
     };
@@ -112,8 +88,7 @@
     embedWrap.__videoWatchdog = setTimeout(function () {
       stop();
       if (embedWrap.__videoOk) return;
-      var frame = embedWrap.querySelector("iframe");
-      if (!frame || !document.contains(frame) || frame.src.indexOf("/video") === -1) return;
+      if (!document.contains(frame) || frame.src.indexOf("/video") === -1) return;
       DEBUG && console.log("[player] /video page silent, using audio embed", id);
       embedWrap.__videoFellBack = true;
       frame.removeAttribute("sandbox");
@@ -122,8 +97,7 @@
   }
 
   function useVideoEmbed(embedWrap, id, attempt) {
-    if (!USE_IFRAME_API) return;
-    if (embedWrap.__videoFellBack) return;
+    if (embedWrap.__videoFellBack) return false;
     var frame = embedWrap.querySelector("iframe");
     if (!frame) {
       if ((attempt || 0) < 30) {
@@ -131,20 +105,21 @@
           useVideoEmbed(embedWrap, id, (attempt || 0) + 1);
         }, 100);
       }
-      return;
+      return false;
     }
     var videoSrc = "https://open.spotify.com/embed/episode/" + id + "/video?utm_source=iframe-api";
-    if (frame.src.indexOf("/embed/episode/" + id + "/video") !== -1) return;
+    if (frame.src.indexOf("/embed/episode/" + id + "/video") !== -1) return false;
     frame.addEventListener("load", function () {
       if (frame.src.indexOf("/video") === -1) return;
       var controller = controllerFor(embedWrap);
       if (controller) {
         try { controller.play(); } catch (err) {}
       }
-      watchForDegradedVideo(embedWrap, id);
     });
     frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
+    watchForDegradedVideo(embedWrap, id);
     frame.src = videoSrc;
+    return true;
   }
 
   function pruneControllers() {
@@ -156,10 +131,6 @@
   }
 
   function pauseAllSpotify() {
-    if (!USE_IFRAME_API) {
-      document.querySelectorAll(".podcast-list-spotify-embed").forEach(unmountPlainEmbed);
-      return;
-    }
     pruneControllers();
     spotifyControllers.forEach(function (entry) {
       try { entry.controller.pause(); } catch (err) {}
@@ -220,11 +191,6 @@
       return;
     }
 
-    if (!USE_IFRAME_API) {
-      mountPlainEmbed(item, embedWrap, id);
-      return;
-    }
-
     var existing = spotifyControllers.filter(function (entry) {
       return item.contains(entry.el);
     })[0];
@@ -243,7 +209,7 @@
       }, function (controller) {
         spotifyControllers.push({ el: embedWrap, controller: controller });
         controller.addListener("ready", function () {
-          useVideoEmbed(embedWrap, id);
+          if (useVideoEmbed(embedWrap, id)) return;
           try { controller.play(); } catch (err) {}
         });
       });
@@ -254,17 +220,12 @@
 
   function pauseItem(item, platform) {
     if (platform === "spotify") {
-      if (USE_IFRAME_API) {
-        pruneControllers();
-        spotifyControllers.forEach(function (entry) {
-          if (item.contains(entry.el)) {
-            try { entry.controller.pause(); } catch (err) {}
-          }
-        });
-      } else {
-        var wrap = item.querySelector(".podcast-list-spotify-embed");
-        if (wrap) unmountPlainEmbed(wrap);
-      }
+      pruneControllers();
+      spotifyControllers.forEach(function (entry) {
+        if (item.contains(entry.el)) {
+          try { entry.controller.pause(); } catch (err) {}
+        }
+      });
     } else {
       var frame = item.querySelector(".podcast-list-youtube-embed iframe");
       if (frame && frame.contentWindow) {

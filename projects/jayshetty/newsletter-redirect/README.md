@@ -3,8 +3,8 @@
 Source of truth for the snippet deployed to **jayshetty.me** site-wide footer code.
 Spec: `projects/jayshetty/.claude/specs/jayshetty-newsletter-signup-redirect.md`.
 
-| File | Deploys to |
-| --- | --- |
+| File               | Deploys to                                                     |
+| ------------------ | -------------------------------------------------------------- |
 | `footer-code.html` | Project Settings → Custom Code → **Footer** (before `</body>`) |
 
 Site `64c10a2010e1a379d08bf030`. Site-wide, not per-page — the three forms it targets
@@ -31,7 +31,7 @@ subscriber. It also saves a step at the top of a 9-question form.
 **Why `.footer2_form:not(.is-tour)`.** There are four signup forms on the site, not
 one. Three are global (footer / popup / banner, matching the `popup` / `banner` /
 `footer` beehiiv sources); the fourth is on `/tour` and is deliberately excluded.
-The form *name* `wf-form-Footer-Subscribe-Form` is shared across three separate
+The form _name_ `wf-form-Footer-Subscribe-Form` is shared across three separate
 elements, and the popup and banner additionally share the DOM id
 `wf-form-popup-Subscribe-Form` — so neither name nor id is a safe selector. The
 class is. It also picks up any future signup form built from the same class.

@@ -31,6 +31,9 @@ with the answer (`Parse Report`, `Build HTML`). Snapshot: `.claude/backend/nem-v
 
 ## Defects in the prompt text itself (send back to Alex)
 
+Items 2–5 are corrected in the local capture (see its header); item 1 is marked as a
+missing variant there. Alex's Notion page still needs the same edits.
+
 1. Emotional numbing › Behaviour › Male 50+ is truncated/garbled: "Je doet je ding en die routinas alcohol op vaste tijden." Not ready despite "Ready for live testing".
 2. §2.3 body starts with a stray first-person author note: "Ik praat liever over een vaste reeks…"
 3. §2.3 Valse hoop > Zelfafwijzing: "hooghouden van alle bahet afwerken" — garbled.

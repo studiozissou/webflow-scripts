@@ -1,11 +1,36 @@
 # NEM TEST 01 — system prompt (full capture, page state of 2026-08-31, pasted by Will 2026-09-01)
 
-This is Alex's WORKING document, pasted verbatim. It is not the runtime prompt: the
-header, change log, related-documents list, the italic "function of this block" notes and
-the "Frequentie" lines are editorial and must not reach the API. Alex's own rule is that
-the stripped copy lives on the separate "runtime prompt" page, which he has not yet marked
-final. See nem-system-prompt-reconciliation-2026-09-01.md for the diff against what n8n
-actually sends and expects.
+This is Alex's WORKING document, pasted by Will and then lightly corrected (list below). It
+is not the runtime prompt: the header, change log, related-documents list, the italic
+"function of this block" notes and the "Frequentie" lines are editorial and must not reach
+the API. Alex's own rule is that the stripped copy lives on the separate "runtime prompt"
+page, which he has not yet marked final. See nem-system-prompt-reconciliation-2026-09-01.md
+for the diff against what n8n actually sends and expects.
+
+## Corrections applied here, 2026-09-01 — Alex's Notion page is the source of truth, so these need re-applying there
+
+Wording only; no clinical content was written or changed.
+
+1. §2.1 function note: "the third paragraph of the primary response (1.2: 'acknowledge what
+   this response once gave [first_name]')" → "the `origin` field (1.2)". The old text pointed
+   at a 1.2 structure that no longer exists.
+2. §2.3: removed the stray first-person author note "Ik praat liever over een vaste reeks,
+   een vast patroon van beschermingsmechanismes die elkaar opvolgen." It sat inside the
+   prompt body and is not an instruction.
+3. §2.3 Valse hoop > Zelfafwijzing: "het hooghouden van alle bahet afwerken van je
+   to-do-lijst" → "het hooghouden van alle ballen en het afwerken van je to-do-lijst".
+4. Emotional numbing › Present-day cost › Male: "lijden tot" → "leiden tot".
+5. Emotional numbing › Behaviour › Male 50+ was a truncated fragment ("Je doet je ding en
+   die routinas alcohol op vaste tijden."). **Not rewritten** — that is clinical copy for
+   Alex and Christel. Replaced with an explicit missing-variant marker so §1.5's own rule
+   ("where no variant exists … use the text as it stands") applies to the Male 18–50 text.
+6. Typos: "Op die manier hoeft je niet" → "hoef je niet" (False hope › Core); "Je herkend
+   wel" → "Je herkent wel" (False hope › Behaviour › Female 18–50); "Dan vindt je eigenlijk"
+   → "Dan vind je eigenlijk" (False power › Behaviour › Female 18–50); "dat je er iets mis is
+   met jou" → "dat er iets mis is met jou" (Self-rejection › cost › Female); "Zo vraag je
+   weleens af" → "Zo vraag je je weleens af" (Self-rejection › Situational › Female).
+7. Fear › "Manifestations (NL: Uitingsvormen)" was the only unbolded instance; bolded to
+   match the other four mechanisms.
 
 Source: https://app.notion.com/p/alexanderreus/NEM-TEST-01-Waarom-reageer-ik-zo-system-prompt-382c706b69c081f2b7cec566c49d8647
 
@@ -284,7 +309,7 @@ Layer 2 is source material, never output. You never reproduce a sentence, phrase
 
 ## 2.1 - Origin - why it began and why it stayed (NL: De oorsprong)
 
-*Function of this block: this is essential material for the primary response, not optional background. It explains two things Claude must carry into the report: why the mechanism was once the most sensible way for a child to survive its situation, and why that same mechanism kept running long after the danger was gone - shaping [first_name]'s reactions today. Claude uses this to write the third paragraph of the primary response (1.2: "acknowledge what this response once gave [first_name]"), translated into report language and tied to the primary mechanism - never copied verbatim, never presented as a standalone explanation.*
+*Function of this block: this is essential material for the primary response, not optional background. It explains two things Claude must carry into the report: why the mechanism was once the most sensible way for a child to survive its situation, and why that same mechanism kept running long after the danger was gone - shaping [first_name]'s reactions today. Claude uses this to write the `origin` field (1.2), translated into report language and tied to the primary mechanism - never copied verbatim, never presented as a standalone explanation.*
 
 **Kerngedachte.** Elk beschermingsmechanisme is ooit ontstaan als een zinvolle aanpassing aan ons systeem, aan ons lichaam en geest. Niet als afwijking, niet als zwakte, maar als de best mogelijke oplossing van een kind dat zich onveilig, niet gezien of te alleen voelde en nog geen andere manier had om op zijn pijnlijke situatie te reageren. Het kind paste zichzelf aan om een overweldigende kindpijn niet te hoeven voelen. Op die manier kon het de voor het leven belangrijkste band met de primaire verzorgers veilig houden. Het overlevingsdeel dat toen opstond, deed precies waarvoor het bedoeld was: het hield het kind overeind.
 
@@ -320,7 +345,7 @@ Angst is soms bijna een stemmetje dat je van binnen hoort, soms alleen een gevoe
 
 Meestal weet je heel goed dat die gedachte niet klopt. En toch: "ik voel dat akelige gevoel wel, en ik krijg het maar niet weg." Het gevoel wordt je leidraad, niet je verstand. Zo ontstaat er angst voor de angst zelf — en daarmee zit je vast. Niet in de situatie, maar in het gevoel erover.
 
-Manifestations (NL: Uitingsvormen)
+**Manifestations (NL: Uitingsvormen)**
 
 *Thought (NL: Gedachte)*
 
@@ -386,13 +411,13 @@ Generic, both female and male: Je voelt een lage energie in je lichaam, een gevo
 
 *Situational (NL: Situationeel)*
 
-Female: De zelfafwijzing begint vaak nadat er contact is geweest met andere mensen. Je vraagt je af of je aardig genoeg bent geweest op dat moment, en wat je anders had kunnen doen of zeggen. Vaak vraag je je achteraf af of je bij de ander iets hebt opgemerkt van wat die van je vond. Situaties waarin dit sterk opkomt gaan vaak over je lichaam, of over de vraag of je voldoet aan de verwachtingen van de mensen om je heen. Zo vraag je weleens af: "Lukt het me wel om alle ballen hoog te houden?" Je vergelijkt jezelf vaak met andere vrouwen: je uiterlijk, hoe het thuis of op  je werk gaat, of hoeveel sociale contacten je hebt. Elk gebied waarop je jezelf naast iemand anders legt en jezelf 'meet', kan de zelfafwijzing oproepen.
+Female: De zelfafwijzing begint vaak nadat er contact is geweest met andere mensen. Je vraagt je af of je aardig genoeg bent geweest op dat moment, en wat je anders had kunnen doen of zeggen. Vaak vraag je je achteraf af of je bij de ander iets hebt opgemerkt van wat die van je vond. Situaties waarin dit sterk opkomt gaan vaak over je lichaam, of over de vraag of je voldoet aan de verwachtingen van de mensen om je heen. Zo vraag je je weleens af: "Lukt het me wel om alle ballen hoog te houden?" Je vergelijkt jezelf vaak met andere vrouwen: je uiterlijk, hoe het thuis of op  je werk gaat, of hoeveel sociale contacten je hebt. Elk gebied waarop je jezelf naast iemand anders legt en jezelf 'meet', kan de zelfafwijzing oproepen.
 
 Male: De zelfafwijzing begint vaak nadat er contact is geweest met andere mensen. Je vraagt je af of je wel goed genoeg overkwam op dat moment, en wat je anders had kunnen doen of zeggen. Je gaat het gesprek nog eens na en probeert terug te halen of je bij de ander iets hebt opgemerkt van wat die persoon van je vond. Situaties waarin dit sterk opkomt gaan vaak over de vraag of je voldoet: "Ben ik een goede partner, ook in bed? Is mijn baan goed genoeg in de ogen van de mensen die belangrijk voor mij zijn?" Momenten waarop je beoordeeld wordt of wanneer je meent dat andere mensen een verwachting van je hebben, kunnen dit gevoel oproepen.
 
 **Present-day cost (NL: Kostprijs)**
 
-Female: De negatieve gedachten over jezelf zijn regelmatig zo overtuigend dat ze steeds vaker aanvoelen als een feit. Je gedachten plakken aan allerlei situaties, waardoor er steeds meer bewijs bij lijkt te komen voor het idee dat je niet deugt. De nare gedachten voelen zwaar en kosten je veel energie. Je lijf voelt zwaar en er blijft weinig over om iets te ondernemen. Doordat je jezelf klein maakt en je regelmatig terugtrekt, zien de mensen om je heen niet wie je werkelijk bent. Dat bevestigt voor jezelf opnieuw de overtuigende gedachte dat je er iets mis is met jou, en je er niet helemaal bij hoort. Het vergelijken houdt deze negatieve spiraal in stand. Vanuit deze negatieve overtuiging kan je altijd wel iemand vinden die 'beter' is dan jou, waardoor je jezelf als 'minder' blijft zien (en voelen).
+Female: De negatieve gedachten over jezelf zijn regelmatig zo overtuigend dat ze steeds vaker aanvoelen als een feit. Je gedachten plakken aan allerlei situaties, waardoor er steeds meer bewijs bij lijkt te komen voor het idee dat je niet deugt. De nare gedachten voelen zwaar en kosten je veel energie. Je lijf voelt zwaar en er blijft weinig over om iets te ondernemen. Doordat je jezelf klein maakt en je regelmatig terugtrekt, zien de mensen om je heen niet wie je werkelijk bent. Dat bevestigt voor jezelf opnieuw de overtuigende gedachte dat er iets mis is met jou, en je er niet helemaal bij hoort. Het vergelijken houdt deze negatieve spiraal in stand. Vanuit deze negatieve overtuiging kan je altijd wel iemand vinden die 'beter' is dan jou, waardoor je jezelf als 'minder' blijft zien (en voelen).
 
 Male:  De negatieve gedachten over jezelf zijn regelmatig zo overtuigend dat ze steeds vaker aanvoelen als een feit. Je gedachten plakken aan allerlei situaties, waardoor er steeds meer bewijs lijkt bij te komen voor het idee dat je niet deugt. De nare gedachten voelen zwaar en kosten je veel energie. Je lijf voelt zwaar en er blijft weinig over om iets te ondernemen. Wat je daarnaast inlevert,  is écht verbindend contact met mensen. Doordat je niet durft te laten zien wat er werkelijk in je speelt, uit schaamte of het gevoel minder waardig te zijn, trek je je steeds meer terug. Mensen om je heen zien niet wat er werkelijk bij je speelt. Dat versterkt vervolgens weer het negatieve gedachtenpatroon, waardoor je jezelf onbewust gevangen houdt in deze spiraal.
 
@@ -400,7 +425,7 @@ Male:  De negatieve gedachten over jezelf zijn regelmatig zo overtuigend dat ze 
 
 **Core (NL: Kern)**
 
-Generic, both female and male: Valse hoop is een beschermingsmechanisme dat zegt: "Als ik dit nu maar 'even' doe, dan komt het wel goed". Je staat er vaak niet bij stil dat je eigenlijk een keuze hebt. Als je daar wel stil bij zou staan, ga je je al heel snel ongemakkelijk voelen. Het overtuigende innerlijke stemmetje is: "Ik heb geen keuze, ik kan dit nu niet anders doen, want anders dan…" Je overtuigt jezelf dat je het ook graag doet. Op die manier hoeft je niet bij jezelf stil te staan en een bewuste keuze te maken.
+Generic, both female and male: Valse hoop is een beschermingsmechanisme dat zegt: "Als ik dit nu maar 'even' doe, dan komt het wel goed". Je staat er vaak niet bij stil dat je eigenlijk een keuze hebt. Als je daar wel stil bij zou staan, ga je je al heel snel ongemakkelijk voelen. Het overtuigende innerlijke stemmetje is: "Ik heb geen keuze, ik kan dit nu niet anders doen, want anders dan…" Je overtuigt jezelf dat je het ook graag doet. Op die manier hoef je niet bij jezelf stil te staan en een bewuste keuze te maken.
 Wat je enigszins begint op te vallen, is dat je aan het einde van de dag steeds vaker vermoeider voelt dan je eigenlijk zou willen. Eerlijk gezegd voelt het alsof er meestal maar weinig tijd voor jezelf is.
 
 **Manifestations (NL: Uitingsvormen)**
@@ -413,7 +438,7 @@ Male: "Dit kan je nog wel doen" en: "Ja hoor, dit lukt me ook nog wel" zijn zinn
 
 *Behaviour (NL: Gedrag)*
 
-Female, age 18 to 50 years: Je staat altijd voor iedereen klaar. Mensen hoeven maar te vragen en je doet het - zeker voor de mensen in je nabije omgeving,  je familie of je collega's. Je bent eigenlijk altijd bezig en kunt heel moeilijk stilzitten. Je vindt het ook fijn. Je hebt meestal al 'ja' gezegd voordat je het door hebt. Je herkend wel dat je af en toe neerploft op de bank als de dag bijna ten einde is. Dat je dan eigenlijk té moe bent om nog iets te doen.
+Female, age 18 to 50 years: Je staat altijd voor iedereen klaar. Mensen hoeven maar te vragen en je doet het - zeker voor de mensen in je nabije omgeving,  je familie of je collega's. Je bent eigenlijk altijd bezig en kunt heel moeilijk stilzitten. Je vindt het ook fijn. Je hebt meestal al 'ja' gezegd voordat je het door hebt. Je herkent wel dat je af en toe neerploft op de bank als de dag bijna ten einde is. Dat je dan eigenlijk té moe bent om nog iets te doen.
 
 Female, age 50+ years: Je staat altijd voor iedereen klaar. Mensen hoeven maar te vragen en je doet het. Je bent altijd al een bezige bij geweest en kunt heel moeilijk stilzitten. Je hebt meestal al 'ja' gezegd voordat je er erg in hebt. Wat er in de loop van de tijd is veranderd, is niet dat je minder doet, maar wel dat je je soms afvraagt: "Is dit echt wel nodig?" Als je erbij stilstaat, merk je dat de aanleiding waarvoor je het ooit deed er niet meer is, terwijl de drang om iets te doen blijft. Als je een keer niets omhanden hebt, komt er eerder onrust dan rust.
 
@@ -454,7 +479,7 @@ Male: Als je eerlijk bent, dan irriteer je je vrij snel aan andere mensen. Als j
 
 *Behaviour (NL: Gedrag)*
 
-Female, age 18 to 50 years: Je ziet jezelf als een eerlijk persoon: "Ja, de waarheid kan nu eenmaal hard zijn".  Je kunt je dan ook snel negatief uitspreken over een bepaald persoon. Het hoeft niet zo te zijn dat je dit direct doet naar de persoon zelf, over wie je iets vindt. Je kunt het ook 'fijn' vinden om met andere mensen over het gedrag van iemand anders te praten. Als je oordelen zich omzetten in irritatie, dan kan je gedrag best heftig worden. Dit gedrag kan zich in verschillende gradaties uiten. Je kunt de ander met woorden of gebaren als het ware 'aanvallen', ook al vind je zelf dat dit best meevalt. Je kunt je ook terugtrekken in stilte. Dan vindt je eigenlijk dat de ander maar even goed moet nadenken over wat die heeft gedaan of misdaan naar jou.
+Female, age 18 to 50 years: Je ziet jezelf als een eerlijk persoon: "Ja, de waarheid kan nu eenmaal hard zijn".  Je kunt je dan ook snel negatief uitspreken over een bepaald persoon. Het hoeft niet zo te zijn dat je dit direct doet naar de persoon zelf, over wie je iets vindt. Je kunt het ook 'fijn' vinden om met andere mensen over het gedrag van iemand anders te praten. Als je oordelen zich omzetten in irritatie, dan kan je gedrag best heftig worden. Dit gedrag kan zich in verschillende gradaties uiten. Je kunt de ander met woorden of gebaren als het ware 'aanvallen', ook al vind je zelf dat dit best meevalt. Je kunt je ook terugtrekken in stilte. Dan vind je eigenlijk dat de ander maar even goed moet nadenken over wat die heeft gedaan of misdaan naar jou.
 
 Female, age 50+ years: Je ziet jezelf als een eerlijk persoon: "Ja, de waarheid kan nu eenmaal hard zijn". Je draait al een tijdje mee in dit leven en hebt inmiddels de nodige mensenkennis opgebouwd. Je spreekt je makkelijk en snel uit. In een gezelschap voer je vaak het hoogste woord met jouw ervaringen en belevingen. Het gaat vaak over wat iemand anders wel of niet gedaan heeft. In gevallen waarin iemand het niet met je eens is en dit uitspreekt, voel je een spanning ontstaan, maar daar ga je het liefst aan voorbij. In zo'n situatie kun je nog sterker reageren, of je houdt je mond en neemt wat afstand van diegene. Wat je in de loop van de tijd is opgevallen, is dat er steeds meer contacten stilvallen: mensen die je niet meer spreekt, een familielid dat je op afstand houdt, je kring wordt kleiner. Dat gaat zelden nog met irritatie of boosheid gepaard; het is eerder iets waar niet meer over gesproken wordt. Omdat het gesprek van beide kanten er niet meer van komt, blijft het oordeel staan zoals het was.
 
@@ -500,7 +525,7 @@ Female, age 50+ years: In gezelschap ben je meer op de achtergrond. Je kunt je g
 
 Male, age 18 to 50 years: Je bent meer op de achtergrond en schuift zaken vaak voor je uit, ook als ze belangrijk voor je zijn. Je laat een beslissing liever over aan een ander. Dan kan er ook geen gedoe van komen. Je bent eerder ingehouden dan dat je een duidelijke mening geeft. Het niet-voelen zit vaak verpakt in dingen die er productief of sterk uitzien: veel werken, sporten, gamen, of op een andere manier je afleiden van 'ongemakkelijke' zaken zoals gevoelens.
 
-Male, age 50+ years: Je hebt een overzichtelijk leven en dat is meestal prima. Je doet je ding en die routinas alcohol op vaste tijden.
+Male, age 50+ years: [NO VARIANT YET — the source text here was a truncated fragment ("Je hebt een overzichtelijk leven en dat is meestal prima. Je doet je ding en die routinas alcohol op vaste tijden."). Alex and Christel to finish. Until then, per 1.5, use the Male, age 18 to 50 years text as it stands.]
 
 *Body & energy (NL: Lichaam & Energie)*
 
@@ -516,7 +541,7 @@ Male: In allerlei situaties ben je wat afwachtend. Je kijkt goed naar wat andere
 
 Female: "Wie ben je?" en "wat wil je?" zijn voor jou moeilijke vragen. Doordat je je voortdurend afstemt op anderen, kom je maar moeizaam bij je eigen gevoel. De vraag wat jij ergens van vindt is moeilijk te beantwoorden en kan je zelfs stress opleveren. Je leeft in die zin oppervlakkig, zonder passie en levensenergie. Het kabbelt; je doet wat je moet doen. Zo leef je een aangepast leven dat emotioneel arm is, doordat je het moeilijk vindt om jezelf te laten zien. Fysiek kan dit tot gevolg hebben dat er spanning ontstaat die zich onbewust opbouwt, omdat ze geen uitweg vindt. En doordat je zelden laat zien wat er speelt, blijft het contact met de mensen om je heen aan de oppervlakte - je bent er wel, maar wat je bezighoudt komt er niet bij.
 
-Male: Gevoelens die je langdurig niet kunt toelaten, verdwijnen niet - ze zoeken een andere uitweg. Je kunt jezelf gaan verdoven en op die manier weggaan van situaties die je raken. Relaties vragen om verdieping en openheid. Door emoties niet te uiten blijven relaties oppervlakkig: nabijheid en verbinding vragen nu eenmaal om jezelf te laten zien. Het is niet eens dat je het niet zou willen, maar je hebt het nooit geleerd. Dit voelt wel als een gemis dat zich onderhuids als spanning kan opbouwen. Dit kan vervolgens lijden tot ondermeer hoge bloeddruk.
+Male: Gevoelens die je langdurig niet kunt toelaten, verdwijnen niet - ze zoeken een andere uitweg. Je kunt jezelf gaan verdoven en op die manier weggaan van situaties die je raken. Relaties vragen om verdieping en openheid. Door emoties niet te uiten blijven relaties oppervlakkig: nabijheid en verbinding vragen nu eenmaal om jezelf te laten zien. Het is niet eens dat je het niet zou willen, maar je hebt het nooit geleerd. Dit voelt wel als een gemis dat zich onderhuids als spanning kan opbouwen. Dit kan vervolgens leiden tot onder meer hoge bloeddruk.
 
 ## 2.3 - Common profile sequences
 
@@ -526,11 +551,9 @@ Male: Gevoelens die je langdurig niet kunt toelaten, verdwijnen niet - ze zoeken
 - The ranking line under each pair is editorial metadata: 1 is the most frequently observed pair, 6 the least. It is never mentioned, implied or reflected in the report - not as a rank, not as "this is common" - and it never influences how prominently the pair is described. It exists for the authors only.
 - *Where the supplied pair does not match one described here, Claude falls back on 1.4's general rule for the secondary response - it does not invent a sequence of its own.*
 
-Ik praat liever over een vaste reeks, een vast patroon van beschermingsmechanismes die elkaar opvolgen.
-
 ### Valse hoop > Zelfafwijzing
 
-Je herkent dat je altijd bezig bent met het hooghouden van alle bahet afwerken van je to-do-lijst. Je hoopt steeds, soms zelfs tegen beter weten in, dat je meer kunt doen dan er binnen je tijd past. Als het duidelijk wordt dat het je niet lukt om je lijstje af te ronden, slaat het om naar een nare gedachte over jezelf die aanvoelt als een feit: "Ik heb het niet goed gedaan. Waarom lukt mij dit niet, terwijl het een ander wel lukt?" De hoop die je op de been hield stort in, en wat overblijft, is het oordeel over jezelf.
+Je herkent dat je altijd bezig bent met het hooghouden van alle ballen en het afwerken van je to-do-lijst. Je hoopt steeds, soms zelfs tegen beter weten in, dat je meer kunt doen dan er binnen je tijd past. Als het duidelijk wordt dat het je niet lukt om je lijstje af te ronden, slaat het om naar een nare gedachte over jezelf die aanvoelt als een feit: "Ik heb het niet goed gedaan. Waarom lukt mij dit niet, terwijl het een ander wel lukt?" De hoop die je op de been hield stort in, en wat overblijft, is het oordeel over jezelf.
 
 Frequentie (redactioneel, niet voor het rapport): 1 van 6
 

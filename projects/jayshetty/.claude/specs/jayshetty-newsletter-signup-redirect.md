@@ -4,7 +4,7 @@
 **Site:** Webflow site `64c10a2010e1a379d08bf030` (jayshetty.webflow.io / www.jayshetty.me)
 **Slug:** `jayshetty-newsletter-signup-redirect`
 **Date:** 2026-09-01
-**Status:** Planned — not built
+**Status:** Approach chosen (script) — snippet written, awaiting deploy
 **Related:** `projects/jayshetty/.claude/research/beehiiv-welcome-survey-not-triggering.md` (2026-08-27)
 
 ---
@@ -127,12 +127,16 @@ script's advantage is narrower than first stated:
 | New signup forms | Each needs the setting adding by hand | Covered automatically by the class selector |
 | Reversibility | Clear the field | Delete the block |
 
-**Recommendation: the script**, on the grounds that re-asking for an address the
-visitor entered seconds earlier, at the top of a long survey, is a predictable
-drop-off point and the whole purpose here is survey completion. But this is now a
-judgement call about conversion, **not** a functional necessity. If the priority is
-shipping today, the native redirect is a legitimate choice and this spec should be
-closed in favour of a Designer change.
+**Decided 2026-09-01 (Will): the script.** Two reasons, the second the stronger:
+
+1. Re-asking for an address the visitor entered seconds earlier, at the top of a
+   long survey, is a predictable drop-off point.
+2. **Data integrity.** If the visitor retypes the address they can typo it or use a
+   different one, and the survey response is then attached to an address that does
+   not match the subscriber record created by Webflow → Zapier → beehiiv. Passing
+   the captured value guarantees the response lands against the right subscriber.
+
+The native redirect remains a valid fallback if the script ever has to be pulled.
 
 ### 3.5 Success detection
 
@@ -286,7 +290,7 @@ across `/`, `/about-jay`, `/press`, `/speaking`, `/connect`, `/blog`, `/podcast`
 
 | # | Task | Agent | Depends on |
 |---|---|---|---|
-| 0 | **Decide: script or native redirect** (§3.4). The native option is viable; the script buys the email prefill. | — (Will) | — |
+| 0 | ~~Decide: script or native redirect~~ — **done, script chosen** (§3.4) | — (Will) | — |
 | 2 | Write the footer snippet to `projects/jayshetty/newsletter-redirect/footer-code.html` as the git mirror of what is pasted into Webflow | code-writer | 0 |
 | 3 | Deploy: paste into Project Settings → Custom Code → Footer; publish to **jayshetty.webflow.io only** | — (manual, Will) | 2 |
 | 4 | Verify on the Webflow subdomain — all three forms, real email, Tier 1 + Tier 3 | qa | 3 |

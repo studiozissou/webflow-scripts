@@ -161,6 +161,31 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
     expect(submission.email).toBe('test@example.com');
   });
 
+  test('the submission carries the intro line and the conclusion text the user saw (§7)', async ({ page }) => {
+    /* Alex's prompt reads both from the user message, so what reaches n8n must be exactly
+       what the conclusion screen rendered — asserted against the DOM, not a fixture. */
+    const captured = await captureSubmit(page);
+    await loadPage(page);
+    await answerReportProfile(page);
+    await fillProfileScreen(page, 'Vrouw');
+    const onScreen = await getConclusionText(page);
+    await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
+    await page.getByPlaceholder(/voornaam/i).fill('Testpersoon');
+    await page.getByPlaceholder(/e-?mail/i).fill('test@example.com');
+    await page.getByRole('checkbox').check();
+    await page.getByRole('button', { name: /ontvang mijn rapport/i }).click();
+    await expectCaptureCount(captured, 2);
+
+    const submission = captured[1];
+    expect(typeof submission.conclusionText).toBe('string');
+    expect(submission.conclusionText.length).toBeGreaterThan(0);
+    expect(onScreen.replace(/\s+/g, ' ').trim()).toContain(
+      submission.conclusionText.split(/\n{2,}/)[0].replace(/\s+/g, ' ').trim(),
+    );
+    expect(typeof submission.introLine).toBe('string');
+    expect(submission.conclusionText).not.toContain(submission.introLine || '\u0000');
+  });
+
   test('a flat outcome produces the completion row and no second row', async ({ page }) => {
     const captured = await captureSubmit(page);
     await loadPage(page);
@@ -200,11 +225,9 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
 // runs the real Build HTML jsCode and asserts the line appears between the <h1> and the
 // greeting, escaped, and absent entirely when empty.
 //
-// STILL UNCOVERED: that the component sends introLine in the /submit payload at all. The
-// right test is a payload assertion on captureSubmit, not a DOM one — deliberately not
-// added yet, because the submission POST is not currently observed at all
-// (nem-submit-second-row-not-written-on-optin, P1). Add it once that is fixed, or it
-// would land red for an unrelated reason.
+// The payload half — that the component sends introLine and conclusionText in the /submit
+// POST at all — is covered above in A: "the submission carries the intro line and the
+// conclusion text the user saw (§7)", a payload assertion on captureSubmit.
 
 // ── C: General ────────────────────────────────────────────────
 

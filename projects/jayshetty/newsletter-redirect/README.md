@@ -160,15 +160,49 @@ fast submit.
 
 Two things that make this worth a glance later rather than never:
 
-- Will's understanding is that the Zapier automation **only creates subscribers and
-  does not update them** — unverified, no Zapier access from here. If so, a response
-  lost to the race is lost permanently; nothing backfills it.
+- The Zapier step is **Create a Subscriber**, not an update (confirmed from the Zap
+  config, 2026-09-01 — see below). A response lost to the race is lost permanently;
+  nothing backfills it.
 - The failure is silent. There is no error surfaced to us, only an absent response.
 
 **Watch signal:** survey responses trailing signup volume. If that shows up, the fix
 is to route signups through beehiiv's own subscribe flow (its homepage form posts to
 `/create`, and this survey _is_ beehiiv's post-subscribe form) so the subscriber
 exists synchronously and Zapier leaves the critical path.
+
+### The Zapier step, confirmed 2026-09-01
+
+Step 3 of the Zap, read from its config. This is the asynchronous hop between a
+Webflow submit and the subscriber existing in beehiiv:
+
+| Field                | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| Action               | beehiiv **Create a Subscriber**                 |
+| Publication          | The Daily Wisdom                                |
+| Email                | mapped from Webflow `Data Email`                |
+| Tier                 | free                                            |
+| Reactivate existing? | `true`                                          |
+| Send Welcome Email   | `true`                                          |
+| UTM Source           | `jayshetty.me` (static)                         |
+| UTM Medium           | mapped from Webflow `Data Utm Medium`           |
+| Referring Site       | `https://www.jayshetty.me` (static)             |
+| First Name           | mapped from Webflow `Data Name` (usually empty) |
+
+Two things follow:
+
+- **It creates, it does not update.** With `Reactivate existing? = true` a repeat
+  signup reactivates rather than erroring, but it does not overwrite custom fields on
+  an existing subscriber — so survey answers already stored against someone cannot be
+  clobbered by a later signup.
+- **`Send Welcome Email` is already `true`**, which is the fix recommended in
+  `../.claude/research/beehiiv-welcome-survey-not-triggering.md` (2026-08-27). That
+  half of the August investigation has been applied.
+
+**Still unknown:** whether the Zap sets `automation_ids` or has a following _Add
+Subscriber to an Automation_ step — the config panel was not read past `First Name`.
+That determines whether the welcome survey also arrives **by email** as a backstop. If
+it does, a response dropped in the browser matters less still, because the subscriber
+gets a second route to the same survey.
 
 **Careful when re-testing the survey by hand:** beehiiv remembers an address across
 visits, so a no-param load after a `?email=` load still shows the field prefilled.

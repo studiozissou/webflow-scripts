@@ -166,6 +166,82 @@ target the live site and will only be meaningful **after** publish.
 
 ---
 
+## 5a. POST-PUBLISH LIVE CRAWL — 2026-09-01, after Will published
+
+All 231 sitemap URLs re-crawled. **2,666 occurrences of `!Coconut` remain**, of which
+**97 are meaningful** across 28 pages. Breakdown:
+
+| Class | Count | Verdict |
+|---|---:|---|
+| Asset URLs | 2,092 | ✅ expected (D1) |
+| `alternateName` | 232 | ✅ expected (D6) |
+| FCA disclosure line | 245 | ✅ expected (D3) |
+| **MEANINGFUL** | **97** | ❌ see below |
+
+### Root cause: the site has TWO nav/footer component sets
+
+This is the big miss, and the spec did not mention it. §6 lists one `Top Nav Bar` and one
+`Footer`. In fact there are two parallel sets:
+
+| Set | Components | Instances | Status |
+|---|---|---:|---|
+| 2025 redesign (group "25") | `Top Nav Bar` + `Footer` | 50 each | fixed in the original build |
+| Older set | `Navbar / Light / 1` + `Footer Main` | 46 each | **missed** |
+
+**Why the original sweep missed it:** a page-level text query does **not** descend into a
+component's own definition — it only returns page-level text and component *instance
+overrides*. The original build scope-queried `Top Nav Bar` and `Footer` by ID (because the
+spec named them) and swept all 383 component *prop defaults*, but never swept component
+*internal text*. Everything inside `Navbar / Light / 1` and `Footer Main` was invisible to
+every check that was run, including the pre-publish verification.
+
+I initially misread the 15 affected pages as "not republished". They were published fine —
+they simply render `Footer Main`, which still had the old text. The FCA wording Will
+changed made this diagnosable: those 15 pages served the *old* FCA sentence because the
+edit was applied to `Footer` only, not `Footer Main`.
+
+### The 97, fully accounted for
+
+| Source | Count | Fixed? |
+|---|---:|---|
+| Page JSON-LD (blocked, §4) | 43 | ❌ still blocked |
+| `Navbar / Light / 1` + `Footer Main` (15 pages × 3, plus 4 `/tools/*` × 1) | 49 | ✅ fixed 2026-09-01 |
+| `!Coconut` inside a component **variant** (Zempler bank line) | 5 | ✅ fixed 2026-09-01 |
+
+### Fixed after the crawl
+
+- `Navbar / Light / 1` → `Coconut news`
+- `Footer Main` → `Coconut news`, ` Coconut. All rights reserved.`
+- Zempler section component `2a411466…` → "…free Zempler bank account within Coconut."
+
+These are **staged and need another publish**.
+
+### ⚠️ The site is serving two different FCA statements
+
+`Footer` now carries Will's updated wording:
+> `@Coconut, Coconut and !Coconut are trading names of @Coconut Platform Ltd… Coconut is registered with the FCA…`
+
+`Footer Main` still carries the original:
+> `@Coconut and !Coconut are trading names of @Coconut Platform Ltd… !Coconut is registered with the FCA…`
+
+Roughly 15 live pages show the old one. Two divergent regulated disclosures on the same
+site is a compliance problem in its own right. Left unchanged pending an explicit decision —
+this is not a copy edit.
+
+### More JSON-LD pages than §3.6 found
+
+§3.6 lists only `/` and `/pricing`. The crawl shows brand-carrying JSON-LD on **five** pages:
+
+| Page | Meaningful JSON-LD hits |
+|---|---:|
+| `/mtd-software` | 21 |
+| `/pricing` | 13 |
+| `/webinars-and-events` | 7 |
+| `/` | 1 |
+| `/hmrc-free-mtd-software-comparison` | 1 |
+
+---
+
 ## 6. What Will needs to do
 
 1. Check the Designer for other people's unpublished work before publishing (R1) — the

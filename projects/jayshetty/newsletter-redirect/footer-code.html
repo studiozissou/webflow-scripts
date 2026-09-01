@@ -23,7 +23,7 @@
       if (going) return;
       going = true;
       var email = emails.get(form);
-      var url = email ? SURVEY + '?email=' + encodeURIComponent(email) : SURVEY;
+      var url = email ? SURVEY + '?email=' + email : SURVEY;
       window.setTimeout(function () {
         window.location.href = url;
       }, DELAY);

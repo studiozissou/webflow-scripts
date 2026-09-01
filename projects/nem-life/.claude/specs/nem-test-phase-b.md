@@ -639,6 +639,8 @@ Manual trigger
 
 **Not yet built** — this section documents the agreed design only. ~~Building the Publish workflow depends on MailerSend being off its trial account (the test-PDF email needs it).~~ **That dependency cleared 2026-08-18** when Alex upgraded to a paid plan, so the Publish workflow is now buildable whenever it is prioritised.
 
+**Prerequisite found 2026-09-01:** the prompt reads the intro line and the conclusion text from the user message, and `/verify` sends neither. That gap is specced as §7 of `nem-report-json-and-error-visibility.md` and must land before the prompt is installed by either route.
+
 ### Spam / bot protection
 
 Three layers, zero user friction:

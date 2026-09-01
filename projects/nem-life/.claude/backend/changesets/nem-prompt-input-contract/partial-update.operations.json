@@ -1,0 +1,104 @@
+{
+  "_comment": [
+    "Operations payload for mcp__n8n__n8n_update_partial_workflow.",
+    "Surgical node-level diff — not a whole-workflow import.",
+    "Apply with validateOnly: true FIRST, read the result, then apply for real.",
+    "Prerequisite: the conclusionText column on nem_test_profiles is added in the n8n UI",
+    "and the /submit edits (normalize.jsCode.js, store-profile.columns.json) are in place.",
+    "Every jsCode / jsonBody here is byte-identical to the sibling file and the committed",
+    "snapshot — tests/nem/nem-prompt-input-contract.test.js asserts it."
+  ],
+  "id": "uKkMgMYoH5nOLoCR",
+  "intent": "§7 prompt input contract: send the intro line and conclusion text, spell gender Female/Male, drop the total score, drop the greeting from Build HTML, and gate non-nl locales to Log Failure instead of Anthropic",
+  "operations": [
+    {
+      "type": "addNode",
+      "node": {
+        "name": "Locale Supported?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          900,
+          460
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "c3000000-0000-4000-8000-00000000007d",
+                "leftValue": "={{ $json.locale }}",
+                "rightValue": "nl",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      }
+    },
+    {
+      "type": "addNode",
+      "node": {
+        "name": "Unsupported Locale",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1180,
+          600
+        ],
+        "parameters": {
+          "jsCode": "// The report prompt is Dutch-only, so any other locale is logged and alerted instead of\n// calling Anthropic. Emits the exact shape Parse Report emits on failure, so Log Failure\n// and Alert Failure need no changes.\nconst p = $('Validate Token').first().json;\n\nreturn [{\n  json: Object.assign({}, p, {\n    parseValid: false,\n    report: null,\n    reason: 'unsupported-locale',\n    detail: 'Locale \"' + p.locale + '\" has no report prompt - only nl is supported. No model call was made.',\n    rawResponse: '',\n    executionId: String($execution.id),\n    failedAt: new Date().toISOString()\n  })\n}];"
+        }
+      }
+    },
+    {
+      "_comment": "Valid? true-branch: Report Prompt is displaced by the gate. Respond Confirmed and Mark Consumed stay on the direct fan-out — do not touch them, or the 302 starts waiting on the report chain.",
+      "type": "rewireConnection",
+      "source": "Valid?",
+      "from": "Report Prompt",
+      "to": "Locale Supported?",
+      "branch": "true"
+    },
+    {
+      "type": "addConnection",
+      "source": "Locale Supported?",
+      "target": "Report Prompt",
+      "branch": "true"
+    },
+    {
+      "type": "addConnection",
+      "source": "Locale Supported?",
+      "target": "Unsupported Locale",
+      "branch": "false"
+    },
+    {
+      "type": "addConnection",
+      "source": "Unsupported Locale",
+      "target": "Log Failure"
+    },
+    {
+      "type": "updateNode",
+      "nodeName": "Generate Report",
+      "updates": {
+        "parameters.jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Locale: ' + $('Validate Token').first().json.locale + '. Write the full report in ' + ($('Validate Token').first().json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $('Validate Token').first().json.firstName + '\\nGender: ' + ({ vrouw: 'Female', female: 'Female', man: 'Male', male: 'Male' }[$('Validate Token').first().json.gender] || $('Validate Token').first().json.gender) + '\\nAge category: ' + $('Validate Token').first().json.ageCategory + '\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $('Validate Token').first().json.scoresJson + '\\nPrimary mechanism: ' + $('Validate Token').first().json.primaryMechanism + '\\nSecondary mechanism: ' + ($('Validate Token').first().json.secondaryMechanism || 'none') + '\\n\\nIntro line: ' + ($('Validate Token').first().json.introLine || '') + '\\nConclusion text: ' + ($('Validate Token').first().json.conclusionText || '') } ] }) }}"
+      }
+    },
+    {
+      "type": "updateNode",
+      "nodeName": "Build HTML",
+      "updates": {
+        "parameters.jsCode": "// Consumes the five validated JSON sections. Formatting lives here, not in the prompt -\n// the model returns content only. Values are escaped: Christel's prose contains & and\n// quotes, which would otherwise break the document. There is no greeting line: the\n// prompt places the first name once, at the start of opening.\nconst p = $('Validate Token').first().json;\nconst r = $json.report;\nconst SECTIONS = ['opening', 'reaction', 'origin', 'cost', 'closing'];\n\nconst heading = p.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport';\n\n// Fixed editorial copy, selected client-side on the conclusion key alone (no gender).\n// Empty until Alex's Intro lines tab is exported — an empty line renders nothing, not a gap.\nconst introLine = String(p.introLine || '').trim();\n\nconst esc = (s) => String(s)\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\nconst para = (t) => esc(t)\n  .split(/\\n{2,}/)\n  .map(x => '<p>' + x.replace(/\\n/g, '<br>') + '</p>')\n  .join('');\n\nconst body = SECTIONS.map(k => para(r[k])).join('');\nconst reportText = SECTIONS.map(k => r[k]).join('\\n\\n');\n\nconst html = '<!doctype html><html><head><meta charset=\"utf-8\"><style>'\n  + 'body{font-family:Georgia,serif;color:#292828;max-width:640px;margin:0 auto;padding:48px 40px;line-height:1.6;font-size:16px}'\n  + 'h1{font-family:Montserrat,Arial,sans-serif;font-size:24px;color:#292828}'\n  + '.intro{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#5a5757;margin:0 0 24px}'\n  + 'p{margin:0 0 16px}'\n  + '</style></head><body><h1>' + heading + '</h1>'\n  + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '')\n  + body\n  + '</body></html>';\n\nreturn [{ json: Object.assign({ html: html, reportText: reportText }, p) }];"
+      }
+    }
+  ]
+}

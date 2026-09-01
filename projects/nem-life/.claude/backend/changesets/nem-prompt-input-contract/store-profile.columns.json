@@ -1,0 +1,17 @@
+{
+  "value": {
+    "conclusionText": "={{ $json.conclusionText }}"
+  },
+  "schema": [
+    {
+      "id": "conclusionText",
+      "displayName": "conclusionText",
+      "required": false,
+      "defaultMatch": false,
+      "display": true,
+      "type": "string",
+      "readOnly": false,
+      "removed": false
+    }
+  ]
+}

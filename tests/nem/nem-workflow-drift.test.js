@@ -219,6 +219,26 @@ describe("formatReport", () => {
   });
 });
 
+/* The §7 prompt input contract, as the live-shaped fixtures carry it: intro line and
+ * conclusion text sent, gender mapped to the prompt's spelling, no total score. */
+const CONTRACT_BODY =
+  "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Gender: ' + ({ vrouw: 'Female', female: 'Female', man: 'Male', male: 'Male' }[$('Validate Token').first().json.gender] || $('Validate Token').first().json.gender) + '\\nIntro line: ' + ($('Validate Token').first().json.introLine || '') + '\\nConclusion text: ' + ($('Validate Token').first().json.conclusionText || '') } ] }) }}";
+
+/* Build HTML after §7f: no greeting line — the prompt puts the first name inside opening. */
+const BUILD_HTML_NO_GREETING =
+  "const html = '<h1>' + heading + '</h1>' + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '') + body;";
+
+const GATE_PARAMS = {
+  conditions: {
+    conditions: [{
+      leftValue: "={{ $json.locale }}",
+      rightValue: "nl",
+      operator: { type: "string", operation: "equals" },
+    }],
+    combinator: "and",
+  },
+};
+
 describe("checkInvariants — the facts docs kept asserting by hand", () => {
   const verifyLive = wf([
     node("Report Prompt", {
@@ -229,16 +249,20 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
         }],
       },
     }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
-    node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
+    node("Generate Report", { jsonBody: CONTRACT_BODY }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
-    node("Build HTML", { jsCode: "const html = '<h1>' + heading + '</h1>' + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '') + '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>';" }),
+    node("Build HTML", { jsCode: BUILD_HTML_NO_GREETING }),
+    node("Locale Supported?", GATE_PARAMS, { type: "n8n-nodes-base.if", typeVersion: 2.2 }),
+    node("Unsupported Locale", { jsCode: "return [{ json: { reason: 'unsupported-locale' } }];" }),
     node("Log Failure"),
     node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - report generation failed' }) }}" }),
     node("Respond Confirmed"),
     node("Mark Consumed"),
   ], {
-    "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }]] },
+    "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Locale Supported?" }]] },
+    "Locale Supported?": { main: [[{ node: "Report Prompt" }], [{ node: "Unsupported Locale" }]] },
+    "Unsupported Locale": { main: [[{ node: "Log Failure" }]] },
     "Generate Report": { main: [[{ node: "Parse Report" }]] },
     "Parse Report": { main: [[{ node: "Valid Report?" }]] },
     "Valid Report?": { main: [[{ node: "Build HTML" }], [{ node: "Log Failure" }]] },
@@ -296,15 +320,19 @@ describe("checkInvariants — the report JSON gate", () => {
         }],
       },
     }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
-    node("Generate Report", { jsonBody: "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt }) }}" }),
+    node("Generate Report", { jsonBody: CONTRACT_BODY }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
-    node("Build HTML", { jsCode: "const html = '<h1>' + heading + '</h1>' + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '') + '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>';" }),
+    node("Build HTML", { jsCode: BUILD_HTML_NO_GREETING }),
+    node("Locale Supported?", GATE_PARAMS, { type: "n8n-nodes-base.if", typeVersion: 2.2 }),
+    node("Unsupported Locale", { jsCode: "return [{ json: { reason: 'unsupported-locale' } }];" }),
     node("Log Failure"),
     node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - report generation failed' }) }}" }),
     node("Respond Confirmed"), node("Mark Consumed"),
   ], {
-    "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }]] },
+    "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Locale Supported?" }]] },
+    "Locale Supported?": { main: [[{ node: "Report Prompt" }], [{ node: "Unsupported Locale" }]] },
+    "Unsupported Locale": { main: [[{ node: "Log Failure" }]] },
     "Generate Report": { main: [[{ node: "Parse Report" }]] },
     "Parse Report": { main: [[{ node: "Valid Report?" }]] },
     "Valid Report?": { main: [[{ node: "Build HTML" }], [{ node: "Log Failure" }]] },
@@ -375,6 +403,131 @@ describe("checkInvariants — the report JSON gate", () => {
     rp.parameters.assignments.assignments[0].value = "Write a warm two-page report.";
     const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
     assert.ok(failed.some((c) => /JSON/i.test(c.label)));
+  });
+});
+
+describe("checkInvariants — the §7 prompt input contract", () => {
+  /* Alex's prompt reads the intro line, the conclusion text and a Female/Male gender from
+   * the user message, and says the model does not calculate. Each of these is one hand
+   * edit away from silently regressing in the n8n UI. */
+  const contract = wf([
+    node("Report Prompt", {
+      assignments: { assignments: [{ name: "systemPrompt", type: "string", value: "Return ONLY a valid JSON object." }] },
+    }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
+    node("Generate Report", { jsonBody: CONTRACT_BODY }),
+    node("Parse Report", { jsCode: "parseReport($json)" }),
+    node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
+    node("Build HTML", { jsCode: BUILD_HTML_NO_GREETING }),
+    node("Locale Supported?", GATE_PARAMS, { type: "n8n-nodes-base.if", typeVersion: 2.2 }),
+    node("Unsupported Locale", { jsCode: "return [{ json: { reason: 'unsupported-locale' } }];" }),
+    node("Log Failure"),
+    node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - report generation failed' }) }}" }),
+    node("Respond Confirmed"), node("Mark Consumed"),
+  ], {
+    "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Locale Supported?" }]] },
+    "Locale Supported?": { main: [[{ node: "Report Prompt" }], [{ node: "Unsupported Locale" }]] },
+    "Unsupported Locale": { main: [[{ node: "Log Failure" }]] },
+    "Generate Report": { main: [[{ node: "Parse Report" }]] },
+    "Parse Report": { main: [[{ node: "Valid Report?" }]] },
+    "Valid Report?": { main: [[{ node: "Build HTML" }], [{ node: "Log Failure" }]] },
+    "Log Failure": { main: [[{ node: "Alert Failure" }]] },
+  });
+
+  const failing = (broken) => checkInvariants("verify", broken).filter((c) => !c.ok).map((c) => c.label);
+  const withBody = (edit) => {
+    const broken = structuredClone(contract);
+    const gr = broken.nodes.find((n) => n.name === "Generate Report");
+    gr.parameters.jsonBody = edit(gr.parameters.jsonBody);
+    return broken;
+  };
+
+  test("passes on the contract-shaped workflow", () => {
+    assert.deepEqual(failing(contract), []);
+  });
+
+  test("catches the intro line being dropped from the user message", () => {
+    const broken = withBody((b) => b.replace("'\\nIntro line: ' + ($('Validate Token').first().json.introLine || '') + ", ""));
+    assert.ok(failing(broken).some((l) => /intro line/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches the conclusion text being dropped from the user message", () => {
+    const broken = withBody((b) => b.replace(" + '\\nConclusion text: ' + ($('Validate Token').first().json.conclusionText || '')", ""));
+    assert.ok(failing(broken).some((l) => /conclusion text/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches the total score creeping back in", () => {
+    const broken = withBody((b) => b.replace("} ] }) }}", "+ '\\nTotal score: ' + $('Validate Token').first().json.totalScore } ] }) }}"));
+    assert.ok(failing(broken).some((l) => /total score/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches the gender mapping being removed", () => {
+    const broken = withBody((b) => b.replace("({ vrouw: 'Female', female: 'Female', man: 'Male', male: 'Male' }[$('Validate Token').first().json.gender] || $('Validate Token').first().json.gender)", "$('Validate Token').first().json.gender"));
+    assert.ok(failing(broken).some((l) => /Female|gender/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches the greeting line returning to Build HTML", () => {
+    const broken = structuredClone(contract);
+    const bh = broken.nodes.find((n) => n.name === "Build HTML");
+    bh.parameters.jsCode = bh.parameters.jsCode.replace("+ body;", "+ '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>' + body;");
+    assert.ok(failing(broken).some((l) => /greet|first name/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches Report Prompt moving back onto the Valid? fan-out, ahead of the gate", () => {
+    const broken = structuredClone(contract);
+    broken.connections["Valid?"].main[0].push({ node: "Report Prompt" });
+    assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches the gate's false branch being wired to Report Prompt", () => {
+    const broken = structuredClone(contract);
+    broken.connections["Locale Supported?"].main[1] = [{ node: "Report Prompt" }];
+    assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches the gate's false branch not reaching Log Failure", () => {
+    const broken = structuredClone(contract);
+    broken.connections["Unsupported Locale"] = { main: [[]] };
+    assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
+  });
+
+  test("catches a missing gate node outright", () => {
+    const broken = structuredClone(contract);
+    broken.nodes = broken.nodes.filter((n) => n.name !== "Locale Supported?");
+    broken.connections["Valid?"].main[0] = [{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }];
+    assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
+  });
+
+  /* The /submit half: conclusionText must survive Normalize and be persisted. */
+  const submitContract = wf([
+    node("Normalize", { jsCode: "return [{ json: { outcome: b.outcome, conclusionKey: b.conclusionKey, conclusionId: b.conclusionId, introLine: b.introLine, conclusionText: (b.conclusionText || '').toString() } }];" }),
+    node("Store Profile", {
+      dataTableId: { value: "ib5Yh0yEfNpDqeuU" },
+      columns: { value: { outcome: "", conclusionKey: "", conclusionId: "", event: "", introLine: "", conclusionText: "={{ $json.conclusionText }}" } },
+    }),
+    node("Honeypot filled?"), node("Rate limit"),
+    node("MailerLite: Send Verification", { url: "https://connect.mailerlite.com/api/subscribers" }),
+    node("Log Completion", { dataTableId: { value: "other" }, columns: { value: { token: "" } } }),
+  ], {
+    "Completion?": { main: [[{ node: "Log Completion" }]] },
+  });
+
+  test("passes on the contract-shaped submit workflow", () => {
+    assert.deepEqual(checkInvariants("submit", submitContract).filter((c) => !c.ok).map((c) => c.label), []);
+  });
+
+  test("catches Normalize dropping conclusionText", () => {
+    const broken = structuredClone(submitContract);
+    const n = broken.nodes.find((x) => x.name === "Normalize");
+    n.parameters.jsCode = n.parameters.jsCode.replace(", conclusionText: (b.conclusionText || '').toString()", "");
+    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    assert.ok(failed.some((l) => /conclusionText/.test(l)), failed.join("; "));
+  });
+
+  test("catches Store Profile not persisting conclusionText", () => {
+    const broken = structuredClone(submitContract);
+    delete broken.nodes.find((x) => x.name === "Store Profile").parameters.columns.value.conclusionText;
+    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    assert.ok(failed.some((l) => /conclusionText/.test(l)), failed.join("; "));
   });
 });
 

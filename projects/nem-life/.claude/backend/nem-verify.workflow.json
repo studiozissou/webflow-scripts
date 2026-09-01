@@ -198,7 +198,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Locale: ' + $('Validate Token').first().json.locale + '. Write the full report in ' + ($('Validate Token').first().json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $('Validate Token').first().json.firstName + '\\nGender: ' + $('Validate Token').first().json.gender + '\\nAge category: ' + $('Validate Token').first().json.ageCategory + '\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $('Validate Token').first().json.scoresJson + '\\nPrimary mechanism: ' + $('Validate Token').first().json.primaryMechanism + '\\nSecondary mechanism: ' + ($('Validate Token').first().json.secondaryMechanism || 'none') + '\\nTotal score: ' + $('Validate Token').first().json.totalScore } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Locale: ' + $('Validate Token').first().json.locale + '. Write the full report in ' + ($('Validate Token').first().json.locale === 'en' ? 'English' : 'Dutch') + '.\\n\\nFirst name: ' + $('Validate Token').first().json.firstName + '\\nGender: ' + ({ vrouw: 'Female', female: 'Female', man: 'Male', male: 'Male' }[$('Validate Token').first().json.gender] || $('Validate Token').first().json.gender) + '\\nAge category: ' + $('Validate Token').first().json.ageCategory + '\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + '\\n\\nMechanism scores (JSON): ' + $('Validate Token').first().json.scoresJson + '\\nPrimary mechanism: ' + $('Validate Token').first().json.primaryMechanism + '\\nSecondary mechanism: ' + ($('Validate Token').first().json.secondaryMechanism || 'none') + '\\n\\nIntro line: ' + ($('Validate Token').first().json.introLine || '') + '\\nConclusion text: ' + ($('Validate Token').first().json.conclusionText || '') } ] }) }}",
         "options": {}
       },
       "credentials": {
@@ -222,7 +222,7 @@
       ],
       "disabled": false,
       "parameters": {
-        "jsCode": "// Consumes the five validated JSON sections. Formatting lives here, not in the prompt -\n// the model returns content only. Values are escaped: Christel's prose contains & and\n// quotes, which would otherwise break the document.\nconst p = $('Validate Token').first().json;\nconst r = $json.report;\nconst SECTIONS = ['opening', 'reaction', 'origin', 'cost', 'closing'];\n\nconst heading = p.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport';\nconst greeting = p.locale === 'en' ? 'Dear' : 'Beste';\n\n// Fixed editorial copy, selected client-side on the conclusion key alone (no gender).\n// Empty until Alex's Intro lines tab is exported — an empty line renders nothing, not a gap.\nconst introLine = String(p.introLine || '').trim();\n\nconst esc = (s) => String(s)\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\nconst para = (t) => esc(t)\n  .split(/\\n{2,}/)\n  .map(x => '<p>' + x.replace(/\\n/g, '<br>') + '</p>')\n  .join('');\n\nconst body = SECTIONS.map(k => para(r[k])).join('');\nconst reportText = SECTIONS.map(k => r[k]).join('\\n\\n');\n\nconst html = '<!doctype html><html><head><meta charset=\"utf-8\"><style>'\n  + 'body{font-family:Georgia,serif;color:#292828;max-width:640px;margin:0 auto;padding:48px 40px;line-height:1.6;font-size:16px}'\n  + 'h1{font-family:Montserrat,Arial,sans-serif;font-size:24px;color:#292828}'\n  + '.intro{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#5a5757;margin:0 0 24px}'\n  + 'p{margin:0 0 16px}'\n  + '</style></head><body><h1>' + heading + '</h1>'\n  + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '')\n  + '<p>' + greeting + ' ' + esc(p.firstName || '') + ',</p>'\n  + body\n  + '</body></html>';\n\nreturn [{ json: Object.assign({ html: html, reportText: reportText }, p) }];"
+        "jsCode": "// Consumes the five validated JSON sections. Formatting lives here, not in the prompt -\n// the model returns content only. Values are escaped: Christel's prose contains & and\n// quotes, which would otherwise break the document. There is no greeting line: the\n// prompt places the first name once, at the start of opening.\nconst p = $('Validate Token').first().json;\nconst r = $json.report;\nconst SECTIONS = ['opening', 'reaction', 'origin', 'cost', 'closing'];\n\nconst heading = p.locale === 'en' ? 'Your NEM Test report' : 'Jouw NEM Test rapport';\n\n// Fixed editorial copy, selected client-side on the conclusion key alone (no gender).\n// Empty until Alex's Intro lines tab is exported — an empty line renders nothing, not a gap.\nconst introLine = String(p.introLine || '').trim();\n\nconst esc = (s) => String(s)\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\nconst para = (t) => esc(t)\n  .split(/\\n{2,}/)\n  .map(x => '<p>' + x.replace(/\\n/g, '<br>') + '</p>')\n  .join('');\n\nconst body = SECTIONS.map(k => para(r[k])).join('');\nconst reportText = SECTIONS.map(k => r[k]).join('\\n\\n');\n\nconst html = '<!doctype html><html><head><meta charset=\"utf-8\"><style>'\n  + 'body{font-family:Georgia,serif;color:#292828;max-width:640px;margin:0 auto;padding:48px 40px;line-height:1.6;font-size:16px}'\n  + 'h1{font-family:Montserrat,Arial,sans-serif;font-size:24px;color:#292828}'\n  + '.intro{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#5a5757;margin:0 0 24px}'\n  + 'p{margin:0 0 16px}'\n  + '</style></head><body><h1>' + heading + '</h1>'\n  + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '')\n  + body\n  + '</body></html>';\n\nreturn [{ json: Object.assign({ html: html, reportText: reportText }, p) }];"
       }
     },
     {
@@ -388,12 +388,58 @@
       }
     },
     {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c3000000-0000-4000-8000-00000000007d",
+              "leftValue": "={{ $json.locale }}",
+              "rightValue": "nl",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c3000000-0000-4000-8000-0000000000ls",
+      "name": "Locale Supported?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// The report prompt is Dutch-only, so any other locale is logged and alerted instead of\n// calling Anthropic. Emits the exact shape Parse Report emits on failure, so Log Failure\n// and Alert Failure need no changes.\nconst p = $('Validate Token').first().json;\n\nreturn [{\n  json: Object.assign({}, p, {\n    parseValid: false,\n    report: null,\n    reason: 'unsupported-locale',\n    detail: 'Locale \"' + p.locale + '\" has no report prompt - only nl is supported. No model call was made.',\n    rawResponse: '',\n    executionId: String($execution.id),\n    failedAt: new Date().toISOString()\n  })\n}];"
+      },
+      "id": "c3000000-0000-4000-8000-0000000000ul",
+      "name": "Unsupported Locale",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        600
+      ]
+    },
+    {
       "id": "ae437372-20c6-4377-b988-f97e014b4e06",
       "name": "Report Prompt",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1040,
+        1180,
         460
       ],
       "parameters": {
@@ -588,7 +634,7 @@
             "index": 0
           },
           {
-            "node": "Report Prompt",
+            "node": "Locale Supported?",
             "type": "main",
             "index": 0
           }
@@ -714,6 +760,35 @@
         [
           {
             "node": "Alert Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Locale Supported?": {
+      "main": [
+        [
+          {
+            "node": "Report Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unsupported Locale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unsupported Locale": {
+      "main": [
+        [
+          {
+            "node": "Log Failure",
             "type": "main",
             "index": 0
           }

@@ -150,12 +150,68 @@ const INVARIANTS = {
        * through esc() (it is Christel's prose, full of & and quotes), and absent entirely
        * when empty — no empty <p>, no stray margin. That last property is what lets the
        * plumbing ship before Alex's copy exists. */
-      label: "Build HTML renders the intro line above the greeting, escaped",
+      label: "Build HTML renders the intro line above the report body, escaped",
       check: (wf) => {
         const code = find(wf, "Build HTML")?.parameters?.jsCode ?? "";
         const intro = code.indexOf("introLine ? '<p class=\"intro\">' + esc(introLine)");
-        const greeting = code.indexOf("greeting + ' '");
-        return intro !== -1 && greeting !== -1 && intro < greeting;
+        const body = code.indexOf("+ body");
+        return intro !== -1 && body !== -1 && intro < body;
+      },
+    },
+    {
+      /* Alex's prompt says the first name appears exactly once, at the start of opening.
+       * A greeting line above the body would print it twice on every PDF. */
+      label: "Build HTML does not greet — the prompt places the first name inside opening",
+      check: (wf) => {
+        const code = find(wf, "Build HTML")?.parameters?.jsCode ?? "";
+        return code.length > 0 && !/\bconst greeting\b|\+\s*greeting\b/.test(code);
+      },
+    },
+    {
+      /* The prompt writes "in the same register as the intro line" and builds on the
+       * conclusion text the user already saw. Neither reached the model until §7; drop
+       * one again and it matches a register it was never shown. */
+      label: "Generate Report sends the intro line",
+      check: (wf) => (find(wf, "Generate Report")?.parameters?.jsonBody ?? "").includes("Intro line: "),
+    },
+    {
+      label: "Generate Report sends the conclusion text",
+      check: (wf) => (find(wf, "Generate Report")?.parameters?.jsonBody ?? "").includes("Conclusion text: "),
+    },
+    {
+      label: "Generate Report does not send the total score — the prompt says the model does not calculate",
+      check: (wf) => {
+        const body = find(wf, "Generate Report")?.parameters?.jsonBody ?? "";
+        return body.length > 0 && !/Total score/i.test(body);
+      },
+    },
+    {
+      /* The stored value stays vrouw / man — conclusionId derives from it. Only the user
+       * message spells it the way the prompt does. */
+      label: "Generate Report spells gender the prompt's way: Female / Male",
+      check: (wf) => {
+        const body = find(wf, "Generate Report")?.parameters?.jsonBody ?? "";
+        return body.includes("'Female'") && body.includes("'Male'");
+      },
+    },
+    {
+      /* The prompt is Dutch-only: forbidden words, register and every text variant. An
+       * en token must be logged and alerted like any other failure, and must never reach
+       * Anthropic. The gate sits on the Valid? fast path where Report Prompt used to be. */
+      label: "Unsupported locales are logged and alerted, never sent to Anthropic",
+      check: (wf) => {
+        if (!find(wf, "Locale Supported?")) return false;
+        const fast = fanOut(wf, "Valid?");
+        if (!fast.includes("Locale Supported?") || fast.includes("Report Prompt")) return false;
+        const branches = wf.connections?.["Locale Supported?"]?.main ?? [];
+        const onTrue = (branches[0] ?? []).map((c) => c.node);
+        const onFalse = (branches[1] ?? []).map((c) => c.node);
+        if (!onTrue.includes("Report Prompt") || onTrue.includes("Unsupported Locale")) return false;
+        if (onFalse.length === 0) return false;
+        const reachesLog = (name) => name === "Log Failure" || fanOut(wf, name).includes("Log Failure");
+        return onFalse.every(
+          (n) => n !== "Report Prompt" && n !== "Generate Report" && reachesLog(n),
+        );
       },
     },
     {
@@ -240,6 +296,22 @@ const INVARIANTS = {
       check: (wf) => {
         const mapped = find(wf, "Store Profile")?.parameters?.columns?.value ?? {};
         return "introLine" in mapped;
+      },
+    },
+    {
+      /* The conclusion text the user read on screen. n8n holds no copy of the texts, so
+       * this is the only route by which /verify can hand it to the prompt. */
+      label: "Normalize keeps conclusionText",
+      check: (wf) => {
+        const code = find(wf, "Normalize")?.parameters?.jsCode ?? "";
+        return code.includes("conclusionText");
+      },
+    },
+    {
+      label: "Store Profile persists conclusionText",
+      check: (wf) => {
+        const mapped = find(wf, "Store Profile")?.parameters?.columns?.value ?? {};
+        return "conclusionText" in mapped;
       },
     },
     {

@@ -352,6 +352,16 @@
       "critical": false,
       "created": "2026-08-31",
       "description": "Removes the leading '!' from the Coconut brand name across copy, CMS, SEO fields and JSON-LD. Includes regression guards asserting the FCA footer disclosure (D3), logo asset filenames (D1) and Organization alternateName (D6) are deliberately left unchanged."
+    },
+    {
+      "slug": "rhp-home-scroll-back-to-intro",
+      "url": "https://rhpcircle.webflow.io/",
+      "spec": "tests/acceptance/rhp-home-scroll-back-to-intro.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-31",
+      "description": "Desktop wheel-up in completed home state re-arms the intro scrub; native scroll scrubs the morph back to the landing view and forward again to complete. Expected to fail until the feature ships (awaiting Ryan approval)."
     }
   ]
 }

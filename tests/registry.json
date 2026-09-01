@@ -341,7 +341,17 @@
       "source": "plan",
       "critical": false,
       "created": "2026-08-31",
-      "description": "Coconut supplementary FAQ content (August 2026): 15 new FAQ entries plus 2 merged answers across 7 landing pages — 2 CMS pages via the 25 New Features common-questions multi-reference (appended last) and 5 static pages via duplicated _25-collapse-item accordion blocks. Asserts per-page item counts, no duplicate questions, merged copy present with the folded-in questions absent, pre-existing questions retained, and the 4 new links resolving."
+      "description": "Coconut supplementary FAQ content (August 2026): 15 new FAQ entries plus 2 merged answers across 7 landing pages \u2014 2 CMS pages via the 25 New Features common-questions multi-reference (appended last) and 5 static pages via duplicated _25-collapse-item accordion blocks. Asserts per-page item counts, no duplicate questions, merged copy present with the folded-in questions absent, pre-existing questions retained, and the 4 new links resolving."
+    },
+    {
+      "slug": "coconut-remove-brand-exclamation-mark",
+      "url": "https://getcoconut.webflow.io/",
+      "spec": "tests/acceptance/coconut-remove-brand-exclamation-mark.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-08-31",
+      "description": "Removes the leading '!' from the Coconut brand name across copy, CMS, SEO fields and JSON-LD. Includes regression guards asserting the FCA footer disclosure (D3), logo asset filenames (D1) and Organization alternateName (D6) are deliberately left unchanged."
     }
   ]
 }

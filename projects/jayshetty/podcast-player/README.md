@@ -1,7 +1,8 @@
 # Podcast dual-platform inline player (YouTube + Spotify)
 
-Source of truth for the custom code deployed to **jayshetty.webflow.io/podcast-v2**
-(page `6a85a907e42332f1eded63d7`, site `64c10a2010e1a379d08bf030`). Spec:
+Source of truth for the custom code on the **/podcast** page (page
+`64c14c21b0f0bd266134a4df`, site `64c10a2010e1a379d08bf030`; the draft
+`podcast-v2` mirror is `6a85a907e42332f1eded63d7`). Spec:
 `projects/jayshetty/.claude/specs/podcast-dual-platform-inline-player.md`.
 
 The code ships as Webflow page custom code, not via the CDN pipeline. These files
@@ -29,10 +30,13 @@ set_page_scripts        -> applied to the podcast page, footer
                            the live /podcast page serves the script today)
 ```
 
-Two reasons. Webflow's freeform custom-code endpoint started returning HTTP
-406 on every write (any size, any content, byte-identical included) while
-reads, publishes and the scripts API all worked — so the footer can only be
-edited by hand right now. And when the script tag *was* pasted by hand, the
+On the live `/podcast` page the player is NOT attached via the scripts API —
+it loads from a plain `<script>` tag in the footer freeform block (updated to
+the v1.2.0 pin via `set_page_freeform_code` on 1 Sep 2026; the endpoint's
+old blanket HTTP 406 has cleared for that page, though the `podcast-v2` head
+write still 406s). The scripts-API attachment above applies to the draft
+`podcast-v2` mirror. Historical context: the freeform endpoint once returned
+HTTP 406 on every write, and when the script tag *was* pasted by hand, the
 Designer's code editor reformatted the block on save and truncated the long
 jsDelivr URL mid-path, which is a good reason to keep long URLs out of that
 field permanently.
@@ -44,9 +48,10 @@ the new version against the tagged jsDelivr URL and re-apply it with
 always bump the version rather than relying on a purge. Rollback is one API
 call: re-apply the previous hosted script version (v1.1.0 for the v1.2.0 rollout).
 
-**Outstanding:** the footer still contains the truncated
-`<script src=".../podcas?v=1">` line from that paste. It 404s harmlessly but
-should be deleted by hand in Page Settings. The CDN URL pins a release tag,
+**Outstanding:** the draft `podcast-v2` footer still contains the truncated
+`<script src=".../podcas?v=1">` line from that paste (the live `/podcast`
+footer does not). It 404s harmlessly but should be deleted in Page Settings
+or via the now-working freeform write. The CDN URL pins a release tag,
 never a branch, so it survives merges and worktree cleanup.
 
 ### Deploying the footer
@@ -169,6 +174,9 @@ before the audio page (~450 ms) can load — so both are judged unlikely.
 - Footer pin bumped to `@jayshetty-podcast-player-v1.2.0`.
 - Spec: `projects/jayshetty/.claude/specs/podcast-safari-video-path.md`.
   Evidence: `projects/jayshetty/.claude/research/safari-spotify-video-2026-08-31.md`.
+- Deployed 1 Sep 2026 to the webflow.io subdomain only (`/podcast` footer pin
+  swap + hosted-script registration 1.2.0); the live domain stays on v1.1.0
+  until custom domains are published.
 
 ### v1.1.0 (Aug 2026)
 

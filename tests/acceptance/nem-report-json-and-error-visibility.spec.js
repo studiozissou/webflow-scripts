@@ -25,6 +25,7 @@ import {
   answerAllQuestions,
   answerByIndices,
   fillProfileScreen,
+  getConclusionText,
 } from './helpers/nem-quiz.js';
 
 const SLUG = 'nem-report-json-and-error-visibility';
@@ -223,7 +224,7 @@ test.describe(`${SLUG} — A: Anonymous completion logging`, () => {
 //
 // The rendering is now covered where it actually happens: tests/nem/nem-build-html.test.js
 // runs the real Build HTML jsCode and asserts the line appears between the <h1> and the
-// greeting, escaped, and absent entirely when empty.
+// opening section, escaped, and absent entirely when empty.
 //
 // The payload half — that the component sends introLine and conclusionText in the /submit
 // POST at all — is covered above in A: "the submission carries the intro line and the

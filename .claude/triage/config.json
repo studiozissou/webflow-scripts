@@ -1,6 +1,6 @@
 {
   "slack": {
-    "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time \u2014 every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
+    "_comment": "Team Zissou workspace only. Claude Code holds one Slack connection at a time — every Slack MCP server shares the same OAuth clientId, so authing a second workspace overwrites the first token, and a second server on the same URL shadows the plugin's server in the app. Skye High therefore can't be scanned automatically; see manualCheck below.",
     "channels": [
       {
         "id": "C0973LJ2BTJ",
@@ -32,11 +32,11 @@
         "name": "#tamsen-web-dev",
         "id": "C09A7MZEK3P",
         "client": "Tamsen Fadal",
-        "note": "Slack API returned channel_not_found on 2026-08-05 \u2014 the ID may be wrong, or the Slack app is not installed in the Skye High workspace."
+        "note": "Slack API returned channel_not_found on 2026-08-05 — the ID may be wrong, or the Slack app is not installed in the Skye High workspace."
       },
       {
         "workspace": "Skye High",
-        "name": "DM \u2014 Yoni",
+        "name": "DM — Yoni",
         "id": "D049YCR485C",
         "client": "Tamsen Fadal",
         "note": "Slack API returned channel_not_found on 2026-08-05. Yoni's jayshetty.me request arrived by email instead."
@@ -63,17 +63,28 @@
           "updates@mymind.email",
           "mymind.com"
         ],
-        "_sendersComment": "Always keep. Newsletters here are read for pleasure, not scanned for actions, so the usual 'no action needed' test does not apply to them. Match on the domain, not the full address \u2014 mymind sends from updates@mymind.email, and a sending address can change without the brand changing.",
+        "_sendersComment": "Always keep. Newsletters here are read for pleasure, not scanned for actions, so the usual 'no action needed' test does not apply to them. Match on the domain, not the full address — mymind sends from updates@mymind.email, and a sending address can change without the brand changing.",
         "domains": []
       },
       "learnedKeep": [
         "permanentstyle.com"
       ],
-      "_learnedKeepComment": "Senders the user has said to always keep \u2014 either rescued from a cleanup run or named directly. Match on the domain so a change of sending address does not silently drop the rule. Append when the user rescues a sender; never remove an entry automatically, because the user put it there."
+      "_learnedKeepComment": "Senders the user has said to always keep — either rescued from a cleanup run or named directly. Match on the domain so a change of sending address does not silently drop the rule. Append when the user rescues a sender; never remove an entry automatically, because the user put it there."
     }
   },
   "calendar": {
-    "lookaheadDays": 7
+    "lookaheadDays": 7,
+    "birthdays": {
+      "lookaheadDays": 14,
+      "cardLeadDays": 7,
+      "keywords": [
+        "birthday",
+        "bday",
+        "jarig",
+        "verjaardag"
+      ],
+      "_comment": "Checked on every run regardless of lastProcessed. Each birthday in the window is matched to a 'Send card for {name}' task in Tasks Tracker by Source ID calendar:birthday:{recurringEventId}:{YYYY}; missing ones are proposed as quick tasks due cardLeadDays before the birthday. See Birthdays under Calendar in the triage skill."
+    }
   },
   "trello": {
     "enabled": true,
@@ -85,7 +96,7 @@
         "lists": [
           "Web development"
         ],
-        "note": "Shared board with the I-com agency (108 cards). Scope scans to the Web development list only \u2014 the other lists are their SEO, content and PPC work."
+        "note": "Shared board with the I-com agency (108 cards). Scope scans to the Web development list only — the other lists are their SEO, content and PPC work."
       }
     ]
   },

@@ -224,9 +224,13 @@ describe("formatReport", () => {
 const CONTRACT_BODY =
   "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Gender: ' + ({ vrouw: 'Female', female: 'Female', man: 'Male', male: 'Male' }[$('Validate Token').first().json.gender] || $('Validate Token').first().json.gender) + '\\nIntro line: ' + ($('Validate Token').first().json.introLine || '') + '\\nConclusion text: ' + ($('Validate Token').first().json.conclusionText || '') } ] }) }}";
 
-/* Build HTML after §7f: no greeting line — the prompt puts the first name inside opening. */
+/* Build HTML after nem-report-webflow-template: fills the fetched Webflow template's
+ * slots, no greeting line (§7f — the prompt puts the first name inside opening). */
 const BUILD_HTML_NO_GREETING =
-  "const html = '<h1>' + heading + '</h1>' + (introLine ? '<p class=\"intro\">' + esc(introLine) + '</p>' : '') + body;";
+  "const TEMPLATE_URL = 'https://nem-life-1.webflow.io/report-pdf-template';"
+  + " let html = String(await this.helpers.httpRequest({ url: TEMPLATE_URL }));"
+  + " if (introLine) { fillText('intro-line', esc(introLine)); } else { html = html.replace(elementRe('data-slot-wrap', 'intro-line'), ''); }"
+  + " const out = html + body;";
 
 const GATE_PARAMS = {
   conditions: {

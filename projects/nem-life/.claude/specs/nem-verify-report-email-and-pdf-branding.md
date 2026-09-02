@@ -1,7 +1,7 @@
 # NEM Test report delivery: brand the covering email and the PDF report
 
 **Slug:** `nem-verify-report-email-and-pdf-branding`
-**Status:** Ready to Build — **unblocked 2026-09-01**, see the note below
+**Status:** PDF half PREPARED 2026-09-02 as changeset `../backend/changesets/nem-report-webflow-template/` (Build HTML fetches and fills the Webflow page `/report-pdf-template`; not yet applied to live). Email half still Ready to Build.
 **Priority:** P2
 **Type:** feature
 **Created:** 2026-08-11

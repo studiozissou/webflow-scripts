@@ -332,6 +332,16 @@
       "critical": false,
       "created": "2026-08-20",
       "description": "SEMrush remediation for tamsenfadal.com: title tags under 70 chars while keeping the '| Tamsen Fadal' entity suffix, 10 duplicate meta description pairs made distinct, llms.txt rewritten to llmstxt.org Markdown, retired Apple Podcasts id1560877893 links repointed, and the hot-girl-menopause-smoothie redirect chain removed."
+    },
+    {
+      "slug": "tamsen-broken-external-links-sep-2026",
+      "url": "https://www.tamsenfadal.com/",
+      "spec": "tests/acceptance/tamsen-broken-external-links-sep-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-02",
+      "description": "SEMrush issue 12 follow-up for tamsenfadal.com: advocacy bill links repointed to current legislature URLs, dead press and provider links cleared or archived, six blog/podcast links repointed, two healthnews.com anchors unlinked, and bot-blocked false positives left untouched."
     }
   ]
 }

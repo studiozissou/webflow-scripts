@@ -1,5 +1,16 @@
 # Changeset — nem-prompt-input-contract
 
+> ## ✅ APPLIED — do not apply again
+>
+> Applied 2026-09-02: the `conclusionText` column and `Normalize` by hand in the UI,
+> everything else via `n8n_update_partial_workflow` (validated, then applied).
+> `npm run check:nem-drift` confirms both workflows IN SYNC with every invariant green,
+> and the snapshots were re-baselined from live in the same commit.
+>
+> Still open from this README: the step-10 execution checks (one `locale: en` token, one
+> `vrouw` token) and the Webflow paste of `dist/nem-test-phase-b.webflow.tsx` — until that
+> paste, `conclusionText` arrives empty and is stored as `''`.
+
 **Spec:** `../../specs/nem-report-json-and-error-visibility.md` (§7)
 **Prepared:** 2026-09-01
 **Applies to:** `/submit` (`LDI1eWR35lwX6WLp`) and `/verify` (`uKkMgMYoH5nOLoCR`)

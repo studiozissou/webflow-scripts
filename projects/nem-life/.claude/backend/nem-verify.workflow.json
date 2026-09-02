@@ -388,58 +388,12 @@
       }
     },
     {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "version": 2,
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "c3000000-0000-4000-8000-00000000007d",
-              "leftValue": "={{ $json.locale }}",
-              "rightValue": "nl",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "c3000000-0000-4000-8000-0000000000ls",
-      "name": "Locale Supported?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        900,
-        460
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// The report prompt is Dutch-only, so any other locale is logged and alerted instead of\n// calling Anthropic. Emits the exact shape Parse Report emits on failure, so Log Failure\n// and Alert Failure need no changes.\nconst p = $('Validate Token').first().json;\n\nreturn [{\n  json: Object.assign({}, p, {\n    parseValid: false,\n    report: null,\n    reason: 'unsupported-locale',\n    detail: 'Locale \"' + p.locale + '\" has no report prompt - only nl is supported. No model call was made.',\n    rawResponse: '',\n    executionId: String($execution.id),\n    failedAt: new Date().toISOString()\n  })\n}];"
-      },
-      "id": "c3000000-0000-4000-8000-0000000000ul",
-      "name": "Unsupported Locale",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1180,
-        600
-      ]
-    },
-    {
       "id": "ae437372-20c6-4377-b988-f97e014b4e06",
       "name": "Report Prompt",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1180,
+        1040,
         460
       ],
       "parameters": {
@@ -583,6 +537,52 @@
           "id": "699carSHScI1ng0W",
           "name": "MailerSend API"
         }
+      }
+    },
+    {
+      "id": "4b478200-1f0e-440e-8beb-435ac9e12b2a",
+      "name": "Locale Supported?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        460
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c3000000-0000-4000-8000-00000000007d",
+              "leftValue": "={{ $json.locale }}",
+              "rightValue": "nl",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cd6bcb8d-3554-4335-9ef0-589cc90dceac",
+      "name": "Unsupported Locale",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        600
+      ],
+      "parameters": {
+        "jsCode": "// The report prompt is Dutch-only, so any other locale is logged and alerted instead of\n// calling Anthropic. Emits the exact shape Parse Report emits on failure, so Log Failure\n// and Alert Failure need no changes.\nconst p = $('Validate Token').first().json;\n\nreturn [{\n  json: Object.assign({}, p, {\n    parseValid: false,\n    report: null,\n    reason: 'unsupported-locale',\n    detail: 'Locale \"' + p.locale + '\" has no report prompt - only nl is supported. No model call was made.',\n    rawResponse: '',\n    executionId: String($execution.id),\n    failedAt: new Date().toISOString()\n  })\n}];"
       }
     }
   ],

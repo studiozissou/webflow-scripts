@@ -45,3 +45,4 @@ return [{
     verifyUrl: base + '?token=' + encodeURIComponent(token)
   }
 }];
+

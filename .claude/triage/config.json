@@ -46,15 +46,15 @@
   },
   "gmail": {
     "queries": [
-      "in:inbox newer_than:3d",
+      "in:inbox after:{gmail.lastProcessed}",
       "is:starred -in:sent"
     ],
     "lookbackDays": 3,
-    "_comment": "queries cover the whole inbox, read and unread, so nothing is missed. cleanup is a separate, wider sweep used only by the newsletter cleanup pass.",
+    "_comment": "queries cover the whole inbox, read and unread, so nothing is missed. {gmail.lastProcessed} is replaced at run time with state.sources.gmail.lastProcessed as Unix epoch seconds, so each run scans only mail that arrived since the previous run; Gmail's after: matches on message date, so a thread with a new reply still surfaces. If the timestamp is null, fall back to newer_than:{lookbackDays}d. cleanup is a separate, wider sweep used only by the newsletter cleanup pass.",
     "cleanup": {
       "enabled": true,
-      "_comment": "Newsletter cleanup. Trashes bulk marketing mail only, and only when it passes every keep test in the triage skill's <inbox_cleanup> section. Trash is recoverable in Gmail for 30 days.",
-      "query": "in:inbox -is:starred -is:important",
+      "_comment": "Newsletter cleanup. Trashes bulk marketing mail only, and only when it passes every keep test in the triage skill's <inbox_cleanup> section. Scoped to unread mail since 2026-09-02 at Will's request: anything he has opened stays where it is. Trash is recoverable in Gmail for 30 days.",
+      "query": "in:inbox is:unread -is:starred -is:important",
       "lookbackDays": 14,
       "maxPerRun": 100,
       "neverDelete": {
@@ -96,11 +96,12 @@
     "clientsDbDataSourceId": "collection://229e1848-bb51-8018-888c-000b6dbead72",
     "defaultStatus": "Inbox",
     "comments": {
-      "_comment": "Reads the user's own comments on Notion tasks each run and acts on them. Only comments authored by userNotionId count as instructions; anyone else's are context, and triage's own replies are never read back in. maxPagesPerRun caps how many watched pages are checked, oldest-checked first, so a backlog drains over runs.",
+      "_comment": "Reads the user's own comments on Notion tasks each run and acts on them. Only comments authored by userNotionId count as instructions; anyone else's are context, and triage's own replies are never read back in. Pages fetched during the run are always checked. The background sweep only revisits a page whose lastCommentCheck is null or older than sweepIntervalDays, capped at maxPagesPerRun per run, oldest first, so a backlog drains over runs without a 40-call sweep every morning.",
       "enabled": true,
-      "maxPagesPerRun": 40,
+      "maxPagesPerRun": 10,
       "includeBlockComments": true,
-      "replyAfterActing": true
+      "replyAfterActing": true,
+      "sweepIntervalDays": 7
     }
   }
 }

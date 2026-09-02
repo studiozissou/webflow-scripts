@@ -20,26 +20,26 @@ Defined in `init.js` -> `CONFIG.modules` (load order matters). Read it there; de
 
 ## File responsibilities
 
-| File | Version | Responsibility |
-|------|---------|----------------|
-| `init.js` | 2026.3.12.1 | Loader: load order, dev/CDN URL resolution, health check, `window.RHP` bootstrap, project CSS loading |
-| `orchestrator.js` | 2026.8.12.4 | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
-| `lenis-manager.js` | 2026.2.6.10 | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
-| `cursor.js` | 2026.2.18.1 | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
-| `work-dial.js` | 2026.8.18.3 | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover; inert while a case study is displayed (`inCaseStudyMode()`) |
-| `home-about-slide.js` | 2026.8.12.1 | Home↔about curtain/slide transitions; `leaveAboutToHome(data, opts)` takes an optional `{ duration }` |
-| `transition-dial.js` | 2026.8.12.1 | Static teal canvas dial shown during Barba transitions; also paints the static ring into the persistent `#dial_ticks-canvas` for the about→work via-home beat (`paintInto`/`clearCanvas`) |
-| `about-dial-ticks.js` | 2026.2.6.10 | Small 6rem static teal dial on about page |
-| `about-text-lines.js` | 2026.2.13.1 | Scroll-linked per-line text fade on about page (SplitText + Lenis scroll events) |
-| `about-swipers.js` | 2026.8.17.1 | Swiper crossfade sliders on about page **and** their desktop sizing — each `[data-slider]` gets its own `--slide-max-height`; also publishes `--accordion-title-height` for the sticky carousel |
-| `home-intro.js` | 2026.2.11.1 | One-time intro sequence on fresh home load (step text → ticks → video → nav) |
-| `intro-format.js` | — | Sanitise `[data-text="intro"]` HTML on case pages (decode entities, strip disallowed tags) |
-| `earth-parallax.js` | 2026.2.23.1 | Scroll-linked `.earth-image` parallax on case pages (ScrollTrigger) |
-| `case-video-controls.js` | 2026.3.10.1 | Case video play/pause, mute, progress bar, viewport auto-pause, auto-hide controls |
-| `video-loader.js` | 2026.3.17.1 | Lottie loading spinner on visible videos; MutationObserver for pool swaps; reduced-motion CSS fallback |
-| `overland-ai.js` | — | Page-specific: grid hover + mobile benefit video autoplay |
-| `utils.js` | — | Copyright year, `rel="noreferrer noopener"` on `_blank` links, UTM form fields |
-| `ready-hit-play.css` | — | All styles: dial layout, cursor, state flags, custom properties, Barba namespace scoping |
+| File | Responsibility |
+|------|----------------|
+| `init.js` | Loader: load order, dev/CDN URL resolution, health check, `window.RHP` bootstrap, project CSS loading |
+| `orchestrator.js` | Barba conductor: init/destroy modules per page, transitions (morph in leave), scroll lock, contact pullout, dial namespace restructure |
+| `lenis-manager.js` | Lenis instance: start/stop on Barba transitions, ScrollTrigger proxy for case scroll wrapper |
+| `cursor.js` | Custom cursor: 4 states (dot/solid-orange/arrow-orange/arrow-white), data-attribute driven |
+| `work-dial.js` | Homepage dial: canvas ticks, video pool (sliding window), sector switch with fg-video deadzone, drag/hover; inert while a case study is displayed (`inCaseStudyMode()`) |
+| `home-about-slide.js` | Home↔about curtain/slide transitions; `leaveAboutToHome(data, opts)` takes an optional `{ duration }` |
+| `transition-dial.js` | Static teal canvas dial shown during Barba transitions; also paints the static ring into the persistent `#dial_ticks-canvas` for the about→work via-home beat (`paintInto`/`clearCanvas`) |
+| `about-dial-ticks.js` | Small 6rem static teal dial on about page |
+| `about-text-lines.js` | Scroll-linked per-line text fade on about page (SplitText + Lenis scroll events) |
+| `about-swipers.js` | Swiper crossfade sliders on about page **and** their desktop sizing — each `[data-slider]` gets its own `--slide-max-height`; also publishes `--accordion-title-height` for the sticky carousel |
+| `home-intro.js` | One-time intro sequence on fresh home load (step text → ticks → video → nav) |
+| `intro-format.js` | Sanitise `[data-text="intro"]` HTML on case pages (decode entities, strip disallowed tags) |
+| `earth-parallax.js` | Scroll-linked `.earth-image` parallax on case pages (ScrollTrigger) |
+| `case-video-controls.js` | Case video play/pause, mute, progress bar, viewport auto-pause, auto-hide controls |
+| `video-loader.js` | Lottie loading spinner on visible videos; MutationObserver for pool swaps; reduced-motion CSS fallback |
+| `overland-ai.js` | Page-specific: grid hover + mobile benefit video autoplay |
+| `utils.js` | Copyright year, `rel="noreferrer noopener"` on `_blank` links, UTM form fields |
+| `ready-hit-play.css` | All styles: dial layout, cursor, state flags, custom properties, Barba namespace scoping |
 
 ## Barba namespaces
 

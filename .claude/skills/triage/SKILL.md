@@ -499,8 +499,16 @@ Handled by the `gmail-triage` skill. Load it and run Steps 1-4 from that skill:
 4. Load project context from `projects/{client}/.claude/`
 
 Read every thread in the window, not only the unread ones. Mail the user opened on their
-phone and never dealt with is exactly the mail that goes missing, and the cleanup pass
-needs to see read mail too — that is where old newsletters sit.
+phone and never dealt with is exactly the mail that goes missing. The window itself is
+incremental: the first configured query carries an `after:{gmail.lastProcessed}` placeholder,
+which is replaced with `state.sources.gmail.lastProcessed` as Unix epoch seconds. Gmail's
+`after:` matches on message date, so a thread that gained a reply since the last run still
+surfaces. If the timestamp is null, fall back to `newer_than:{gmail.lookbackDays}d`.
+
+Do not re-read whole threads that are already in the ledger. When a thread's Source ID is in
+`processedSourceIds`, the search result already lists its message IDs, so fetch only the
+messages newer than the last run via `get_message`. A long thread carries every earlier
+message quoted inside each reply, and reading it again costs far more than it tells you.
 
 After gmail-triage classification:
 - REPLY NEEDED threads → extract task + draft reply
@@ -1081,9 +1089,18 @@ Notion's database query tools need a Business plan and are unavailable here, so 
 4. Any page the update pass in <task_updates> fetches this run gets checked too, whether or
    not it is on the watch list
 
-Check at most `config.notion.comments.maxPagesPerRun` pages per run (default 40), oldest
-`lastCommentCheck` first, so a backlog drains over successive runs instead of making one run
-enormous. Say in the report when a backlog remains.
+Two tiers, so the pass stays cheap on a daily run:
+
+- **Always:** every page fetched during this run, whether for an update, a dedup check, or a
+  create. Those calls are being made anyway, and a page with fresh activity is the one most
+  likely to carry a comment.
+- **Background sweep:** from `commentWatch`, only pages whose `lastCommentCheck` is null or
+  older than `config.notion.comments.sweepIntervalDays` (default 7), oldest first, capped at
+  `config.notion.comments.maxPagesPerRun` (default 10). A page checked yesterday is skipped.
+
+A full sweep every morning was forty calls for one stale note. This keeps the guarantee that
+every watched page is read at least weekly, and drains a backlog over successive runs
+instead of making one run enormous. Say in the report when a backlog remains.
 
 `taskLinks` only goes back as far as it has been kept, so on the first run the watch list is
 much smaller than the set of tasks the user actually has open — and a comment on a task

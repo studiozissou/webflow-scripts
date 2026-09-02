@@ -73,7 +73,18 @@
     }
   },
   "calendar": {
-    "lookaheadDays": 7
+    "lookaheadDays": 7,
+    "birthdays": {
+      "lookaheadDays": 14,
+      "cardLeadDays": 7,
+      "keywords": [
+        "birthday",
+        "bday",
+        "jarig",
+        "verjaardag"
+      ],
+      "_comment": "Checked on every run regardless of lastProcessed. Each birthday in the window is matched to a 'Send card for {name}' task in Tasks Tracker by Source ID calendar:birthday:{recurringEventId}:{YYYY}; missing ones are proposed as quick tasks due cardLeadDays before the birthday. See Birthdays under Calendar in the triage skill."
+    }
   },
   "trello": {
     "enabled": true,

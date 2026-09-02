@@ -72,6 +72,12 @@ Spawn parallel agents to scan each source:
 - Filter to events that imply preparation or follow-up
 - Skip routine recurring events unless they have specific agendas
 - Return actionable events with dates
+- Birthday pass, every run, ignoring `lastProcessed`: `list_events` for the next
+  `config.calendar.birthdays.lookaheadDays` days, once with default types and once
+  with `eventType: ["BIRTHDAY"]`; keep all-day events matching
+  `config.calendar.birthdays.keywords` that are not parties; return each with its
+  name, date, `recurringEventId` and `htmlLink` (rules in the triage skill under
+  Birthdays)
 
 **Agent 4 — Trello** (if enabled and available):
 - Read configured boards
@@ -178,6 +184,7 @@ Output the full triage report following the format in the triage skill:
 ```
 ── TRIAGE — {date} ──
 
+## Birthdays Coming Up (always first, never omitted; card task Missing / Not sent / Overdue / Sent per birthday)
 ## Replies Needed
 ## Draft Replies
 ## Your Notion Comments (verbatim + what each produced; omit if empty)

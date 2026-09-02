@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Also keeps existing Notion tasks current: proposes field updates when new information arrives and flags obsolete tasks for cancelling. Reads the user's own comments on Notion tasks every run and acts on them — carrying out the automatable ones, turning the rest into field updates, subtasks or answers, and replying in the thread to say what was done — so an instruction left as a comment does not become admin to redo by hand. Flags sub-15-minute tasks as Quick, files them under a Quick Tasks mother task at P0 with an hours estimate so they can be sorted by size and cleared in a batch. Reads the whole inbox, read and unread, and clears bulk newsletters out of it — keeping anything holding a discount code, a receipt, a reminder, mymind, or anything else actionable, and keeping anything it is unsure about. Loaded by the /triage command. NEVER sends emails or Slack messages, and NEVER writes to Notion, without explicit user approval. Deleted mail is only ever moved to Gmail's trash, never purged.
+description: Multi-source task triage — scans Gmail, Slack, Calendar, and Trello, extracts tasks, detects blockers, creates subtasks, drafts replies, and writes everything to Notion as self-contained briefs (verbatim ask, source links, assets, steps, acceptance criteria) so a task can be worked or handed off without opening anything else. Also keeps existing Notion tasks current: proposes field updates when new information arrives and flags obsolete tasks for cancelling. Reads the user's own comments on Notion tasks every run and acts on them — carrying out the automatable ones, turning the rest into field updates, subtasks or answers, and replying in the thread to say what was done — so an instruction left as a comment does not become admin to redo by hand. Flags sub-15-minute tasks as Quick, files them under a Quick Tasks mother task at P0 with an hours estimate so they can be sorted by size and cleared in a batch. Reads the whole inbox, read and unread, and clears bulk newsletters out of it — keeping anything holding a discount code, a receipt, a reminder, mymind, or anything else actionable, and keeping anything it is unsure about. Checks the calendar for birthdays in the next two weeks on every run and reports whether each one's send-card task exists and is done, proposing the task when it is missing. Loaded by the /triage command. Loaded by the /triage command. NEVER sends emails or Slack messages, and NEVER writes to Notion, without explicit user approval. Deleted mail is only ever moved to Gmail's trash, never purged.
 ---
 
 <objective>
@@ -577,6 +577,62 @@ Never advance `lastProcessed` for a `manualCheck` source — there is nothing to
    - Events with action items in description → individual tasks
 3. Skip recurring events that are routine (standups, etc.) unless they have specific agenda items
 
+### Birthdays
+
+The user forgets birthdays. This pass exists so that a birthday cannot arrive without a
+card task having been seen first. It runs on **every** triage, including `/triage calendar`
+and scheduled runs, and it ignores `lastProcessed` — a birthday is not new activity, it is
+a deadline that gets closer every day, so it is re-checked every time.
+
+1. Call `list_events` on the primary calendar twice for the next
+   `config.calendar.birthdays.lookaheadDays` days (14): once with default event types, once
+   with `eventType: ["BIRTHDAY"]`. Google keeps contact birthdays in the second bucket and
+   the ones copied in from Meggie's Morlomonszters calendar in the first.
+2. A birthday is an all-day event whose title contains one of
+   `config.calendar.birthdays.keywords` — `birthday`, `bday`, `jarig`, `verjaardag` — and
+   none of the party words (`party`, `partay`, `drinks`, `dinner`, `lunch`, `bash`,
+   `feestje`, `borrel`, `uitje`). A party is an event, not a person; it goes through the
+   normal calendar extraction above. Anniversaries are not birthdays and are not part of
+   this pass.
+3. The person's name is the title with the keyword, emoji, punctuation, a possessive `'s`,
+   and any trailing note like `(2024 - Jade)` stripped: "Nina Kwakkel birthday! 🐒🦎" →
+   Nina Kwakkel, "Buurman Sem jarig!" → Buurman Sem, "Meggie's Birthday 🐙" → Meggie.
+4. Source ID is `calendar:birthday:{recurringEventId}:{YYYY}` where the year is the year of
+   this occurrence, so each year produces a fresh task and last year's Done task never
+   hides this year's birthday. Use the instance's `recurringEventId` when present and the
+   event `id` otherwise.
+5. Find the card task. One SQL query against the Tasks Tracker data source with every
+   Source ID from this pass in an `IN (...)` list, selecting `Task name`, `Status`,
+   `date:Due date:start` and `url`. Do not rely on the ledger alone for this — the user
+   may have created or ticked off a card task by hand, and Notion is the source of truth.
+   If nothing matches on Source ID, search by name for `Send card for {name}` before
+   treating the task as missing. If the SQL query is refused (it needs a single data
+   source and has worked on this plan, but if it stops), fall back to `taskLinks` in the
+   ledger plus a `notion-search` for `Send card for {name}`, and `notion-fetch` each hit
+   for its Status.
+6. Decide per birthday:
+
+   | Card task | Report as |
+   |-----------|-----------|
+   | None | **Missing** — propose `Send card for {name}` in the New Tasks batch, see below |
+   | Exists, Status not Done or Cancelled | **Not sent** — flag it; **overdue** if `Due date` is in the past |
+   | Exists, Status Done | **Sent** — one line so the user knows it is covered |
+   | Exists, Status Cancelled | Say so and do not re-propose |
+
+   A birthday within 3 days whose card is not Done goes to the top of the section with a
+   🔴, whatever else is in the report.
+
+7. A proposed card task is a quick task in every respect: `Priority` P0, `Tags` Quick,
+   `Hours Estimate` 0.25, `Doer` User, `Parent task` the Quick Tasks mother, quick-depth
+   brief. Plus: `Source` Calendar, `Source Link` the event's `htmlLink`, `Source ID` from
+   step 4, `Source Context` naming the person and the date, and `Due date` set to the
+   birthday minus `config.calendar.birthdays.cardLeadDays` (7), floored to today, so there
+   is time for the post. It still waits for approval like any other new task.
+
+Present the whole pass in the **Birthdays Coming Up** section of the report, which is the
+first section and is never omitted: when the window holds no birthdays, it says so in one
+line. The point is that the user sees it every time.
+
 ## Trello
 
 When enabled in config:
@@ -910,6 +966,8 @@ Before creating any task:
    - Gmail: thread ID
    - Slack: `channel_id:message_ts`
    - Calendar: event ID
+   - Calendar birthday: `calendar:birthday:{recurringEventId}:{YYYY}` — see Birthdays under
+     Calendar in <source_scanning>
    - Trello: card ID
    - Meeting notes: `notion-meeting:{page-id}`
 2. If the ID is in `processedSourceIds` → do not create a new task; this source already
@@ -1235,6 +1293,17 @@ Present the full triage as a single structured report:
 
 ```
 ── TRIAGE — {date} ──
+
+## Birthdays Coming Up
+Every birthday in the next 14 days and the state of its card task. First section, never
+omitted: with nothing in the window it reads "No birthdays in the next 14 days." A
+birthday within 3 days whose card is not Done is listed first with a 🔴. See Birthdays
+under Calendar in <source_scanning>.
+| # | Who | Birthday | In | Card task | Status | Due |
+|---|-----|----------|----|-----------|--------|-----|
+
+`Status` is Missing / Not sent / Overdue / Sent / Cancelled. A Missing card appears again
+in New Tasks below, where it is approved like everything else.
 
 ## Replies Needed
 | # | Source | From | Thread/Channel | What they need | Draft ready? |

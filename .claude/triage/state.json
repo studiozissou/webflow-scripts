@@ -103,7 +103,15 @@
     "gmail:1a05843e5514ffe6",
     "notion-comment:3cde1848-bb51-8014-b4d0-001daa9a6e39",
     "gmail:1a05e63b1ce52589",
-    "gmail:1a059fd801421169#patientnow"
+    "gmail:1a059fd801421169#patientnow",
+    "calendar:birthday:hgp66rm8ah66j2f8a79t1f205g:2026",
+    "calendar:birthday:3dtsgefvgu0f7ghvnnhqbaajlo:2026",
+    "calendar:birthday:q9hpkkqc0sio5bd5lan1cefirk:2026",
+    "calendar:birthday:ja7f1ksj2agc601emek10qbk48:2026",
+    "calendar:birthday:anabmd514c7142e4joguln41j4:2026",
+    "calendar:birthday:8qd0bfnpb3hh3gkf7ttrp8bp3s:2026",
+    "calendar:birthday:uera7m8ic203vo91niclpdc6c0:2026",
+    "calendar:birthday:q9185hkro7tcgfi0npuv7h0ocs:2026"
   ],
   "sources": {
     "gmail": {
@@ -164,7 +172,15 @@
     "gmail:1a059fd801421169#estimate": "https://app.notion.com/p/3cee1848bb5181dea12ef533bee2f6e2",
     "gmail:1a05843e5514ffe6": "https://app.notion.com/p/3cee1848bb5181508605f71dccd30505",
     "notion-comment:3cde1848-bb51-8014-b4d0-001daa9a6e39": "https://app.notion.com/p/3cee1848bb5181bdbf88e1b628bf8a8b",
-    "gmail:1a05e63b1ce52589": "https://app.notion.com/p/3cfe1848bb518129b054c1b4692e1ee6"
+    "gmail:1a05e63b1ce52589": "https://app.notion.com/p/3cfe1848bb518129b054c1b4692e1ee6",
+    "calendar:birthday:hgp66rm8ah66j2f8a79t1f205g:2026": "https://app.notion.com/p/3cfe1848bb5181d58700d004a4c2cf18",
+    "calendar:birthday:3dtsgefvgu0f7ghvnnhqbaajlo:2026": "https://app.notion.com/p/3cfe1848bb5181219b9ce7a8ef1a47e4",
+    "calendar:birthday:q9hpkkqc0sio5bd5lan1cefirk:2026": "https://app.notion.com/p/3cfe1848bb5181d6a3d0f650b0282571",
+    "calendar:birthday:ja7f1ksj2agc601emek10qbk48:2026": "https://app.notion.com/p/3cfe1848bb51810ea6c4cb916ae01c45",
+    "calendar:birthday:anabmd514c7142e4joguln41j4:2026": "https://app.notion.com/p/3cfe1848bb51816db66ed72d127a93a2",
+    "calendar:birthday:8qd0bfnpb3hh3gkf7ttrp8bp3s:2026": "https://app.notion.com/p/3cfe1848bb518176a6fcfb0a887b3751",
+    "calendar:birthday:uera7m8ic203vo91niclpdc6c0:2026": "https://app.notion.com/p/3cfe1848bb5181838f8dc813a4fc1503",
+    "calendar:birthday:q9185hkro7tcgfi0npuv7h0ocs:2026": "https://app.notion.com/p/3cfe1848bb51811688bacca3cf34b3a8"
   },
   "userNotionId": "9dde1fcb-9a58-4b04-8be0-1e0f93f6f344",
   "processedComments": [

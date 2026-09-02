@@ -146,16 +146,27 @@ const INVARIANTS = {
       check: (wf) => fanOut(wf, "Generate Report").includes("Parse Report"),
     },
     {
-      /* The intro line is the report's lead paragraph: between the <h1> and the greeting,
-       * through esc() (it is Christel's prose, full of & and quotes), and absent entirely
-       * when empty — no empty <p>, no stray margin. That last property is what lets the
-       * plumbing ship before Alex's copy exists. */
-      label: "Build HTML renders the intro line above the report body, escaped",
+      /* The PDF is the published Webflow report template with its data-slots filled — the
+       * design surface Alex edits, fetched per report, never an inline document that
+       * drifts from the site. */
+      label: "Build HTML fills the published Webflow template, fetched from TEMPLATE_URL",
       check: (wf) => {
         const code = find(wf, "Build HTML")?.parameters?.jsCode ?? "";
-        const intro = code.indexOf("introLine ? '<p class=\"intro\">' + esc(introLine)");
-        const body = code.indexOf("+ body");
-        return intro !== -1 && body !== -1 && intro < body;
+        return /TEMPLATE_URL = 'https:\/\/[^']+\/report-pdf-template'/.test(code)
+          && code.includes("this.helpers.httpRequest")
+          && !code.includes("<!doctype html>");
+      },
+    },
+    {
+      /* The intro line is the report's lead paragraph: into its slot through esc() (it is
+       * Christel's prose, full of & and quotes), and when empty the whole block goes —
+       * spacer and styled wrapper, not just the text. That last property is what lets the
+       * plumbing ship before Alex's copy exists. */
+      label: "Build HTML fills the intro-line slot escaped, and removes the block when empty",
+      check: (wf) => {
+        const code = find(wf, "Build HTML")?.parameters?.jsCode ?? "";
+        return code.includes("fillText('intro-line', esc(introLine))")
+          && code.includes("elementRe('data-slot-wrap', 'intro-line')");
       },
     },
     {

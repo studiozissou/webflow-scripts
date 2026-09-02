@@ -49,7 +49,6 @@ const branch = (wf, name, i) =>
   ((wf.connections[name]?.main ?? [])[i] ?? []).map((c) => c.node);
 
 const generateReportBody = node(verify, 'Generate Report').parameters.jsonBody;
-const buildHtmlCode = node(verify, 'Build HTML').parameters.jsCode;
 const normalizeCode = node(submit, 'Normalize').parameters.jsCode;
 
 /** Profile row as Validate Token spreads it. Overridable per case. */
@@ -189,12 +188,16 @@ describe('Build HTML — the prompt owns the first name (7f)', () => {
     closing: 'Er is een weg terug.',
   };
 
+  /* Runs the §7f node as applied — this changeset's copy. The live node has since been
+   * superseded by nem-report-webflow-template (see nem-build-html.test.js). */
+  const applied = readFileSync(path.join(CHANGESET, 'build-html.jsCode.js'), 'utf8').slice(0, -1);
+
   function run(p) {
     const $ = (name) => {
       assert.equal(name, 'Validate Token');
       return { first: () => ({ json: p }) };
     };
-    return new Function('$', '$json', buildHtmlCode)($, { report })[0].json;
+    return new Function('$', '$json', applied)($, { report })[0].json;
   }
 
   test('no `Beste …,` line — the name appears once, inside opening', () => {
@@ -318,8 +321,13 @@ describe('the changeset files cannot drift from the snapshots', () => {
     assert.equal(read('generate-report.jsonBody.txt'), generateReportBody + '\n');
   });
 
-  test('build-html.jsCode.js is byte-identical to the committed node', () => {
-    assert.equal(read('build-html.jsCode.js'), buildHtmlCode + '\n');
+  /* Build HTML was superseded by nem-report-webflow-template, which asserts its own
+   * byte-identity in nem-build-html.test.js. This changeset's copy is the applied §7f
+   * state, kept as the record of what that step changed. */
+  test('build-html.jsCode.js is the applied §7f node, not the live one', () => {
+    const file = read('build-html.jsCode.js');
+    assert.ok(!/\bconst greeting\b/.test(file));
+    assert.ok(file.includes("introLine ? '<p class=\"intro\">' + esc(introLine)"));
   });
 
   test('unsupported-locale.jsCode.js is byte-identical to the committed node', () => {
@@ -365,6 +373,6 @@ describe('the changeset files cannot drift from the snapshots', () => {
     const bh = ops.operations.find(
       (o) => o.type === 'updateNode' && o.nodeName === 'Build HTML',
     );
-    assert.equal(bh.updates['parameters.jsCode'], buildHtmlCode);
+    assert.equal(bh.updates['parameters.jsCode'], read('build-html.jsCode.js').slice(0, -1));
   });
 });

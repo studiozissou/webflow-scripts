@@ -1,24 +1,25 @@
 /**
  * Unit tests for the `Build HTML` Code node in the NEM Test `/verify` n8n workflow
- * (changeset: nem-intro-line-plumbing).
+ * (changeset: nem-report-webflow-template).
  *
  * The extraction trick from nem-report-parse.test.js, applied to a whole Code node:
  * the real jsCode is pulled out of the committed workflow snapshot and run against
  * fixtures, so the module under test and the node that runs live cannot drift.
  *
- * The properties under test are the intro line's:
- *   - a populated introLine renders as <p class="intro"> between the <h1> and the
- *     opening section (the greeting line was removed by nem-prompt-input-contract §7f —
- *     the prompt owns the first name now)
- *   - it goes through esc() — Christel's prose contains & and quotes
- *   - '', null, undefined and whitespace-only lines render NOTHING — no empty <p>,
- *     no stray margin. This is what lets the plumbing ship before the copy exists.
- *   - the five model sections are unchanged in every case
- *   - reportText is untouched: the intro line is fixed editorial copy, not model output
- *
- * Byte-identity between the changeset files and the snapshot is asserted in
- * tests/nem/nem-prompt-input-contract.test.js, which superseded this changeset's copies
- * of Build HTML and Normalize.
+ * Build HTML no longer writes its own document. It fetches the published Webflow report
+ * template (the design surface Alex edits), fills every `data-slot`, and hands PDFShift a
+ * self-contained page. The fixture is the published page as it was captured; the
+ * properties under test:
+ *   - every dynamic slot is filled: first-name, date, intro-line, the five sections
+ *   - a section becomes one <p> per blank-line-separated paragraph, carrying the class
+ *     of the placeholder paragraph, so the Designer's paragraph styling survives
+ *   - model prose goes through esc() — Christel's prose contains & and quotes
+ *   - an empty intro line removes its whole block (the `data-slot-wrap` elements), not
+ *     just the text — no empty rule, no stray spacer
+ *   - the export is PDF-safe: no <script>, no lazy images, print rules and embedded
+ *     fonts injected, fixed slots (logo, labels, disclaimer, site-url) untouched
+ *   - a template missing a required slot throws rather than shipping placeholder copy
+ *   - reportText is untouched: the plain-text alternative is model output only
  *
  * Run: node --test tests/nem/nem-build-html.test.js
  */
@@ -31,17 +32,20 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BACKEND = path.join(__dirname, "..", "..", "projects", "nem-life", ".claude", "backend");
+const CHANGESET = path.join(BACKEND, "changesets", "nem-report-webflow-template");
 
 const snapshot = JSON.parse(readFileSync(path.join(BACKEND, "nem-verify.workflow.json"), "utf8"));
 const buildHtmlCode = snapshot.nodes.find((n) => n.name === "Build HTML").parameters.jsCode;
 
+const TEMPLATE = readFileSync(path.join(__dirname, "fixtures", "report-pdf-template.html"), "utf8");
+
 /** The five validated report sections, as Parse Report emits them. */
 const report = {
-  opening: "Je hebt de test ingevuld en dat vraagt eerlijkheid.",
-  reaction: "Wanneer de spanning oploopt, trek je je terug.",
+  opening: "Anna, je hebt de test ingevuld en dat vraagt eerlijkheid.",
+  reaction: "Wanneer de spanning oploopt, trek je je terug.\n\nDaarna volgt de tweede laag.",
   origin: "Dit patroon ontstaat vaak vroeg.",
   cost: "Het kost je nabijheid.",
-  closing: "Er is een weg terug naar jezelf.",
+  closing: "Wat geleerd is, staat niet vast.",
 };
 
 /** Profile row as Validate Token spreads it. Overridable per case. */
@@ -49,129 +53,199 @@ const profile = (overrides = {}) => ({
   token: "t-123",
   locale: "nl",
   firstName: "Sjoerd d'Anjou",
+  introLine: "Ik doe eigenlijk altijd mijn best - toch voel ik me nooit goed genoeg",
   ...overrides,
 });
 
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+
 /**
- * Runs the node's real jsCode the way n8n does: `$` resolves upstream nodes,
- * `$json` is the incoming item. Returns the single output item's json.
+ * Runs the node's real jsCode the way n8n does: `$` resolves upstream nodes, `$json` is
+ * the incoming item, `this.helpers.httpRequest` fetches the template. Returns the single
+ * output item's json plus the requests the node made.
  */
-function runBuildHtml({ p = profile(), r = report } = {}) {
+async function runBuildHtml({ p = profile(), r = report, template = TEMPLATE } = {}) {
   const $ = (name) => {
     assert.equal(name, "Validate Token", `Build HTML referenced unexpected node: ${name}`);
     return { first: () => ({ json: p }) };
   };
-  const fn = new Function("$", "$json", buildHtmlCode);
-  const out = fn($, { report: r });
+  const requests = [];
+  const ctx = {
+    helpers: {
+      httpRequest: async (opts) => {
+        requests.push(opts);
+        return template;
+      },
+    },
+  };
+  const fn = new AsyncFunction("$", "$json", buildHtmlCode);
+  const out = await fn.call(ctx, $, { report: r });
   assert.equal(out.length, 1);
-  return out[0].json;
+  return { ...out[0].json, requests };
 }
 
-describe("a populated intro line", () => {
-  const line = "Je herkent jezelf misschien in dit patroon.";
-  const html = () => runBuildHtml({ p: profile({ introLine: line }) }).html;
+const slot = (html, name) => {
+  const m = html.match(new RegExp(`<(\\w+)\\b[^>]*data-slot="${name}"[^>]*>([\\s\\S]*?)</\\1>`));
+  return m ? m[2] : null;
+};
 
-  test("renders as <p class=\"intro\"> between the <h1> and the opening section", () => {
-    const out = html();
-    const intro = out.indexOf('<p class="intro">' + line + "</p>");
-    const h1 = out.indexOf("</h1>");
-    const opening = out.indexOf("<p>" + report.opening + "</p>");
-    assert.ok(intro !== -1, "intro paragraph missing");
-    assert.ok(h1 !== -1 && opening !== -1);
-    assert.ok(h1 < intro && intro < opening, "intro must sit between the h1 and the opening");
-  });
-
-  test("has the .intro style so the paragraph is not unstyled prose", () => {
-    assert.match(html(), /\.intro\{[^}]*italic[^}]*\}/);
-  });
-
-  test("is trimmed — surrounding whitespace does not reach the markup", () => {
-    const out = runBuildHtml({ p: profile({ introLine: `  ${line}\n` }) }).html;
-    assert.ok(out.includes('<p class="intro">' + line + "</p>"));
+describe("the changeset file cannot drift from the snapshot", () => {
+  test("build-html.jsCode.js is byte-identical to the committed node", () => {
+    const file = readFileSync(path.join(CHANGESET, "build-html.jsCode.js"), "utf8");
+    assert.equal(file, buildHtmlCode + "\n");
   });
 });
 
-describe("the intro line is escaped through esc()", () => {
-  test("& < > become entities", () => {
-    const out = runBuildHtml({
-      p: profile({ introLine: "Angst & hoop, <soms> beide > vaak" }),
-    }).html;
-    assert.ok(out.includes('<p class="intro">Angst &amp; hoop, &lt;soms&gt; beide &gt; vaak</p>'));
-  });
-
-  test("quotes pass through as text without breaking the markup", () => {
-    /* esc() handles the characters that are dangerous in text content (& < >); quotes
-     * are only dangerous in attributes, and the line lands in element text. The
-     * assertion is that they arrive intact and the paragraph structure survives. */
-    const line = `Christel zegt: "je bent er bijna", 's avonds`;
-    const out = runBuildHtml({ p: profile({ introLine: line }) }).html;
-    assert.ok(out.includes('<p class="intro">' + line + "</p>"));
+describe("the template is fetched from the published Webflow page", () => {
+  test("one GET to the report template URL, as text", async () => {
+    const { requests } = await runBuildHtml();
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].method, "GET");
+    assert.match(requests[0].url, /^https:\/\/[^/]+\/report-pdf-template$/);
+    assert.equal(requests[0].json, false);
   });
 });
 
-describe("an absent intro line renders nothing — no empty <p>, no stray margin", () => {
+describe("the cover slots", () => {
+  test("first-name carries the escaped first name", async () => {
+    const { html } = await runBuildHtml({ p: profile({ firstName: "Sjoerd <d'Anjou> & co" }) });
+    assert.equal(slot(html, "first-name"), "Sjoerd &lt;d'Anjou&gt; &amp; co");
+  });
+
+  test("date is today in Dutch long form", async () => {
+    const { html } = await runBuildHtml();
+    const today = new Intl.DateTimeFormat("nl-NL", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Europe/Amsterdam",
+    }).format(new Date());
+    assert.equal(slot(html, "date"), today);
+    assert.match(today, /^\d{1,2} [a-z]+ \d{4}$/);
+  });
+
+  test("intro-line carries the escaped, trimmed intro line", async () => {
+    const line = "Angst & hoop, <soms> beide";
+    const { html } = await runBuildHtml({ p: profile({ introLine: `  ${line}\n` }) });
+    assert.equal(slot(html, "intro-line"), "Angst &amp; hoop, &lt;soms&gt; beide");
+    assert.ok(html.includes('data-slot-wrap="intro-line"'), "the intro block stays when the line is set");
+  });
+});
+
+describe("an absent intro line removes the whole block — no empty rule, no stray spacer", () => {
   for (const [label, value] of [
     ["empty string", ""],
     ["null", null],
     ["undefined", undefined],
     ["whitespace-only", "   \n\t "],
   ]) {
-    test(`introLine: ${label}`, () => {
+    test(`introLine: ${label}`, async () => {
       const p = profile();
+      delete p.introLine;
       if (value !== undefined) p.introLine = value;
-      const out = runBuildHtml({ p }).html;
-      assert.ok(!out.includes('class="intro"'), "no intro paragraph may render");
-      /* The h1 flows straight into the opening section — nothing in between. */
-      assert.ok(out.includes("</h1><p>" + report.opening + "</p>"));
+      const { html } = await runBuildHtml({ p });
+      assert.ok(!html.includes('data-slot="intro-line"'), "no intro slot may remain");
+      assert.ok(!html.includes('data-slot-wrap="intro-line"'), "no intro wrapper or spacer may remain");
+      assert.ok(!html.includes("hero_subheading-wrap"), "the styled wrapper is gone, not emptied");
     });
   }
 });
 
-describe("everything else is unchanged in every case", () => {
-  for (const [label, p] of [
-    ["with an intro line", profile({ introLine: "Een vaste openingszin." })],
-    ["without one", profile()],
-  ]) {
-    test(label, () => {
-      const out = runBuildHtml({ p });
-
-      // The five sections render, in Alex's order, escaped.
-      let last = -1;
-      for (const key of ["opening", "reaction", "origin", "cost", "closing"]) {
-        const idx = out.html.indexOf("<p>" + report[key] + "</p>");
-        assert.ok(idx !== -1, `section ${key} missing from the html`);
-        assert.ok(idx > last, `section ${key} out of order`);
-        last = idx;
-      }
-
-      /* No greeting line: the prompt puts the first name once, inside opening (§7f). */
-      assert.ok(!out.html.includes("Beste "));
-
-      /* reportText is the plain-text alternative built from the five model sections.
-       * The intro line is fixed editorial copy, not model output — it stays out. */
-      assert.equal(
-        out.reportText,
-        Object.values(report).join("\n\n"),
-      );
-      assert.ok(!out.reportText.includes("Een vaste openingszin."));
-
-      // The profile fields ride along on the output item, as /verify's later nodes expect.
-      assert.equal(out.token, "t-123");
-      assert.equal(out.locale, "nl");
+describe("the five sections", () => {
+  test("render in order as paragraphs carrying the placeholder's class, escaped", async () => {
+    const { html } = await runBuildHtml({
+      r: { ...report, origin: "Vroeg & <vaak>." },
     });
-  }
+    let last = -1;
+    for (const key of ["opening", "reaction", "origin", "cost", "closing"]) {
+      const idx = html.indexOf(`data-slot="${key}"`);
+      assert.ok(idx !== -1, `section ${key} missing`);
+      assert.ok(idx > last, `section ${key} out of order`);
+      last = idx;
+    }
+    assert.ok(html.includes('<p class="text-size-medium">Vroeg &amp; &lt;vaak&gt;.</p>'));
+    assert.ok(!html.includes("Lorem ipsum"), "placeholder copy must not survive");
+  });
+
+  test("a blank line in the prose becomes a new paragraph, a single newline a <br>", async () => {
+    const { html } = await runBuildHtml({
+      r: { ...report, reaction: "Eerste alinea.\nzelfde alinea.\n\nTweede alinea." },
+    });
+    const body = slot(html, "reaction");
+    assert.equal(
+      body,
+      '<p class="text-size-medium">Eerste alinea.<br>zelfde alinea.</p><p class="text-size-medium">Tweede alinea.</p>',
+    );
+  });
+
+  test("the section slot lives on a wrapper div, so sibling paragraphs can be spaced", async () => {
+    const { html } = await runBuildHtml();
+    assert.match(html, /<div data-slot="reaction"><p class="text-size-medium">/);
+    assert.match(html, /div\[data-slot\]\s*>\s*p\s*\+\s*p\s*\{[^}]*margin-top/);
+  });
 });
 
-describe("the EN locale", () => {
-  test("intro line sits between the EN heading and the opening section", () => {
-    const out = runBuildHtml({
-      p: profile({ locale: "en", introLine: "You may recognise yourself here." }),
-    }).html;
-    const h1 = out.indexOf("Your NEM Test report");
-    const intro = out.indexOf('<p class="intro">You may recognise yourself here.</p>');
-    const opening = out.indexOf("<p>" + report.opening + "</p>");
-    assert.ok(h1 !== -1 && intro !== -1 && opening !== -1);
-    assert.ok(h1 < intro && intro < opening);
-    assert.ok(!out.includes("Dear "));
+describe("the export is PDF-safe", () => {
+  test("no <script> survives — the WebFont loader, jQuery and init.js are all gone", async () => {
+    const { html } = await runBuildHtml();
+    assert.ok(!/<script\b/i.test(html), "script tag found in the export");
+  });
+
+  test("images load eagerly — PDFShift does not scroll", async () => {
+    const { html } = await runBuildHtml();
+    assert.ok(!/loading="lazy"/.test(html));
+  });
+
+  test("the brand fonts are embedded through a render-blocking stylesheet", async () => {
+    const { html } = await runBuildHtml();
+    assert.match(html, /<link rel="stylesheet" href="https:\/\/cdn\.jsdelivr\.net\/gh\/studiozissou\/webflow-scripts@[0-9a-f]{7,40}\/projects\/nem-life\/src\/report-fonts\.css">/);
+  });
+
+  test("print rules: A4 page, closing and footer blocks do not split, headings stay with their text, no orphan lines, backgrounds print", async () => {
+    const { html } = await runBuildHtml();
+    assert.match(html, /@page\s*\{[^}]*size:\s*A4/);
+    assert.match(html, /\.block-conclusion\s*\{[^}]*break-inside:\s*avoid/);
+    assert.match(html, /\.report_block\.is-disclaimer[^{]*\{[^}]*break-inside:\s*avoid/);
+    assert.match(html, /h2,\s*h2 \+ div\s*\{[^}]*break-after:\s*avoid/);
+    assert.match(html, /p\s*\{[^}]*orphans:\s*3;\s*widows:\s*3/);
+    assert.match(html, /print-color-adjust:\s*exact/);
+  });
+
+  test("fixed slots are untouched: logo, labels, disclaimer, site-url", async () => {
+    const { html } = await runBuildHtml();
+    assert.ok(html.includes('data-slot="logo"'));
+    assert.equal(slot(html, "label-opening"), "Wat je herkent");
+    assert.equal(slot(html, "label-closing"), "Wat nu");
+    assert.match(slot(html, "disclaimer"), /^Dit rapport is geen psychologische diagnose\./);
+    assert.equal(slot(html, "site-url"), "nemmatters.com");
+  });
+});
+
+describe("a template that lost a slot fails loudly", () => {
+  for (const name of ["first-name", "date", "intro-line", "opening", "reaction", "origin", "cost", "closing"]) {
+    test(`missing data-slot="${name}" throws naming the slot`, async () => {
+      const broken = TEMPLATE.replace(`data-slot="${name}"`, 'data-slot="gone"');
+      await assert.rejects(runBuildHtml({ template: broken }), new RegExp(`data-slot="${name}"`));
+    });
+  }
+
+  test("a missing intro wrapper throws too — an empty line could not be removed cleanly", async () => {
+    const broken = TEMPLATE.replaceAll('data-slot-wrap="intro-line"', "");
+    await assert.rejects(runBuildHtml({ template: broken, p: profile({ introLine: "" }) }), /data-slot-wrap="intro-line"/);
+  });
+});
+
+describe("everything else on the output item", () => {
+  test("reportText is the plain-text alternative built from the five sections only", async () => {
+    const out = await runBuildHtml();
+    assert.equal(out.reportText, Object.values(report).join("\n\n"));
+    assert.ok(!out.reportText.includes(profile().introLine));
+  });
+
+  test("the profile fields ride along, as /verify's later nodes expect", async () => {
+    const out = await runBuildHtml();
+    assert.equal(out.token, "t-123");
+    assert.equal(out.locale, "nl");
+    assert.equal(out.firstName, "Sjoerd d'Anjou");
   });
 });

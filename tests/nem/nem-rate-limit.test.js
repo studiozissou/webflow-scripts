@@ -32,32 +32,34 @@ const runner = () => {
 const submission = (ip = "1.2.3.4") => ({ ip, event: "submission", email: "a@b.c" });
 const completion = (ip = "1.2.3.4") => ({ ip, event: "completion" });
 
+/* Raised from 3 to 10 on 2026-09-02: the honeypot and the email verification are the real
+ * abuse guards, and 3 blocked a tester's second run within the hour. */
+const MAX_PER_HOUR = 10;
+
 describe("Rate limit — submissions", () => {
-  test("three submissions from one IP pass, the fourth is limited", () => {
+  test(`${MAX_PER_HOUR} submissions from one IP pass, the next is limited`, () => {
     const { run } = runner();
-    assert.equal(run(submission()).rateLimited, false);
-    assert.equal(run(submission()).rateLimited, false);
-    assert.equal(run(submission()).rateLimited, false);
+    for (let i = 0; i < MAX_PER_HOUR; i++) assert.equal(run(submission()).rateLimited, false, `hit ${i + 1}`);
     assert.equal(run(submission()).rateLimited, true);
   });
 
   test("another IP has its own window", () => {
     const { run } = runner();
-    for (let i = 0; i < 3; i++) run(submission("1.1.1.1"));
+    for (let i = 0; i < MAX_PER_HOUR; i++) run(submission("1.1.1.1"));
     assert.equal(run(submission("2.2.2.2")).rateLimited, false);
   });
 
   test("a rejected submission does not extend the window", () => {
     const { run, store } = runner();
-    for (let i = 0; i < 5; i++) run(submission());
-    assert.equal(store.hits["1.2.3.4"].length, 3);
+    for (let i = 0; i < MAX_PER_HOUR + 2; i++) run(submission());
+    assert.equal(store.hits["1.2.3.4"].length, MAX_PER_HOUR);
   });
 });
 
 describe("Rate limit — completion pings", () => {
   test("a completion ping is never rate limited", () => {
     const { run } = runner();
-    for (let i = 0; i < 3; i++) run(submission());
+    for (let i = 0; i < MAX_PER_HOUR; i++) run(submission());
     assert.equal(run(completion()).rateLimited, false);
   });
 
@@ -66,9 +68,7 @@ describe("Rate limit — completion pings", () => {
     run(completion());
     run(completion());
     assert.equal(store.hits?.["1.2.3.4"]?.length ?? 0, 0);
-    assert.equal(run(submission()).rateLimited, false);
-    assert.equal(run(submission()).rateLimited, false);
-    assert.equal(run(submission()).rateLimited, false);
+    for (let i = 0; i < MAX_PER_HOUR; i++) assert.equal(run(submission()).rateLimited, false, `hit ${i + 1}`);
     assert.equal(run(submission()).rateLimited, true);
   });
 

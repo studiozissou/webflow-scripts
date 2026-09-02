@@ -32,9 +32,9 @@ const runner = () => {
 const submission = (ip = "1.2.3.4") => ({ ip, event: "submission", email: "a@b.c" });
 const completion = (ip = "1.2.3.4") => ({ ip, event: "completion" });
 
-/* Raised from 3 to 10 on 2026-09-02: the honeypot and the email verification are the real
- * abuse guards, and 3 blocked a tester's second run within the hour. */
-const MAX_PER_HOUR = 10;
+/* 50 while the test is in testing (2026-09-02); the go-live checklist drops it to 3. The
+ * honeypot and the email verification are the real abuse guards. */
+const MAX_PER_HOUR = 50;
 
 describe("Rate limit — submissions", () => {
   test(`${MAX_PER_HOUR} submissions from one IP pass, the next is limited`, () => {

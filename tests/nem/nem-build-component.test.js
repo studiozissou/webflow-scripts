@@ -194,6 +194,34 @@ describe("comments are stripped from production code", () => {
   });
 });
 
+describe("the submission payload carries the conclusion text the user saw (§7b)", () => {
+  const submission = () => bundle.slice(
+    bundle.indexOf("const handleSubmit"),
+    bundle.indexOf("const goBackToOptin"),
+  );
+
+  test("handleSubmit sends conclusionText next to introLine", () => {
+    const s = submission();
+    assert.ok(s.length > 0, "handleSubmit not found in the bundle");
+    assert.match(s, /introLine,/);
+    assert.match(s, /conclusionText,/);
+  });
+
+  test("conclusionText is derived from the same table the conclusion screen renders", () => {
+    /* One lookup, used twice: what goes to n8n is what the user read on screen. */
+    assert.equal((bundle.match(/const conclusionText =/g) || []).length, 1);
+    assert.match(bundle, /const conclusionText =\s*\n?\s*t\.conclusions\[genderKey/);
+  });
+
+  test("the anonymous beacon does not carry it — gender is unknown at question 20", () => {
+    const beacon = bundle.slice(
+      bundle.indexOf("const sendCompletionBeacon"),
+      bundle.indexOf("const selectAnswer"),
+    );
+    assert.doesNotMatch(beacon, /conclusionText/);
+  });
+});
+
 describe("the anonymous completion beacon reaches the bundle", () => {
   test("it fires and is tagged as a completion, not a submission", () => {
     assert.match(bundle, /event: "completion"/);

@@ -8,7 +8,7 @@ const store = $getWorkflowStaticData('global');
 store.hits = store.hits || {};
 const now = Date.now();
 const windowMs = 60 * 60 * 1000;
-const MAX_PER_HOUR = 10;
+const MAX_PER_HOUR = 50;
 const recent = (store.hits[ip] || []).filter(t => now - t < windowMs);
 const rateLimited = recent.length >= MAX_PER_HOUR;
 if (!rateLimited) {

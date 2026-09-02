@@ -158,12 +158,13 @@ Small, easy to forget, and each one is wrong in production. Check every line bef
 | # | Item | Why it is like this | Verify |
 |---|---|---|---|
 | 1 | **`Alert Failure` emails `will@teamzissou.io` and its subject is tagged `[DEV]`** | Set 2026-08-18 so test runs and teething failures do not ping the client, and so a test alert can never be mistaken for a production one — it sends from `hallo@nemmatters.com`, the client's own address, so the subject is the only tell. Alex asked to be notified; shipping like this means he learns about failures from users. | Node `Alert Failure` → `jsonBody`. **Two edits: the `to` address and the `[DEV]` prefix.** The drift check enforces that they agree, so it will fail if you change one and forget the other — but it cannot tell you *when* to flip them, which is why this row exists. |
-| 2 | **`Report Prompt` holds a TEST MODE stub** | Alex's real prompt lives in a Notion doc we cannot read. Reports currently say "TESTRAPPORT / TEST REPORT". | `LIVE-STATE.md`, or read the node |
+| 2 | **`Report Prompt` holds a provisional prompt, not Alex's final one** | Installed 2026-09-02 from Alex's 2026-08-31 working capture with the editorial matter stripped (`changesets/nem-provisional-runtime-prompt/`), so real reports render. Alex has not yet marked his runtime page final, and two of his decisions (relationship-status taxonomy, flat outcomes) are still open. | Diff the node against the final runtime page, then re-run the builder or paste the final |
 | 3 | **Christel's conclusion texts are 27 of 108** | Female Dutch only; the rest fall through to visible placeholders. | `src/nem-conclusion-texts.js` |
 | 4 | ~~`conclusionId` is never recorded~~ | **Fixed 2026-08-18** — `/submit` now maps and stores all the v2 fields. | — |
+| 5 | **`Rate limit` allows 50 submissions per IP per hour** | Raised from 3 on 2026-09-02 so testing is never blocked by the limiter (`MAX_PER_HOUR` in the node; changeset `nem-rate-limit-completions`). **Set it back to 3 at go-live.** The honeypot and the email verification are the real abuse guards, but 50 is far more than any person needs. | Node `Rate limit` → `MAX_PER_HOUR`, then `npm run check:nem-drift -- --write` and update `tests/nem/nem-rate-limit.test.js` to match |
 
 Run `npm run check:nem-drift` alongside this — it covers the structural invariants, but
-none of the four above, because each is a deliberate value rather than broken wiring.
+none of the five above, because each is a deliberate value rather than broken wiring.
 
 ### 🌐 Known issue — every subscriber lands in the NL newsletter group
 

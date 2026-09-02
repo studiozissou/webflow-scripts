@@ -204,6 +204,7 @@ describe("the export is PDF-safe", () => {
   test("print rules: A4 page, closing and footer blocks do not split, headings stay with their text, no orphan lines, backgrounds print", async () => {
     const { html } = await runBuildHtml();
     assert.match(html, /@page\s*\{[^}]*size:\s*A4/);
+    assert.match(html, /@page\s*:first\s*\{[^}]*margin-top:\s*0\b/);
     assert.match(html, /\.block-conclusion\s*\{[^}]*break-inside:\s*avoid/);
     assert.match(html, /\.report_block\.is-disclaimer[^{]*\{[^}]*break-inside:\s*avoid/);
     assert.match(html, /h2,\s*h2 \+ div\s*\{[^}]*break-after:\s*avoid/);

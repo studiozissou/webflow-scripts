@@ -3,7 +3,7 @@
 **Client:** NEM Life
 **Slug:** `nem-test-conclusion-logic-v2`
 **Created:** 2026-08-10
-**Status:** Ready to Build
+**Status:** Built — verified 2026-09-01. All seven changes are in the shipped code: directional dual keys and the 54-row ID enumeration in `src/nem-test-conclusion-ids.js`; `MIN_MECHANISM_SCORE = 8`, `flat-low`, `flat-high` and `skipsReport` in `src/nem-test-scoring.js`; English keys throughout; debug mode at `src/nem-test-phase-b.tsx:480`. Dutch texts and all 25 intro lines landed in `bd31e09`.
 **Supersedes (in part):** `nem-test-phase-b` — the "Conclusion key ordering (canonical, resolved 2026-07-14)" decision is **reversed** by this spec.
 
 **Sources**

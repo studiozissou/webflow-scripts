@@ -885,6 +885,10 @@ function Quiz({
     [result.skipsReport, result.conclusionKey, t.introLines]
   );
 
+  const genderKey = GENDER_TO_TABLE[gender] || "man";
+  const conclusionText =
+    t.conclusions[genderKey as keyof GenderedConclusions]?.[result.conclusionKey] || "";
+
   const handleProfileContinue = useCallback(() => {
     const errors: Record<string, string> = {};
     if (!gender) errors.gender = t.errors.genderEmpty;
@@ -943,6 +947,7 @@ function Quiz({
       conclusionKey: result.conclusionKey,
       conclusionId: result.conclusionId,
       introLine,
+      conclusionText,
       totalScore: result.totalScore,
       nemMattersConsent,
       timestamp: new Date().toISOString(),
@@ -971,7 +976,7 @@ function Quiz({
 
     setSubmitting(false);
     setPhase("confirmation");
-  }, [firstName, email, nemMattersConsent, honeypot, result, introLine, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
+  }, [firstName, email, nemMattersConsent, honeypot, result, introLine, conclusionText, token, locale, submitWebhookUrl, t.errors, relationshipStatus, gender, ageCategory]);
 
   const goBackToOptin = useCallback(() => {
     setEmail("");
@@ -981,10 +986,6 @@ function Quiz({
     setSubmitting(false);
     setPhase("optin");
   }, []);
-
-  const genderKey = GENDER_TO_TABLE[gender] || "man";
-  const conclusionText =
-    t.conclusions[genderKey as keyof GenderedConclusions]?.[result.conclusionKey] || "";
 
   const isFlatOutcome = result.skipsReport;
 

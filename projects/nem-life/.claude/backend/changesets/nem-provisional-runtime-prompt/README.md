@@ -1,9 +1,20 @@
 # Changeset — nem-provisional-runtime-prompt
 
+> ## ✅ APPLIED — do not apply again
+>
+> Applied 2026-09-02: Will pasted `system-prompt.txt` into `Report Prompt` in the n8n UI
+> and published. The UI save also dropped default-valued parameters from seven other
+> nodes (Webhook `httpMethod: GET`, Data Table `condition: eq` / `operation: insert`,
+> HTTP `contentType` / `specifyHeaders`) — n8n normalisation, no behaviour change.
+> Snapshot and `LIVE-STATE.md` re-baselined from live; the snapshot's prompt is
+> byte-identical to `system-prompt.txt`, every invariant holds, 326 tests pass.
+>
+> Still open: step 3, one real quiz → verify → PDF run, read by eye.
+
 **Spec:** `../../specs/nem-report-json-and-error-visibility.md` (§7, "installing the prompt")
 **Prepared:** 2026-09-02
 **Applies to:** `/verify` (`uKkMgMYoH5nOLoCR`), node `Report Prompt` only
-**Status:** PREPARED
+**Status:** APPLIED to live 2026-09-02
 
 ## What
 

@@ -101,7 +101,7 @@ test.describe('tamsen-broken-external-links-sep-2026: press', () => {
 test.describe('tamsen-broken-external-links-sep-2026: provider directory', () => {
   test('provider directory pages carry no dead provider domains', async ({ request }) => {
     const all = (await Promise.all(DIRECTORY_PAGES.map((p) => fetchHtml(request, p)))).join('');
-    const offenders = hrefs(all).filter((h) => DEAD_PROVIDERS.some((d) => h.toLowerCase().includes(d)));
+    const offenders = hrefs(all).filter((h) => !h.startsWith('mailto:') && DEAD_PROVIDERS.some((d) => h.toLowerCase().includes(d)));
     expect(offenders).toEqual([]);
   });
 

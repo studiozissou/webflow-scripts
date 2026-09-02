@@ -11,7 +11,3 @@ Playwright acceptance tests run against the live production site.
 ```bash
 npm run test:sz                # runs all Playwright acceptance tests (shared config)
 ```
-
-### Test suites
-- `tests/acceptance/tf-newsletter.spec.js` — newsletter page: H1, signup forms, input fields, submit button
-- `tests/acceptance/tf-contact.spec.js` — contact page functional checks

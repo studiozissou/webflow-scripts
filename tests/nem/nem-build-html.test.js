@@ -7,12 +7,18 @@
  * fixtures, so the module under test and the node that runs live cannot drift.
  *
  * The properties under test are the intro line's:
- *   - a populated introLine renders as <p class="intro"> between the <h1> and greeting
+ *   - a populated introLine renders as <p class="intro"> between the <h1> and the
+ *     opening section (the greeting line was removed by nem-prompt-input-contract §7f —
+ *     the prompt owns the first name now)
  *   - it goes through esc() — Christel's prose contains & and quotes
  *   - '', null, undefined and whitespace-only lines render NOTHING — no empty <p>,
  *     no stray margin. This is what lets the plumbing ship before the copy exists.
- *   - the five model sections and the greeting are unchanged in every case
+ *   - the five model sections are unchanged in every case
  *   - reportText is untouched: the intro line is fixed editorial copy, not model output
+ *
+ * Byte-identity between the changeset files and the snapshot is asserted in
+ * tests/nem/nem-prompt-input-contract.test.js, which superseded this changeset's copies
+ * of Build HTML and Normalize.
  *
  * Run: node --test tests/nem/nem-build-html.test.js
  */
@@ -25,7 +31,6 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BACKEND = path.join(__dirname, "..", "..", "projects", "nem-life", ".claude", "backend");
-const CHANGESET = path.join(BACKEND, "changesets", "nem-intro-line-plumbing");
 
 const snapshot = JSON.parse(readFileSync(path.join(BACKEND, "nem-verify.workflow.json"), "utf8"));
 const buildHtmlCode = snapshot.nodes.find((n) => n.name === "Build HTML").parameters.jsCode;
@@ -62,34 +67,18 @@ function runBuildHtml({ p = profile(), r = report } = {}) {
   return out[0].json;
 }
 
-describe("the changeset files cannot drift from the snapshot", () => {
-  test("build-html.jsCode.js is byte-identical to the committed node", () => {
-    const file = readFileSync(path.join(CHANGESET, "build-html.jsCode.js"), "utf8");
-    assert.equal(file, buildHtmlCode + "\n");
-  });
-
-  test("normalize.jsCode.js is byte-identical to the committed node", () => {
-    const submit = JSON.parse(
-      readFileSync(path.join(BACKEND, "nem-submit.workflow.json"), "utf8"),
-    );
-    const node = submit.nodes.find((n) => n.name === "Normalize");
-    const file = readFileSync(path.join(CHANGESET, "normalize.jsCode.js"), "utf8");
-    assert.equal(file, node.parameters.jsCode + "\n");
-  });
-});
-
 describe("a populated intro line", () => {
   const line = "Je herkent jezelf misschien in dit patroon.";
   const html = () => runBuildHtml({ p: profile({ introLine: line }) }).html;
 
-  test("renders as <p class=\"intro\"> between the <h1> and the greeting", () => {
+  test("renders as <p class=\"intro\"> between the <h1> and the opening section", () => {
     const out = html();
     const intro = out.indexOf('<p class="intro">' + line + "</p>");
     const h1 = out.indexOf("</h1>");
-    const greeting = out.indexOf("<p>Beste ");
+    const opening = out.indexOf("<p>" + report.opening + "</p>");
     assert.ok(intro !== -1, "intro paragraph missing");
-    assert.ok(h1 !== -1 && greeting !== -1);
-    assert.ok(h1 < intro && intro < greeting, "intro must sit between the h1 and the greeting");
+    assert.ok(h1 !== -1 && opening !== -1);
+    assert.ok(h1 < intro && intro < opening, "intro must sit between the h1 and the opening");
   });
 
   test("has the .intro style so the paragraph is not unstyled prose", () => {
@@ -132,8 +121,8 @@ describe("an absent intro line renders nothing — no empty <p>, no stray margin
       if (value !== undefined) p.introLine = value;
       const out = runBuildHtml({ p }).html;
       assert.ok(!out.includes('class="intro"'), "no intro paragraph may render");
-      /* The h1 flows straight into the greeting — nothing in between. */
-      assert.match(out, /<\/h1><p>Beste /);
+      /* The h1 flows straight into the opening section — nothing in between. */
+      assert.ok(out.includes("</h1><p>" + report.opening + "</p>"));
     });
   }
 });
@@ -155,8 +144,8 @@ describe("everything else is unchanged in every case", () => {
         last = idx;
       }
 
-      // The greeting carries the escaped first name.
-      assert.ok(out.html.includes("<p>Beste Sjoerd d'Anjou,</p>"));
+      /* No greeting line: the prompt puts the first name once, inside opening (§7f). */
+      assert.ok(!out.html.includes("Beste "));
 
       /* reportText is the plain-text alternative built from the five model sections.
        * The intro line is fixed editorial copy, not model output — it stays out. */
@@ -174,14 +163,15 @@ describe("everything else is unchanged in every case", () => {
 });
 
 describe("the EN locale", () => {
-  test("intro line sits between the EN heading and 'Dear'", () => {
+  test("intro line sits between the EN heading and the opening section", () => {
     const out = runBuildHtml({
       p: profile({ locale: "en", introLine: "You may recognise yourself here." }),
     }).html;
     const h1 = out.indexOf("Your NEM Test report");
     const intro = out.indexOf('<p class="intro">You may recognise yourself here.</p>');
-    const greeting = out.indexOf("<p>Dear ");
-    assert.ok(h1 !== -1 && intro !== -1 && greeting !== -1);
-    assert.ok(h1 < intro && intro < greeting);
+    const opening = out.indexOf("<p>" + report.opening + "</p>");
+    assert.ok(h1 !== -1 && intro !== -1 && opening !== -1);
+    assert.ok(h1 < intro && intro < opening);
+    assert.ok(!out.includes("Dear "));
   });
 });

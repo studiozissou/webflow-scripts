@@ -1,5 +1,14 @@
 # Changeset — nem-intro-line-plumbing
 
+> ## ✅ APPLIED — do not apply again
+>
+> Confirmed against live on **2026-09-01**: `npm run check:nem-drift` reported both
+> workflows IN SYNC with `introLine` in `Normalize`, `Store Profile` and `Build HTML`.
+>
+> `build-html.jsCode.js` and `normalize.jsCode.js` here are the record of what was
+> applied, not the current node code — both nodes were edited again by
+> `../nem-prompt-input-contract` (§7), which now owns the byte-identity tests for them.
+
 **Spec:** `../../specs/nem-quiz-transition-guard-and-intro-line-plumbing.md` (Part C)
 **Prepared:** 2026-08-19
 **Applies to:** `/submit` (`LDI1eWR35lwX6WLp`) and `/verify` (`uKkMgMYoH5nOLoCR`)

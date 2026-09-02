@@ -57,7 +57,36 @@ git merge-base --is-ancestor BRANCH origin/main
 
 Only force-delete if that exits 0. Otherwise leave the branch and report why.
 
-## Step 5 — Report
+## Step 5 — Report developer cache sizes
+
+Worktree disk is source code — the only way to reclaim it is to remove the
+worktree, which Step 3 already does. The large, genuinely reclaimable space sits
+outside the repo in package-manager caches. Measure it, report it, stop there.
+
+1. Measure:
+   ```
+   du -sh ~/.npm ~/Library/Caches ~/.cache 2>/dev/null
+   df -h /System/Volumes/Data | tail -1
+   ```
+2. Report each size, and the free space remaining on the disk.
+3. If free space is under 20G, or those caches together exceed 5G, print this
+   command for the user to run in their own terminal:
+   ```
+   cmm clean dev
+   ```
+
+**This step never deletes anything.** Do not run `cmm clean`, `cmm purge`, or any
+`--force` variant from here. Two reasons: `cmm` is a full-screen interactive tool,
+so run non-interactively it paints one frame and exits with
+`Error: bodyDidNotComplete`; and `--force` skips the review step with no dry-run
+available, so nothing proves in advance what it will take. Report the numbers,
+print the command, let the user decide.
+
+Do not reach for `cmm purge` on this repo. There is one `node_modules`, at the
+repo root, and it is in active use — the worktrees carry none, so `purge` has
+nothing safe to find here.
+
+## Step 6 — Report
 
 State plainly:
 
@@ -67,6 +96,8 @@ State plainly:
   commit count, so leftover work is visible rather than silently accumulating
 - Any backup patch paths
 - Disk still used by `.claude/worktrees` (`du -sh`)
+- Developer cache sizes from Step 5, plus the `cmm clean dev` command if
+  either threshold was crossed
 
 ## Notes
 
@@ -75,5 +106,9 @@ State plainly:
   branches are pushed, so only the folders are clutter.
 - Never delete a worktree that is currently locked without checking why; a lock
   usually means a session is still running in it.
+- `cmm clean dev` respects the CleanMyMac ignore list. The Playwright browsers
+  (`~/Library/Caches/ms-playwright`) are already on it — they are a slow
+  re-download and the RHP test suite depends on them. Check
+  `cmm ignore list` before recommending a clean.
 - This command never pushes, merges, or opens PRs. Use `/merge-worktrees` to
   integrate unmerged work first, then `/tidy` to clear what that leaves behind.

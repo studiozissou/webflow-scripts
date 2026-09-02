@@ -3,7 +3,7 @@
 **Client:** NEM Life
 **Slug:** `nem-report-json-and-error-visibility`
 **Created:** 2026-08-17
-**Status:** Slice 1 (§1–3) **BUILT and verified live 2026-08-18** (execs 49 happy / 50 failure). §4–6 still Ready to Build.
+**Status:** §7 **APPLIED to live 2026-09-02** (changeset `backend/changesets/nem-prompt-input-contract/`; both workflows IN SYNC, all invariants green). §1–3 built and verified live 2026-08-18 (execs 49 happy / 50 failure); §4–5 built 2026-08-18/19; §6 still Ready to Build, blocked on Alex's design. Remaining: the manual gate/gender execution checks (changeset README step 10), the Webflow paste of `dist/`, and installing Alex's prompt once he marks the page final.
 **Priority:** P0
 **Type:** feature
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, active) and `/submit` (`LDI1eWR35lwX6WLp`)
@@ -270,6 +270,70 @@ the n8n workflow. Alex should know the Webflow page is a design surface, not the
 Slots the template must expose: title, first name, date, intro line, the five JSON sections,
 and the fixed disclaimer.
 
+### 7. Prompt input contract — what the user message must carry (added 2026-09-01)
+
+On 2026-09-01 Will pasted Alex's full system prompt (page state 2026-08-31, saved at
+`.claude/research/nem-system-prompt-2026-08-31.md`) and it was diffed against what
+`Generate Report` actually sends (`.claude/research/nem-system-prompt-reconciliation-2026-09-01.md`).
+The output side (§1) matches. The **input** side does not: the prompt reads fields from the
+user message that `/verify` never puts there. Installing the real prompt over the current
+user message would have Claude writing "in the same register as the intro line" it was
+never shown. This slice closes that gap **before** the prompt is installed, so the install
+stays the single fixed-value edit §"Not blocked by Notion" promised.
+
+**The user message `Generate Report` sends today**
+
+```
+Locale: nl. Write the full report in Dutch.
+
+First name: …
+Gender: vrouw
+Age category: 41-50
+Relationship status: in-een-relatie
+
+Mechanism scores (JSON): {…}
+Primary mechanism: falseHope
+Secondary mechanism: selfRejection | none
+Total score: 47
+```
+
+**What the prompt (§1.1, 1.2, 1.4, 1.5) expects, and what changes**
+
+| # | Prompt expects | Today | Change |
+|---|---|---|---|
+| 7a | The **intro line** shown on the title page, as register context | Not sent. `introLine` is already a column on `nem_test_profiles` and `Build HTML` reads it. | Append `'\nIntro line: ' + introLine` to the jsonBody. One-line edit. |
+| 7b | The **conclusion text** the user already saw | Not sent, and **not stored** — only `conclusionKey` / `conclusionId`. The texts live in `src/nem-conclusion-texts.js`; n8n has no copy. | Component adds `conclusionText` to the submit payload; `/submit` `Store Profile` gains a `conclusionText` column; jsonBody appends `'\nConclusion text: ' + conclusionText`. |
+| 7c | Gender `Female` / `Male` | `vrouw` / `man` (nl), `female` / `male` (en) | Map in the jsonBody: `{vrouw:'Female', female:'Female', man:'Male', male:'Male'}[gender]`. Do not change the stored value — `conclusionId` derives from it. |
+| 7d | Dutch prose only; the forbidden-word list is Dutch | `locale=en` → "Write the full report in English." | **Gate `en`.** Route it to `Log Failure` with reason `unsupported-locale` and the Alex alert, and do not call Anthropic. No English layer exists (the English CSV column is empty — `nem-conclusion-texts.test.js` asserts it). |
+| 7e | Nothing about totals ("you do not calculate") | `Total score: 47` | Drop the line. |
+| 7f | First name once, at the start of `opening` | `Build HTML` also prints `Beste {firstName},` above the body | Remove the greeting line from `Build HTML`; the prompt owns the address. |
+| 7g | Age `18-30 year` … | `18-30` … | No change — unambiguous. |
+| 7h | Mechanism names | camelCase slugs `falseHope` … | No change — unambiguous; the Dutch label is Alex's to name in the prompt if he wants it. |
+
+**7b is the only structural change.** n8n Data Table schemas are **immutable through the
+public API** (learned building §3 — no add-column). Check the UI first: if a column can be
+added there, do that. If not, the fallback is to pass `conclusionText` through the token
+instead of storing it — i.e. `/verify` looks it up from `conclusionKey + gender` using a
+copy of `nem-conclusion-texts.js` pasted into a Code node. The second path duplicates the
+texts into n8n, which the 2026-08-17 build deliberately avoided; prefer the column.
+
+**Contradictions this surfaced — Alex decides, we do not implement either side silently**
+
+| | Prompt says | Product does | Default until Alex answers |
+|---|---|---|---|
+| Relationship status | Single ± children / With a partner ± children / Other (§1.5) | Form offers `alleenstaand`, `in-een-relatie`, `gescheiden`, `anders` — no children axis, has "divorced" | Keep the live form. Ask Alex to rewrite §1.5 to the four values, since it is "a modifier only" either way. |
+| Flat outcomes | "Where no primary mechanism is supplied … build the report around that picture" (§1.4) | Flat users get the contact link and no report (10 Aug call; §5 above) | Keep no-report. Ask Alex to delete the §1.4 clause. `/verify` never receives a flat token, so nothing to build. |
+
+**Defects in the prompt text itself** — fixed as far as we can in the saved capture
+(`.claude/research/nem-system-prompt-2026-08-31.md`, change list in its header): typos, the
+stray first-person note at the top of §2.3, the stale §2.1 cross-reference. The truncated
+Male 50+ block under Emotional numbing is clinical content and stays Alex's: the capture
+marks it as a missing variant so the prompt's own §1.5 fallback applies. Alex's Notion page
+is the source of truth, so these fixes need re-applying there — list sent 2026-09-01.
+
+**Not in this slice:** installing the prompt (waits on Alex marking the runtime page final)
+and the Publish Prompt workflow (`nem-test-phase-b.md` → "Report prompt — runtime link").
+
 ---
 
 ## Files affected
@@ -282,8 +346,12 @@ and the fixed disclaimer.
 | `projects/nem-life/src/nem-intro-lines.js` | new — generated, 25 key-only lines |
 | `tools/nem/build-conclusion-texts.js` | extend to emit the intro-lines tab |
 | `projects/nem-life/.claude/backend/nem_report_failures.csv` | new Data Table schema |
-| `tests/acceptance/nem-report-json-and-error-visibility.spec.js` | new — Tier 1 |
+| `tests/acceptance/nem-report-json-and-error-visibility.spec.js` | new — Tier 1; §7: assert the submission POST carries `conclusionText` |
 | `tests/nem/nem-report-parse.test.js` | new — unit tests for the validator |
+| `projects/nem-life/.claude/backend/nem-verify.workflow.json` (§7) | `Generate Report` jsonBody: intro line, conclusion text, gender map, no total, `en` gated; `Build HTML`: drop the greeting |
+| `projects/nem-life/.claude/backend/nem-submit.workflow.json` (§7) | `Store Profile`: `conclusionText` column |
+| `projects/nem-life/src/nem-test-phase-b.tsx` (§7) | submit payload gains `conclusionText` |
+| `tools/nem/check-workflow-drift.js` + `tests/nem/nem-workflow-drift.test.js` (§7) | three new invariants on the `Generate Report` jsonBody |
 
 ---
 
@@ -324,6 +392,17 @@ and the fixed disclaimer.
 - All 25 keys resolve; no reachable non-flat outcome produces a blank intro line.
 - The same key returns the same line for `man` and `vrouw` — the lookup ignores gender.
 
+**Prompt input contract (§7)**
+- `Generate Report`'s jsonBody contains `Intro line:` and `Conclusion text:` and does **not**
+  contain `Total score:` — asserted by `npm run check:nem-drift` against the live workflow.
+- The submission POST from the component carries a non-empty `conclusionText` that equals
+  the text rendered on the conclusion screen — Playwright, network interception.
+- A `nem_test_profiles` row written after the change has `conclusionText` populated.
+- For a `vrouw` profile the user message reads `Gender: Female`; for `man`, `Gender: Male`.
+- A token whose row has `locale: en` produces a `nem_report_failures` row with reason
+  `unsupported-locale`, an alert to Alex, no Anthropic call and no `Send Report`.
+- The rendered PDF has no `Beste …,` line; the first name appears once, inside `opening`.
+
 ### Reproduction steps
 
 1. `POST /webhook/nem-submit` with a fixture profile; read the `token` from
@@ -339,7 +418,21 @@ and the fixed disclaimer.
   validator against all four failure modes plus valid input. This is where the real coverage
   lives; it needs no n8n and no network.
 - **Tier 1 — Playwright:** `tests/acceptance/nem-report-json-and-error-visibility.spec.js`
-  covers the flat beacon (network interception) and the intro line rendering.
+  covers the flat beacon (network interception) and the intro line rendering. §7 wants
+  *"the submission payload carries the conclusion text the user saw"* — **not written at
+  plan time**: the suite's own note says the submission POST is not observable until
+  `nem-submit-second-row-not-written-on-optin` (P1) is fixed, so it would land red for an
+  unrelated reason. `/build` adds it alongside the `introLine` payload assertion the same
+  note defers.
+- **Tier 1 — drift (`npm run check:nem-drift`, needs `N8N_API_KEY`):** three §7 invariants
+  for `/build` to add to `tools/nem/check-workflow-drift.js` — *Generate Report sends the
+  intro line*, *Generate Report sends the conclusion text*, *Generate Report does not send
+  the total score*. They fail against today's snapshot by design; add them in the same
+  commit as the jsonBody change so the invariant list never describes a workflow that
+  does not exist.
+- **Tier 3 — Manual (§7):** the `en` gate and the gender mapping are n8n-execution checks —
+  run one `vrouw` and one `locale: en` token through `/verify` and read the execution. Not
+  automatable without an n8n API key in CI.
 - **Tier 2 — CDN regression:** registered in `tests/registry.json`.
 - **Tier 3 — Manual:**
   - Read a generated PDF end to end. Only a human can judge whether five separately
@@ -440,8 +533,41 @@ fixed-value edit to one node. Everything above is buildable now (Will, 2026-08-1
 3. **Alert volume.** One email per failure until the log shows the real rate.
 4. **Does `Store Profile`'s email column allow null?** Must be answered before completion
    logging is built — every row now arrives without an email.
+5. **(§7) Relationship-status taxonomy** — prompt §1.5 and the live form disagree. Default:
+   keep the form; Alex rewrites §1.5. Asked 2026-09-01.
+6. **(§7) Flat outcomes** — prompt §1.4 writes a report for them; the product routes them to
+   the contact link. Default: keep no-report; Alex deletes the clause. Asked 2026-09-01.
+7. **(§7) Can a column be added to `nem_test_profiles` in the n8n UI?** Decides whether
+   `conclusionText` is stored (preferred) or looked up in `/verify` from a pasted copy of the
+   texts. Check before building 7b.
+8. **(§7) Runtime prompt page access** — `399c706b69c080eab095f89476b4fa21` 404s via the MCP
+   until Alex's 31 Aug share is accepted. Needed to install the prompt, not to build §7.
 
 ## Agents needed
 
 - `code-writer` — workflow JSON, component beacon, intro-lines generator
 - `qa` — the four malformed cases, flat-logging regression, fast-path latency
+
+## Build plan — §7 (planned 2026-09-01)
+
+Order, and why: tests first, then the one structural change, then the edits that depend on
+it, then the ones that do not.
+
+1. **Drift invariants first** (`tools/nem/check-workflow-drift.js` + its unit test): they fail
+   against today's snapshot and pass once the jsonBody is right. Same commit as step 5.
+2. **Playwright test** for `conclusionText` in the submission POST — appended to the existing
+   spec file once the submission POST is observable (see Tier mapping).
+3. **Answer open question 7** (column in the UI?). Add `conclusionText` to `nem_test_profiles`
+   and to `Store Profile` in `/submit`.
+4. **Component:** `conclusionText` in the submit payload (`nem-test-phase-b.tsx` ~line 625),
+   `npm run build:nem`, paste, verify the new `moduleId`.
+5. **`/verify`:** re-pull live (`npm run check:nem-drift`), then edit `Generate Report`'s
+   jsonBody (7a–7e) and `Build HTML` (7f) as node-level diffs. Add the `en` gate as an IF
+   ahead of `Generate Report`, its false-branch into the existing `Log Failure` → `Alert
+   Alex` chain with reason `unsupported-locale`. New nodes **below y=360**.
+6. **Re-baseline** with `npm run check:nem-drift -- --write`, commit the snapshot, run one
+   `vrouw` token and one `en` token through and read the executions (Tier 3).
+
+Parallelisation: 1–2 and 3–4 are independent streams; 5 waits on 3 (the column must exist
+before the jsonBody reads it). One worktree, one agent — the workflow edits are small and the
+live-pull-before-edit rule makes two people in `/verify` at once a liability.

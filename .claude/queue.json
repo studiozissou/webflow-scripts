@@ -1,8 +1,41 @@
 {
   "version": "1.0.0",
-  "updated": "2026-08-18",
+  "updated": "2026-08-31",
   "note": "Merged 2026-08-18. NEM Test: conclusion engine v2 live; MailerSend trial cap resolved and verified; the prompt-escaping changeset was found already applied by hand on 13 Aug; a workflow drift check now guards the live n8n workflows; the report JSON contract, Parse Report gate and failure logging are built and verified live; anonymous completion logging is built and awaiting a Webflow paste. RHP: mobile dial permanent lengthened ticks planned and spec written (Ready to Build), side-space verified live, rotation/index desync found as a blocking sub-fix. RHP mobile dial circular 360 drag + spinner arrows is built, QA-approved and deployed (6d7de7b, 2026.8.18.3); merged into main 2026-08-19.",
   "queue": [
+    {
+      "id": "jayshetty-podcast-safari-video-path",
+      "project": "jayshetty",
+      "type": "fix",
+      "priority": "P0",
+      "status": "Ready to Build",
+      "title": "Podcast player: remove the Safari gate so Spotify episodes play video",
+      "description": "Due tomorrow (1 Sep). Client Product reported Safari gets an audio embed where Chrome gets video; 31 Aug re-investigation proved Safari plays the /video embed (human-verified, 40 playback updates), so the WebKit GestureEvent gate comes out of podcast-player.js along with its dead plain-embed code. Includes the watchdog latch fix (source-checked messages, not playback_update only) without which Safari's autoplay block would tear healthy video down to audio after 6 seconds. Then footer re-pin to v1.2.0, README rewrite, and a user-gated deploy as hosted script v1.2.0 to the live /podcast page. Spec approved; work sits on branch worktree-jayshetty-safari-spotify-video.",
+      "spec": "projects/jayshetty/.claude/specs/podcast-safari-video-path.md"
+    },
+    {
+      "id": "rhp-reply-to-ryan-homepage-scroll-back-estimate",
+      "project": "ready-hit-play-prod",
+      "type": "chore",
+      "priority": "P0",
+      "status": "Done",
+      "title": "Reply to Ryan with the estimate for scrolling back from the circle to the homepage landing view",
+      "description": "Due 2026-09-01. Ryan asked (2026-08-26) what it would take to scroll back and forth between the RHP landing view and the circle, instead of clicking the horizontal logo. Analysis 2026-08-31 (revised: forward morph scrubs on desktop, so the way back must scrub too): wheel-up re-arms the intro ScrollTrigger scrub so native scroll drives the morph both ways, reusing most of replay(). Quote 2 hours; flag it could run into a third if the complete-state restoration fights back. 1 hour is not credible for the scrubbed version. Spec ready at the linked path. UPDATE 2026-08-31: estimate sent to Ryan by Will — done ahead of the 09-01 due date. Feature task remains blocked on his go-ahead.",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-home-scroll-back-to-intro.md",
+      "created": "2026-08-31"
+    },
+    {
+      "id": "rhp-home-scroll-back-to-intro",
+      "project": "ready-hit-play-prod",
+      "type": "feature",
+      "priority": "P1",
+      "status": "Blocked",
+      "title": "Home: scroll back from the dial to the intro landing view (desktop only)",
+      "description": "Wheel-up in the completed home state re-arms the intro scrub: restore scroll to the trigger end, keep ScrollTrigger enabled, unlock scroll — native scroll then scrubs the morph both ways, matching the scrubbed forward direction. Refactors replay() into a shared _prepareReverse() so logo-click replay is unchanged. Desktop only. Single file (~60-80 LOC) plus init.js version bump. Estimated 2 hours, may stretch to 3.",
+      "blockedOn": "awaiting-ryan-approval",
+      "spec": "projects/ready-hit-play-prod/.claude/specs/rhp-home-scroll-back-to-intro.md",
+      "created": "2026-08-31"
+    },
     {
       "id": "tsc-launch-metadata-schema",
       "project": "the-signalling-company",

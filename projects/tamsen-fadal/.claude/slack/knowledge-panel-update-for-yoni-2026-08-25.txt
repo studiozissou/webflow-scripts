@@ -1,0 +1,38 @@
+Hi Yoni — we're into the Knowledge Panel, so that's item 5 unblocked. Thanks for chasing it down.
+
+Before I start submitting things, one bit of honesty about what this actually gets us, because I think I oversold it when I called it "the last piece".
+
+*What Knowledge Panel access actually does*
+It lets us *suggest* changes. Google reviews them and there's no appeal. And most of what's in that panel — the About paragraph, her date of birth, the marriages — isn't ours to edit at all. Google pulls it from Wikipedia and Wikidata, and it only changes when those change. So it's the last piece of access we were waiting on, but it's a smaller lever than the Wikidata work we've already done.
+
+Four things are worth doing, and I can do three of them this week.
+
+*1. The photo — and this is the one I need from you*
+The image is the only part of the panel that's genuinely ours to set, and it's the one Google is most likely to just accept. It's currently an older headshot.
+This is the same ask as the Wikidata photo I mentioned last week, so one image covers both. Same conditions: it needs to be one she owns outright and is happy to have used publicly.
+Everything else on this list I can do without you. This one I can't.
+
+*2. The line under her name*
+It currently reads "American journalist and writer". Out of date, and it's the first thing anyone reads.
+Worth noting it doesn't match any of its own sources — Wikidata says "journalist, author, and menopause advocate", Wikipedia's own summary line says "television personality". Google has generated it. I'll suggest "American journalist, author and menopause advocate", which matches what we've already put in Wikidata.
+
+*3. Missing profiles*
+The panel shows YouTube, Instagram, Facebook and TikTok. LinkedIn is missing, as are the podcast links. I'll submit those.
+
+*4. Her height is listed*
+1.61m. It's in there. I'll flag it for removal — no guarantee Google drops it, but it costs nothing to ask.
+
+*The thing I actually think matters more*
+Looking at the full panel, Google still has her filed under the earlier relationship-and-dating work rather than the menopause work.
+The "people also search for" row is entirely her ex-husbands and a former co-author. The top question Google suggests is "Who is Tamsen Fadal's ex-husband?". Three of the five books it shows are the dating titles.
+None of that is editable — not by us, not by Google support. It's Google inferring associations from what's been written about her over twenty years, and it shifts as coverage of the menopause work accumulates. I'm flagging it because it's the real gap between how she's positioned now and how Google still sees her, and no amount of panel editing touches it. Realistically that's quarters, not weeks.
+
+*Wikipedia — I'd like your go-ahead*
+Last time I offered to submit a sourced request to the editors. I've now got it drafted and I'd like to send it.
+The strongest item is small but useful: Wikipedia's one-line summary of her still says "American television personality", while the article's own opening sentence says "journalist, writer, and menopause advocate". They contradict each other, which makes it an easy fix to argue and it feeds several places downstream.
+Worth setting expectations — I have to declare I'm paid to work for her, the request goes in a queue, independent editors decide, and partial acceptance is a good outcome. I can't edit it directly and wouldn't.
+
+*One small thing for her team*
+Google shows "Is Tamsen Fadal a doctor?" as a common question, and there's no clear answer anywhere on the site. Worth a line on the About page — it's a credibility question and right now third parties are answering it for her. Happy to draft it if you want to see wording first.
+
+*So, from you:* the photo, and a yes/no on the Wikipedia request. I'll get on with the rest.

@@ -16,6 +16,7 @@ import { resolve } from "node:path";
 
 import { buildComponent, SRC_DIR } from "../../tools/nem/build-component.js";
 import * as REAL_TEXTS from "../../projects/nem-life/src/nem-conclusion-texts.js";
+import { readTextRows } from "../../tools/nem/build-conclusion-texts.js";
 
 const bundle = buildComponent();
 
@@ -125,8 +126,14 @@ describe("Christel's copy reaches the bundle intact", () => {
     );
   });
 
+  /* Taken from the CSV rather than quoted inline: Christel revises this copy, and a test
+   * that pins her exact wording fails on an edit that is not a defect. What matters is
+   * that her text reached the bundle instead of a placeholder. */
   test("real Dutch copy is present, not just placeholders", () => {
-    assert.match(bundle, /Op basis van je antwoorden springt er niets duidelijk uit/);
+    const flatLow = readTextRows().find((r) => r.gender === "female" && r.key === "flat-low");
+    const opening = flatLow.nl.split("\n\n")[0].slice(0, 60);
+    assert.ok(opening.length > 40, "expected the flat-low Dutch text to be written");
+    assert.ok(bundle.includes(opening), "flat-low Dutch copy did not reach the bundle");
   });
 
   test("paragraph breaks survive into the bundle as escaped newlines", () => {
@@ -184,6 +191,34 @@ describe("comments are stripped from production code", () => {
     const withComments = readFileSync(resolve(SRC_DIR, "nem-test-scoring.js"), "utf8");
     assert.match(withComments, /Fixed tiebreak order/);
     assert.doesNotMatch(bundle, /Fixed tiebreak order/);
+  });
+});
+
+describe("the submission payload carries the conclusion text the user saw (§7b)", () => {
+  const submission = () => bundle.slice(
+    bundle.indexOf("const handleSubmit"),
+    bundle.indexOf("const goBackToOptin"),
+  );
+
+  test("handleSubmit sends conclusionText next to introLine", () => {
+    const s = submission();
+    assert.ok(s.length > 0, "handleSubmit not found in the bundle");
+    assert.match(s, /introLine,/);
+    assert.match(s, /conclusionText,/);
+  });
+
+  test("conclusionText is derived from the same table the conclusion screen renders", () => {
+    /* One lookup, used twice: what goes to n8n is what the user read on screen. */
+    assert.equal((bundle.match(/const conclusionText =/g) || []).length, 1);
+    assert.match(bundle, /const conclusionText =\s*\n?\s*t\.conclusions\[genderKey/);
+  });
+
+  test("the anonymous beacon does not carry it — gender is unknown at question 20", () => {
+    const beacon = bundle.slice(
+      bundle.indexOf("const sendCompletionBeacon"),
+      bundle.indexOf("const selectAnswer"),
+    );
+    assert.doesNotMatch(beacon, /conclusionText/);
   });
 });
 

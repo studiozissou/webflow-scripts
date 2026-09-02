@@ -64,13 +64,15 @@ describe("readTextRows — the exported sheet", () => {
     }
   });
 
-  test("female Dutch is complete — all 27 written", () => {
-    const written = rows.filter((r) => r.gender === "female" && r.nl.trim());
-    assert.equal(written.length, 27);
+  test("Dutch is complete — all 27 female and all 27 male written", () => {
+    assert.equal(rows.filter((r) => r.gender === "female" && r.nl.trim()).length, 27);
+    assert.equal(rows.filter((r) => r.gender === "male" && r.nl.trim()).length, 27);
   });
 
-  test("the other three columns are still empty, as expected on 2026-08-17", () => {
-    assert.equal(rows.filter((r) => r.gender === "male" && r.nl.trim()).length, 0);
+  /* English is what stands between a Dutch-only test run and a bilingual one, so it is
+   * asserted rather than assumed. Christel wrote the male Dutch column on 2026-08-31; when
+   * the English column follows, this flips to a completeness check like the one above. */
+  test("English is still unwritten, so a live test can only run in Dutch", () => {
     assert.equal(rows.filter((r) => r.en.trim()).length, 0);
   });
 });
@@ -107,10 +109,13 @@ describe("buildTextsModule", () => {
   });
 
   test("only includes texts that are actually written", () => {
-    /* 27 female Dutch entries and nothing else, so an unwritten text falls through to
-     * the component's visible placeholder rather than rendering as blank. */
+    /* Counted off the CSV rather than hard-coded, so writing more copy does not fail the
+     * suite. The guarantee under test is the omission: an unwritten text must fall through
+     * to the component's visible placeholder rather than render as blank. */
+    const rows = readTextRows();
+    const expected = rows.filter((r) => r.nl.trim()).length + rows.filter((r) => r.en.trim()).length;
     const entries = [...module.matchAll(/^ {2}"[^"]+":/gm)];
-    assert.equal(entries.length, 27);
+    assert.equal(entries.length, expected);
   });
 
   test("newlines are escaped as \\n, not emitted raw into the string literal", () => {
@@ -122,9 +127,13 @@ describe("buildTextsModule", () => {
     const tmp = `${process.env.TMPDIR || "/tmp"}/nem-texts-${process.pid}.mjs`;
     writeFileSync(tmp, module);
     const loaded = await import(tmp);
-    assert.equal(Object.keys(loaded.NL_VROUW).length, 27);
+    const rows = readTextRows();
+    const written = (gender, locale) =>
+      rows.filter((r) => r.gender === gender && r[locale].trim()).length;
+
+    assert.equal(Object.keys(loaded.NL_VROUW).length, written("female", "nl"));
+    assert.equal(Object.keys(loaded.NL_MAN).length, written("male", "nl"));
     assert.equal(loaded.NL_VROUW["flat-low"].split("\n\n").length, 3);
-    assert.equal(Object.keys(loaded.NL_MAN).length, 0);
   });
 
   test("carries a provenance header naming the CSV and the command", () => {

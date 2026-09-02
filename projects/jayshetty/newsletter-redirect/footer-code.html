@@ -1,0 +1,53 @@
+<!-- Redirects successful newsletter signups to the beehiiv welcome survey with the submitted email attached. -->
+<script>
+  (function () {
+    var SURVEY = 'https://news.jayshetty.me/forms/c63ba936-3683-48e2-add5-f8890e18bd5e';
+    var SELECTOR = '.footer2_form:not(.is-tour)';
+    var DELAY = 1200;
+
+    var emails = new WeakMap();
+    var going = false;
+
+    document.addEventListener(
+      'submit',
+      function (e) {
+        var form = e.target;
+        if (!form || !form.matches || !form.matches(SELECTOR)) return;
+        var field = form.querySelector('input[name="Email"], input[type="email"]');
+        if (field && field.value) emails.set(form, field.value.trim());
+      },
+      true,
+    );
+
+    function go(form) {
+      if (going) return;
+      going = true;
+      var email = emails.get(form);
+      var url = email ? SURVEY + '?email=' + encodeURIComponent(email) : SURVEY;
+      window.setTimeout(function () {
+        window.location.href = url;
+      }, DELAY);
+    }
+
+    function watch(form) {
+      var wrapper = form.closest('.w-form');
+      var done = wrapper && wrapper.querySelector('.w-form-done');
+      if (!done) return;
+      if (window.getComputedStyle(done).display !== 'none') go(form);
+      new MutationObserver(function () {
+        if (window.getComputedStyle(done).display !== 'none') go(form);
+      }).observe(done, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
+    function boot() {
+      var forms = document.querySelectorAll(SELECTOR);
+      for (var i = 0; i < forms.length; i++) watch(forms[i]);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+  })();
+</script>

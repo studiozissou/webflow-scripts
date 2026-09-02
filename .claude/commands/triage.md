@@ -1,6 +1,6 @@
 # /triage — Multi-Source Task Triage
 
-Scan Gmail, Slack, Calendar, and Trello. Extract tasks, detect blockers, draft replies, create tasks in Notion, and keep existing Notion tasks current as new information arrives.
+Scan Gmail, Slack, Calendar, Trello, and the comments on existing Notion tasks. Extract tasks, detect blockers, draft replies, create tasks in Notion, act on the comments the user has left, and keep existing Notion tasks current as new information arrives.
 
 ## Model split
 - **Opus** for task extraction, classification, reply drafting, and question generation
@@ -23,7 +23,8 @@ Before scanning, verify which MCP tools are available:
 Required:
 - Gmail MCP (mcp__claude_ai_Gmail__search_threads, mcp__claude_ai_Gmail__get_thread, mcp__claude_ai_Gmail__create_draft)
 - Slack MCP (mcp__plugin_slack_slack__slack_read_channel, mcp__plugin_slack_slack__slack_read_thread)
-- Notion MCP (notion-search, notion-create-pages, notion-fetch, notion-update-page)
+- Notion MCP (notion-search, notion-create-pages, notion-fetch, notion-update-page,
+  notion-get-comments, notion-create-comment, notion-get-users)
 
 Optional:
 - Google Calendar MCP (list_events)
@@ -77,11 +78,38 @@ Spawn parallel agents to scan each source:
 - Extract cards assigned to user or due within 7 days
 - Return cards with URLs and due dates
 
+**Agent 5 — Notion comments** (skip if `config.notion.comments.enabled` is false):
+- Resolve the user's Notion user ID via `notion-get-users` if `state.userNotionId` is null,
+  and return it so it can be cached
+- If `state.commentWatch` is empty or was never bootstrapped, seed it first: `notion-search`
+  the Tasks Tracker for tasks not `Done` or `Cancelled`, so comments on tasks predating
+  `taskLinks` are not invisible. Say in the report that this run seeded the list
+- Take the pages in `state.commentWatch`, oldest `lastCommentCheck` first, capped at
+  `config.notion.comments.maxPagesPerRun`
+- For each: `notion-get-comments(page_id, include_all_blocks: true)` — block-level
+  discussions are where the user comments on a specific line of the brief, and they are
+  invisible without the flag
+- Skip any comment whose ID is already in `state.processedComments`
+- Keep only comments authored by `state.userNotionId`. Return anyone else's as context, and
+  never return triage's own replies as input
+- Classify each using the shape table in the triage skill's `<notion_comments>` section:
+  Instruction / Field change / Answer / Status signal / Question / Note
+- Note the page's current `Status` so `Done` and `Cancelled` tasks can be dropped from the
+  watch list
+- Return each comment verbatim with its page ID, discussion ID, comment ID, and reading
+
+This is a read-only pass. Nothing is written or replied to until Step 8.
+
 ### Step 4 — Extract tasks and draft replies
 
 Using the results from all agents:
 
 1. **Extract tasks** from every actionable item (following triage skill extraction rules)
+1b. **Route Notion comments** from Agent 5 by their reading — instructions become Quick Wins
+   when Doer is Claude, or task updates and subtasks otherwise; field changes and status
+   signals become rows in the update table; answers get folded into the brief and unblock
+   what they were holding up; questions get answered in Step 8; notes append to
+   `Source Context`. A comment carrying two asks produces two actions
 2. **Detect blockers** — scan for blocking language, unanswered threads, cross-task dependencies
 3. **Create subtasks** where a task has 3+ distinct deliverables
 4. **Draft replies** for REPLY NEEDED items:
@@ -129,8 +157,12 @@ For each extracted task:
 
 ### Step 5b — Update pass
 
-Independently of new tasks, review tasks that current source activity touches:
+Independently of new tasks, review tasks that current source activity touches — including
+every task the user commented on:
 
+0. Comment-driven changes from Step 4 land here, in the same before/after table. The user
+   saying "make this P0" in a comment is a proposed `Priority` change like any other, and it
+   is the one case where `Done` may be proposed — see the Done exception in the skill
 1. Blockers that cleared → propose `Waiting`/`Blocked` → `Inbox` and clearing `Blocked Reason`
 2. New blockers, moved deadlines, added scope, changed ownership → propose the matching field change
 3. Obsolete candidates → collect separately for individual confirmation
@@ -148,6 +180,7 @@ Output the full triage report following the format in the triage skill:
 
 ## Replies Needed
 ## Draft Replies
+## Your Notion Comments (verbatim + what each produced; omit if empty)
 ## New Tasks → Notion (with Doer column)
 ## Task Updates → Notion (before/after per field; omit if empty)
 ## Possibly Obsolete (confirm individually; omit if empty)
@@ -179,7 +212,8 @@ the rest.
 
 Use AskUserQuestion with options:
 - **"Approve all tasks, updates, and drafts" (Recommended)** — create tasks, apply field
-  updates, create email/Slack drafts. Never covers trashing
+  updates, run the comment-driven actions, post the replies that report them, and create
+  email/Slack drafts. Never covers trashing
 - **"Let me review individually"** — go through each task, update, and draft one by one
 - **"Approve tasks only"** — create Notion tasks, skip reply drafts
 - **"Approve drafts only"** — create reply drafts, skip Notion writes
@@ -211,6 +245,19 @@ Based on user's choice:
 2. If it has subtasks, stop and ask what happens to the children first
 3. Move to trash via `notion-update-page`, and tell the user it is recoverable for 30 days
 4. Remove its `taskLinks` entry, keep its `processedSourceIds` entry
+
+**Notion comment actions and replies:**
+1. Run the approved comment-driven actions. Automatable ones execute here or in Step 8b as
+   Quick Wins; field changes go through the update path above
+2. For each thread where something actually happened, reply via
+   `notion-create-comment(page_id, discussion_id, markdown)` saying what was done in a line
+   or two — the concrete change, not "noted"
+3. Answer any question comments with the real answer, doing whatever reading it takes first
+4. Never reply on a thread whose action was skipped, deferred, or left as a question, and
+   never reply to something only proposed
+5. Leave every discussion unresolved — resolving is the user's signal, not triage's
+6. Append every comment ID handled, including ones deliberately ignored, to
+   `processedComments`
 
 **Gmail draft creation:**
 1. For each approved draft, call `mcp__claude_ai_Gmail__create_draft` with `replyToMessageId`
@@ -245,12 +292,17 @@ After executing approved actions, if any tasks have Doer = "Claude":
 2. Record `taskLinks[sourceId] = "<notion page url>"` for every task created
 3. Drop `taskLinks` entries for any task trashed, keeping their `processedSourceIds` entries
 4. Updates and cancellations change nothing else in state.json — Notion holds task state
-5. Write updated timestamps to `.claude/triage/state.json`
+5. Add every created task's page ID to `commentWatch`; stamp `lastCommentCheck` on every page
+   read this run; drop entries for pages found `Done`, `Cancelled`, or missing
+6. Append every handled comment ID to `processedComments`, and cache `userNotionId` if it
+   was resolved this run
+7. Write updated timestamps to `.claude/triage/state.json`
 6. Print summary:
    ```
    ── Triage Complete ──
    Sources scanned: Gmail (X threads), Slack (Y messages), Calendar (Z events)
    Tasks created: N (P parent + S subtasks)
+   Comments read: X (acted on: Y, replied: Z)
    Tasks updated: U (F fields)
    Tasks cancelled/trashed: C
    Drafts created: D
@@ -268,11 +320,13 @@ The `/triage` command accepts optional arguments:
 - `/triage slack` — Slack only
 - `/triage calendar` — Calendar only
 - `/triage trello` — Trello only
+- `/triage comments` — Notion task comments only (see Comments Mode below)
 - `/triage add` — manually add tasks from conversation, bullet points, or free-text notes (see Manual Input Mode below)
 - `/triage meeting` — process recent Notion call recordings/meeting notes (see Meeting Notes Mode below)
 - `/triage --no-drafts` — extract tasks but skip reply drafting
 - `/triage --dry-run` — scan and classify but don't create or change anything in Notion or Gmail
 - `/triage --no-updates` — propose new tasks only; skip the update and obsolete passes
+- `/triage --no-comments` — skip the Notion comment pass entirely
 - `/triage --no-delete` — run everything else normally, but report the newsletter cleanup
   instead of trashing anything. Use this on the first run, or after changing the keep
   rules, to check the judgement before it acts
@@ -346,6 +400,26 @@ Process Notion call recordings, meeting notes, and AI-generated meeting summarie
    - Source ID: `notion-meeting:{page-id}` for dedup
 6. For decisions and non-task items, offer to add them as comments on existing related tasks or as notes in the project's `.claude/` directory
 
+## Comments Mode (`/triage comments`)
+
+Just the Notion comment pass — no source scanning, no drafting, no newsletter sweep. Run
+Step 3's Agent 5, route the results through Step 4, and present only the comment section plus
+whatever tables it feeds.
+
+This is the cheap, run-it-any-time mode, and the one that saves the most admin. Leave comments
+on tasks as you work through the day, run `/triage comments`, approve, and they are done —
+without waiting for tomorrow morning's full run.
+
+```
+/triage comments                  — every watched task with unread comments
+/triage comments --client carsa   — only tasks related to one client
+/triage comments --dry-run        — read and classify, change nothing
+```
+
+Because no other pass has run, there is less surrounding context to disambiguate a terse
+comment. Lean harder on asking: reading the wrong thing into "do the other one too" and acting
+on it is worse than one question.
+
 ## Cleanup Mode (`/triage cleanup`)
 
 Just the newsletter sweep — no task extraction, no drafting, no Notion. Run Step 4b on its
@@ -361,8 +435,11 @@ The launchd agent in `scripts/triage-morning.plist` runs `/triage` on weekday mo
 with nobody watching. Two things change when the run is unattended:
 
 - **Nothing that needs approval happens.** No Notion writes, no Slack sends, no email
-  sends. The run produces the report and the Gmail drafts, and everything requiring a
-  decision waits in it for the user
+  sends, and no comment replies. The run produces the report and the Gmail drafts, and
+  everything requiring a decision waits in it for the user
+- **Comments are still read**, and what each one would produce is written into the report,
+  so the morning's first job is one approval rather than a re-read of everything commented
+  on yesterday. Nothing is acted on or replied to until the user approves
 - **The newsletter cleanup still runs**, because it is safe by construction rather than by
   approval — trash only, recoverable for 30 days, with the keep tests doing the work
 
@@ -375,4 +452,7 @@ sit down. Set up or change the schedule with `scripts/triage-morning.plist`.
 - If Notion MCP is unavailable → present tasks as local summary, offer to retry later
 - If Notion DB doesn't exist yet → guide user through setup, still present triage results
 - If a Slack channel returns an error → warn and skip, continue with other channels
+- If a watched page 404s or is in the trash → drop it from `commentWatch` and carry on
+- If the user's Notion user ID cannot be resolved → skip the comment pass and say why,
+  rather than acting on comments whose author is unverified
 - If state.json is missing or corrupt → treat as first run, use config lookback windows

@@ -3,7 +3,7 @@
 **Slug:** `nem-quiz-transition-guard-and-intro-line-plumbing`
 **Project:** nem-life (NEM Test)
 **Created:** 2026-08-19
-**Status:** Ready to Build
+**Status:** Built — all three parts delivered, verified 2026-09-01. A: guard, lock, disabled pills/back button and timer cleanup are all in `src/nem-test-phase-b.tsx` (`d5edb65`). B: `tests/acceptance/helpers/nem-quiz.js` exists and the three suites are repointed. C: the changeset was applied live — `npm run check:nem-drift` reports both workflows IN SYNC, and `introLine` is present in the `/submit` and `/verify` snapshots.
 
 Closes three carried-forward items in one pass, because they interlock: the component fix
 (A) is what lets the test helpers (B) drop their retry, and (C) is the server half of work

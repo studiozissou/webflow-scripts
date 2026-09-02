@@ -1,6 +1,6 @@
 # NEM Life — live n8n state
 
-**Generated 2026-09-02T14:00:49.649Z** by `npm run check:nem-drift`.
+**Generated 2026-09-02T14:32:05.977Z** by `npm run check:nem-drift`.
 
 **Do not hand-edit this file.** It is written from the live n8n API and is the one
 place in this repo allowed to assert what the workflows currently do. Prose docs that
@@ -40,7 +40,7 @@ need a live fact should link here rather than restating it — restating is how 
 - n8n id: `LDI1eWR35lwX6WLp`
 - active: yes
 - nodes: 13
-- last changed in n8n: 2026-09-02T07:15:07.384Z
+- last changed in n8n: 2026-09-02T14:31:35.698Z
 - committed snapshot: matches live
 
 | Invariant | State |
@@ -48,6 +48,7 @@ need a live fact should link here rather than restating it — restating is how 
 | Store Profile targets a real data table, not a REPLACE_ placeholder | holds |
 | Honeypot gate is present | holds |
 | Per-IP rate limit is present | holds |
+| Rate limit ignores completion pings — they are logging, not submissions | holds |
 | Verification mail goes out via MailerLite | holds |
 | Normalize keeps the v2 outcome, conclusionKey and conclusionId | holds |
 | Store Profile persists the v2 conclusion fields and the event type | holds |

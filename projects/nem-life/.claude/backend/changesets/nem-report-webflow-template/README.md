@@ -1,9 +1,20 @@
 # Changeset — nem-report-webflow-template
 
+> ## ✅ APPLIED — do not apply again
+>
+> Applied 2026-09-02 via `n8n_update_partial_workflow` (`Build HTML` only; the workflow
+> stayed active). `./verify.sh` exits 0: both workflows IN SYNC, every invariant green,
+> including the two this changeset added. No re-baseline was needed — the committed
+> snapshot already carried the template-filling node.
+>
+> Still open from this README: step 3, one live `/verify` with the PDF opened by eye
+> (no `Lorem ipsum`, olive header with logo, Lato body). The drift checker cannot see the
+> published template, so that check is manual. The three "Before go-live" items stand.
+
 **Spec:** `../../specs/nem-verify-report-email-and-pdf-branding.md` (PDF template half)
 **Prepared:** 2026-09-02
 **Applies to:** `/verify` (`uKkMgMYoH5nOLoCR`), node `Build HTML` only
-**Status:** PREPARED — not applied to live
+**Status:** APPLIED to live 2026-09-02 (verify.sh exit 0)
 
 ## What
 

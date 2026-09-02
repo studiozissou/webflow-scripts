@@ -205,6 +205,14 @@ describe("the export is PDF-safe", () => {
     const { html } = await runBuildHtml();
     assert.match(html, /@page\s*\{[^}]*size:\s*A4/);
     assert.match(html, /@page\s*:first\s*\{[^}]*margin-top:\s*0\b/);
+  });
+
+  test("the olive header bleeds past every page edge and the page never overflows sideways", async () => {
+    /* The bleed is 800px wide on a 794px page: the 3px overflow made Chrome shrink the page
+     * to fit, and the sub-pixel scale left hairlines at the top and right (2026-09-02). */
+    const { html } = await runBuildHtml();
+    assert.match(html, /html,\s*body\s*\{[^}]*overflow-x:\s*clip/);
+    assert.match(html, /\.report_header \.report_bg-olive\s*\{[^}]*top:\s*-2px[^}]*left:\s*-50vw[^}]*right:\s*-50vw/);
     assert.match(html, /\.block-conclusion\s*\{[^}]*break-inside:\s*avoid/);
     assert.match(html, /\.report_block\.is-disclaimer[^{]*\{[^}]*break-inside:\s*avoid/);
     assert.match(html, /h2,\s*h2 \+ div\s*\{[^}]*break-after:\s*avoid/);

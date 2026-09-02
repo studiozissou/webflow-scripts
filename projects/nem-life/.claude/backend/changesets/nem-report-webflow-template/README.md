@@ -74,10 +74,13 @@ snapshot is a broken rollback point.
 - **Template URL** is the staging domain. When the new site goes live on `nemlife.com`,
   change `TEMPLATE_URL` in `Build HTML` (and this file) to the live page, or the PDF keeps
   reading a staging page that may be unpublished.
-- **Footer domain** reads `nemmatters.com` (the email sender domain). Every canonical and
-  schema reference for the site is `nemlife.com`. Alex to confirm which the footer shows;
-  it is fixed copy on the page, not a slot.
-- **Contact address** in the "Heb je vragen" line is `hallo@nemmatters.com`. Alex to confirm.
+- **Footer domain** — Will changed the link and its text to `nemlife.nl` on 2026-09-02.
+  Every canonical and schema reference for the site is `nemlife.com`; Alex to confirm
+  which one the footer should carry. Fixed copy on the page, not a slot.
+- **Contact address** in the "Heb je vragen" line is still `hallo@nemmatters.com`. Alex to confirm.
+- **First page bleeds to the top edge.** The first live render (2026-09-02) showed a white
+  strip above the olive header: the 12mm top page margin. `@page:first{margin-top:0}` now
+  removes it on page one only; later pages keep their 12mm.
 
 ## Files
 

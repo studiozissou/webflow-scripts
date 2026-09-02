@@ -74,6 +74,7 @@ html = html
 const printCss = '<link rel="stylesheet" href="' + FONTS_CSS + '">'
   + '<style>'
   + '@page{size:A4;margin:12mm 0 14mm}'
+  + '@page:first{margin-top:0}'
   + '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
   + '.report_block.is-final,.report_block.is-disclaimer,.block-conclusion{break-inside:avoid}'
   + 'h2,h2 + div{break-after:avoid}'

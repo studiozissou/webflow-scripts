@@ -1,6 +1,6 @@
 # Podcast Spotify links backfill
 
-**Status:** Planned, awaiting approval to write
+**Status:** Done 2026-09-02. 44 items updated and published via MCP. Verify loop passed: only ep 112 draft still lacks a link; live ep 111 page links to 3OrbmsX03czcvPzAS8M4K2.
 **Date:** 2026-09-02
 **Type:** CMS data fill (no code)
 
@@ -79,4 +79,4 @@ Machine-readable copy: `podcast-spotify-links-backfill.json` (item id, episode, 
 N/A. No code change.
 
 ## Open questions
-- Publish the 44 items after updating, or leave staged for the client to publish?
+- Resolved: published items directly (user approved). Ep 112 needs its link added once it appears on Spotify.

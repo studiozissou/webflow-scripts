@@ -82,7 +82,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// In-memory IP rate limit: max 3 submissions per IP per rolling hour.\n// Uses n8n workflow static data (persists across executions of this workflow).\n// Completion pings are logging, not submissions: neither counted nor blocked.\nconst input = $json;\nif (input.event === 'completion') return [{ json: { ...input, rateLimited: false } }];\nconst ip = input.ip || 'unknown';\nconst store = $getWorkflowStaticData('global');\nstore.hits = store.hits || {};\nconst now = Date.now();\nconst windowMs = 60 * 60 * 1000;\nconst recent = (store.hits[ip] || []).filter(t => now - t < windowMs);\nconst rateLimited = recent.length >= 3;\nif (!rateLimited) {\n  recent.push(now);\n}\nstore.hits[ip] = recent;\nreturn [{ json: { ...input, rateLimited } }];"
+        "jsCode": "// In-memory IP rate limit: max MAX_PER_HOUR submissions per IP per rolling hour.\n// Uses n8n workflow static data (persists across executions of this workflow).\n// Completion pings are logging, not submissions: neither counted nor blocked.\nconst input = $json;\nif (input.event === 'completion') return [{ json: { ...input, rateLimited: false } }];\nconst ip = input.ip || 'unknown';\nconst store = $getWorkflowStaticData('global');\nstore.hits = store.hits || {};\nconst now = Date.now();\nconst windowMs = 60 * 60 * 1000;\nconst MAX_PER_HOUR = 10;\nconst recent = (store.hits[ip] || []).filter(t => now - t < windowMs);\nconst rateLimited = recent.length >= MAX_PER_HOUR;\nif (!rateLimited) {\n  recent.push(now);\n}\nstore.hits[ip] = recent;\nreturn [{ json: { ...input, rateLimited } }];"
       },
       "id": "ea6a7d58-17a2-4fe5-afbd-99b8045b7118",
       "name": "Rate limit",

@@ -6,6 +6,11 @@
 > stayed active). `./verify.sh` exits 0: both workflows IN SYNC, every invariant green
 > including the new one. 334 tests pass. Hits recorded before the fix still age out on
 > their own hour.
+>
+> **Second application, same day:** the limit itself raised from 3 to 10 per IP per hour
+> as the named constant `MAX_PER_HOUR`. The honeypot and the email verification are the
+> real abuse guards; 3 was tight enough to block a tester's second run within the hour.
+> Revisit at go-live if abuse shows up in `nem_test_profiles`.
 
 **Spec:** none — a defect found on the first real end-to-end run, 2026-09-02
 **Prepared:** 2026-09-02

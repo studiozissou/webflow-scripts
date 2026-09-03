@@ -235,7 +235,7 @@
     if (isLocal) {
       return scriptSrc.replace(/\?.*$/, '').replace(/\/[^/]*$/, '');
     }
-    var match = scriptSrc.match(/@([a-f0-9]{7,40})(?:\/|$)/i);
+    var match = scriptSrc.match(/@([^/?#@]+)\//);
     var commit = match ? match[1] : 'main';
     return CONFIG.baseUrlTemplate.replace('COMMIT', commit);
   }

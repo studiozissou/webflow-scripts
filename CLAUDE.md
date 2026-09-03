@@ -29,24 +29,10 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - Reports go in `projects/{client}/.claude/reports/`
 - Proposals go in `projects/{client}/.claude/proposals/`
 
-## Financial and personal data — THIS REPO IS PUBLIC
-`studiozissou/webflow-scripts` is a public GitHub repo. Anything committed is world-readable
-and stays in the history even after deletion.
-
-- IMPORTANT: NEVER commit accounting, tax, banking or payroll material. This includes
-  Belastingdienst correspondence, aanslagen, bezwaren, suppleties, BTW/VPB/IB returns,
-  jaarrekeningen, bank statements, Moneybird exports, payslips, and invoices carrying
-  bank details.
-- IMPORTANT: NEVER commit personal identifiers — IBANs, BSN, mortgage or loan numbers,
-  account balances, salary figures, home address, or share links to private Drive/Dropbox
-  folders.
-- IMPORTANT: Redact IBANs from proposals and invoices before committing. Write
-  `[IBAN supplied on the invoice]` and keep the real number out of the repo.
-- Financial and personal admin lives in `~/Documents/Studio Zissou/`, never in this repo.
-  If asked to write such a file, save it there instead and say where it went.
-- The `.gitignore` accounting block is a backstop for obvious filenames only. It will not
-  catch a sensitive figure pasted into a spec, a proposal, or a research note — check the
-  content, not just the path.
+## Financial data — THIS REPO IS PUBLIC
+- IMPORTANT: Never commit accounting, tax, banking or payroll material, IBANs, BSN,
+  balances, or private Drive links. Redact IBANs as `[IBAN supplied on the invoice]`.
+- Financial admin goes in `~/Documents/Studio Zissou/`, never here.
 
 ## Code Style
 - Named exports only (no default exports in `shared/`)

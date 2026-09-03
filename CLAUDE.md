@@ -29,6 +29,11 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - Reports go in `projects/{client}/.claude/reports/`
 - Proposals go in `projects/{client}/.claude/proposals/`
 
+## Financial data — THIS REPO IS PUBLIC
+- IMPORTANT: Never commit accounting, tax, banking or payroll material, IBANs, BSN,
+  balances, or private Drive links. Redact IBANs as `[IBAN supplied on the invoice]`.
+- Financial admin goes in `~/Documents/Studio Zissou/`, never here.
+
 ## Code Style
 - Named exports only (no default exports in `shared/`)
 - No `console.log` in committed code — use `DEBUG && console.log(...)` pattern

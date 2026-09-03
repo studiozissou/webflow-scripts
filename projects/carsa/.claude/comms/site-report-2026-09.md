@@ -4,9 +4,9 @@
 
 ## Summary
 
-The vehicle page titles and descriptions that went live on 10 August are now in the crawl, and they did what they were meant to. Duplicate titles fell from 2,151 to 6, duplicate content from 1,286 to 4, and over-length titles from 430 to 2. The six duplicate titles left are two cars that are published twice under two web addresses and one blog post that exists at two addresses, so that is a ten-minute tidy rather than a template problem. Site health moved from 75% to 77%. The WhatsApp link that inflated the broken-link count every month did not trip the crawler this time, so that figure has gone from 5,489 to 3, and the three left are real dead links I can fix.
+The vehicle page titles and descriptions that went live on 10 August are now in the crawl, and they did what they were meant to. Duplicate titles fell from 2,151 to 6, duplicate content from 1,286 to 4, and over-length titles from 430 to 2. The six duplicate titles left are two cars that are published twice under two web addresses and one blog post that exists at two addresses, so that is a ten-minute tidy rather than a template problem. Site health moved from 75% to 77%. The WhatsApp link that inflated the broken-link count every month did not trip the crawler this time, so that figure has gone from 5,489 to 3, and only one of those three is a real dead link.
 
-Two things turned up this month that the crawl does not report and that matter more than anything in the table. First, the two sell pages that moved under /sell-car/ in May still tell Google their old addresses are the real ones, and the old addresses redirect straight back. Google has kept ranking the old URLs and has never picked up the new ones. That is a fifteen-minute fix on the page behind "value my car", 60,500 searches a month, and it is this month's number one. Second, Webflow now stamps a "last changed" date on every page in the sitemap. Vehicle pages update daily and the service pages are current, but 273 of the 456 model pages have not changed since 2025, including several that rank in the top ten. The model pages that were edited on 24 August are also the ones that moved up this month. I would not call that proof, but it points the same way.
+Two things turned up this month that the crawl does not report and that matter more than anything in the table. First, the two sell pages that moved under /sell-car/ in May were still telling Google their old addresses were the real ones, while the old addresses redirected straight back. Google had kept ranking the old URLs and never picked up the new ones. That one is now fixed and verified, on the page behind "value my car", 60,500 searches a month. Second, Webflow now stamps a "last changed" date on every page in the sitemap. Vehicle pages update daily and the service pages are current, but 273 of the 456 model pages have not changed since 2025, including several that rank in the top ten. The model pages that were edited on 24 August are also the ones that moved up this month. I would not call that proof, but it points the same way.
 
 Two crawl counts went the other way, and both have a plain explanation. The crawl found 112 vehicle pages returning "not found" and 120 wrong entries in the sitemap. They are the same cars: sold, removed from the site, but still listed in the sitemap when SEMRush ran. I requested every one of the 5,462 sitemap addresses on 2 September and found three missing, all cars that sold while the check was running, so the sitemap catches up on its own. The fix is to make sure the site publishes after the stock sync removes cars, which is a question for Grant. Slow-loading pages rose from 1,090 to 1,471, all vehicle pages, and the cause is the inline script weight on that template that the code migration is already addressing. Rankings were mixed: "nissan qashqai" 17th to 11th, "volkswagen golf" 18th to 8th, "car sales" 14th to 10th, but two generic local searches dropped out and the store pages and city pages are now swapping places on the same town searches. One correction to August's report: the stores page does have a meta description. I said it had none.
 
@@ -25,7 +25,7 @@ Two crawl counts went the other way, and both have a plain explanation. The craw
 | Duplicate content pages | 1,286 | 4 | −1,282 (fixed) |
 | Over-length page titles | 430 | 2 | −428 (fixed) |
 | Duplicate meta descriptions | 28 | 22 | −6 |
-| Broken external links | 5,489 | 3 | −5,486 (WhatsApp artefact gone; 3 real) |
+| Broken external links | 5,489 | 3 | −5,486 (WhatsApp artefact gone; 1 real) |
 | Pages not crawled | 40 | 4 | −36 |
 | Structured-data errors | 460 | 444 | −16 (sold cars, see note) |
 | 4xx errors | 1 | 112 | +111 (sold cars in sitemap at crawl time) |
@@ -59,7 +59,7 @@ No movement this month. Each row has a matching recommendation in the AI search 
 	- Duplicate titles: 2,151 → 6. The new vehicle title format, one title per registration. The six left are three pairs: two cars published under two addresses each, and one blog post at two addresses. Covered in issue #6.
 	- Duplicate content: 1,286 → 4. I did not predict this one. Giving each car a unique title and description was enough for SEMRush to stop matching same-spec cars against each other. The body copy on identical-spec cars has not changed, so this is the crawler's view rather than a rewrite, but the count is gone and I will not raise it again on crawl evidence. The four left are the two double-published cars.
 	- Over-length titles: 430 → 2. The two are the carsaCover page and one blog post, both a few characters over.
-	- Broken external links: 5,489 → 3. The WhatsApp link in the header did not rate-limit the crawler this time. It may again, and it can be ignored when it does. The three real ones are a dead leasing.carsa.co.uk link on two blog posts and a dead Microsoft support link on the cookie policy. Issue #6.
+	- Broken external links: 5,489 → 3. The WhatsApp link in the header did not rate-limit the crawler this time. It may again, and it can be ignored when it does. Of the three the crawl flagged, one is real: a dead Microsoft support link on the cookie policy. The two leasing.carsa.co.uk links answered normally when I rechecked them on 2 September, so that was a blip during the crawl rather than a dead site. Issue #6.
 	- Pages not crawled: 40 → 4. New stock arriving mid-crawl, same as June and August.
 	- Duplicate descriptions: 28 → 22. What is left is eight identical 2025 silver Qashqais and a handful of identical-spec pairs. Same car, same words. That is the floor.
 	- Structured-data errors: 460 → 444. Still all sold cars in their retention window, as established in August.
@@ -71,7 +71,7 @@ No movement this month. Each row has a matching recommendation in the AI search 
 
 ### Found outside the crawl {toggle="true"}
 
-	- The moved sell pages point Google back at their old addresses. /value-car redirects to /sell-car/value-car, and /sell-car/value-car says its official address is /value-car. Same for part exchange. Live since the May restructure. Issue #1.
+	- The moved sell pages were pointing Google back at their old addresses. /value-car redirects to /sell-car/value-car, and /sell-car/value-car was saying its official address was /value-car. Same for part exchange, and both had been that way since the May restructure. Fixed and republished on 2 September. Issue #1.
 	- Webflow now writes a "last changed" date for every page into the sitemap. For vehicle and blog pages it comes from the CMS item's last edit; for static pages it changes when the page itself is edited in the Designer. Google uses this date to decide what to re-crawl, provided it stays accurate. What it shows for Carsa: vehicle pages are current (4,700 changed in the last five weeks), the homepage changed on 1 September, /car-finance on 10 August, the store and city pages in July. Blog posts almost all read 30 June, which looks like a bulk edit rather than 71 real updates, and 34 read 7 August. The oldest blog post is the best used SUVs guide (24 March), which ranks 2nd nationally. Model pages are the outlier: 273 of 456 have not changed since 2025. Issue #4 and the AI search section pick this up.
 
 ### Added {toggle="true"}
@@ -90,24 +90,24 @@ No movement this month. Each row has a matching recommendation in the AI search 
 
 ## Top issues to fix
 
-### 1. Fix the canonical address on the two moved sell pages — 15 minutes {toggle="true"}
+### 1. Canonical address on the two moved sell pages — fixed 2 September {toggle="true"}
 
-*Issue:* /sell-car/value-car and /sell-car/part-exchange each tell Google their real address is the old URL, and the old URL redirects straight back to them.
-*Explanation:* Google gets two contradictory instructions for the page behind "value my car" (60,500 searches a month), so it has stuck with the old address and never moved.
-*Fix:* Set each page's canonical to its own address in Webflow page settings.
+*Issue:* /sell-car/value-car and /sell-car/part-exchange each told Google their real address was the old URL, and the old URL redirects straight back to them.
+*Explanation:* Google got two contradictory instructions for the page behind "value my car" (60,500 searches a month), so it stuck with the old address and never moved.
+*Fix:* Done. Both pages now name themselves as their own address.
 *Benefit:* One clear address per page, and the valuation and part exchange pages can start earning credit at the URLs that are in the sitemap.
 
 	---
 
 	**Detail**
 
-	**What is happening:** In May the sell pages moved under /sell-car/ with redirects from the old addresses. The redirects work. But the canonical tag on /sell-car/value-car still reads https://www.carsa.co.uk/value-car, and on /sell-car/part-exchange it reads https://www.carsa.co.uk/part-exchange. Google follows the redirect to the new page, reads "the real page is the old address", follows that, and lands back where it started.
+	**What was happening:** In May the sell pages moved under /sell-car/ with redirects from the old addresses. The redirects work. But the canonical tag on /sell-car/value-car still read https://www.carsa.co.uk/value-car, and on /sell-car/part-exchange it read https://www.carsa.co.uk/part-exchange. Google followed the redirect to the new page, read "the real page is the old address", followed that, and landed back where it started.
 
-	**Evidence it matters:** Every ranking SEMRush reports for these pages is still at the old URL: /value-car 17th for "value my car", 14th for "car value of my car"; /part-exchange 19th for "part exchange car", 23rd for "part exchange". The new URLs do not appear in the ranking data at all after three and a half months, which is not what a clean move looks like. "trade in value of my car" slipped from 22nd to 25th this month and "value my vehicle" from 19th to 20th. I cannot say the canonical is the cause, but it is the first thing to rule out. These two pages are also the likeliest reason the sitemap check flags a handful of non-vehicle entries every month.
+	**Fixed and verified.** Both pages were corrected and republished on 2 September. I checked the live source afterwards: /sell-car/value-car now names itself, and so does /sell-car/part-exchange. The old addresses still redirect, which is right. Nothing further to do here; the ranking data should start showing the new URLs within a crawl or two, and I will report on that next month.
 
-	**What to change:** Open each page in Webflow, page settings, and set the canonical to the page's own URL (or clear the override so the site default applies). Republish. Then check /sell-car/value-car in a browser: the canonical in the page source should match the address bar.
+	**Why it mattered:** Every ranking SEMRush reports for these pages is still recorded at the old URL: /value-car 17th for "value my car", 14th for "car value of my car"; /part-exchange 19th for "part exchange car", 23rd for "part exchange". The new URLs do not appear in the ranking data at all after three and a half months, which is not what a clean move looks like. "trade in value of my car" slipped from 22nd to 25th this month and "value my vehicle" from 19th to 20th. I cannot say the canonical was the cause, but it was the first thing to rule out, and it is now ruled out.
 
-	**How to verify:** Within a crawl or two, SEMRush should start reporting /sell-car/value-car and /sell-car/part-exchange instead of the old URLs. Strategic #3 depends on this being done first.
+	**How we will know it worked:** Within a crawl or two, SEMRush should start reporting /sell-car/value-car and /sell-car/part-exchange instead of the old URLs. Strategic #3 builds on this.
 
 ### 2. Store pages and city pages are competing for the same town searches — 1 hour {toggle="true"}
 
@@ -193,9 +193,9 @@ No movement this month. Each row has a matching recommendation in the AI search 
 
 ### 6. Five small tidy-ups in one pass — 0.5 hours {toggle="true"}
 
-*Issue:* Two cars published twice, one blog post at two addresses, three dead outbound links, Shrewsbury still in the sitemap and llms.txt.
+*Issue:* Two cars published twice, one blog post at two addresses, one dead outbound link, Shrewsbury still in the sitemap and llms.txt.
 *Explanation:* None of these matters on its own. Together they are the whole of the duplicate-title, duplicate-content and broken-link counts.
-*Fix:* Remove or redirect the duplicates, fix the three links, unpublish the Shrewsbury page, update llms.txt.
+*Fix:* Remove or redirect the duplicates, fix the dead link, unpublish the Shrewsbury page, update llms.txt.
 *Benefit:* Three metrics go to zero and the AI-facing facts file stops naming a closed branch.
 
 	---
@@ -204,11 +204,11 @@ No movement this month. Each row has a matching recommendation in the AI search 
 
 	**The duplicates:** /vehicles/used/j16bnt and j16bnt-fa27e are the same 2019 Mercedes A Class; /vehicles/used/f14yeg and f14yeg-03cc0 are the same 2018 Mini. The suffixed versions are probably re-imports; whichever is not the live listing should go. /blog/what-is-adaptive-cruise-control and /blog/what-is-adaptive-cruise-control-guide are the same article; redirect one to the other.
 
-	**The links:** leasing.carsa.co.uk no longer answers. It is linked from "Does car leasing include insurance?" and "5 reasons car leasing is beneficial". Either point those at a live page or remove the links. The cookie policy links to a Microsoft support article that has gone; swap for the current one or drop it.
+	**The links:** the cookie policy links to a Microsoft support article that has gone; swap it for the current one or drop it. The crawl also flagged the leasing.carsa.co.uk links on "Does car leasing include insurance?" and "5 reasons car leasing is beneficial", but that site answered normally when I rechecked on 2 September, so nothing needs changing there.
 
 	**Shrewsbury:** The branch page now redirects to /stores, which is right. It is still in the sitemap because the page is still published; unpublish it and the sitemap drops it on the next publish. llms.txt still lists Shrewsbury and omits Portsmouth and Wolverhampton. /stores lists eleven branches; llms.txt should match.
 
-	**How to verify:** Re-crawl. Duplicate titles 6 → 0, duplicate content 4 → 0, broken external links 3 → 0 (WhatsApp aside).
+	**How to verify:** Re-crawl. Duplicate titles 6 → 0, duplicate content 4 → 0, broken external links down to the WhatsApp rows only.
 
 **Total estimated time: ~4 hours**
 
@@ -405,15 +405,15 @@ New arrivals worth knowing about: "nissan juke for sale" (12,100, difficulty 24)
 
 **Local.** "car sales" 14th → 10th (Portsmouth). "used car dealerships" 6th, unchanged. "used car dealerships near me" out of the top 100 from 9th. "car showroom near me" 5th → 17th. See strategic #1.
 
-**Valuation.** "value my car" 17th, unchanged, at the old URL. Article gained "car value" 9th (14,800). See issue #1 and strategic #3.
+**Valuation.** "value my car" 17th, unchanged, still recorded at the old URL because the crawl predates the 2 September canonical fix. Article gained "car value" 9th (14,800). See issue #1 and strategic #3.
 
 **Blog.** "cheapest cars to insure for new drivers" 2nd → 3rd. "best used suv uk" 2nd. "pcp" 4th (27,100). "self employed car finance" 2nd. Holding.
 
 **Google context.** No core update in August. Google ran a spam update from 18 to 21 August, and several SEO publications reported general volatility in early August without a confirmed cause. Carsa's gains and losses are spread across page types in a way that does not look like a targeted hit, so I would not read anything into it beyond normal movement.
 
-**What to take from this.** Three things. The model pages are the ones responding to attention: the batch edited on 24 August moved up, the batch untouched since 2025 mostly slipped. The valuation and part exchange pages have been ranking at addresses that no longer exist, and cannot improve until the canonical is fixed. And the local picture is now a fight between Carsa's own pages rather than a fight with competitors.
+**What to take from this.** Three things. The model pages are the ones responding to attention: the batch edited on 24 August moved up, the batch untouched since 2025 mostly slipped. The valuation and part exchange pages had been ranking at addresses that no longer exist, which the 2 September canonical fix has now settled. And the local picture is a fight between Carsa's own pages rather than a fight with competitors.
 
-**Next steps, in order.** Fix the canonical on the two sell pages (issue #1, fifteen minutes). Refresh the twenty stale model pages listed in issue #4, starting with the ones in the top ten. Settle which page owns each branch town (issue #2), then reposition /stores (strategic #1). Next month this table gains a "page last changed" comparison so we can see whether the refreshes moved anything.
+**Next steps, in order.** Refresh the twenty stale model pages listed in issue #4, starting with the ones in the top ten. Settle which page owns each branch town (issue #2), then reposition /stores (strategic #1). Watch the two sell pages for the new URLs appearing in the ranking data now the canonical is fixed. Next month this table gains a "page last changed" comparison so we can see whether the refreshes moved anything.
 
 ---
 

@@ -17,6 +17,7 @@
     "entity-audit": "node tools/entity-audit/index.js",
     "test:ea": "node --test 'tests/entity-audit/*.test.js'",
     "test:nem": "node --test 'tests/nem/*.test.js'",
+    "test:rhp": "node --test 'tests/rhp/*.test.js'",
     "build:nem": "node tools/nem/build-conclusion-texts.js && node tools/nem/build-component.js && npm run typecheck:nem",
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",
     "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'",

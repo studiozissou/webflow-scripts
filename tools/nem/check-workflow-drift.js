@@ -269,6 +269,14 @@ const INVARIANTS = {
       check: (wf) => Boolean(find(wf, "Rate limit")),
     },
     {
+      /* The limiter sits before the Completion? branch, so without this guard the quiz's
+       * completion ping spends a slot before the form is even shown: one honest run cost
+       * two of the three, and a corrected resubmit within the hour was refused (2026-09-02). */
+      label: "Rate limit ignores completion pings — they are logging, not submissions",
+      check: (wf) =>
+        /event\s*===\s*'completion'/.test(find(wf, "Rate limit")?.parameters?.jsCode ?? ""),
+    },
+    {
       label: "Verification mail goes out via MailerLite",
       check: (wf) =>
         /connect\.mailerlite\.com/.test(

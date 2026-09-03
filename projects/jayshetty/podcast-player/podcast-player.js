@@ -85,15 +85,21 @@
     };
 
     window.addEventListener("message", onMessage);
-    embedWrap.__videoWatchdog = setTimeout(function () {
-      stop();
-      if (embedWrap.__videoOk) return;
-      if (!document.contains(frame) || frame.src.indexOf("/video") === -1) return;
-      DEBUG && console.log("[player] /video page silent, using audio embed", id);
-      embedWrap.__videoFellBack = true;
-      frame.removeAttribute("sandbox");
-      frame.src = "https://open.spotify.com/embed/episode/" + id;
-    }, VIDEO_WATCHDOG_MS);
+    embedWrap.__videoWatchdog = true;
+    frame.addEventListener("load", function onLoad() {
+      frame.removeEventListener("load", onLoad);
+      if (!embedWrap.__videoWatchdog || embedWrap.__videoOk) return;
+      if (frame.src.indexOf("/video") === -1) return;
+      embedWrap.__videoWatchdog = setTimeout(function () {
+        stop();
+        if (embedWrap.__videoOk) return;
+        if (!document.contains(frame) || frame.src.indexOf("/video") === -1) return;
+        DEBUG && console.log("[player] /video page silent, using audio embed", id);
+        embedWrap.__videoFellBack = true;
+        frame.removeAttribute("sandbox");
+        frame.src = "https://open.spotify.com/embed/episode/" + id;
+      }, VIDEO_WATCHDOG_MS);
+    });
   }
 
   function useVideoEmbed(embedWrap, id, attempt) {

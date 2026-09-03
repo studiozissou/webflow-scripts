@@ -1,0 +1,10 @@
+/vehicles/used/j16bnt-fa27e                             200 
+/vehicles/used/j16bnt                                   200 
+/vehicles/used/f14yeg-03cc0                             200 
+/vehicles/used/f14yeg                                   200 
+/blog/what-is-adaptive-cruise-control                   200 
+/blog/what-is-adaptive-cruise-control-guide             200 
+/stores/shrewsbury                                      301 https://www.carsa.co.uk/stores
+/car-care/extended-mechanical-warranty                  200 
+/sell-car/value-car                                     200 
+/sell-car/part-exchange                                 200 

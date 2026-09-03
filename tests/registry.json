@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-08-20",
-  "note": "nem-quiz-transition-guard planned 2026-08-19 \u2014 expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
+  "lastUpdated": "2026-09-03",
+  "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
   "lastDeployedHash": "677502e",
@@ -39,7 +39,7 @@
     {
       "slug": "news-digest",
       "spec": "tests/news-digest/news-digest.test.js",
-      "description": "Unit tests for weekly news digest CLI tool \u2014 RSS/Atom parsing, HTML scraping, Claude API scoring, markdown output, dedup state",
+      "description": "Unit tests for weekly news digest CLI tool — RSS/Atom parsing, HTML scraping, Claude API scoring, markdown output, dedup state",
       "created": "2026-04-22"
     },
     {
@@ -58,14 +58,14 @@
       "slug": "nem-mobile-qa-automated-fixes",
       "url": "https://nem-life-1.webflow.io",
       "spec": "tests/acceptance/nem-mobile-qa-automated-fixes.spec.js",
-      "description": "NEM Life mobile QA fixes \u2014 page titles, ervaringen heading, Christel card stacking, NEM Methode spacing, footer links",
+      "description": "NEM Life mobile QA fixes — page titles, ervaringen heading, Christel card stacking, NEM Methode spacing, footer links",
       "created": "2026-04-30"
     },
     {
       "slug": "nem-life-remediation",
       "url": "https://nem-life-1.webflow.io",
       "spec": "tests/acceptance/nem-life-remediation.spec.js",
-      "description": "NEM Life site remediation \u2014 5 phases: SEO metadata, JSON-LD schemas, a11y + headings, CMS + ops, growth + launch",
+      "description": "NEM Life site remediation — 5 phases: SEO metadata, JSON-LD schemas, a11y + headings, CMS + ops, growth + launch",
       "created": "2026-05-07"
     },
     {
@@ -75,7 +75,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Coconut homepage refresh \u2014 new sections (value props, persona, MTD table), rewritten hero/FAQ/CTA, deleted carousel/bank logos",
+      "description": "Coconut homepage refresh — new sections (value props, persona, MTD table), rewritten hero/FAQ/CTA, deleted carousel/bank logos",
       "created": "2026-06-01"
     },
     {
@@ -85,7 +85,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "NEM Life read-more expand/collapse \u2014 GSAP accordion toggle on data-button/data-block siblings with Dutch text swap",
+      "description": "NEM Life read-more expand/collapse — GSAP accordion toggle on data-button/data-block siblings with Dutch text swap",
       "created": "2026-06-02"
     },
     {
@@ -95,7 +95,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "NEM Life zelftest quiz data extraction \u2014 reads CMS questions and results into window.__quizData for React component",
+      "description": "NEM Life zelftest quiz data extraction — reads CMS questions and results into window.__quizData for React component",
       "created": "2026-06-03"
     },
     {
@@ -105,7 +105,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Carsa near-page location redirect \u2014 hides zero-count facet-wrappers and redirects to /used-cars with filter preservation",
+      "description": "Carsa near-page location redirect — hides zero-count facet-wrappers and redirects to /used-cars with filter preservation",
       "created": "2026-06-09"
     },
     {
@@ -115,7 +115,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "NEM Life 123 cards + wat-als \u2014 mobile trigger timing fix (bottom 95%) and wat-als desktop/mobile alignment to same stagger pattern",
+      "description": "NEM Life 123 cards + wat-als — mobile trigger timing fix (bottom 95%) and wat-als desktop/mobile alignment to same stagger pattern",
       "created": "2026-06-09"
     },
     {
@@ -125,7 +125,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "NEM Life backend cleanup \u2014 English page titles, Dutch slugs, CMS field Title Case, help texts, orphan flagging",
+      "description": "NEM Life backend cleanup — English page titles, Dutch slugs, CMS field Title Case, help texts, orphan flagging",
       "created": "2026-06-09"
     },
     {
@@ -135,7 +135,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": true,
-      "description": "NEM TEST Phase B \u2014 landing page structure, 5-screen quiz flow, scoring logic, pill buttons, form validation, screen transitions, correction flow, i18n (NL+EN), e2e signup via MailerSend API + Gmail API",
+      "description": "NEM TEST Phase B — landing page structure, 5-screen quiz flow, scoring logic, pill buttons, form validation, screen transitions, correction flow, i18n (NL+EN), e2e signup via MailerSend API + Gmail API",
       "created": "2026-06-16",
       "updated": "2026-06-19"
     },
@@ -146,7 +146,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC brand colour variables \u2014 updated Base/Light, Lift values, plus 20 new brand scale variables (Cyan, Ink, Steel, Yellow) in Webflow Designer",
+      "description": "TSC brand colour variables — updated Base/Light, Lift values, plus 20 new brand scale variables (Cyan, Ink, Steel, Yellow) in Webflow Designer",
       "created": "2026-06-24"
     },
     {
@@ -156,7 +156,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC Cargo rem migration \u2014 86 Webflow Variables migrated from px/vw to rem/em across Typography, Layout, Radius, Icon collections with fluid root CSS",
+      "description": "TSC Cargo rem migration — 86 Webflow Variables migrated from px/vw to rem/em across Typography, Layout, Radius, Icon collections with fluid root CSS",
       "created": "2026-06-24"
     },
     {
@@ -166,7 +166,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Carsa VDP script externalisation \u2014 verifies 19 inline scripts work correctly when loaded as single external CDN bundle (Phase 1) and modular init.js loader (Phase 2)",
+      "description": "Carsa VDP script externalisation — verifies 19 inline scripts work correctly when loaded as single external CDN bundle (Phase 1) and modular init.js loader (Phase 2)",
       "created": "2026-06-25"
     },
     {
@@ -176,7 +176,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Carsa service site migration \u2014 hub page, 5 location booking pages (Acuity embed), winter health check, cross-sell sections, JSON-LD schema, 301 redirects",
+      "description": "Carsa service site migration — hub page, 5 location booking pages (Acuity embed), winter health check, cross-sell sections, JSON-LD schema, 301 redirects",
       "created": "2026-06-30"
     },
     {
@@ -186,7 +186,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC historic blog migration \u2014 7 WordPress posts (2019-2021) migrated to Webflow CMS News collection with correct dates, AVIF images, and categories",
+      "description": "TSC historic blog migration — 7 WordPress posts (2019-2021) migrated to Webflow CMS News collection with correct dates, AVIF images, and categories",
       "created": "2026-07-06"
     },
     {
@@ -196,7 +196,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Carsa visual regression system \u2014 Playwright toHaveScreenshot proof-of-concept: static page diffs, CMS-masked diffs, console error checks, broken link detection",
+      "description": "Carsa visual regression system — Playwright toHaveScreenshot proof-of-concept: static page diffs, CMS-masked diffs, console error checks, broken link detection",
       "created": "2026-07-03"
     },
     {
@@ -206,7 +206,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Carsa code migration v2 \u2014 footer init.js loader + global.js, then page-by-page inline removal; loader pinning/caching, footer behaviours, SRP/Deals/homepage baselines, per-page inline-removed guards",
+      "description": "Carsa code migration v2 — footer init.js loader + global.js, then page-by-page inline removal; loader pinning/caching, footer behaviours, SRP/Deals/homepage baselines, per-page inline-removed guards",
       "created": "2026-07-06",
       "updated": "2026-08-20"
     },
@@ -217,7 +217,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC dedicated SEO fields \u2014 seo-title/seo-description added to 5 templated CMS collections (Products, Services, RailOS Devices, News, Case Studies) and bound in template-page SEO settings; verifies rendered title/meta/OG tags on item pages",
+      "description": "TSC dedicated SEO fields — seo-title/seo-description added to 5 templated CMS collections (Products, Services, RailOS Devices, News, Case Studies) and bound in template-page SEO settings; verifies rendered title/meta/OG tags on item pages",
       "created": "2026-07-08"
     },
     {
@@ -227,7 +227,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC hero/CTA background video loading \u2014 source-stripping so off-breakpoint and below-fold variants never fetch, breakpoint-correct hydration, progressive low\u2192high hero swap, reduced-motion/saveData guards; targets mobile Lighthouse LCP via font/render-blocking chain alongside ~14MB video bandwidth saving",
+      "description": "TSC hero/CTA background video loading — source-stripping so off-breakpoint and below-fold variants never fetch, breakpoint-correct hydration, progressive low→high hero swap, reduced-motion/saveData guards; targets mobile Lighthouse LCP via font/render-blocking chain alongside ~14MB video bandwidth saving",
       "created": "2026-07-13"
     },
     {
@@ -237,7 +237,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC desktop nav mega-menu \u2014 clicking a non-link area of a .master_dropdown panel closes its parent Webflow dropdown; child links still navigate; desktop-only (scoped by .nav-menu-dektop)",
+      "description": "TSC desktop nav mega-menu — clicking a non-link area of a .master_dropdown panel closes its parent Webflow dropdown; child links still navigate; desktop-only (scoped by .nav-menu-dektop)",
       "created": "2026-07-14"
     },
     {
@@ -248,7 +248,7 @@
       "type": "asset-pipeline",
       "source": "plan",
       "critical": false,
-      "description": "TSC responsive image resizing to AVIF \u2014 measured on-site render widths @1440/@479, 2x retina targets, 100px-gap bucketing into 730/960/1180/1500/2850, magick+avifenc encode; shell Tier-1 verify (width==bucket, format, size, originals-untouched). Output to Downloads/optimised/<bucket>/, not deployed.",
+      "description": "TSC responsive image resizing to AVIF — measured on-site render widths @1440/@479, 2x retina targets, 100px-gap bucketing into 730/960/1180/1500/2850, magick+avifenc encode; shell Tier-1 verify (width==bucket, format, size, originals-untouched). Output to Downloads/optimised/<bucket>/, not deployed.",
       "created": "2026-07-14"
     },
     {
@@ -258,7 +258,7 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC launch metadata + schema \u2014 writes missing SEO title/meta for the 11 RailOS Apps CMS items, adds Full JSON-LD schema site-wide (Organization/WebSite/BreadcrumbList/Product/Service/FAQPage/NewsArticle/Person/SoftwareApplication/CreativeWork/VideoObject), and re-audits all existing meta for accuracy; verifies distinct app titles and parseable typed JSON-LD on sampled pages",
+      "description": "TSC launch metadata + schema — writes missing SEO title/meta for the 11 RailOS Apps CMS items, adds Full JSON-LD schema site-wide (Organization/WebSite/BreadcrumbList/Product/Service/FAQPage/NewsArticle/Person/SoftwareApplication/CreativeWork/VideoObject), and re-audits all existing meta for accuracy; verifies distinct app titles and parseable typed JSON-LD on sampled pages",
       "created": "2026-07-15"
     },
     {
@@ -290,7 +290,7 @@
       "type": "test-page",
       "source": "test-page",
       "critical": false,
-      "description": "MTD for Sole Traders landing page \u2014 Full-mode /test-page baseline (a11y 100, SEO 100, best-practices 73, LCP 158ms, CLS 0.11). Regression spec: JS errors, mobile overflow, CLS ceiling 0.15, heading hierarchy, img alt, SEO essentials.",
+      "description": "MTD for Sole Traders landing page — Full-mode /test-page baseline (a11y 100, SEO 100, best-practices 73, LCP 158ms, CLS 0.11). Regression spec: JS errors, mobile overflow, CLS ceiling 0.15, heading hierarchy, img alt, SEO essentials.",
       "created": "2026-07-16"
     },
     {
@@ -332,6 +332,16 @@
       "critical": false,
       "created": "2026-08-20",
       "description": "SEMrush remediation for tamsenfadal.com: title tags under 70 chars while keeping the '| Tamsen Fadal' entity suffix, 10 duplicate meta description pairs made distinct, llms.txt rewritten to llmstxt.org Markdown, retired Apple Podcasts id1560877893 links repointed, and the hot-girl-menopause-smoothie redirect chain removed."
+    },
+    {
+      "slug": "carsa-seo-autofixes-2026-09",
+      "url": "https://www.carsa.co.uk/car-care/extended-mechanical-warranty",
+      "spec": "tests/acceptance/carsa-seo-autofixes-2026-09.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-03",
+      "description": "Carsa September SEO auto-fixes - deletes two duplicate vehicle CMS items, 301s the duplicate adaptive-cruise-control post to the ranking -guide version, adds Product + BreadcrumbList schema to the extended warranty page, unpublishes the Shrewsbury store page; regression-guards the 2 Sep sell-page canonical fix."
     }
   ]
 }

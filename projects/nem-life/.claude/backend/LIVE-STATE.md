@@ -1,6 +1,6 @@
 # NEM Life — live n8n state
 
-**Generated 2026-09-02T07:15:14.402Z** by `npm run check:nem-drift`.
+**Generated 2026-09-02T14:43:26.658Z** by `npm run check:nem-drift`.
 
 **Do not hand-edit this file.** It is written from the live n8n API and is the one
 place in this repo allowed to assert what the workflows currently do. Prose docs that
@@ -12,7 +12,7 @@ need a live fact should link here rather than restating it — restating is how 
 - n8n id: `uKkMgMYoH5nOLoCR`
 - active: yes
 - nodes: 21
-- last changed in n8n: 2026-09-02T07:01:00.240Z
+- last changed in n8n: 2026-09-02T14:43:02.996Z
 - committed snapshot: matches live
 
 | Invariant | State |
@@ -24,7 +24,8 @@ need a live fact should link here rather than restating it — restating is how 
 | Valid? keeps Respond Confirmed on the fast path, ahead of the report chain | holds |
 | Report Prompt demands JSON — without it every report fails validation | holds |
 | Generate Report goes through Parse Report, not straight to Build HTML | holds |
-| Build HTML renders the intro line above the report body, escaped | holds |
+| Build HTML fills the published Webflow template, fetched from TEMPLATE_URL | holds |
+| Build HTML fills the intro-line slot escaped, and removes the block when empty | holds |
 | Build HTML does not greet — the prompt places the first name inside opening | holds |
 | Generate Report sends the intro line | holds |
 | Generate Report sends the conclusion text | holds |
@@ -39,7 +40,7 @@ need a live fact should link here rather than restating it — restating is how 
 - n8n id: `LDI1eWR35lwX6WLp`
 - active: yes
 - nodes: 13
-- last changed in n8n: 2026-09-02T07:15:07.384Z
+- last changed in n8n: 2026-09-02T14:36:26.763Z
 - committed snapshot: matches live
 
 | Invariant | State |
@@ -47,6 +48,7 @@ need a live fact should link here rather than restating it — restating is how 
 | Store Profile targets a real data table, not a REPLACE_ placeholder | holds |
 | Honeypot gate is present | holds |
 | Per-IP rate limit is present | holds |
+| Rate limit ignores completion pings — they are logging, not submissions | holds |
 | Verification mail goes out via MailerLite | holds |
 | Normalize keeps the v2 outcome, conclusionKey and conclusionId | holds |
 | Store Profile persists the v2 conclusion fields and the event type | holds |

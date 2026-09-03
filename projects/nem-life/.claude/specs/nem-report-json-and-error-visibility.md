@@ -3,7 +3,7 @@
 **Client:** NEM Life
 **Slug:** `nem-report-json-and-error-visibility`
 **Created:** 2026-08-17
-**Status:** §7 **APPLIED to live 2026-09-02** (changeset `backend/changesets/nem-prompt-input-contract/`; both workflows IN SYNC, all invariants green). §1–3 built and verified live 2026-08-18 (execs 49 happy / 50 failure); §4–5 built 2026-08-18/19; §6 still Ready to Build, blocked on Alex's design. Remaining: the manual gate/gender execution checks (changeset README step 10), the Webflow paste of `dist/`, and installing Alex's prompt once he marks the page final.
+**Status:** §7 **APPLIED to live 2026-09-02** (changeset `backend/changesets/nem-prompt-input-contract/`; both workflows IN SYNC, all invariants green). §1–3 built and verified live 2026-08-18 (execs 49 happy / 50 failure); §4–5 built 2026-08-18/19; §6 still Ready to Build, blocked on Alex's design. Remaining: the manual gate/gender execution checks (changeset README step 10), the Webflow paste of `dist/`, and installing Alex's final prompt once he marks the page final (a **provisional** prompt built from his 2026-08-31 capture was installed 2026-09-02 — changeset `backend/changesets/nem-provisional-runtime-prompt/` — so real reports render end to end meanwhile).
 **Priority:** P0
 **Type:** feature
 **Workflow:** `NEM Test — /verify` (n8n id `uKkMgMYoH5nOLoCR`, active) and `/submit` (`LDI1eWR35lwX6WLp`)

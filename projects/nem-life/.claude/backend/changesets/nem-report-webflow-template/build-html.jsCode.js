@@ -74,11 +74,14 @@ html = html
 const printCss = '<link rel="stylesheet" href="' + FONTS_CSS + '">'
   + '<style>'
   + '@page{size:A4;margin:12mm 0 14mm}'
+  + '@page:first{margin-top:0}'
   + '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
   + '.report_block.is-final,.report_block.is-disclaimer,.block-conclusion{break-inside:avoid}'
   + 'h2,h2 + div{break-after:avoid}'
   + 'p{orphans:3;widows:3}'
   + 'div[data-slot] > p + p{margin-top:1rem}'
+  + 'html,body{overflow-x:clip}'
+  + '.report_header .report_bg-olive{top:-2px;bottom:0;left:-50vw;right:-50vw}'
   + '</style>';
 if (!html.includes('</head>')) throw missing('a <head>');
 html = html.replace('</head>', () => printCss + '</head>');

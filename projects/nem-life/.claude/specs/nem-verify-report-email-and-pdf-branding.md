@@ -1,7 +1,7 @@
 # NEM Test report delivery: brand the covering email and the PDF report
 
 **Slug:** `nem-verify-report-email-and-pdf-branding`
-**Status:** PDF half PREPARED 2026-09-02 as changeset `../backend/changesets/nem-report-webflow-template/` (Build HTML fetches and fills the Webflow page `/report-pdf-template`; not yet applied to live). Email half still Ready to Build.
+**Status:** PDF half **APPLIED to live 2026-09-02** as changeset `../backend/changesets/nem-report-webflow-template/` (Build HTML fetches and fills the Webflow page `/report-pdf-template`; `verify.sh` exit 0, both workflows IN SYNC). Still owed: one live `/verify` with the PDF inspected by eye. Email half still Ready to Build.
 **Priority:** P2
 **Type:** feature
 **Created:** 2026-08-11

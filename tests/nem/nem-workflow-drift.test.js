@@ -508,7 +508,8 @@ describe("checkInvariants — the §7 prompt input contract", () => {
       dataTableId: { value: "ib5Yh0yEfNpDqeuU" },
       columns: { value: { outcome: "", conclusionKey: "", conclusionId: "", event: "", introLine: "", conclusionText: "={{ $json.conclusionText }}" } },
     }),
-    node("Honeypot filled?"), node("Rate limit"),
+    node("Honeypot filled?"),
+    node("Rate limit", { jsCode: "if (input.event === 'completion') return [{ json: { ...input, rateLimited: false } }];" }),
     node("MailerLite: Send Verification", { url: "https://connect.mailerlite.com/api/subscribers" }),
     node("Log Completion", { dataTableId: { value: "other" }, columns: { value: { token: "" } } }),
   ], {
@@ -517,6 +518,13 @@ describe("checkInvariants — the §7 prompt input contract", () => {
 
   test("passes on the contract-shaped submit workflow", () => {
     assert.deepEqual(checkInvariants("submit", submitContract).filter((c) => !c.ok).map((c) => c.label), []);
+  });
+
+  test("catches Rate limit counting completion pings", () => {
+    const broken = structuredClone(submitContract);
+    broken.nodes.find((x) => x.name === "Rate limit").parameters.jsCode = "const recent = [];";
+    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    assert.ok(failed.some((l) => /completion/i.test(l)), failed.join("; "));
   });
 
   test("catches Normalize dropping conclusionText", () => {

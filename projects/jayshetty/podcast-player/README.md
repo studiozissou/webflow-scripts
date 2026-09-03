@@ -144,10 +144,15 @@ watchdog falls back to audio when a loaded video page never reports in within
 `contentWindow`** — a healthy `/video` page posts `ready` immediately, so
 Safari's blocked autoplay (no `playback_update` until the user taps) cannot
 trigger a false fallback. The listener is armed *before* `frame.src` is
-reassigned, not on the iframe's `load` event: measured in Chrome, `ready`
-arrives only ~34 ms after `load`, and a listener attached on `load` could miss
-it in a slower engine — with no autoplay to send follow-up messages, that would
-have been a guaranteed false fallback in Safari. To keep a stale message from
+reassigned (measured in Chrome, `ready` arrives only ~34 ms after `load`, and a
+listener attached on `load` could miss it in a slower engine — with no autoplay
+to send follow-up messages, that would have been a guaranteed false fallback in
+Safari), but the 6 s countdown starts only at the iframe's `load` event: v1.2.0
+started it at the swap, so on slow connections the countdown expired while the
+`/video` page was still downloading and healthy players were torn down to audio
+(client-reported, reproduced with Slow 3G throttling; fixed in v1.2.1). A dead
+`/video` card still loads and then fails to handshake, so the fallback path
+survives the later start. To keep a stale message from
 the outgoing audio document from satisfying the latch, the controller `ready`
 handler does not send `play()` when it has just issued the swap (the iframe's
 `load` handler plays instead). This also closes an older looseness where
@@ -165,6 +170,17 @@ before the audio page (~450 ms) can load — so both are judged unlikely.
 
 ## Changes log
 
+### v1.2.1 — watchdog countdown starts at iframe load (2 Sep 2026)
+
+- v1.2.0 started the 6 s watchdog countdown when the `/video` swap was issued,
+  so slow connections triggered a false audio fallback before the page could
+  load (client report: inconsistent audio/video across their team; reproduced
+  on the live page with Slow 3G — no `load` within 14 s, `__videoFellBack`
+  true at 6 s). The countdown now starts on the swapped iframe's `load` event;
+  the message listener stays armed from the swap so early handshakes are never
+  missed. Dead-card fallback verified intact (bogus episode: load at 0.2 s,
+  fallback 6.3 s after load).
+
 ### v1.2.0 — Safari joins the video path (1 Sep 2026)
 
 - Removed the `GestureEvent` engine gate from `podcast-player.js` and
@@ -174,9 +190,8 @@ before the audio page (~450 ms) can load — so both are judged unlikely.
 - Footer pin bumped to `@jayshetty-podcast-player-v1.2.0`.
 - Spec: `projects/jayshetty/.claude/specs/podcast-safari-video-path.md`.
   Evidence: `projects/jayshetty/.claude/research/safari-spotify-video-2026-08-31.md`.
-- Deployed 1 Sep 2026 to the webflow.io subdomain only (`/podcast` footer pin
-  swap + hosted-script registration 1.2.0); the live domain stays on v1.1.0
-  until custom domains are published.
+- v1.2.0 deployed 1 Sep 2026 (staging then live); superseded by v1.2.1 the
+  next day after the slow-network false-fallback report.
 
 ### v1.1.0 (Aug 2026)
 

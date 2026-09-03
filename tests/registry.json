@@ -372,6 +372,16 @@
       "critical": false,
       "created": "2026-09-01",
       "description": "Newsletter signup (footer/popup/banner) redirects to the beehiiv welcome survey with ?email= appended; tour, search, filter and contact forms excluded."
+    },
+    {
+      "slug": "tamsen-broken-external-links-sep-2026",
+      "url": "https://www.tamsenfadal.com/",
+      "spec": "tests/acceptance/tamsen-broken-external-links-sep-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-02",
+      "description": "SEMrush issue 12 follow-up for tamsenfadal.com: advocacy bill links repointed to current legislature URLs, dead press and provider links cleared or archived, six blog/podcast links repointed, two healthnews.com anchors unlinked, and bot-blocked false positives left untouched."
     }
   ]
 }

@@ -79,18 +79,61 @@ recoverable — without touching the reference. `/stores/shrewsbury` already 301
 **Worth raising with Carsa:** a car is still assigned to a branch the spec describes as
 closed.
 
-### 4. Blog redirect — not done
+### 4. Blog redirect — added by Will, live
 
 `/blog/what-is-adaptive-cruise-control` → `/blog/what-is-adaptive-cruise-control-guide`
-was not created. The Webflow MCP exposes no redirects action, and no Webflow API token is
-available in this checkout, so the Redirects REST endpoint could not be reached either.
+was added by hand in Site Settings, because the Webflow MCP exposes no redirects action
+and no API token is available in this checkout. Verified live: the bare slug returns 301
+to the `-guide` URL, and the guide returns 200.
 
-Needs either a token or a manual entry under Site Settings → Publishing → 301 redirects.
+**Undo:** delete the redirect rule in Site Settings → Publishing → 301 redirects.
 
-**Undo:** delete the redirect rule.
+### 5. AggregateOffer added to the warranty Product
 
-## Not yet published
+The first Rich Results Test run failed with one critical issue on the Product:
+`Either "offers", "review", or "aggregateRating" should be specified`. That is the direct
+consequence of D4 leaving `Offer` out.
 
-The schema write and the sitemap flag are staged and need a site publish. The vehicle
-unpublishes are already live. The publish was deliberately held: the spec calls for one
-publish covering all four changes, and two of the four still need Will.
+Resolved with Will's approval by adding an `AggregateOffer` carrying `lowPrice: 699`,
+`priceCurrency: GBP`. This answers D4's actual objection — a `lowPrice` asserts a floor,
+not a fixed price, which is exactly what "from £699" means — and `£699` already appears
+ten times in the live page copy, so the structured data matches visible content.
+
+**Undo:** remove the `offers` node and re-write the schema.
+
+### 6. Redirected blog slug excluded from the sitemap
+
+Found during verification: after the 301 went live, the bare slug was still listed in
+`sitemap.xml`, which Search Console reports as "Page with redirect". Fixed with
+`update_item_sitemap_status` on blog item `69b7a43359b74cf7c7335946`,
+`includeInSitemap: false`.
+
+**Undo:** set `includeInSitemap: true`.
+
+## Published
+
+Site published to `www.carsa.co.uk` and `carsa.co.uk` on 2026-09-03. Everything above is
+live and verified.
+
+## Verification results
+
+| Check | Result |
+|-------|--------|
+| `j16bnt-fa27e`, `f14yeg-03cc0` | 404 |
+| `j16bnt`, `f14yeg` | 200 |
+| Bare adaptive-cruise slug | 301 → `-guide` |
+| `-guide` blog post | 200 |
+| Warranty Product + BreadcrumbList in raw HTML | Present, both parse |
+| Warranty canonical and Finsweet script | Intact after two schema writes |
+| Sell-page canonicals | Both still self-canonicalise |
+| Sitemap: shrewsbury, both suffixed vehicles, bare blog slug | All absent |
+| Sitemap: `-guide` blog post | Present |
+| Google Rich Results Test | 3 valid items — Product, Breadcrumbs, Organization. No critical issues. |
+
+The Rich Results Test reports 4 non-critical issues on the Product, of which the named two
+are `Missing field "review" (optional)` and `Missing field "aggregateRating" (optional)`.
+Both are optional-field recommendations, not errors. `provider` was parsed and expanded
+into the full Organization node rather than flagged, so the earlier concern about it not
+being a recognised `Product` property did not materialise.
+
+Screenshots: `rich-results-before-fix.png` (the failing run) and `rich-results-pass.png`.

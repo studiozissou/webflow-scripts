@@ -1,20 +1,19 @@
-Hi Tomek — ran the September SEO auto-fixes on Carsa this morning. Two of the four are live, two need a hand.
+Hi Tomek — the September SEO auto-fixes are done and live on Carsa. All four shipped, plus two extras that turned up during checks.
 
-*Live now*
-•  Both stale duplicate vehicle records are off the site. `j16bnt-fa27e` and `f14yeg-03cc0` return 404, and the real `j16bnt` and `f14yeg` still return 200. I unpublished rather than deleted them, so they're recoverable — happy to make it permanent once you're comfortable.
+*What's live*
+•  Both stale duplicate vehicle records are off the site. `j16bnt-fa27e` and `f14yeg-03cc0` return 404, the real `j16bnt` and `f14yeg` still return 200. I unpublished rather than deleted, so they're recoverable.
+•  `/blog/what-is-adaptive-cruise-control` now 301s to the `-guide` version, which is the one that actually ranks.
+•  The extended mechanical warranty page has Product + BreadcrumbList structured data. It had none at all before.
+•  Shrewsbury is out of the sitemap.
 
-*Staged, waiting on one publish*
-•  The extended mechanical warranty page now has Product + BreadcrumbList structured data. It had none at all before.
-•  Shrewsbury is flagged out of the sitemap.
+*Two extras*
+•  Google's Rich Results Test failed the Product at first — it needs a price, a review or a rating. We added an `AggregateOffer` at £699, which is the "from" price already shown ten times on the page. Now passing with 3 valid items and no errors.
+•  After the 301 went live, the old blog URL was still sitting in the sitemap, which Search Console counts as a redirect error. Flagged out and republished.
 
-*Needs you*
-•  The `/blog/what-is-adaptive-cruise-control` → `-guide` 301 still needs adding by hand, under Site Settings → Publishing → 301 redirects. The Webflow API doesn't expose redirects, so I can't do it from here.
-•  One publish to push the schema and the sitemap change live. I held it deliberately so all the changes go out together rather than in two batches.
+*One for Carsa*
+•  Shrewsbury wouldn't unpublish — Webflow blocked it because a live car, `MJ72RKK`, is still assigned to that branch. Worth asking whether that's intentional, given the branch is meant to be closed. I used the sitemap flag instead, which gets the same result without breaking the link.
 
-*Two things worth knowing*
-•  Shrewsbury wouldn't unpublish — Webflow blocked it because a live car, `MJ72RKK`, is still assigned to that branch. Worth checking with Carsa, since the branch is meant to be closed. I used the sitemap flag instead, which gets the same result without breaking the link.
-•  The breadcrumb in the schema points at `/car-care/overview` rather than `/car-care`, because `/car-care` 301s. Small thing, but it keeps a redirect out of the structured data.
+*Small thing*
+•  The schema breadcrumb points at `/car-care/overview` rather than `/car-care`, since `/car-care` 301s. Keeps a redirect out of the structured data.
 
-Full before-state and undo steps for every change are committed on `worktree-carsa-seo-report-2026-09`. Nothing here is one-way.
-
-Give me a shout when you want the publish run.
+Everything is verified against the live site and every change has a documented undo. Nothing here is one-way.

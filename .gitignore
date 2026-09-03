@@ -34,3 +34,22 @@ projects/nem-life/.claude/research/phase-b-page-full.png
 
 # Triage reports contain email subjects and senders — keep them local
 .claude/triage/reports/
+
+# Accounting, tax and banking — THIS REPO IS PUBLIC.
+# Financial admin lives in ~/Documents/Studio Zissou/, never in git.
+# Filename patterns are a backstop, not the control — see the rule in CLAUDE.md.
+projects/studio-zissou/.claude/comms/
+**/.claude/accounting/
+**/.claude/finance/
+*belasting*
+*aanslag*
+*bezwaar*
+*naheffing*
+*suppletie*
+*jaarrekening*
+*loonheffing*
+*bankafschrift*
+*bank-statement*
+*payslip*
+*salaris*
+*moneybird*

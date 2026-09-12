@@ -64,6 +64,16 @@ Five pages, no blog, no news section, nothing that needs feeding.
 - **Say it at the table.** "Als het lekker was, een Google-review helpt ons echt." Still the most effective thing anyone does.
 - Never show the review link only to happy guests — that's also banned.
 
+**The first 30 reviews: ask in person, in week one.** During opening week, someone from the family asks the first thirty or so tables — at the bill, face to face — for a Google review, ideally that evening. Not the card, not the email: a person asking. Why this matters more than anything else in this document:
+
+- A face-to-face ask from the owner converts several times better than a QR code or an email. Guests who've just eaten well and been asked directly mostly say yes.
+- Google weights how *recently* and how *fast* reviews arrive, not just how many. A profile that goes from 0 to 25 reviews in ten days reads as a place people are talking about; 25 reviews spread over six months doesn't. Review recency is among the top five ranking factors in the Whitespark survey.
+- A new profile has no history. Until the first reviews land, Google has nothing to rank you on except category and distance. The first batch is what gets you into the map results at all; everything after defends the spot.
+- Every later guest sees them. Someone in week three choosing between you and a place with 400 reviews sees "4.8 ★ (31)" instead of "no reviews yet" — on Maps, on TheFork, and in the AI answers that draw on your profile.
+- Opening week is when the ask is easiest. Guests know you're new, the family is on the floor every night, and "we've just opened, a review would really help" is a story people want to join. That goodwill fades once you're established.
+
+Ask every table, not just the happy ones. Don't attach anything to it. And don't overshoot: thirty in a week is normal for a restaurant your size; two hundred would look like spam to Google. Steady from week two.
+
 ## 5. Bookings and automation
 **Recommendation: Formitable** (the Dutch arm of Zenchef — same company, Dutch support). Roughly €69–119 a month; they often run half-price for the first six months, so get a quote.
 
@@ -90,7 +100,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 
 **Two weeks before:** Apple Business Connect · Bing Places · Eet.nu · TheFork · Tripadvisor · OpenStreetMap · Waze · Foursquare · VisitHaarlem.com listing · website live.
 
-**Opening week:** invite Haarlem's local Instagram accounts to a soft-opening meal — free meal, no strings: @haarlemcityblog (42K, reviews every new opening), @indebuurthaarlem (11K), @waarhaarlemeet (7.2K), @haarlemfood (3.2K); list on VisitHaarlem and tag @visithaarlem (24K); pitch Proef het Verre Oosten, whose Indonesian-hotspots list already includes one Haarlem toko · tip Haarlems Dagblad and Indebuurt Haarlem about the opening · ask the first 30 guests in person for a review. Early velocity matters more than anything.
+**Opening week:** invite Haarlem's local Instagram accounts to a soft-opening meal — free meal, no strings: @haarlemcityblog (42K, reviews every new opening), @indebuurthaarlem (11K), @waarhaarlemeet (7.2K), @haarlemfood (3.2K); list on VisitHaarlem and tag @visithaarlem (24K); pitch Proef het Verre Oosten, whose Indonesian-hotspots list already includes one Haarlem toko · tip Haarlems Dagblad and Indebuurt Haarlem about the opening · ask the first 30 guests in person for a review (see section 4 for why).
 
 **Every month, about an hour:** reply to reviews · four new photos · one Google post · update sold-out dishes · swap one quote on the homepage.
 

@@ -264,12 +264,13 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
 ---
 
 ## 9. Technical notes
-- **Platform:** Webflow Premium site plan ($25/mo billed annually — includes CMS). Client First naming. No Barba, no GSAP, no jQuery. One Google font max. Images AVIF via `/optimise-images`. Target: mobile LCP < 2s, Lighthouse ≥ 95 all four.
+- **Platform:** Webflow Premium site plan ($25/mo billed annually — includes CMS). Client First naming. No Barba, no GSAP, no jQuery. Two type families max: Cormorant Garamond for headings (matches the wordmark's serif), one sans for body and menu. Images AVIF via `/optimise-images`. Target: mobile LCP < 2s, Lighthouse ≥ 95 all four.
 - **CMS for handover** (the family touches only these):
   - `Gerechten`: naam, sectie (ref), beschrijving NL, beschrijving EN (optional), prijs, vegetarisch, pittig, uitverkocht (toggle → shows "op" badge), volgorde
   - `Secties`: naam, intro, volgorde
   - `Instellingen` (single item): adres, telefoon, WhatsApp, openingstijden ma–zo (open/dicht per day), Formitable ID, Google review URL, Instagram URL. Bound to footer, hours blocks **and** the JSON-LD embed — one edit updates the visible text and the schema together.
 - **Schema (JSON-LD embed, CMS-bound):** `Restaurant` with `servesCuisine: Indonesian`, `address`, `geo`, `telephone`, `openingHoursSpecification` (from Instellingen), `acceptsReservations`, `hasMenu` as an inline `Menu` → `MenuSection` → `MenuItem` object built from the Gerechten collection list (`offers.price` per item), `sameAs` [GBP, IG, FB, Eet.nu, TheFork, Tripadvisor], `priceRange`. `/afhalen`: `FAQPage`. Generate with the `schema` agent; validate with `/test-schema`.
+- **Brand:** logo supplied (`assets/oost_horizontal.png`): Barong mask + "RESTAURANT" small caps + "oost" in a light high-contrast serif, white on near-black. Pages stay light for menu legibility; header and footer bands in ink carry the white lockup. Mask alone = favicon, app icon and the `logo` in the Restaurant schema. Ask for SVGs and a stacked lockup. The mask is Balinese — only mention that on the About page if the family has a Bali connection; don't invent one.
 - **Booking widget:** Formitable button script in site `<head>`, one `[data-formitable]` button in nav + hero, present in both locales. No custom JS.
 - **Forms:** Webflow native; catering form → family email + Formitable if it supports enquiries. Spam: Webflow reCAPTCHA off (hurts conversion); honeypot field instead.
 - **Custom JS:** none, unless the FAQ accordion can't be done with `<details>` — it can.

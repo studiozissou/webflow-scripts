@@ -2,7 +2,8 @@
 **Source:** `oost-digital-launch.md` (spec) and `reports/2026-09-12-exec-summary.md`. Every recommendation in those two documents appears here once. Tick as done; nothing ships with an open box in sections 1–8.
 
 ## 1. Decisions from the client
-- [ ] Name is `Restaurant Oost` on the sign, receipts, KvK trade name and GBP — decided
+- [ ] Name is `Restaurant Oost` on the sign, receipts, KvK trade name and GBP — decided (matches the logo lockup)
+  - [ ] "Indonesisch" appears as text somewhere on the shopfront (window, A-board, or a line under the logo on the gevelbord) — the mask says it visually, Google can't read that
   - [ ] BOIP trademark register searched (boip.int/nl/merkenregister) — no blocking mark
 - [ ] Address confirmed
   - [ ] Is it in Haarlem-Oost? If yes, "Haarlem-Oost" becomes an on-page term (home, afhalen, GBP description)
@@ -39,8 +40,15 @@
   - [ ] Reserveren opens the Formitable overlay on every page — not a page
 - [ ] Footer: NAP, WhatsApp link, hours (CMS-bound), Google Maps route link, Instagram, KvK number
 - [ ] Client First class naming; no jQuery, no GSAP, no Barba, no custom JS beyond embeds
-- [ ] One Google font max, with fallback stack
+- [ ] Brand assets from the client (`assets/oost_horizontal.png` is the reference)
+  - [ ] Logo as SVG: horizontal lockup, stacked lockup, mask alone, wordmark alone; white and ink versions
+  - [ ] Favicon and app icon = the Barong mask alone (reads at 32px; the wordmark doesn't)
+  - [ ] OG / share image: mask + wordmark on ink, 1200×630
+  - [ ] Logo referenced in the `Restaurant` schema `logo` field
+- [ ] Type: the wordmark's light high-contrast serif matched with Cormorant Garamond (Google Fonts) for headings only; one clean sans for body and the menu (prices must be legible at 15px on a phone). Two families max, both with fallback stacks
+- [ ] "RESTAURANT" small-caps descriptor style from the logo reused for eyebrows and section labels
 - [ ] Palette: rice paper `#F3EDE0` / ink `#1E1B18` / indigo `#2E3A67` / pandan `#4F7A3A` (see mymind note "Oost colour palette")
+  - [ ] Pages light (rice paper ground) for menu legibility; header and footer bands in ink so the white logo lockup sits as designed
   - [ ] Indigo for links and buttons only; pandan for badges and small highlights only
 - [ ] Images AVIF via `/optimise-images`; alt text names the dish or the person
 - [ ] Mobile LCP < 2s; Lighthouse ≥ 95 on all four categories for `/`

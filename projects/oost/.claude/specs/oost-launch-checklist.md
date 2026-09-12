@@ -17,10 +17,9 @@
 
 ## 2. Name, domain, NAP
 - [ ] One canonical NAP string written down (name, street + number, postcode, city, phone) — used verbatim everywhere below
-- [ ] Domain registered
-  - [ ] Enquiry sent for parked `restaurantoost.nl`; buy if the price is sane
-  - [ ] Otherwise primary `eetbijoost.nl` — confirmed free via sidn.nl before purchase
-  - [ ] `oosthaarlem.nl` defensive redirect
+- [ ] Domain: `oosteeten.nl` (client owns it) — DNS pointed at Webflow, SSL on
+  - [ ] `oosteten.nl` (single e) registered as a typo redirect
+  - [ ] `oosthaarlem.nl` defensive redirect, if still free
   - [ ] `.com` of the primary
   - [ ] All redirects → primary with 301
 - [ ] Business email on the domain (for GBP, Formitable, form notifications)

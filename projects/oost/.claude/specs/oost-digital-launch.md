@@ -47,7 +47,7 @@ SERP check confirms a bare "Oost" brand won't rank for its own name for a long t
 - **Body copy** says "Oost" — that's what guests will call it.
 - **HTML title tags** (keywords allowed here): homepage `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`; other pages end `| Restaurant Oost`. Never a bare "Oost".
 - **GBP:** primary category `Indonesisch restaurant`; description opens "Indonesisch familierestaurant in Haarlem"; every photo captioned with a dish name. Reviews that say "Indonesisch", "rijsttafel", "rendang" are what will separate Restaurant Oost from the district in Google's eyes — which is why the review velocity plan in §4 matters more here than it would for a distinctively named place.
-- **Domain:** `restaurantoost.nl` is taken and parked for resale (Dovendi) — it's the exact brand match, so make one enquiry and buy it if the price is sane. Otherwise **`eetbijoost.nl`** primary (brandable, showed no DNS record — confirm via sidn.nl) with `oosthaarlem.nl` as a defensive redirect. Take the `.com` of whichever wins.
+- **Domain:** `oosteeten.nl` — already owned by the client. Spoken aloud it's "oost eten", so register **`oosteten.nl`** (single e) as a typo redirect, and `oosthaarlem.nl` as a defensive redirect if still free. Primary domain in every listing: `oosteeten.nl`.
 - **Story upside:** "de Oost" is what an older generation of Indo-Dutch families called the Dutch East Indies (vs "de West"). Genuine About-page material and a clean AI-quotable fact (§3); zero search volume as a term.
 - **If the address is physically in Haarlem-Oost**, the district collision flips into an asset: "Indonesisch restaurant in Haarlem-Oost" becomes an exact-match local term. Confirm the address.
 
@@ -343,7 +343,7 @@ N/A — no CDN-hosted JS in this project.
 
 ## Open questions
 1. Is the physical address in Haarlem-Oost? Changes §1 from liability to asset.
-2. Domain: try to buy `restaurantoost.nl`, or go with `eetbijoost.nl`? Do the BOIP trademark search on "Oost" first.
+2. Domain is `oosteeten.nl` — OK to also register `oosteten.nl` as a typo redirect? Do the BOIP trademark search on "Oost" first.
 3. Sunday hours?
 4. Is ~€70–120/mo for Formitable acceptable? If not, fallback (§7) and the automation flow loses its email leg.
 5. Who in the family owns Instagram? Everything else is passive; this one isn't.

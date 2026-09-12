@@ -12,7 +12,7 @@ Oost can be the easiest Indonesian restaurant in Haarlem to find, book and revie
 
 **The name is Restaurant Oost** — on the sign, the receipts, the Google listing and every directory, spelt identically everywhere. Guests will just say Oost. Because the name itself doesn't say "Indonesisch", the rest of this plan has to: it goes in every page title, at the top of the Google description, in the photo captions, and above all in the reviews, which is why the review plan in section 4 matters more for Oost than it would for a restaurant with a more distinctive name.
 
-Domains: `restaurantoost.nl` is already registered and parked for resale — it's the exact match, so worth one enquiry. If the price is silly, `eetbijoost.nl` is a good, memorable alternative, with `oosthaarlem.nl` as a redirect so nobody else takes it. A quick trademark check at boip.int is sensible before printing anything.
+Domain: you already have `oosteeten.nl`, good. Two small extras worth a few euros a year: `oosteten.nl` with a single e, because that's how people will type it after hearing it, and `oosthaarlem.nl` so nobody else takes it. Both just redirect. A quick trademark check on "Oost" at boip.int is sensible before printing anything.
 
 The story behind the name — "de Oost", what an older generation called the Indies — is genuinely good. It belongs on the About page, not in search.
 
@@ -104,7 +104,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 **Every month, about an hour:** reply to reviews · four new photos · one Google post · update sold-out dishes · swap one quote on the homepage.
 
 ## What we need from you
-1. Domain: shall we enquire about buying restaurantoost.nl, or go with eetbijoost.nl?
+1. OK to register `oosteten.nl` (single e) and `oosthaarlem.nl` as redirects to oosteeten.nl?
 2. Address — is it in Haarlem-Oost?
 3. Sunday hours?
 4. Is roughly €70–120 a month for Formitable acceptable?
@@ -115,7 +115,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 - Website hosting — Webflow Premium: $25/month, billed annually (≈ €23; Webflow bills in USD)
 - English version of the whole site — Webflow Localization Essential, one locale: $9/month, billed annually (≈ €8). Includes machine translation and localised SEO; we edit every translation by hand.
 - Formitable: ~€69–119/month (or Eet.nu at €0.25/booking)
-- Domain(s): ~€10–30/year
+- Extra domains for redirects: ~€10–20/year
 - Thank-you cards and QR stand: one-off print cost
 - Everything else in this plan is free.
 

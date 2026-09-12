@@ -32,9 +32,10 @@
   - [ ] Only the homepage published in `en`; all other pages excluded from the locale
   - [ ] Machine translation hand-edited against the `/en` copy in the spec
   - [ ] hreflang `nl` / `en` / `x-default` verified on the homepage
-- [ ] Pages: `/`, `/menukaart`, `/afhalen`, `/catering`, `/over-ons`, `/en/`
+- [ ] Pages: `/`, `/afhalen`, `/catering`, `/over-ons`, `/en/`
+  - [ ] Full menu on the homepage at `#menukaart` — no separate menu page (14 dishes)
   - [ ] No blog, news, gallery, contact or reviews page
-- [ ] Nav: Menukaart · Afhalen · Catering · Over ons · Reserveren (button) · EN
+- [ ] Nav: Menukaart (anchor → `/#menukaart`) · Afhalen · Catering · Over ons · Reserveren (button) · EN
   - [ ] Reserveren opens the Formitable overlay on every page — not a page
 - [ ] Footer: NAP, WhatsApp link, hours (CMS-bound), Google Maps route link, Instagram, KvK number
 - [ ] Client First class naming; no jQuery, no GSAP, no Barba, no custom JS beyond embeds
@@ -42,7 +43,7 @@
 - [ ] Palette: rice paper `#F3EDE0` / ink `#1E1B18` / indigo `#2E3A67` / pandan `#4F7A3A` (see mymind note "Oost colour palette")
   - [ ] Indigo for links and buttons only; pandan for badges and small highlights only
 - [ ] Images AVIF via `/optimise-images`; alt text names the dish or the person
-- [ ] Mobile LCP < 2s; Lighthouse ≥ 95 on all four categories for `/` and `/menukaart`
+- [ ] Mobile LCP < 2s; Lighthouse ≥ 95 on all four categories for `/`
 - [ ] FAQ accordion uses `<details>`, no JS
 - [ ] Forms: Webflow native, honeypot field, reCAPTCHA off, notifications to family email
 
@@ -58,10 +59,9 @@
 - [ ] One-page guide written: mark sold out, change a price, change hours
 
 ## 5. Website — schema (JSON-LD, CMS-bound embeds)
-- [ ] `/`: `Restaurant` with `name`, `servesCuisine: Indonesian`, `address` (exact NAP), `geo`, `telephone`, `priceRange`, `openingHoursSpecification` from Instellingen, `acceptsReservations`, `hasMenu` → `/menukaart`, `sameAs` [GBP, Instagram, Facebook, Eet.nu, TheFork, Tripadvisor]
-- [ ] `/menukaart`: `Menu` → `MenuSection` → `MenuItem` from the Gerechten collection list; `offers.price` per item
+- [ ] `/`: `Restaurant` with `name`, `servesCuisine: Indonesian`, `address` (exact NAP), `geo`, `telephone`, `priceRange`, `openingHoursSpecification` from Instellingen, `acceptsReservations`, `hasMenu` → inline `Menu` → `MenuSection` → `MenuItem` from the Gerechten collection list, `offers.price` per item, `sameAs` [GBP, Instagram, Facebook, Eet.nu, TheFork, Tripadvisor]
 - [ ] `/afhalen`: `FAQPage` from the four FAQ pairs
-- [ ] Generated with `/generate-schema`; validated with `/test-schema` (Rich Results Test, zero errors) on all three pages
+- [ ] Generated with `/generate-schema`; validated with `/test-schema` (Rich Results Test, zero errors) on both pages
 - [ ] Re-validated once after the family makes a live edit during handover
 
 ## 6. Website — copy (per page; spec §3 has the drafts)
@@ -75,24 +75,21 @@ Rules for all pages:
 - [ ] "Haarlem-Oost" added where relevant per decision 1
 
 `/` Home
-- [ ] Title `Toko Oost – Indonesisch restaurant & afhalen in Haarlem`
+- [ ] Title `Toko Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
 - [ ] H1 `Indonesisch eten zoals bij ons thuis, midden in Haarlem`
 - [ ] Intro paragraph (family, how you cook, three ways to eat)
 - [ ] CTA row: Reserveer een tafel (widget) · Afhalen · App ons (wa.me)
-- [ ] "Wat we koken" — four CMS-fed cards: Rijsttafel, Saté, Rendang, Nasi & bami, two lines each, link to menukaart
+- [ ] "Menukaart" section, `id="menukaart"`, full menu CMS-fed
+  - [ ] Intro incl. the five national dishes sentence (gado-gado, soto, saté, nasi goreng, rendang — 2018)
+  - [ ] Allergy line
+  - [ ] Sections in order: Rijsttafel · Vlees & vis · Vegetarisch · Rijst & bami · Zoet (if any)
+  - [ ] Section intros; Haarlem mentioned once across the menu, not in every section
+  - [ ] Every dish: name, two-line description, price, badges vegetarisch / pittig, sold-out badge
+  - [ ] Closing line → afhalen
+  - [ ] Never a PDF or image menu; print stylesheet for the section
 - [ ] "Vanavond eten?" — hours, address, route link, reserveer button, "vrijdag en zaterdag wel verstandig" line
 - [ ] "Wat gasten zeggen" — three Google reviews as text, first name + "via Google", no widget
 - [ ] "De familie" — one paragraph, kitchen photo, link to over-ons
-
-`/menukaart`
-- [ ] Title `Menukaart – rijsttafel, saté, rendang & meer | Toko Oost Haarlem`
-- [ ] Intro incl. the five national dishes sentence (gado-gado, soto, saté, nasi goreng, rendang — 2018)
-- [ ] Allergy line
-- [ ] Sections in order: Rijsttafel · Nasi & bami · Saté · Hoofdgerechten · Soep · Bijgerechten · Zoet
-- [ ] Section intros mention Haarlem once across the page, not in every section
-- [ ] Badges: vegetarisch, pittig
-- [ ] Footer line → afhalen
-- [ ] Never a PDF or image menu; printable version is the page itself
 
 `/afhalen`
 - [ ] Title `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Toko Oost`
@@ -112,11 +109,11 @@ Rules for all pages:
 - [ ] Title `Over ons – de familie achter Toko Oost, Indonesisch restaurant in Haarlem`
 - [ ] "De Oost" origin paragraph; who does what; "geen keten, geen foodhall"; "als de rendang op is, is hij op"
 - [ ] Real family photos only, alt text with names
-- [ ] CTAs: Reserveer een tafel · Bekijk de menukaart
+- [ ] CTAs: Reserveer een tafel · Bekijk de menukaart (→ `/#menukaart`)
 
 `/en/`
 - [ ] Title `Toko Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
-- [ ] Sections: who we are · the menu (link to NL menukaart, note dish names are the same) · book · takeaway · find us
+- [ ] Sections: who we are · the menu (link to `/#menukaart`, note dish names are the same) · book · takeaway · find us
 - [ ] Satay spelt "satay" here, "saté" everywhere else
 
 ## 7. Google Business Profile
@@ -124,11 +121,11 @@ Rules for all pages:
 - [ ] Name = exact sign name (no keywords added)
 - [ ] Primary category `Indonesisch restaurant`; secondary `Afhaalrestaurant`, `Cateringservice`
 - [ ] Address, service area (for catering), phone, website (primary domain), hours incl. Sunday, holiday hours
-- [ ] Reservation link → Formitable; menu link → `/menukaart`; order link → `/afhalen`
+- [ ] Reservation link → Formitable; menu link → `/#menukaart`; order link → `/afhalen`
 - [ ] WhatsApp number linked for chat
 - [ ] Description (750 chars): family, Indonesian, Haarlem, rijsttafel, afhalen, catering, [Haarlem-Oost]
 - [ ] Attributes: vegetarian options, pin/contactless, takeaway, reservations, [wheelchair]
-- [ ] GBP menu populated with every section and dish name (mirrors `/menukaart`)
+- [ ] GBP menu populated with every section and dish name (mirrors the homepage menu)
 - [ ] 20+ photos at launch: exterior, interior, 8 dishes, family, menu board; each dish photo captioned with the dish name
 - [ ] Logo and cover image
 - [ ] "Ask for reviews" short link generated → used for all QR codes
@@ -196,7 +193,7 @@ Rules for all pages:
 - [ ] National Haarlem-hotspot lists pitched for their next update: Foodies Magazine, Uit Paulines Keuken, Girls Who, WijnSpijs, Your Little Black Book
 - [ ] First 30 guests asked in person for a Google review
 - [ ] GBP Post "We zijn open" published
-- [ ] Sitemap submitted to Search Console and Bing Webmaster; six URLs indexed within 14 days
+- [ ] Sitemap submitted to Search Console and Bing Webmaster; five URLs indexed within 14 days
 
 ## 13. Monthly (family, ~1 hour)
 - [ ] Reply to all new reviews

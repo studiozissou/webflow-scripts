@@ -17,18 +17,17 @@ Domains: `restaurantoost.nl` is already taken and parked for resale. `tokooost.n
 The story behind the name — "de Oost", what an older generation called the Indies — is genuinely good. It belongs on the About page, not in search.
 
 ## 2. The website
-Six pages, no blog, no news section, nothing that needs feeding.
+Five pages, no blog, no news section, nothing that needs feeding.
 
 | Page | Job |
 |---|---|
-| Home | Menu highlights, book a table, order takeaway, hours, three guest quotes, who you are |
-| Menukaart | The full menu as real text on the page, not a PDF |
+| Home | The full menu as real text (not a PDF), book a table, order takeaway, hours, three guest quotes, who you are |
 | Afhalen | How takeaway works, rijsttafel for home, pickup times, FAQ |
 | Catering | Rijsttafel for parties and offices, enquiry form |
 | Over ons | The family and the story |
 | English | One page for expats and tourists |
 
-"Reserveren" is a button in the menu bar, not a page — one tap fewer.
+"Reserveren" is a button in the menu bar, not a page — one tap fewer. The menu lives on the homepage rather than its own page: with around fourteen dishes it fits, and the menu is what most visitors came for.
 
 **Why the menu must be text, not a PDF:** we looked at all nine Indonesian restaurants and tokos in Haarlem. None of them have structured data on their site, and most serve their menu as a PDF or image, which search engines and AI assistants can't read. A text menu with the right markup makes Oost the only restaurant in the category that Google, ChatGPT and Apple Maps can actually read dish by dish.
 

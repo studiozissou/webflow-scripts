@@ -55,12 +55,11 @@ SERP check confirms a bare "Oost" brand won't rank for its own name for a long t
 ---
 
 ## 2. Sitemap
-Five Dutch pages + one English page. "Book" is a button, not a page — the Formitable widget opens as an overlay from the nav on every page, which is one tap fewer than a /reserveren page.
+Four Dutch pages + one English page. The full menu lives on the homepage — 14 dishes fit, and the reasoning is below. "Book" is a button, not a page — the Formitable widget opens as an overlay from the nav on every page, which is one tap fewer than a /reserveren page.
 
 | URL | Purpose | Primary keyword (est. vol/mo) | Secondary |
 |---|---|---|---|
-| `/` | Convert: book, takeaway, hours | indonesisch restaurant haarlem (200–350, hard — long game) | indonesisch eten haarlem centrum, rijsttafel haarlem |
-| `/menukaart` | HTML menu; dish-level search; `hasMenu` schema | rijsttafel haarlem (90–150) | rendang/nasi goreng/bami/sate/gado-gado + haarlem (<20 each, unclaimed) |
+| `/` | Convert: full menu, book, takeaway, hours | indonesisch restaurant haarlem (200–350, hard — long game) | rijsttafel haarlem (90–150); rendang/nasi goreng/bami/sate/gado-gado + haarlem (<20 each, unclaimed); indonesisch eten haarlem centrum |
 | `/afhalen` | Takeaway intent; how to order | indonesisch afhalen haarlem (40–70, winnable) | rijsttafel afhalen haarlem, indonesisch afhalen haarlem zondag |
 | `/catering` | Group/party orders (phase 2 OK) | indonesische catering haarlem (<20, one competitor) | rijsttafel bestellen feest haarlem |
 | `/over-ons` | Trust; family story; E-E-A-T | familierestaurant haarlem (near-zero, brand) | — |
@@ -68,9 +67,11 @@ Five Dutch pages + one English page. "Book" is a button, not a page — the Form
 
 Not built: blog, news, gallery page, contact page (contact lives in footer + `/afhalen`), reviews page (reviews live on Google; homepage quotes three by hand).
 
-**Why dish + Haarlem terms get no pages of their own.** Each is <10–20 searches/month (est.); a "rendang Haarlem" page with a paragraph and a price is thin content Google folds into the parent anyway. Those searches resolve in the local pack, not on a URL — what gets Oost into the three Maps results is the GBP menu and reviews that mention the dish. `Menu → MenuSection → MenuItem` schema on `/menukaart` already gives Google a structured entity per dish, which no competitor has. And six dish pages the family never updates is the rot this site is designed to avoid. So: one `/menukaart`, every dish with a real two-line description in the CMS (that's where the dish name, the method and the city land), section intros that mention Haarlem once, dish names and captioned photos in the GBP menu, and a nudge on the thank-you card to name what you ate in the review. **Exception:** rijsttafel ("rijsttafel haarlem" 90–150/mo, "rijsttafel afhalen haarlem" a distinct intent) lives in `/afhalen` at launch and may earn `/rijsttafel` in phase 2 if Search Console shows those queries landing on the wrong page.
+**Why dish + Haarlem terms get no pages of their own.** Each is <10–20 searches/month (est.); a "rendang Haarlem" page with a paragraph and a price is thin content Google folds into the parent anyway. Those searches resolve in the local pack, not on a URL — what gets Oost into the three Maps results is the GBP menu and reviews that mention the dish. `Menu → MenuSection → MenuItem` schema on the homepage already gives Google a structured entity per dish, which no competitor has. And six dish pages the family never updates is the rot this site is designed to avoid. So: one menu section on the homepage (`#menukaart`), every dish with a real two-line description in the CMS (that's where the dish name, the method and the city land), section intros that mention Haarlem once, dish names and captioned photos in the GBP menu, and a nudge on the thank-you card to name what you ate in the review. **Exception:** rijsttafel ("rijsttafel haarlem" 90–150/mo, "rijsttafel afhalen haarlem" a distinct intent) lives in `/afhalen` at launch and may earn `/rijsttafel` in phase 2 if Search Console shows those queries landing on the wrong page.
 
-Nav: Menukaart · Afhalen · Catering · Over ons · **Reserveren** (button) · EN
+**Why no separate menu page either.** With ~14 dishes (6 meat, 6 vegetarian, rice and bami) the menu fits the homepage. The menu is the highest-converting content on a restaurant site, so one tap fewer beats a second URL; a four-page site keeps its thin authority concentrated; and the `Menu` schema inlines cleanly inside the homepage `Restaurant` object. What's lost is a second title tag aimed at menu terms — the homepage title carries "rijsttafel" instead. If Search Console shows menu queries stalling after a few months, `/menukaart` is a 20-minute addition.
+
+Nav: Menukaart (anchor → `/#menukaart`) · Afhalen · Catering · Over ons · **Reserveren** (button) · EN
 Footer: address, phone/WhatsApp, hours, Google Maps link, Instagram, KvK.
 
 ---
@@ -79,37 +80,28 @@ Footer: address, phone/WhatsApp, hours, Google Maps link, Instagram, KvK.
 Voice: warm, direct, first person plural, no marketing adjectives. Every page says "familie" once, naturally. Dutch informal `je`. Dish names in Indonesian, never translated. Placeholders in `[…]`.
 
 ### `/` Home
-- **Title:** `Toko Oost – Indonesisch restaurant & afhalen in Haarlem`
-- **Meta:** `Oost is het Indonesische familierestaurant van Haarlem. Rijsttafel, saté en rendang zoals thuis — reserveer een tafel, haal af of laat ons je feest verzorgen.`
+- **Title:** `Toko Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
+- **Meta:** `Oost is het Indonesische familierestaurant van Haarlem. Rijsttafel, saté, rendang en gado-gado zoals thuis — bekijk de menukaart, reserveer een tafel of haal af.`
 - **H1:** `Indonesisch eten zoals bij ons thuis, midden in Haarlem`
 - **Intro:**
   > Welkom bij Oost. Wij zijn de familie [achternaam] en we koken zoals [oma/mama] het ons leerde: met geduld, veel sambal en recepten die nooit zijn opgeschreven. Kom eten, haal af, of laat ons de rijsttafel voor je feest verzorgen.
 - **CTA row:** `Reserveer een tafel` (widget) · `Afhalen` (→ /afhalen) · `App ons` (wa.me link)
-- **H2:** `Wat we koken` — four CMS-fed cards (Rijsttafel, Saté, Rendang, Nasi & bami), each two lines:
-  > **Rijsttafel** — Geen buffet, maar een tafel vol kleine schalen die we voor jullie klaarzetten. Vanaf twee personen.
-  > **Saté** — Kip of varken, gegrild op houtskool, met onze eigen pindasaus. De saus is het geheim, en die verklappen we niet.
-  > **Rendang** — Uren gestoofd tot het vlees uit elkaar valt. [Oma]'s recept, onveranderd.
-  > **Nasi & bami** — De klassiekers, gewoon goed. Ook om af te halen.
-  Link: `Bekijk de hele menukaart →`
+- **H2:** `Menukaart` — section `id="menukaart"`, the full menu, CMS-fed. Intro:
+  > Alles op deze kaart komt uit de keuken van de familie [achternaam]. De vijf gerechten die Indonesië in 2018 tot nationale gerechten uitriep — gado-gado, soto, saté, nasi goreng en rendang — staan er allemaal op. De rest is wat we thuis ook eten.
+  > Vegetarisch en pittig staat bij elk gerecht aangegeven. Allergie? Zeg het, we denken mee.
+  - **Sections (CMS, in order):** Rijsttafel · Vlees & vis · Vegetarisch · Rijst & bami · Zoet (if any)
+  - **Section intros (one line each, CMS field):**
+    > **Rijsttafel** — Kies voor twee, vier of de hele tafel. Wij kiezen de schalen uit wat hieronder staat, jij bepaalt hoe pittig.
+    > **Vlees & vis** — Rendang die uren heeft gestoofd, saté van de houtskool, [ayam/ikan]. [Oma]'s recepten, onveranderd.
+    > **Vegetarisch** — Gado-gado, sambal goreng boontjes, tempé: geen bijzaak, de helft van de kaart.
+    > **Rijst & bami** — Witte rijst, nasi goreng of bami. De basis onder alles.
+  - Every dish: name, two-line description (dish, method, one concrete detail), price, badges vegetarisch / pittig, sold-out badge from CMS.
+  - Closing line: `Alles ook af te halen → Zo werkt afhalen`
 - **H2:** `Vanavond eten?` — hours (CMS-bound), address, `Route` link to Google Maps, `Reserveer` button.
   > Reserveren is niet verplicht, maar op vrijdag en zaterdag wel verstandig.
 - **H2:** `Wat gasten zeggen` — three Google reviews pasted as text with first name + "via Google". Updated quarterly by the family. No widget.
 - **H2:** `De familie` — one paragraph, photo of the family in the kitchen, link to /over-ons.
   > Oost is een familiebedrijf. [Naam] staat in de keuken, [naam] in de zaal, en [naam] bepaalt of de sambal pittig genoeg is. Lees ons verhaal →
-
-### `/menukaart`
-- **Title:** `Menukaart – rijsttafel, saté, rendang & meer | Toko Oost Haarlem`
-- **Meta:** `De menukaart van Oost in Haarlem: rijsttafel, nasi goreng, bami, saté, rendang, gado-gado en zoete afsluiters als spekkoek en pisang goreng. Alles ook om af te halen.`
-- **H1:** `Menukaart`
-- **Intro:**
-  > Alles op deze kaart komt uit de keuken van de familie [achternaam]. De vijf gerechten die Indonesië in 2018 tot nationale gerechten uitriep — gado-gado, soto, saté, nasi goreng en rendang — staan er allemaal op. De rest is wat we thuis ook eten.
-  > Vegetarisch en pittig staat bij elk gerecht aangegeven. Allergie? Zeg het, we denken mee.
-- **Sections (CMS, in order):** Rijsttafel · Nasi & bami · Saté · Hoofdgerechten · Soep · Bijgerechten · Zoet
-- **Section intros (one line each, CMS field):**
-  > **Rijsttafel** — Kies voor twee, vier of de hele tafel. Wij bepalen de schalen, jij bepaalt hoe pittig.
-  > **Bijgerechten** — Sambal goreng boontjes, atjar, kroepoek, sambal: de dingen waar je stiekem voor komt.
-  > **Zoet** — Spekkoek van [oma]'s recept en pisang goreng. Ook los af te halen.
-- **Footer line:** `Alles op de kaart is ook af te halen → Zo werkt afhalen`
 
 ### `/afhalen`
 - **Title:** `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Toko Oost`
@@ -154,7 +146,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
   >
   > Kom langs. We schuiven graag een stoel bij.
 - **Photos:** real family photos only — kitchen, hands, the schrift. No stock. Alt text names the people and the dish.
-- **CTA:** `Reserveer een tafel` · `Bekijk de menukaart`
+- **CTA:** `Reserveer een tafel` · `Bekijk de menukaart` (→ `/#menukaart`)
 
 ### `/en`
 - **Title:** `Toko Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
@@ -163,7 +155,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
 - **Copy:**
   > We're the [surname] family. We cook the way [grandma/mum] taught us — slowly, with a lot of sambal, from recipes nobody ever wrote down. Come for dinner, take it home, or let us cater your party.
   >
-  > **The menu** — Rijsttafel (a table of small shared dishes, from two people), satay from the charcoal grill, slow-cooked rendang, nasi goreng and bami. Dish names are Indonesian; every item is marked vegetarian or spicy. [See the full menu →](/menukaart) (Dutch, but the dish names are the same.)
+  > **The menu** — Rijsttafel (a table of small shared dishes, from two people), satay from the charcoal grill, slow-cooked rendang, nasi goreng and bami. Dish names are Indonesian; every item is marked vegetarian or spicy. [See the full menu →](/#menukaart) (Dutch, but the dish names are the same.)
   >
   > **Book a table** — [widget button]. Bookings aren't required, but Friday and Saturday fill up.
   >
@@ -257,7 +249,7 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
 **Week −4 (before opening)**
 - [ ] Register domain (§1) + `.com`
 - [ ] KvK registration (mandatory; directories scrape it)
-- [ ] **Google Business Profile** — create, video-verify, fill every field: category `Indonesisch restaurant`, secondary `Afhaalrestaurant`, `Cateringservice`; hours; menu link → `/menukaart`; reservation link → Formitable; WhatsApp number; 20+ photos (food, room, family); attributes (vegetarian/pin)
+- [ ] **Google Business Profile** — create, video-verify, fill every field: category `Indonesisch restaurant`, secondary `Afhaalrestaurant`, `Cateringservice`; hours; menu link → `/#menukaart`; reservation link → Formitable; WhatsApp number; 20+ photos (food, room, family); attributes (vegetarian/pin)
 - [ ] Instagram + Facebook business profiles, same name, same bio, link to site
 - [ ] WhatsApp Business app: greeting, away message, catalogue with 8 dishes, business hours
 - [ ] Formitable account, widget ID, review email switched on with Google link, takeaway module configured
@@ -293,7 +285,7 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
   - `Gerechten`: naam, sectie (ref), beschrijving NL, beschrijving EN (optional), prijs, vegetarisch, pittig, uitverkocht (toggle → shows "op" badge), volgorde
   - `Secties`: naam, intro, volgorde
   - `Instellingen` (single item): adres, telefoon, WhatsApp, openingstijden ma–zo (open/dicht per day), Formitable ID, Google review URL, Instagram URL. Bound to footer, hours blocks **and** the JSON-LD embed — one edit updates the visible text and the schema together.
-- **Schema (JSON-LD embed, CMS-bound):** `Restaurant` with `servesCuisine: Indonesian`, `address`, `geo`, `telephone`, `openingHoursSpecification` (from Instellingen), `acceptsReservations`, `hasMenu` → `/menukaart`, `sameAs` [GBP, IG, FB, Eet.nu, TheFork, Tripadvisor], `priceRange`. `/menukaart`: `Menu` → `MenuSection` → `MenuItem` (from Gerechten collection list). `/afhalen`: `FAQPage`. Generate with the `schema` agent; validate with `/test-schema`.
+- **Schema (JSON-LD embed, CMS-bound):** `Restaurant` with `servesCuisine: Indonesian`, `address`, `geo`, `telephone`, `openingHoursSpecification` (from Instellingen), `acceptsReservations`, `hasMenu` as an inline `Menu` → `MenuSection` → `MenuItem` object built from the Gerechten collection list (`offers.price` per item), `sameAs` [GBP, IG, FB, Eet.nu, TheFork, Tripadvisor], `priceRange`. `/afhalen`: `FAQPage`. Generate with the `schema` agent; validate with `/test-schema`.
 - **Booking widget:** Formitable button script in site `<head>`, one `[data-formitable]` button in nav + hero + `/en`. No custom JS.
 - **Forms:** Webflow native; catering form → family email + Formitable if it supports enquiries. Spam: Webflow reCAPTCHA off (hurts conversion); honeypot field instead.
 - **Custom JS:** none, unless the FAQ accordion can't be done with `<details>` — it can.
@@ -317,7 +309,7 @@ No. No shared-code or architectural decisions; project is self-contained. One de
 | 1 | Confirm assumptions with client (address, hours, names, Sunday, budget, sign name) | pm | — |
 | 2 | Domain + email setup; Formitable account; GBP creation | client + pm | 1 |
 | 3 | Final Dutch copy from §3 with placeholders filled; `/humanizer` pass | content | 1 |
-| 4 | Webflow build: CMS structure (§9), 6 pages, Client First, mobile-first | code-writer | 1 |
+| 4 | Webflow build: CMS structure (§9), 5 pages, Client First, mobile-first | code-writer | 1 |
 | 5 | JSON-LD schema (Restaurant, Menu, FAQPage) as CMS-bound embeds | schema | 4 |
 | 6 | Formitable widget + wa.me links + catering form wiring | code-writer | 2, 4 |
 | 7 | Photo shoot brief + image optimisation | art-director + `/optimise-images` | 1 |
@@ -341,26 +333,26 @@ No. No shared-code or architectural decisions; project is self-contained. One de
 **No test infra exists for this project** (new project, no `package.json`, no `.env.test`). Playwright acceptance tests are **not generated**; add `tests/` to the project if the build phase wants Tier 1 coverage — for a static 6-page site, the manual + tool checks below are sufficient.
 
 ### Tier 1 — Auto (none until infra added)
-Would cover: every page 200, no console errors, `[data-formitable]` present on all pages, `/menukaart` renders ≥ 1 `MenuItem`, `/afhalen` FAQ `<details>` toggles, hours text matches Instellingen.
+Would cover: every page 200, no console errors, `[data-formitable]` present on all pages, `/` renders ≥ 1 `MenuItem` inside `#menukaart`, `/afhalen` FAQ `<details>` toggles, hours text matches Instellingen.
 
 ### Tier 2 — CDN regression
 N/A — no CDN-hosted JS in this project.
 
 ### Tier 3 — Manual / tool-assisted
-- Google Rich Results Test passes on `/`, `/menukaart`, `/afhalen` (Restaurant, Menu, FAQPage detected, zero errors) — `/test-schema`
-- Lighthouse mobile ≥ 95 performance/a11y/best-practices/SEO on `/` and `/menukaart` — chrome-devtools `lighthouse_audit`
+- Google Rich Results Test passes on `/` and `/afhalen` (Restaurant with Menu, FAQPage detected, zero errors) — `/test-schema`
+- Lighthouse mobile ≥ 95 performance/a11y/best-practices/SEO on `/` — chrome-devtools `lighthouse_audit`
 - Formitable widget opens and completes a test booking on iOS Safari + Android Chrome (real devices; widget is third-party iframe)
 - wa.me link opens WhatsApp with prefilled text on a phone
-- Mark a dish `uitverkocht` in Editor → badge appears on `/menukaart` and the item drops from `MenuItem` schema (or gains `availability: SoldOut`)
+- Mark a dish `uitverkocht` in Editor → badge appears in the homepage menu and the item drops from `MenuItem` schema (or gains `availability: SoldOut`)
 - Change Thursday hours in Instellingen → footer, `/afhalen` hours block and JSON-LD all update
 - `/en` shows `hreflang` pair with `/`; no other page has `en`
 - NAP string on site === GBP === Eet.nu === TheFork (visual diff)
-- Search Console: sitemap accepted, 6 URLs indexed within 14 days
+- Search Console: sitemap accepted, 5 URLs indexed within 14 days
 
 ## Verify Loop
 **How `/build` knows this is working:**
-- **Pass criteria:** all 6 pages return 200 and render without console errors; Rich Results Test reports Restaurant on `/`, Menu on `/menukaart`, FAQPage on `/afhalen` with 0 errors; Lighthouse mobile ≥ 95 ×4 on `/`; `[data-formitable]` button present on every page; `/menukaart` has ≥ 1 rendered `MenuItem` and no PDF/image menu; `/en` and `/` carry reciprocal hreflang.
-- **Repro:** open each URL on a 390px viewport; open nav → Reserveren → widget overlay appears; on `/afhalen` tap first FAQ → answer expands; on `/menukaart` search DOM for `"@type":"MenuItem"`.
+- **Pass criteria:** all 5 pages return 200 and render without console errors; Rich Results Test reports Restaurant and Menu on `/`, FAQPage on `/afhalen` with 0 errors; Lighthouse mobile ≥ 95 ×4 on `/`; `[data-formitable]` button present on every page; `/#menukaart` has ≥ 1 rendered `MenuItem` and no PDF/image menu anywhere; `/en` and `/` carry reciprocal hreflang.
+- **Repro:** open each URL on a 390px viewport; open nav → Reserveren → widget overlay appears; on `/afhalen` tap first FAQ → answer expands; on `/` search DOM for `"@type":"MenuItem"`.
 - **Tier mapping:** all checks Tier 3 (tool-assisted) until Playwright infra is added; schema via `/test-schema`; performance via `lighthouse_audit`.
 - **Regression scope:** none — greenfield. Post-launch: any CMS edit must not break JSON-LD validity (re-run Rich Results after the handover session while the family makes a live edit).
 

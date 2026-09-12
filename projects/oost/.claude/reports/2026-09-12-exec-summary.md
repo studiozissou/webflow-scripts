@@ -92,7 +92,8 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 6. Names, phone number, opening date, and a few family photos for the About page.
 
 ## Costs at a glance
-- Website hosting (Webflow): ~€20/month
+- Website hosting — Webflow Premium: $25/month, billed annually (≈ €23; Webflow bills in USD)
+- English version — Webflow Localization Essential, one locale: $9/month, billed annually (≈ €8). Includes machine translation and localised SEO; we review every translation by hand.
 - Formitable: ~€69–119/month (or Eet.nu at €0.25/booking)
 - Domain(s): ~€10–30/year
 - Thank-you cards and QR stand: one-off print cost

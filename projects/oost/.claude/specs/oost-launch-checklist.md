@@ -7,7 +7,6 @@
 - [ ] Address confirmed
   - [ ] Is it in Haarlem-Oost? If yes, "Haarlem-Oost" becomes an on-page term (home, afhalen, GBP description)
 - [ ] Opening hours per day, incl. Sunday
-- [ ] Halal — yes/no (decides badges, FAQ answer, GBP attribute, keyword set)
 - [ ] Delivery — assumed no; confirm
 - [ ] Formitable budget (~€69–119/mo) approved, or Eet.nu fallback chosen
 - [ ] Instagram owner named in the family
@@ -49,7 +48,7 @@
 
 ## 4. Website — CMS (what the family edits)
 - [ ] Collection `Secties`: naam, intro, volgorde
-- [ ] Collection `Gerechten`: naam, sectie (ref), beschrijving NL, beschrijving EN (optional), prijs, vegetarisch, pittig, halal, uitverkocht, volgorde
+- [ ] Collection `Gerechten`: naam, sectie (ref), beschrijving NL, beschrijving EN (optional), prijs, vegetarisch, pittig, uitverkocht, volgorde
   - [ ] `uitverkocht` toggle shows an "op" badge and sets `availability: SoldOut` in schema
   - [ ] Every dish has a real two-line description — dish name, method, one concrete detail (this is where dish + Haarlem terms live)
 - [ ] Collection `Instellingen` (single item): adres, telefoon, WhatsApp, openingstijden ma–zo, Formitable ID, Google review URL, Instagram URL
@@ -73,7 +72,6 @@ Rules for all pages:
 - [ ] Every title tag starts or ends with `Toko Oost` and contains "Haarlem"; no bare "Oost" title anywhere
 - [ ] Every page has a unique meta description ≤ 155 chars
 - [ ] Placeholders `[…]` all filled; `/humanizer` pass done
-- [ ] Halal references kept or stripped per decision 1
 - [ ] "Haarlem-Oost" added where relevant per decision 1
 
 `/` Home
@@ -92,7 +90,7 @@ Rules for all pages:
 - [ ] Allergy line
 - [ ] Sections in order: Rijsttafel · Nasi & bami · Saté · Hoofdgerechten · Soep · Bijgerechten · Zoet
 - [ ] Section intros mention Haarlem once across the page, not in every section
-- [ ] Badges: vegetarisch, pittig, [halal]
+- [ ] Badges: vegetarisch, pittig
 - [ ] Footer line → afhalen
 - [ ] Never a PDF or image menu; printable version is the page itself
 
@@ -102,7 +100,7 @@ Rules for all pages:
 - [ ] "Zo werkt het" three steps; wa.me button with prefilled "Hoi, ik wil graag afhalen:"; bel button
 - [ ] "Rijsttafel afhalen" block with persons, dishes, lead time
 - [ ] "Afhaaltijden" CMS-bound
-- [ ] FAQ: zondag · bezorgen · hoe ver van tevoren · vegetarisch/halal — answers match decisions in §1
+- [ ] FAQ: zondag · bezorgen · hoe ver van tevoren · vegetarisch — answers match decisions in §1
 
 `/catering`
 - [ ] Title `Indonesische catering in Haarlem – rijsttafel voor je feest | Toko Oost`
@@ -128,8 +126,8 @@ Rules for all pages:
 - [ ] Address, service area (for catering), phone, website (primary domain), hours incl. Sunday, holiday hours
 - [ ] Reservation link → Formitable; menu link → `/menukaart`; order link → `/afhalen`
 - [ ] WhatsApp number linked for chat
-- [ ] Description (750 chars): family, Indonesian, Haarlem, rijsttafel, afhalen, catering, [halal], [Haarlem-Oost]
-- [ ] Attributes: vegetarian options, [halal], pin/contactless, takeaway, reservations, [wheelchair]
+- [ ] Description (750 chars): family, Indonesian, Haarlem, rijsttafel, afhalen, catering, [Haarlem-Oost]
+- [ ] Attributes: vegetarian options, pin/contactless, takeaway, reservations, [wheelchair]
 - [ ] GBP menu populated with every section and dish name (mirrors `/menukaart`)
 - [ ] 20+ photos at launch: exterior, interior, 8 dishes, family, menu board; each dish photo captioned with the dish name
 - [ ] Logo and cover image

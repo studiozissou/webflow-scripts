@@ -17,7 +17,6 @@ As a Haarlemmer who wants Indonesian food tonight, I want to see the menu, book 
 
 ## Assumptions (confirm before build)
 - Address, phone, opening hours, family names, opening date — all placeholders `[…]` in copy below.
-- Halal status unknown — if halal, it's a total content gap locally; if not, strip every halal reference.
 - Sunday opening unknown — a genuine differentiator (only Toko Nur and SamaSama open Sundays).
 - Delivery: assumed **no** (afhalen only). Thuisbezorgd/Uber Eats is a separate commercial decision.
 - Budget tolerates ~€70–120/mo for a booking platform. If not, see fallback in §7.
@@ -104,7 +103,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
 - **H1:** `Menukaart`
 - **Intro:**
   > Alles op deze kaart komt uit de keuken van de familie [achternaam]. De vijf gerechten die Indonesië in 2018 tot nationale gerechten uitriep — gado-gado, soto, saté, nasi goreng en rendang — staan er allemaal op. De rest is wat we thuis ook eten.
-  > Vegetarisch, pittig[ en halal] staat bij elk gerecht aangegeven. Allergie? Zeg het, we denken mee.
+  > Vegetarisch en pittig staat bij elk gerecht aangegeven. Allergie? Zeg het, we denken mee.
 - **Sections (CMS, in order):** Rijsttafel · Nasi & bami · Saté · Hoofdgerechten · Soep · Bijgerechten · Zoet
 - **Section intros (one line each, CMS field):**
   > **Rijsttafel** — Kies voor twee, vier of de hele tafel. Wij bepalen de schalen, jij bepaalt hoe pittig.
@@ -130,7 +129,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
   > **Kan ik op zondag afhalen?** [Ja, op zondag van … tot … / Nee, zondag zijn we dicht.]
   > **Bezorgen jullie ook?** Nee, alleen afhalen. Zo blijft alles warm en de prijs eerlijk.
   > **Hoe ver van tevoren moet ik bestellen?** Nasi, bami en saté: een half uur. Rijsttafel: liefst een dag.
-  > **Kan ik vegetarisch of halal bestellen?** [answer]
+  > **Kan ik vegetarisch bestellen?** Ja — gado-gado, sambal goreng boontjes, tempé en meer. Zeg het bij je bestelling.
 
 ### `/catering`
 - **Title:** `Indonesische catering in Haarlem – rijsttafel voor je feest | Toko Oost`
@@ -164,7 +163,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
 - **Copy:**
   > We're the [surname] family. We cook the way [grandma/mum] taught us — slowly, with a lot of sambal, from recipes nobody ever wrote down. Come for dinner, take it home, or let us cater your party.
   >
-  > **The menu** — Rijsttafel (a table of small shared dishes, from two people), satay from the charcoal grill, slow-cooked rendang, nasi goreng and bami. Dish names are Indonesian; every item is marked vegetarian, spicy[ or halal]. [See the full menu →](/menukaart) (Dutch, but the dish names are the same.)
+  > **The menu** — Rijsttafel (a table of small shared dishes, from two people), satay from the charcoal grill, slow-cooked rendang, nasi goreng and bami. Dish names are Indonesian; every item is marked vegetarian or spicy. [See the full menu →](/menukaart) (Dutch, but the dish names are the same.)
   >
   > **Book a table** — [widget button]. Bookings aren't required, but Friday and Saturday fill up.
   >
@@ -258,7 +257,7 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
 **Week −4 (before opening)**
 - [ ] Register domain (§1) + `.com`
 - [ ] KvK registration (mandatory; directories scrape it)
-- [ ] **Google Business Profile** — create, video-verify, fill every field: category `Indonesisch restaurant`, secondary `Afhaalrestaurant`, `Cateringservice`; hours; menu link → `/menukaart`; reservation link → Formitable; WhatsApp number; 20+ photos (food, room, family); attributes (halal/vegetarian/pin)
+- [ ] **Google Business Profile** — create, video-verify, fill every field: category `Indonesisch restaurant`, secondary `Afhaalrestaurant`, `Cateringservice`; hours; menu link → `/menukaart`; reservation link → Formitable; WhatsApp number; 20+ photos (food, room, family); attributes (vegetarian/pin)
 - [ ] Instagram + Facebook business profiles, same name, same bio, link to site
 - [ ] WhatsApp Business app: greeting, away message, catalogue with 8 dishes, business hours
 - [ ] Formitable account, widget ID, review email switched on with Google link, takeaway module configured
@@ -291,7 +290,7 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
 ## 9. Technical notes
 - **Platform:** Webflow Premium site plan ($25/mo billed annually — includes CMS). Client First naming. No Barba, no GSAP, no jQuery. One Google font max. Images AVIF via `/optimise-images`. Target: mobile LCP < 2s, Lighthouse ≥ 95 all four.
 - **CMS for handover** (the family touches only these):
-  - `Gerechten`: naam, sectie (ref), beschrijving NL, beschrijving EN (optional), prijs, vegetarisch, pittig, halal, uitverkocht (toggle → shows "op" badge), volgorde
+  - `Gerechten`: naam, sectie (ref), beschrijving NL, beschrijving EN (optional), prijs, vegetarisch, pittig, uitverkocht (toggle → shows "op" badge), volgorde
   - `Secties`: naam, intro, volgorde
   - `Instellingen` (single item): adres, telefoon, WhatsApp, openingstijden ma–zo (open/dicht per day), Formitable ID, Google review URL, Instagram URL. Bound to footer, hours blocks **and** the JSON-LD embed — one edit updates the visible text and the schema together.
 - **Schema (JSON-LD embed, CMS-bound):** `Restaurant` with `servesCuisine: Indonesian`, `address`, `geo`, `telephone`, `openingHoursSpecification` (from Instellingen), `acceptsReservations`, `hasMenu` → `/menukaart`, `sameAs` [GBP, IG, FB, Eet.nu, TheFork, Tripadvisor], `priceRange`. `/menukaart`: `Menu` → `MenuSection` → `MenuItem` (from Gerechten collection list). `/afhalen`: `FAQPage`. Generate with the `schema` agent; validate with `/test-schema`.
@@ -315,7 +314,7 @@ No. No shared-code or architectural decisions; project is self-contained. One de
 
 | # | Task | Agent | Depends on |
 |---|---|---|---|
-| 1 | Confirm assumptions with client (address, hours, halal, names, Sunday, budget, sign name) | pm | — |
+| 1 | Confirm assumptions with client (address, hours, names, Sunday, budget, sign name) | pm | — |
 | 2 | Domain + email setup; Formitable account; GBP creation | client + pm | 1 |
 | 3 | Final Dutch copy from §3 with placeholders filled; `/humanizer` pass | content | 1 |
 | 4 | Webflow build: CMS structure (§9), 6 pages, Client First, mobile-first | code-writer | 1 |
@@ -368,7 +367,6 @@ N/A — no CDN-hosted JS in this project.
 ## Open questions
 1. Is the physical address in Haarlem-Oost? Changes §1 from liability to asset.
 2. Sign name: `Toko Oost` (recommended), `Warung Oost`, or bare `Oost`? Decides GBP name, domain and every title tag. Do the BOIP trademark search first.
-3. Halal — yes/no? Decides a whole keyword set and menu badges.
-4. Sunday hours?
-5. Is ~€70–120/mo for Formitable acceptable? If not, fallback (§7) and the automation flow loses its email leg.
-6. Who in the family owns Instagram? Everything else is passive; this one isn't.
+3. Sunday hours?
+4. Is ~€70–120/mo for Formitable acceptable? If not, fallback (§7) and the automation flow loses its email leg.
+5. Who in the family owns Instagram? Everything else is passive; this one isn't.

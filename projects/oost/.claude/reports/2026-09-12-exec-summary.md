@@ -52,7 +52,7 @@ Six pages, no blog, no news section, nothing that needs feeding.
   Google Business Profile is the single biggest lever: fill in every field, 20+ photos, a new photo weekly, reply to every review.
 - Google recently replaced its questions-and-answers feature with AI answers drawn from your profile, reviews and website — so the completeness of that profile matters more than it did a year ago.
 - **Search terms we can realistically win** in the first months are the specific ones: "indonesisch afhalen haarlem", "rijsttafel afhalen haarlem", dish names + Haarlem (rendang, saté, nasi goreng, gado-gado — nobody targets these), "indonesian food haarlem" for the English-speaking market. The big term, "indonesisch restaurant haarlem", is a longer game against places with hundreds of reviews.
-- If you are open on Sundays, or halal, say so loudly — almost nobody in Haarlem is, and people search for both.
+- If you are open on Sundays, say so loudly — almost nobody in Haarlem is, and people search for it.
 - If the restaurant is physically in Haarlem-Oost, the name problem partly turns into an advantage: "Indonesisch restaurant Haarlem-Oost" becomes an exact match.
 
 ## 4. Reviews
@@ -98,7 +98,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 ## What we need from you
 1. Sign name: Toko Oost, Warung Oost, or Oost?
 2. Address — is it in Haarlem-Oost?
-3. Halal? Sunday hours?
+3. Sunday hours?
 4. Is roughly €70–120 a month for Formitable acceptable?
 5. Who owns Instagram?
 6. Names, phone number, opening date, and a few family photos for the About page.

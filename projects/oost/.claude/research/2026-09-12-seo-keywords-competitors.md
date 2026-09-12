@@ -13,7 +13,6 @@
 - "rijsttafel afhalen haarlem" — est. <20/mo, zero dedicated pages.
 - "indonesisch eten haarlem centrum" — est. <20/mo, untargeted.
 - "toko haarlem [buurt]" — near-zero individually, zero competition.
-- "halal indonesisch haarlem" — est. <10/mo; no competitor mentions halal — total gap if genuinely halal.
 - "indonesisch afhalen haarlem zondag" — near-zero, high intent (only Toko Nur/SamaSama open Sundays).
 - "beste saté haarlem" — est. <10/mo, unclaimed.
 - Dish + haarlem (each est. <10–20/mo, collectively meaningful, wholly untargeted): rendang, nasi goreng, bami, gado gado, sate, lumpia, soto, nasi rames.

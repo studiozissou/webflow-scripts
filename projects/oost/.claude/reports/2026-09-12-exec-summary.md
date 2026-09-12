@@ -37,7 +37,19 @@ Six pages, no blog, no news section, nothing that needs feeding.
 **Running it:** you'll be able to change prices, mark a dish sold out, and change opening hours from your phone. One edit updates the page and the search data together. We'll do a 30-minute handover and leave a one-page guide.
 
 ## 3. Being found
-- **Google Business Profile** is roughly a third of what decides local map rankings, according to the annual Whitespark survey of 47 local-search experts (2026); reviews are about a fifth; the website itself about a fifth; links to your site, citations in directories and user behaviour make up the rest. So: fill in every field, 20+ photos, a new photo weekly, reply to every review.
+- **What decides local map rankings**, according to the annual Whitespark survey of 47 local-search experts (2026):
+
+  | Signal | Weight |
+  |---|---|
+  | Google Business Profile (category, proximity, name, completeness) | 32% |
+  | Reviews (number, recency, replies) | 20% |
+  | Your website (address, local keywords, menu content) | 19% |
+  | Links to your site from other sites | 15% |
+  | User behaviour (clicks, calls, route requests) | 8% |
+  | Directory listings with consistent details | 7% |
+  | Personalisation and social | 3% |
+
+  Google Business Profile is the single biggest lever: fill in every field, 20+ photos, a new photo weekly, reply to every review.
 - Google recently replaced its questions-and-answers feature with AI answers drawn from your profile, reviews and website — so the completeness of that profile matters more than it did a year ago.
 - **Search terms we can realistically win** in the first months are the specific ones: "indonesisch afhalen haarlem", "rijsttafel afhalen haarlem", dish names + Haarlem (rendang, saté, nasi goreng, gado-gado — nobody targets these), "indonesian food haarlem" for the English-speaking market. The big term, "indonesisch restaurant haarlem", is a longer game against places with hundreds of reviews.
 - If you are open on Sundays, or halal, say so loudly — almost nobody in Haarlem is, and people search for both.

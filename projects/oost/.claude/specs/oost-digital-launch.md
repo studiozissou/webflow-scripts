@@ -39,16 +39,15 @@ Full briefings in `projects/oost/.claude/research/`. What matters:
 
 ## 1. The name problem: "Oost" collides three ways
 SERP check confirms a bare "Oost" brand won't rank for its own name for a long time, if ever:
-1. **Haarlem-Oost is a district.** "Oost Haarlem" returns Thuisbezorgd postcode pages (2031/2032/2034), neighbourhood listicles, council content.
+1. **Haarlem-Oost is a district.** "Oost Haarlem" and "restaurant Oost Haarlem" return Thuisbezorgd postcode pages (2031/2032/2034), "restaurants in Haarlem-Oost" listicles, council content.
 2. **"Oost" is directory shorthand** for *Oost-Europees* (Eet.nu) and *Oosters* (TheFork) cuisine categories.
 3. **Prior use in horeca:** Café Oost (Amsterdam), Op Oost (Texel). No BOIP trademark check done — search boip.int/nl/merkenregister before signing anything.
 
-**Decision required — recommended: sign it "Toko Oost".**
-- **Real-world name (sign, receipts, KvK, GBP):** `Toko Oost`. GBP policy requires the signed name — keyword-rich GBP names get suspended — so the disambiguation has to be *in the actual name*. "Toko" does it for free, mirrors the local pattern (Toko Nur, Toko SamaSama), matches how you described the business, and borrows relevance from "toko haarlem" (est. 150–250/mo). `Warung Oost` is the alternative if "toko" undersells the dine-in side. Bare "Oost" on the sign is meaningfully worse; push back.
-- **Body copy** still says "Oost" — that's what guests will call it.
-- **HTML title tags** (keywords allowed here): `Toko Oost – Indonesisch restaurant & afhalen in Haarlem` pattern on every page. Never a bare "Oost".
-- **Every directory listing:** the identical NAP string `Toko Oost`. Never vary it.
-- **Domain:** `restaurantoost.nl` is taken and parked for resale. `tokooost.nl`, `eetbijoost.nl`, `oosthaarlem.nl` show no DNS record (confirm via sidn.nl before buying). Recommend **`tokooost.nl`** primary — but note the triple-o typo risk when spoken; register `toko-oost.nl` and `oosthaarlem.nl` as redirects. Take the `.com` too.
+**Client decision: it's a restaurant, not a toko or warung, and the real-world name is `Restaurant Oost`.** That is the sign, the receipts, the KvK trade name, the GBP name and the NAP string on every directory. It's a weaker disambiguator than "Toko Oost" — the collision query is literally "restaurant Oost Haarlem" — so the rest of the plan compensates:
+- **Body copy** says "Oost" — that's what guests will call it.
+- **HTML title tags** (keywords allowed here): homepage `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`; other pages end `| Restaurant Oost`. Never a bare "Oost".
+- **GBP:** primary category `Indonesisch restaurant`; description opens "Indonesisch familierestaurant in Haarlem"; every photo captioned with a dish name. Reviews that say "Indonesisch", "rijsttafel", "rendang" are what will separate Restaurant Oost from the district in Google's eyes — which is why the review velocity plan in §4 matters more here than it would for a distinctively named place.
+- **Domain:** `restaurantoost.nl` is taken and parked for resale (Dovendi) — it's the exact brand match, so make one enquiry and buy it if the price is sane. Otherwise **`eetbijoost.nl`** primary (brandable, showed no DNS record — confirm via sidn.nl) with `oosthaarlem.nl` as a defensive redirect. Take the `.com` of whichever wins.
 - **Story upside:** "de Oost" is what an older generation of Indo-Dutch families called the Dutch East Indies (vs "de West"). Genuine About-page material and a clean AI-quotable fact (§3); zero search volume as a term.
 - **If the address is physically in Haarlem-Oost**, the district collision flips into an asset: "Indonesisch restaurant in Haarlem-Oost" becomes an exact-match local term. Confirm the address.
 
@@ -77,10 +76,11 @@ Footer: address, phone/WhatsApp, hours, Google Maps link, Instagram, KvK.
 ---
 
 ## 3. Copy
+Full copy for every page, with a sample menu, lives in `oost-website-copy.md` — that file is the source of truth; the outlines below are the earlier drafts.
 Voice: warm, direct, first person plural, no marketing adjectives. Every page says "familie" once, naturally. Dutch informal `je`. Dish names in Indonesian, never translated. Placeholders in `[…]`.
 
 ### `/` Home
-- **Title:** `Toko Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
+- **Title:** `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
 - **Meta:** `Oost is het Indonesische familierestaurant van Haarlem. Rijsttafel, saté, rendang en gado-gado zoals thuis — bekijk de menukaart, reserveer een tafel of haal af.`
 - **H1:** `Indonesisch eten zoals bij ons thuis, midden in Haarlem`
 - **Intro:**
@@ -104,7 +104,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
   > Oost is een familiebedrijf. [Naam] staat in de keuken, [naam] in de zaal, en [naam] bepaalt of de sambal pittig genoeg is. Lees ons verhaal →
 
 ### `/afhalen`
-- **Title:** `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Toko Oost`
+- **Title:** `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Restaurant Oost`
 - **Meta:** `Indonesisch eten afhalen in Haarlem? Bestel je rijsttafel, nasi goreng of saté bij Oost via WhatsApp of telefoon en haal het warm op[. Ook op zondag].`
 - **H1:** `Indonesisch afhalen in Haarlem`
 - **Intro:**
@@ -124,7 +124,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
   > **Kan ik vegetarisch bestellen?** Ja — gado-gado, sambal goreng boontjes, tempé en meer. Zeg het bij je bestelling.
 
 ### `/catering`
-- **Title:** `Indonesische catering in Haarlem – rijsttafel voor je feest | Toko Oost`
+- **Title:** `Indonesische catering in Haarlem – rijsttafel voor je feest | Restaurant Oost`
 - **Meta:** `Rijsttafel of Indonesisch buffet voor je verjaardag, borrel, bruiloft of bedrijfslunch in Haarlem en omgeving. Familierecepten, vers gekookt, vanaf [x] personen.`
 - **H1:** `Rijsttafel catering voor je feest`
 - **Copy:**
@@ -134,7 +134,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
 - **Below form:** `Liever eerst bellen? [nummer]`
 
 ### `/over-ons`
-- **Title:** `Over ons – de familie achter Toko Oost, Indonesisch restaurant in Haarlem`
+- **Title:** `Over ons – de familie achter Oost, Indonesisch restaurant in Haarlem`
 - **Meta:** `Oost is een familiebedrijf. Lees hoe de familie [achternaam] hun Indonesische familierecepten van [plaats in Indonesië] naar Haarlem bracht.`
 - **H1:** `De familie achter Oost`
 - **Copy:**
@@ -149,7 +149,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
 - **CTA:** `Reserveer een tafel` · `Bekijk de menukaart` (→ `/#menukaart`)
 
 ### `/en`
-- **Title:** `Toko Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
+- **Title:** `Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
 - **Meta:** `Oost is a family-run Indonesian restaurant in Haarlem. Rijsttafel, satay and rendang cooked from family recipes. Book a table, order takeaway or ask about catering.`
 - **H1:** `Indonesian food the way our family cooks it, in the heart of Haarlem`
 - **Copy:**
@@ -358,7 +358,7 @@ N/A — no CDN-hosted JS in this project.
 
 ## Open questions
 1. Is the physical address in Haarlem-Oost? Changes §1 from liability to asset.
-2. Sign name: `Toko Oost` (recommended), `Warung Oost`, or bare `Oost`? Decides GBP name, domain and every title tag. Do the BOIP trademark search first.
+2. Domain: try to buy `restaurantoost.nl`, or go with `eetbijoost.nl`? Do the BOIP trademark search on "Oost" first.
 3. Sunday hours?
 4. Is ~€70–120/mo for Formitable acceptable? If not, fallback (§7) and the automation flow loses its email leg.
 5. Who in the family owns Instagram? Everything else is passive; this one isn't.

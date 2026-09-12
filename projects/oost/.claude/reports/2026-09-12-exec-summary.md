@@ -4,15 +4,15 @@
 ## The short version
 Oost can be the easiest Indonesian restaurant in Haarlem to find, book and review from the day it opens — with a small website you run yourselves in under an hour a month. Three things do most of the work: a complete Google Business Profile, a steady stream of Google reviews, and a booking system that asks for those reviews automatically. The website's job is to be simple, fast, and structured in a way none of your competitors have bothered with.
 
-## 1. The name needs a decision first
+## 1. The name: Restaurant Oost, and what it's up against
 "Oost" on its own will struggle to be found online for three reasons:
-- **Haarlem-Oost is a district.** Searching "Oost Haarlem" returns delivery-area pages, neighbourhood listings and council content — not a restaurant.
+- **Haarlem-Oost is a district.** Searching "Oost Haarlem" or "restaurant Oost Haarlem" returns delivery-area pages, "restaurants in Haarlem-Oost" lists and council content — not you.
 - **Restaurant directories use "Oost" as a category** (Oost-Europees, Oosters), so the word points at Eastern European and Asian-fusion listings.
 - **Others already trade under it:** Café Oost in Amsterdam, Op Oost on Texel.
 
-**Recommendation: sign it "Toko Oost".** Google requires your Maps listing to match the name on the sign, so the disambiguation has to be on the sign itself. "Toko" does that, fits how Haarlem already names these places (Toko Nur, Toko SamaSama), and picks up the people searching "toko haarlem". Guests will still just call it Oost. "Warung Oost" is the alternative if "toko" feels too much like a shop.
+**The name is Restaurant Oost** — on the sign, the receipts, the Google listing and every directory, spelt identically everywhere. Guests will just say Oost. Because the name itself doesn't say "Indonesisch", the rest of this plan has to: it goes in every page title, at the top of the Google description, in the photo captions, and above all in the reviews, which is why the review plan in section 4 matters more for Oost than it would for a restaurant with a more distinctive name.
 
-Domains: `restaurantoost.nl` is already taken and parked for resale. `tokooost.nl`, `eetbijoost.nl` and `oosthaarlem.nl` appear free — worth registering the first plus `oosthaarlem.nl` as a redirect. A quick trademark check at boip.int is sensible before printing anything.
+Domains: `restaurantoost.nl` is already registered and parked for resale — it's the exact match, so worth one enquiry. If the price is silly, `eetbijoost.nl` is a good, memorable alternative, with `oosthaarlem.nl` as a redirect so nobody else takes it. A quick trademark check at boip.int is sensible before printing anything.
 
 The story behind the name — "de Oost", what an older generation called the Indies — is genuinely good. It belongs on the About page, not in search.
 
@@ -105,7 +105,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 **Every month, about an hour:** reply to reviews · four new photos · one Google post · update sold-out dishes · swap one quote on the homepage.
 
 ## What we need from you
-1. Sign name: Toko Oost, Warung Oost, or Oost?
+1. Domain: shall we enquire about buying restaurantoost.nl, or go with eetbijoost.nl?
 2. Address — is it in Haarlem-Oost?
 3. Sunday hours?
 4. Is roughly €70–120 a month for Formitable acceptable?

@@ -2,7 +2,7 @@
 **Source:** `oost-digital-launch.md` (spec) and `reports/2026-09-12-exec-summary.md`. Every recommendation in those two documents appears here once. Tick as done; nothing ships with an open box in sections 1–8.
 
 ## 1. Decisions from the client
-- [ ] Sign name confirmed: Toko Oost / Warung Oost / Oost
+- [ ] Name is `Restaurant Oost` on the sign, receipts, KvK trade name and GBP — decided
   - [ ] BOIP trademark register searched (boip.int/nl/merkenregister) — no blocking mark
 - [ ] Address confirmed
   - [ ] Is it in Haarlem-Oost? If yes, "Haarlem-Oost" becomes an on-page term (home, afhalen, GBP description)
@@ -18,8 +18,8 @@
 ## 2. Name, domain, NAP
 - [ ] One canonical NAP string written down (name, street + number, postcode, city, phone) — used verbatim everywhere below
 - [ ] Domain registered
-  - [ ] Primary (`tokooost.nl` recommended) — confirmed free via sidn.nl before purchase
-  - [ ] `toko-oost.nl` redirect (triple-o typo guard)
+  - [ ] Enquiry sent for parked `restaurantoost.nl`; buy if the price is sane
+  - [ ] Otherwise primary `eetbijoost.nl` — confirmed free via sidn.nl before purchase
   - [ ] `oosthaarlem.nl` defensive redirect
   - [ ] `.com` of the primary
   - [ ] All redirects → primary with 301
@@ -69,13 +69,13 @@ Rules for all pages:
 - [ ] Voice: warm, direct, first person plural, `je`, no marketing adjectives
 - [ ] "familie" appears once per page, naturally
 - [ ] Dish names in Indonesian, never translated; Dutch spellings: rijsttafel, saté, bami, gado-gado, afhalen (not bezorgen unless true)
-- [ ] Every title tag starts or ends with `Toko Oost` and contains "Haarlem"; no bare "Oost" title anywhere
+- [ ] Every title tag contains "Oost", either "Indonesisch restaurant" or "| Restaurant Oost", and "Haarlem"; no bare "Oost" title anywhere
 - [ ] Every page has a unique meta description ≤ 155 chars
 - [ ] Placeholders `[…]` all filled; `/humanizer` pass done
 - [ ] "Haarlem-Oost" added where relevant per decision 1
 
 `/` Home
-- [ ] Title `Toko Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
+- [ ] Title `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
 - [ ] H1 `Indonesisch eten zoals bij ons thuis, midden in Haarlem`
 - [ ] Intro paragraph (family, how you cook, three ways to eat)
 - [ ] CTA row: Reserveer een tafel (widget) · Afhalen · App ons (wa.me)
@@ -92,7 +92,7 @@ Rules for all pages:
 - [ ] "De familie" — one paragraph, kitchen photo, link to over-ons
 
 `/afhalen`
-- [ ] Title `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Toko Oost`
+- [ ] Title `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Restaurant Oost`
 - [ ] H1 `Indonesisch afhalen in Haarlem`
 - [ ] "Zo werkt het" three steps; wa.me button with prefilled "Hoi, ik wil graag afhalen:"; bel button
 - [ ] "Rijsttafel afhalen" block with persons, dishes, lead time
@@ -100,25 +100,25 @@ Rules for all pages:
 - [ ] FAQ: zondag · bezorgen · hoe ver van tevoren · vegetarisch — answers match decisions in §1
 
 `/catering`
-- [ ] Title `Indonesische catering in Haarlem – rijsttafel voor je feest | Toko Oost`
+- [ ] Title `Indonesische catering in Haarlem – rijsttafel voor je feest | Restaurant Oost`
 - [ ] Two paragraphs (share, occasions, radius, minimum, pickup or delivered; what to tell us, reply within a day)
 - [ ] Form: naam, e-mail, telefoon, datum, aantal gasten, bericht
 - [ ] "Liever eerst bellen?" line
 
 `/over-ons`
-- [ ] Title `Over ons – de familie achter Toko Oost, Indonesisch restaurant in Haarlem`
+- [ ] Title `Over ons – de familie achter Oost, Indonesisch restaurant in Haarlem`
 - [ ] "De Oost" origin paragraph; who does what; "geen keten, geen foodhall"; "als de rendang op is, is hij op"
 - [ ] Real family photos only, alt text with names
 - [ ] CTAs: Reserveer een tafel · Bekijk de menukaart (→ `/#menukaart`)
 
 `/en/`
-- [ ] Title `Toko Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
+- [ ] Title `Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
 - [ ] Sections: who we are · the menu (link to `/#menukaart`, note dish names are the same) · book · takeaway · find us
 - [ ] Satay spelt "satay" here, "saté" everywhere else
 
 ## 7. Google Business Profile
 - [ ] Created under the business email; video verification completed
-- [ ] Name = exact sign name (no keywords added)
+- [ ] Name = `Restaurant Oost`, exactly as on the sign (no keywords added)
 - [ ] Primary category `Indonesisch restaurant`; secondary `Afhaalrestaurant`, `Cateringservice`
 - [ ] Address, service area (for catering), phone, website (primary domain), hours incl. Sunday, holiday hours
 - [ ] Reservation link → Formitable; menu link → `/#menukaart`; order link → `/afhalen`

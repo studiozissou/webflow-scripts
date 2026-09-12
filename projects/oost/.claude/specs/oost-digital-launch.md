@@ -54,7 +54,7 @@ SERP check confirms a bare "Oost" brand won't rank for its own name for a long t
 ---
 
 ## 2. Sitemap
-Four Dutch pages + one English page. The full menu lives on the homepage — 14 dishes fit, and the reasoning is below. "Book" is a button, not a page — the Formitable widget opens as an overlay from the nav on every page, which is one tap fewer than a /reserveren page.
+Four pages, Dutch first, the whole site translated to English via Webflow Localization (translation written later, not in this spec). The full menu lives on the homepage — 14 dishes fit, and the reasoning is below. "Book" is a button, not a page — the Formitable widget opens as an overlay from the nav on every page, which is one tap fewer than a /reserveren page.
 
 | URL | Purpose | Primary keyword (est. vol/mo) | Secondary |
 |---|---|---|---|
@@ -62,7 +62,7 @@ Four Dutch pages + one English page. The full menu lives on the homepage — 14 
 | `/afhalen` | Takeaway intent; how to order | indonesisch afhalen haarlem (40–70, winnable) | rijsttafel afhalen haarlem, indonesisch afhalen haarlem zondag |
 | `/catering` | Group/party orders (phase 2 OK) | indonesische catering haarlem (<20, one competitor) | rijsttafel bestellen feest haarlem |
 | `/over-ons` | Trust; family story; E-E-A-T | familierestaurant haarlem (near-zero, brand) | — |
-| `/en/` | Expats/tourists, homepage localised via Webflow Localization | indonesian food haarlem (20–40 combined) | indonesian takeaway haarlem |
+| `/en/…` | Every page above, localised via Webflow Localization | indonesian food haarlem (20–40 combined) | indonesian takeaway haarlem, indonesian restaurant haarlem |
 
 Not built: blog, news, gallery page, contact page (contact lives in footer + `/afhalen`), reviews page (reviews live on Google; homepage quotes three by hand).
 
@@ -147,22 +147,6 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
   > Kom langs. We schuiven graag een stoel bij.
 - **Photos:** real family photos only — kitchen, hands, the schrift. No stock. Alt text names the people and the dish.
 - **CTA:** `Reserveer een tafel` · `Bekijk de menukaart` (→ `/#menukaart`)
-
-### `/en`
-- **Title:** `Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
-- **Meta:** `Oost is a family-run Indonesian restaurant in Haarlem. Rijsttafel, satay and rendang cooked from family recipes. Book a table, order takeaway or ask about catering.`
-- **H1:** `Indonesian food the way our family cooks it, in the heart of Haarlem`
-- **Copy:**
-  > We're the [surname] family. We cook the way [grandma/mum] taught us — slowly, with a lot of sambal, from recipes nobody ever wrote down. Come for dinner, take it home, or let us cater your party.
-  >
-  > **The menu** — Rijsttafel (a table of small shared dishes, from two people), satay from the charcoal grill, slow-cooked rendang, nasi goreng and bami. Dish names are Indonesian; every item is marked vegetarian or spicy. [See the full menu →](/#menukaart) (Dutch, but the dish names are the same.)
-  >
-  > **Book a table** — [widget button]. Bookings aren't required, but Friday and Saturday fill up.
-  >
-  > **Takeaway** — WhatsApp or call [number] with your order and pick-up time. Rijsttafel is best ordered a day ahead. [Collection only, no delivery.]
-  >
-  > **Find us** — [address], Haarlem. [Hours]. [Google Maps link].
-- `hreflang`: `/` ↔ `/en` only. No English versions of other pages.
 
 ---
 
@@ -286,11 +270,11 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
   - `Secties`: naam, intro, volgorde
   - `Instellingen` (single item): adres, telefoon, WhatsApp, openingstijden ma–zo (open/dicht per day), Formitable ID, Google review URL, Instagram URL. Bound to footer, hours blocks **and** the JSON-LD embed — one edit updates the visible text and the schema together.
 - **Schema (JSON-LD embed, CMS-bound):** `Restaurant` with `servesCuisine: Indonesian`, `address`, `geo`, `telephone`, `openingHoursSpecification` (from Instellingen), `acceptsReservations`, `hasMenu` as an inline `Menu` → `MenuSection` → `MenuItem` object built from the Gerechten collection list (`offers.price` per item), `sameAs` [GBP, IG, FB, Eet.nu, TheFork, Tripadvisor], `priceRange`. `/afhalen`: `FAQPage`. Generate with the `schema` agent; validate with `/test-schema`.
-- **Booking widget:** Formitable button script in site `<head>`, one `[data-formitable]` button in nav + hero + `/en`. No custom JS.
+- **Booking widget:** Formitable button script in site `<head>`, one `[data-formitable]` button in nav + hero, present in both locales. No custom JS.
 - **Forms:** Webflow native; catering form → family email + Formitable if it supports enquiries. Spam: Webflow reCAPTCHA off (hurts conversion); honeypot field instead.
 - **Custom JS:** none, unless the FAQ accordion can't be done with `<details>` — it can.
-- **hreflang:** handled by Webflow Localization; verify `nl`/`en`/`x-default` on the homepage only.
-- **Localisation:** Webflow Localization **Essential**, one `en` locale ($9/mo billed annually, on top of Premium $25/mo billed annually). English lives at `/en/…`; hreflang is generated by Webflow. Localise only the homepage in `en` and exclude the other pages from the locale, so the English site stays one page. Machine-translate, then hand-edit against the `/en` copy in §3.
+- **hreflang:** handled by Webflow Localization; verify `nl`/`en`/`x-default` on every page.
+- **Localisation:** Webflow Localization **Essential**, one `en` locale ($9/mo billed annually, on top of Premium $25/mo billed annually). The whole site is published in `en` at `/en/…`; hreflang is generated by Webflow. CMS fields (dish descriptions, section intros, Instellingen) are localised in the CMS, static text in the Designer. Machine-translate first, then hand-edit — **the English translation is a separate, later task**; dish names stay Indonesian in both locales, "saté" becomes "satay" in English.
 - **Menu never as PDF or image.** If the family wants a printable menu, print from the page.
 - **Editor training:** one 30-minute session + a one-page PDF: "how to mark a dish sold out, change a price, change hours".
 
@@ -298,7 +282,7 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
 N/A — no Barba transitions. Multi-page site, native navigation.
 
 ## ADR needed?
-No. No shared-code or architectural decisions; project is self-contained. One decision worth recording in the project README: "Localization Essential, homepage-only `en` locale" and why.
+No. No shared-code or architectural decisions; project is self-contained. One decision worth recording in the project README: "Localization Essential, whole site in `en`, translation hand-edited" and why.
 
 ---
 
@@ -309,7 +293,7 @@ No. No shared-code or architectural decisions; project is self-contained. One de
 | 1 | Confirm assumptions with client (address, hours, names, Sunday, budget, sign name) | pm | — |
 | 2 | Domain + email setup; Formitable account; GBP creation | client + pm | 1 |
 | 3 | Final Dutch copy from §3 with placeholders filled; `/humanizer` pass | content | 1 |
-| 4 | Webflow build: CMS structure (§9), 5 pages, Client First, mobile-first | code-writer | 1 |
+| 4 | Webflow build: CMS structure (§9), 4 pages, Localization Essential configured, Client First, mobile-first | code-writer | 1 |
 | 5 | JSON-LD schema (Restaurant, Menu, FAQPage) as CMS-bound embeds | schema | 4 |
 | 6 | Formitable widget + wa.me links + catering form wiring | code-writer | 2, 4 |
 | 7 | Photo shoot brief + image optimisation | art-director + `/optimise-images` | 1 |
@@ -319,6 +303,7 @@ No. No shared-code or architectural decisions; project is self-contained. One de
 | 11 | Day-one footprint checklist (§8) executed | pm + client | 2 |
 | 12 | Bedankt-kaartje + QR stand design (print) | art-director | 2 |
 | 13 | Editor handover session + one-page guide | pm | 4 |
+| 14 | English translation of all pages and CMS fields (later, separate brief) | content | 3, 4 |
 
 ### Parallelisation map
 - **Stream A (client-gated):** 1 → 2 → 11. Client does most of it; pm chases.
@@ -345,13 +330,13 @@ N/A — no CDN-hosted JS in this project.
 - wa.me link opens WhatsApp with prefilled text on a phone
 - Mark a dish `uitverkocht` in Editor → badge appears in the homepage menu and the item drops from `MenuItem` schema (or gains `availability: SoldOut`)
 - Change Thursday hours in Instellingen → footer, `/afhalen` hours block and JSON-LD all update
-- `/en` shows `hreflang` pair with `/`; no other page has `en`
+- Every page shows an `nl`/`en`/`x-default` hreflang set; `/en/` versions return 200
 - NAP string on site === GBP === Eet.nu === TheFork (visual diff)
 - Search Console: sitemap accepted, 5 URLs indexed within 14 days
 
 ## Verify Loop
 **How `/build` knows this is working:**
-- **Pass criteria:** all 5 pages return 200 and render without console errors; Rich Results Test reports Restaurant and Menu on `/`, FAQPage on `/afhalen` with 0 errors; Lighthouse mobile ≥ 95 ×4 on `/`; `[data-formitable]` button present on every page; `/#menukaart` has ≥ 1 rendered `MenuItem` and no PDF/image menu anywhere; `/en` and `/` carry reciprocal hreflang.
+- **Pass criteria:** all 4 pages and their `/en/` versions return 200 and render without console errors; Rich Results Test reports Restaurant and Menu on `/`, FAQPage on `/afhalen` with 0 errors; Lighthouse mobile ≥ 95 ×4 on `/`; `[data-formitable]` button present on every page; `/#menukaart` has ≥ 1 rendered `MenuItem` and no PDF/image menu anywhere; every page carries reciprocal `nl`/`en` hreflang.
 - **Repro:** open each URL on a 390px viewport; open nav → Reserveren → widget overlay appears; on `/afhalen` tap first FAQ → answer expands; on `/` search DOM for `"@type":"MenuItem"`.
 - **Tier mapping:** all checks Tier 3 (tool-assisted) until Playwright infra is added; schema via `/test-schema`; performance via `lighthouse_audit`.
 - **Regression scope:** none — greenfield. Post-launch: any CMS edit must not break JSON-LD validity (re-run Rich Results after the handover session while the family makes a live edit).

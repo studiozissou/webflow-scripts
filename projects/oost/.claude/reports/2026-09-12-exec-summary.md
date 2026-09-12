@@ -17,7 +17,7 @@ Domains: `restaurantoost.nl` is already registered and parked for resale — it'
 The story behind the name — "de Oost", what an older generation called the Indies — is genuinely good. It belongs on the About page, not in search.
 
 ## 2. The website
-Five pages, no blog, no news section, nothing that needs feeding.
+Four pages, each also in English, no blog, no news section, nothing that needs feeding.
 
 | Page | Job |
 |---|---|
@@ -25,9 +25,8 @@ Five pages, no blog, no news section, nothing that needs feeding.
 | Afhalen | How takeaway works, rijsttafel for home, pickup times, FAQ |
 | Catering | Rijsttafel for parties and offices, enquiry form |
 | Over ons | The family and the story |
-| English | One page for expats and tourists |
 
-"Reserveren" is a button in the menu bar, not a page — one tap fewer. The menu lives on the homepage rather than its own page: with around fourteen dishes it fits, and the menu is what most visitors came for.
+"Reserveren" is a button in the menu bar, not a page — one tap fewer. Every page gets an English version for expats and tourists; the translation is done after the Dutch copy is final. The menu lives on the homepage rather than its own page: with around fourteen dishes it fits, and the menu is what most visitors came for.
 
 **Why the menu must be text, not a PDF:** we looked at all nine Indonesian restaurants and tokos in Haarlem. None of them have structured data on their site, and most serve their menu as a PDF or image, which search engines and AI assistants can't read. A text menu with the right markup makes Oost the only restaurant in the category that Google, ChatGPT and Apple Maps can actually read dish by dish.
 
@@ -114,7 +113,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 
 ## Costs at a glance
 - Website hosting — Webflow Premium: $25/month, billed annually (≈ €23; Webflow bills in USD)
-- English version — Webflow Localization Essential, one locale: $9/month, billed annually (≈ €8). Includes machine translation and localised SEO; we review every translation by hand.
+- English version of the whole site — Webflow Localization Essential, one locale: $9/month, billed annually (≈ €8). Includes machine translation and localised SEO; we edit every translation by hand.
 - Formitable: ~€69–119/month (or Eet.nu at €0.25/booking)
 - Domain(s): ~€10–30/year
 - Thank-you cards and QR stand: one-off print cost

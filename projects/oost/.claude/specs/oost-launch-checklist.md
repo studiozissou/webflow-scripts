@@ -29,10 +29,11 @@
 ## 3. Website — structure
 - [ ] Webflow Premium site plan, billed annually
 - [ ] Localization Essential, one `en` locale, billed annually
-  - [ ] Only the homepage published in `en`; all other pages excluded from the locale
-  - [ ] Machine translation hand-edited against the `/en` copy in the spec
-  - [ ] hreflang `nl` / `en` / `x-default` verified on the homepage
-- [ ] Pages: `/`, `/afhalen`, `/catering`, `/over-ons`, `/en/`
+  - [ ] Whole site published in `en`; CMS fields and Instellingen localised, not duplicated
+  - [ ] English translation is a later, separate task — machine-translate then hand-edit; dish names stay Indonesian, "saté" → "satay"
+  - [ ] hreflang `nl` / `en` / `x-default` verified on every page
+  - [ ] Language switch in nav (NL / EN), same position on every page
+- [ ] Pages: `/`, `/afhalen`, `/catering`, `/over-ons` (+ `/en/…` for each)
   - [ ] Full menu on the homepage at `#menukaart` — no separate menu page (14 dishes)
   - [ ] No blog, news, gallery, contact or reviews page
 - [ ] Nav: Menukaart (anchor → `/#menukaart`) · Afhalen · Catering · Over ons · Reserveren (button) · EN
@@ -111,11 +112,6 @@ Rules for all pages:
 - [ ] Real family photos only, alt text with names
 - [ ] CTAs: Reserveer een tafel · Bekijk de menukaart (→ `/#menukaart`)
 
-`/en/`
-- [ ] Title `Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
-- [ ] Sections: who we are · the menu (link to `/#menukaart`, note dish names are the same) · book · takeaway · find us
-- [ ] Satay spelt "satay" here, "saté" everywhere else
-
 ## 7. Google Business Profile
 - [ ] Created under the business email; video verification completed
 - [ ] Name = `Restaurant Oost`, exactly as on the sign (no keywords added)
@@ -134,7 +130,7 @@ Rules for all pages:
 
 ## 8. Bookings, automation, privacy
 - [ ] Formitable account (Zenchef NL), Dutch UI
-  - [ ] Widget script in site `<head>`; `[data-formitable]` buttons in nav, hero, `/en/`
+  - [ ] Widget script in site `<head>`; `[data-formitable]` buttons in nav and hero, both locales
   - [ ] Takeaway module configured (so takeaway orders also trigger the review email)
   - [ ] Review verzoek e-mail switched on, Google review link inserted, timing default (next morning dine-in, same evening takeaway)
   - [ ] Booking form disclosure text set: "Na je bezoek sturen we je één mail met de vraag hoe het was, en af en toe nieuws van Oost. Afmelden kan altijd."

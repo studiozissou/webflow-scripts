@@ -1,17 +1,17 @@
 # Oost — website copy
-**Status:** Draft v1 · **Date:** 2026-09-12 · **Language:** Dutch, informal `je`; one English page
+**Status:** Draft v1 · **Date:** 2026-09-12 · **Language:** Dutch, informal `je`. The whole site is translated to English later via Webflow Localization; the translation is not written here.
 
 Placeholders in `[…]` are facts we don't have yet. The menu is invented to show shape, length and phrasing; the family replaces dishes and prices. Prices are plausible for Haarlem in 2026.
 
 **How the keywords sit:** each page owns one search intent and says it in the title, the H1 and the first paragraph, then never forces it again. Dish names, "Haarlem" and "afhalen" recur where a person would naturally say them. Nothing here is written for a robot; read it aloud and it should sound like the family.
 
-**Length:** home ~800 words (the menu carries it), `/afhalen` ~600, `/catering` ~500, `/over-ons` ~250, `/en/` ~250. The two pages that exist to win a keyword are the two with the most content. `/over-ons` and `/en/` are brand and expat pages and are meant to be short.
+**Length:** home ~800 words (the menu carries it), `/afhalen` ~600, `/catering` ~500, `/over-ons` ~250. The two pages that exist to win a keyword are the two with the most content. `/over-ons` is a brand page and is meant to be short.
 
 ---
 
 ## Global
 
-**Nav:** Menukaart · Afhalen · Catering · Over ons · **Reserveer een tafel** · EN
+**Nav:** Menukaart · Afhalen · Catering · Over ons · **Reserveer een tafel** · NL / EN
 **Footer:**
 > **Restaurant Oost** · [Straat 00], [0000 XX] Haarlem · [06 00 00 00 00] · App ons · Route
 > [Openingstijden, CMS-bound, per dag]
@@ -305,35 +305,6 @@ Placeholders in `[…]` are facts we don't have yet. The menu is invented to sho
 
 ---
 
-## `/en/` English
-
-**Title:** `Oost – Indonesian family restaurant in Haarlem | Menu, takeaway, bookings`
-**Meta:** `Oost is a family-run Indonesian restaurant in Haarlem. Rijsttafel, satay and rendang from family recipes. Book a table, order takeaway or ask about catering.`
-
-**H1:** Indonesian food the way our family cooks it, in the heart of Haarlem
-
-> We're the [surname] family. We cook the way [grandma] taught us: slowly, with a lot of sambal, from recipes nobody ever wrote down. Come for dinner, take it home, or let us cater your party.
-
-[Book a table] [Order takeaway] [WhatsApp us]
-
-**The menu**
-> Rijsttafel, the Dutch-Indonesian table of small shared dishes, from two people. Satay from the charcoal grill, rendang stewed for four hours, nasi goreng and bami, and a full vegetarian half of the menu with gado-gado, tempé and sajoer lodeh. Dish names are Indonesian on the Dutch menu too, so nothing gets lost. Everything is marked vegetarian or spicy, and everything can be made mild for kids.
-> [See the full menu →](/#menukaart)
-
-**Book a table**
-> Bookings aren't required, but Friday and Saturday fill up. [Book a table]
-
-**Takeaway**
-> WhatsApp or call [+31 6 00 00 00 00] with your order and a pick-up time. Half an hour is enough for most dishes; rijsttafel is best ordered a day ahead. Collection only, no delivery. Open Sundays.
-
-**Catering**
-> Rijsttafel buffets and lunch boxes for parties and offices in and around Haarlem, from ten people. [Email us](mailto:) or WhatsApp.
-
-**Find us**
-> [Street 00], Haarlem, [x] minutes' walk from the station. [Hours]. [Google Maps]
-
----
-
 ## Adjacent copy (same voice, same keywords)
 
 **Google Business Profile description** (≤ 750 tekens)
@@ -363,6 +334,6 @@ Placeholders in `[…]` are facts we don't have yet. The menu is invented to sho
 | `/afhalen` | indonesisch afhalen haarlem · rijsttafel afhalen haarlem | nasi goreng afhalen · saté afhalen · zondag · vegetarisch afhalen |
 | `/catering` | indonesische catering haarlem · rijsttafel catering | buffet · bedrijfslunch · verjaardag |
 | `/over-ons` | familierestaurant haarlem · de Oost | (brand, E-E-A-T) |
-| `/en/` | indonesian food haarlem · indonesian restaurant haarlem | indonesian takeaway haarlem · rijsttafel |
+| `/en/…` (later) | indonesian food haarlem · indonesian restaurant haarlem | indonesian takeaway haarlem · rijsttafel |
 
 Not used anywhere on purpose: "beste", "authentiek", "ambachtelijk", "passie", "beleving". If a sentence needs those, it isn't finished.

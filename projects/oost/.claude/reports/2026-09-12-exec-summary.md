@@ -37,7 +37,7 @@ Six pages, no blog, no news section, nothing that needs feeding.
 **Running it:** you'll be able to change prices, mark a dish sold out, and change opening hours from your phone. One edit updates the page and the search data together. We'll do a 30-minute handover and leave a one-page guide.
 
 ## 3. Being found
-- **What decides local map rankings**, according to the annual Whitespark survey of 47 local-search experts (2026):
+- **What decides local map rankings**, according to the annual [Whitespark survey](https://whitespark.ca/local-search-ranking-factors/) of 47 local-search experts (2026):
 
   | Signal | Weight |
   |---|---|
@@ -112,3 +112,30 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 - Everything else in this plan is free.
 
 *Search volume figures are estimates; we'll replace them with real data from Google Search Console two months after launch.*
+
+## Sources
+**Ranking and search**
+- [Whitespark — 2026 Local Search Ranking Factors](https://whitespark.ca/local-search-ranking-factors/) (chart transcribed via [W3 Marketing Hub](https://w3marketinghub.com/seo/local-seo-ranking/))
+- [Google — How to improve your local ranking](https://support.google.com/business/answer/7091)
+- [Google — Business Profile messaging changes](https://support.google.com/business/answer/14919056) · [Q&A removal](https://shorelinedigital.agency/blog/google-public-qa-feature-on-gbp-being-removed/)
+- [SOCi — how ChatGPT, Perplexity and AI Overviews pick local businesses](https://www.soci.ai/blog/how-to-rank-in-chatgpt-perplexity-and-google-ai-overview/)
+- [Sterling Sky — Google Business Profile name policy and keyword stuffing](https://www.sterlingsky.ca/50-cases-of-keyword-spam/)
+
+**Reviews and the law**
+- [Google — Maps user-generated content policy (incentivised reviews)](https://support.google.com/contributionpolicy/answer/7400114)
+- [ACM — reviews en beoordelingen gebruiken](https://www.acm.nl/nl/verkoop-aan-consumenten/reclame-en-verleiden/online-beinvloeden/reviews-en-beoordelingen-gebruiken) · [ACM — aanpak nepreviews](https://www.acm.nl/nl/publicaties/acm-pakt-handel-nepreviews-en-neplikes-aan)
+- [DDMA — e-mail en de soft opt-in](https://ddma.nl/legal/wetgeving/e-mail/) · [Legalz — soft opt-in telemarketing vervalt 1 juli 2026](https://www.legalz.nl/blog/soft-op-in-voor-telemarketing-vervalt-1-juli-2026-is-uw-organisatie-voorbereid)
+
+**Bookings and tools**
+- [Formitable — review verzoek e-mail](https://help.formitable.com/nl/articles/2720987-review-verzoek-email-aanzetten-of-aanpassen) · [Formitable × Zenchef](https://formitable.com/en/formitablezenchefpressrelease)
+- [Zenchef — plans](https://www.zenchef.com/plans)
+- [Eet.nu — reserveringen, tarieven](https://reserveringen.eet.nu/)
+- [TheFork Manager — review requests](https://www.theforkmanager.com/en/blog/how-encourage-customers-write-reviews)
+- [WhatsApp Business pricing, Europe 2026](https://blueticks.co/blog/whatsapp-business-pricing-europe-2026)
+- [Webflow pricing 2026](https://www.memberstack.com/blog/new-webflow-pricing-in-2026-what-every-plan-costs-and-how-to-choose) · [Webflow Localization pricing](https://www.tunel.studio/webflow-wiki/pricing/webflow-localization-pricing-and-plans)
+
+**Haarlem**
+- Competitor sites reviewed: [De Lachende Javaan](https://delachendejavaan.com/), [Toko SamaSama](https://www.tokosamasama.nl/), [Toko Nur](https://www.tokonur.nl/en), [Café Samabe](https://samabe.nl/)
+- Name collision: [Thuisbezorgd Haarlem-Oost](https://www.thuisbezorgd.nl/bestellen/eten/haarlem-haarlem-oost-2034) · [Eet.nu Oost-Europees Haarlem](https://www.eet.nu/haarlem/oost-europees) · [Café Oost Amsterdam](https://cafe-oost.nl/) · [Op Oost Texel](https://www.opoost.nl/en/restaurant)
+- [VisitHaarlem — listing submission](https://www.visithaarlem.com/) · Instagram: [@waarhaarlemeet](https://www.instagram.com/waarhaarlemeet/), [@haarlemfood](https://www.instagram.com/haarlemfood/)
+- [Nederlands-Indië — "de Oost"](https://nl.wikipedia.org/wiki/Nederlands-Indi%C3%AB)

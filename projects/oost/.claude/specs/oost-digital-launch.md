@@ -28,7 +28,7 @@ As a Haarlemmer who wants Indonesian food tonight, I want to see the menu, book 
 Full briefings in `projects/oost/.claude/research/`. What matters:
 
 - **No Haarlem Indonesian competitor has schema markup; most serve PDF menus.** An HTML menu + Restaurant/Menu JSON-LD makes Oost the only structured entity in the category. (seo briefing)
-- **Local pack ranking is ~32% GBP signals, ~20% reviews, ~19% on-page.** Google now attributes prominence mainly to backlinks and reviews. The website's job is relevance for long-tail terms and being the citable source; GBP and reviews do the ranking. (Whitespark 2025, Google docs)
+- **Local pack ranking is ~32% GBP signals, ~20% reviews, ~19% on-page.** Google now attributes prominence mainly to backlinks and reviews. The website's job is relevance for long-tail terms and being the citable source; GBP and reviews do the ranking. (Whitespark 2026 expert survey, n=47; Google docs)
 - **Google killed GBP Q&A (late 2025) and messaging (2024).** Gemini's "Ask Maps" now answers customer questions from GBP data, reviews and the website — so GBP completeness and an HTML menu are doing more work than before.
 - **Formitable (Zenchef's NL brand) has a confirmed automated post-visit review email** with a Google review link, next morning for dine-in, same evening for takeaway. This is the only zero-tech path to "guest ate → invited to review".
 - **Incentivised reviews are banned** by Google's UGC policy ("Offer incentives – such as payment, discounts, free goods and/or services – in exchange for posting any review") and treated as advertising by the ACM (fines to €900k). Review gating (only asking happy guests) is also banned.

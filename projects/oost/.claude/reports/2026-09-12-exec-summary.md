@@ -91,7 +91,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 
 **Two weeks before:** Apple Business Connect · Bing Places · Eet.nu · TheFork · Tripadvisor · OpenStreetMap · Waze · Foursquare · VisitHaarlem.com listing · website live.
 
-**Opening week:** invite @waarhaarlemeet and @haarlemfood (Haarlem's two food Instagram accounts, 10k followers between them) to a soft-opening meal — free meal, no strings · tip Haarlems Dagblad and Indebuurt Haarlem about the opening · ask the first 30 guests in person for a review. Early velocity matters more than anything.
+**Opening week:** invite Haarlem's local Instagram accounts to a soft-opening meal — free meal, no strings: @haarlemcityblog (42K, reviews every new opening), @indebuurthaarlem (11K), @waarhaarlemeet (7.2K), @haarlemfood (3.2K); list on VisitHaarlem and tag @visithaarlem (24K); pitch Proef het Verre Oosten, whose Indonesian-hotspots list already includes one Haarlem toko · tip Haarlems Dagblad and Indebuurt Haarlem about the opening · ask the first 30 guests in person for a review. Early velocity matters more than anything.
 
 **Every month, about an hour:** reply to reviews · four new photos · one Google post · update sold-out dishes · swap one quote on the homepage.
 
@@ -137,5 +137,5 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 **Haarlem**
 - Competitor sites reviewed: [De Lachende Javaan](https://delachendejavaan.com/), [Toko SamaSama](https://www.tokosamasama.nl/), [Toko Nur](https://www.tokonur.nl/en), [Café Samabe](https://samabe.nl/)
 - Name collision: [Thuisbezorgd Haarlem-Oost](https://www.thuisbezorgd.nl/bestellen/eten/haarlem-haarlem-oost-2034) · [Eet.nu Oost-Europees Haarlem](https://www.eet.nu/haarlem/oost-europees) · [Café Oost Amsterdam](https://cafe-oost.nl/) · [Op Oost Texel](https://www.opoost.nl/en/restaurant)
-- [VisitHaarlem — listing submission](https://www.visithaarlem.com/) · Instagram: [@waarhaarlemeet](https://www.instagram.com/waarhaarlemeet/), [@haarlemfood](https://www.instagram.com/haarlemfood/)
+- [VisitHaarlem — listing submission](https://www.visithaarlem.com/) · Instagram: [@haarlemcityblog](https://www.instagram.com/haarlemcityblog/), [@visithaarlem](https://www.instagram.com/visithaarlem/), [@indebuurthaarlem](https://www.instagram.com/indebuurthaarlem/), [@waarhaarlemeet](https://www.instagram.com/waarhaarlemeet/), [@haarlemfood](https://www.instagram.com/haarlemfood/) · [Proef het Verre Oosten — Indonesische hotspots](https://proefhetverreoosten.nl/hotspots-en-reizen/12-indonesische-restaurant-hotspots/)
 - [Nederlands-Indië — "de Oost"](https://nl.wikipedia.org/wiki/Nederlands-Indi%C3%AB)

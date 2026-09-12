@@ -32,7 +32,7 @@ Full briefings in `projects/oost/.claude/research/`. What matters:
 - **Formitable (Zenchef's NL brand) has a confirmed automated post-visit review email** with a Google review link, next morning for dine-in, same evening for takeaway. This is the only zero-tech path to "guest ate → invited to review".
 - **Incentivised reviews are banned** by Google's UGC policy ("Offer incentives – such as payment, discounts, free goods and/or services – in exchange for posting any review") and treated as advertising by the ACM (fines to €900k). Review gating (only asking happy guests) is also banned.
 - **AI answers (ChatGPT/Perplexity/Gemini) pull local dining from Google Maps, Tripadvisor, Foursquare, Yelp** — for NL that means GBP + Tripadvisor completeness matter disproportionately.
-- **Two Haarlem foodie Instagram accounts** (@waarhaarlemeet ~7.2k, @haarlemfood ~3.2k) accept submissions — the cheapest route to a "best of Haarlem" mention.
+- **Haarlem's local Instagram reach is concentrated in five accounts** — @haarlemcityblog (42K, reviews new openings), @visithaarlem (24K), @indebuurthaarlem (11K), @waarhaarlemeet (7.2K), @haarlemfood (3.2K) — plus Proef het Verre Oosten for the Indo-food audience. A soft-opening invite is the cheapest route to a "best of Haarlem" mention.
 - SEMrush unavailable this session (plan lapsed, pinned for later) — **all keyword volumes are estimates**. Search Console gives real query data free once live.
 
 ---
@@ -272,7 +272,7 @@ Do in this order. Everything is free unless marked. Use the identical NAP string
 - [ ] Site live with schema, submitted to Search Console + Bing Webmaster
 
 **Opening week**
-- [ ] Invite @waarhaarlemeet and @haarlemfood to a soft-opening meal (free meal, no conditions on posting)
+- [ ] Soft-opening invites: @haarlemcityblog (42K, info@haarlemcityblog.nl), @indebuurthaarlem (11K), @waarhaarlemeet (7.2K), @haarlemfood (3.2K); tag @visithaarlem (24K). Free meal, no conditions on posting. Full list in `research/2026-09-12-haarlem-instagram-accounts.md`
 - [ ] Tip Haarlems Dagblad + Indebuurt Haarlem "nieuwe horeca" (direct email to editorial — mechanics unverified, check each site's tip-ons page)
 - [ ] First GBP Post: "We zijn open"
 - [ ] Ask the first 30 guests in person for a Google review — velocity in week one matters most

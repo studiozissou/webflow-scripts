@@ -184,9 +184,16 @@ Rules for all pages:
 - [ ] Not set up: TikTok (optional), SMS, WhatsApp Business API, separate newsletter tool, Instagram feed embed on the site
 
 ## 12. Opening week
-- [ ] @waarhaarlemeet and @haarlemfood invited to a soft-opening meal — free, no posting conditions
-- [ ] Haarlems Dagblad and Indebuurt Haarlem tipped directly ("nieuwe horeca") — check each site's tip-ons page for the current route
-- [ ] Haarlem City Blog / Uitagenda checked for a submission route
+- [ ] Soft-opening invites sent — free meal, no posting conditions (full list: `research/2026-09-12-haarlem-instagram-accounts.md`)
+  - [ ] @haarlemcityblog (42K) — info@haarlemcityblog.nl
+  - [ ] @indebuurthaarlem (11K) — tip de redactie
+  - [ ] @waarhaarlemeet (7.2K) — DM
+  - [ ] @haarlemfood (3.2K) — DM
+  - [ ] @visithaarlem (24K) — listing first, then tag every post
+  - [ ] Proef het Verre Oosten — pitch for the "Indonesische hotspots" list (Kokkie Londo Haarlem is already on it)
+  - [ ] @anne_travel_foodie — pitch the vegetarian rijsttafel angle
+- [ ] Haarlems Dagblad (@hdhaarlem, 9.3K) and LEVEN! Magazine Haarlem pitched with the family story, not a tag
+- [ ] National Haarlem-hotspot lists pitched for their next update: Foodies Magazine, Uit Paulines Keuken, Girls Who, WijnSpijs, Your Little Black Book
 - [ ] First 30 guests asked in person for a Google review
 - [ ] GBP Post "We zijn open" published
 - [ ] Sitemap submitted to Search Console and Bing Webmaster; six URLs indexed within 14 days

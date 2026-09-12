@@ -191,7 +191,14 @@ Rules for all pages:
   - [ ] @anne_travel_foodie — pitch the vegetarian rijsttafel angle
 - [ ] Haarlems Dagblad (@hdhaarlem, 9.3K) and LEVEN! Magazine Haarlem pitched with the family story, not a tag
 - [ ] National Haarlem-hotspot lists pitched for their next update: Foodies Magazine, Uit Paulines Keuken, Girls Who, WijnSpijs, Your Little Black Book
-- [ ] First 30 guests asked in person for a Google review
+- [ ] First 30 guests asked in person for a Google review — week one, at the bill, by a family member (why: an in-person ask converts several times better than card or email; Google weights review recency and rate; a new profile needs a first batch to enter the map results at all; later guests see the count)
+  - [ ] Family member named who does the asking every service in week one
+  - [ ] Line agreed: "We zijn net open — een Google-review helpt ons echt. Vanavond nog, als je wilt."
+  - [ ] Ask every table, not just the happy ones; nothing attached to the ask
+  - [ ] Target ~30 in week one; not more than ~50 (a spike from a new profile can trip Google's spam filter)
+  - [ ] Guest shown the QR on the card or table stand so it's one tap
+  - [ ] Every review replied to within 48h, from week one
+  - [ ] Week two onwards: steady, via card, email and the table line — no more push
 - [ ] GBP Post "We zijn open" published
 - [ ] Sitemap submitted to Search Console and Bing Webmaster; five URLs indexed within 14 days
 

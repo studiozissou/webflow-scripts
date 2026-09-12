@@ -69,6 +69,8 @@ Five Dutch pages + one English page. "Book" is a button, not a page — the Form
 
 Not built: blog, news, gallery page, contact page (contact lives in footer + `/afhalen`), reviews page (reviews live on Google; homepage quotes three by hand).
 
+**Why dish + Haarlem terms get no pages of their own.** Each is <10–20 searches/month (est.); a "rendang Haarlem" page with a paragraph and a price is thin content Google folds into the parent anyway. Those searches resolve in the local pack, not on a URL — what gets Oost into the three Maps results is the GBP menu and reviews that mention the dish. `Menu → MenuSection → MenuItem` schema on `/menukaart` already gives Google a structured entity per dish, which no competitor has. And six dish pages the family never updates is the rot this site is designed to avoid. So: one `/menukaart`, every dish with a real two-line description in the CMS (that's where the dish name, the method and the city land), section intros that mention Haarlem once, dish names and captioned photos in the GBP menu, and a nudge on the thank-you card to name what you ate in the review. **Exception:** rijsttafel ("rijsttafel haarlem" 90–150/mo, "rijsttafel afhalen haarlem" a distinct intent) lives in `/afhalen` at launch and may earn `/rijsttafel` in phase 2 if Search Console shows those queries landing on the wrong page.
+
 Nav: Menukaart · Afhalen · Catering · Over ons · **Reserveren** (button) · EN
 Footer: address, phone/WhatsApp, hours, Google Maps link, Instagram, KvK.
 

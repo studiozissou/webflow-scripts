@@ -25,13 +25,13 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 
 ## `/` Home
 
-**Title:** `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
-**Meta:** `Oost is het Indonesische familierestaurant van Haarlem. Rijsttafel, saté, rendang en gado-gado zoals thuis. Bekijk de menukaart, reserveer een tafel of haal af.`
+**Title:** `Oost – Indonesisch restaurant in Haarlem: rijsttafel & afhalen`
+**Meta:** `Oost is het Indonesische familierestaurant van Haarlem. Rijsttafel, saté, rendang en gado-gado zoals thuis. Bekijk de kaart, reserveer of haal af.`
 
 ### Hero
 **H1:** Indonesisch eten zoals bij ons thuis, midden in Haarlem
 
-> Welkom bij Oost, het Indonesische familierestaurant van Haarlem. Wij zijn de familie [achternaam] en we koken zoals [oma] het ons leerde, wat vooral betekent: geduld hebben, en sambal maken op de dag zelf. Je kunt hier komen eten, je kunt het meenemen naar huis, en als je een feest hebt koken we de rijsttafel voor de hele tafel.
+> Welkom bij Oost, het Indonesische familierestaurant van Haarlem. Wij zijn [naam] en [naam], en we koken zoals [oma] het ons leerde, wat vooral betekent: geduld hebben, en sambal maken op de dag zelf. Je kunt hier komen eten, je kunt het meenemen naar huis, en als je een feest hebt koken we de rijsttafel voor de hele tafel.
 
 [Reserveer een tafel] [Bestel om af te halen] [App ons]
 
@@ -66,7 +66,7 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 | **Saté ajam** | Kipsaté van de houtskoolgrill, zes stokjes, met onze eigen pindasaus en kroepoek. | € 14,50 |
 | **Saté babi** | Varkenssaté, een nacht gemarineerd in ketjap en knoflook. Zoet en een beetje plakkerig, zoals het hoort. | € 15,00 |
 | **Ajam pedis** 🌶🌶 | Kip in rode sambal, langzaam gegaard. Dit is de pittige. | € 16,50 |
-| **Babi ketjap** | Varkensvlees in zoete ketjap met ui en gember. Bij ons thuis het gerecht voor de kinderen, hier ook. | € 16,50 |
+| **Babi ketjap** | Varkensvlees in zoete ketjap met ui en gember. Vroeger thuis het gerecht voor de kinderen. Dat is het hier ook. | € 16,50 |
 | **Ikan pepes** | Vis in bananenblad, gestoomd met citroengras, gember en kemiri. Welke vis hangt af van wat er die ochtend was. | € 17,50 |
 
 **Vegetarisch**
@@ -155,18 +155,18 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 ### De familie
 **H2:** De familie
 
-> Oost is een familiebedrijf. [Naam] staat in de keuken, [naam] doet de zaal en de bestellingen, en [naam] proeft de sambal en zegt of hij pittig genoeg is. Dat duurt meestal langer dan je zou denken. [Lees ons verhaal →](/over-ons)
+> Oost is een familiebedrijf van twee. [Naam] staat in de keuken, [naam] doet de zaal, de telefoon en Instagram. De sambal proeven ze allebei, en het duurt meestal even voor ze het eens zijn. [Lees ons verhaal →](/over-ons)
 
 ---
 
 ## `/afhalen`
 
-**Title:** `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Restaurant Oost`
+**Title:** `Indonesisch afhalen in Haarlem – rijsttafel & saté | Oost`
 **Meta:** `Indonesisch eten afhalen in Haarlem? Bestel je rijsttafel, nasi goreng of saté bij Oost via WhatsApp of telefoon en haal het warm op. Ook op zondag.`
 
 **H1:** Indonesisch afhalen in Haarlem
 
-> Geen zin om te koken? Bestel bij Oost en haal het warm op. App of bel ons, zeg hoe laat je komt, en het staat klaar. Alles van de menukaart kan mee, van een portie saté tot een hele rijsttafel. We zitten op [Straat 00], [x] minuten lopen van het station, dus als je uit de trein stapt en geen zin hebt in de supermarkt, dan weet je het.
+> Geen zin om te koken? Bestel bij Oost, het Indonesische familierestaurant aan [Straat 00], en haal het warm op. App of bel ons, zeg hoe laat je komt, en het staat klaar. Alles van de menukaart kan mee, van een portie saté tot een hele rijsttafel. We zitten [x] minuten lopen van het station, dus als je uit de trein stapt en geen zin hebt in de supermarkt, dan weet je het.
 
 [App je bestelling] [Bel [06 00 00 00 00]]
 
@@ -246,8 +246,8 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 
 ## `/catering`
 
-**Title:** `Indonesische catering in Haarlem – rijsttafel voor je feest | Restaurant Oost`
-**Meta:** `Rijsttafel of Indonesisch buffet voor je verjaardag, borrel, bruiloft of bedrijfslunch in Haarlem en omgeving. Familierecepten, vers gekookt, vanaf tien personen.`
+**Title:** `Indonesische catering in Haarlem – rijsttafel | Oost`
+**Meta:** `Rijsttafel of Indonesisch buffet voor je verjaardag, borrel, bruiloft of bedrijfslunch in Haarlem en omgeving. Vers gekookt, vanaf tien personen.`
 
 **H1:** Rijsttafel catering voor je feest
 
@@ -256,7 +256,7 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 [Vraag een offerte aan] [App ons]
 
 ### Wat we maken
-**H2:** Wat we maken
+**H2:** Rijsttafel catering: wat we maken
 
 > **Rijsttafel buffet.** Het Indonesische buffet zoals je het kent: rendang, saté, ajam pedis, gado-gado, sambal goreng boontjes, tempé, sajoer lodeh, nasi en bami, met kroepoek, atjar en sambal. Acht tot twaalf schaaltjes, afhankelijk van hoeveel mensen er komen. Warm afgeleverd in bakken die zo op tafel kunnen, met een kaartje bij elk gerecht wat het is en of het pittig is. Vanaf € [27,50] per persoon.
 >
@@ -274,7 +274,7 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 > Bij een rijsttafel rekenen we ruim, omdat mensen twee keer opscheppen en er toch altijd iemand is die nog een derde keer gaat. Er blijft dan wat over voor de volgende dag, en daar hoor je nooit iemand over klagen. Voor een borrel is drie tot vier stokjes saté en twee lumpia's per persoon genoeg naast andere hapjes, het dubbele als het de maaltijd vervangt. Twijfel je, bel dan even, dan rekenen we het samen uit.
 
 ### Waar we komen
-**H2:** Waar we komen
+**H2:** Catering in Haarlem en omgeving
 
 > Heel Haarlem, en daaromheen: Heemstede, Bloemendaal, Overveen, Aerdenhout, Zandvoort, Spaarndam, Hoofddorp en Velserbroek. Verder weg kan, in overleg. Bezorgen en klaarzetten doen we vanaf twintig personen. Daaronder haal je het bij ons op, warm en ingepakt.
 
@@ -310,18 +310,22 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 
 ## `/over-ons`
 
-**Title:** `Over ons – de familie achter Oost, Indonesisch restaurant in Haarlem`
-**Meta:** `Oost is een familiebedrijf. Lees hoe de familie [achternaam] hun Indonesische familierecepten van [plaats] naar Haarlem bracht, en wie er in de keuken staat.`
+**Title:** `De familie achter Oost – Indonesisch restaurant in Haarlem`
+**Meta:** `Oost is het restaurant van [naam] en [naam]. Lees hoe [oma]'s Indonesische recepten van [plaats] naar Haarlem kwamen, en wie er in de keuken staat.`
 
 **H1:** De familie achter Oost
 
+**H2:** Waarom Oost
+
 > Oost heet Oost omdat het daar begon. "De Oost", zo bleef [oma] Indonesië noemen, ook na [vijftig] jaar in Nederland, en ook als je haar verbeterde. De recepten kwamen mee, in haar hoofd en in een schrift dat inmiddels uit elkaar valt. Dat schrift ligt nu in onze keuken in Haarlem, in een plastic hoesje, en niemand mag het meenemen.
 >
-> [Naam] staat in de keuken, elke dag. [Naam] doet de zaal, de bestellingen en de telefoon. [Naam] proeft de sambal en zegt wanneer die goed is, en dat duurt meestal langer dan iedereen zou willen. [Naam], de jongste, doet Instagram, dus als je een filmpje van de rendang voorbij ziet komen, weet je van wie.
+**H2:** Wie er in de keuken staat
+
+> Wij zijn met z'n tweeën. [Naam] staat in de keuken, elke dag. [Naam] doet de zaal, de bestellingen, de telefoon en Instagram, dus als je een filmpje van de rendang voorbij ziet komen, weet je van wie. De sambal proeven we allebei, en dat duurt meestal even, want we zijn het zelden meteen eens. [Oma] komt op [maandag] langs om te controleren of we niets veranderd hebben.
 >
-> We zijn geen keten en we zijn geen foodhall. We zijn een familie met een keuken in Haarlem en we koken wat we thuis ook koken, in dezelfde hoeveelheden sambal. Dat betekent ook dat de rendang soms op is. Dan is hij op. Morgen staat er weer een pan.
+> We zijn geen keten en we zijn geen foodhall. We zijn twee mensen met een keuken in Haarlem en we koken [wat we thuis ook koken](/#menukaart), in dezelfde hoeveelheden sambal. Op zondag is dat meestal een rijsttafel, en dat is hier niet anders. Dat betekent ook dat de rendang soms op is. Dan is hij op. Morgen staat er weer een pan.
 >
-> Kinderen zijn welkom, ook als ze hard zijn. We hebben er zelf ook een paar.
+> Kinderen zijn welkom, ook als ze hard zijn. Wij hebben er zelf geen, dus we vinden het alleen maar gezellig.
 >
 > Kom langs. We schuiven een stoel bij.
 
@@ -386,5 +390,9 @@ Not used anywhere on purpose: "beste", "authentiek", "ambachtelijk", "passie", "
 - Meta descriptions, titles, H1s, FAQs and the keyword map are unchanged; the SEO surface is identical.
 
 **SEO recheck (13 Sep):** the humanize pass had dropped the page's own phrase from two first paragraphs. Restored: "het Indonesische familierestaurant van Haarlem" in the home hero, "Indonesische catering in Haarlem" in the catering intro, plus one rijsttafel-and-Haarlem sentence in the menu intro and a menu link from catering. Nothing else moved; titles, metas, H1s and FAQs were already intact.
+
+**Full-site recheck (13 Sep):** titles trimmed to 52–62 characters (afhalen and catering were 77 and 79 and would have been cut in results), metas to under 155 (home, catering and over-ons were 157–162). Afhalen now says "familie" once. Catering carries its own word in two H2s. Over-ons gets two H2s, a link to the menu and one rijsttafel mention. Word counts: home 1,390, afhalen 940, catering 690, over-ons 280.
+
+**Owners are a couple, no children (13 Sep):** hero, the home "De familie" block, the About page and the babi ketjap line rewritten for two people. "Familierestaurant" stays: a couple running it on family recipes is a family restaurant, and it's the term people search.
 
 **Still worth a native read:** "Klein schaaltje, je wilt er twee", "in dezelfde hoeveelheden sambal", "dan weet je het". They sound right to me; a Haarlemmer's ear decides.

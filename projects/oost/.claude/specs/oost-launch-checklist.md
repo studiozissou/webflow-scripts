@@ -76,15 +76,15 @@
 ## 6. Website — copy (per page; spec §3 has the drafts)
 Rules for all pages:
 - [ ] Voice: warm, direct, first person plural, `je`, no marketing adjectives
-- [ ] "familie" appears once per page, naturally
+- [ ] "familie" appears at least once per page, naturally (afhalen: in the intro)
 - [ ] Dish names in Indonesian, never translated; Dutch spellings: rijsttafel, saté, bami, gado-gado, afhalen (not bezorgen unless true)
-- [ ] Every title tag contains "Oost", either "Indonesisch restaurant" or "| Restaurant Oost", and "Haarlem"; no bare "Oost" title anywhere
-- [ ] Every page has a unique meta description ≤ 155 chars
+- [ ] Every title tag contains "Oost", "Indonesisch" and "Haarlem", and is 50–62 characters; no bare "Oost" title anywhere
+- [ ] Every page has a unique meta description of 120–155 characters (checked in the copy file)
 - [ ] Placeholders `[…]` all filled; `/humanizer` pass done
 - [ ] "Haarlem-Oost" added where relevant per decision 1
 
 `/` Home
-- [ ] Title `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
+- [ ] Title `Oost – Indonesisch restaurant in Haarlem: rijsttafel & afhalen`
 - [ ] H1 `Indonesisch eten zoals bij ons thuis, midden in Haarlem`
 - [ ] Intro paragraph (family, how you cook, three ways to eat)
 - [ ] CTA row: Reserveer een tafel (widget) · Afhalen · App ons (wa.me)
@@ -102,7 +102,7 @@ Rules for all pages:
 - [ ] "De familie" — one paragraph, kitchen photo, link to over-ons
 
 `/afhalen`
-- [ ] Title `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Restaurant Oost`
+- [ ] Title `Indonesisch afhalen in Haarlem – rijsttafel & saté | Oost`
 - [ ] H1 `Indonesisch afhalen in Haarlem`
 - [ ] "Zo werkt het" three steps; wa.me button with prefilled "Hoi, ik wil graag afhalen:"; bel button
 - [ ] "Rijsttafel afhalen" block with persons, dishes, lead time
@@ -110,13 +110,13 @@ Rules for all pages:
 - [ ] FAQ: zondag · bezorgen · hoe ver van tevoren · vegetarisch — answers match decisions in §1
 
 `/catering`
-- [ ] Title `Indonesische catering in Haarlem – rijsttafel voor je feest | Restaurant Oost`
+- [ ] Title `Indonesische catering in Haarlem – rijsttafel | Oost`
 - [ ] Two paragraphs (share, occasions, radius, minimum, pickup or delivered; what to tell us, reply within a day)
 - [ ] Form: naam, e-mail, telefoon, datum, aantal gasten, bericht
 - [ ] "Liever eerst bellen?" line
 
 `/over-ons`
-- [ ] Title `Over ons – de familie achter Oost, Indonesisch restaurant in Haarlem`
+- [ ] Title `De familie achter Oost – Indonesisch restaurant in Haarlem`
 - [ ] "De Oost" origin paragraph; who does what; "geen keten, geen foodhall"; "als de rendang op is, is hij op"
 - [ ] Real family photos only, alt text with names
 - [ ] CTAs: Reserveer een tafel · Bekijk de menukaart (→ `/#menukaart`)

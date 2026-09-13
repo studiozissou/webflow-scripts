@@ -45,7 +45,7 @@ SERP check confirms a bare "Oost" brand won't rank for its own name for a long t
 
 **Client decision: it's a restaurant, not a toko or warung, and the real-world name is `Restaurant Oost`.** That is the sign, the receipts, the KvK trade name, the GBP name and the NAP string on every directory. It's a weaker disambiguator than "Toko Oost" — the collision query is literally "restaurant Oost Haarlem" — so the rest of the plan compensates:
 - **Body copy** says "Oost" — that's what guests will call it.
-- **HTML title tags** (keywords allowed here): homepage `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`; other pages end `| Restaurant Oost`. Never a bare "Oost".
+- **HTML title tags** (keywords allowed here): homepage `Oost – Indonesisch restaurant in Haarlem: rijsttafel & afhalen`; other pages carry "Indonesisch" and "Haarlem" and end `| Oost`, all 50–62 characters. Never a bare "Oost".
 - **GBP:** primary category `Indonesisch restaurant`; description opens "Indonesisch familierestaurant in Haarlem"; every photo captioned with a dish name. Reviews that say "Indonesisch", "rijsttafel", "rendang" are what will separate Restaurant Oost from the district in Google's eyes — which is why the review velocity plan in §4 matters more here than it would for a distinctively named place.
 - **Domain:** `oosteeten.nl` — already owned by the client. Spoken aloud it's "oost eten", so register **`oosteten.nl`** (single e) as a typo redirect, and `oosthaarlem.nl` as a defensive redirect if still free. Primary domain in every listing: `oosteeten.nl`.
 - **Story upside:** "de Oost" is what an older generation of Indo-Dutch families called the Dutch East Indies (vs "de West"). Genuine About-page material and a clean AI-quotable fact (§3); zero search volume as a term.
@@ -80,7 +80,7 @@ Full copy for every page, with a sample menu, lives in `oost-website-copy.md` �
 Voice: warm, direct, first person plural, no marketing adjectives. Every page says "familie" once, naturally. Dutch informal `je`. Dish names in Indonesian, never translated. Placeholders in `[…]`.
 
 ### `/` Home
-- **Title:** `Oost – Indonesisch restaurant, rijsttafel & afhalen in Haarlem`
+- **Title:** `Oost – Indonesisch restaurant in Haarlem: rijsttafel & afhalen`
 - **Meta:** `Oost is het Indonesische familierestaurant van Haarlem. Rijsttafel, saté, rendang en gado-gado zoals thuis — bekijk de menukaart, reserveer een tafel of haal af.`
 - **H1:** `Indonesisch eten zoals bij ons thuis, midden in Haarlem`
 - **Intro:**
@@ -104,7 +104,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
   > Oost is een familiebedrijf. [Naam] staat in de keuken, [naam] in de zaal, en [naam] bepaalt of de sambal pittig genoeg is. Lees ons verhaal →
 
 ### `/afhalen`
-- **Title:** `Indonesisch afhalen in Haarlem – rijsttafel, nasi & saté | Restaurant Oost`
+- **Title:** `Indonesisch afhalen in Haarlem – rijsttafel & saté | Oost`
 - **Meta:** `Indonesisch eten afhalen in Haarlem? Bestel je rijsttafel, nasi goreng of saté bij Oost via WhatsApp of telefoon en haal het warm op[. Ook op zondag].`
 - **H1:** `Indonesisch afhalen in Haarlem`
 - **Intro:**
@@ -124,7 +124,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
   > **Kan ik vegetarisch bestellen?** Ja — gado-gado, sambal goreng boontjes, tempé en meer. Zeg het bij je bestelling.
 
 ### `/catering`
-- **Title:** `Indonesische catering in Haarlem – rijsttafel voor je feest | Restaurant Oost`
+- **Title:** `Indonesische catering in Haarlem – rijsttafel | Oost`
 - **Meta:** `Rijsttafel of Indonesisch buffet voor je verjaardag, borrel, bruiloft of bedrijfslunch in Haarlem en omgeving. Familierecepten, vers gekookt, vanaf [x] personen.`
 - **H1:** `Rijsttafel catering voor je feest`
 - **Copy:**
@@ -134,7 +134,7 @@ Voice: warm, direct, first person plural, no marketing adjectives. Every page sa
 - **Below form:** `Liever eerst bellen? [nummer]`
 
 ### `/over-ons`
-- **Title:** `Over ons – de familie achter Oost, Indonesisch restaurant in Haarlem`
+- **Title:** `De familie achter Oost – Indonesisch restaurant in Haarlem`
 - **Meta:** `Oost is een familiebedrijf. Lees hoe de familie [achternaam] hun Indonesische familierecepten van [plaats in Indonesië] naar Haarlem bracht.`
 - **H1:** `De familie achter Oost`
 - **Copy:**

@@ -68,7 +68,8 @@
 
 ## 5. Website — schema (JSON-LD, CMS-bound embeds)
 - [ ] `/`: `Restaurant` with `name`, `servesCuisine: Indonesian`, `address` (exact NAP), `geo`, `telephone`, `priceRange`, `openingHoursSpecification` from Instellingen, `acceptsReservations`, `hasMenu` → inline `Menu` → `MenuSection` → `MenuItem` from the Gerechten collection list, `offers.price` per item, `sameAs` [GBP, Instagram, Facebook, Eet.nu, TheFork, Tripadvisor]
-- [ ] `/afhalen`: `FAQPage` from the four FAQ pairs
+- [ ] `/`: `FAQPage` from the homepage FAQ (restaurant-level questions)
+- [ ] `/afhalen`: `FAQPage` from the takeaway FAQ — different questions from the homepage, no duplicates
 - [ ] Generated with `/generate-schema`; validated with `/test-schema` (Rich Results Test, zero errors) on both pages
 - [ ] Re-validated once after the family makes a live edit during handover
 
@@ -97,6 +98,7 @@ Rules for all pages:
   - [ ] Never a PDF or image menu; print stylesheet for the section
 - [ ] "Vanavond eten?" — hours, address, route link, reserveer button, "vrijdag en zaterdag wel verstandig" line
 - [ ] "Wat gasten zeggen" — three Google reviews as text, first name + "via Google", no widget
+- [ ] "Veelgestelde vragen" — nine restaurant-level FAQs (reserveren, rijsttafel, pittig, vegetarisch, kinderen, zondag, adres/parkeren, groepen, allergieën); `<details>`; FAQPage schema
 - [ ] "De familie" — one paragraph, kitchen photo, link to over-ons
 
 `/afhalen`

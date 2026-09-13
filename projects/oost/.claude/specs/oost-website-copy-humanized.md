@@ -122,6 +122,36 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 
 > [Drie Google-reviews, letterlijk overgenomen, voornaam + "via Google". Elk kwartaal één vervangen.]
 
+### Veelgestelde vragen
+**H2:** Veelgestelde vragen
+
+> **Moet ik reserveren?**
+> Nee. Op vrijdag en zaterdag is het wel handig, want dan zit het vol. Doordeweeks en op zondag kun je meestal gewoon binnenlopen, en anders wacht je even aan de bar.
+>
+> **Wat is een rijsttafel precies?**
+> Veel kleine schaaltjes, één grote pan rijst, en iedereen pakt van alles een beetje. Het is geen Indonesisch gerecht, het is een Nederlands-Indische gewoonte die in Indonesië zelf bijna niemand kent. Bij ons vanaf twee personen. De schaaltjes kiezen wij, hoe pittig kies jij.
+>
+> **Is het eten erg pittig?**
+> Alleen als je dat wilt. Bij elk gerecht staat hoe pittig het is, alles kan milder, en de sambal staat apart op tafel zodat je zelf bepaalt hoe ver je gaat.
+>
+> **Kan ik vegetarisch eten?**
+> Ja. De helft van de kaart is vegetarisch: gado-gado, tempé, sajoer lodeh, terong balado, tahoe telor. De rijsttafel kan helemaal vegetarisch, en dat is dan geen kleinere rijsttafel.
+>
+> **Is het geschikt voor kinderen?**
+> Ja. De meeste kinderen willen saté met witte rijst en een gebakken ei, sambal apart, en dat is een prima maaltijd. Er staat een kinderstoel en er liggen kleurpotloden bij de bar.
+>
+> **Zijn jullie op zondag open?**
+> Ja, van [17:00 tot 21:00]. [Maandag] zijn we dicht, dan doet [oma] de boodschappen.
+>
+> **Waar zit Oost en kan ik parkeren?**
+> [Straat 00], in Haarlem[-Centrum / -Oost], [x] minuten lopen van het station. Parkeren kan [op straat / bij …]. Fietsen kun je gewoon voor de deur zetten.
+>
+> **Kan ik met een groep komen?**
+> Tot [twaalf] personen aan één tafel, als je even belt. Meer dan dat, of liever bij jou thuis of op kantoor? Dan koken we het als [catering →](/catering).
+>
+> **Hoe zit het met allergieën?**
+> Pinda zit in de satésaus en in de gado-gado, verder nergens. Gluten zitten in ketjap en bami. Zeg het bij het bestellen, dan zeggen we precies wat kan.
+
 ### De familie
 **H2:** De familie
 

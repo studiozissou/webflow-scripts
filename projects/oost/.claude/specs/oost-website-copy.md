@@ -5,7 +5,7 @@ Placeholders in `[…]` are facts we don't have yet. The menu is invented to sho
 
 **How the keywords sit:** each page owns one search intent and says it in the title, the H1 and the first paragraph, then never forces it again. Dish names, "Haarlem" and "afhalen" recur where a person would naturally say them. Nothing here is written for a robot; read it aloud and it should sound like the family.
 
-**Length:** home ~800 words (the menu carries it), `/afhalen` ~600, `/catering` ~500, `/over-ons` ~250. The two pages that exist to win a keyword are the two with the most content. `/over-ons` is a brand page and is meant to be short.
+**Length:** home ~1,050 words (the menu and FAQ carry it), `/afhalen` ~600, `/catering` ~500, `/over-ons` ~250. The two pages that exist to win a keyword are the two with the most content. `/over-ons` is a brand page and is meant to be short.
 
 ---
 
@@ -125,6 +125,36 @@ Placeholders in `[…]` are facts we don't have yet. The menu is invented to sho
 **H2:** Wat gasten zeggen
 
 > [Drie Google-reviews, letterlijk overgenomen, voornaam + "via Google". Elk kwartaal één vervangen.]
+
+### Veelgestelde vragen
+**H2:** Veelgestelde vragen
+
+> **Moet ik reserveren?**
+> Nee, maar op vrijdag en zaterdag is het verstandig. Doordeweeks en op zondag kun je meestal gewoon binnenlopen.
+>
+> **Wat is een rijsttafel precies?**
+> Veel kleine schaaltjes, één grote pan rijst, en iedereen pakt van alles wat. Het is geen Indonesisch gerecht maar een Nederlands-Indische gewoonte. Bij ons vanaf twee personen, en de schaaltjes kiezen wij.
+>
+> **Is het eten erg pittig?**
+> Alleen als je dat wilt. Bij elk gerecht staat hoe pittig het is, en alles kan milder. De sambal staat apart op tafel.
+>
+> **Kan ik vegetarisch eten?**
+> Ja, de helft van de kaart is vegetarisch. Gado-gado, tempé, sajoer lodeh, terong balado. De rijsttafel kan helemaal vegetarisch.
+>
+> **Is het geschikt voor kinderen?**
+> Ja. Saté met witte rijst en een gebakken ei is de favoriet, sambal apart. Er staat een kinderstoel.
+>
+> **Zijn jullie op zondag open?**
+> Ja, van [17:00 tot 21:00]. [Maandag] zijn we dicht.
+>
+> **Waar zit Oost en kan ik parkeren?**
+> [Straat 00], in Haarlem[-Centrum / -Oost], [x] minuten lopen van het station. Parkeren kan [op straat / bij …]. Fietsen voor de deur.
+>
+> **Kan ik met een groep komen?**
+> Tot [twaalf] personen aan één tafel, graag even bellen. Meer dan dat, of liever bij jou thuis? Dan doen we het als [catering →](/catering).
+>
+> **Hoe zit het met allergieën?**
+> Pinda zit in de satésaus en de gado-gado. Gluten in ketjap en bami. Zeg het bij het bestellen, dan zeggen we precies wat kan.
 
 ### De familie
 **H2:** De familie

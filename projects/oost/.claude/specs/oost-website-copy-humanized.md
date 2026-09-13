@@ -31,7 +31,7 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 ### Hero
 **H1:** Indonesisch eten zoals bij ons thuis, midden in Haarlem
 
-> Welkom bij Oost. Wij zijn de familie [achternaam] en we koken zoals [oma] het ons leerde, wat vooral betekent: geduld hebben, en sambal maken op de dag zelf. Je kunt hier komen eten, je kunt het meenemen naar huis, en als je een feest hebt koken we de rijsttafel voor de hele tafel.
+> Welkom bij Oost, het Indonesische familierestaurant van Haarlem. Wij zijn de familie [achternaam] en we koken zoals [oma] het ons leerde, wat vooral betekent: geduld hebben, en sambal maken op de dag zelf. Je kunt hier komen eten, je kunt het meenemen naar huis, en als je een feest hebt koken we de rijsttafel voor de hele tafel.
 
 [Reserveer een tafel] [Bestel om af te halen] [App ons]
 
@@ -49,7 +49,7 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 ---
 
 **Rijsttafel**
-> Kies voor twee, vier of de hele tafel. Wij kiezen de schaaltjes uit de kaart hieronder, jij zegt hoe pittig.
+> Kies voor twee, vier of de hele tafel. Wij kiezen de schaaltjes uit de kaart hieronder, jij zegt hoe pittig. Het is de rijsttafel die we thuis ook maken, alleen nu in Haarlem en met meer schaaltjes.
 > Als je nog nooit een rijsttafel hebt gehad: het is geen Indonesisch gerecht, het is een Nederlands-Indische gewoonte. Veel kleine schaaltjes, één grote pan rijst, en iedereen pakt van alles een beetje. Je hoeft niets te kiezen.
 
 | | | |
@@ -251,14 +251,14 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 
 **H1:** Rijsttafel catering voor je feest
 
-> Een rijsttafel is bedoeld om te delen, dus het is nogal logisch dat we hem ook buiten de deur koken. Voor verjaardagen, borrels, bruiloften en bedrijfslunches in Haarlem en omgeving, vanaf tien personen. Je haalt het op, of wij komen het brengen en zetten het klaar. Het is hetzelfde eten als in het restaurant, uit dezelfde keuken, alleen in grotere pannen.
+> Een rijsttafel is bedoeld om te delen, dus het is nogal logisch dat we hem ook buiten de deur koken. Indonesische catering in Haarlem en omgeving, voor verjaardagen, borrels, bruiloften en bedrijfslunches, vanaf tien personen. Je haalt het op, of wij komen het brengen en zetten het klaar. Het is hetzelfde eten als [op onze menukaart](/#menukaart), uit dezelfde keuken, alleen in grotere pannen.
 
 [Vraag een offerte aan] [App ons]
 
 ### Wat we maken
 **H2:** Wat we maken
 
-> **Rijsttafel buffet.** Rendang, saté, ajam pedis, gado-gado, sambal goreng boontjes, tempé, sajoer lodeh, nasi en bami, met kroepoek, atjar en sambal. Acht tot twaalf schaaltjes, afhankelijk van hoeveel mensen er komen. Warm afgeleverd in bakken die zo op tafel kunnen, met een kaartje bij elk gerecht wat het is en of het pittig is. Vanaf € [27,50] per persoon.
+> **Rijsttafel buffet.** Het Indonesische buffet zoals je het kent: rendang, saté, ajam pedis, gado-gado, sambal goreng boontjes, tempé, sajoer lodeh, nasi en bami, met kroepoek, atjar en sambal. Acht tot twaalf schaaltjes, afhankelijk van hoeveel mensen er komen. Warm afgeleverd in bakken die zo op tafel kunnen, met een kaartje bij elk gerecht wat het is en of het pittig is. Vanaf € [27,50] per persoon.
 >
 > **Lunchbox.** Nasi rames per persoon in een doos: vijf gerechten, rijst, kroepoek, en een lepel sambal apart. Voor kantoor en vergaderingen, omdat iedereen dan z'n eigen doos heeft en niemand hoeft op te scheppen. Vegetarische dozen krijgen een sticker. Vanaf € [16,50] per persoon.
 >
@@ -384,5 +384,7 @@ Not used anywhere on purpose: "beste", "authentiek", "ambachtelijk", "passie", "
 - A few sentences are allowed to ramble the way people do when they're explaining their own restaurant ("en er toch altijd iemand is die nog een derde keer gaat").
 - Triplets broken up or extended to four where the list is genuinely four things.
 - Meta descriptions, titles, H1s, FAQs and the keyword map are unchanged; the SEO surface is identical.
+
+**SEO recheck (13 Sep):** the humanize pass had dropped the page's own phrase from two first paragraphs. Restored: "het Indonesische familierestaurant van Haarlem" in the home hero, "Indonesische catering in Haarlem" in the catering intro, plus one rijsttafel-and-Haarlem sentence in the menu intro and a menu link from catering. Nothing else moved; titles, metas, H1s and FAQs were already intact.
 
 **Still worth a native read:** "Klein schaaltje, je wilt er twee", "in dezelfde hoeveelheden sambal", "dan weet je het". They sound right to me; a Haarlemmer's ear decides.

@@ -1,5 +1,5 @@
 # Oost — Digital launch plan
-**Prepared for:** the Oost family · **By:** Studio Zissou · **Date:** 12 September 2026
+**Prepared for:** [naam] and [naam], Restaurant Oost · **By:** Studio Zissou · **Date:** 12 September 2026
 
 ## The short version
 Oost can be the easiest Indonesian restaurant in Haarlem to find, book and review from the day it opens — with a small website you run yourselves in under an hour a month. Three things do most of the work: a complete Google Business Profile, a steady stream of Google reviews, and a booking system that asks for those reviews automatically. The website's job is to be simple, fast, and structured in a way none of your competitors have bothered with.
@@ -24,7 +24,7 @@ Four pages, each also in English, no blog, no news section, nothing that needs f
 | Home | The full menu as real text (not a PDF), book a table, order takeaway, hours, three guest quotes, who you are |
 | Afhalen | How takeaway works, rijsttafel for home, pickup times, FAQ |
 | Catering | Rijsttafel for parties and offices, enquiry form |
-| Over ons | The family and the story |
+| Over ons | The two of you, oma's recipes, and the story behind the name |
 
 "Reserveren" is a button in the menu bar, not a page — one tap fewer. Every page gets an English version for expats and tourists; the translation is done after the Dutch copy is final. The menu lives on the homepage rather than its own page: with around fourteen dishes it fits, and the menu is what most visitors came for.
 
@@ -63,13 +63,13 @@ Four pages, each also in English, no blog, no news section, nothing that needs f
 - **Say it at the table.** "Als het lekker was, een Google-review helpt ons echt." Still the most effective thing anyone does.
 - Never show the review link only to happy guests — that's also banned.
 
-**The first 30 reviews: ask in person, in week one.** During opening week, someone from the family asks the first thirty or so tables — at the bill, face to face — for a Google review, ideally that evening. Not the card, not the email: a person asking. Why this matters more than anything else in this document:
+**The first 30 reviews: ask in person, in week one.** During opening week, one of you asks the first thirty or so tables — at the bill, face to face — for a Google review, ideally that evening. Not the card, not the email: a person asking. Why this matters more than anything else in this document:
 
 - A face-to-face ask from the owner converts several times better than a QR code or an email. Guests who've just eaten well and been asked directly mostly say yes.
 - Google weights how *recently* and how *fast* reviews arrive, not just how many. A profile that goes from 0 to 25 reviews in ten days reads as a place people are talking about; 25 reviews spread over six months doesn't. Review recency is among the top five ranking factors in the Whitespark survey.
 - A new profile has no history. Until the first reviews land, Google has nothing to rank you on except category and distance. The first batch is what gets you into the map results at all; everything after defends the spot.
 - Every later guest sees them. Someone in week three choosing between you and a place with 400 reviews sees "4.8 ★ (31)" instead of "no reviews yet" — on Maps, on TheFork, and in the AI answers that draw on your profile.
-- Opening week is when the ask is easiest. Guests know you're new, the family is on the floor every night, and "we've just opened, a review would really help" is a story people want to join. That goodwill fades once you're established.
+- Opening week is when the ask is easiest. Guests know you're new, you're both on the floor every night, and "we've just opened, a review would really help" is a story people want to join. That goodwill fades once you're established.
 
 Ask every table, not just the happy ones. Don't attach anything to it. And don't overshoot: thirty in a week is normal for a restaurant your size; two hundred would look like spam to Google. Steady from week two.
 
@@ -85,16 +85,18 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 ## 6. Communication channels
 | Keep | Why |
 |---|---|
-| **Instagram** | The main way Haarlem discovers food. 2–3 short videos a week, tagged with the location. Someone in the family needs to own this — it's the only channel that isn't passive. |
+| **Instagram** | The main way Haarlem discovers food. 2–3 short videos a week, tagged with the location. One of you needs to own this — it's the only channel that isn't passive, and with two people it will otherwise fall between you. |
 | **WhatsApp Business (free app)** | Takeaway orders and questions. Set an away message and a menu catalogue once. Link the number in your Google profile. |
 | **Google Business Profile** | One photo a week, one post a month, reply to reviews. |
 | **Formitable email** | Automatic. A short news email quarterly once you have a couple of hundred addresses. |
 
-**Skip:** TikTok (unless a family member wants to), SMS, paid WhatsApp API, actively posting on Facebook (claim it, auto-cross-post from Instagram, never log in).
+**Skip:** TikTok (unless one of you actually enjoys it), SMS, paid WhatsApp API, actively posting on Facebook (claim it, auto-cross-post from Instagram, never log in).
 
 **Privacy:** the post-visit email is allowed under Dutch law as long as the booking form says it will happen and every email has an unsubscribe link. Formitable handles this; we'll set the wording.
 
 ## 7. Day one checklist
+A note on workload: this plan assumes two people. Everything below is sized so the two of you can do it between services; nothing needs a third pair of hands except the photo shoot.
+
 **Four weeks before opening:** domain · KvK · Google Business Profile (video-verified, every field, 20+ photos) · Instagram + Facebook · WhatsApp Business · Formitable set up with the review email on · print thank-you cards and one table QR stand.
 
 **Two weeks before:** Apple Business Connect · Bing Places · Eet.nu · TheFork · Tripadvisor · OpenStreetMap · Waze · Foursquare · VisitHaarlem.com listing · website live.
@@ -109,7 +111,7 @@ Why it's worth the money: it's the one tool that handles table bookings, takeawa
 3. Sunday hours?
 4. Is roughly €70–120 a month for Formitable acceptable?
 5. Who owns Instagram?
-6. Names, phone number, opening date, and a few family photos for the About page.
+6. Your names, phone number, opening date, and a few photos of the two of you in the kitchen for the About page. Oma too, if she's up for it.
 
 ## Costs at a glance
 - Website hosting — Webflow Premium: $25/month, billed annually (≈ €23; Webflow bills in USD)

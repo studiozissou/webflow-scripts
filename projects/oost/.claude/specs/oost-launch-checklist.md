@@ -10,9 +10,9 @@
 - [ ] Opening hours per day, incl. Sunday
 - [ ] Delivery — assumed no; confirm
 - [ ] Formitable budget (~€69–119/mo) approved, or Eet.nu fallback chosen
-- [ ] Instagram owner named in the family
-- [ ] Family names, phone/WhatsApp number, opening date
-- [ ] Family photos: kitchen, hands, the recipe book, the room
+- [ ] Instagram owner named — one of the two, not shared
+- [ ] Both owners' names, oma's name (and whether she wants to be named), phone/WhatsApp number, opening date
+- [ ] Photos: the two owners in the kitchen, hands, oma's recipe book, the room; oma herself if she agrees
 - [ ] Rijsttafel details: minimum persons, number of dishes, lead time
 - [ ] Catering: minimum persons, radius, pickup vs delivered
 
@@ -53,16 +53,16 @@
 - [ ] Images AVIF via `/optimise-images`; alt text names the dish or the person
 - [ ] Mobile LCP < 2s; Lighthouse ≥ 95 on all four categories for `/`
 - [ ] FAQ accordion uses `<details>`, no JS
-- [ ] Forms: Webflow native, honeypot field, reCAPTCHA off, notifications to family email
+- [ ] Forms: Webflow native, honeypot field, reCAPTCHA off, notifications to the restaurant email
 
-## 4. Website — CMS (what the family edits)
+## 4. Website — CMS (what the owners edit)
 - [ ] Collection `Secties`: naam, intro, volgorde
 - [ ] Collection `Gerechten`: naam, sectie (ref), beschrijving NL, beschrijving EN (optional), prijs, vegetarisch, pittig, uitverkocht, volgorde
   - [ ] `uitverkocht` toggle shows an "op" badge and sets `availability: SoldOut` in schema
   - [ ] Every dish has a real two-line description — dish name, method, one concrete detail (this is where dish + Haarlem terms live)
 - [ ] Collection `Instellingen` (single item): adres, telefoon, WhatsApp, openingstijden ma–zo, Formitable ID, Google review URL, Instagram URL
   - [ ] Bound to footer, homepage hours block, `/afhalen` hours block **and** the JSON-LD embed — one edit updates all four
-- [ ] Editor roles set so the family can edit collections and static text only
+- [ ] Editor roles set so both owners can edit collections and static text only
 - [ ] 30-minute handover session booked
 - [ ] One-page guide written: mark sold out, change a price, change hours
 
@@ -71,7 +71,7 @@
 - [ ] `/`: `FAQPage` from the homepage FAQ (restaurant-level questions)
 - [ ] `/afhalen`: `FAQPage` from the takeaway FAQ — different questions from the homepage, no duplicates
 - [ ] Generated with `/generate-schema`; validated with `/test-schema` (Rich Results Test, zero errors) on both pages
-- [ ] Re-validated once after the family makes a live edit during handover
+- [ ] Re-validated once after an owner makes a live edit during handover
 
 ## 6. Website — copy (per page; spec §3 has the drafts)
 Rules for all pages:
@@ -86,7 +86,7 @@ Rules for all pages:
 `/` Home
 - [ ] Title `Oost – Indonesisch restaurant in Haarlem: rijsttafel & afhalen`
 - [ ] H1 `Indonesisch eten zoals bij ons thuis, midden in Haarlem`
-- [ ] Intro paragraph (family, how you cook, three ways to eat)
+- [ ] Intro paragraph (the two of you, oma's recipes, three ways to eat)
 - [ ] CTA row: Reserveer een tafel (widget) · Afhalen · App ons (wa.me)
 - [ ] "Menukaart" section, `id="menukaart"`, full menu CMS-fed
   - [ ] Intro incl. the five national dishes sentence (gado-gado, soto, saté, nasi goreng, rendang — 2018)
@@ -99,7 +99,7 @@ Rules for all pages:
 - [ ] "Vanavond eten?" — hours, address, route link, reserveer button, "vrijdag en zaterdag wel verstandig" line
 - [ ] "Wat gasten zeggen" — three Google reviews as text, first name + "via Google", no widget
 - [ ] "Veelgestelde vragen" — nine restaurant-level FAQs (reserveren, rijsttafel, pittig, vegetarisch, kinderen, zondag, adres/parkeren, groepen, allergieën); `<details>`; FAQPage schema
-- [ ] "De familie" — one paragraph, kitchen photo, link to over-ons
+- [ ] "De familie" — one paragraph for two people (kitchen / floor + phone + Instagram), kitchen photo, link to over-ons
 
 `/afhalen`
 - [ ] Title `Indonesisch afhalen in Haarlem – rijsttafel & saté | Oost`
@@ -118,7 +118,7 @@ Rules for all pages:
 `/over-ons`
 - [ ] Title `De familie achter Oost – Indonesisch restaurant in Haarlem`
 - [ ] "De Oost" origin paragraph; who does what; "geen keten, geen foodhall"; "als de rendang op is, is hij op"
-- [ ] Real family photos only, alt text with names
+- [ ] Real photos of the two owners (and oma if she agrees) only, alt text with names; no children in copy or imagery implied as theirs
 - [ ] CTAs: Reserveer een tafel · Bekijk de menukaart (→ `/#menukaart`)
 
 ## 7. Google Business Profile
@@ -131,7 +131,7 @@ Rules for all pages:
 - [ ] Description (750 chars): family, Indonesian, Haarlem, rijsttafel, afhalen, catering, [Haarlem-Oost]
 - [ ] Attributes: vegetarian options, pin/contactless, takeaway, reservations, [wheelchair]
 - [ ] GBP menu populated with every section and dish name (mirrors the homepage menu)
-- [ ] 20+ photos at launch: exterior, interior, 8 dishes, family, menu board; each dish photo captioned with the dish name
+- [ ] 20+ photos at launch: exterior, interior, 8 dishes, the two owners, menu board; each dish photo captioned with the dish name
 - [ ] Logo and cover image
 - [ ] "Ask for reviews" short link generated → used for all QR codes
 - [ ] First Post scheduled: "We zijn open"
@@ -149,7 +149,7 @@ Rules for all pages:
 - [ ] Fallback only if Formitable declined: Eet.nu widget (€0.25/booking)
 - [ ] TheFork listing created (free, no marketplace booking flow yet); revisit at month 3
 - [ ] wa.me links tested on a phone with prefilled text
-- [ ] Catering form submissions arrive at the family email
+- [ ] Catering form submissions arrive at the restaurant email
 
 ## 9. Review mechanism
 - [ ] Bedankt-kaartje designed and printed
@@ -159,7 +159,7 @@ Rules for all pages:
 - [ ] Table QR stand (or QR on the last menu page) → Google review link
 - [ ] Staff line agreed: "Als het lekker was, een Google-review helpt ons echt."
 - [ ] Never: discount conditional on a review · asking only happy guests · showing the link only after positive feedback
-- [ ] Reply to every Google review within 48h — family member assigned; done from the phone
+- [ ] Reply to every Google review within 48h — one owner assigned; done from the phone
 - [ ] Homepage quote swapped quarterly
 
 ## 10. Listings and footprint (identical NAP everywhere)
@@ -194,10 +194,10 @@ Rules for all pages:
   - [ ] @visithaarlem (24K) — listing first, then tag every post
   - [ ] Proef het Verre Oosten — pitch for the "Indonesische hotspots" list (Kokkie Londo Haarlem is already on it)
   - [ ] @anne_travel_foodie — pitch the vegetarian rijsttafel angle
-- [ ] Haarlems Dagblad (@hdhaarlem, 9.3K) and LEVEN! Magazine Haarlem pitched with the family story, not a tag
+- [ ] Haarlems Dagblad (@hdhaarlem, 9.3K) and LEVEN! Magazine Haarlem pitched with the story (a couple, oma's recipes, "de Oost"), not a tag
 - [ ] National Haarlem-hotspot lists pitched for their next update: Foodies Magazine, Uit Paulines Keuken, Girls Who, WijnSpijs, Your Little Black Book
-- [ ] First 30 guests asked in person for a Google review — week one, at the bill, by a family member (why: an in-person ask converts several times better than card or email; Google weights review recency and rate; a new profile needs a first batch to enter the map results at all; later guests see the count)
-  - [ ] Family member named who does the asking every service in week one
+- [ ] First 30 guests asked in person for a Google review — week one, at the bill, by whichever of you is on the floor (why: an in-person ask converts several times better than card or email; Google weights review recency and rate; a new profile needs a first batch to enter the map results at all; later guests see the count)
+  - [ ] Owner named who does the asking every service in week one
   - [ ] Line agreed: "We zijn net open — een Google-review helpt ons echt. Vanavond nog, als je wilt."
   - [ ] Ask every table, not just the happy ones; nothing attached to the ask
   - [ ] Target ~30 in week one; not more than ~50 (a spike from a new profile can trip Google's spam filter)
@@ -207,7 +207,7 @@ Rules for all pages:
 - [ ] GBP Post "We zijn open" published
 - [ ] Sitemap submitted to Search Console and Bing Webmaster; five URLs indexed within 14 days
 
-## 13. Monthly (family, ~1 hour)
+## 13. Monthly (owners, ~1 hour)
 - [ ] Reply to all new reviews
 - [ ] 4 new GBP photos
 - [ ] 1 GBP Post

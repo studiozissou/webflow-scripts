@@ -31,13 +31,20 @@ test.describe('carsa-at-price-total', () => {
   for (const path of VDP_PATHS) {
     test(`fills at-value with the comma-formatted £ sum of saving and carsa price on ${path}`, async ({ page }) => {
       await loadPage(page, path);
+      const savingText = (await page.locator(`${BLOCK} [data-price="at-saving"]`).textContent()) || '';
       const value = await page.locator(`${BLOCK} [data-price="at-value"]`).textContent();
+      if (!/\d/.test(savingText)) {
+        expect(value, `no CMS saving on ${path}; target must stay empty`).toBe('');
+        return;
+      }
       expect(value).toMatch(/^£\d{1,3}(,\d{3})*$/);
     });
 
     test(`at-value equals at-saving plus carsa-price numerically on ${path}`, async ({ page }) => {
       await loadPage(page, path);
-      const saving = toNumber(await page.locator(`${BLOCK} [data-price="at-saving"]`).textContent());
+      const savingText = (await page.locator(`${BLOCK} [data-price="at-saving"]`).textContent()) || '';
+      test.skip(!/\d/.test(savingText), `no CMS saving on ${path}`);
+      const saving = toNumber(savingText);
       const price = toNumber(await page.locator(`${BLOCK} [data-price="carsa-price"]`).textContent());
       const value = toNumber(await page.locator(`${BLOCK} [data-price="at-value"]`).textContent());
       expect(value).toBe(Math.round(saving + price));

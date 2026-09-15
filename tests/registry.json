@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-03",
+  "lastUpdated": "2026-09-15",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -341,7 +341,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-08-31",
-      "description": "Coconut supplementary FAQ content (August 2026): 15 new FAQ entries plus 2 merged answers across 7 landing pages \u2014 2 CMS pages via the 25 New Features common-questions multi-reference (appended last) and 5 static pages via duplicated _25-collapse-item accordion blocks. Asserts per-page item counts, no duplicate questions, merged copy present with the folded-in questions absent, pre-existing questions retained, and the 4 new links resolving."
+      "description": "Coconut supplementary FAQ content (August 2026): 15 new FAQ entries plus 2 merged answers across 7 landing pages — 2 CMS pages via the 25 New Features common-questions multi-reference (appended last) and 5 static pages via duplicated _25-collapse-item accordion blocks. Asserts per-page item counts, no duplicate questions, merged copy present with the folded-in questions absent, pre-existing questions retained, and the 4 new links resolving."
     },
     {
       "slug": "coconut-remove-brand-exclamation-mark",
@@ -392,6 +392,16 @@
       "critical": false,
       "created": "2026-09-03",
       "description": "Carsa September SEO auto-fixes - deletes two duplicate vehicle CMS items, 301s the duplicate adaptive-cruise-control post to the ranking -guide version, adds Product + BreadcrumbList schema to the extended warranty page, unpublishes the Shrewsbury store page; regression-guards the 2 Sep sell-page canonical fix."
+    },
+    {
+      "slug": "carsa-at-price-total",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/ef72otu",
+      "spec": "tests/acceptance/carsa-at-price-total.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-15",
+      "description": "VDP AutoTrader block: at-value span filled with the comma-formatted £ sum of at-saving and carsa-price."
     }
   ]
 }

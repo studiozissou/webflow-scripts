@@ -38,6 +38,9 @@ test.describe('carsa-at-price-total', () => {
         return;
       }
       expect(value).toMatch(/^£\d{1,3}(,\d{3})*$/);
+      expect(savingText).toMatch(/^£\d{1,3}(,\d{3})*$/);
+      const heading = await page.locator(`${BLOCK} .heading-style-h3`).first().textContent();
+      expect(heading).not.toMatch(/££/);
     });
 
     test(`at-value equals at-saving plus carsa-price numerically on ${path}`, async ({ page }) => {

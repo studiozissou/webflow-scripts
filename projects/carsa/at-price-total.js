@@ -1,4 +1,4 @@
-// Sums the AutoTrader saving and Carsa cash price inside .autotrader_price-info on the VDP and prints the AutoTrader market value as a comma-formatted £ figure.
+// Sums the AutoTrader saving and Carsa cash price inside .autotrader_price-info on the VDP and prints both the saving and the AutoTrader market value as comma-formatted £ figures.
 (function () {
   function parsePrice(text) {
     var clean = String(text || '').replace(/[^0-9.-]+/g, '');
@@ -7,8 +7,12 @@
     return isFinite(n) ? n : NaN;
   }
 
+  function formatNumber(n) {
+    return Math.round(n).toLocaleString('en-GB');
+  }
+
   function formatGBP(n) {
-    return '£' + Math.round(n).toLocaleString('en-GB');
+    return '£' + formatNumber(n);
   }
 
   function run() {
@@ -17,8 +21,14 @@
     var price = root.querySelector('[data-price="carsa-price"]');
     var targets = root.querySelectorAll('[data-price="at-value"], [data-price="at-price"]');
     if (!saving || !price || !targets.length) return;
-    var total = parsePrice(saving.textContent) + parsePrice(price.textContent);
+    var savingValue = parsePrice(saving.textContent);
+    var total = savingValue + parsePrice(price.textContent);
     if (isNaN(total)) return;
+    var before = saving.previousSibling;
+    if (before && before.nodeType === 3 && /£\s*$/.test(before.textContent)) {
+      before.textContent = before.textContent.replace(/£\s*$/, '');
+    }
+    saving.textContent = formatGBP(savingValue);
     for (var i = 0; i < targets.length; i++) targets[i].textContent = formatGBP(total);
   }
 
@@ -28,5 +38,5 @@
     run();
   }
 
-  window.CarsaAtPriceTotal = { parsePrice: parsePrice, formatGBP: formatGBP, run: run };
+  window.CarsaAtPriceTotal = { parsePrice: parsePrice, formatNumber: formatNumber, formatGBP: formatGBP, run: run };
 })();

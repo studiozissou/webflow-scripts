@@ -9,11 +9,16 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 
 const STAGING_URL = process.env.STAGING_URL_CARSA || 'https://carsa-v2.webflow.io';
-const VDP_PATH = '/vehicles/used/ef72otu';
+const VDP_PATHS = [
+  '/vehicles/used/ef72otu',
+  '/vehicles/used/va22hmc',
+  '/vehicles/used/ln70jpv',
+];
+const VDP_PATH = VDP_PATHS[0];
 const BLOCK = '.autotrader_price-info';
 
-async function loadPage(page) {
-  await page.goto(`${STAGING_URL}${VDP_PATH}`, { waitUntil: 'domcontentloaded' });
+async function loadPage(page, path = VDP_PATH) {
+  await page.goto(`${STAGING_URL}${path}`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.readyState === 'complete', { timeout: 20_000 });
   await page.waitForTimeout(1500);
 }
@@ -23,19 +28,21 @@ function toNumber(text) {
 }
 
 test.describe('carsa-at-price-total', () => {
-  test('fills at-value with the comma-formatted £ sum of saving and carsa price', async ({ page }) => {
-    await loadPage(page);
-    const value = await page.locator(`${BLOCK} [data-price="at-value"]`).textContent();
-    expect(value).toMatch(/^£\d{1,3}(,\d{3})*$/);
-  });
+  for (const path of VDP_PATHS) {
+    test(`fills at-value with the comma-formatted £ sum of saving and carsa price on ${path}`, async ({ page }) => {
+      await loadPage(page, path);
+      const value = await page.locator(`${BLOCK} [data-price="at-value"]`).textContent();
+      expect(value).toMatch(/^£\d{1,3}(,\d{3})*$/);
+    });
 
-  test('at-value equals at-saving plus carsa-price numerically', async ({ page }) => {
-    await loadPage(page);
-    const saving = toNumber(await page.locator(`${BLOCK} [data-price="at-saving"]`).textContent());
-    const price = toNumber(await page.locator(`${BLOCK} [data-price="carsa-price"]`).textContent());
-    const value = toNumber(await page.locator(`${BLOCK} [data-price="at-value"]`).textContent());
-    expect(value).toBe(Math.round(saving + price));
-  });
+    test(`at-value equals at-saving plus carsa-price numerically on ${path}`, async ({ page }) => {
+      await loadPage(page, path);
+      const saving = toNumber(await page.locator(`${BLOCK} [data-price="at-saving"]`).textContent());
+      const price = toNumber(await page.locator(`${BLOCK} [data-price="carsa-price"]`).textContent());
+      const value = toNumber(await page.locator(`${BLOCK} [data-price="at-value"]`).textContent());
+      expect(value).toBe(Math.round(saving + price));
+    });
+  }
 
   test('exposes CarsaAtPriceTotal global', async ({ page }) => {
     await loadPage(page);

@@ -57,9 +57,19 @@ Alternatives considered and rejected:
 
 1. Unit tests (TDD) — done, 6 pass
 2. Script — done
-3. Commit, push, take commit hash for the jsDelivr URL
-4. Append `<script src>` tag to the VDP page footer via Webflow MCP
+3. Commit, push, take commit hash for the jsDelivr URL — done, `fe05e80`
+4. Add to the VDP page footer via Webflow MCP — done. The freeform footer
+   block was left untouched (48KB, risky to round-trip). Instead the CDN file
+   is a registered hosted script, id `carsaatpricetotal`, version 1.0.0, with
+   SRI hash, applied to the Vehicles Template in the footer location. To bump
+   later: `update_registered_script` with the new jsDelivr URL and hash.
 5. Publish to staging (user) and run Tier 1
+
+## Test pages (staging)
+
+- https://carsa-v2.webflow.io/vehicles/used/ef72otu
+- https://carsa-v2.webflow.io/vehicles/used/va22hmc
+- https://carsa-v2.webflow.io/vehicles/used/ln70jpv
 
 ## Parallelisation map
 

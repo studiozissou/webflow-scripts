@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-03",
+  "lastUpdated": "2026-09-15",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -392,6 +392,16 @@
       "critical": false,
       "created": "2026-09-03",
       "description": "Carsa September SEO auto-fixes - deletes two duplicate vehicle CMS items, 301s the duplicate adaptive-cruise-control post to the ranking -guide version, adds Product + BreadcrumbList schema to the extended warranty page, unpublishes the Shrewsbury store page; regression-guards the 2 Sep sell-page canonical fix."
+    },
+    {
+      "slug": "carsa-body-colour-guard",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/cf23rpx",
+      "spec": "tests/acceptance/carsa-body-colour-guard.spec.js",
+      "type": "acceptance",
+      "source": "debug",
+      "critical": false,
+      "created": "2026-09-15",
+      "description": "Carsa body colour guard - the VDP Material UI carousel injects body { color: rgba(0,0,0,.87) } at runtime; a site-wide html body rule in the head custom code keeps text brand purple. Asserts the rule ships and body/paragraph colour is #511e62 on home and VDP."
     }
   ]
 }

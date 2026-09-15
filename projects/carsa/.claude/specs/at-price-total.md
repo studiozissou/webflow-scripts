@@ -65,7 +65,10 @@ Alternatives considered and rejected:
    block was left untouched (48KB, risky to round-trip). Instead the CDN file
    is a registered hosted script, id `carsaatpricetotal`, version 1.0.0, with
    SRI hash, applied to the Vehicles Template in the footer location. To bump
-   later: `update_registered_script` with the new jsDelivr URL and hash.
+   later: `update_registered_script` returns 404 for hosted scripts, so
+   re-register with `register_hosted_script` under the same display name and
+   a new SemVer, then `set_page_scripts` with the new version. Current: 1.1.0
+   at commit `efbb516`.
 5. Publish to staging (user) and run Tier 1
 
 ## Test pages (staging)

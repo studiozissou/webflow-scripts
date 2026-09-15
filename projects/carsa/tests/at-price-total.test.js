@@ -51,6 +51,29 @@ test('sums saving and carsa price into at-value as comma-formatted £', () => {
   assert.equal(target.textContent, '£14,672');
 });
 
+test('rewrites at-saving as a comma-grouped £ figure', () => {
+  const saving = el({ 'data-price': 'at-saving' }, '1250');
+  run([saving, el({ 'data-price': 'carsa-price' }, '£9,995'), el({ 'data-price': 'at-value' }, '')]);
+  assert.equal(saving.textContent, '£1,250');
+});
+
+test('strips a literal £ from the text node right before at-saving', () => {
+  const before = { nodeType: 3, textContent: '£' };
+  const saving = el({ 'data-price': 'at-saving' }, '314');
+  saving.previousSibling = before;
+  run([saving, el({ 'data-price': 'carsa-price' }, '£14,358'), el({ 'data-price': 'at-value' }, '')]);
+  assert.equal(saving.textContent, '£314');
+  assert.equal(before.textContent, '');
+});
+
+test('keeps preceding text that does not end in £', () => {
+  const before = { nodeType: 3, textContent: 'Save ' };
+  const saving = el({ 'data-price': 'at-saving' }, '314');
+  saving.previousSibling = before;
+  run([saving, el({ 'data-price': 'carsa-price' }, '£14,358'), el({ 'data-price': 'at-value' }, '')]);
+  assert.equal(before.textContent, 'Save ');
+});
+
 test('also fills a target named at-price', () => {
   const target = el({ 'data-price': 'at-price' }, '');
   run([

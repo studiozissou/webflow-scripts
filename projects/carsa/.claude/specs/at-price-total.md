@@ -45,6 +45,9 @@ Alternatives considered and rejected:
 - Parse both sources by stripping everything except digits, dot and minus.
 - If either source is missing or has no digits, do nothing (target stays empty).
 - Total is rounded to whole pounds and written as `£14,672` (en-GB grouping).
+- The saving span is rewritten as `£1,250`. The embed has a literal £ in the
+  text node before the span; the script strips that trailing £ so the heading
+  never shows `££`. Removing the literal from the embed is optional.
 
 ## Files
 

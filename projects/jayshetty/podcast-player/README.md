@@ -22,8 +22,8 @@ the Webflow MCP (or by pasting in Designer page settings).
 hosted script and applied to the page through the Webflow scripts API:
 
 ```
-register_hosted_script  -> id "jayshettypodcastplayer", version 1.2.0
-                           (tag jayshetty-podcast-player-v1.2.0)
+register_hosted_script  -> id "jayshettypodcastplayer", version 1.2.2
+                           (tag jayshetty-podcast-player-v1.2.2)
 set_page_scripts        -> applied to the podcast page, footer
                            (README recorded 6a85a907e42332f1eded63d7; confirm the
                            current page id via the scripts API at deploy time —
@@ -46,7 +46,7 @@ To ship a player change: edit `podcast-player.js`, merge, tag the merge commit
 the new version against the tagged jsDelivr URL and re-apply it with
 `set_page_scripts`. jsDelivr serves tags immediately and caches forever, so
 always bump the version rather than relying on a purge. Rollback is one API
-call: re-apply the previous hosted script version (v1.1.0 for the v1.2.0 rollout).
+call: re-apply the previous hosted script version (v1.2.1 for the v1.2.2 rollout).
 
 **Outstanding:** the draft `podcast-v2` footer still contains the truncated
 `<script src=".../podcas?v=1">` line from that paste (the live `/podcast`
@@ -139,36 +139,56 @@ the repo as regression instruments.
 
 `/video` once went through a spell of serving a dead card to *everyone* (real
 Chrome, clean sessions) while the audio embed kept working, so the player
-watchdog falls back to audio when a loaded video page never reports in within
-6 s. The latch is **any message whose `source` is the swapped iframe's
-`contentWindow`** — a healthy `/video` page posts `ready` immediately, so
-Safari's blocked autoplay (no `playback_update` until the user taps) cannot
+keeps a watchdog that falls back to the audio embed when a loaded video page
+never reports in. The latch is **any message whose `source` is the swapped
+iframe's `contentWindow`** — a healthy `/video` page posts `ready` on its own,
+so Safari's blocked autoplay (no `playback_update` until the user taps) cannot
 trigger a false fallback. The listener is armed *before* `frame.src` is
-reassigned (measured in Chrome, `ready` arrives only ~34 ms after `load`, and a
-listener attached on `load` could miss it in a slower engine — with no autoplay
-to send follow-up messages, that would have been a guaranteed false fallback in
-Safari), but the 6 s countdown starts only at the iframe's `load` event: v1.2.0
-started it at the swap, so on slow connections the countdown expired while the
-`/video` page was still downloading and healthy players were torn down to audio
-(client-reported, reproduced with Slow 3G throttling; fixed in v1.2.1). A dead
-`/video` card still loads and then fails to handshake, so the fallback path
-survives the later start. To keep a stale message from
-the outgoing audio document from satisfying the latch, the controller `ready`
-handler does not send `play()` when it has just issued the swap (the iframe's
-`load` handler plays instead). This also closes an older looseness where
-another Spotify embed's `playback_update` (origin-checked only) satisfied the
-watchdog for every wrapper on the page.
+reassigned; the countdown starts at the iframe's `load` event.
+
+The countdown is **20 s** (v1.2.2; it was 6 s until then). Measured on the live
+page on 16 Sep 2026, Spotify's video page posted `ready` anywhere from 0.5 s to
+more than 6.4 s after `load`, varying minute to minute on Spotify's side, and
+two of ten fresh Safari runs were torn down to audio by the 6 s timer. That was
+the client's "some of us get audio, some get a mix" report — nothing to do with
+the browser, region, caches or episode content (all ruled out in
+`projects/jayshetty/.claude/research/spotify-video-watchdog-latency-2026-09-16.md`).
+A dead card still loads and then fails to handshake, so the fallback path
+survives the longer wait; it just tolerates a slow Spotify.
+
+The fallback is **not sticky** (also v1.2.2). A Watch click on an item that fell
+back clears the fallback flags and swaps the iframe back to `/video`, re-arming
+the watchdog, so one slow moment can no longer lock an episode to audio for the
+rest of the page session.
+
+To keep a stale message from the outgoing audio document from satisfying the
+latch, the controller `ready` handler does not send `play()` when it has just
+issued the swap (the iframe's `load` handler plays instead). This also closes an
+older looseness where another Spotify embed's `playback_update` (origin-checked
+only) satisfied the watchdog for every wrapper on the page.
 
 Accepted residual risks, all with the same mild consequence (a dead `/video`
-page would not fall back to audio): if the dead-card spell recurs *and* the dead
-card still handshakes; or if the outgoing audio document posts a message in the
-window between `frame.src` reassignment and the navigation committing (the same
-`contentWindow` proxy spans both documents). The dead card observed top-level
-performs no handshake, an idle audio embed has not been seen to post unprompted,
-and the swap normally lands within 100 ms of the iframe's insertion — well
-before the audio page (~450 ms) can load — so both are judged unlikely.
+page would not fall back to audio, or would show for up to 20 s first): if the
+dead-card spell recurs *and* the dead card still handshakes; or if the outgoing
+audio document posts a message in the window between `frame.src` reassignment
+and the navigation committing. The dead card observed top-level performs no
+handshake, an idle audio embed has not been seen to post unprompted, and the
+swap normally lands within 100 ms of the iframe's insertion, so both are judged
+unlikely.
 
 ## Changes log
+
+### v1.2.2 — watchdog waits 20 s and no longer sticks (16 Sep 2026)
+
+- Reproduced the client's post-v1.2.1 report on the live page in Safari 26.6.2:
+  Spotify's `/video` page took 0.5 s to >6.4 s after `load` to post `ready`,
+  and the 6 s watchdog tore two of ten healthy runs down to audio, permanently
+  for that page session. `VIDEO_WATCHDOG_MS` 6000 → 20000; a Watch click on a
+  fallen-back item now swaps back to `/video` and re-arms the watchdog.
+- `video-latency-probe.html` added: a standalone control that times `load` →
+  `ready` for six iframe variants, for checking whether Spotify is slow right
+  now. Spec: `projects/jayshetty/.claude/specs/podcast-video-watchdog-latency.md`.
+  Evidence: `projects/jayshetty/.claude/research/spotify-video-watchdog-latency-2026-09-16.md`.
 
 ### v1.2.1 — watchdog countdown starts at iframe load (2 Sep 2026)
 

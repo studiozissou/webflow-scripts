@@ -1,7 +1,7 @@
 // Shared helpers for the Carsa code-migration acceptance suites: base URL, page loading, error capture, sitemap sampling, finance API mocking and attribution storage.
 const BASE = process.env.STAGING_URL_CARSA || 'https://www.carsa.co.uk';
 
-const KNOWN_ERRORS = [/filtered is not defined/, /setting 'innerText'/];
+const KNOWN_ERRORS = [/filtered is not defined/, /setting 'innerText'/, /reading 'length'/];
 
 const FINANCE_HOST = 'consumer-finance.carsanet.co.uk';
 

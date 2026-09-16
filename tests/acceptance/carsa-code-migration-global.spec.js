@@ -54,8 +54,8 @@ test.describe('carsa-code-migration — Global: attribution storage', () => {
     expect(session.referrerDomain).toBe('google.com');
   });
 
-  test('attr-internal-referrer-ignored: a carsa.co.uk referrer never counts as attribution', async ({ page }) => {
-    await loadPage(page, '/', 500, { referer: 'https://www.carsa.co.uk/used-cars' });
+  test('attr-internal-referrer-ignored: a same-site referrer never counts as attribution', async ({ page }) => {
+    await loadPage(page, '/', 500, { referer: `${BASE}/used-cars` });
     const { local } = await readAttribution(page);
     expect(local.referrerDomain).toBe('');
     expect(local.referrer).toBe('');

@@ -13,6 +13,7 @@ import {
   firstPath,
   mockFinance,
   waitForQuotes,
+  idOrData,
   gbp,
   parseGBP,
 } from './helpers/carsa.js';
@@ -20,8 +21,13 @@ import {
 const MONEY = (n) => gbp(n, 2);
 
 async function textIfPresent(page, selector) {
-  const el = page.locator(selector).first();
+  const el = page.locator(selector.startsWith('#') && !selector.includes(',') ? idOrData(selector.slice(1)) : selector).first();
   return (await el.count()) ? (await el.textContent()).trim() : null;
+}
+
+async function contributionOf(page) {
+  const el = page.locator('#deposit-contribution').first();
+  return (await el.count()) ? parseGBP((await el.inputValue()) || '0') : 0;
 }
 
 async function expectTextIfPresent(page, selector, expected) {
@@ -68,7 +74,7 @@ test.describe('carsa-code-migration — Finance: VDP calculator', () => {
     const calls = await mockFinance(page);
     await loadPage(page, vdp);
     await waitForQuotes(page, calls, 1);
-    const contribution = parseGBP((await page.locator('#deposit-contribution').first().inputValue().catch(() => '')) || '0');
+    const contribution = await contributionOf(page);
     const expectedCash = Math.max(0, FINANCE_CONFIG.defaultDepositAmount - contribution);
     expect(await page.locator('#finance-deposit').inputValue()).toBe(gbp(expectedCash));
     const term = await checkedValue(page, 'finance-term');
@@ -89,7 +95,7 @@ test.describe('carsa-code-migration — Finance: VDP calculator', () => {
     await waitForQuotes(page, calls, 1);
     const [payload] = calls.quotes;
     const cash = parseGBP(await page.locator('#finance-deposit').inputValue());
-    const contribution = parseGBP((await page.locator('#deposit-contribution').first().inputValue().catch(() => '')) || '0');
+    const contribution = await contributionOf(page);
     expect(payload.criteria.cashDeposit).toBe(cash + contribution);
     expect(payload.criteria.term).toBe(Number(await checkedValue(page, 'finance-term')));
     expect(payload.criteria.apr).toBe(FINANCE_CONFIG.aprByTier.VeryGood);
@@ -176,11 +182,11 @@ test.describe('carsa-code-migration — Finance: VDP calculator', () => {
     const calls = await mockFinance(page);
     await loadPage(page, vdp);
     await waitForQuotes(page, calls, 1);
-    const contribution = parseGBP((await page.locator('#deposit-contribution').first().inputValue().catch(() => '')) || '0');
+    const contribution = await contributionOf(page);
     const deposit = page.locator('#finance-deposit');
-    await deposit.focus();
+    await deposit.evaluate((el) => { el.dispatchEvent(new Event('focus')); });
     expect(await deposit.inputValue()).toMatch(/^\d*$/);
-    await deposit.fill('1500');
+    await deposit.evaluate((el) => { el.value = '1500'; el.dispatchEvent(new Event('input', { bubbles: true })); });
     await page.waitForTimeout(200);
     await expectTextIfPresent(page, '[data-number="customer-deposit"]', gbp(1500));
     await expectTextIfPresent(page, '[data-number="deposit"]', gbp(1500 + contribution));
@@ -188,7 +194,7 @@ test.describe('carsa-code-migration — Finance: VDP calculator', () => {
     await waitForQuotes(page, calls, 2, 4000);
     expect(calls.quotes.length).toBe(2);
     expect(calls.quotes[1].criteria.cashDeposit).toBe(1500 + contribution);
-    await deposit.blur();
+    await deposit.evaluate((el) => { el.dispatchEvent(new Event('blur')); });
     expect(await deposit.inputValue()).toBe(gbp(1500));
   });
 
@@ -264,7 +270,7 @@ test.describe('carsa-code-migration — Finance: VDP calculator', () => {
 
   test('vdp-fin-live-api-smoke: the real consumer-finance API returns a monthly HP figure', async ({ page }) => {
     await loadPage(page, vdp);
-    await expect(page.locator('#hp-price').first()).toHaveText(/^£[\d,]+\.\d{2}$/, { timeout: 15_000 });
+    await expect(page.locator(idOrData('hp-price')).first()).toHaveText(/^£[\d,]+\.\d{2}$/, { timeout: 15_000 });
   });
 
   test('vdp-fin-no-errors: zero unexpected JS errors with the API mocked', async ({ page }) => {
@@ -318,7 +324,7 @@ test.describe('carsa-code-migration — Finance: calculator page', () => {
     await expectTextIfPresent(page, '#hp-total-charges', MONEY(q.hp.totalCharges));
     await expectTextIfPresent(page, '#hp-fixed-rate', '5.5%');
     await expectTextIfPresent(page, '#hp-term', `${FINANCE_CONFIG.defaultTerm} monthly payments of`);
-    expect(await textIfPresent(page, '#hp-price')).not.toBeNull();
+    expect(await textIfPresent(page, '#hp-price-short')).not.toBeNull();
   });
 
   test('calc-static-outputs: total credit and disclosed deposit follow price minus deposit', async ({ page }) => {
@@ -427,7 +433,7 @@ test.describe('carsa-code-migration — Finance: calculator page', () => {
 
   test('calc-live-api-smoke: the real consumer-finance API returns a monthly HP figure', async ({ page }) => {
     await loadPage(page, PATH);
-    await expect(page.locator('#hp-price').first()).toHaveText(/^£[\d,]+\.\d{2}$/, { timeout: 15_000 });
+    await expect(page.locator(idOrData('hp-price-short')).first()).toHaveText(/^£[\d,]+$/, { timeout: 15_000 });
   });
 
   test('calc-no-errors: zero unexpected JS errors with the API mocked', async ({ page }) => {

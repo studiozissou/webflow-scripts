@@ -402,6 +402,16 @@
       "critical": false,
       "created": "2026-09-15",
       "description": "VDP AutoTrader block: at-value span filled with the comma-formatted £ sum of at-saving and carsa-price."
+    },
+    {
+      "slug": "carsa-body-colour-guard",
+      "url": "https://carsa-v2.webflow.io/vehicles/used/cf23rpx",
+      "spec": "tests/acceptance/carsa-body-colour-guard.spec.js",
+      "type": "acceptance",
+      "source": "debug",
+      "critical": false,
+      "created": "2026-09-15",
+      "description": "Carsa body colour guard - the VDP Material UI carousel injects body { color: rgba(0,0,0,.87) } at runtime; a site-wide html body rule in the head custom code keeps text brand purple. Asserts the rule ships and body/paragraph colour is #511e62 on home and VDP."
     }
   ]
 }

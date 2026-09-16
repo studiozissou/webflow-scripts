@@ -1,4 +1,4 @@
-// Dual-platform inline podcast player for the Jay Shetty podcast list: YouTube via postMessage, Spotify via its iFrame API swapped to the /video embed in every browser, with a video-to-audio fallback. See README.md for why each branch exists.
+// Dual-platform inline podcast player for the Jay Shetty podcast list: YouTube via postMessage, Spotify via its iFrame API swapped to the /video embed in every browser, with a slow, non-sticky video-to-audio fallback. See README.md for why each branch exists.
 
 (function () {
   var DEBUG = false;
@@ -65,7 +65,7 @@
     return entry ? entry.controller : null;
   }
 
-  var VIDEO_WATCHDOG_MS = 6000;
+  var VIDEO_WATCHDOG_MS = 20000;
 
   function watchForDegradedVideo(embedWrap, id) {
     if (embedWrap.__videoWatchdog || embedWrap.__videoOk) return;
@@ -201,6 +201,12 @@
       return item.contains(entry.el);
     })[0];
     if (existing) {
+      if (embedWrap.__videoFellBack) {
+        embedWrap.__videoFellBack = false;
+        embedWrap.__videoOk = false;
+        embedWrap.__videoWatchdog = null;
+        if (useVideoEmbed(embedWrap, id)) return;
+      }
       existing.controller.play();
       return;
     }

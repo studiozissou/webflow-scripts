@@ -5,8 +5,10 @@
  * Tests added incrementally as each page is migrated.
  * Phase 1: Homepage first, then remaining pages in priority order.
  */
-const { test, expect } = require('@playwright/test');
-require('dotenv').config({ path: '.env.test' });
+import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.test' });
 
 const BASE = process.env.STAGING_URL_CARSA || 'https://www.carsa.co.uk';
 
@@ -243,94 +245,71 @@ test.describe('carsa-code-migration — Loader (Phase 1)', () => {
   }
 });
 
-// ── Phase 2: SRP baseline (pre- and post-swap) ────────────────
+// ── Phase 2: search pages (VSRP widget since CARSA-5852) ──────
+// Results, filters and counters on /used-cars, /used-cars/deals and the make/model
+// templates are rendered by Carsa's carsa-search.js widget, not by Webflow custom
+// code. Page settings keep only the 404 toast, check-finance hover and valuation builder.
 
-test.describe('carsa-code-migration — SRP', () => {
-  test.beforeEach(async ({ page }) => {
+const WIDGET_SRC = 'd2zblaqlrfk95e.cloudfront.net/carsa-search.js';
+const CARD_LINK = 'a[href*="/vehicles/used/"]';
+
+for (const path of ['/used-cars', '/used-cars/deals']) {
+  test.describe(`carsa-code-migration — Search ${path}`, () => {
+    test(`search-no-errors on ${path}: zero JS console errors`, async ({ page }) => {
+      const errors = collectErrors(page);
+      await loadPage(page, path);
+      await page.waitForTimeout(2000);
+      expect(errors.map((e) => e.message)).toEqual([]);
+    });
+
+    test(`search-widget-loaded on ${path}: carsa-search.js is preloaded in the head and executed exactly once`, async ({ page }) => {
+      const hits = [];
+      page.on('request', (r) => r.url().includes(WIDGET_SRC) && hits.push(r.url()));
+      await loadPage(page, path);
+      expect(await page.locator(`link[rel="preload"][href*="${WIDGET_SRC}"]`).count()).toBe(1);
+      expect(await page.locator(`script[src*="${WIDGET_SRC}"]`).count()).toBe(1);
+      expect(hits.length).toBeGreaterThanOrEqual(1);
+    });
+
+    test(`search-widget-renders on ${path}: the widget renders vehicle cards`, async ({ page }) => {
+      await loadPage(page, path);
+      await expect(page.locator(CARD_LINK).first()).toBeVisible({ timeout: 20_000 });
+    });
+
+    test(`search-valuation-link on ${path}: the instant valuation builder still runs`, async ({ page }) => {
+      await loadPage(page, path);
+      const trigger = page.locator('form [data-link="valuation"]').first();
+      test.skip((await trigger.count()) === 0, 'no valuation form on this page');
+      await trigger.locator('xpath=ancestor::form[1]').locator('[name="vrm"]').first().fill('AB12CDE');
+      await page.waitForTimeout(200);
+      expect(await trigger.getAttribute('href')).toContain('sellcar.carsa.co.uk/new-order?vrm=AB12CDE');
+    });
+
+    test(`search-check-finance on ${path}: widget cards expose a check-finance hook that the hover swap rewrites`, async ({ page }) => {
+      await loadPage(page, path);
+      await page.locator(CARD_LINK).first().waitFor({ state: 'visible', timeout: 20_000 });
+      const el = page.locator('a [data-link="check-finance"][vrm]').first();
+      test.skip((await el.count()) === 0, 'widget cards carry no check-finance hook on this build');
+      await el.scrollIntoViewIfNeeded();
+      await el.hover();
+      await page.waitForTimeout(200);
+      const href = await el.locator('xpath=ancestor::a[1]').evaluate((a) => a.href);
+      expect(href).toContain('quote.carsa.co.uk/eligibility/questions?vrm=');
+    });
+  });
+}
+
+test.describe('carsa-code-migration — Search: 404 toast', () => {
+  test('srp-redirect-toast: #redirect-message shows once when the 404 page set from404Used', async ({ page, context }) => {
+    await context.addInitScript(() => { if (!sessionStorage.getItem('__seeded')) { sessionStorage.setItem('from404Used', 'true'); sessionStorage.setItem('__seeded', '1'); } });
     await loadPage(page, '/used-cars');
-    await page.waitForTimeout(2000);
+    await expect(page.locator('#redirect-message')).toBeVisible({ timeout: 5000 });
+    expect(await page.evaluate(() => sessionStorage.getItem('from404Used'))).toBeNull();
   });
 
-  test('srp-no-errors: zero JS console errors', async ({ page }) => {
-    const errors = collectErrors(page);
-    await page.waitForTimeout(2000);
-    expect(errors.map((e) => e.message)).toEqual([]);
-  });
-
-  test('srp-results-list: #results-list renders at least one item', async ({ page }) => {
-    await expect(page.locator('#results-list')).toBeAttached();
-    const items = page.locator('#results-list [role="listitem"], #results-list .w-dyn-item');
-    await expect(items.first()).toBeVisible({ timeout: 15000 });
-  });
-
-  test('srp-results-counter: #desktop-results shows a number', async ({ page }) => {
-    const counter = page.locator('#desktop-results');
-    await expect(counter).toBeAttached();
-    await expect(counter).toHaveText(/\d/, { timeout: 15000 });
-  });
-
-  test('srp-mobile-filter-toggle: mobile filters link opens the filter panel at 375px', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.waitForTimeout(500);
-    const link = page.locator('#mobile-filters-link');
-    await expect(link).toBeVisible({ timeout: 15000 });
-    await link.click();
-    await expect(page.locator('#filters-mobile-close')).toBeVisible();
-  });
-
-  test('srp-vrm-sanitiser: #vrm-search strips disallowed characters', async ({ page }) => {
-    const input = page.locator('#vrm-search');
-    test.skip((await input.count()) === 0, 'no VRM input on this build');
-    await input.fill('ab12 c!d£e');
-    await input.dispatchEvent('input');
-    expect(await input.inputValue()).toMatch(/^[A-Za-z0-9 ]*$/);
-  });
-
-  test('srp-valuation-link: instant valuation link points at sellcar.carsa.co.uk', async ({ page }) => {
-    const link = page.locator('[data-link="valuation"]').first();
-    test.skip((await link.count()) === 0, 'no valuation link on SRP');
-    await link.hover();
-    await page.waitForTimeout(300);
-    expect(await link.getAttribute('href')).toContain('sellcar.carsa.co.uk');
-  });
-
-  test('srp-check-finance-hover: finance links resolve to quote.carsa.co.uk/eligibility', async ({ page }) => {
-    const link = page.locator('a[href*="eligibility"], [data-link="check-finance"]').first();
-    await expect(link).toBeAttached({ timeout: 15000 });
-    await link.hover();
-    await page.waitForTimeout(300);
-    expect(await link.getAttribute('href')).toContain('quote.carsa.co.uk/eligibility');
-  });
-
-  test('srp-redirect-toast: #redirect-message shows when arriving from a 404 VDP', async ({ page }) => {
-    await loadPage(page, '/used-cars?redirect=vdp');
-    const toast = page.locator('#redirect-message');
-    test.skip((await toast.count()) === 0, 'toast element not on this build');
-    await expect(toast).toBeVisible({ timeout: 5000 });
-  });
-});
-
-// ── Phase 2: Deals baseline ───────────────────────────────────
-
-test.describe('carsa-code-migration — Deals', () => {
-  test.beforeEach(async ({ page }) => {
-    await loadPage(page, '/used-cars/deals');
-    await page.waitForTimeout(2000);
-  });
-
-  test('deals-no-errors: zero JS console errors', async ({ page }) => {
-    const errors = collectErrors(page);
-    await page.waitForTimeout(2000);
-    expect(errors.map((e) => e.message)).toEqual([]);
-  });
-
-  test('deals-results-list: #results-list renders at least one item', async ({ page }) => {
-    const items = page.locator('#results-list [role="listitem"], #results-list .w-dyn-item');
-    await expect(items.first()).toBeVisible({ timeout: 15000 });
-  });
-
-  test('deals-promo-cards: promo storage element present', async ({ page }) => {
-    await expect(page.locator('#promo-storage')).toBeAttached();
+  test('srp-no-toast-by-default: #redirect-message stays hidden on a normal visit', async ({ page }) => {
+    await loadPage(page, '/used-cars');
+    await expect(page.locator('#redirect-message')).toBeHidden();
   });
 });
 

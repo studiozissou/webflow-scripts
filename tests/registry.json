@@ -206,9 +206,49 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Carsa code migration v2 — footer init.js loader + global.js, then page-by-page inline removal; loader pinning/caching, footer behaviours, SRP/Deals/homepage baselines, per-page inline-removed guards",
+      "description": "Carsa code migration v2 — footer init.js loader + global.js, then page-by-page inline removal; loader pinning/caching, homepage baseline, VSRP-widget search pages, 404 toast, per-page inline-removed guards. Phase 0 baseline suites live in the four carsa-code-migration-* specs below.",
       "created": "2026-07-06",
-      "updated": "2026-08-20"
+      "updated": "2026-09-16"
+    },
+    {
+      "slug": "carsa-code-migration-global",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-code-migration-global.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "description": "Phase 0 baseline for the site-wide footer scripts: attribution first/last-touch storage semantics, eligibility-link UTM appending, menu promo links, store-list prepend, noopener, copyright year, menu scroll lock, n8n chat, WhatsApp nav embed, GTM and site schema.",
+      "created": "2026-09-16"
+    },
+    {
+      "slug": "carsa-code-migration-finance",
+      "url": "https://www.carsa.co.uk/car-finance-calculator",
+      "spec": "tests/acceptance/carsa-code-migration-finance.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "description": "Phase 0 baseline for the VDP and /car-finance-calculator finance calculators: config-driven defaults, /quote payloads, HP/PCP output painting, APR painting, PCP-error fallback, config-failure fallback, debounce and Enter handling; consumer-finance API mocked plus one live smoke test each.",
+      "created": "2026-09-16"
+    },
+    {
+      "slug": "carsa-code-migration-leads",
+      "url": "https://www.carsa.co.uk/get-started?vrm=ab12cde&location=Bolton",
+      "spec": "tests/acceptance/carsa-code-migration-leads.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "description": "Phase 0 baseline for every lead hand-off: check-finance hover swap, instant-valuation and part-exchange link builders, VDP booking CTAs and link decoration, hidden UTM form fields, get-started prefill and booking links, contact form.",
+      "created": "2026-09-16"
+    },
+    {
+      "slug": "carsa-code-migration-pages",
+      "url": "https://www.carsa.co.uk/faq",
+      "spec": "tests/acceptance/carsa-code-migration-pages.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Phase 0 baseline for the remaining page scripts: FAQ/blog lists and schema, models index, CMS template link builders (models, make, fuel, near, promotions, stores), reservation widget, 404 and car-redirect flows, animation presence checks, health sweep over every live page type. One expected failure: near-search-locations-link (live ReferenceError).",
+      "created": "2026-09-16"
     },
     {
       "slug": "tsc-cms-seo-fields",

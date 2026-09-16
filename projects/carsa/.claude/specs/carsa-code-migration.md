@@ -27,6 +27,7 @@ Performance is not the pitch. Cold-load LCP did not move when the VDP was extern
 | 20 Aug | Tomek opens #carsa-proj-webflow thread for sign-off. Rishi 👍 on 21 Aug, against Will's framing of **2 hours of his own time**. | [Slack](https://app.slack.com/archives/C08G8FGHX9Q/p1787239056087669) |
 | 24 Aug | Stephen Putman: the blocker is not repo access, it is that assets must be deployed **from the repo to a CDN**. Asks Will to open a PR. Will Wayman points at PR #138 as prior art. | [Slack](https://app.slack.com/archives/C08G8FGHX9Q/p1787565553106209) |
 | 27 Aug | **D2 reversed** — host in Carsa's repo, serve from their CloudFront. D10/D11/D12 added. D3 re-examined and left standing. | This revision |
+| 16 Sep | **Phase 0 tasks 0.1–0.6 and 0.8 (registry) done**, no site changes. 90 pages re-captured; 17 changed since July; search pages moved to Carsa's VSRP widget (CARSA-5852) so `srp/deals/makes/models` modules shrink to three blocks; finance calculator rewired to `consumer-finance.carsanet.co.uk/finance-config`; 206 tests across 5 specs. **0.7 (live run) awaits Will's go-ahead; prune list awaits confirmation.** | `reports/code-migration-phase-0-2026-09-16.md` |
 
 Net: the repo side is ~40% done (capture, VDP file, test harness, loader pattern elsewhere in the monorepo). The Webflow side is at zero. Nothing has shipped to live.
 

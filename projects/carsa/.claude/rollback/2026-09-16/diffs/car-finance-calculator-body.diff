@@ -1,0 +1,183 @@
+--- july/finance-calc-body.html
++++ sept/car-finance-calculator-body.html
+@@ -4,26 +4,69 @@
+   const carPriceInput = document.getElementById("finance-car-price");
+   const totalPriceEl = document.getElementById("total-price");
+ 
++  // ---------- Finance config: single source of truth, fetched once ----------
++  // Fallbacks below are today's live figures, used only if the fetch fails.
++  const CFG = {
++    representativeApr: 10.9,
++    aprByTier: { Excellent: 8.9, VeryGood: 10.9, Good: 10.9, Fair: 16.9, BelowAverage: 16.9 },
++    defaultTerm: 48,
++    defaultAnnualMileage: 8000,
++    defaultDepositAmount: 2500
++  };
++  const TIER = { 'excellent':'Excellent', 'very-good':'VeryGood', 'good':'Good', 'fair':'Fair' };
++
++  const cfgReady = Promise.race([
++    fetch('https://consumer-finance.carsanet.co.uk/finance-config')
++      .then(r => r.ok ? r.json() : Promise.reject(r.status))
++      .then(c => {
++        const a = c && c.representativeApr;
++        if (typeof a === 'number' && isFinite(a) && a >= 0 && a <= 40) {   // 0% is valid, so only cap the ceiling
++          Object.keys(c).forEach(k => { if (c[k] !== null && c[k] !== undefined && c[k] !== '') CFG[k] = c[k]; });
++        }
++        return CFG;
++      })
++      .catch(err => {
++        // MUST be reported: a silent failure means this page serves a stale rate.
++        console.error('finance-config fetch failed', err);
++        if (window.DD_LOGS) window.DD_LOGS.logger.error('finance-config fetch failed', { error: String(err) });
++        return CFG;
++      }),
++    new Promise(res => setTimeout(() => res(CFG), 3000))   // never let a hung fetch stop the calculator
++  ]);
++
+   // ---------- Helpers ----------
+   const fmtGBP = (v, opts={minimumFractionDigits:0, maximumFractionDigits:0}) =>
+     "£" + Number(v).toLocaleString("en-GB", opts);
+   const parseGBP = v => Number((v||"").toString().replace(/[^0-9.]/g,"")) || 0;
+-  const aprFor = rating => rating==="excellent" ? 8.9 : (rating==="fair" ? 16.9 : 11.9);
++  const aprFor = rating => {
++    const v = (CFG.aprByTier || {})[TIER[rating]];
++    return (typeof v === 'number') ? v : CFG.representativeApr;
++  };
++  const depositDefault = () => {
++    const keys = ['defaultDepositAmount','defaultDeposit','defaultCashDeposit','representativeDeposit'];
++    for (const k of keys) if (typeof CFG[k] === 'number' && isFinite(CFG[k]) && CFG[k] >= 0) return CFG[k];
++    return 2500;
++  };
+ 
+   let cmsPrice = parseGBP(carPriceInput.value || "10000");
+ 
+-  // ---------- Ensure APR checked matches visible .is-active on load (Webflow quirk) ----------
+-  (function fixAprLoadMismatch(){
+-    const aprWrap = document.querySelector('.finance-calculator_radio-buttons-wrapper input[data-name="apr"]')?.closest('.finance-calculator_radio-buttons-wrapper');
+-    if (!aprWrap) return;
+-    const activeAprInput = aprWrap.querySelector('label.finance-calculator_radio-button-field.is-active input[type="radio"][data-name="apr"]');
+-    const checkedApr = aprWrap.querySelector('input[type="radio"][data-name="apr"]:checked');
+-    if (activeAprInput && activeAprInput !== checkedApr) {
+-      aprWrap.querySelectorAll('input[data-name="apr"]').forEach(r => r.classList.remove('w--redirected-checked'));
+-      activeAprInput.checked = true;
+-      activeAprInput.classList.add('w--redirected-checked');
+-    }
+-  })();
++  // Check a radio AND move Webflow/Finsweet's visual state with it, so
++  // checked / w--redirected-checked / is-active can never disagree.
++  function setRadio(input) {
++    if (!input) return;
++    document.querySelectorAll('input[name="' + input.name + '"]').forEach(r => {
++      r.checked = false;
++      r.removeAttribute('checked');
++      r.classList.remove('w--redirected-checked');
++      const l = r.closest('label');
++      if (l) l.classList.remove(l.getAttribute('fs-inputactive-class') || 'is-active');
++    });
++    input.checked = true;
++    input.setAttribute('checked', '');
++    input.classList.add('w--redirected-checked');
++    const lab = input.closest('label');
++    if (lab) lab.classList.add(lab.getAttribute('fs-inputactive-class') || 'is-active');
++  }
+ 
+   function getSelectedAPRAndUpdateUI() {
+     const sel = document.querySelector('input[type="radio"][data-name="apr"]:checked');
+@@ -44,6 +87,10 @@
+     document.querySelectorAll('[data-number="total-credit"]').forEach(el => {
+       el.textContent = fmtGBP(credit);
+     });
++    // keep the disclosed deposit in step with what we actually quote on
++    document.querySelectorAll('[data-number="deposit"]').forEach(el => {
++      el.textContent = fmtGBP(deposit);
++    });
+     console.log("[Static Outputs] Deposit:", deposit, "Price:", cmsPrice, "Credit:", credit);
+   }
+ 
+@@ -59,11 +106,12 @@
+       "hp-price": { path: "hp.payments.regular", currency: true, localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 } },
+       "hp-price-short": { path: "hp.payments.regular", currency: true, transform: v => Math.floor(parseFloat(v)), localeOptions: { minimumFractionDigits: 0, maximumFractionDigits: 0 } },
+       "hp-total-amount-payable": { path: "hp.totalAmountPayable", currency: true, localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 } },
+-      "hp-total-charges": { path: "hp.totalCharges", currency: true, localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 } }
++      "hp-total-charges": { path: "hp.totalCharges", currency: true, localeOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 } },
++      "hp-fixed-rate": { path: "hp.flatRate", currency: false, format: v => Number(v).toFixed(1) + "%" }
+     };
+ 
+     const payload = {
+-      criteria: { annualMileage: 10000, cashDeposit: Number(deposit), outstandingFinance: 0, pxEquity: 0, term: Number(term), apr },
++      criteria: { annualMileage: Number(CFG.defaultAnnualMileage), cashDeposit: Number(deposit), outstandingFinance: 0, pxEquity: 0, term: Number(term), apr },
+       vehicle:  { mileage: 7617, price: cmsPrice, registrationDate: "2025-01-22", type: "Car", vrm: "MD74ZHJ" },
+       requestedBy: "manual",
+       requestUuid: (window.crypto?.randomUUID && crypto.randomUUID()) || String(Date.now())
+@@ -98,21 +146,26 @@
+       .catch(err => console.error("[Finance API Error]", err));
+   }
+ 
+-  // ---------- Defaults ----------
+-  depositInput.value = fmtGBP(2000);
+-
+-  cmsPrice = parseGBP(carPriceInput.value || "10000");
+-  carPriceInput.value = fmtGBP(cmsPrice);
+-  if (totalPriceEl) totalPriceEl.textContent = fmtGBP(cmsPrice);
+-
+-  // If no term is checked, default to 48
+-  if (!document.querySelector('input[type="radio"][data-name="finance-term"]:checked')) {
+-    const t48 = document.getElementById("48");
+-    if (t48) t48.checked = true;
+-  }
+-
+-  // Sync APR display on load
+-  getSelectedAPRAndUpdateUI();
++  // ---------- Defaults (applied from config) ----------
++  function applyDefaults() {
++    depositInput.value = fmtGBP(depositDefault());
++
++    cmsPrice = parseGBP(carPriceInput.value || "10000");
++    carPriceInput.value = fmtGBP(cmsPrice);
++    if (totalPriceEl) totalPriceEl.textContent = fmtGBP(cmsPrice);
++
++    // Force the config term. Do NOT skip when Webflow already has one checked —
++    // the design default (24) is checked in the HTML, so an "if nothing is
++    // checked" guard never fires and the page quotes the wrong term.
++    setRadio(document.getElementById(String(CFG.defaultTerm)));
++
++    // Default credit band
++    setRadio(document.querySelector('input[type="radio"][data-name="apr"][value="very-good"]'));
++
++    getSelectedAPRAndUpdateUI();
++  }
++
++  applyDefaults();   // immediately, so Webflow/Finsweet initialise against the right state
+ 
+   // ---------- Inputs ----------
+   // Car price
+@@ -152,14 +205,7 @@
+   function wireScopedRadios(groupName) {
+     document.querySelectorAll('input[type="radio"][data-name="'+groupName+'"]').forEach(input => {
+       input.addEventListener("change", function() {
+-        const wrapper = this.closest('.finance-calculator_radio-buttons-wrapper');
+-        if (wrapper) {
+-          wrapper.querySelectorAll('label.finance-calculator_radio-button-field').forEach(lbl => lbl.classList.remove('is-active'));
+-          wrapper.querySelectorAll('input[type="radio"][data-name="'+groupName+'"]').forEach(r => r.classList.remove('w--redirected-checked'));
+-        }
+-        this.checked = true;
+-        this.classList.add('w--redirected-checked');
+-        this.closest('label')?.classList.add('is-active');
++        setRadio(this);
+ 
+         if (groupName === "apr") {
+           const apr = getSelectedAPRAndUpdateUI();
+@@ -179,8 +225,11 @@
+   document.querySelectorAll('#finance-deposit, #finance-car-price, input[type="radio"][data-name="finance-term"], input[type="radio"][data-name="apr"]')
+     .forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); }));
+ 
+-  // Initial calc
+-  callFinanceAPI();
++  // ---------- Initial calc: wait for the live config so the first quote is right ----------
++  cfgReady.then(() => {
++    applyDefaults();     // re-apply in case the config differs from the fallbacks
++    callFinanceAPI();
++  });
+ });
+ </script>
+ 

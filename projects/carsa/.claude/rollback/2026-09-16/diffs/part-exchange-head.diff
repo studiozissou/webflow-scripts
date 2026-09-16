@@ -1,0 +1,8 @@
+--- july/part-exchange-head.html
++++ sept/part-exchange-head.html
+@@ -1,4 +1,4 @@
+-<link rel="canonical" href="https://www.carsa.co.uk/part-exchange">
++<link rel="canonical" href="https://www.carsa.co.uk/sell-car/part-exchange">
+ 
+ <!-- Finsweet Attributes -->
+ <script async type="module"

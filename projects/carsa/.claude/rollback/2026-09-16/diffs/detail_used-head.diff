@@ -1,0 +1,11 @@
+--- july/vdp-template-head.html
++++ sept/detail_used-head.html
+@@ -22,8 +22,4 @@
+ <link rel="preconnect" href="https://d3e54v103j8qbb.cloudfront.net" crossorigin>
+ <link rel="dns-prefetch" href="https://d3e54v103j8qbb.cloudfront.net">
+ <link rel="preconnect" href="https://cdn.prod.website-files.com" crossorigin>
+-<link rel="dns-prefetch" href="cdn.prod.website-files.com">
+-
+-<style>
+-#cta-default {display: none}
+-</style>+<link rel="dns-prefetch" href="cdn.prod.website-files.com">

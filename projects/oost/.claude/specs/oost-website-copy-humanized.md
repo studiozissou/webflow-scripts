@@ -113,7 +113,7 @@ Same structure, same keywords, same placeholders. What changed is the rhythm. v1
 ### Vanavond eten?
 **H2:** Vanavond eten?
 
-> [Straat 00], Haarlem [Centrum / -Oost]. [Openingstijden per dag.] Je hoeft niet te reserveren, maar op vrijdag en zaterdag zit het vol, dus dan is het wel handig. Loop je gewoon binnen, dan kijken we of er plek is. Meestal wel, soms even wachten aan de bar.
+> [Straat 00], Haarlem [Centrum / -Oost]. [Openingstijden per dag.] Je hoeft niet te reserveren, maar op vrijdag en zaterdag zit het vol, dus dan is het wel handig. Loop je gewoon binnen, dan kijken we of er plek is. Meestal wel, soms even wachten aan de bar. Kom je alleen? Neem plaats aan onze grote tafel, gezelschap vind je hier vanzelf.
 
 [Reserveer een tafel] [Route]
 
@@ -394,5 +394,7 @@ Not used anywhere on purpose: "beste", "authentiek", "ambachtelijk", "passie", "
 **Full-site recheck (13 Sep):** titles trimmed to 52–62 characters (afhalen and catering were 77 and 79 and would have been cut in results), metas to under 155 (home, catering and over-ons were 157–162). Afhalen now says "familie" once. Catering carries its own word in two H2s. Over-ons gets two H2s, a link to the menu and one rijsttafel mention. Word counts: home 1,390, afhalen 940, catering 690, over-ons 280.
 
 **Owners are a couple, no children (13 Sep):** hero, the home "De familie" block, the About page and the babi ketjap line rewritten for two people. "Familierestaurant" stays: a couple running it on family recipes is a family restaurant, and it's the term people search.
+
+**Solo diners (13 Sep, from Will's doc comment):** communal-table line added to "Vanavond eten?".
 
 **Still worth a native read:** "Klein schaaltje, je wilt er twee", "in dezelfde hoeveelheden sambal", "dan weet je het". They sound right to me; a Haarlemmer's ear decides.

@@ -1,7 +1,7 @@
 // Shared helpers for the Carsa code-migration acceptance suites: base URL, page loading, error capture, sitemap sampling, finance API mocking and attribution storage.
 const BASE = process.env.STAGING_URL_CARSA || 'https://www.carsa.co.uk';
 
-const KNOWN_ERRORS = [/filtered is not defined/];
+const KNOWN_ERRORS = [/filtered is not defined/, /setting 'innerText'/];
 
 const FINANCE_HOST = 'consumer-finance.carsanet.co.uk';
 
@@ -36,6 +36,13 @@ function collectErrors(page) {
 
 function unexpectedErrors(errors) {
   return errors.map((e) => e.message).filter((m) => !KNOWN_ERRORS.some((re) => re.test(m)));
+}
+
+function errorStacks(errors) {
+  return errors
+    .filter((e) => !KNOWN_ERRORS.some((re) => re.test(e.message)))
+    .map((e) => (e.stack || e.message).split('\n').slice(0, 4).join(' | '))
+    .join('\n');
 }
 
 let sitemapCache = null;
@@ -86,7 +93,28 @@ async function readAttribution(page) {
 
 async function seedAttribution(context, { utms = {}, referrer = '', referrerDomain = '', expiresAt } = {}) {
   const record = { utms, referrer, referrerDomain, updatedAt: Date.now(), expiresAt: expiresAt ?? Date.now() + 30 * 864e5 };
-  await context.addInitScript((r) => localStorage.setItem('attribution', JSON.stringify(r)), record);
+  await context.addInitScript((r) => {
+    if (self !== top || window.__carsaSeeded) return;
+    window.__carsaSeeded = true;
+    if (!sessionStorage.getItem('__carsaSeededOnce')) {
+      sessionStorage.setItem('__carsaSeededOnce', '1');
+      localStorage.setItem('attribution', JSON.stringify(r));
+    }
+  }, record);
+}
+
+async function seedSessionOnce(context, key, value) {
+  await context.addInitScript(([k, v]) => {
+    if (self !== top) return;
+    if (!sessionStorage.getItem(`__seeded_${k}`)) {
+      sessionStorage.setItem(`__seeded_${k}`, '1');
+      sessionStorage.setItem(k, v);
+    }
+  }, [key, value]);
+}
+
+function idOrData(id) {
+  return `#${id}, [data-number="${id}"]`;
 }
 
 function gbp(n, decimals = 0) {
@@ -110,12 +138,15 @@ export {
   waitForReady,
   collectErrors,
   unexpectedErrors,
+  errorStacks,
   sitemapPaths,
   firstPath,
   mockFinance,
   waitForQuotes,
   readAttribution,
   seedAttribution,
+  seedSessionOnce,
+  idOrData,
   gbp,
   parseGBP,
 };

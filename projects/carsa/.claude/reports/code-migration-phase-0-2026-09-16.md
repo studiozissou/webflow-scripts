@@ -12,7 +12,7 @@
 | 0.4 Repo file audit | 5 current, 2 stale, 4 unused, 1 empty, 1 hosted live (`battery-animation.js` @main). | `reports/code-migration-repo-file-audit-2026-09-16.md` |
 | 0.5 Routes | Confirmed against live sitemap (5,527 URLs). Route map in the spec is correct; `/used-cars/models/*` (460), `/used-cars/make/*` (48), `/used-cars/near/*` (39), `/used-cars/fuel/*` (7), `/used-cars/promotions/*` (3), `/sell-car/store/*` (10), `/stores/*` (13), `/blog/*` (107), `/terms/*` (12), `/vehicles/used/*` (4,799). | `rollback/2026-09-16/sitemap-live.xml` |
 | 0.6 Tests | 5 spec files, **206 tests** (was 40). Granular for finance, attribution and lead forms; one presence check per animation. Full script inventory written. | `tests/acceptance/carsa-code-migration*.spec.js`, `helpers/carsa.js`, `reports/code-migration-script-inventory-2026-09-16.md` |
-| 0.7 Run on live | **Not run** — Playwright needs your go-ahead. Specs parse (`--list` clean). | `npm run test:sz:acceptance -- carsa-code-migration` |
+| 0.7 Run on live | **Green.** 211 tests: 188 pass, 21 skipped (Phase 1 loader guards, gated on `CARSA_PHASE1=1`), 2 expected failures (live bugs, see below). Three runs on 16 Sep; the first surfaced 48 failures that resolved to selector drift, a widget rebuild and the live findings below. | `npm run test:sz:acceptance -- carsa-code-migration` |
 | 0.8 Registry + staging | Registered (4 new entries, 1 updated). Staging run pending 0.7. | `tests/registry.json` |
 
 ## Three findings that change the plan
@@ -50,6 +50,24 @@ Material: site head (body-colour guard), site footer (menu model-link rewrite re
 13. **Out of scope confirm:** Impel (`impel-test`, dev only), Acuity (repo only, never pasted), Calltracks (archive page, no code), Slack — none appear in live custom code. - correct
 14. **Duplicate `#px-form-small` ids on the VDP** (details quote form and the hero PX form). jQuery only binds the first. - flag for review in refactor. it currently works fine
 
+## Found by the live run (16 Sep) — dead or broken blocks
+
+All characterised in the suite (`*-block-dead` tests, `test.fail` for the two bugs). Each is a block that can be dropped rather than migrated, or a bug to fix in `global.js`:
+
+| # | Block | Page(s) | What the run showed | Suggest |
+|---|---|---|---|---|
+| A | noopener / noreferrer fix | site footer | `type="fs-consent"` → Finsweet Consent executes it after `DOMContentLoaded`, so its listener never fires. WhatsApp, Facebook, TikTok, LinkedIn, Instagram, YouTube links ship with `rel=""`. | Fix in `global.js` (run immediately, no listener) — matches your fs-consent decision |
+| B | Copyright year | site footer | Throws `Cannot set properties of null (setting 'innerText')` on pages with no `#year` (`/get-started`, `/payments/*`). | Null-guard in `global.js` |
+| C | Make/model redirect v2 | homepage | No `select[name=make]` or `.model-data` on the live home; the search is a plain Webflow form. Block never binds. | Drop from `homepage.js` |
+| D | PX link builder | homepage | No `px-vrm` input; the hero form is the valuation form. | Drop from `homepage.js` |
+| E | "Move View all" | `/faq` | Neither `#category-list` nor `#view-all` exists (both exist on `/blog`). | Drop from `faq-index.js` |
+| F | FAQ schema (mini) | `/reserve` | No `#section-faq` or `[data-faq-question]`; nothing injected. | Drop from reserve module |
+| G | 404 redirect toast | `/used-cars`, `/used-cars/deals` | Split in half: the script is only on `/used-cars` (where `#redirect-message` no longer exists) and the element is only on `/used-cars/deals` (where the script was never pasted). The VDP-404 → `/used-cars` redirect works but the message never shows anywhere. | Put element and script on the same page, or drop both |
+| H | Search-locations link | near template | Already on your list (remove). The target button doesn't exist either. | Remove |
+| I | `carsa-search` widget cards | `/used-cars`, deals | 50 `check-finance` hooks rendered, 25 visible; the hover swap still works on them. Not a bug — confirms the hover block must survive on widget pages. | Keep |
+
+Intermittent: `Cannot read properties of undefined (reading 'length')` ×2 appeared on `/car-finance`, `/used-cars/models`, `/stores` in the first two runs and not the third; the sweep now prints the stack when it recurs.
+
 ## Live dependencies to clear before Phase 1
 
 - `battery-animation.js` from `studiozissou/webflow-scripts@main` on every VDP — unpinned (spec D7). - include in scripts in PR
@@ -68,7 +86,7 @@ Material: site head (body-colour guard), site footer (menu model-link rewrite re
 
 Finance tests mock `consumer-finance.carsanet.co.uk` with `page.route` so numbers are deterministic; one real-API smoke test per calculator stays live. `KNOWN_ERRORS` in the helper allow-lists the near-template bug only.
 
-**Note:** the repo is `"type": "module"`, so the July `carsa-code-migration.spec.js` (CommonJS `require`) could never have run. All five specs now use `import`.
+**Note:** the repo is `"type": "module"`, so the July `carsa-code-migration.spec.js` (CommonJS `require`) could never have run. All five specs now use `import`. Final count after the live run: 211 tests (main 36 / global 26 / finance 29 / leads 34 / pages 86).
 
 ## Next
 

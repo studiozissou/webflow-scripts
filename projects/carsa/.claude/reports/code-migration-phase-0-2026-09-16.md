@@ -13,7 +13,7 @@
 | 0.5 Routes | Confirmed against live sitemap (5,527 URLs). Route map in the spec is correct; `/used-cars/models/*` (460), `/used-cars/make/*` (48), `/used-cars/near/*` (39), `/used-cars/fuel/*` (7), `/used-cars/promotions/*` (3), `/sell-car/store/*` (10), `/stores/*` (13), `/blog/*` (107), `/terms/*` (12), `/vehicles/used/*` (4,799). | `rollback/2026-09-16/sitemap-live.xml` |
 | 0.6 Tests | 5 spec files, **206 tests** (was 40). Granular for finance, attribution and lead forms; one presence check per animation. Full script inventory written. | `tests/acceptance/carsa-code-migration*.spec.js`, `helpers/carsa.js`, `reports/code-migration-script-inventory-2026-09-16.md` |
 | 0.7 Run on live | **Green.** 211 tests: 188 pass, 21 skipped (Phase 1 loader guards, gated on `CARSA_PHASE1=1`), 2 expected failures (live bugs, see below). Three runs on 16 Sep; the first surfaced 48 failures that resolved to selector drift, a widget rebuild and the live findings below. | `npm run test:sz:acceptance -- carsa-code-migration` |
-| 0.8 Registry + staging | Registered (4 new entries, 1 updated). Staging run pending 0.7. | `tests/registry.json` |
+| 0.8 Registry + staging | Registered (4 new entries, 1 updated). **Staging run done** (`STAGING_URL_CARSA=https://carsa-v2.webflow.io`): same shape as live — 186 pass, 21 gated, 2 expected failures; no staging-only differences beyond the Webflow runtime error below being consistent rather than intermittent. | `tests/registry.json` |
 
 ## Three findings that change the plan
 
@@ -66,7 +66,7 @@ All characterised in the suite (`*-block-dead` tests, `test.fail` for the two bu
 | H | Search-locations link | near template | Already on your list (remove). The target button doesn't exist either. | Remove |
 | I | `carsa-search` widget cards | `/used-cars`, deals | 50 `check-finance` hooks rendered, 25 visible; the hover swap still works on them. Not a bug — confirms the hover block must survive on widget pages. | Keep |
 
-Intermittent: `Cannot read properties of undefined (reading 'length')` ×2 appeared on `/car-finance`, `/used-cars/models`, `/stores` in the first two runs and not the third; the sweep now prints the stack when it recurs.
+Not ours: `Cannot read properties of undefined (reading 'length')` (intermittent on live, consistent on staging for `/car-finance`, the near template and the VDP) comes from Webflow's own runtime chunk (`webflow.achunk.58f76f29….js` → `webflow.achunk.36b8fb49….js`), not from custom code. Allow-listed in `KNOWN_ERRORS` so it cannot mask a migration regression by accident; worth a note to Tomek as a Webflow interactions issue.
 
 ## Live dependencies to clear before Phase 1
 

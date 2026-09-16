@@ -35,9 +35,9 @@ Material: site head (body-colour guard), site footer (menu model-link rewrite re
 
 ## Scripts I am not sure about — your call
 
-1. **Near template `[data-button="search-locations"]` is dead code.** The line defining `filtered` is commented out, so the block throws `ReferenceError: filtered is not defined` on every `/used-cars/near/*` load and the button never gets its href. Fix, or migrate as-is? (Test written as an expected failure; the error is allow-listed in `KNOWN_ERRORS`.)
-2. **VDP "car-info" embed renders "in our  store."** when the CMS location is empty (seen on `a26eta`). In-canvas, not custom code.
-3. **VDP radio CTA calls `svg.__svgDrawPlay`** but the VDP's draw-line variant never defines it, so the squiggle-on-select never plays. Intentional?
+1. **Near template `[data-button="search-locations"]` is dead code.** The line defining `filtered` is commented out, so the block throws `ReferenceError: filtered is not defined` on every `/used-cars/near/*` load and the button never gets its href. Fix, or migrate as-is? (Test written as an expected failure; the error is allow-listed in `KNOWN_ERRORS`.) - remove
+2. **VDP "car-info" embed renders "in our  store."** when the CMS location is empty (seen on `a26eta`). In-canvas, not custom code. 
+3. **VDP radio CTA calls `svg.__svgDrawPlay`** but the VDP's draw-line variant never defines it, so the squiggle-on-select never plays. Intentional? - not intentional, can we fix?
 4. **Duplicate VWO SmartCode** on `/about/careers` and `/development/our-team` heads (same account as site head). Delete on migration? And is VWO still in use — it hides `body` for up to 2 s on every page.
 5. **Finsweet Consent gating.** The noopener fix, the copyright year and Jetboost are `type="fs-consent"`; no Consent loader is in any capture, so it must be an embed or GTM. If Consent isn't installed those never run. Which is it?
 6. **`/car-finance-calculator` quotes a hard-coded demo car** (`MD74ZHJ`, 7,617 miles, reg 2025-01-22) and leaves ~15 `console.log` calls live. Intentional?

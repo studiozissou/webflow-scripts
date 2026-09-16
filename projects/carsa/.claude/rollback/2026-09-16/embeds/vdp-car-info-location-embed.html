@@ -1,8 +1,10 @@
-<!-- In-canvas Embed captured from the live HTML on 16 Sep 2026: Vehicles template; CMS location token renders inline. Not readable via the Webflow API; stays in Webflow. -->
+<!-- In-canvas Embed on the Vehicles template (not in page settings). Source supplied by Will, 16 Sep 2026. Renders the store-location sentence from the CMS Location reference; when Location/Display Name is empty the sentence reads "in our  store." -->
+<p class="text-size-regular" id="car-info"></p>
+
 <script>
-const carLocation = ''.trim();
+    const carLocation = '{{wf:Location/Display Name|Dynamo}}'.trim();
     const container = document.getElementById('car-info');
-    
+
     let firstSentence = carLocation === 'Storage'
         ? "This car is fully inspected and in our storage facility."
         : `This car's currently in our ${carLocation} store.`;

@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8"><title>Spotify /video ready-latency probe (standalone control for the watchdog; serve over http, open in the browser under test)</title>
+<style>body{font:13px monospace;margin:20px}iframe{width:336px;height:189px;border:0;display:block;margin:8px 0}</style>
+<div id="log"></div><div id="slot"></div>
+<script>
+var ID="1ornkffTkoykK4TnWkcMFJ", PER=4, CAP=30000, results=[];
+var AUDIO="https://open.spotify.com/embed/episode/"+ID+"?utm_source=iframe-api";
+var VIDEO="https://open.spotify.com/embed/episode/"+ID+"/video?utm_source=iframe-api";
+var ALLOW='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
+var variants=[
+ {name:"plain", setup:function(f){f.setAttribute('allow',ALLOW); f.src=VIDEO;}},
+ {name:"sandbox", setup:function(f){f.setAttribute('allow',ALLOW); f.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation'); f.src=VIDEO;}},
+ {name:"lazy", setup:function(f){f.setAttribute('allow',ALLOW); f.setAttribute('loading','lazy'); f.src=VIDEO;}},
+ {name:"audio-then-swap", setup:function(f){f.setAttribute('allow',ALLOW); f.src=AUDIO; f.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation'); f.src=VIDEO;}},
+ {name:"audio-then-swap-nosandbox", setup:function(f){f.setAttribute('allow',ALLOW); f.src=AUDIO; f.src=VIDEO;}},
+ {name:"prod-like(lazy+audio+sandbox+swap)", setup:function(f){f.setAttribute('allow',ALLOW); f.setAttribute('loading','lazy'); f.src=AUDIO; f.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation'); f.src=VIDEO;}}
+];
+window.__probe={done:false,results:results};
+function log(s){document.getElementById('log').textContent+=s+"\n";}
+var vi=0, si=0;
+function run(){
+  if(vi>=variants.length){window.__probe.done=true;log("DONE");return;}
+  var v=variants[vi]; var slot=document.getElementById('slot'); slot.innerHTML="";
+  var f=document.createElement('iframe');
+  var t0=performance.now(), loads=[], tReady=null, msgs=[], timer;
+  function finish(){ window.removeEventListener('message',onMsg); clearTimeout(timer);
+    var r={v:v.name, n:si, loads:loads.map(function(x){return Math.round(x-t0)}), ready: tReady!=null? Math.round(tReady-t0): null, firstMsgs: msgs.slice(0,3)};
+    results.push(r); log(JSON.stringify(r)); si++; if(si>=PER){si=0;vi++;} setTimeout(run,500); }
+  function onMsg(e){ if(e.source!==f.contentWindow) return; msgs.push(e.data&&e.data.type||String(e.data).slice(0,20)); if(e.data&&e.data.type==='ready'&&tReady==null){ tReady=performance.now(); setTimeout(finish,300); } }
+  window.addEventListener('message',onMsg);
+  f.addEventListener('load',function(){ loads.push(performance.now()); });
+  timer=setTimeout(finish, CAP);
+  slot.appendChild(f);
+  v.setup(f);
+}
+run();
+</script>

@@ -187,7 +187,7 @@ A correctly-configured Consent Mode v2 site loads GTM and gtag.js immediately an
 before the user chooses. Those tags run in `denied` mode and send cookieless pings. **A compliant
 site and a non-compliant site look identical in the network panel.** Never conclude "analytics
 fires before consent" from script load order, `<head>` embed code, or a WebFetch of the HTML.
-That inference produced a false positive on Coconut (May 2026) that reached the client.
+That inference once produced a false positive that reached a client.
 
 Two things must be true before flagging anything:
 
@@ -296,8 +296,8 @@ SEMRush.
 **FAQPage eligibility rule.** Since August 2023, Google shows FAQ rich results only for
 authoritative government and health sites. For every other site — SaaS, ecommerce, agency,
 professional services — adding `FAQPage` markup will **not** produce expandable Q&As in search
-results, and a task justified that way is a false promise. This reached a client in the Coconut
-audit (May 2026).
+results, and a task justified that way is a false promise. This has reached a client in a past
+audit.
 
 `FAQPage` markup is still worth recommending on a commercial site, but only on its real merits:
 AI-citation extraction and page-type signal. So flag a missing `FAQPage` when the site is a
@@ -429,7 +429,7 @@ Merge all outputs into `reports/intake-report-YYYY-MM-DD.md`.
 The audit streams verify **findings** — what is or isn't on the page. Synthesis adds
 **justifications** — why a finding matters and what fixing it buys. Justifications are generated
 prose, they are the part the client reads and budgets against, and until now nothing checked them.
-Both false positives in the Coconut audit (May 2026) entered here, not in the audit streams.
+Past false positives entered here, not in the audit streams.
 
 Every justification splits into two kinds of claim:
 

@@ -2,26 +2,23 @@
   "name": "NEM Test — /submit",
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "nem-submit",
-        "responseMode": "responseNode",
-        "options": {}
-      },
       "id": "16aa20eb-d7f2-4fe3-8b22-178786a04acc",
       "name": "Webhook",
+      "webhookId": "nem-submit",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
         -656,
         192
       ],
-      "webhookId": "nem-submit"
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nem-submit",
+        "responseMode": "responseNode",
+        "options": {}
+      }
     },
     {
-      "parameters": {
-        "jsCode": "// Flatten the webhook payload + derive server-side fields.\nconst b = $json.body ?? $json;\nconst headers = $json.headers ?? {};\nconst xff = (headers['x-forwarded-for'] || headers['x-real-ip'] || '').toString();\nconst ip = xff.split(',')[0].trim() || 'unknown';\nconst now = new Date();\nconst expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();\n// Base URL of the /verify webhook. Set NEM_VERIFY_WEBHOOK_URL as an n8n env var,\n// or replace the fallback string below once the /verify workflow is deployed.\nconst base = 'https://reus.app.n8n.cloud/webhook/nem-verify';\nconst token = (b.token || '').toString();\nreturn [{\n  json: {\n    token,\n    email: (b.email || '').toString().trim().toLowerCase(),\n    firstName: (b.firstName || '').toString().trim(),\n    gender: b.gender || '',\n    ageCategory: b.ageCategory || '',\n    relationshipStatus: b.relationshipStatus || '',\n    locale: b.locale || 'nl',\n    scoresJson: JSON.stringify(b.scores || {}),\n    primaryMechanism: b.primaryMechanism || '',\n    secondaryMechanism: b.secondaryMechanism || '',\n    // v2 conclusion engine fields. The component has sent these since 2026-08-17;\n    // they were silently dropped here until 2026-08-18.\n    outcome: b.outcome || '',\n    conclusionKey: b.conclusionKey || '',\n    conclusionId: b.conclusionId || '',\n    // Selected client-side from the conclusion key alone — no gender. Empty until Alex's\n    // Intro lines tab is exported; Build HTML renders nothing rather than a gap.\n    introLine: (b.introLine || '').toString(),\n    // The conclusion text the user read on screen. Alex's prompt reads it from the user\n    // message and n8n holds no copy of the texts, so it rides the payload like introLine.\n    conclusionText: (b.conclusionText || '').toString(),\n    // 'submission' is an identified opt-in. The anonymous completion beacon will send\n    // 'completion' instead, so default rather than hard-code.\n    event: b.event || 'submission',\n    totalScore: b.totalScore ?? '',\n    nemMattersConsent: b.nemMattersConsent === true,\n    honeypot: (b.honeypot || '').toString(),\n    ip,\n    receivedAt: now.toISOString(),\n    expiresAt,\n    consumed: false,\n    verifyUrl: base + '?token=' + encodeURIComponent(token)\n  }\n}];\n"
-      },
       "id": "37746a0a-4b55-4f3e-b5be-c98ed8ed4e94",
       "name": "Normalize",
       "type": "n8n-nodes-base.code",
@@ -29,9 +26,20 @@
       "position": [
         -448,
         192
-      ]
+      ],
+      "parameters": {
+        "jsCode": "// Flatten the webhook payload + derive server-side fields.\nconst b = $json.body ?? $json;\nconst headers = $json.headers ?? {};\nconst xff = (headers['x-forwarded-for'] || headers['x-real-ip'] || '').toString();\nconst ip = xff.split(',')[0].trim() || 'unknown';\nconst now = new Date();\nconst expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();\n// Base URL of the /verify webhook. Set NEM_VERIFY_WEBHOOK_URL as an n8n env var,\n// or replace the fallback string below once the /verify workflow is deployed.\nconst base = 'https://reus.app.n8n.cloud/webhook/nem-verify';\nconst token = (b.token || '').toString();\nreturn [{\n  json: {\n    token,\n    email: (b.email || '').toString().trim().toLowerCase(),\n    firstName: (b.firstName || '').toString().trim(),\n    gender: b.gender || '',\n    ageCategory: b.ageCategory || '',\n    relationshipStatus: b.relationshipStatus || '',\n    locale: b.locale || 'nl',\n    scoresJson: JSON.stringify(b.scores || {}),\n    primaryMechanism: b.primaryMechanism || '',\n    secondaryMechanism: b.secondaryMechanism || '',\n    // v2 conclusion engine fields. The component has sent these since 2026-08-17;\n    // they were silently dropped here until 2026-08-18.\n    outcome: b.outcome || '',\n    conclusionKey: b.conclusionKey || '',\n    conclusionId: b.conclusionId || '',\n    // Selected client-side from the conclusion key alone — no gender. Empty until Alex's\n    // Intro lines tab is exported; Build HTML renders nothing rather than a gap.\n    introLine: (b.introLine || '').toString(),\n    // The conclusion text the user read on screen. Alex's prompt reads it from the user\n    // message and n8n holds no copy of the texts, so it rides the payload like introLine.\n    conclusionText: (b.conclusionText || '').toString(),\n    // 'submission' is an identified opt-in. The anonymous completion beacon will send\n    // 'completion' instead, so default rather than hard-code.\n    event: b.event || 'submission',\n    totalScore: b.totalScore ?? '',\n    nemMattersConsent: b.nemMattersConsent === true,\n    honeypot: (b.honeypot || '').toString(),\n    ip,\n    receivedAt: now.toISOString(),\n    expiresAt,\n    consumed: false,\n    verifyUrl: base + '?token=' + encodeURIComponent(token)\n  }\n}];\n"
+      }
     },
     {
+      "id": "3b35361b-0df0-4aa2-83ba-dd0b1396ff5a",
+      "name": "Honeypot filled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        192
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -55,22 +63,9 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "3b35361b-0df0-4aa2-83ba-dd0b1396ff5a",
-      "name": "Honeypot filled?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        -224,
-        192
-      ]
+      }
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"status\": \"ok\" } }}",
-        "options": {}
-      },
       "id": "c6ad72fe-50b6-42db-8c41-8c8bf63ee103",
       "name": "Respond OK (honeypot)",
       "type": "n8n-nodes-base.respondToWebhook",
@@ -78,12 +73,14 @@
       "position": [
         0,
         0
-      ]
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ok\" } }}",
+        "options": {}
+      }
     },
     {
-      "parameters": {
-        "jsCode": "// In-memory IP rate limit: max MAX_PER_HOUR submissions per IP per rolling hour.\n// Uses n8n workflow static data (persists across executions of this workflow).\n// Completion pings are logging, not submissions: neither counted nor blocked.\nconst input = $json;\nif (input.event === 'completion') return [{ json: { ...input, rateLimited: false } }];\nconst ip = input.ip || 'unknown';\nconst store = $getWorkflowStaticData('global');\nstore.hits = store.hits || {};\nconst now = Date.now();\nconst windowMs = 60 * 60 * 1000;\nconst MAX_PER_HOUR = 50;\nconst recent = (store.hits[ip] || []).filter(t => now - t < windowMs);\nconst rateLimited = recent.length >= MAX_PER_HOUR;\nif (!rateLimited) {\n  recent.push(now);\n}\nstore.hits[ip] = recent;\nreturn [{ json: { ...input, rateLimited } }];"
-      },
       "id": "ea6a7d58-17a2-4fe5-afbd-99b8045b7118",
       "name": "Rate limit",
       "type": "n8n-nodes-base.code",
@@ -91,9 +88,20 @@
       "position": [
         0,
         288
-      ]
+      ],
+      "parameters": {
+        "jsCode": "// In-memory IP rate limit: max MAX_PER_HOUR submissions per IP per rolling hour.\n// Uses n8n workflow static data (persists across executions of this workflow).\n// Completion pings are logging, not submissions: neither counted nor blocked.\nconst input = $json;\nif (input.event === 'completion') return [{ json: { ...input, rateLimited: false } }];\nconst ip = input.ip || 'unknown';\nconst store = $getWorkflowStaticData('global');\nstore.hits = store.hits || {};\nconst now = Date.now();\nconst windowMs = 60 * 60 * 1000;\nconst MAX_PER_HOUR = 50;\nconst recent = (store.hits[ip] || []).filter(t => now - t < windowMs);\nconst rateLimited = recent.length >= MAX_PER_HOUR;\nif (!rateLimited) {\n  recent.push(now);\n}\nstore.hits[ip] = recent;\nreturn [{ json: { ...input, rateLimited } }];"
+      }
     },
     {
+      "id": "29c130b4-a3cd-4549-b7fd-b492a3f2ddd2",
+      "name": "Rate limited?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        288
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -117,22 +125,9 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "29c130b4-a3cd-4549-b7fd-b492a3f2ddd2",
-      "name": "Rate limited?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        224,
-        288
-      ]
+      }
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"status\": \"rate_limited\" } }}",
-        "options": {}
-      },
       "id": "51003e2b-9793-492b-9edb-843922aba96c",
       "name": "Respond Rate Limited",
       "type": "n8n-nodes-base.respondToWebhook",
@@ -140,9 +135,22 @@
       "position": [
         448,
         128
-      ]
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"rate_limited\" } }}",
+        "options": {}
+      }
     },
     {
+      "id": "59074752-ad20-42de-b264-884a89b3d79d",
+      "name": "Store Profile",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        448,
+        384
+      ],
       "parameters": {
         "operation": "upsert",
         "dataTableId": {
@@ -424,17 +432,17 @@
           "convertFieldsToString": false
         },
         "options": {}
-      },
-      "id": "59074752-ad20-42de-b264-884a89b3d79d",
-      "name": "Store Profile",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        448,
-        384
-      ]
+      }
     },
     {
+      "id": "cc885860-8b3a-47dc-8cd2-1ab2330e8bb1",
+      "name": "MailerLite: Send Verification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        384
+      ],
       "parameters": {
         "method": "POST",
         "url": "https://connect.mailerlite.com/api/subscribers",
@@ -455,17 +463,9 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ email: $json.email, fields: { name: $json.firstName, nem_token: $json.token, nem_locale: $json.locale, nem_verify_url: $json.verifyUrl }, groups: [ '192344920326931926' ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ email: $json.email, fields: { name: $json.firstName, nem_token: $json.token, nem_locale: $json.locale, nem_verify_url: $json.verifyUrl }, groups: [ '192344920326931926' ], status: 'active', resubscribe: true }) }}",
         "options": {}
       },
-      "id": "cc885860-8b3a-47dc-8cd2-1ab2330e8bb1",
-      "name": "MailerLite: Send Verification",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        672,
-        384
-      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "wQ0hWw0KfZHraJs1",
@@ -474,11 +474,6 @@
       }
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"status\": \"ok\" } }}",
-        "options": {}
-      },
       "id": "a6f5fe4c-8850-404c-9649-de82a919aeb9",
       "name": "Respond OK",
       "type": "n8n-nodes-base.respondToWebhook",
@@ -486,9 +481,22 @@
       "position": [
         880,
         384
-      ]
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ok\" } }}",
+        "options": {}
+      }
     },
     {
+      "id": "d4000000-0000-4000-8000-00000000000i",
+      "name": "Completion?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        528
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -511,17 +519,17 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "d4000000-0000-4000-8000-00000000000i",
-      "name": "Completion?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        336,
-        528
-      ]
+      }
     },
     {
+      "id": "d4000000-0000-4000-8000-00000000000l",
+      "name": "Log Completion",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        560,
+        528
+      ],
       "parameters": {
         "dataTableId": {
           "__rl": true,
@@ -548,22 +556,9 @@
           "convertFieldsToString": false
         },
         "options": {}
-      },
-      "id": "d4000000-0000-4000-8000-00000000000l",
-      "name": "Log Completion",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        560,
-        528
-      ]
+      }
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"status\": \"ok\" } }}",
-        "options": {}
-      },
       "id": "d4000000-0000-4000-8000-00000000000r",
       "name": "Respond OK (completion)",
       "type": "n8n-nodes-base.respondToWebhook",
@@ -571,7 +566,12 @@
       "position": [
         784,
         528
-      ]
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ok\" } }}",
+        "options": {}
+      }
     }
   ],
   "connections": {

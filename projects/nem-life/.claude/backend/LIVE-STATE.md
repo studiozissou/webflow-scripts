@@ -1,6 +1,6 @@
 # NEM Life — live n8n state
 
-**Generated 2026-09-02T14:43:26.658Z** by `npm run check:nem-drift`.
+**Generated 2026-09-17T08:43:25.780Z** by `npm run check:nem-drift`.
 
 **Do not hand-edit this file.** It is written from the live n8n API and is the one
 place in this repo allowed to assert what the workflows currently do. Prose docs that
@@ -40,7 +40,7 @@ need a live fact should link here rather than restating it — restating is how 
 - n8n id: `LDI1eWR35lwX6WLp`
 - active: yes
 - nodes: 13
-- last changed in n8n: 2026-09-02T14:36:26.763Z
+- last changed in n8n: 2026-09-17T08:42:43.192Z
 - committed snapshot: matches live
 
 | Invariant | State |
@@ -50,6 +50,8 @@ need a live fact should link here rather than restating it — restating is how 
 | Per-IP rate limit is present | holds |
 | Rate limit ignores completion pings — they are logging, not submissions | holds |
 | Verification mail goes out via MailerLite | holds |
+| Verification upsert sets the subscriber active, so the automation sends | holds |
+| Verification upsert resubscribes contacts who once unsubscribed | holds |
 | Normalize keeps the v2 outcome, conclusionKey and conclusionId | holds |
 | Store Profile persists the v2 conclusion fields and the event type | holds |
 | Normalize keeps introLine | holds |

@@ -897,6 +897,7 @@ googleapis (for Gmail API)
 25. Minimal footer with logo only
 26. prefers-reduced-motion respected
 27. All strings display correctly in EN locale (/en/ path)
+28. An address already in MailerLite as unconfirmed or unsubscribed still receives the verification email and ends up active (backend README → *Returning-contact test*)
 
 ### Reproduction steps
 

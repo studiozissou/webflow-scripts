@@ -51,6 +51,7 @@ carry their original dates.
 | MailerLite — pending group | `192344920326931926` | ✅ Created ("NEM Test — Pending") |
 | MailerLite — custom fields | `nem_token` / `nem_locale` / `nem_verify_url` | ✅ Created (text) |
 | MailerLite — double opt-in | account setting | ✅ **Disabled for API/integrations** — subscribers land Active, no MailerLite opt-in email |
+| MailerLite — returning contacts | `MailerLite: Send Verification` body | ✅ **Fixed 17-09-2026** — the upsert sends `status: 'active', resubscribe: true`. Before this, an address already in MailerLite as unconfirmed or unsubscribed kept that status, and the automation (active-only) silently sent nothing — Alex's protonmail run on 16-09 (exec #311). Bounced/junk contacts still cannot be reactivated. **Verified 17-09-2026** for a new address (exec #314, status `active`, email in 10 s); **not yet verified live against an unconfirmed contact** — see *Returning-contact test* below. |
 | MailerLite — verification automation + email | `mailerlite-verification.md` | ✅ **Built + verified** — email arrives, `{$nem_verify_url}` resolves to the tokened link |
 | Component prop wiring | `src/nem-test-phase-b.tsx` | ⏳ Paste submit URL into `submitWebhookUrl` in Webflow Designer |
 | `/verify` webhook | `nem-verify.workflow.json` | ✅ **Live (full chain)** — workflow id `uKkMgMYoH5nOLoCR`, active; `https://reus.app.n8n.cloud/webhook/nem-verify?token=…`. Redirects → `nem-life-1.webflow.io/verificatie/{bevestigd,verlopen}` (staging; EN under `/en/verificatie/…`); `consumed` flips on validate. Report branch **enabled + verified e2e** (2026-07-09, exec #32). |
@@ -441,6 +442,21 @@ but no data-table row and no email.
 
 **Rate-limit test:** fire 4× fast from the same IP → the 4th returns
 `{"status":"rate_limited"}`.
+
+**Returning-contact test** (added 17-09-2026 — this is the case that broke for Alex):
+a new `will+…` address always lands `active`, so it can never catch this. The address
+must **already exist in MailerLite** with a non-active status.
+
+1. In MailerLite, pick or create a contact whose status is **unconfirmed** (an old
+   double-opt-in form signup that was never confirmed) or **unsubscribed** (unsubscribe
+   a `will+…` test contact in the UI).
+2. Submit the quiz with that exact address.
+3. Pass: `MailerLite: Send Verification` returns `"status": "active"` in the execution,
+   **and** the verification email arrives. Before the fix the node returned
+   `"status": "unconfirmed"` and no email came — the webhook still said `ok`, so the
+   HTTP response proves nothing.
+4. Click the link and confirm the report arrives.
+5. Bounced/junk contacts are expected to fail — MailerLite blocks reactivating them.
 
 ---
 

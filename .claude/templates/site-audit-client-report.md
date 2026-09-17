@@ -413,7 +413,7 @@ the detail behind the summary numbers.
   *simpler*; it may never make it *stronger*, or add a benefit the internal report didn't
   establish. This bites hardest on the **Benefit line**, which asserts what Google or an AI
   assistant will *do* — third-party behaviours that change without notice and that a model will
-  cheerfully state from stale memory. Two that reached a Coconut client in May 2026: "FAQ schema
+  cheerfully state from stale memory. Two that have reached a client: "FAQ schema
   makes Google show expandable Q&As" (false since Aug 2023 outside gov/health) and "analytics
   fires before consent" (that is what correct Consent Mode v2 looks like). If a Benefit line
   reads thin, it was thin upstream — go fix it there rather than papering over it with a

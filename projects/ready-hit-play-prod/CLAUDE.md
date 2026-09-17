@@ -6,9 +6,9 @@ Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + 
 
 ## Deployment
 - `init.js` is the only script tag in Webflow (head). It self-loads everything.
-- jsDelivr serves files pinned to a commit hash (e.g. `...@abc1234/projects/ready-hit-play-prod/init.js?v=N`).
+- jsDelivr serves files pinned to a git tag (e.g. `...@rhp-live-v2/projects/ready-hit-play-prod/init.js?v=N`), never a commit ID.
 - Local dev: serve repo root on localhost; `init.js` detects local origin and loads from disk.
-- On deploy: bump `CONFIG.version` in `init.js`, push, update commit hash + `?v=` in Webflow.
+- On deploy: bump `CONFIG.version` in `init.js`, push, create the next `rhp-live-vN` tag, update the tag + `?v=` in Webflow.
 - CSS (`ready-hit-play.css`) is also linked from jsDelivr in the same Webflow head block.
 
 ## IMPORTANT: All RHP work happens here
@@ -98,7 +98,7 @@ State classes added by JS to `[data-barba="wrapper"]`:
 - `home-intro.js` runs only on first DOMContentLoaded load, not on Barba re-enter
 - `overland-ai.js` re-inits on `rhp:barba:afterenter` (not just on DOMContentLoaded)
 - iOS: video autoplay requires a user gesture; work-dial calls `enforceVideoPolicy()` on `pointerdown`
-- jsDelivr caches aggressively — always pin a commit hash AND bump `?v=` to bust cache
+- jsDelivr caches aggressively — always use a new tag AND bump `?v=` to bust cache
 - Safari nav logo SVG `height="162"` causes oversized rendering — needs explicit size constraint
 - **`.home-transition-dial` is the skip-intro control, NOT decoration** (2026-08-13) — `home-scroll-morph.js` binds `pointerdown` to the wrapper (`skipTarget = dialWrapper`) so tapping the small dial skips the intro word-cycle. A blanket `pointer-events: none` on it silently kills that. The `.transition-dial_canvas` **child** is safe to make non-interactive unconditionally — the listener is on the parent, and a non-interactive child passes the event through to it.
 - **Decorative canvases still need `pointer-events: none`** (fixed 2026-08-13) — `transition-dial.js` leaves its `aria-hidden` canvas in the DOM after `destroy()`, and the wrapper sits bottom-centre, so on a case study it covered `.case_close-button` and swallowed taps with nothing visible on screen. The wrapper rule is therefore **scoped** to case-study mode: `[data-barba="wrapper"]:has(.dial_layer-fg.is-case-study) .home-transition-dial`. Keyed on the same `.is-case-study` signal `work-dial.js` guards on, so JS and CSS stay in step.

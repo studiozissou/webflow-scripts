@@ -53,3 +53,36 @@ projects/studio-zissou/.claude/comms/
 *payslip*
 *salaris*
 *moneybird*
+
+# Internal docs live in the private studiozissou/webflow-internal repo (~/webflow-internal).
+# scripts/link-internal.sh symlinks them here. No trailing slashes, so the symlinks match too.
+projects/*/.claude
+.claude/specs
+.claude/research
+.claude/briefs
+.claude/plans
+.claude/screenshots
+.claude/reference
+.claude/triage
+.claude/queue.json
+/*.png
+# Personal and client-specific Claude tooling (same private repo)
+.claude/skills/triage
+.claude/skills/gmail-triage
+.claude/skills/draft-email
+.claude/skills/next
+.claude/skills/notion-dashboard
+.claude/skills/queue-tasks
+.claude/skills/zissou-scan
+.claude/skills/carsa-webflow
+.claude/commands/triage.md
+.claude/commands/carsa-build.md
+
+# CI checkout of the private repo (see .github/workflows/tests.yml)
+/_internal
+
+# Claude session logs written wherever a session ran
+**/.claude/logs/
+
+# Generated site-review output (kept in webflow-internal/.claude/research/site-review-reports)
+tools/site-review/reports/

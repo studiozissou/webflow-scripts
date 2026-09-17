@@ -29,7 +29,19 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - Reports go in `projects/{client}/.claude/reports/`
 - Proposals go in `projects/{client}/.claude/proposals/`
 
-## Financial data — THIS REPO IS PUBLIC
+## Public vs internal — THIS REPO IS PUBLIC
+- IMPORTANT: Only live scripts and what genuinely needs to be public are committed here.
+  Client notes, specs, research, comms, proposals, estimates, audits and screenshots are internal.
+- Internal files live in the private repo `studiozissou/webflow-internal`, cloned at
+  `~/webflow-internal`. `projects/*/.claude` and `.claude/{specs,research,briefs,plans,screenshots,reference,triage}`
+  are gitignored symlinks into it, created by `scripts/link-internal.sh`.
+- Commit internal doc changes in `~/webflow-internal` (`git -C ~/webflow-internal ...`), never here.
+- New client: run `scripts/link-internal.sh` after creating `projects/{client}/.claude/` — it moves
+  the folder into the private repo and links it back.
+- New worktrees get the links from a `post-checkout` hook (`scripts/link-internal.sh --install-hook`, once per clone).
+  If a path is not a symlink, run the script before writing to it.
+
+## Financial data
 - IMPORTANT: Never commit accounting, tax, banking or payroll material, IBANs, BSN,
   balances, or private Drive links. Redact IBANs as `[IBAN supplied on the invoice]`.
 - Financial admin goes in `~/Documents/Studio Zissou/`, never here.

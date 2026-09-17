@@ -1,0 +1,262 @@
+<!-- Update car card link when finance check is hovered/clicked -->
+<script>
+  (() => {
+    const BASE = 'https://quote.carsa.co.uk/eligibility/questions';
+    const SELECTOR = '[data-link="check-finance"]';
+    const ANALYTICS_VALUE = 'check-finance-car-card-click';
+    const HOST = location.hostname.replace(/^www\./, '');
+
+    function getAttributionParams() {
+      const pick = (s) => {
+        try {
+          return JSON.parse(s.getItem('attribution_session') || 'null') || JSON.parse(s.getItem('attribution') || 'null');
+        } catch (_) {
+          return null;
+        }
+      };
+      const ss = pick(sessionStorage) || {};
+      const ls = pick(localStorage) || {};
+      const utms = ss.utms && Object.keys(ss.utms).length ? ss.utms : ls.utms || {};
+      let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+      if (!refDomain && document.referrer) {
+        try {
+          const d = new URL(document.referrer).hostname.replace(/^www\./, '');
+          if (!(d === HOST || d.endsWith('.' + HOST))) refDomain = d;
+        } catch (_) {
+          /* invalid referrer URL */
+        }
+      }
+      const params = { ...utms };
+      if (refDomain) params.referrer = refDomain;
+      return params;
+    }
+
+    function addParams(url, obj) {
+      try {
+        const u = new URL(url, location.origin);
+        for (const k in obj) {
+          if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]);
+        }
+        return u.toString();
+      } catch (_) {
+        const hasQ = url.indexOf('?') > -1;
+        const parts = [];
+        for (const k in obj) {
+          if (!new RegExp('([?&])' + k + '=').test(url)) parts.push(k + '=' + encodeURIComponent(obj[k]));
+        }
+        return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
+      }
+    }
+
+    function buildURL(vrm) {
+      let url = BASE;
+      if (vrm) url += '?vrm=' + encodeURIComponent(vrm);
+      return addParams(url, getAttributionParams());
+    }
+
+    // Hover: swap ancestor <a> href so browser status bar shows finance URL
+    document.body.addEventListener('mouseover', (e) => {
+      const el = e.target.closest(SELECTOR);
+      if (!el) return;
+      const anchor = el.closest('a');
+      if (!anchor) return;
+      if (!anchor.dataset.originalHref) anchor.dataset.originalHref = anchor.href;
+      if (!('originalAnalytics' in anchor.dataset)) anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+      anchor.href = buildURL(el.getAttribute('vrm'));
+      anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+    });
+
+    document.body.addEventListener('mouseout', (e) => {
+      const el = e.target.closest(SELECTOR);
+      if (!el) return;
+      if (el.contains(e.relatedTarget)) return;
+      const anchor = el.closest('a');
+      if (!anchor || !anchor.dataset.originalHref) return;
+      anchor.href = anchor.dataset.originalHref;
+      delete anchor.dataset.originalHref;
+      if ('originalAnalytics' in anchor.dataset) {
+        const orig = anchor.dataset.originalAnalytics;
+        if (orig) anchor.setAttribute('data-analytics-event', orig);
+        else anchor.removeAttribute('data-analytics-event');
+        delete anchor.dataset.originalAnalytics;
+      }
+    });
+
+    // Click fallback: if href wasn't swapped yet (keyboard/touch), swap it now
+    document.body.addEventListener('click', (e) => {
+      const el = e.target.closest(SELECTOR);
+      if (!el) return;
+      const anchor = el.closest('a');
+      if (!anchor) return;
+      if (!anchor.dataset.originalHref) {
+        anchor.dataset.originalHref = anchor.href;
+        anchor.href = buildURL(el.getAttribute('vrm'));
+      }
+      if (!('originalAnalytics' in anchor.dataset)) {
+        anchor.dataset.originalAnalytics = anchor.getAttribute('data-analytics-event') || '';
+        anchor.setAttribute('data-analytics-event', ANALYTICS_VALUE);
+      }
+    });
+  })();
+</script>
+
+<!-- Set description and SEO data if missing -->
+<script>
+  $(function () {
+    // Build default meta description with Webflow CMS values
+    var defaultDesc = 'The {{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }} {{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }} blends everyday practicality with signature {{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }} craftsmanship. Expect responsive engines, refined comfort, advanced infotainment and safety tech packaged in a distinctive design that turns routine drives into rewarding journeys.';
+
+    // Check and set meta description
+    var metaDesc = $('meta[name="description"]');
+    if (!metaDesc.length || !metaDesc.attr('content')) {
+      $('head').append('<meta name="description" content="' + defaultDesc + '">');
+    }
+
+    // Get current or default meta description
+    var descText = $('meta[name="description"]').attr('content') || defaultDesc;
+
+    // Set page title if missing
+    if (!document.title.trim()) {
+      document.title = 'Shop used {{wf {&quot;path&quot;:&quot;make:name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }} {{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }} cars combining style, performance and modern tech. Discover our stock online, choose your favourite and book a test drive.';
+    }
+
+    // Set #description element text
+    $('#description').text(descText);
+  });
+</script>
+
+<script>
+  /**
+   * FAQ Scrub — Carsa /make/ and /models/ pages
+   * Removes empty Question nodes from FAQPage JSON-LD.
+   * If all questions are empty, removes the entire FAQPage block
+   * and cleans the mainEntity #faq ref from CollectionPage.
+   */
+  (function () {
+    var blocks = document.querySelectorAll('script[type="application/ld+json"]');
+    for (var i = 0; i < blocks.length; i++) {
+      var txt = blocks[i].textContent;
+      if (!txt) continue;
+      try {
+        var data = JSON.parse(txt);
+        if (data['@type'] === 'FAQPage' && Array.isArray(data.mainEntity)) {
+          var kept = [];
+          for (var q = 0; q < data.mainEntity.length; q++) {
+            var item = data.mainEntity[q];
+            var name = (item.name || '').trim();
+            var answer = ((item.acceptedAnswer && item.acceptedAnswer.text) || '').trim();
+            if (name && answer) kept.push(item);
+          }
+          if (kept.length === 0) {
+            blocks[i].parentNode.removeChild(blocks[i]);
+          } else {
+            data.mainEntity = kept;
+            blocks[i].textContent = JSON.stringify(data);
+          }
+        }
+        if (data['@graph']) {
+          for (var g = 0; g < data['@graph'].length; g++) {
+            var node = data['@graph'][g];
+            if (node.mainEntity && typeof node.mainEntity['@id'] === 'string' && node.mainEntity['@id'].indexOf('#faq') !== -1) {
+              var faqAlive = false;
+              for (var f = 0; f < blocks.length; f++) {
+                if (!blocks[f].parentNode) continue;
+                try {
+                  var check = JSON.parse(blocks[f].textContent);
+                  if (check['@type'] === 'FAQPage') {
+                    faqAlive = true;
+                    break;
+                  }
+                } catch (_) {}
+              }
+              if (!faqAlive) {
+                delete node.mainEntity;
+                blocks[i].textContent = JSON.stringify(data);
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+  })();
+</script>
+
+<!-- Update and open the link for Instant Valuation form -->
+<script>
+/* Build valuation links using stored UTMs + external referrer domain (fallbacks included) */
+$(function () {
+  const HOST = location.hostname.replace(/^www\./,'');
+
+  function getAttributionParams(){
+    const pick = (s)=>{ try{ return JSON.parse(s.getItem('attribution_session')||'null') || JSON.parse(s.getItem('attribution')||'null'); }catch(_){ return null; } };
+    const ss = pick(sessionStorage) || {};
+    const ls = pick(localStorage)  || {};
+    const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms||{}));
+    let refDomain = ss.referrerDomain || ls.referrerDomain || '';
+    if(!refDomain && document.referrer){
+      try{
+        const d = new URL(document.referrer).hostname.replace(/^www\./,'');
+        if(!(d===HOST || d.endsWith('.'+HOST))) refDomain = d;
+      }catch(_){}
+    }
+    const params = {...utms};
+    if(refDomain) params.referrer = refDomain;
+    return params;
+  }
+
+  function addParams(url, obj){
+    const u = new URL(url, location.origin);
+    for(const k in obj){ if(!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
+    return u.toString();
+  }
+
+  function generateOrderURL(vrm, mileage){
+    const base = 'https://sellcar.carsa.co.uk/new-order?vrm=' + encodeURIComponent(vrm)
+               + '&mileage=' + encodeURIComponent(mileage || '');
+    return addParams(base, getAttributionParams());
+  }
+
+  function getFormValues($form){
+    const vrm = ($form.find('[name="vrm"]').first().val() || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '');
+    const mileage = ($form.find('[name="mileage"]').first().val() || '').trim();
+    return { vrm, mileage };
+  }
+
+  function setHref($trigger){
+    const $form = $trigger.closest('form');
+    if(!$form.length) return null;
+    const { vrm, mileage } = getFormValues($form);
+    if(!vrm) return null;
+    const url = generateOrderURL(vrm, mileage);
+    if($trigger.is('a')) $trigger.attr({ href: url, target: '_blank' });
+    return url;
+  }
+
+  $(document).on('click', '[data-link="valuation"]', function(e){
+    const url = setHref($(this));
+    if(!url) return;
+    if(!$(this).is('a')){
+      e.preventDefault();
+      window.open(url, '_blank', 'noopener');
+    }
+  });
+
+  $(document).on('keydown', 'form input', function(e){
+    if(e.key !== 'Enter') return;
+    const $form = $(this).closest('form');
+    const $trigger = $form.find('[data-link="valuation"]').first();
+    if(!$trigger.length) return;
+    e.preventDefault();
+    const url = setHref($trigger);
+    if(url && !$trigger.is('a')) window.open(url, '_blank', 'noopener');
+    else if(url) $trigger[0].click();
+  });
+
+  $(document).on('input', 'form [name="vrm"], form [name="mileage"]', function(){
+    const $form = $(this).closest('form');
+    $form.find('[data-link="valuation"]').each(function(){ setHref($(this)); });
+  });
+});
+</script>

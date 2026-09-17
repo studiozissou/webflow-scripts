@@ -1,0 +1,39 @@
+  <script type="module">
+    import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+    
+    createChat({
+      webhookUrl: 'https://carsa.app.n8n.cloud/webhook/88d110ef-b4ab-4c22-9306-1e492c9f7687/chat', // Replace with your n8n webhook URL
+
+      // Widget configuration
+      mode: 'window',
+      metadata: {
+		    currentPageUrl: window.location.href
+      },
+      target: '#n8n-chat',
+      showWelcomeScreen: true,
+      loadPreviousSession: true,
+      
+      // Chat input/session keys
+      chatInputKey: 'chatInput',
+      chatSessionKey: 'sessionId',
+      
+      // Initial messages (sentence case)
+      initialMessages: [
+        'Hello! 👋',
+        'How can I help you today?'
+      ],
+      
+      // Localisation - sentence case text
+      defaultLanguage: 'en',
+      i18n: {
+        en: {
+          title: 'Chat with us',
+          subtitle: "We're here to help you 24/7.",
+          footer: '',
+          getStarted: 'Start a conversation',
+          inputPlaceholder: 'Type your message...',
+          closeButtonTooltip: 'Close chat',
+        },
+      }
+    });
+  </script>

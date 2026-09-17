@@ -1,0 +1,10 @@
+--- july/search-demo-head.html
++++ sept/search-demo-head.html
+@@ -1,4 +1,7 @@
+ <link rel="canonical" href="https://www.carsa.co.uk/used-cars">
++
++<!-- VSRP search widget styles (CARSA-5852) -->
++<link rel="stylesheet" href="https://d2zblaqlrfk95e.cloudfront.net/carsa-search.css">
+ 
+ <!-- Finsweet Attributes -->
+ <script async type="module"

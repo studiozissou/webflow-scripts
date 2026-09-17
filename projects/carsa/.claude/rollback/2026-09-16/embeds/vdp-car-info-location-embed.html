@@ -1,0 +1,12 @@
+<!-- In-canvas Embed on the Vehicles template (not in page settings). Source supplied by Will, 16 Sep 2026. Renders the store-location sentence from the CMS Location reference; when Location/Display Name is empty the sentence reads "in our  store." -->
+<p class="text-size-regular" id="car-info"></p>
+
+<script>
+    const carLocation = '{{wf:Location/Display Name|Dynamo}}'.trim();
+    const container = document.getElementById('car-info');
+
+    let firstSentence = carLocation === 'Storage'
+        ? "This car is fully inspected and in our storage facility."
+        : `This car's currently in our ${carLocation} store.`;
+    container.textContent = `${firstSentence} We can move the vehicle to any of our 10 stores nationwide. Pay a refundable £39 reservation fee, then choose your store and test-drive time. After you've test-driven, we'll refund your fee or deduct it from the purchase if you buy.`;
+</script>

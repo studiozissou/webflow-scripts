@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.test' });
 import {
+  BASE,
   FINANCE_CONFIG,
   FINANCE_QUOTE,
   VIEWPORT_MOBILE,
@@ -266,6 +267,53 @@ test.describe('carsa-code-migration — Finance: VDP calculator', () => {
     const el = page.locator('#deposit-contribution').first();
     test.skip((await el.count()) === 0, 'no contribution field on this build');
     expect(await el.evaluate((e) => ({ ro: e.readOnly, req: e.required, tab: e.getAttribute('tabindex') }))).toEqual({ ro: true, req: false, tab: '-1' });
+  });
+
+  test.describe('deposit contribution promotion', () => {
+    const PROMO_PATH = '/used-cars/promotions/500-finance-deposit-contribution';
+    const CONTRIBUTION = 500;
+    let promoVdp;
+
+    test.beforeEach(async ({ request }) => {
+      if (promoVdp === undefined) {
+        const res = await request.get(`${BASE}${PROMO_PATH}`);
+        const match = res.ok() ? (await res.text()).match(/\/vehicles\/used\/[a-z0-9-]+/i) : null;
+        promoVdp = match ? match[0] : null;
+      }
+      test.skip(!promoVdp, `no car currently listed on ${PROMO_PATH}`);
+    });
+
+    test('vdp-fin-promo-contribution-shown: a promoted car shows the £500 contribution, locked, in the field and the breakdown', async ({ page }) => {
+      const calls = await mockFinance(page);
+      await loadPage(page, promoVdp);
+      await waitForQuotes(page, calls, 1);
+      expect(await contributionOf(page)).toBe(CONTRIBUTION);
+      const el = page.locator('#deposit-contribution').first();
+      expect(await el.evaluate((e) => ({ ro: e.readOnly, tab: e.getAttribute('tabindex') }))).toEqual({ ro: true, tab: '-1' });
+      await expectTextIfPresent(page, '[data-number="deposit-contribution"]', gbp(CONTRIBUTION));
+    });
+
+    test('vdp-fin-promo-quote-includes-contribution: the customer deposit drops by £500 but the quote uses the full deposit', async ({ page }) => {
+      const calls = await mockFinance(page);
+      await loadPage(page, promoVdp);
+      await waitForQuotes(page, calls, 1);
+      const cash = parseGBP(await page.locator('#finance-deposit').inputValue());
+      expect(cash).toBe(Math.max(0, FINANCE_CONFIG.defaultDepositAmount - CONTRIBUTION));
+      expect(calls.quotes[0].criteria.cashDeposit).toBe(cash + CONTRIBUTION);
+      await expectTextIfPresent(page, '[data-number="deposit"]', gbp(cash + CONTRIBUTION));
+      await expectTextIfPresent(page, '[data-number="customer-deposit"]', gbp(cash));
+    });
+
+    test('vdp-fin-promo-deposit-change: a new customer deposit is re-quoted with the £500 added', async ({ page }) => {
+      const calls = await mockFinance(page);
+      await loadPage(page, promoVdp);
+      await waitForQuotes(page, calls, 1);
+      const deposit = page.locator('#finance-deposit');
+      await deposit.evaluate((el) => { el.dispatchEvent(new Event('focus')); el.value = '1500'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+      await waitForQuotes(page, calls, 2, 4000);
+      expect(calls.quotes[1].criteria.cashDeposit).toBe(1500 + CONTRIBUTION);
+      await expectTextIfPresent(page, '[data-number="deposit"]', gbp(1500 + CONTRIBUTION));
+    });
   });
 
   test('vdp-fin-live-api-smoke: the real consumer-finance API returns a monthly HP figure', async ({ page }) => {

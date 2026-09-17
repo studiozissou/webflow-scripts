@@ -39,6 +39,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # NEM tests and build read files that live in the private webflow-internal repo.
+      # WEBFLOW_INTERNAL_DEPLOY_KEY is a read-only deploy key on that repo.
+      - name: Checkout internal docs
+        uses: actions/checkout@v4
+        with:
+          repository: studiozissou/webflow-internal
+          ssh-key: ${{ secrets.WEBFLOW_INTERNAL_DEPLOY_KEY }}
+          path: _internal
+
+      - name: Link internal docs
+        run: WEBFLOW_INTERNAL="$GITHUB_WORKSPACE/_internal" scripts/link-internal.sh
+
       # `node --test 'glob'` needs Node 21+; on 20 the quoted pattern is read as a literal
       # path and every suite silently finds nothing to run.
       - name: Setup Node

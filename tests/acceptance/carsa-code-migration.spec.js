@@ -7,7 +7,7 @@
  */
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
-import { seedSessionOnce } from './helpers/carsa.js';
+import { seedSessionOnce, unexpectedErrors } from './helpers/carsa.js';
 
 dotenv.config({ path: '.env.test' });
 
@@ -89,10 +89,10 @@ test.describe('carsa-code-migration — Homepage', () => {
 
 // ── Phase 1: footer loader + global.js ────────────────────────
 
-// Hosting moved to Carsa's CloudFront at SHA-versioned paths on 27 Aug 2026 (spec D2a).
-// These two constants are the only place the host and path shape are named.
-const LOADER_RE = /\/webflow\/[0-9a-f]{7,40}\/init\.js$/;
-const LOADER_PATH_RE = /\/webflow\/[0-9a-f]{7,40}\/init\.js/;
+// Hosting moved to Carsa's CloudFront on 27 Aug 2026 (spec D2a); folders are named by release tag, not commit SHA (spec D10, revised 17 Sep).
+// These two constants are the only place the path shape is named.
+const LOADER_RE = /\/webflow\/v\d+\.\d+\.\d+\/init\.js$/;
+const LOADER_PATH_RE = /\/webflow\/v\d+\.\d+\.\d+\/init\.js/;
 const LOADER_SEL = 'script[src*="/webflow/"][src$="/init.js"]';
 const moduleSel = (file) => `script[src*="/webflow/"][src$="/${file}"]`;
 const LOADER_PAGES = ['/', '/used-cars'];
@@ -109,7 +109,7 @@ test.describe('carsa-code-migration — Loader (Phase 1)', () => {
     test.skip(!process.env.CARSA_PHASE1, 'Phase 1 loader not shipped yet; set CARSA_PHASE1=1 once init.js is in the footer');
   });
 
-  test('loader-present-and-pinned: init.js tag points at a commit SHA, not @main', async ({ page }) => {
+  test('loader-present-and-pinned: init.js tag points at a release folder, not @main', async ({ page }) => {
     await loadPage(page, '/');
     const srcs = await page.$$eval(LOADER_SEL, (els) => els.map((e) => e.src));
     expect(srcs, 'init.js tag missing from footer').toHaveLength(1);
@@ -223,12 +223,23 @@ test.describe('carsa-code-migration — Loader (Phase 1)', () => {
     expect(stray).toEqual([]);
   });
 
+  for (const path of ['/', '/about/careers']) {
+    test(`vwo-removed: no VWO SmartCode and no body-hiding style on ${path}`, async ({ page }) => {
+      await loadPage(page, path);
+      const vwo = await page.evaluate(() => ({
+        code: !!document.getElementById('vwoCode') || typeof window._vwo_code !== 'undefined',
+        preconnect: !!document.querySelector('link[href*="visualwebsiteoptimizer.com"]'),
+      }));
+      expect(vwo).toEqual({ code: false, preconnect: false });
+    });
+  }
+
   for (const path of LOADER_PAGES) {
     test(`loader-no-errors: zero JS errors on ${path}`, async ({ page }) => {
       const errors = collectErrors(page);
       await loadPage(page, path);
       await page.waitForTimeout(2000);
-      expect(errors.map((e) => e.message)).toEqual([]);
+      expect(unexpectedErrors(errors)).toEqual([]);
     });
   }
 });

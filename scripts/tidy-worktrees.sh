@@ -59,6 +59,17 @@ for d in "$REPO"/.claude/worktrees/*/; do
     continue
   fi
 
+  # Internal docs are gitignored, so a real folder written in a worktree is invisible above.
+  if [ -x "$REPO/scripts/link-internal.sh" ]; then
+    unlinked=$("$REPO/scripts/link-internal.sh" --unlinked "$d" | head -5)
+    if [ -n "$unlinked" ]; then
+      echo "  keep   $name (internal docs not linked to ~/webflow-internal; run scripts/link-internal.sh there):"
+      echo "$unlinked" | sed 's/^/           /'
+      kept=$((kept+1))
+      continue
+    fi
+  fi
+
   if [ -n "$(git -C "$d" status --porcelain)" ]; then
     mkdir -p "$BACKUP_DIR"
     git -C "$d" diff > "$BACKUP_DIR/$name.patch"

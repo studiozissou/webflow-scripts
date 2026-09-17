@@ -18,21 +18,13 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 ## Queue Tasks
 - Follow the `queue-tasks` skill for all queue.json formatting and Notion sync
 
-## Client File Organisation
-- IMPORTANT: All client-related docs, specs, research, comms, and assets MUST live inside
-  the client's project directory: `projects/{client}/.claude/`. Never store client files in
-  the top-level `.claude/` directory.
-- Specs go in `projects/{client}/.claude/specs/`
-- Research/screenshots go in `projects/{client}/.claude/research/`
-- Slack messages go in `projects/{client}/.claude/slack/`
-- Audits go in `projects/{client}/.claude/audits/`
-- Reports go in `projects/{client}/.claude/reports/`
-- Proposals go in `projects/{client}/.claude/proposals/`
-
-## Financial data — THIS REPO IS PUBLIC
-- IMPORTANT: Never commit accounting, tax, banking or payroll material, IBANs, BSN,
-  balances, or private Drive links. Redact IBANs as `[IBAN supplied on the invoice]`.
-- Financial admin goes in `~/Documents/Studio Zissou/`, never here.
+## THIS REPO IS PUBLIC
+- IMPORTANT: Commit only hosted scripts, files they load, and the code, tests and tooling that build them.
+  Everything else (client docs, notes, pricing, screenshots, personal skills) goes in `~/webflow-internal`
+  (private), linked in by `scripts/link-internal.sh`. Commit it there.
+- Client files: `projects/{client}/.claude/{specs,research,slack,audits,reports,proposals}/`, never top-level `.claude/`.
+- Pin live script tags to a git tag, never a commit ID.
+- Financial admin goes in `~/Documents/Studio Zissou/`, never in either repo.
 
 ## Code Style
 - Named exports only (no default exports in `shared/`)

@@ -284,6 +284,19 @@ const INVARIANTS = {
         ),
     },
     {
+      /* MailerLite automations skip anyone not active, and an upsert without a status keeps
+       * the old one — so a contact left unconfirmed by an earlier signup got no verification
+       * email at all (Alex, 2026-09-16). Every submitter has ticked the required consent box. */
+      label: "Verification upsert sets the subscriber active, so the automation sends",
+      check: (wf) =>
+        /status:\s*'active'/.test(find(wf, "MailerLite: Send Verification")?.parameters?.jsonBody ?? ""),
+    },
+    {
+      label: "Verification upsert resubscribes contacts who once unsubscribed",
+      check: (wf) =>
+        /resubscribe:\s*true/.test(find(wf, "MailerLite: Send Verification")?.parameters?.jsonBody ?? ""),
+    },
+    {
       /* The v2 component has sent these three since 2026-08-17, but Normalize dropped them
        * for a day and nothing noticed — the payload arrived, was silently discarded, and
        * the failure log's conclusionId column was left permanently unfillable. */

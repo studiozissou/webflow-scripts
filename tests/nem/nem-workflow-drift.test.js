@@ -510,7 +510,10 @@ describe("checkInvariants — the §7 prompt input contract", () => {
     }),
     node("Honeypot filled?"),
     node("Rate limit", { jsCode: "if (input.event === 'completion') return [{ json: { ...input, rateLimited: false } }];" }),
-    node("MailerLite: Send Verification", { url: "https://connect.mailerlite.com/api/subscribers" }),
+    node("MailerLite: Send Verification", {
+      url: "https://connect.mailerlite.com/api/subscribers",
+      jsonBody: "={{ JSON.stringify({ email: $json.email, groups: [ '192344920326931926' ], status: 'active', resubscribe: true }) }}",
+    }),
     node("Log Completion", { dataTableId: { value: "other" }, columns: { value: { token: "" } } }),
   ], {
     "Completion?": { main: [[{ node: "Log Completion" }]] },
@@ -525,6 +528,22 @@ describe("checkInvariants — the §7 prompt input contract", () => {
     broken.nodes.find((x) => x.name === "Rate limit").parameters.jsCode = "const recent = [];";
     const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
     assert.ok(failed.some((l) => /completion/i.test(l)), failed.join("; "));
+  });
+
+  test("catches the verification upsert leaving an existing subscriber's status alone", () => {
+    const broken = structuredClone(submitContract);
+    const n = broken.nodes.find((x) => x.name === "MailerLite: Send Verification");
+    n.parameters.jsonBody = n.parameters.jsonBody.replace(", status: 'active'", "");
+    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    assert.ok(failed.some((l) => /active/i.test(l)), failed.join("; "));
+  });
+
+  test("catches the verification upsert not resubscribing unsubscribed contacts", () => {
+    const broken = structuredClone(submitContract);
+    const n = broken.nodes.find((x) => x.name === "MailerLite: Send Verification");
+    n.parameters.jsonBody = n.parameters.jsonBody.replace(", resubscribe: true", "");
+    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    assert.ok(failed.some((l) => /resubscribe/i.test(l)), failed.join("; "));
   });
 
   test("catches Normalize dropping conclusionText", () => {

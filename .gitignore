@@ -77,3 +77,12 @@ projects/*/.claude
 .claude/skills/carsa-webflow
 .claude/commands/triage.md
 .claude/commands/carsa-build.md
+
+# CI checkout of the private repo (see .github/workflows/tests.yml)
+/_internal
+
+# Claude session logs written wherever a session ran
+**/.claude/logs/
+
+# Generated site-review output (kept in webflow-internal/.claude/research/site-review-reports)
+tools/site-review/reports/

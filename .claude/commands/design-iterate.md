@@ -61,7 +61,7 @@ For selected **code changes**:
 - Use worktree isolation if multiple code changes target different files
 
 For selected **visual concepts**:
-- If Nano Banana assets were generated and selected, copy them to `projects/<client>/assets/generated/`
+- If Nano Banana assets were generated and selected, copy them to `projects/<client>/.claude/assets/generated/` (private repo)
 - Note the placement in the implementation log
 
 For selected **copy rewrites**:

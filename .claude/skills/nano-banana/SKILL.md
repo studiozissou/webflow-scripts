@@ -172,7 +172,7 @@ concepts with new ones that reflect applied changes.
 ### Asset placement
 Generated images are saved to:
 - `.claude/research/concepts/<slug>-concept-<n>.png` — for review concepts
-- `projects/<client>/assets/generated/` — for assets accepted into the build
+- `projects/<client>/.claude/assets/generated/` — for assets accepted into the build (private; upload to Webflow from there)
 
 ### Fallback
 If `GOOGLE_AI_API_KEY` is not set in the environment:

@@ -200,7 +200,7 @@ Privacy → Prevent cross-site tracking; extensions (ad blockers); Lockdown Mode
 Private window; iCloud Private Relay.
 
 `tests/jayshetty/podcast-player-debug.test.js` runs the real script in a stub
-DOM (`node --test tests/jayshetty/`).
+DOM (`npm run test:jayshetty`).
 
 ## Changes log
 

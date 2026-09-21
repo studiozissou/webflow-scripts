@@ -1,7 +1,11 @@
 // Shared helpers for the Carsa code-migration acceptance suites: base URL, page loading, error capture, sitemap sampling, finance API mocking and attribution storage.
 const BASE = process.env.STAGING_URL_CARSA || 'https://www.carsa.co.uk';
 
-const KNOWN_ERRORS = [/filtered is not defined/, /setting 'innerText'/, /reading 'length'/];
+const PHASE1 = !!process.env.CARSA_PHASE1;
+
+const KNOWN_ERRORS = [/filtered is not defined/, /reading 'length'/, ...(PHASE1 ? [] : [/setting 'innerText'/])];
+
+const RELEASE_PATH_RE = /\/webflow\/v\d+\.\d+\.\d+\//;
 
 const FINANCE_HOST = 'consumer-finance.carsanet.co.uk';
 
@@ -129,7 +133,9 @@ const VIEWPORT_MOBILE = { width: 375, height: 812 };
 
 export {
   BASE,
+  PHASE1,
   KNOWN_ERRORS,
+  RELEASE_PATH_RE,
   FINANCE_HOST,
   FINANCE_CONFIG,
   FINANCE_QUOTE,

@@ -176,7 +176,42 @@ handshake, an idle audio embed has not been seen to post unprompted, and the
 swap normally lands within 100 ms of the iframe's insertion, so both are judged
 unlikely.
 
+## Debug log (`?playerdebug`, v1.3.0+)
+
+Add `?playerdebug` (or `&playerdebug`) to any page running the player and a
+log panel appears bottom-right with **Copy log** and **Hide**. It exists so the
+client can reproduce a problem on their own machine and paste back what the
+player saw, without DevTools. Without the flag the logger is a no-op: no panel,
+no extra listeners, no `window.__playerLog`.
+
+What it records: version, user agent, viewport, URL; what the page can detect
+about Safari settings (autoplay allowed before and on the Watch click, a failed
+iFrame API script load as a content-blocker hint, cookie flag, storage quota as
+a Private-window hint, MediaSource/FairPlay support, reduced motion); every
+step of the Spotify path (API ready, controller created/ready, `/video` swap,
+iframe `load` timings, watchdog armed/satisfied/fired, the first Spotify message
+of each type per iframe); swallowed `play()` errors, page errors and unhandled
+rejections. **Copy log** appends a `state` line per Spotify iframe (src kind,
+`__videoOk`, `__videoFellBack`, `allow` attribute).
+
+Settings a page cannot see — ask the client to report them alongside the log:
+Safari → Settings for jayshetty.me → Auto-Play and Content Blockers; Settings →
+Privacy → Prevent cross-site tracking; extensions (ad blockers); Lockdown Mode;
+Private window; iCloud Private Relay.
+
+`tests/jayshetty/podcast-player-debug.test.js` runs the real script in a stub
+DOM (`npm run test:jayshetty`).
+
 ## Changes log
+
+### v1.3.0 — `?playerdebug` on-page log (21 Sep 2026)
+
+- Client still reported audio instead of video in Safari after v1.2.2.
+  Reproduced once on the live page in Safari 26.6.2: `/video` loaded at 5.4 s,
+  then sent no message for 23 s, so the watchdog correctly fell back to audio.
+  Three further runs (foreground and hidden window) handshook 2–4 s after load
+  and played video. Chrome was fine. The log is to capture the client's own
+  runs and settings. Player behaviour is unchanged.
 
 ### v1.2.2 — watchdog waits 20 s and no longer sticks (16 Sep 2026)
 

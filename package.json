@@ -19,6 +19,7 @@
     "test:nem": "node --test 'tests/nem/*.test.js'",
     "test:rhp": "node --test 'tests/rhp/*.test.js'",
     "test:carsa": "node --test 'tests/carsa/*.test.js' projects/carsa/tests/init.test.js projects/carsa/tests/global.test.js projects/carsa/tests/at-price-total.test.js",
+    "test:jayshetty": "node --test 'tests/jayshetty/*.test.js'",
     "test:internal": "node --test 'tests/internal/*.test.js'",
     "build:nem": "node tools/nem/build-conclusion-texts.js && node tools/nem/build-component.js && npm run typecheck:nem",
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",

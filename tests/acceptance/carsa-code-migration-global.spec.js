@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 import {
   BASE,
+  PHASE1,
   VIEWPORT_MOBILE,
   loadPage,
   collectErrors,
@@ -118,7 +119,7 @@ test.describe('carsa-code-migration — Global: link decoration', () => {
   });
 
   test('noopener: every external _blank link carries noreferrer noopener, carsa links are left alone', async ({ page }) => {
-    test.fail(true, 'live bug: the block is type="fs-consent", so Finsweet Consent executes it after DOMContentLoaded and its listener never fires; social and WhatsApp links ship with rel=""');
+    test.fail(!PHASE1, 'live bug until Phase 1 (global.js runs it without a listener): the block is type="fs-consent", so Finsweet Consent executes it after DOMContentLoaded and its listener never fires; social and WhatsApp links ship with rel=""');
     await loadPage(page, '/');
     const rels = await page.$$eval('a[target="_blank"]', (els) =>
       els.filter((a) => a.href).map((a) => ({ href: a.href, rel: a.rel, external: !a.href.includes('carsa.co.uk') }))

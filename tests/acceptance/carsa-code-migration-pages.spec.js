@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 import {
   BASE,
+  PHASE1,
+  RELEASE_PATH_RE,
   VIEWPORT_MOBILE,
   loadPage,
   collectErrors,
@@ -330,19 +332,25 @@ test.describe('carsa-code-migration — Pages: animations', () => {
     expect(new Set(heights).size).toBe(1);
   });
 
-  test('vdp-battery-animation-loaded: battery-animation.js is requested on a VDP (currently from @main)', async ({ page, request }) => {
+  test('vdp-battery-animation-loaded: battery-animation.js is requested once on a VDP (from @main until Phase 1, then the release folder)', async ({ page, request }) => {
     const vdp = await firstPath(request, '/vehicles/used/');
     const hits = [];
-    page.on('request', (r) => r.url().includes('/projects/carsa/battery-animation.js') && hits.push(r.url()));
+    page.on('request', (r) => /\/battery-animation\.js(\?|$)/.test(r.url()) && hits.push(r.url()));
     await loadPage(page, vdp);
     expect(hits.length).toBe(1);
+    if (PHASE1) {
+      expect(hits[0]).toMatch(RELEASE_PATH_RE);
+      expect(hits[0]).not.toContain('studiozissou/webflow-scripts');
+    }
   });
 
-  test('vdp-at-price-total-pinned: the registered AutoTrader price script is loaded from a SHA-pinned URL', async ({ page, request }) => {
+  test('vdp-at-price-total-pinned: the AutoTrader price script loads once from a pinned URL (jsDelivr SHA until Phase 1, then the release folder)', async ({ page, request }) => {
     const vdp = await firstPath(request, '/vehicles/used/');
     await loadPage(page, vdp);
-    const src = await page.locator('script[src*="/projects/carsa/at-price-total.js"]').first().getAttribute('src');
-    expect(src).toMatch(/webflow-scripts@[0-9a-f]{40}\/projects\/carsa\/at-price-total\.js$/);
+    const srcs = await page.$$eval('script[src*="at-price-total.js"]', (els) => els.map((e) => e.src));
+    expect(srcs).toHaveLength(1);
+    if (PHASE1) expect(srcs[0]).toMatch(RELEASE_PATH_RE);
+    else expect(srcs[0]).toMatch(/webflow-scripts@[0-9a-f]{40}\/projects\/carsa\/at-price-total\.js$/);
   });
 });
 

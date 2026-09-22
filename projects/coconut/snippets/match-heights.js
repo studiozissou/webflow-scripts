@@ -26,7 +26,7 @@
 
   var frame = null;
   var observer = null;
-  var applied = new Map(); // group name -> last written height, to skip no-op writes
+  var sizes = new WeakMap(); // observed child -> last seen size
   var mq = window.matchMedia(BREAKPOINT);
 
   /** Hidden elements (inactive tabs, display:none) measure 0 — never let them win. */
@@ -72,7 +72,6 @@
 
     if (!mq.matches) {
       clearHeights(els);
-      applied.clear();
       return; // stay disconnected; the mq listener re-arms us on the way back up
     }
 
@@ -95,8 +94,6 @@
       // Subpixel heights round down when painted; ceil so text can't clip.
       tallest = Math.ceil(tallest);
 
-      if (applied.get(name) === tallest) return;
-      applied.set(name, tallest);
       writes.push([group, tallest]);
 
       DEBUG && console.log('[match-heights] ' + name + ': ' + group.length + ' els -> ' + tallest);
@@ -118,10 +115,23 @@
     frame = requestAnimationFrame(sync);
   }
 
+  // Re-observing reports every child once even if nothing moved; resyncing on
+  // that would loop every frame, so only react to a real size change.
+  function onResize(entries) {
+    var changed = false;
+    for (var i = 0; i < entries.length; i++) {
+      var rect = entries[i].contentRect;
+      var size = rect.width + 'x' + rect.height;
+      if (sizes.get(entries[i].target) !== size) changed = true;
+      sizes.set(entries[i].target, size);
+    }
+    if (changed) schedule();
+  }
+
   function observe() {
     if (typeof ResizeObserver === 'undefined') return;
 
-    if (!observer) observer = new ResizeObserver(schedule);
+    if (!observer) observer = new ResizeObserver(onResize);
     else observer.disconnect();
 
     // Watch the sections' children, not the sections — a section's own box is
@@ -134,7 +144,6 @@
   }
 
   function onBreakpointChange() {
-    applied.clear();
     schedule();
   }
 
@@ -146,7 +155,6 @@
     observer = null;
 
     clearHeights(sections());
-    applied.clear();
 
     window.removeEventListener('resize', schedule);
     window.removeEventListener('orientationchange', schedule);

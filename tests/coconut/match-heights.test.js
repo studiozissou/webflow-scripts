@@ -80,7 +80,7 @@ test('equalises each data-mh group to its tallest member', () => {
 
 test('heights survive a resync where nothing changed', () => {
   const els = [makeEl('header', 262), makeEl('header', 281)];
-  const { window, flush, fireResize } = setup(els);
+  const { window, flush } = setup(els);
   flush();
   window.matchHeights.refresh();
   flush();

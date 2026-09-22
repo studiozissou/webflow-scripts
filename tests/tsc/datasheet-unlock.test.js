@@ -33,7 +33,18 @@ function makeBlock() {
   return { style: { display: 'none' }, observers: [] };
 }
 
-function run({ hrefs = ['a.pdf', 'b.pdf', 'c.pdf'], stored = null, storageThrows = false } = {}) {
+function makeNode(id) {
+  return {
+    id,
+    attrs: {},
+    children: [],
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+    appendChild(child) { this.children.push(child); child.parentNode = this; return child; },
+  };
+}
+
+function run({ hrefs = ['a.pdf', 'b.pdf', 'c.pdf'], stored = null, storageThrows = false, nodes = {} } = {}) {
   const links = hrefs.map(makeLink);
   const done = hrefs.map(makeBlock);
   const fail = hrefs.map(makeBlock);
@@ -56,6 +67,7 @@ function run({ hrefs = ['a.pdf', 'b.pdf', 'c.pdf'], stored = null, storageThrows
       return [];
     },
     addEventListener() {},
+    getElementById(id) { return nodes[id] || null; },
   };
   const window = {
     addEventListener(type, fn, capture) { listeners.push({ type, fn, capture }); },
@@ -172,4 +184,19 @@ test('clicks outside a datasheet link are ignored', () => {
   listeners.forEach((l) => l.fn(e));
   assert.equal(e.prevented, false);
   assert.equal(e.stopped, false);
+});
+
+test('moves the brochure into the data grid as a list item', () => {
+  const brochure = makeNode('brochure');
+  const grid = makeNode('data-grid');
+  run({ nodes: { brochure, 'data-grid': grid } });
+  assert.equal(brochure.parentNode, grid);
+  assert.equal(brochure.getAttribute('role'), 'listitem');
+});
+
+test('leaves the page alone when the brochure or grid is missing', () => {
+  const brochure = makeNode('brochure');
+  run({ nodes: { brochure } });
+  assert.equal(brochure.parentNode, undefined);
+  assert.equal(brochure.getAttribute('role'), null);
 });

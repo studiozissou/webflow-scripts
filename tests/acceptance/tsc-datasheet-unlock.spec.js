@@ -32,6 +32,7 @@ test.describe('tsc-datasheet-unlock', () => {
       const first = page.locator(TRIGGER).first();
       await expect(first).toHaveAttribute('href', '#');
       await expect(first).not.toHaveAttribute('data-unlocked', /.*/);
+      await expect(first).toHaveAttribute('data-pdf', /\.pdf$/i);
       await first.click();
       await page.waitForTimeout(IX_SETTLE);
       await expect(page.locator('[data-modal="datasheet-wrapper"]:visible')).toHaveCount(1);
@@ -67,7 +68,7 @@ test.describe('tsc-datasheet-unlock', () => {
       await expect(page.locator('[data-modal="datasheet-wrapper"]:visible')).toHaveCount(0);
     });
 
-    test('every trigger resolves a .pdf URL (data-pdf or success-link fallback)', async ({ page }) => {
+    test('every trigger resolves a .pdf URL (link href set in Webflow)', async ({ page }) => {
       const hrefs = await page.locator(TRIGGER).evaluateAll((els) => els.map((a) => a.getAttribute('href')));
       expect(hrefs.every((h) => /\.pdf$/i.test(h))).toBe(true);
     });

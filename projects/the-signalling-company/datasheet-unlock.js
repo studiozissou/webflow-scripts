@@ -1,4 +1,4 @@
-// Keeps InnoTrans datasheet links on their email popup until one datasheet form succeeds, then lets every link open its PDF directly.
+// InnoTrans page module: places the brochure card in the datasheet grid, and keeps datasheet links on their email popup until one form succeeds, then lets every link open its PDF directly.
 (() => {
   const KEY = 'tsc-datasheets-unlocked';
   const TRIGGER = '[data-link="datasheet-modal"]';
@@ -59,7 +59,16 @@
     });
   }
 
+  function placeBrochure() {
+    const brochure = document.getElementById('brochure');
+    const grid = document.getElementById('data-grid');
+    if (!brochure || !grid) return;
+    brochure.setAttribute('role', 'listitem');
+    grid.appendChild(brochure);
+  }
+
   function init() {
+    placeBrochure();
     const links = Array.from(document.querySelectorAll(TRIGGER));
     if (!links.length) return;
     lock(links);

@@ -23,6 +23,10 @@
     // 'hero-anim.js',
   ];
 
+  const pageModules = {
+    '6ab10852f344a15a2b01d930': 'datasheet-unlock.js',
+  };
+
   /* ── Site-wide utilities ───────────────────────────────── */
 
   function setExternalLinkRels() {
@@ -973,13 +977,17 @@
     });
   }
 
+  function loadModule(file) {
+    const s = document.createElement('script');
+    s.src = `${BASE}${file}`;
+    s.async = false;
+    document.head.appendChild(s);
+  }
+
   function loadModules() {
-    modules.forEach((file) => {
-      const s = document.createElement('script');
-      s.src = `${BASE}${file}`;
-      s.async = false;
-      document.head.appendChild(s);
-    });
+    modules.forEach(loadModule);
+    const pageModule = pageModules[document.documentElement.getAttribute('data-wf-page')];
+    if (pageModule) loadModule(pageModule);
   }
 
   /* ── Boot ──────────────────────────────────────────────── */
@@ -1008,7 +1016,7 @@
     }
 
     /* Project modules */
-    if (modules.length) loadModules();
+    loadModules();
   }
 
   if (document.readyState === 'loading') {

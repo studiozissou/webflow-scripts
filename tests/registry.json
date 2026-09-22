@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-15",
+  "lastUpdated": "2026-09-22",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -452,6 +452,16 @@
       "critical": false,
       "created": "2026-09-15",
       "description": "Carsa body colour guard - the VDP Material UI carousel injects body { color: rgba(0,0,0,.87) } at runtime; a site-wide html body rule in the head custom code keeps text brand purple. Asserts the rule ships and body/paragraph colour is #511e62 on home and VDP."
+    },
+    {
+      "slug": "tsc-datasheet-unlock",
+      "url": "https://tsc-v2.webflow.io/innotrans-brochure-datasheets",
+      "spec": "tests/acceptance/tsc-datasheet-unlock.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "TSC InnoTrans page: after one datasheet form succeeds (flag in localStorage), every datasheet-modal link opens its PDF directly in a new tab instead of the popup",
+      "created": "2026-09-22"
     }
   ]
 }

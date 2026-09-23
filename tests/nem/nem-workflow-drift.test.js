@@ -819,8 +819,8 @@ describe("the real committed snapshots hold the facts the docs claim", () => {
     }
   });
 
-  test("Publish Prompt is skipped by the CLI until it is imported; the live two are not", () => {
-    assert.deepEqual(WORKFLOWS.filter(isPendingImport).map((w) => w.key), ["publish"]);
+  test("every workflow is imported, so the CLI checks all three against live", () => {
+    assert.deepEqual(WORKFLOWS.filter(isPendingImport).map((w) => w.key), []);
   });
 
   test("the committed /verify snapshot fails only the invariants nem-verify-runtime-config fixes", () => {

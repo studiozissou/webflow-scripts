@@ -120,6 +120,26 @@ describe("block rules", () => {
     assert.equal(notionToPrompt([callout, toc, h(1, "Introduction"), p("x")]), "# Introduction\n\nx\n");
   });
 
+  test("the older API field name `text` works like `rich_text` — n8n's Notion node still sends it", () => {
+    const old = (type, words) => ({ object: "block", id: type + words, type, has_children: false, [type]: { text: t(words) } });
+    assert.equal(notionToPrompt([old("heading_1", "Introduction"), old("paragraph", "x"), old("bulleted_list_item", "y")]), "# Introduction\n\nx\n\n- y\n");
+  });
+
+  test("the Publish button, which the API reports as unsupported, is skipped", () => {
+    const button = { object: "block", id: "b1", type: "unsupported", has_children: false, unsupported: { block_type: "button" } };
+    assert.equal(notionToPrompt([button, h(1, "Introduction"), p("x")]), "# Introduction\n\nx\n");
+  });
+
+  test("any other block the API cannot describe throws, naming what it really is", () => {
+    const form = { object: "block", id: "f1", type: "unsupported", has_children: false, unsupported: { block_type: "form" } };
+    assert.throws(() => notionToPrompt([p("a"), form]), /Unsupported block type: form/);
+  });
+
+  test("an unsupported block with no inner type still throws", () => {
+    const bare = { object: "block", id: "u1", type: "unsupported", has_children: false, unsupported: {} };
+    assert.throws(() => notionToPrompt([p("a"), bare]), /Unsupported block type: unsupported/);
+  });
+
   for (const type of ["quote", "toggle", "code", "image", "table", "child_page", "to_do"]) {
     test(`an unsupported ${type} block throws, naming the type`, () => {
       assert.throws(() => notionToPrompt([p("a"), block(type, t("x"))]), new RegExp(`Unsupported block type: ${type}`));

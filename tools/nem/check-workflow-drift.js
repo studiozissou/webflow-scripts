@@ -27,7 +27,7 @@ export const API_BASE = "https://reus.app.n8n.cloud/api/v1/workflows";
 export const WORKFLOWS = [
   { key: "verify", id: "uKkMgMYoH5nOLoCR", label: "NEM Test — /verify", file: "nem-verify.workflow.json" },
   { key: "submit", id: "LDI1eWR35lwX6WLp", label: "NEM Test — /submit", file: "nem-submit.workflow.json" },
-  { key: "publish", id: "REPLACE_PUBLISH_WORKFLOW_ID", label: "NEM Test — Publish Prompt", file: "nem-publish-prompt.workflow.json" },
+  { key: "publish", id: "Chvq0q5cx7cxe4zV", label: "NEM Test — Publish Prompt", file: "nem-publish-prompt.workflow.json" },
 ];
 
 /* A workflow whose id is still a placeholder has not been imported into n8n yet, so

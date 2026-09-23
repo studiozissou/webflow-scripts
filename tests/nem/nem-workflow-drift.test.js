@@ -24,6 +24,7 @@ import {
   formatReport,
   checkInvariants,
   buildLiveState,
+  isPendingImport,
 } from "../../tools/nem/check-workflow-drift.js";
 
 /* A minimal workflow shaped like the real thing. */
@@ -232,7 +233,7 @@ describe("formatReport", () => {
 /* The §7 prompt input contract, as the live-shaped fixtures carry it: intro line and
  * conclusion text sent, gender mapped to the prompt's spelling, no total score. */
 const CONTRACT_BODY =
-  "={{ JSON.stringify({ max_tokens: 8000, system: $('Report Prompt').first().json.systemPrompt, messages: [ { role: 'user', content: 'Gender: ' + ({ vrouw: 'Female', female: 'Female', man: 'Male', male: 'Male' }[$('Validate Token').first().json.gender] || $('Validate Token').first().json.gender) + '\\nIntro line: ' + ($('Validate Token').first().json.introLine || '') + '\\nConclusion text: ' + ($('Validate Token').first().json.conclusionText || '') } ] }) }}";
+  "={{ JSON.stringify({ max_tokens: 8000, system: $('Runtime Config').first().json.systemPrompt, messages: [ { role: 'user', content: 'Gender: ' + ({ vrouw: 'Female', female: 'Female', man: 'Male', male: 'Male' }[$('Validate Token').first().json.gender] || $('Validate Token').first().json.gender) + '\\nIntro line: ' + ($('Validate Token').first().json.introLine || '') + '\\nConclusion text: ' + ($('Validate Token').first().json.conclusionText || '') } ] }) }}";
 
 /* Build HTML after nem-report-webflow-template: fills the fetched Webflow template's
  * slots, no greeting line (§7f — the prompt puts the first name inside opening). */
@@ -241,6 +242,43 @@ const BUILD_HTML_NO_GREETING =
   + " let html = String(await this.helpers.httpRequest({ url: TEMPLATE_URL }));"
   + " if (introLine) { fillText('intro-line', esc(introLine)); } else { html = html.replace(elementRe('data-slot-wrap', 'intro-line'), ''); }"
   + " const out = html + body;";
+
+/* The prompt comes from the newest active nem_runtime_config row, published from Alex's
+ * Notion page, behind a gate that logs and alerts when there is none. */
+const RUNTIME_CONFIG_CODE =
+  "const rows = $('Load Runtime Config').all().map((i) => i.json)"
+  + ".filter((r) => r && r.key === 'report_prompt' && (r.active === true || r.active === 'true'));"
+  + " const row = rows.sort((a, b) => Number(b.version) - Number(a.version))[0];";
+
+const PROMPT_GATE_PARAMS = {
+  conditions: {
+    conditions: [{
+      leftValue: "={{ $json.promptOk }}",
+      rightValue: "",
+      operator: { type: "boolean", operation: "true", singleValue: true },
+    }],
+    combinator: "and",
+  },
+};
+
+const promptNodes = () => [
+  node("Load Runtime Config", {
+    operation: "get",
+    matchType: "allConditions",
+    filters: { conditions: [{ keyName: "key", keyValue: "report_prompt" }, { keyName: "active", condition: "isTrue" }] },
+  }, { type: "n8n-nodes-base.dataTable", typeVersion: 1, alwaysOutputData: true }),
+  node("Runtime Config", { jsCode: RUNTIME_CONFIG_CODE }),
+  node("Prompt Loaded?", PROMPT_GATE_PARAMS, { type: "n8n-nodes-base.if", typeVersion: 2.2 }),
+  node("Missing Prompt", { jsCode: "return [{ json: { reason: 'no-active-prompt' } }];" }),
+];
+
+const promptConnections = () => ({
+  "Locale Supported?": { main: [[{ node: "Load Runtime Config" }], [{ node: "Unsupported Locale" }]] },
+  "Load Runtime Config": { main: [[{ node: "Runtime Config" }]] },
+  "Runtime Config": { main: [[{ node: "Prompt Loaded?" }]] },
+  "Prompt Loaded?": { main: [[{ node: "Generate Report" }], [{ node: "Missing Prompt" }]] },
+  "Missing Prompt": { main: [[{ node: "Log Failure" }]] },
+});
 
 const GATE_PARAMS = {
   conditions: {
@@ -255,14 +293,7 @@ const GATE_PARAMS = {
 
 describe("checkInvariants — the facts docs kept asserting by hand", () => {
   const verifyLive = wf([
-    node("Report Prompt", {
-      assignments: {
-        assignments: [{
-          name: "systemPrompt", type: "string",
-          value: "TEST MODE. Return ONLY a valid JSON object.",
-        }],
-      },
-    }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
+    ...promptNodes(),
     node("Generate Report", { jsonBody: CONTRACT_BODY }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
@@ -275,7 +306,7 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
     node("Mark Consumed"),
   ], {
     "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Locale Supported?" }]] },
-    "Locale Supported?": { main: [[{ node: "Report Prompt" }], [{ node: "Unsupported Locale" }]] },
+    ...promptConnections(),
     "Unsupported Locale": { main: [[{ node: "Log Failure" }]] },
     "Generate Report": { main: [[{ node: "Parse Report" }]] },
     "Parse Report": { main: [[{ node: "Valid Report?" }]] },
@@ -289,12 +320,12 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
     assert.deepEqual(failed.map((c) => c.label), []);
   });
 
-  test("catches the escaping regression: systemPrompt stored as an expression", () => {
+  test("catches Generate Report reading the old Report Prompt node again", () => {
     const broken = structuredClone(verifyLive);
-    const rp = broken.nodes.find((n) => n.name === "Report Prompt");
-    rp.parameters.assignments.assignments[0].value = "={{ 'oops' }}";
+    const gr = broken.nodes.find((n) => n.name === "Generate Report");
+    gr.parameters.jsonBody = gr.parameters.jsonBody.replace("$('Runtime Config')", "$('Report Prompt')");
     const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
-    assert.ok(failed.some((c) => /fixed value/i.test(c.label)));
+    assert.ok(failed.some((c) => /Runtime Config/.test(c.label)));
   });
 
   test("catches max_tokens being dropped back to the truncating value", () => {
@@ -309,12 +340,12 @@ describe("checkInvariants — the facts docs kept asserting by hand", () => {
     /* If Respond Confirmed leaves the Valid? fan-out, the browser waits on a blank page
      * for the whole LLM + PDF round trip. */
     const broken = structuredClone(verifyLive);
-    broken.connections["Valid?"].main[0] = [{ node: "Report Prompt" }];
+    broken.connections["Valid?"].main[0] = [{ node: "Locale Supported?" }];
     const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
     assert.ok(failed.some((c) => /fast path|Respond Confirmed/i.test(c.label)));
   });
 
-  test("a missing Report Prompt node fails rather than throwing", () => {
+  test("a workflow missing the prompt nodes fails rather than throwing", () => {
     const broken = wf([node("Generate Report", { jsonBody: "max_tokens: 8000" })]);
     const checks = checkInvariants("verify", broken);
     assert.ok(checks.some((c) => !c.ok));
@@ -326,14 +357,7 @@ describe("checkInvariants — the report JSON gate", () => {
    * that the failure branch cannot reach Send Report — a hand-edit reconnecting those
    * would silently start posting half-built PDFs. */
   const gated = wf([
-    node("Report Prompt", {
-      assignments: {
-        assignments: [{
-          name: "systemPrompt", type: "string",
-          value: "Return ONLY a valid JSON object with keys opening, reaction, origin, cost, closing.",
-        }],
-      },
-    }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
+    ...promptNodes(),
     node("Generate Report", { jsonBody: CONTRACT_BODY }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
@@ -345,7 +369,7 @@ describe("checkInvariants — the report JSON gate", () => {
     node("Respond Confirmed"), node("Mark Consumed"),
   ], {
     "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Locale Supported?" }]] },
-    "Locale Supported?": { main: [[{ node: "Report Prompt" }], [{ node: "Unsupported Locale" }]] },
+    ...promptConnections(),
     "Unsupported Locale": { main: [[{ node: "Log Failure" }]] },
     "Generate Report": { main: [[{ node: "Parse Report" }]] },
     "Parse Report": { main: [[{ node: "Valid Report?" }]] },
@@ -409,15 +433,6 @@ describe("checkInvariants — the report JSON gate", () => {
     );
   });
 
-  test("catches a prompt that stops demanding JSON", () => {
-    /* Applies to Alex's real prompt too, not just the stub — if it does not ask for JSON,
-     * every report fails validation. */
-    const broken = structuredClone(gated);
-    const rp = broken.nodes.find((n) => n.name === "Report Prompt");
-    rp.parameters.assignments.assignments[0].value = "Write a warm two-page report.";
-    const failed = checkInvariants("verify", broken).filter((c) => !c.ok);
-    assert.ok(failed.some((c) => /JSON/i.test(c.label)));
-  });
 });
 
 describe("checkInvariants — the §7 prompt input contract", () => {
@@ -425,9 +440,7 @@ describe("checkInvariants — the §7 prompt input contract", () => {
    * the user message, and says the model does not calculate. Each of these is one hand
    * edit away from silently regressing in the n8n UI. */
   const contract = wf([
-    node("Report Prompt", {
-      assignments: { assignments: [{ name: "systemPrompt", type: "string", value: "Return ONLY a valid JSON object." }] },
-    }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
+    ...promptNodes(),
     node("Generate Report", { jsonBody: CONTRACT_BODY }),
     node("Parse Report", { jsCode: "parseReport($json)" }),
     node("Valid Report?", {}, { type: "n8n-nodes-base.if" }),
@@ -439,7 +452,7 @@ describe("checkInvariants — the §7 prompt input contract", () => {
     node("Respond Confirmed"), node("Mark Consumed"),
   ], {
     "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Locale Supported?" }]] },
-    "Locale Supported?": { main: [[{ node: "Report Prompt" }], [{ node: "Unsupported Locale" }]] },
+    ...promptConnections(),
     "Unsupported Locale": { main: [[{ node: "Log Failure" }]] },
     "Generate Report": { main: [[{ node: "Parse Report" }]] },
     "Parse Report": { main: [[{ node: "Valid Report?" }]] },
@@ -486,15 +499,15 @@ describe("checkInvariants — the §7 prompt input contract", () => {
     assert.ok(failing(broken).some((l) => /greet|first name/i.test(l)), failing(broken).join("; "));
   });
 
-  test("catches Report Prompt moving back onto the Valid? fan-out, ahead of the gate", () => {
+  test("catches the prompt lookup moving onto the Valid? fan-out, ahead of the gate", () => {
     const broken = structuredClone(contract);
-    broken.connections["Valid?"].main[0].push({ node: "Report Prompt" });
+    broken.connections["Valid?"].main[0].push({ node: "Load Runtime Config" });
     assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
   });
 
-  test("catches the gate's false branch being wired to Report Prompt", () => {
+  test("catches the gate's false branch being wired to the prompt lookup", () => {
     const broken = structuredClone(contract);
-    broken.connections["Locale Supported?"].main[1] = [{ node: "Report Prompt" }];
+    broken.connections["Locale Supported?"].main[1] = [{ node: "Load Runtime Config" }];
     assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
   });
 
@@ -507,7 +520,7 @@ describe("checkInvariants — the §7 prompt input contract", () => {
   test("catches a missing gate node outright", () => {
     const broken = structuredClone(contract);
     broken.nodes = broken.nodes.filter((n) => n.name !== "Locale Supported?");
-    broken.connections["Valid?"].main[0] = [{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Report Prompt" }];
+    broken.connections["Valid?"].main[0] = [{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Load Runtime Config" }];
     assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
   });
 
@@ -661,6 +674,206 @@ describe("checkInvariants — the §7 prompt input contract", () => {
   });
 });
 
+describe("checkInvariants — the prompt comes from nem_runtime_config", () => {
+  /* Alex publishes from Notion into nem_runtime_config; /verify reads the newest active
+   * row. Each check below is one UI edit away from silently sending the wrong prompt, or
+   * no prompt at all. */
+  const base = wf([
+    ...promptNodes(),
+    node("Generate Report", { jsonBody: CONTRACT_BODY }),
+    node("Locale Supported?", GATE_PARAMS, { type: "n8n-nodes-base.if", typeVersion: 2.2 }),
+    node("Unsupported Locale"),
+    node("Log Failure"),
+  ], {
+    "Valid?": { main: [[{ node: "Respond Confirmed" }, { node: "Mark Consumed" }, { node: "Locale Supported?" }]] },
+    ...promptConnections(),
+    "Unsupported Locale": { main: [[{ node: "Log Failure" }]] },
+  });
+
+  const RESOLVES_ROW = "Runtime Config resolves the active nem_runtime_config row";
+  const READS_RUNTIME_CONFIG = "Generate Report reads the prompt from Runtime Config";
+  const MISSING_PROMPT_ALERTED = "A missing active prompt is logged and alerted, never sent to Anthropic";
+  const LOCALE_GATED = "Unsupported locales are logged and alerted, never sent to Anthropic";
+  const PROMPT_LABELS = [RESOLVES_ROW, READS_RUNTIME_CONFIG, MISSING_PROMPT_ALERTED, LOCALE_GATED];
+  const failing = (w) => checkInvariants("verify", w).filter((c) => !c.ok).map((c) => c.label);
+  const edit = (fn) => {
+    const broken = structuredClone(base);
+    fn(broken, (name) => broken.nodes.find((n) => n.name === name));
+    return failing(broken);
+  };
+  const catches = (label, fn) => {
+    const failed = edit(fn);
+    assert.ok(failed.includes(label), failed.join("; ") || "nothing failed");
+  };
+
+  test("the four prompt invariants hold on the runtime-config shape", () => {
+    const failed = failing(base);
+    for (const label of PROMPT_LABELS) assert.ok(!failed.includes(label), `${label} failed`);
+  });
+
+  test("catches the lookup matching any condition instead of all — n8n's default", () => {
+    catches(RESOLVES_ROW, (_, get) => { delete get("Load Runtime Config").parameters.matchType; });
+  });
+
+  test("catches the active filter being dropped", () => {
+    catches(RESOLVES_ROW, (_, get) => { get("Load Runtime Config").parameters.filters.conditions.pop(); });
+  });
+
+  test("catches the lookup filtering another key", () => {
+    catches(RESOLVES_ROW, (_, get) => { get("Load Runtime Config").parameters.filters.conditions[0].keyValue = "other"; });
+  });
+
+  test("catches an empty table stopping the run silently (alwaysOutputData off)", () => {
+    catches(RESOLVES_ROW, (_, get) => { delete get("Load Runtime Config").alwaysOutputData; });
+  });
+
+  test("catches Runtime Config being unplugged from the lookup", () => {
+    catches(RESOLVES_ROW, (w) => { delete w.connections["Load Runtime Config"]; });
+  });
+
+  test("catches Runtime Config ignoring the active flag", () => {
+    catches(RESOLVES_ROW, (_, get) => {
+      const n = get("Runtime Config");
+      n.parameters.jsCode = n.parameters.jsCode.replace(/ && \(r\.active === true \|\| r\.active === 'true'\)/, "");
+    });
+  });
+
+  test("catches Generate Report sending a prompt from anywhere else", () => {
+    catches(READS_RUNTIME_CONFIG, (_, get) => {
+      const n = get("Generate Report");
+      n.parameters.jsonBody = n.parameters.jsonBody.replace("$('Runtime Config').first().json.systemPrompt", "'Be nice.'");
+    });
+  });
+
+  test("catches the old Report Prompt node coming back", () => {
+    catches(MISSING_PROMPT_ALERTED, (w) => {
+      w.nodes.push(node("Report Prompt", {}, { type: "n8n-nodes-base.set", typeVersion: 3.5 }));
+    });
+  });
+
+  test("catches the missing-prompt branch wired to Generate Report", () => {
+    catches(MISSING_PROMPT_ALERTED, (w) => { w.connections["Prompt Loaded?"].main[1] = [{ node: "Generate Report" }]; });
+  });
+
+  test("catches the missing-prompt branch not reaching Log Failure", () => {
+    catches(MISSING_PROMPT_ALERTED, (w) => { w.connections["Missing Prompt"] = { main: [[]] }; });
+  });
+
+  test("catches Runtime Config wired straight to Generate Report, around the gate", () => {
+    catches(MISSING_PROMPT_ALERTED, (w) => {
+      w.connections["Runtime Config"].main[0].push({ node: "Generate Report" });
+    });
+  });
+
+  test("catches the gate testing the wrong field", () => {
+    catches(MISSING_PROMPT_ALERTED, (_, get) => {
+      get("Prompt Loaded?").parameters.conditions.conditions[0].leftValue = "={{ $json.valid }}";
+    });
+  });
+
+  test("catches the locale gate's true branch skipping the lookup", () => {
+    catches(LOCALE_GATED, (w) => { w.connections["Locale Supported?"].main[0] = [{ node: "Generate Report" }]; });
+  });
+});
+
+describe("checkInvariants — the Publish Prompt workflow", () => {
+  const ROOT = resolve(import.meta.dirname, "../..");
+  const publish = JSON.parse(
+    readFileSync(resolve(ROOT, "projects/nem-life/.claude/backend/nem-publish-prompt.workflow.json"), "utf8"),
+  );
+  const failing = (w) => checkInvariants("publish", w).filter((c) => !c.ok).map((c) => c.label);
+  const edit = (fn) => {
+    const broken = structuredClone(publish);
+    fn(broken, (name) => broken.nodes.find((n) => n.name === name));
+    return failing(broken);
+  };
+  const catches = (pattern, fn) => {
+    const failed = edit(fn);
+    assert.ok(failed.some((l) => pattern.test(l)), failed.join("; ") || "nothing failed");
+  };
+
+  test("the committed snapshot satisfies every publish invariant", () => {
+    assert.ok(checkInvariants("publish", publish).length >= 9);
+    assert.deepEqual(failing(publish), []);
+  });
+
+  test("catches the webhook accepting GET", () => {
+    catches(/Webhook/, (_, get) => { get("Webhook").parameters.httpMethod = "GET"; });
+  });
+
+  test("catches the webhook without its header secret", () => {
+    catches(/Webhook/, (_, get) => { get("Webhook").parameters.authentication = "none"; });
+  });
+
+  test("catches nested blocks not being fetched", () => {
+    catches(/nested blocks/, (_, get) => { get("Fetch Notion Blocks").parameters.fetchNestedBlocks = false; });
+  });
+
+  test("catches only the first page of blocks being fetched", () => {
+    catches(/nested blocks/, (_, get) => { delete get("Fetch Notion Blocks").parameters.returnAll; });
+  });
+
+  test("catches Serialise losing the validator", () => {
+    catches(/validator/, (_, get) => {
+      const n = get("Serialise");
+      n.parameters.jsCode = n.parameters.jsCode.replace("function validatePrompt", "function checkPrompt");
+    });
+  });
+
+  test("catches a new version written inactive", () => {
+    catches(/Insert Version/, (_, get) => { get("Insert Version").parameters.columns.value.active = false; });
+  });
+
+  test("catches Insert Version reachable from anything but Changed? true", () => {
+    catches(/Insert Version/, (w) => { w.connections["Serialise"].main[0].push({ node: "Insert Version", type: "main", index: 0 }); });
+  });
+
+  test("catches Changed? being skipped, which would re-publish an unchanged page", () => {
+    catches(/Insert Version/, (w) => { w.connections["Valid?"].main[0] = [{ node: "Insert Version", type: "main", index: 0 }]; });
+  });
+
+  test("catches an unchanged page reaching Insert Version", () => {
+    catches(/unchanged/, (w) => { w.connections["Changed?"].main[1] = [{ node: "Insert Version", type: "main", index: 0 }]; });
+  });
+
+  test("catches Deactivate Previous moved ahead of Insert Version", () => {
+    catches(/Deactivate Previous runs after/, (w) => {
+      w.connections["Valid?"].main[0] = [{ node: "Deactivate Previous", type: "main", index: 0 }];
+      w.connections["Deactivate Previous"].main[0] = [{ node: "Insert Version", type: "main", index: 0 }];
+      w.connections["Insert Version"].main[0] = [{ node: "Status: Published", type: "main", index: 0 }];
+    });
+  });
+
+  test("catches Deactivate Previous matching any condition — it would deactivate the new row", () => {
+    catches(/older versions/, (_, get) => { delete get("Deactivate Previous").parameters.matchType; });
+  });
+
+  test("catches Deactivate Previous losing its version bound", () => {
+    catches(/older versions/, (_, get) => {
+      get("Deactivate Previous").parameters.filters.conditions = get("Deactivate Previous").parameters.filters.conditions
+        .filter((c) => c.keyName !== "version");
+    });
+  });
+
+  test("catches the status write going anywhere but a Notion block PATCH", () => {
+    catches(/Update Status Callout/, (_, get) => { get("Update Status Callout").parameters.method = "POST"; });
+  });
+
+  test("catches a refusal wired into Insert Version", () => {
+    catches(/refused publish/, (w) => {
+      w.connections["Status: Refused"].main[0].push({ node: "Insert Version", type: "main", index: 0 });
+    });
+  });
+
+  test("catches a refusal that never reaches the callout", () => {
+    catches(/refused publish/, (w) => { w.connections["Status: Refused"] = { main: [[]] }; });
+  });
+
+  test("catches a model call sneaking into the publish path", () => {
+    catches(/Anthropic/, (_, get) => { get("Update Status Callout").parameters.url = "https://api.anthropic.com/v1/messages"; });
+  });
+});
+
 describe("buildLiveState — the generated status file", () => {
   const entries = [{
     key: "verify",
@@ -705,12 +918,21 @@ describe("the real committed snapshots hold the facts the docs claim", () => {
   const load = (f) =>
     JSON.parse(readFileSync(resolve(ROOT, "projects/nem-life/.claude/backend", f), "utf8"));
 
-  test("both workflows are registered for checking", () => {
-    assert.deepEqual(WORKFLOWS.map((w) => w.key).sort(), ["submit", "verify"]);
-    for (const w of WORKFLOWS) assert.match(w.id, /^[A-Za-z0-9]{16}$/);
+  test("all three workflows are registered for checking", () => {
+    assert.deepEqual(WORKFLOWS.map((w) => w.key).sort(), ["publish", "submit", "verify"]);
+    for (const w of WORKFLOWS) {
+      if (isPendingImport(w)) assert.match(w.id, /^REPLACE_/);
+      else assert.match(w.id, /^[A-Za-z0-9]{16}$/);
+    }
+  });
+
+  test("every workflow is imported, so the CLI checks all three against live", () => {
+    assert.deepEqual(WORKFLOWS.filter(isPendingImport).map((w) => w.key), []);
   });
 
   test("the committed /verify snapshot satisfies every invariant", () => {
+    /* nem-verify-runtime-config was applied 2026-09-23: /verify reads the prompt from
+     * nem_runtime_config, published from Alex's Notion page. */
     const failed = checkInvariants("verify", load("nem-verify.workflow.json")).filter((c) => !c.ok);
     assert.deepEqual(failed.map((c) => c.label), []);
   });
@@ -721,7 +943,7 @@ describe("the real committed snapshots hold the facts the docs claim", () => {
   });
 
   test("snapshots carry no server metadata — they are normalised on write", () => {
-    for (const f of ["nem-verify.workflow.json", "nem-submit.workflow.json"]) {
+    for (const f of ["nem-verify.workflow.json", "nem-submit.workflow.json", "nem-publish-prompt.workflow.json"]) {
       const snap = load(f);
       for (const k of ["id", "createdAt", "updatedAt", "versionId", "shared", "active"]) {
         assert.ok(!(k in snap), `${f} still carries server field "${k}"`);

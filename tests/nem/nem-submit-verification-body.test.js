@@ -52,6 +52,8 @@ const normalizeOutput = {
 const mailConfigOutput = {
   verificationTemplateNl: 'tpl-nl-000',
   verificationTemplateEn: 'tpl-en-000',
+  verificationSubjectNl: 'Nog één stap: bevestig je e-mailadres',
+  verificationSubjectEn: 'One more step: confirm your email',
 };
 
 /** n8n's `$(nodeName)` accessor, bound to the given upstream outputs. */
@@ -130,9 +132,14 @@ describe('nem /submit — Send Verification jsonBody', () => {
     assert.strictEqual(send({ normalize: { verifyUrl: url } }).personalization[0].data.verify_url, url);
   });
 
-  test('subject, text and html live in the template, not in the body', () => {
+  test('sends a subject — MailerSend 422s a template send without one (exec #338)', () => {
+    assert.strictEqual(send().subject, 'Nog één stap: bevestig je e-mailadres');
+    assert.strictEqual(send({ normalize: { locale: 'en' } }).subject, 'One more step: confirm your email');
+  });
+
+  test('text and html live in the template, not in the body', () => {
     const body = send();
-    for (const key of ['subject', 'text', 'html']) assert.ok(!(key in body), `unexpected ${key}`);
+    for (const key of ['text', 'html']) assert.ok(!(key in body), `unexpected ${key}`);
   });
 
   test('reads profile fields via $(\'Normalize\'), not bare $json', () => {
@@ -157,11 +164,11 @@ describe('nem /submit — Mail Config Set node', () => {
     assert.strictEqual(node.typeVersion, 3.5);
   });
 
-  test('holds exactly the two template ids as fixed string values', () => {
+  test('holds the two template ids and two subjects as fixed string values', () => {
     const assignments = node.parameters.assignments.assignments;
     assert.deepStrictEqual(
       assignments.map((a) => a.name).sort(),
-      ['verificationTemplateEn', 'verificationTemplateNl']
+      ['verificationSubjectEn', 'verificationSubjectNl', 'verificationTemplateEn', 'verificationTemplateNl']
     );
     for (const a of assignments) {
       assert.strictEqual(a.type, 'string');

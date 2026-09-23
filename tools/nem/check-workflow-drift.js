@@ -27,7 +27,12 @@ export const API_BASE = "https://reus.app.n8n.cloud/api/v1/workflows";
 export const WORKFLOWS = [
   { key: "verify", id: "uKkMgMYoH5nOLoCR", label: "NEM Test — /verify", file: "nem-verify.workflow.json" },
   { key: "submit", id: "LDI1eWR35lwX6WLp", label: "NEM Test — /submit", file: "nem-submit.workflow.json" },
+  { key: "publish", id: "REPLACE_PUBLISH_WORKFLOW_ID", label: "NEM Test — Publish Prompt", file: "nem-publish-prompt.workflow.json" },
 ];
+
+/* A workflow whose id is still a placeholder has not been imported into n8n yet, so
+ * there is nothing live to compare against. The CLI says so rather than failing. */
+export const isPendingImport = (wf) => String(wf.id).startsWith("REPLACE_");
 
 /* What a snapshot is allowed to contain. Everything else n8n returns is server-side and
  * churns on its own: ids, timestamps, versionId, sharing, triggerCount.
@@ -98,24 +103,60 @@ export const hasDrift = (results) => results.some((r) => !r.inSync);
 
 const find = (workflow, name) => (workflow.nodes ?? []).find((n) => n.name === name);
 
-const fanOut = (workflow, from) =>
-  ((workflow.connections?.[from]?.main ?? [])[0] ?? []).map((c) => c.node);
+const branch = (workflow, from, index) =>
+  ((workflow.connections?.[from]?.main ?? [])[index] ?? []).map((c) => c.node);
+
+const fanOut = (workflow, from) => branch(workflow, from, 0);
+
+const reachableFrom = (workflow, starts) => {
+  const seen = new Set();
+  const queue = [...starts];
+  while (queue.length) {
+    const name = queue.shift();
+    if (seen.has(name)) continue;
+    seen.add(name);
+    for (const out of workflow.connections?.[name]?.main ?? []) {
+      for (const c of out ?? []) queue.push(c.node);
+    }
+  }
+  return seen;
+};
+
+const sourcesOf = (workflow, target) =>
+  Object.entries(workflow.connections ?? {}).flatMap(([from, outputs]) =>
+    (outputs?.main ?? []).flatMap((out, index) =>
+      ((out ?? []).some((c) => c.node === target) ? [{ from, index }] : [])),
+  );
+
+const filterConditions = (node) => node?.parameters?.filters?.conditions ?? [];
+const isEq = (c) => (c.condition ?? "eq") === "eq";
 
 const INVARIANTS = {
   verify: [
     {
-      label: "Report Prompt is a Set node on typeVersion 3.5",
+      /* The prompt lives in nem_runtime_config, published from Alex's Notion page. The
+       * table keeps every version; the newest active row is live. Both filters must hold at
+       * once: n8n's Data Table default is "any condition", which would load every row. An
+       * empty table must still emit an item, or the run stops silently with no alert. */
+      label: "Runtime Config resolves the active nem_runtime_config row",
       check: (wf) => {
-        const n = find(wf, "Report Prompt");
-        return Boolean(n) && n.type === "n8n-nodes-base.set" && Number(n.typeVersion) === 3.5;
-      },
-    },
-    {
-      label: "Report Prompt stores systemPrompt as a fixed value, not an expression",
-      check: (wf) => {
-        const n = find(wf, "Report Prompt");
-        const a = n?.parameters?.assignments?.assignments?.[0];
-        return Boolean(a) && a.name === "systemPrompt" && !String(a.value).startsWith("=");
+        const load = find(wf, "Load Runtime Config");
+        const pick = find(wf, "Runtime Config");
+        if (!load || !pick) return false;
+        const conds = filterConditions(load);
+        const code = pick.parameters?.jsCode ?? "";
+        return load.type === "n8n-nodes-base.dataTable"
+          && load.parameters?.operation === "get"
+          && load.parameters?.matchType === "allConditions"
+          && load.alwaysOutputData === true
+          && conds.some((c) => c.keyName === "key" && isEq(c) && c.keyValue === "report_prompt")
+          && conds.some((c) => c.keyName === "active" && c.condition === "isTrue")
+          && fanOut(wf, "Load Runtime Config").includes("Runtime Config")
+          && pick.type === "n8n-nodes-base.code"
+          && code.includes("$('Load Runtime Config')")
+          && code.includes("report_prompt")
+          && /\.active\b/.test(code)
+          && /\.version\b/.test(code);
       },
     },
     {
@@ -123,22 +164,39 @@ const INVARIANTS = {
       check: (wf) => /max_tokens:\s*8000/.test(find(wf, "Generate Report")?.parameters?.jsonBody ?? ""),
     },
     {
-      label: "Generate Report reads the prompt from the Report Prompt node",
-      check: (wf) =>
-        /\$\('Report Prompt'\)/.test(find(wf, "Generate Report")?.parameters?.jsonBody ?? ""),
+      label: "Generate Report reads the prompt from Runtime Config",
+      check: (wf) => {
+        const body = find(wf, "Generate Report")?.parameters?.jsonBody ?? "";
+        return /\$\('Runtime Config'\)\.first\(\)\.json\.systemPrompt/.test(body)
+          && !body.includes("$('Report Prompt')");
+      },
+    },
+    {
+      /* No active row means no prompt. Sending an empty system prompt would produce a report
+       * nobody wrote; the run is logged and alerted like a bad model response instead. */
+      label: "A missing active prompt is logged and alerted, never sent to Anthropic",
+      check: (wf) => {
+        if (find(wf, "Report Prompt")) return false;
+        const gate = find(wf, "Prompt Loaded?");
+        if (!gate || gate.type !== "n8n-nodes-base.if") return false;
+        const tested = gate.parameters?.conditions?.conditions ?? [];
+        if (!tested.some((c) => /\$json\.promptOk\b/.test(String(c.leftValue))
+          && c.operator?.type === "boolean" && c.operator?.operation === "true")) return false;
+        if (!fanOut(wf, "Runtime Config").includes("Prompt Loaded?")) return false;
+        const onTrue = branch(wf, "Prompt Loaded?", 0);
+        const onFalse = branch(wf, "Prompt Loaded?", 1);
+        if (!onTrue.includes("Generate Report") || onTrue.includes("Missing Prompt")) return false;
+        if (!onFalse.includes("Missing Prompt") || onFalse.includes("Generate Report")) return false;
+        const into = sourcesOf(wf, "Generate Report");
+        if (!into.every((s) => s.from === "Prompt Loaded?" && s.index === 0)) return false;
+        return fanOut(wf, "Missing Prompt").includes("Log Failure");
+      },
     },
     {
       label: "Valid? keeps Respond Confirmed on the fast path, ahead of the report chain",
       check: (wf) => {
         const targets = fanOut(wf, "Valid?");
         return targets.includes("Respond Confirmed") && targets.includes("Mark Consumed");
-      },
-    },
-    {
-      label: "Report Prompt demands JSON — without it every report fails validation",
-      check: (wf) => {
-        const a = find(wf, "Report Prompt")?.parameters?.assignments?.assignments?.[0];
-        return /json/i.test(String(a?.value ?? ""));
       },
     },
     {
@@ -208,21 +266,19 @@ const INVARIANTS = {
     {
       /* The prompt is Dutch-only: forbidden words, register and every text variant. An
        * en token must be logged and alerted like any other failure, and must never reach
-       * Anthropic. The gate sits on the Valid? fast path where Report Prompt used to be. */
+       * Anthropic. The gate sits on the Valid? fast path, ahead of the prompt lookup. */
       label: "Unsupported locales are logged and alerted, never sent to Anthropic",
       check: (wf) => {
         if (!find(wf, "Locale Supported?")) return false;
+        const promptPath = ["Load Runtime Config", "Report Prompt", "Generate Report"];
         const fast = fanOut(wf, "Valid?");
-        if (!fast.includes("Locale Supported?") || fast.includes("Report Prompt")) return false;
-        const branches = wf.connections?.["Locale Supported?"]?.main ?? [];
-        const onTrue = (branches[0] ?? []).map((c) => c.node);
-        const onFalse = (branches[1] ?? []).map((c) => c.node);
-        if (!onTrue.includes("Report Prompt") || onTrue.includes("Unsupported Locale")) return false;
+        if (!fast.includes("Locale Supported?") || fast.some((n) => promptPath.includes(n))) return false;
+        const onTrue = branch(wf, "Locale Supported?", 0);
+        const onFalse = branch(wf, "Locale Supported?", 1);
+        if (!onTrue.includes("Load Runtime Config") || onTrue.includes("Unsupported Locale")) return false;
         if (onFalse.length === 0) return false;
         const reachesLog = (name) => name === "Log Failure" || fanOut(wf, name).includes("Log Failure");
-        return onFalse.every(
-          (n) => n !== "Report Prompt" && n !== "Generate Report" && reachesLog(n),
-        );
+        return onFalse.every((n) => !promptPath.includes(n) && reachesLog(n));
       },
     },
     {
@@ -376,6 +432,106 @@ const INVARIANTS = {
           !onCompletion.includes("Store Profile")
         );
       },
+    },
+  ],
+  publish: [
+    {
+      /* The webhook URL alone is a secret anyone holding the URL could replay; the header
+       * Notion's button sends is the second factor. */
+      label: "Webhook accepts POST only, behind the Notion header secret",
+      check: (wf) => {
+        const n = find(wf, "Webhook");
+        return n?.type === "n8n-nodes-base.webhook"
+          && n.parameters?.httpMethod === "POST"
+          && n.parameters?.authentication === "headerAuth"
+          && Boolean(n.credentials?.httpHeaderAuth);
+      },
+    },
+    {
+      /* Without nested blocks every indented list item vanishes from the prompt. */
+      label: "Fetch Notion Blocks fetches nested blocks with the Notion credential",
+      check: (wf) => {
+        const n = find(wf, "Fetch Notion Blocks");
+        return n?.type === "n8n-nodes-base.notion"
+          && n.parameters?.resource === "block"
+          && n.parameters?.operation === "getAll"
+          && n.parameters?.returnAll === true
+          && n.parameters?.fetchNestedBlocks === true
+          && n.parameters?.simplifyOutput === false
+          && Boolean(n.credentials?.notionApi);
+      },
+    },
+    {
+      label: "Serialise carries the serialiser and the validator",
+      check: (wf) => {
+        const code = find(wf, "Serialise")?.parameters?.jsCode ?? "";
+        return code.includes("function notionToPrompt") && code.includes("function validatePrompt");
+      },
+    },
+    {
+      label: "Only Valid? true reaches Insert Version, which writes the row as active",
+      check: (wf) => {
+        const n = find(wf, "Insert Version");
+        const mapped = n?.parameters?.columns?.value ?? {};
+        const into = sourcesOf(wf, "Insert Version");
+        return n?.type === "n8n-nodes-base.dataTable"
+          && (n.parameters?.operation ?? "insert") === "insert"
+          && (mapped.active === true || mapped.active === "true")
+          && ["key", "version", "text"].every((f) => f in mapped)
+          && into.length > 0
+          && into.every((s) => s.from === "Valid?" && s.index === 0);
+      },
+    },
+    {
+      /* Insert first, deactivate second: there is never a moment with no active row. Two
+       * active rows for a moment is fine — /verify takes the highest version. */
+      label: "Deactivate Previous runs after Insert Version, never instead of it",
+      check: (wf) => {
+        const into = sourcesOf(wf, "Deactivate Previous");
+        return into.length > 0 && into.every((s) => s.from === "Insert Version");
+      },
+    },
+    {
+      /* n8n's Data Table default is "any condition": key OR version-below would deactivate
+       * the row just inserted, and every report after it would fail. */
+      label: "Deactivate Previous only touches older versions of the same key",
+      check: (wf) => {
+        const n = find(wf, "Deactivate Previous");
+        const conds = filterConditions(n);
+        return n?.type === "n8n-nodes-base.dataTable"
+          && n.parameters?.operation === "update"
+          && n.parameters?.matchType === "allConditions"
+          && conds.length === 2
+          && conds.some((c) => c.keyName === "key" && isEq(c))
+          && conds.some((c) => c.keyName === "version" && c.condition === "lt")
+          && n.parameters?.columns?.value?.active === false;
+      },
+    },
+    {
+      label: "Update Status Callout PATCHes the callout block on api.notion.com",
+      check: (wf) => {
+        const n = find(wf, "Update Status Callout");
+        return n?.parameters?.method === "PATCH"
+          && String(n.parameters?.url ?? "").includes("api.notion.com/v1/blocks/")
+          && n.parameters?.nodeCredentialType === "notionApi"
+          && Boolean(n.credentials?.notionApi);
+      },
+    },
+    {
+      /* A refusal must tell Alex why, and must never write a row /verify would pick up. */
+      label: "A refused publish reaches the status callout and never Insert Version",
+      check: (wf) => {
+        const onFalse = branch(wf, "Valid?", 1);
+        if (onFalse.length === 0) return false;
+        const reached = reachableFrom(wf, onFalse);
+        return reached.has("Update Status Callout")
+          && !reached.has("Insert Version")
+          && !reached.has("Deactivate Previous");
+      },
+    },
+    {
+      label: "Publishing never calls Anthropic",
+      check: (wf) => (wf.nodes ?? []).length > 0 && !JSON.stringify(wf.nodes).includes("api.anthropic.com"),
     },
   ],
 };
@@ -537,6 +693,10 @@ async function main() {
   const entries = [];
 
   for (const wf of WORKFLOWS) {
+    if (isPendingImport(wf)) {
+      process.stdout.write(`${wf.key.padEnd(8)} skipped — not imported yet (${wf.file})\n`);
+      continue;
+    }
     const live = await fetchWorkflow(wf.id, apiKey);
     const path = resolve(BACKEND, wf.file);
     const repo = JSON.parse(readFileSync(path, "utf8"));

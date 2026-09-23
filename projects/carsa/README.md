@@ -50,7 +50,7 @@ This reads `init.js`, `global.js`, `battery-animation.js` and `at-price-total.js
 
 ## Local development
 
-Run `/local`, then open any page with `?carsa=local` (add `&carsa-port=8081` for another port). The choice persists in `localStorage` until `?carsa=cdn`.
+Run `/local`, then open any page with `?carsa=local` (add `&carsa-port=8081` for another port). The loader only honours the switch when its `<script>` tag carries `data-allow-local`, which the live footer never has: add the attribute with a DevTools HTML override, or publish it to the staging domain only. The choice lasts for the browser session (`sessionStorage`) or until `?carsa=cdn`.
 
 ## Tests
 

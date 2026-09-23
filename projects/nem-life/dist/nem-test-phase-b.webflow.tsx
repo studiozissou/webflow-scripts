@@ -967,6 +967,11 @@ function Quiz({
           setSubmitting(false);
           return;
         }
+        if (data.status === "error") {
+          setFieldErrors({ generic: t.errors.generic });
+          setSubmitting(false);
+          return;
+        }
       } catch {
         setFieldErrors({ generic: t.errors.generic });
         setSubmitting(false);

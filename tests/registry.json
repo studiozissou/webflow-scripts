@@ -452,6 +452,16 @@
       "critical": false,
       "created": "2026-09-15",
       "description": "Carsa body colour guard - the VDP Material UI carousel injects body { color: rgba(0,0,0,.87) } at runtime; a site-wide html body rule in the head custom code keeps text brand purple. Asserts the rule ships and body/paragraph colour is #511e62 on home and VDP."
+    },
+    {
+      "slug": "nem-verification-email-mailersend",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-verification-email-mailersend.spec.js",
+      "type": "acceptance",
+      "source": "build",
+      "critical": false,
+      "created": "2026-09-23",
+      "description": "NEM Test verification email sent as a MailerSend template from inside /submit, ahead of Respond OK. One real submission per run (gated on NEM_SUBMIT_WEBHOOK_URL): confirmation screen without an error, round-trip under 5 s, no console errors."
     }
   ]
 }

@@ -29,10 +29,12 @@ try {
   verdict = { ok: false, reasons: [error.message], warnings: [], chars: 0, headings: 0 };
 }
 const refusals = statusCallout ? verdict.reasons : [...verdict.reasons, 'no status callout on the page'];
+const changed = !(refusals.length === 0 && activeRow && activeRow.text === promptText);
 
 return [{
   json: {
     ok: refusals.length === 0,
+    changed,
     reasons: refusals,
     warnings: verdict.warnings,
     text: promptText,
@@ -40,6 +42,7 @@ return [{
     headings: verdict.headings,
     version: nextVersion,
     previousVersion: activeRow ? Number(activeRow.version) : null,
+    previousPublishedAt: activeRow ? activeRow.publishedAt : null,
     calloutId: statusCallout ? statusCallout.id : null,
     key: config.key,
     publishedAt: new Date().toISOString(),

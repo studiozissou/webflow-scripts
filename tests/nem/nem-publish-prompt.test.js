@@ -41,7 +41,7 @@ const serialise = ({ blocks = pageBlocks(), versions = [{}] } = {}) =>
     Config: [{ pageId: "399c706b-69c0-80ea-b095-f89476b4fa21", key: "report_prompt" }],
   });
 
-const row = (version, active, chars, key = "report_prompt") => ({ key, version, active, chars, headings: 23, text: "…" });
+const row = (version, active, chars, key = "report_prompt", text = "…", publishedAt = "2026-09-23T12:17:39.888Z") => ({ key, version, active, chars, headings: 23, text, publishedAt });
 
 describe("the snapshot", () => {
   test("is a normalised workflow named NEM Test — Publish Prompt", () => {
@@ -145,6 +145,35 @@ describe("Serialise, run on the page", () => {
     assert.deepEqual(serialise({ blocks }).warnings, []);
   });
 
+  test("the first publish counts as a change", () => {
+    assert.equal(serialise().changed, true);
+  });
+
+  test("a page identical to the active version is flagged unchanged, still ok, pointing at that version", () => {
+    const r = serialise({ versions: [row(3, false, promptText.length, "report_prompt", promptText), row(4, true, promptText.length, "report_prompt", promptText)] });
+    assert.equal(r.ok, true);
+    assert.equal(r.changed, false);
+    assert.equal(r.previousVersion, 4);
+    assert.equal(r.previousPublishedAt, "2026-09-23T12:17:39.888Z");
+  });
+
+  test("any difference from the active version is a change, even one character", () => {
+    const r = serialise({ versions: [row(4, true, promptText.length, "report_prompt", promptText.replace("Introduction", "Introductie"))] });
+    assert.equal(r.changed, true);
+  });
+
+  test("matching an older inactive version is still a change — that is a rollback", () => {
+    const r = serialise({ versions: [row(3, false, promptText.length, "report_prompt", promptText), row(4, true, promptText.length, "report_prompt", "something else")] });
+    assert.equal(r.changed, true);
+  });
+
+  test("a refused page is never reported unchanged", () => {
+    const blocks = [...pageBlocks().filter((b) => b.type !== "callout")];
+    const r = serialise({ blocks, versions: [row(4, true, promptText.length, "report_prompt", promptText)] });
+    assert.equal(r.ok, false);
+    assert.equal(r.changed, true);
+  });
+
   test("with two active rows, the higher version is the one compared against", () => {
     const r = serialise({ versions: [row(3, true, 20000), row(4, true, promptText.length)] });
     assert.equal(r.ok, true);
@@ -184,7 +213,7 @@ describe("Serialise, run on the page", () => {
 
 describe("the status callout messages", () => {
   const serialised = (extra) => ({
-    ok: true, reasons: [], warnings: [], text: "…", chars: 66812, headings: 23, version: 7, previousVersion: 6,
+    ok: true, changed: true, previousPublishedAt: "2026-09-23T10:40:00.000Z", reasons: [], warnings: [], text: "…", chars: 66812, headings: 23, version: 7, previousVersion: 6,
     calloutId: "callout-1", key: "report_prompt", publishedAt: "2026-09-23T12:02:00.000Z", executionId: "77",
     ...extra,
   });
@@ -216,6 +245,15 @@ describe("the status callout messages", () => {
         + "Check: Length changed by 45.0% (36000 characters now, 66812 in the live version). "
         + "If that was not intended, restore the page from its history and publish again.",
     );
+  });
+
+  test("unchanged: no new version, and when the live one went up", () => {
+    const r = runNode("Status: Unchanged", { Serialise: [serialised({ changed: false, previousVersion: 4, previousPublishedAt: "2026-09-23T12:17:39.888Z" })] });
+    assert.deepEqual(r, {
+      calloutId: "callout-1",
+      icon: "⚪",
+      message: "Nothing changed on 23 Sep 2026 14:02 — the page matches v4, live since 23 Sep 2026 14:17 (Europe/Amsterdam). No new version was made.",
+    });
   });
 
   test("refused: every reason, and the live version left in place", () => {
@@ -275,8 +313,22 @@ describe("wiring and nodes", () => {
     assert.equal(value.text, "={{ $json.text }}");
   });
 
-  test("Valid? true inserts, then deactivates, then reports", () => {
-    assert.deepEqual(out("Valid?", 0), ["Insert Version"]);
+  test("Changed? tests the changed flag from Serialise", () => {
+    const n = nodeNamed("Changed?");
+    assert.equal(n.type, "n8n-nodes-base.if");
+    const cond = n.parameters.conditions.conditions[0];
+    assert.equal(cond.leftValue, "={{ $json.changed }}");
+    assert.deepEqual(cond.operator, { type: "boolean", operation: "true", singleValue: true });
+  });
+
+  test("an unchanged page writes nothing and says so", () => {
+    assert.deepEqual(out("Changed?", 1), ["Status: Unchanged"]);
+    assert.deepEqual(out("Status: Unchanged", 0), ["Update Status Callout"]);
+  });
+
+  test("Valid? true, when changed, inserts, then deactivates, then reports", () => {
+    assert.deepEqual(out("Valid?", 0), ["Changed?"]);
+    assert.deepEqual(out("Changed?", 0), ["Insert Version"]);
     assert.deepEqual(out("Insert Version", 0), ["Deactivate Previous"]);
     assert.deepEqual(out("Deactivate Previous", 0), ["Status: Published"]);
   });

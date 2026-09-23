@@ -725,8 +725,16 @@ describe("checkInvariants — the Publish Prompt workflow", () => {
     catches(/Insert Version/, (_, get) => { get("Insert Version").parameters.columns.value.active = false; });
   });
 
-  test("catches Insert Version reachable from anything but Valid? true", () => {
+  test("catches Insert Version reachable from anything but Changed? true", () => {
     catches(/Insert Version/, (w) => { w.connections["Serialise"].main[0].push({ node: "Insert Version", type: "main", index: 0 }); });
+  });
+
+  test("catches Changed? being skipped, which would re-publish an unchanged page", () => {
+    catches(/Insert Version/, (w) => { w.connections["Valid?"].main[0] = [{ node: "Insert Version", type: "main", index: 0 }]; });
+  });
+
+  test("catches an unchanged page reaching Insert Version", () => {
+    catches(/unchanged/, (w) => { w.connections["Changed?"].main[1] = [{ node: "Insert Version", type: "main", index: 0 }]; });
   });
 
   test("catches Deactivate Previous moved ahead of Insert Version", () => {

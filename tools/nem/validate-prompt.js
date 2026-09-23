@@ -1,4 +1,4 @@
-// Refuses to publish a serialised report prompt that lost a required section, changed length by more than 30% against the live version, carries a new [NO VARIANT YET gap, stopped asking for JSON, or is empty.
+// Refuses to publish a serialised report prompt that lost a required section, carries a new [NO VARIANT YET gap, stopped asking for JSON, or is empty, and warns without refusing when its length moved more than 30% against the live version.
 
 const REQUIRED_HEADING_PREFIXES = [
   "# Introduction",
@@ -47,7 +47,8 @@ function validatePrompt(text, { activeChars } = {}) {
   const lines = source.split("\n");
   const headings = lines.filter((line) => line.startsWith("#")).length;
   const reasons = [];
-  const verdict = () => ({ ok: reasons.length === 0, reasons, chars: source.length, headings });
+  const warnings = [];
+  const verdict = () => ({ ok: reasons.length === 0, reasons, warnings, chars: source.length, headings });
 
   if (source.trim() === "") {
     reasons.push("The page is empty - there is no prompt to publish.");
@@ -66,8 +67,8 @@ function validatePrompt(text, { activeChars } = {}) {
   if (Number.isFinite(activeChars) && activeChars > 0) {
     const change = Math.abs(source.length - activeChars) / activeChars;
     if (change > MAX_LENGTH_CHANGE) {
-      reasons.push(
-        `Length changed by ${(change * 100).toFixed(1)}% (${source.length} characters now, ${activeChars} in the live version) - more than 30% in one publish looks like a partial paste`,
+      warnings.push(
+        `Length changed by ${(change * 100).toFixed(1)}% (${source.length} characters now, ${activeChars} in the live version)`,
       );
     }
   }

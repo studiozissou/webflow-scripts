@@ -127,13 +127,23 @@ describe("Serialise, run on the page", () => {
     assert.equal(r.previousVersion, 3);
   });
 
-  test("an active v3 of very different length is refused with the length reason", () => {
+  test("an active v3 of very different length still publishes, carrying the length warning", () => {
     const r = serialise({ versions: [row(2, false, 20000), row(3, true, 20000)] });
-    assert.equal(r.ok, false);
-    assert.equal(r.reasons.length, 1);
-    assert.match(r.reasons[0], /20000/);
-    assert.match(r.reasons[0], new RegExp(String(promptText.length)));
+    assert.equal(r.ok, true);
+    assert.deepEqual(r.reasons, []);
+    assert.equal(r.warnings.length, 1);
+    assert.match(r.warnings[0], /20000/);
+    assert.match(r.warnings[0], new RegExp(String(promptText.length)));
     assert.equal(r.previousVersion, 3);
+  });
+
+  test("a clean publish carries no warnings", () => {
+    assert.deepEqual(serialise().warnings, []);
+  });
+
+  test("a serialiser error leaves the warnings list empty, not missing", () => {
+    const blocks = [...structuredClone(fixture), { object: "block", id: "q1", type: "quote", has_children: false, quote: { rich_text: [] } }];
+    assert.deepEqual(serialise({ blocks }).warnings, []);
   });
 
   test("with two active rows, the higher version is the one compared against", () => {
@@ -175,7 +185,7 @@ describe("Serialise, run on the page", () => {
 
 describe("the status callout messages", () => {
   const serialised = (extra) => ({
-    ok: true, reasons: [], text: "…", chars: 66812, headings: 23, version: 7, previousVersion: 6,
+    ok: true, reasons: [], warnings: [], text: "…", chars: 66812, headings: 23, version: 7, previousVersion: 6,
     calloutId: "callout-1", key: "report_prompt", publishedAt: "2026-09-23T12:02:00.000Z", executionId: "77",
     ...extra,
   });
@@ -194,6 +204,19 @@ describe("the status callout messages", () => {
       Serialise: [serialised({ publishedAt: "2026-01-05T09:30:00.000Z", version: 1, previousVersion: null, chars: 812 })],
     });
     assert.equal(r.message, "v1 live since 5 Jan 2026 10:30 (Europe/Amsterdam) — 812 characters, 23 headings. Previous: none.");
+  });
+
+  test("published with a warning: yellow, and the warning follows the usual line", () => {
+    const r = runNode("Status: Published", {
+      Serialise: [serialised({ warnings: ["Length changed by 45.0% (36000 characters now, 66812 in the live version)"] })],
+    });
+    assert.equal(r.icon, "🟡");
+    assert.equal(
+      r.message,
+      "v7 live since 23 Sep 2026 14:02 (Europe/Amsterdam) — 66 812 characters, 23 headings. Previous: v6. "
+        + "Check: Length changed by 45.0% (36000 characters now, 66812 in the live version). "
+        + "If that was not intended, restore the page from its history and publish again.",
+    );
   });
 
   test("refused: every reason, and the live version left in place", () => {

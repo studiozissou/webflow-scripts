@@ -21,6 +21,7 @@ import {
   questionHeading,
   answerQuestion,
   answerAllQuestions,
+  answerByIndices,
   fillProfileScreen,
 } from './helpers/nem-quiz.js';
 
@@ -51,10 +52,13 @@ const computed = (locator, prop) =>
 
 const px = (value) => parseFloat(String(value));
 
+/* Same dual profile as nem-test-phase-b — all-"soms" scores flat and skips the report CTA. */
+const DUAL_PROFILE = [4, 1, 2, 4, 4, 4, 0, 0, 4, 0, 4, 4, 0, 3, 0, 2, 0, 0, 0, 0];
+
 /* Drive the quiz to the conclusion with a profile that is neither flat-low nor flat-high. */
 async function reachConclusion(page) {
   await loadPage(page);
-  await answerAllQuestions(page, 'soms');
+  await answerByIndices(page, DUAL_PROFILE);
   await fillProfileScreen(page, 'Vrouw');
   await expect(page.locator('[data-element="conclusion-text"]')).toBeVisible({
     timeout: 10_000,

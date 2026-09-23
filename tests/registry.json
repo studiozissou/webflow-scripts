@@ -462,6 +462,16 @@
       "critical": false,
       "created": "2026-09-23",
       "description": "NEM Test validation round 1 (Alex OPEN 1-6): reassurance line upright, Terug tooltip, equal card width, profile intro + GDPR note, five household relationship options, select font, h2 titles on screens 4/6, bridge-line weight, opt-in intro/disclaimer/no Geen spam, consent error on greyed button (webhook mocked), confirmation link muted, quiz bg = blog bg, /verificatie/bevestigd card + hero position, no console errors."
+    },
+    {
+      "slug": "nem-verification-email-mailersend",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-verification-email-mailersend.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-23",
+      "description": "NEM Test verification email via MailerSend from /submit (fix for the 15-min MailerLite delay): a real submit to a will+ alias reaches screen 6 without an error (send precedes Respond OK), round-trip under 5 s, no console errors. Sends one real email per run."
     }
   ]
 }

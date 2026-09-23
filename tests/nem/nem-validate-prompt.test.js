@@ -1,8 +1,8 @@
 /**
  * The validator is the last thing between Alex's Notion page and every report /verify
- * writes. It refuses a publish that lost a section, changed length wildly (a half paste),
- * grew a new "[NO VARIANT YET" gap, or stopped asking for JSON — Parse Report would then
- * reject every report. Alex reads the reasons in the page's status callout, so they must
+ * writes. It refuses a publish that lost a section, grew a new "[NO VARIANT YET" gap, or
+ * stopped asking for JSON — Parse Report would then reject every report. A big length change
+ * only warns: it is usually a half paste, but a real rewrite must still be publishable. Alex reads the reasons in the page's status callout, so they must
  * name the problem.
  */
 import { describe, test } from "node:test";
@@ -92,32 +92,38 @@ describe("required headings", () => {
   });
 });
 
-describe("length against the active version", () => {
-  test("more than 30% shorter is refused, with both numbers and the percentage", () => {
+describe("length against the active version — a warning, never a refusal", () => {
+  test("more than 30% shorter still publishes, with a warning naming both numbers and the percentage", () => {
     const text = prompt.slice(0, Math.floor(prompt.length * 0.6));
     const out = validatePrompt(text + "\n" + minimal, { activeChars: prompt.length });
-    const reason = out.reasons.find((r) => /%/.test(r));
-    assert.ok(reason, out.reasons.join("\n"));
-    assert.ok(reason.includes(String(prompt.length)), reason);
-    assert.ok(reason.includes(String(out.chars)), reason);
+    assert.deepEqual(out.reasons, []);
+    assert.equal(out.ok, true);
+    assert.equal(out.warnings.length, 1);
+    assert.match(out.warnings[0], /%/);
+    assert.ok(out.warnings[0].includes(String(prompt.length)), out.warnings[0]);
+    assert.ok(out.warnings[0].includes(String(out.chars)), out.warnings[0]);
   });
 
-  test("more than 30% longer is refused", () => {
+  test("more than 30% longer still publishes, with a warning", () => {
     const out = validatePrompt(minimal, { activeChars: Math.floor(minimal.length / 1.5) });
-    assert.equal(out.ok, false);
-    assert.ok(out.reasons.some((r) => /%/.test(r)));
+    assert.equal(out.ok, true);
+    assert.equal(out.warnings.length, 1);
   });
 
-  test("exactly 30% is allowed", () => {
+  test("exactly 30% raises no warning; one character more does", () => {
     const text = minimal + "x".repeat(1300 - minimal.length);
-    assert.equal(validatePrompt(text, { activeChars: 1000 }).ok, true);
-    assert.equal(validatePrompt(text + "x", { activeChars: 1000 }).ok, false);
+    assert.deepEqual(validatePrompt(text, { activeChars: 1000 }).warnings, []);
+    assert.equal(validatePrompt(text + "x", { activeChars: 1000 }).warnings.length, 1);
   });
 
   test("no active length means no length check", () => {
     for (const activeChars of [undefined, null, 0, -5, NaN, "66000"]) {
-      assert.equal(validatePrompt(minimal, { activeChars }).ok, true, String(activeChars));
+      assert.deepEqual(validatePrompt(minimal, { activeChars }).warnings, [], String(activeChars));
     }
+  });
+
+  test("a clean publish carries an empty warnings list", () => {
+    assert.deepEqual(validatePrompt(prompt, { activeChars: prompt.length }).warnings, []);
   });
 });
 
@@ -187,7 +193,8 @@ describe("reasons accumulate", () => {
       + "Female: [NO VARIANT YET]\n";
     const out = validatePrompt(text, { activeChars: text.length * 3 });
     assert.equal(out.ok, false);
-    assert.equal(out.reasons.length, 4, out.reasons.join("\n"));
+    assert.equal(out.reasons.length, 3, out.reasons.join("\n"));
+    assert.equal(out.warnings.length, 1);
   });
 
   test("chars and headings are reported on refusal too", () => {

@@ -26,7 +26,7 @@ try {
   verdict = validatePrompt(promptText, { activeChars: activeRow ? Number(activeRow.chars) : undefined });
 } catch (error) {
   promptText = '';
-  verdict = { ok: false, reasons: [error.message], chars: 0, headings: 0 };
+  verdict = { ok: false, reasons: [error.message], warnings: [], chars: 0, headings: 0 };
 }
 const refusals = statusCallout ? verdict.reasons : [...verdict.reasons, 'no status callout on the page'];
 
@@ -34,6 +34,7 @@ return [{
   json: {
     ok: refusals.length === 0,
     reasons: refusals,
+    warnings: verdict.warnings,
     text: promptText,
     chars: verdict.chars,
     headings: verdict.headings,

@@ -128,5 +128,10 @@ describe('nem /verify — the MailerSend report templates', () => {
       assert.doesNotMatch(html, /<a\b[^>]*>\s*<table/i);
       assert.match(html, /Waterstraat&zwnj; 5/);
     });
+
+    test(`${locale}: no placeholder survives, and the banner logo is the hosted PNG`, () => {
+      assert.doesNotMatch(html, /REPLACE_/);
+      assert.match(html, /<img src="https:\/\/cdn\.prod\.website-files\.com\/[^"]+\.png" alt="NEM Life"/);
+    });
   }
 });

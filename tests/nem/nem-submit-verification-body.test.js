@@ -360,6 +360,11 @@ describe('nem /submit — the MailerSend verification templates', () => {
     test(`${locale}: the footer address cannot be auto-linked by Gmail`, () => {
       assert.match(html, /Waterstraat&zwnj; 5/);
     });
+
+    test(`${locale}: no placeholder survives, and the banner logo is the hosted PNG`, () => {
+      assert.doesNotMatch(html, /REPLACE_/);
+      assert.match(html, /<img src="https:\/\/cdn\.prod\.website-files\.com\/[^"]+\.png" alt="NEM Life"/);
+    });
   }
 });
 

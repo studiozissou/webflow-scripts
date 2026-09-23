@@ -53,9 +53,14 @@ const byName = (workflow) =>
   new Map((workflow.nodes ?? []).map((node) => [node.name, node]));
 
 /* n8n reorders nodes freely and moves them around the canvas, so compare by name and
- * ignore position. A node that only moved is not drift. */
-const comparable = ({ parameters, type, typeVersion, disabled, credentials }) => ({
+ * ignore position. A node that only moved is not drift. Retry and error-output settings
+ * sit outside parameters but decide whether a failed send reaches its failure branch,
+ * so they count. */
+const comparable = ({
+  parameters, type, typeVersion, disabled, credentials, onError, retryOnFail, maxTries, waitBetweenTries,
+}) => ({
   parameters, type, typeVersion, disabled: disabled ?? false, credentials,
+  onError, retryOnFail, maxTries, waitBetweenTries,
 });
 
 export function diffWorkflows(repo, live) {
@@ -100,6 +105,37 @@ const find = (workflow, name) => (workflow.nodes ?? []).find((n) => n.name === n
 
 const fanOut = (workflow, from) =>
   ((workflow.connections?.[from]?.main ?? [])[0] ?? []).map((c) => c.node);
+
+/* The start node(s) plus every node downstream of them across all outputs, never
+ * stepping onto an avoided node — so "can X be reached without passing through Y" is
+ * one call, and a branch's fan-out can be passed as the starts. */
+const reachable = (workflow, start, avoid = []) => {
+  const seen = new Set([start].flat());
+  const queue = [...seen];
+  while (queue.length) {
+    const name = queue.shift();
+    for (const output of workflow.connections?.[name]?.main ?? []) {
+      for (const c of output ?? []) {
+        if (avoid.includes(c.node) || seen.has(c.node)) continue;
+        seen.add(c.node);
+        queue.push(c.node);
+      }
+    }
+  }
+  return seen;
+};
+
+/* Two edits are needed at go-live: point the alert at Alex, and drop the [DEV] tag
+ * from the subject. Making one and forgetting the other gives either a [DEV]-tagged
+ * alert landing on the client, or an untagged test alert that reads as a real
+ * production failure. Tie them so neither can happen alone. */
+const alertTagAgreesWithRecipient = (wf) => {
+  const body = find(wf, "Alert Failure")?.parameters?.jsonBody ?? "";
+  if (!body) return false;
+  const toDeveloper = body.includes("will@teamzissou.io");
+  const tagged = body.includes("[DEV]");
+  return toDeveloper === tagged;
+};
 
 const INVARIANTS = {
   verify: [
@@ -226,18 +262,8 @@ const INVARIANTS = {
       },
     },
     {
-      /* Two edits are needed at go-live: point the alert at Alex, and drop the [DEV] tag
-       * from the subject. Making one and forgetting the other gives either a [DEV]-tagged
-       * alert landing on the client, or an untagged test alert that reads as a real
-       * production failure. Tie them so neither can happen alone. */
       label: "The alert's [DEV] subject tag agrees with who it is addressed to",
-      check: (wf) => {
-        const body = find(wf, "Alert Failure")?.parameters?.jsonBody ?? "";
-        if (!body) return false;
-        const toDeveloper = body.includes("will@teamzissou.io");
-        const tagged = body.includes("[DEV]");
-        return toDeveloper === tagged;
-      },
+      check: alertTagAgreesWithRecipient,
     },
     {
       label: "The Valid Report? failure branch cannot reach Build HTML or Send Report",
@@ -277,24 +303,86 @@ const INVARIANTS = {
         /event\s*===\s*'completion'/.test(find(wf, "Rate limit")?.parameters?.jsCode ?? ""),
     },
     {
-      label: "Verification mail goes out via MailerLite",
+      /* MailerLite's group-join automation ran on its own queue: 7 s on a good day, ~3 min
+       * on Alex's 2026-09-21 run. A transactional send from inside the execution is the
+       * only way "within a minute" can be promised. */
+      label: "Verification mail is sent by MailerSend from inside /submit, not a MailerLite automation",
+      check: (wf) => {
+        const n = find(wf, "Send Verification");
+        return /api\.mailersend\.com\/v1\/email/.test(n?.parameters?.url ?? "")
+          && (n?.parameters?.jsonBody ?? "").includes("template_id");
+      },
+    },
+    {
+      /* The ids sit in a Set node so the drift snapshot shows which template is live,
+       * rather than burying them as literals inside the expression. */
+      label: "Send Verification reads the NL and EN template ids from Mail Config",
+      check: (wf) => {
+        const config = find(wf, "Mail Config");
+        const names = (config?.parameters?.assignments?.assignments ?? [])
+          .filter((a) => !String(a.value).startsWith("="))
+          .map((a) => a.name);
+        const body = find(wf, "Send Verification")?.parameters?.jsonBody ?? "";
+        return config?.type === "n8n-nodes-base.set"
+          && ["verificationTemplateNl", "verificationTemplateEn"].every((n) => names.includes(n))
+          && body.includes("$('Mail Config').first().json.verificationTemplateNl")
+          && body.includes("$('Mail Config').first().json.verificationTemplateEn");
+      },
+    },
+    {
+      /* The browser only reaches screen 6 once the email has been accepted, so a refused
+       * send shows an error instead of a promise that never arrives. */
+      label: "Send Verification precedes Respond OK on every path from Store Profile",
       check: (wf) =>
-        /connect\.mailerlite\.com/.test(
-          find(wf, "MailerLite: Send Verification")?.parameters?.url ?? "",
-        ),
+        reachable(wf, "Store Profile").has("Send Verification")
+        && reachable(wf, "Send Verification").has("Respond OK")
+        && !reachable(wf, "Store Profile", ["Send Verification"]).has("Respond OK"),
+    },
+    {
+      label: "Send Verification retries before giving up",
+      check: (wf) => {
+        const n = find(wf, "Send Verification");
+        return n?.retryOnFail === true && Number(n?.maxTries) >= 2;
+      },
+    },
+    {
+      label: "A failed verification send is logged, alerted and answered with status error, never ok",
+      check: (wf) => {
+        const n = find(wf, "Send Verification");
+        if (n?.onError !== "continueErrorOutput") return false;
+        const onError = ((wf.connections?.["Send Verification"]?.main ?? [])[1] ?? []).map((c) => c.node);
+        if (onError.length === 0) return false;
+        const downstream = reachable(wf, onError);
+        const logs = find(wf, "Log Send Failure")?.parameters?.dataTableId?.value ?? "";
+        return ["Log Send Failure", "Alert Failure", "Respond Error"].every((name) => downstream.has(name))
+          && !downstream.has("Respond OK")
+          && Boolean(logs) && logs !== PROFILES_TABLE
+          && /error/.test(find(wf, "Respond Error")?.parameters?.responseBody ?? "");
+      },
+    },
+    {
+      label: "The alert's [DEV] subject tag agrees with who it is addressed to",
+      check: alertTagAgreesWithRecipient,
+    },
+    {
+      /* The email has already gone out by the time MailerLite is called. Erroring the
+       * response here would make the user resubmit and receive it twice. */
+      label: "MailerLite pending-group upsert is tracking only — it cannot block the response",
+      check: (wf) => find(wf, "MailerLite: Pending group")?.onError === "continueRegularOutput",
     },
     {
       /* MailerLite automations skip anyone not active, and an upsert without a status keeps
        * the old one — so a contact left unconfirmed by an earlier signup got no verification
-       * email at all (Alex, 2026-09-16). Every submitter has ticked the required consent box. */
-      label: "Verification upsert sets the subscriber active, so the automation sends",
+       * email at all (Alex, 2026-09-16). The automation is off now, but the group is still
+       * the audience for any future reminder, so the contact must land active. */
+      label: "Pending-group upsert sets the subscriber active",
       check: (wf) =>
-        /status:\s*'active'/.test(find(wf, "MailerLite: Send Verification")?.parameters?.jsonBody ?? ""),
+        /status:\s*'active'/.test(find(wf, "MailerLite: Pending group")?.parameters?.jsonBody ?? ""),
     },
     {
-      label: "Verification upsert resubscribes contacts who once unsubscribed",
+      label: "Pending-group upsert resubscribes contacts who once unsubscribed",
       check: (wf) =>
-        /resubscribe:\s*true/.test(find(wf, "MailerLite: Send Verification")?.parameters?.jsonBody ?? ""),
+        /resubscribe:\s*true/.test(find(wf, "MailerLite: Pending group")?.parameters?.jsonBody ?? ""),
     },
     {
       /* The v2 component has sent these three since 2026-08-17, but Normalize dropped them
@@ -370,10 +458,12 @@ const INVARIANTS = {
       check: (wf) => {
         const onCompletion = ((wf.connections?.["Completion?"]?.main ?? [])[0] ?? [])
           .map((c) => c.node);
+        const downstream = reachable(wf, onCompletion);
         return (
           onCompletion.length > 0 &&
-          !onCompletion.includes("MailerLite: Send Verification") &&
-          !onCompletion.includes("Store Profile")
+          !downstream.has("Send Verification") &&
+          !downstream.has("MailerLite: Pending group") &&
+          !downstream.has("Store Profile")
         );
       },
     },

@@ -15,6 +15,9 @@
  *     `unsupported-locale`, in the exact shape Log Failure and Alert Failure map
  *   - /submit carries `conclusionText` from the payload into the profile row
  *   - the changeset files are byte-identical to the snapshots they were cut from
+ *   - relationship status reaches the prompt as an English label (nem-relationship-labels,
+ *     spec nem-validation-round-1.md §5 C1): five household values mapped, legacy values
+ *     passed through. Runs that changeset's own body, so it passes before apply.
  *
  * Run: node --test tests/nem/nem-prompt-input-contract.test.js
  */
@@ -83,13 +86,17 @@ function evaluateExpression(expression, outputs) {
   return new Function('$', `return (${match[1]});`)($);
 }
 
-function userMessage(p) {
-  const body = JSON.parse(
-    evaluateExpression(generateReportBody, {
+function reportBody(p, expression = generateReportBody, systemNode = 'Report Prompt') {
+  return JSON.parse(
+    evaluateExpression(expression, {
       'Validate Token': p,
-      'Report Prompt': { systemPrompt: 'SYSTEM' },
+      [systemNode]: { systemPrompt: 'SYSTEM' },
     }),
   );
+}
+
+function userMessage(p, expression, systemNode) {
+  const body = reportBody(p, expression, systemNode);
   assert.equal(body.messages.length, 1);
   return body.messages[0].content;
 }
@@ -374,5 +381,98 @@ describe('the changeset files cannot drift from the snapshots', () => {
       (o) => o.type === 'updateNode' && o.nodeName === 'Build HTML',
     );
     assert.equal(bh.updates['parameters.jsCode'], read('build-html.jsCode.js').slice(0, -1));
+  });
+});
+
+describe('Generate Report — relationship status reaches the prompt as an English label (C1, 2-7)', () => {
+  const LABELS_CHANGESET = path.join(BACKEND, 'changesets', 'nem-relationship-labels');
+  const COMPONENT = path.join(__dirname, '..', '..', 'projects', 'nem-life', 'src', 'nem-test-phase-b.tsx');
+  const readLabels = (f) => readFileSync(path.join(LABELS_CHANGESET, f), 'utf8');
+  const labelsBody = readLabels('generate-report.jsonBody.txt').replace(/\n$/, '');
+  const labelled = (overrides) => userMessage(profile(overrides), labelsBody, 'Runtime Config');
+
+  const LABELS = [
+    ['alleenstaand-zonder-kinderen', 'Single - without children'],
+    ['alleenstaand-met-kinderen', 'Single - with children'],
+    ['samenwonend-zonder-kinderen', 'With a partner - without children'],
+    ['samenwonend-met-kinderen', 'With a partner - with children'],
+    ['anders', 'Other'],
+  ];
+  const RELATIONSHIP_BEFORE =
+    "'\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + ";
+
+  for (const [value, label] of LABELS) {
+    test(`${value} → Relationship status: ${label}`, () => {
+      const msg = labelled({ relationshipStatus: value });
+      assert.ok(msg.includes(`\nRelationship status: ${label}\n`), msg);
+      assert.ok(!msg.includes(`Relationship status: ${value}`), msg);
+    });
+  }
+
+  for (const legacy of ['in-een-relatie', 'gescheiden', 'alleenstaand']) {
+    test(`legacy row ${legacy} falls back to the raw value`, () => {
+      const msg = labelled({ relationshipStatus: legacy });
+      assert.ok(msg.includes(`\nRelationship status: ${legacy}\n`), msg);
+    });
+  }
+
+  test('the EN locale gets the same label (values are locale-independent)', () => {
+    const msg = labelled({ locale: 'en', relationshipStatus: 'alleenstaand-met-kinderen' });
+    assert.ok(msg.includes('Relationship status: Single - with children'), msg);
+  });
+
+  test('everything else in the message is untouched', () => {
+    const body = reportBody(profile(), labelsBody, 'Runtime Config');
+    assert.equal(body.system, 'SYSTEM');
+    assert.equal(body.max_tokens, 8000);
+    const msg = body.messages[0].content;
+    assert.ok(msg.includes('Gender: Female'));
+    assert.ok(msg.includes("First name: Sjoerd d'Anjou"));
+    assert.ok(msg.includes('Age category: 41-50'));
+    assert.ok(msg.includes('Intro line: Je hoopt dat het vanzelf goed komt & wacht af.'));
+  });
+
+  const optionsIn = (locale) => {
+    const src = readFileSync(COMPONENT, 'utf8');
+    const from = src.indexOf(`\n  ${locale}: {`);
+    const start = src.indexOf('relationshipOptions: [', from);
+    const block = src.slice(start, src.indexOf('],', start));
+    return [...block.matchAll(/\{ value: "([^"]*)", label: "([^"]*)" \}/g)]
+      .map((m) => [m[1], m[2]])
+      .filter(([v]) => v !== '');
+  };
+
+  test('the EN quiz shows exactly these five options, in this order, with these values', () => {
+    assert.deepEqual(optionsIn('en'), LABELS);
+  });
+
+  test('the NL quiz uses the same five values', () => {
+    assert.deepEqual(optionsIn('nl').map(([v]) => v), LABELS.map(([v]) => v));
+  });
+
+  test('the changeset is a one-expression diff against the snapshot (or identical once applied)', () => {
+    if (generateReportBody === labelsBody) return;
+    const head = "'\\nRelationship status: ' + ({";
+    const tail = "|| $('Validate Token').first().json.relationshipStatus) + ";
+    const start = labelsBody.indexOf(head);
+    const end = labelsBody.indexOf(tail, start);
+    assert.ok(start !== -1 && end !== -1, 'relationship mapping expression not found in the changeset body');
+    assert.ok(
+      generateReportBody.includes(RELATIONSHIP_BEFORE),
+      'snapshot no longer has the unmapped expression — regenerate the changeset',
+    );
+    const reverted = labelsBody.slice(0, start) + RELATIONSHIP_BEFORE + labelsBody.slice(end + tail.length);
+    assert.equal(reverted, generateReportBody);
+  });
+
+  test('the partial-update payload targets /verify and carries exactly this body', () => {
+    const ops = JSON.parse(readLabels('partial-update.operations.json'));
+    assert.equal(ops.id, 'uKkMgMYoH5nOLoCR');
+    assert.equal(ops.operations.length, 1);
+    const [op] = ops.operations;
+    assert.equal(op.type, 'updateNode');
+    assert.equal(op.nodeName, 'Generate Report');
+    assert.deepEqual(Object.keys(op.updates), ['parameters.jsonBody']);
+    assert.equal(op.updates['parameters.jsonBody'], labelsBody);
   });
 });

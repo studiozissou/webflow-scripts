@@ -494,12 +494,14 @@ test.describe(`${SLUG} — Screen 5 (Opt-in form)`, () => {
   });
 
   test('submit button enables after consent checkbox ticked', async ({ page }) => {
-    // Tick checkbox
+    const btn = page.getByRole('button', { name: /ontvang mijn rapport/i });
+    await expect(btn).toHaveAttribute('aria-disabled', 'true');
+
     const checkbox = page.locator('input[type="checkbox"]').first();
     await checkbox.check();
 
-    const btn = page.getByRole('button', { name: /ontvang mijn rapport/i });
-    await expect(btn).toBeEnabled({ timeout: 5_000 });
+    await expect(btn).not.toHaveAttribute('aria-disabled', 'true', { timeout: 5_000 });
+    await expect(btn).toBeEnabled();
   });
 
   test('inline validation: empty voornaam shows Dutch error on blur', async ({ page }) => {
@@ -539,13 +541,13 @@ test.describe(`${SLUG} — Screen 5 (Opt-in form)`, () => {
     await expect(page.getByText('Voer een geldig e-mailadres in')).not.toBeVisible();
   });
 
-  test('relieve line visible below submit button', async ({ page }) => {
-    await expect(page.getByText(/geen spam/i)).toBeVisible();
+  // nem-validation-round-1 (4-4, 4-5): the "Geen spam" relieve line was removed and the
+  // report disclaimer now sits below the submit button. The test disclaimer still lives
+  // once on the landing page below the module.
+  test('report disclaimer below submit button, relieve line gone', async ({ page }) => {
+    await expect(page.getByText(/dit rapport is geen diagnose/i)).toBeVisible();
+    await expect(page.getByText(/geen spam/i)).toHaveCount(0);
   });
-
-  // The disclaimer is NOT rendered inside the component — it lives once on the
-  // landing page below the module (the component copy was removed to avoid a
-  // duplicate). No component-level disclaimer assertion here.
 });
 
 // ── Screen 6 (Confirmation) ──────────────────────────────────

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-22",
+  "lastUpdated": "2026-09-23",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -454,14 +454,24 @@
       "description": "Carsa body colour guard - the VDP Material UI carousel injects body { color: rgba(0,0,0,.87) } at runtime; a site-wide html body rule in the head custom code keeps text brand purple. Asserts the rule ships and body/paragraph colour is #511e62 on home and VDP."
     },
     {
-      "slug": "tsc-datasheet-unlock",
-      "url": "https://tsc-v2.webflow.io/innotrans-brochure-datasheets",
-      "spec": "tests/acceptance/tsc-datasheet-unlock.spec.js",
+      "slug": "nem-validation-round-1",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-validation-round-1.spec.js",
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "TSC InnoTrans page: after one datasheet form succeeds (flag in localStorage), every datasheet-modal link opens its PDF directly in a new tab instead of the popup",
-      "created": "2026-09-22"
+      "created": "2026-09-23",
+      "description": "NEM Test validation round 1 (Alex OPEN 1-6): reassurance line upright, Terug tooltip, equal card width, profile intro + GDPR note, five household relationship options, select font, h2 titles on screens 4/6, bridge-line weight, opt-in intro/disclaimer/no Geen spam, consent error on greyed button (webhook mocked), confirmation link muted, quiz bg = blog bg, /verificatie/bevestigd card + hero position, no console errors."
+    },
+    {
+      "slug": "nem-verification-email-mailersend",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-verification-email-mailersend.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-23",
+      "description": "NEM Test verification email via MailerSend from /submit (fix for the 15-min MailerLite delay): a real submit to a will+ alias reaches screen 6 without an error (send precedes Respond OK), round-trip under 5 s, no console errors. Sends one real email per run."
     }
   ]
 }

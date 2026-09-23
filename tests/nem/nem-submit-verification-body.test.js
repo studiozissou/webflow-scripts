@@ -343,6 +343,26 @@ describe('nem /submit — the apply payload matches what was tested', () => {
   });
 });
 
+describe('nem /submit — the MailerSend verification templates', () => {
+  for (const locale of ['nl', 'en']) {
+    const html = fs.readFileSync(path.join(CHANGESET_DIR, `verification-template.${locale}.html`), 'utf8');
+
+    test(`${locale}: greets with {{ first_name }} and links both buttons to {{ verify_url }}`, () => {
+      assert.ok(html.includes('{{ first_name }}'));
+      assert.strictEqual(html.split('{{ verify_url }}').length - 1, 2, 'Outlook VML button + standard button');
+    });
+
+    test(`${locale}: no link wraps a table — MailerSend's cleaner empties it and the button dies`, () => {
+      // Exec 2026-09-23 13:09: `<a href=…><table>…</table></a>` came out as `<a href=…></a><table>`.
+      assert.doesNotMatch(html, /<a\b[^>]*>\s*<table/i);
+    });
+
+    test(`${locale}: the footer address cannot be auto-linked by Gmail`, () => {
+      assert.match(html, /Waterstraat&zwnj; 5/);
+    });
+  }
+});
+
 describe('nem /submit — the committed snapshot carries the same code as the changeset', () => {
   const snapshot = JSON.parse(fs.readFileSync(SNAPSHOT_FILE, 'utf8'));
   const find = (name) => snapshot.nodes.find((n) => n.name === name);

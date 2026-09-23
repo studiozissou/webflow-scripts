@@ -757,7 +757,7 @@ const screenTitleStyle: React.CSSProperties = {
 
 const bodyTextStyle: React.CSSProperties = {
   fontFamily: "'Lato', sans-serif",
-  fontSize: "var(--_typography---paragraph--standard, 1rem)",
+  fontSize: "1em",
   fontWeight: 400,
   lineHeight: 1.6,
   color: "var(--_token---text-main, #292828)",
@@ -1233,7 +1233,7 @@ function Quiz({
             <p
               style={{
                 color: "var(--_token---text-olive, #706d56)",
-                fontSize: "var(--_typography---paragraph--standard, 1rem)",
+                fontSize: "1em",
                 lineHeight: 1.5,
                 margin: "0 0 28px 0",
               }}

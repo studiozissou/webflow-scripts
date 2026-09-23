@@ -11,7 +11,7 @@
  *   - Generate Report sends `Intro line:` and `Conclusion text:`, maps gender, and no
  *     longer sends `Total score:` (the prompt says the model does not calculate)
  *   - Build HTML no longer prints `Beste {firstName},` — the prompt owns the address
- *   - locale `en` is gated before Report Prompt: it lands in Log Failure with reason
+ *   - locale `en` is gated before the prompt lookup: it lands in Log Failure with reason
  *     `unsupported-locale`, in the exact shape Log Failure and Alert Failure map
  *   - /submit carries `conclusionText` from the payload into the profile row
  *   - the changeset files are byte-identical to the snapshots they were cut from
@@ -87,7 +87,7 @@ function userMessage(p) {
   const body = JSON.parse(
     evaluateExpression(generateReportBody, {
       'Validate Token': p,
-      'Report Prompt': { systemPrompt: 'SYSTEM' },
+      'Runtime Config': { systemPrompt: 'SYSTEM' },
     }),
   );
   assert.equal(body.messages.length, 1);
@@ -153,11 +153,11 @@ describe('Generate Report — what it must no longer send (7e)', () => {
 });
 
 describe('Generate Report — nothing else regressed', () => {
-  test('still reads the system prompt from Report Prompt with max_tokens 8000', () => {
+  test('reads the system prompt from Runtime Config with max_tokens 8000', () => {
     const body = JSON.parse(
       evaluateExpression(generateReportBody, {
         'Validate Token': profile(),
-        'Report Prompt': { systemPrompt: 'SYSTEM' },
+        'Runtime Config': { systemPrompt: 'SYSTEM' },
       }),
     );
     assert.equal(body.system, 'SYSTEM');
@@ -251,8 +251,8 @@ describe('the locale gate (7d) — `en` never reaches Anthropic', () => {
     assert.equal(cond.operator.operation, 'equals');
   });
 
-  test('true → Report Prompt; false → Unsupported Locale → Log Failure', () => {
-    assert.deepEqual(branch(verify, 'Locale Supported?', 0), ['Report Prompt']);
+  test('true → Load Runtime Config; false → Unsupported Locale → Log Failure', () => {
+    assert.deepEqual(branch(verify, 'Locale Supported?', 0), ['Load Runtime Config']);
     assert.deepEqual(branch(verify, 'Locale Supported?', 1), ['Unsupported Locale']);
     assert.deepEqual(branch(verify, 'Unsupported Locale', 0), ['Log Failure']);
     assert.deepEqual(branch(verify, 'Log Failure', 0), ['Alert Failure']);
@@ -316,9 +316,16 @@ describe('/submit — conclusionText rides the payload into the profile row (7b)
 
 describe('the changeset files cannot drift from the snapshots', () => {
   const read = (f) => readFileSync(path.join(CHANGESET, f), 'utf8');
+  const bodyBeforeRuntimeConfig = generateReportBody.replace(
+    "$('Runtime Config').first().json.systemPrompt",
+    "$('Report Prompt').first().json.systemPrompt",
+  );
 
-  test('generate-report.jsonBody.txt is byte-identical to the committed node', () => {
-    assert.equal(read('generate-report.jsonBody.txt'), generateReportBody + '\n');
+  /* nem-verify-runtime-config (applied 2026-09-23) swapped only the system prompt read, from
+   * Report Prompt to Runtime Config. This changeset's copy is the §7 state before that. */
+  test('generate-report.jsonBody.txt is the committed node before the prompt read moved to Runtime Config', () => {
+    assert.notEqual(bodyBeforeRuntimeConfig, generateReportBody);
+    assert.equal(read('generate-report.jsonBody.txt'), bodyBeforeRuntimeConfig + '\n');
   });
 
   /* Build HTML was superseded by nem-report-webflow-template, which asserts its own
@@ -369,7 +376,7 @@ describe('the changeset files cannot drift from the snapshots', () => {
     const gr = ops.operations.find(
       (o) => o.type === 'updateNode' && o.nodeName === 'Generate Report',
     );
-    assert.equal(gr.updates['parameters.jsonBody'], generateReportBody);
+    assert.equal(gr.updates['parameters.jsonBody'], bodyBeforeRuntimeConfig);
     const bh = ops.operations.find(
       (o) => o.type === 'updateNode' && o.nodeName === 'Build HTML',
     );

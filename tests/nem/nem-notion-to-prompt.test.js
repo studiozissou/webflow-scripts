@@ -307,15 +307,15 @@ describe("normalisePrompt", () => {
 });
 
 describe("round trip — the live prompt survives Notion's block shape", () => {
-  const snapshot = JSON.parse(readFileSync(path.join(BACKEND, "nem-verify.workflow.json"), "utf8"));
-  const setNodeText = snapshot.nodes.find((n) => n.name === "Report Prompt")?.parameters.assignments.assignments[0].value;
-  const changesetText = readFileSync(
+  /* The Report Prompt Set node was removed from /verify on 2026-09-23. system-prompt.txt is
+   * byte-identical to the value it held, so it stands in for the Set node text here. */
+  const setNodeText = readFileSync(
     path.join(BACKEND, "changesets", "nem-provisional-runtime-prompt", "system-prompt.txt"),
     "utf8",
   );
   const fixture = JSON.parse(readFileSync(path.join(BACKEND, "fixtures", "notion-runtime-prompt.blocks.json"), "utf8"));
 
-  const sources = [["the Report Prompt Set node", setNodeText], ["system-prompt.txt", changesetText]];
+  const sources = [["the former Report Prompt Set node (system-prompt.txt)", setNodeText]];
   for (const [label, text] of sources) {
     test(`${label}, pasted into Notion, serialises back to itself`, () => {
       assert.ok(text, `${label} is missing`);

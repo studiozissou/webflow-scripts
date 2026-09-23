@@ -1,4 +1,4 @@
-// Carsa site loader: waits for Webflow's jQuery and GSAP, then loads global.js and the current route's modules, in order, from the same versioned folder as this file.
+// Carsa site loader: waits for Webflow's jQuery and GSAP, then loads global.js and the current route's modules, in order, from the same versioned folder as this file; the ?carsa=local dev switch only works when the tag carries data-allow-local and lasts for the browser session.
 (function () {
   'use strict';
 
@@ -14,8 +14,9 @@
   if (!script || !script.src) return;
 
   function readSwitch() {
+    if (!script.hasAttribute('data-allow-local')) return null;
     try {
-      var store = window.localStorage;
+      var store = window.sessionStorage;
       var params = new URLSearchParams(window.location.search);
       var source = params.get('carsa');
       var port = params.get('carsa-port');

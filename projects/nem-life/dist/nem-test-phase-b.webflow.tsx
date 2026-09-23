@@ -389,9 +389,11 @@ interface Translations {
   answers: string[];
   questions: string[];
   progress: (n: number, total: number) => string;
-  back: string;
+  backTooltip: string;
   reassurance: string;
   profileLabel: string;
+  profileIntro: string;
+  gdprNote: string;
   profileContinueButton: string;
   conclusionLabel: string;
   bridgeLine: string;
@@ -409,7 +411,6 @@ interface Translations {
   ageCategoryLabel: string;
   ageCategoryOptions: SelectOption[];
   consentLabel: string;
-  relieveLine: string;
   disclaimer: string;
   submitButtonText: string;
   submittingText: string;
@@ -500,9 +501,12 @@ const translations: Record<"nl" | "en", Translations> = {
       "Als ik iets moet doen wat goed voor me is maar me angst geeft, kies ik vaak voor wat veilig voelt.",
     ],
     progress: (n, total) => `Vraag ${n} van ${total}`,
-    back: "← Terug",
+    backTooltip: "Terug",
     reassurance: "Kies wat het meest op jou lijkt - er is geen goed of fout antwoord.",
     profileLabel: "Nog even over jou",
+    profileIntro: "Een paar laatste vragen om je rapport op jou af te stemmen.",
+    gdprNote:
+      "Je gegevens worden alleen gebruikt om jouw rapport te personaliseren en worden nooit gedeeld met derden.",
     profileContinueButton: "Ga verder",
     conclusionLabel: "Jouw uitkomst",
     bridgeLine:
@@ -519,9 +523,10 @@ const translations: Record<"nl" | "en", Translations> = {
     relationshipLabel: "Je relatiestatus",
     relationshipOptions: [
       { value: "", label: "Selecteer..." },
-      { value: "alleenstaand", label: "Alleenstaand" },
-      { value: "in-een-relatie", label: "In een relatie" },
-      { value: "gescheiden", label: "Gescheiden" },
+      { value: "alleenstaand-zonder-kinderen", label: "Alleenstaand - zonder kinderen" },
+      { value: "alleenstaand-met-kinderen", label: "Alleenstaand - met kinderen" },
+      { value: "samenwonend-zonder-kinderen", label: "Samenwonend - zonder kinderen" },
+      { value: "samenwonend-met-kinderen", label: "Samenwonend - met kinderen" },
       { value: "anders", label: "Anders" },
     ],
     genderLabel: "Geslacht",
@@ -541,9 +546,8 @@ const translations: Record<"nl" | "en", Translations> = {
     ],
     consentLabel:
       "Je wordt toegevoegd aan NEM Matters - de nieuwsbrief van NEM Life. Je kunt je altijd afmelden.",
-    relieveLine: "Geen spam & je gegevens blijven veilig. Natuurlijk.",
     disclaimer:
-      "Dit rapport is geen psychologische diagnose. Het is een spiegel op basis van jouw antwoorden - bedoeld als beginpunt voor reflectie, niet als eindoordeel.",
+      "Dit rapport is geen diagnose. Het is een spiegel op basis van jouw antwoorden - puur bedoeld voor inzicht en bewustwording.",
     submitButtonText: "Ontvang mijn rapport",
     submittingText: "Verzenden...",
     errors: {
@@ -596,9 +600,12 @@ const translations: Record<"nl" | "en", Translations> = {
       "When I need to do something that's good for me but scares me, I often choose what feels safe.",
     ],
     progress: (n, total) => `Question ${n} of ${total}`,
-    back: "← Back",
+    backTooltip: "Back",
     reassurance: "Choose what feels most like you — there's no right or wrong answer.",
     profileLabel: "A little about you",
+    profileIntro: "A few last questions to tailor your report to you.",
+    gdprNote:
+      "Your details are only used to personalise your report and are never shared with third parties.",
     profileContinueButton: "Continue",
     conclusionLabel: "Your outcome",
     bridgeLine:
@@ -615,9 +622,10 @@ const translations: Record<"nl" | "en", Translations> = {
     relationshipLabel: "Relationship status",
     relationshipOptions: [
       { value: "", label: "Select..." },
-      { value: "alleenstaand", label: "Single" },
-      { value: "in-een-relatie", label: "In a relationship" },
-      { value: "gescheiden", label: "Divorced" },
+      { value: "alleenstaand-zonder-kinderen", label: "Single - without children" },
+      { value: "alleenstaand-met-kinderen", label: "Single - with children" },
+      { value: "samenwonend-zonder-kinderen", label: "With a partner - without children" },
+      { value: "samenwonend-met-kinderen", label: "With a partner - with children" },
       { value: "anders", label: "Other" },
     ],
     genderLabel: "Gender",
@@ -637,9 +645,8 @@ const translations: Record<"nl" | "en", Translations> = {
     ],
     consentLabel:
       "You'll be added to NEM Matters — the NEM Life newsletter. You can unsubscribe at any time.",
-    relieveLine: "No spam & your data stays safe. Of course.",
     disclaimer:
-      "This report is not a psychological diagnosis. It's a mirror based on your answers — meant as a starting point for reflection, not a final verdict.",
+      "This report is not a diagnosis. It is a mirror based on your answers - meant purely for insight and awareness.",
     submitButtonText: "Get my report",
     submittingText: "Submitting...",
     errors: {
@@ -693,6 +700,7 @@ const fieldErrorStyle: React.CSSProperties = {
 
 const selectFieldStyle: React.CSSProperties = {
   ...fieldStyle,
+  fontSize: "1rem",
   appearance: "none" as const,
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239f9c8b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")`,
   backgroundRepeat: "no-repeat",
@@ -705,7 +713,15 @@ const selectFieldErrorStyle: React.CSSProperties = {
   borderColor: "#e53e3e",
 };
 
-const focusRing = "0 0 0 2px var(--_token---accent-main, #fafa7d)";
+const optionStyle: React.CSSProperties = {
+  fontFamily: "'Lato', sans-serif",
+  fontWeight: 400,
+  color: "var(--_token---text-main, #292828)",
+};
+
+const ACCENT_MAIN = "var(--_token---accent-main, #fafa7d)";
+
+const focusRing = `0 0 0 2px ${ACCENT_MAIN}`;
 
 const labelStyle: React.CSSProperties = {
   display: "block",
@@ -716,19 +732,128 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 6,
 };
 
-const pillButtonStyle: React.CSSProperties = {
+const moduleRootStyle: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 800,
+  boxSizing: "border-box",
+  margin: "0 auto",
+  padding: "var(--_gaps---content-half, 1.5rem)",
+  fontFamily: "'Lato', sans-serif",
+  color: "var(--_token---text-main, #292828)",
+  backgroundColor: "var(--_token---bg-main, white)",
+  borderRadius: "0.625rem",
+  boxShadow: "0 2px 12px rgba(41, 40, 40, 0.06), 0 1px 4px rgba(41, 40, 40, 0.03)",
+};
+
+const screenTitleStyle: React.CSSProperties = {
   fontFamily: "'Montserrat', sans-serif",
   fontWeight: 600,
-  fontSize: "1rem",
-  padding: "16px 32px",
-  background: "var(--_token---accent-main, #fafa7d)",
+  fontSize: 24,
+  lineHeight: 1.2,
   color: "var(--_token---text-main, #292828)",
-  border: "none",
-  borderRadius: 999,
-  cursor: "pointer",
-  transition: "all 0.15s ease",
-  width: "100%",
+  textTransform: "none",
+  margin: 0,
 };
+
+const bodyTextStyle: React.CSSProperties = {
+  fontFamily: "'Lato', sans-serif",
+  fontSize: "1em",
+  fontWeight: 400,
+  lineHeight: 1.6,
+  color: "var(--_token---text-main, #292828)",
+  margin: 0,
+};
+
+const mutedNoteStyle: React.CSSProperties = {
+  fontSize: "0.875rem",
+  lineHeight: 1.5,
+  color: "var(--_token---text-olive, #706d56)",
+  margin: 0,
+};
+
+const disclaimerStyle: React.CSSProperties = {
+  fontSize: "0.875rem",
+  lineHeight: 1.5,
+  color: "var(--_token---accent-grey, #9f9c8b)",
+  textAlign: "center",
+  margin: 0,
+};
+
+const NEM_BUTTON_BG = ACCENT_MAIN;
+const NEM_BUTTON_BG_HOVER = "#f2f24a";
+const NEM_BUTTON_BG_ACTIVE = "#e4e43b";
+const NEM_BUTTON_BG_INACTIVE = "var(--_token---accent-light-grey, #ecebe8)";
+
+const nemButtonStyle: React.CSSProperties = {
+  position: "relative",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "var(--size--16, 1rem)",
+  width: "100%",
+  minHeight: "3.25rem",
+  padding: "var(--size--4, 0.25rem)",
+  boxSizing: "border-box",
+  fontFamily: "'Lato', sans-serif",
+  fontWeight: 400,
+  fontSize: "1rem",
+  lineHeight: 1.5,
+  textAlign: "center",
+  textDecoration: "none",
+  color: "var(--_token---text-main, #292828)",
+  backgroundColor: NEM_BUTTON_BG,
+  border: "1px solid rgba(0, 0, 0, 0.1)",
+  borderRadius: "1000rem",
+  cursor: "pointer",
+  overflow: "hidden",
+  transition: "color 0.2s, background-color 0.2s",
+};
+
+const nemButtonCircleStyle: React.CSSProperties = {
+  display: "flex",
+  flex: "none",
+  justifyContent: "center",
+  alignItems: "center",
+  width: "2.6em",
+  height: "2.6em",
+  boxSizing: "border-box",
+  borderRadius: "1000rem",
+  border: "1px solid rgba(0, 0, 0, 0.1)",
+  backgroundColor: "var(--_token---bg-main, white)",
+  color: "var(--_token---text-main, #292828)",
+};
+
+const NEM_ARROW_PATH =
+  "M13.4707 8.53308C13.397 8.46442 13.3379 8.38162 13.2969 8.28962C13.2559 8.19762 13.2338 8.09831 13.2321 7.99761C13.2303 7.8969 13.2488 7.79687 13.2865 7.70349C13.3243 7.6101 13.3804 7.52526 13.4516 7.45404C13.5228 7.38283 13.6077 7.32668 13.7011 7.28896C13.7945 7.25124 13.8945 7.23271 13.9952 7.23449C14.0959 7.23627 14.1952 7.25831 14.2872 7.2993C14.3792 7.34029 14.462 7.3994 14.5307 7.47308L18.5307 11.4731C18.6711 11.6137 18.75 11.8043 18.75 12.0031C18.75 12.2018 18.6711 12.3925 18.5307 12.5331L14.5307 16.5331C14.462 16.6068 14.3792 16.6659 14.2872 16.7069C14.1952 16.7479 14.0959 16.7699 13.9952 16.7717C13.8945 16.7735 13.7945 16.7549 13.7011 16.7172C13.6077 16.6795 13.5228 16.6233 13.4516 16.5521C13.3804 16.4809 13.3243 16.3961 13.2865 16.3027C13.2488 16.2093 13.2303 16.1093 13.2321 16.0086C13.2338 15.9079 13.2559 15.8085 13.2969 15.7165C13.3379 15.6245 13.397 15.5417 13.4707 15.4731L16.1907 12.7531L6.50066 12.7531C6.30175 12.7531 6.11098 12.6741 5.97033 12.5334C5.82968 12.3928 5.75066 12.202 5.75066 12.0031C5.75066 11.8042 5.82968 11.6134 5.97033 11.4728C6.11098 11.3321 6.30175 11.2531 6.50066 11.2531L16.1907 11.2531L13.4707 8.53308Z";
+
+function NemButtonContent({ label }: { label: string }) {
+  return (
+    <>
+      <span aria-hidden="true" style={nemButtonCircleStyle}>
+        <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: "60%", display: "block" }}>
+          <path d={NEM_ARROW_PATH} />
+        </svg>
+      </span>
+      <span style={{ flex: "1 1 auto", textAlign: "center" }}>{label}</span>
+      <span aria-hidden="true" style={{ flex: "none", width: "2.6em" }} />
+    </>
+  );
+}
+
+function nemButtonHoverHandlers(active: boolean) {
+  const paint = (bg: string) => (e: React.MouseEvent<HTMLElement>) => {
+    if (active) e.currentTarget.style.backgroundColor = bg;
+  };
+  return {
+    onMouseEnter: paint(NEM_BUTTON_BG_HOVER),
+    onMouseLeave: paint(NEM_BUTTON_BG),
+    onMouseDown: paint(NEM_BUTTON_BG_ACTIVE),
+    onMouseUp: paint(NEM_BUTTON_BG_HOVER),
+  };
+}
+
+const PILL_BORDER = "var(--_token---accent-grey, #9f9c8b)";
+const PILL_TEXT = "var(--_token---text-olive, #706d56)";
 
 function Quiz({
   submitWebhookUrl,
@@ -1004,20 +1129,7 @@ function Quiz({
   }, [result]);
 
   return (
-    <div
-      data-element="quiz-module"
-      style={{
-        maxWidth: 800,
-        margin: "0 auto",
-        padding: "var(--_gaps---content-half, 1.5rem)",
-        fontFamily: "'Lato', sans-serif",
-        color: "var(--_token---text-main, #292828)",
-        backgroundColor: "var(--_token---bg-main, white)",
-        borderRadius: "0.625rem",
-        boxShadow: "0 2px 12px rgba(41, 40, 40, 0.06), 0 1px 4px rgba(41, 40, 40, 0.03)",
-      }}
-      className="w-full"
-    >
+    <div data-element="quiz-module" style={moduleRootStyle}>
       <style>{fontLink}</style>
       <style>{`
         .quiz-fade-in { animation: quizFadeIn 0.4s ease-out forwards; }
@@ -1064,10 +1176,11 @@ function Quiz({
                 data-element="back-button"
                 onClick={goBack}
                 disabled={isTransitioning || !hydrated}
-                aria-label={t.back}
+                title={t.backTooltip}
+                aria-label={t.backTooltip}
                 style={{
                   fontSize: "var(--_typography---paragraph--small, 0.875rem)",
-                  fontWeight: 500,
+                  fontWeight: 400,
                   color: "var(--_token---text-olive, #706d56)",
                   background: "none",
                   border: "none",
@@ -1119,11 +1232,10 @@ function Quiz({
           {currentStep === 0 && reassurance && (
             <p
               style={{
-                color: "var(--_token---text-olive)",
-                fontSize: 14,
+                color: "var(--_token---text-olive, #706d56)",
+                fontSize: "1em",
                 lineHeight: 1.5,
                 margin: "0 0 28px 0",
-                fontStyle: "italic",
               }}
             >
               {reassurance}
@@ -1145,13 +1257,9 @@ function Quiz({
                     padding: "12px 24px",
                     borderWidth: "1.5px",
                     borderStyle: "solid",
-                    borderColor: isSelected
-                      ? "var(--_token---accent-main, #fafa7d)"
-                      : "var(--_token---accent-light-grey, #ecebe8)",
-                    backgroundColor: isSelected
-                      ? "var(--_token---accent-main, #fafa7d)"
-                      : "white",
-                    color: "var(--_token---text-main, #292828)",
+                    borderColor: isSelected ? ACCENT_MAIN : PILL_BORDER,
+                    backgroundColor: isSelected ? ACCENT_MAIN : "white",
+                    color: isSelected ? "var(--_token---text-main, #292828)" : PILL_TEXT,
                     cursor: isTransitioning ? "default" : "pointer",
                     opacity: 1,
                     fontFamily: "'Lato', sans-serif",
@@ -1160,14 +1268,13 @@ function Quiz({
                   }}
                   onMouseEnter={(e) => {
                     if (!isSelected && !isTransitioning) {
-                      e.currentTarget.style.borderColor = "var(--_token---accent-main, #fafa7d)";
-                      e.currentTarget.style.backgroundColor =
-                        "color-mix(in srgb, var(--_token---accent-main, #fafa7d) 20%, white)";
+                      e.currentTarget.style.borderColor = ACCENT_MAIN;
+                      e.currentTarget.style.backgroundColor = `color-mix(in srgb, ${ACCENT_MAIN} 20%, white)`;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected && !isTransitioning) {
-                      e.currentTarget.style.borderColor = "var(--_token---accent-light-grey, #ecebe8)";
+                      e.currentTarget.style.borderColor = PILL_BORDER;
                       e.currentTarget.style.backgroundColor = "white";
                     }
                   }}
@@ -1182,19 +1289,12 @@ function Quiz({
 
       {phase === "profile" && (
         <div className="quiz-fade-in flex flex-col gap-6">
-          <h2
-            style={{
-              fontFamily: "'Montserrat', sans-serif",
-              fontWeight: 600,
-              fontSize: 24,
-              lineHeight: 1.2,
-              color: "var(--_token---text-main, #292828)",
-              margin: 0,
-            }}
-            className="max-[480px]:text-[20px]"
-          >
-            {t.profileLabel}
-          </h2>
+          <div>
+            <h2 style={{ ...screenTitleStyle, margin: "0 0 4px 0" }} className="max-[480px]:text-[20px]">
+              {t.profileLabel}
+            </h2>
+            <p style={mutedNoteStyle}>{t.profileIntro}</p>
+          </div>
 
           <div className="flex flex-col gap-4">
             <div>
@@ -1222,7 +1322,7 @@ function Quiz({
                 }}
               >
                 {t.genderOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value} style={optionStyle}>{opt.label}</option>
                 ))}
               </select>
               {fieldErrors.gender && (
@@ -1257,7 +1357,7 @@ function Quiz({
                 }}
               >
                 {t.ageCategoryOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value} style={optionStyle}>{opt.label}</option>
                 ))}
               </select>
               {fieldErrors.ageCategory && (
@@ -1292,7 +1392,7 @@ function Quiz({
                 }}
               >
                 {t.relationshipOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value} style={optionStyle}>{opt.label}</option>
                 ))}
               </select>
               {fieldErrors.relationshipStatus && (
@@ -1302,21 +1402,14 @@ function Quiz({
               )}
             </div>
 
+            <p style={mutedNoteStyle}>{t.gdprNote}</p>
+
             <button
               onClick={handleProfileContinue}
-              style={pillButtonStyle}
-              onMouseEnter={(e) => {
-                if (!prefersReducedMotion) {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
+              style={nemButtonStyle}
+              {...nemButtonHoverHandlers(true)}
             >
-              {t.profileContinueButton}
+              <NemButtonContent label={t.profileContinueButton} />
             </button>
           </div>
         </div>
@@ -1324,18 +1417,9 @@ function Quiz({
 
       {phase === "conclusion" && (
         <div className="quiz-slide-up flex flex-col gap-6">
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "var(--_token---text-olive, #706d56)",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              fontFamily: "'Montserrat', sans-serif",
-            }}
-          >
+          <h2 style={screenTitleStyle} className="max-[480px]:text-[20px]">
             {t.conclusionLabel}
-          </span>
+          </h2>
 
           {debugMode && (
             <code
@@ -1376,61 +1460,30 @@ function Quiz({
             }}
           >
             {conclusionText.split(/\n{2,}/).map((paragraph, i) => (
-              <p
-                key={i}
-                style={{
-                  fontSize: "var(--_typography---paragraph--standard, 1rem)",
-                  lineHeight: 1.6,
-                  color: "var(--_token---text-main, #292828)",
-                  margin: 0,
-                }}
-              >
+              <p key={i} style={bodyTextStyle}>
                 {paragraph}
               </p>
             ))}
           </div>
 
-          <p
-            style={{
-              fontSize: "var(--_typography---paragraph--standard, 1rem)",
-              lineHeight: 1.6,
-              color: "var(--_token---text-main, #292828)",
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            {isFlatOutcome ? t.flatBridgeLine : t.bridgeLine}
-          </p>
+          <p style={bodyTextStyle}>{isFlatOutcome ? t.flatBridgeLine : t.bridgeLine}</p>
 
           {isFlatOutcome ? (
             <a
               data-element="conclusion-contact-link"
               href={contactHref}
-              style={{
-                ...pillButtonStyle,
-                display: "inline-block",
-                textAlign: "center",
-                textDecoration: "none",
-              }}
+              style={nemButtonStyle}
+              {...nemButtonHoverHandlers(true)}
             >
-              {contactLabel}
+              <NemButtonContent label={contactLabel} />
             </a>
           ) : (
             <button
               onClick={() => setPhase("optin")}
-              style={pillButtonStyle}
-              onMouseEnter={(e) => {
-                if (!prefersReducedMotion) {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
+              style={nemButtonStyle}
+              {...nemButtonHoverHandlers(true)}
             >
-              {ctaLabel}
+              <NemButtonContent label={ctaLabel} />
             </button>
           )}
         </div>
@@ -1439,27 +1492,10 @@ function Quiz({
       {phase === "optin" && (
         <div className="quiz-fade-in flex flex-col gap-6">
           <div>
-            <h2
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                fontWeight: 600,
-                fontSize: 24,
-                lineHeight: 1.2,
-                color: "var(--_token---text-main, #292828)",
-                margin: "0 0 4px 0",
-              }}
-              className="max-[480px]:text-[20px]"
-            >
+            <h2 style={{ ...screenTitleStyle, margin: "0 0 4px 0" }} className="max-[480px]:text-[20px]">
               {t.optinLabel}
             </h2>
-            <p
-              style={{
-                color: "var(--_token---text-olive, #706d56)",
-                fontSize: 15,
-                lineHeight: 1.5,
-                margin: 0,
-              }}
-            >
+            <p style={{ ...bodyTextStyle, color: "var(--_token---text-olive, #706d56)" }}>
               {t.optinIntro}
             </p>
           </div>
@@ -1539,6 +1575,8 @@ function Quiz({
               />
             </div>
 
+            <p style={mutedNoteStyle}>{t.gdprNote}</p>
+
             <div>
               <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
                 <input
@@ -1561,32 +1599,30 @@ function Quiz({
                 </span>
               </label>
               {fieldErrors.consent && (
-                <div style={{ color: "#e53e3e", fontSize: "0.875rem", marginTop: 4 }}>
+                <div aria-live="polite" style={{ color: "#e53e3e", fontSize: "0.875rem", marginTop: 4 }}>
                   {fieldErrors.consent}
                 </div>
               )}
             </div>
 
             <button
-              disabled={!nemMattersConsent || submitting}
+              disabled={submitting}
+              aria-disabled={!nemMattersConsent}
               onClick={handleSubmit}
               style={{
-                ...pillButtonStyle,
-                backgroundColor: nemMattersConsent
-                  ? "var(--_token---accent-main, #fafa7d)"
-                  : "var(--_token---accent-light-grey, #ecebe8)",
+                ...nemButtonStyle,
+                backgroundColor: nemMattersConsent ? NEM_BUTTON_BG : NEM_BUTTON_BG_INACTIVE,
                 cursor: nemMattersConsent && !submitting ? "pointer" : "not-allowed",
                 opacity: submitting ? 0.6 : 1,
-                transition: prefersReducedMotion ? "none" : "all 0.15s ease",
+                transition: prefersReducedMotion ? "none" : nemButtonStyle.transition,
                 pointerEvents: submitting ? "none" : "auto",
               }}
+              {...nemButtonHoverHandlers(nemMattersConsent && !submitting)}
             >
-              {submitting ? "..." : ctaLabel}
+              <NemButtonContent label={submitting ? "..." : ctaLabel} />
             </button>
 
-            <p style={{ fontSize: "0.875rem", color: "var(--_token---text-olive, #706d56)", textAlign: "center", margin: 0 }}>
-              {t.relieveLine}
-            </p>
+            <p style={disclaimerStyle}>{t.disclaimer}</p>
 
           </div>
         </div>
@@ -1594,40 +1630,13 @@ function Quiz({
 
       {phase === "confirmation" && (
         <div className="quiz-scale-in flex flex-col gap-5" style={{ paddingTop: 16, paddingBottom: 16 }}>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "var(--_token---text-olive, #706d56)",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              fontFamily: "'Montserrat', sans-serif",
-            }}
-          >
+          <h2 style={screenTitleStyle} className="max-[480px]:text-[20px]">
             {t.confirmationLabel}
-          </span>
+          </h2>
 
-          <p
-            style={{
-              fontSize: "var(--_typography---paragraph--standard, 1rem)",
-              lineHeight: 1.6,
-              color: "var(--_token---text-main, #292828)",
-              margin: 0,
-            }}
-          >
-            {t.confirmationMain}
-          </p>
+          <p style={bodyTextStyle}>{t.confirmationMain}</p>
 
-          <p
-            style={{
-              fontSize: "var(--_typography---paragraph--standard, 1rem)",
-              lineHeight: 1.6,
-              color: "var(--_token---text-main, #292828)",
-              margin: 0,
-            }}
-          >
-            {t.confirmationSecondary}
-          </p>
+          <p style={bodyTextStyle}>{t.confirmationSecondary}</p>
 
           <p
             style={{
@@ -1654,8 +1663,8 @@ function Quiz({
               style={{
                 background: "none",
                 border: "none",
-                color: "var(--_token---text-main, #292828)",
-                fontWeight: 600,
+                color: "var(--_token---accent-grey, #9f9c8b)",
+                fontWeight: 400,
                 cursor: "pointer",
                 textDecoration: "underline",
                 textUnderlineOffset: "3px",
@@ -1667,6 +1676,8 @@ function Quiz({
               {t.wrongEmailLink}
             </button>
           </p>
+
+          <p style={disclaimerStyle}>{t.disclaimer}</p>
         </div>
       )}
     </div>

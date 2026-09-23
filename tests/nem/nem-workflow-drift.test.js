@@ -823,17 +823,11 @@ describe("the real committed snapshots hold the facts the docs claim", () => {
     assert.deepEqual(WORKFLOWS.filter(isPendingImport).map((w) => w.key), []);
   });
 
-  test("the committed /verify snapshot fails only the invariants nem-verify-runtime-config fixes", () => {
-    /* Live still reads the prompt from the Report Prompt Set node. Once the changeset is
-     * applied and the snapshot re-baselined, this list must be empty: tighten it back to
-     * "satisfies every invariant" then. */
+  test("the committed /verify snapshot satisfies every invariant", () => {
+    /* nem-verify-runtime-config was applied 2026-09-23: /verify reads the prompt from
+     * nem_runtime_config, published from Alex's Notion page. */
     const failed = checkInvariants("verify", load("nem-verify.workflow.json")).filter((c) => !c.ok);
-    assert.deepEqual(failed.map((c) => c.label).sort(), [
-      "A missing active prompt is logged and alerted, never sent to Anthropic",
-      "Generate Report reads the prompt from Runtime Config",
-      "Runtime Config resolves the active nem_runtime_config row",
-      "Unsupported locales are logged and alerted, never sent to Anthropic",
-    ]);
+    assert.deepEqual(failed.map((c) => c.label), []);
   });
 
   test("the committed /submit snapshot satisfies every invariant", () => {

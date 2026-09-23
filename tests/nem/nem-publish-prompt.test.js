@@ -26,8 +26,7 @@ const nodeNamed = (name) => snapshot.nodes.find((n) => n.name === name);
 const codeOf = (name) => nodeNamed(name).parameters.jsCode;
 const out = (name, index) => targetsOf(snapshot, name, index);
 
-const verify = JSON.parse(readFileSync(path.join(BACKEND, "nem-verify.workflow.json"), "utf8"));
-const setNodeText = verify.nodes.find((n) => n.name === "Report Prompt").parameters.assignments.assignments[0].value;
+const setNodeText = readFileSync(path.join(BACKEND, "changesets/nem-provisional-runtime-prompt/system-prompt.txt"), "utf8");
 const fixture = JSON.parse(readFileSync(path.join(BACKEND, "fixtures", "notion-runtime-prompt.blocks.json"), "utf8"));
 const pageBlocks = () => simplifyBlocks(flattenBlocks(structuredClone(fixture)));
 const promptText = normalisePrompt(setNodeText);

@@ -9,6 +9,7 @@ const INDENT = "    ";
 function richTextOf(block) {
   const own = block[block.type];
   if (own && Array.isArray(own.rich_text)) return own.rich_text;
+  if (own && Array.isArray(own.text)) return own.text;
   if (Array.isArray(block.rich_text)) return block.rich_text;
   return null;
 }
@@ -117,8 +118,14 @@ function renderRichText(segments) {
   return runs.map(renderRun).join("");
 }
 
+function innerTypeOf(block) {
+  if (block.type !== "unsupported") return block.type;
+  const inner = (block.unsupported && block.unsupported.block_type) || block.block_type;
+  return typeof inner === "string" && inner !== "" ? inner : block.type;
+}
+
 function isSkipped(block) {
-  if (SKIPPED_TYPES.includes(block.type)) return true;
+  if (SKIPPED_TYPES.includes(block.type) || innerTypeOf(block) === "button") return true;
   if (block.type !== "paragraph") return false;
   const rich = richTextOf(block);
   return rich !== null && renderRichText(rich).trim() === "";
@@ -135,7 +142,7 @@ function renderBlock(node, depth, number) {
   const isList = LIST_TYPES.includes(type);
 
   if (!RENDERED_TYPES.includes(type)) {
-    throw new Error(`Unsupported block type: ${type}`);
+    throw new Error(`Unsupported block type: ${innerTypeOf(block)}`);
   }
   if (block.has_children === true && node.children.length === 0) {
     throw new Error(`${describeBlock(block)} has nested blocks that were not fetched`);

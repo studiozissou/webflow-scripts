@@ -122,6 +122,16 @@ describe("diffWorkflows", () => {
     assert.equal(diffWorkflows(repo, live).inSync, false);
   });
 
+  test("a node whose retry or error handling changed live counts as drift", () => {
+    /* Send Verification's whole failure branch hangs off onError and retryOnFail. They
+     * live outside parameters, so a hand-toggle in the n8n UI used to be invisible. */
+    const repo = wf([node("Send Verification", {}, { retryOnFail: true, maxTries: 3, onError: "continueErrorOutput" })]);
+    const live = wf([node("Send Verification", {}, { retryOnFail: true, maxTries: 3, onError: "stopWorkflow" })]);
+    assert.equal(diffWorkflows(repo, live).inSync, false);
+    const retries = wf([node("Send Verification", {}, { retryOnFail: false, onError: "continueErrorOutput" })]);
+    assert.equal(diffWorkflows(repo, retries).inSync, false);
+  });
+
   test("rewired connections count as drift even when every node matches", () => {
     const repo = wf([node("A"), node("B")], { A: { main: [[{ node: "B", index: 0 }]] } });
     const live = wf([node("A"), node("B")], { A: { main: [[]] } });
@@ -501,7 +511,9 @@ describe("checkInvariants — the §7 prompt input contract", () => {
     assert.ok(failing(broken).some((l) => /locale/i.test(l)), failing(broken).join("; "));
   });
 
-  /* The /submit half: conclusionText must survive Normalize and be persisted. */
+  /* The /submit half: conclusionText must survive Normalize and be persisted, and the
+   * verification email goes out via MailerSend from inside the execution, ahead of the
+   * response, with a logged-and-alerted failure branch. */
   const submitContract = wf([
     node("Normalize", { jsCode: "return [{ json: { outcome: b.outcome, conclusionKey: b.conclusionKey, conclusionId: b.conclusionId, introLine: b.introLine, conclusionText: (b.conclusionText || '').toString() } }];" }),
     node("Store Profile", {
@@ -510,40 +522,127 @@ describe("checkInvariants — the §7 prompt input contract", () => {
     }),
     node("Honeypot filled?"),
     node("Rate limit", { jsCode: "if (input.event === 'completion') return [{ json: { ...input, rateLimited: false } }];" }),
-    node("MailerLite: Send Verification", {
+    node("Mail Config", {
+      assignments: { assignments: [
+        { name: "verificationTemplateNl", type: "string", value: "tpl-nl" },
+        { name: "verificationTemplateEn", type: "string", value: "tpl-en" },
+      ] },
+    }, { type: "n8n-nodes-base.set", typeVersion: 3.5 }),
+    node("Send Verification", {
+      url: "https://api.mailersend.com/v1/email",
+      jsonBody: "={{ JSON.stringify({ to: [ { email: $('Normalize').first().json.email } ], template_id: $('Normalize').first().json.locale === 'en' ? $('Mail Config').first().json.verificationTemplateEn : $('Mail Config').first().json.verificationTemplateNl }) }}",
+    }, { type: "n8n-nodes-base.httpRequest", retryOnFail: true, maxTries: 3, waitBetweenTries: 5000, onError: "continueErrorOutput" }),
+    node("MailerLite: Pending group", {
       url: "https://connect.mailerlite.com/api/subscribers",
-      jsonBody: "={{ JSON.stringify({ email: $json.email, groups: [ '192344920326931926' ], status: 'active', resubscribe: true }) }}",
-    }),
+      jsonBody: "={{ JSON.stringify({ email: $('Normalize').first().json.email, groups: [ '192344920326931926' ], status: 'active', resubscribe: true }) }}",
+    }, { onError: "continueRegularOutput" }),
+    node("Respond OK", { responseBody: "={{ { \"status\": \"ok\" } }}" }),
+    node("Verification Failed", { jsCode: "return [{ json: { reason: 'verification_send' } }];" }),
+    node("Log Send Failure", { dataTableId: { value: "lzD76BzG472abwmA" } }),
+    node("Alert Failure", { jsonBody: "={{ JSON.stringify({ to: [ { email: 'will@teamzissou.io' } ], subject: '[DEV] NEM Test - verification email failed' }) }}" }),
+    node("Respond Error", { responseBody: "={{ { \"status\": \"error\" } }}" }),
     node("Log Completion", { dataTableId: { value: "other" }, columns: { value: { token: "" } } }),
   ], {
-    "Completion?": { main: [[{ node: "Log Completion" }]] },
+    "Completion?": { main: [[{ node: "Log Completion" }], [{ node: "Store Profile" }]] },
+    "Store Profile": { main: [[{ node: "Mail Config" }]] },
+    "Mail Config": { main: [[{ node: "Send Verification" }]] },
+    "Send Verification": { main: [[{ node: "MailerLite: Pending group" }], [{ node: "Verification Failed" }]] },
+    "MailerLite: Pending group": { main: [[{ node: "Respond OK" }]] },
+    "Verification Failed": { main: [[{ node: "Log Send Failure" }]] },
+    "Log Send Failure": { main: [[{ node: "Alert Failure" }]] },
+    "Alert Failure": { main: [[{ node: "Respond Error" }]] },
   });
 
+  const failingSubmit = (w) => checkInvariants("submit", w).filter((c) => !c.ok).map((c) => c.label);
+
   test("passes on the contract-shaped submit workflow", () => {
-    assert.deepEqual(checkInvariants("submit", submitContract).filter((c) => !c.ok).map((c) => c.label), []);
+    assert.deepEqual(failingSubmit(submitContract), []);
   });
 
   test("catches Rate limit counting completion pings", () => {
     const broken = structuredClone(submitContract);
     broken.nodes.find((x) => x.name === "Rate limit").parameters.jsCode = "const recent = [];";
-    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    const failed = failingSubmit(broken);
     assert.ok(failed.some((l) => /completion/i.test(l)), failed.join("; "));
   });
 
-  test("catches the verification upsert leaving an existing subscriber's status alone", () => {
+  test("catches the pending-group upsert leaving an existing subscriber's status alone", () => {
     const broken = structuredClone(submitContract);
-    const n = broken.nodes.find((x) => x.name === "MailerLite: Send Verification");
+    const n = broken.nodes.find((x) => x.name === "MailerLite: Pending group");
     n.parameters.jsonBody = n.parameters.jsonBody.replace(", status: 'active'", "");
-    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    const failed = failingSubmit(broken);
     assert.ok(failed.some((l) => /active/i.test(l)), failed.join("; "));
   });
 
-  test("catches the verification upsert not resubscribing unsubscribed contacts", () => {
+  test("catches the pending-group upsert not resubscribing unsubscribed contacts", () => {
     const broken = structuredClone(submitContract);
-    const n = broken.nodes.find((x) => x.name === "MailerLite: Send Verification");
+    const n = broken.nodes.find((x) => x.name === "MailerLite: Pending group");
     n.parameters.jsonBody = n.parameters.jsonBody.replace(", resubscribe: true", "");
-    const failed = checkInvariants("submit", broken).filter((c) => !c.ok).map((c) => c.label);
+    const failed = failingSubmit(broken);
     assert.ok(failed.some((l) => /resubscribe/i.test(l)), failed.join("; "));
+  });
+
+  test("catches the verification email going back to MailerLite's automation", () => {
+    /* The 2026-09-21 defect: MailerLite's group-join automation took 7 s to ~3 min on
+     * its own queue, so "within a minute" could never be promised. */
+    const broken = structuredClone(submitContract);
+    broken.nodes = broken.nodes.filter((x) => x.name !== "Send Verification");
+    broken.connections["Mail Config"] = { main: [[{ node: "MailerLite: Pending group" }]] };
+    delete broken.connections["Send Verification"];
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /MailerSend/.test(l)), failed.join("; "));
+  });
+
+  test("catches Respond OK answering before the verification email is accepted", () => {
+    const broken = structuredClone(submitContract);
+    broken.connections["Store Profile"] = { main: [[{ node: "Respond OK" }, { node: "Mail Config" }]] };
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /precedes Respond OK/.test(l)), failed.join("; "));
+  });
+
+  test("catches Send Verification not retrying", () => {
+    const broken = structuredClone(submitContract);
+    broken.nodes.find((x) => x.name === "Send Verification").retryOnFail = false;
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /retries/.test(l)), failed.join("; "));
+  });
+
+  test("catches a send failure that is not routed to the failure chain", () => {
+    const broken = structuredClone(submitContract);
+    broken.nodes.find((x) => x.name === "Send Verification").onError = "stopWorkflow";
+    broken.connections["Send Verification"] = { main: [[{ node: "MailerLite: Pending group" }]] };
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /failed verification send/i.test(l)), failed.join("; "));
+  });
+
+  test("catches a failure chain that still answers ok", () => {
+    const broken = structuredClone(submitContract);
+    broken.connections["Alert Failure"] = { main: [[{ node: "Respond OK" }]] };
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /failed verification send/i.test(l)), failed.join("; "));
+  });
+
+  test("catches the template ids being read from anywhere but Mail Config", () => {
+    const broken = structuredClone(submitContract);
+    const n = broken.nodes.find((x) => x.name === "Send Verification");
+    n.parameters.jsonBody = n.parameters.jsonBody.replace(/\$\('Mail Config'\)\.first\(\)\.json\.\w+/g, "'tpl-literal'");
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /Mail Config/.test(l)), failed.join("; "));
+  });
+
+  test("catches the pending-group upsert being able to block the response", () => {
+    const broken = structuredClone(submitContract);
+    delete broken.nodes.find((x) => x.name === "MailerLite: Pending group").onError;
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /tracking only/.test(l)), failed.join("; "));
+  });
+
+  test("catches the submit alert's [DEV] tag disagreeing with its recipient", () => {
+    const broken = structuredClone(submitContract);
+    const n = broken.nodes.find((x) => x.name === "Alert Failure");
+    n.parameters.jsonBody = n.parameters.jsonBody.replace("[DEV] ", "");
+    const failed = failingSubmit(broken);
+    assert.ok(failed.some((l) => /\[DEV\]/.test(l)), failed.join("; "));
   });
 
   test("catches Normalize dropping conclusionText", () => {

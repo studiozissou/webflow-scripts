@@ -469,7 +469,7 @@ const INVARIANTS = {
       },
     },
     {
-      label: "Only Valid? true reaches Insert Version, which writes the row as active",
+      label: "Only a changed, valid page reaches Insert Version, which writes the row as active",
       check: (wf) => {
         const n = find(wf, "Insert Version");
         const mapped = n?.parameters?.columns?.value ?? {};
@@ -479,7 +479,10 @@ const INVARIANTS = {
           && (mapped.active === true || mapped.active === "true")
           && ["key", "version", "text"].every((f) => f in mapped)
           && into.length > 0
-          && into.every((s) => s.from === "Valid?" && s.index === 0);
+          && into.every((s) => s.from === "Changed?" && s.index === 0)
+          && sourcesOf(wf, "Changed?").length > 0
+          && sourcesOf(wf, "Changed?").every((s) => s.from === "Valid?" && s.index === 0)
+          && /\$json\.changed\b/.test(JSON.stringify(find(wf, "Changed?")?.parameters ?? {}));
       },
     },
     {
@@ -524,6 +527,18 @@ const INVARIANTS = {
         const onFalse = branch(wf, "Valid?", 1);
         if (onFalse.length === 0) return false;
         const reached = reachableFrom(wf, onFalse);
+        return reached.has("Update Status Callout")
+          && !reached.has("Insert Version")
+          && !reached.has("Deactivate Previous");
+      },
+    },
+    {
+      /* Pressing Publish on an unchanged page must not mint a new version. */
+      label: "An unchanged page reaches the status callout and never Insert Version",
+      check: (wf) => {
+        const onUnchanged = branch(wf, "Changed?", 1);
+        if (onUnchanged.length === 0) return false;
+        const reached = reachableFrom(wf, onUnchanged);
         return reached.has("Update Status Callout")
           && !reached.has("Insert Version")
           && !reached.has("Deactivate Previous");

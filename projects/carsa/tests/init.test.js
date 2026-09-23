@@ -24,13 +24,13 @@ function makeStorage(seed = {}) {
   };
 }
 
-function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, storage = {}, preloaded = [] } = {}) {
+function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, storage = {}, preloaded = [], allowLocal = false } = {}) {
   const appended = [];
   const timers = [];
-  const localStorage = makeStorage(storage);
+  const sessionStorage = makeStorage(storage);
   const head = { appendChild: (el) => appended.push(el) };
   const document = {
-    currentScript: src ? { src } : null,
+    currentScript: src ? { src, hasAttribute: (name) => name === 'data-allow-local' && allowLocal } : null,
     head,
     body: head,
     createElement: (tag) => ({ tagName: tag.toUpperCase() }),
@@ -41,7 +41,7 @@ function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, 
   };
   const window = {
     location: { pathname, search },
-    localStorage,
+    sessionStorage,
     setTimeout: (fn, ms) => timers.push({ fn, ms }),
   };
   if (deps) {
@@ -50,12 +50,12 @@ function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, 
   }
   window.window = window;
   window.document = document;
-  const context = vm.createContext({ window, document, localStorage, location: window.location, setTimeout: window.setTimeout, URLSearchParams });
+  const context = vm.createContext({ window, document, sessionStorage, location: window.location, setTimeout: window.setTimeout, URLSearchParams });
   vm.runInContext(SOURCE, context);
   const tick = (n = 1) => {
     for (let i = 0; i < n && timers.length; i++) timers.shift().fn();
   };
-  return { window, appended, timers, tick, localStorage };
+  return { window, appended, timers, tick, sessionStorage };
 }
 
 const srcs = (appended) => appended.map((el) => el.src);
@@ -89,8 +89,8 @@ test('exposes the base and module list for debugging', () => {
 
 test('runs once even if the tag is pasted twice', () => {
   const { window, appended } = run();
-  const document = { currentScript: { src: CDN + 'init.js' }, head: { appendChild: (el) => appended.push(el) }, createElement: () => ({}), querySelector: () => null };
-  vm.runInContext(SOURCE, vm.createContext({ window, document, localStorage: window.localStorage, location: window.location, setTimeout: window.setTimeout, URLSearchParams }));
+  const document = { currentScript: { src: CDN + 'init.js', hasAttribute: () => false }, head: { appendChild: (el) => appended.push(el) }, createElement: () => ({}), querySelector: () => null };
+  vm.runInContext(SOURCE, vm.createContext({ window, document, sessionStorage: window.sessionStorage, location: window.location, setTimeout: window.setTimeout, URLSearchParams }));
   assert.equal(appended.length, 1);
 });
 
@@ -118,34 +118,45 @@ test('gives up waiting after about 3 seconds and loads anyway', () => {
   assert.equal(env.timers.length, 0);
 });
 
-test('?carsa=local switches to the local server and persists', () => {
-  const { appended, localStorage } = run({ search: '?carsa=local' });
-  assert.deepEqual(srcs(appended), ['https://localhost:8080/projects/carsa/global.js']);
-  assert.equal(localStorage.data['carsa-source'], 'local');
+test('?carsa=local is ignored unless the tag carries data-allow-local', () => {
+  const { appended, sessionStorage } = run({ search: '?carsa=local&carsa-port=8081' });
+  assert.deepEqual(srcs(appended), [CDN + 'global.js']);
+  assert.deepEqual(sessionStorage.data, {});
 });
 
-test('a persisted local source survives navigation, with a custom port', () => {
+test('a stored local source is ignored unless the tag carries data-allow-local', () => {
   const { appended } = run({ storage: { 'carsa-source': 'local', 'carsa-port': '8083' } });
+  assert.deepEqual(srcs(appended), [CDN + 'global.js']);
+});
+
+test('with data-allow-local, ?carsa=local switches to the local server for the session', () => {
+  const { appended, sessionStorage } = run({ search: '?carsa=local', allowLocal: true });
+  assert.deepEqual(srcs(appended), ['https://localhost:8080/projects/carsa/global.js']);
+  assert.equal(sessionStorage.data['carsa-source'], 'local');
+});
+
+test('with data-allow-local, a session-stored local source survives navigation, with a custom port', () => {
+  const { appended } = run({ storage: { 'carsa-source': 'local', 'carsa-port': '8083' }, allowLocal: true });
   assert.deepEqual(srcs(appended), ['https://localhost:8083/projects/carsa/global.js']);
 });
 
 test('?carsa-port only accepts a 4-5 digit port', () => {
-  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=8081' }).appended), ['https://localhost:8081/projects/carsa/global.js']);
-  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=evil.com' }).appended), ['https://localhost:8080/projects/carsa/global.js']);
+  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=8081', allowLocal: true }).appended), ['https://localhost:8081/projects/carsa/global.js']);
+  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=evil.com', allowLocal: true }).appended), ['https://localhost:8080/projects/carsa/global.js']);
 });
 
 test('?carsa=cdn clears the local switch', () => {
-  const { appended, localStorage } = run({ search: '?carsa=cdn', storage: { 'carsa-source': 'local', 'carsa-port': '8083' } });
+  const { appended, sessionStorage } = run({ search: '?carsa=cdn', storage: { 'carsa-source': 'local', 'carsa-port': '8083' }, allowLocal: true });
   assert.deepEqual(srcs(appended), [CDN + 'global.js']);
-  assert.equal(localStorage.data['carsa-source'], undefined);
-  assert.equal(localStorage.data['carsa-port'], undefined);
+  assert.equal(sessionStorage.data['carsa-source'], undefined);
+  assert.equal(sessionStorage.data['carsa-port'], undefined);
 });
 
 test('blocked storage falls back to the CDN instead of throwing', () => {
   const appended = [];
-  const document = { currentScript: { src: CDN + 'init.js' }, head: { appendChild: (el) => appended.push(el) }, createElement: () => ({}), querySelector: () => null };
+  const document = { currentScript: { src: CDN + 'init.js', hasAttribute: () => true }, head: { appendChild: (el) => appended.push(el) }, createElement: () => ({}), querySelector: () => null };
   const window = { location: { pathname: '/', search: '?carsa=local' }, setTimeout: () => {}, jQuery() {}, gsap: {} };
-  Object.defineProperty(window, 'localStorage', { get() { throw new Error('SecurityError'); } });
+  Object.defineProperty(window, 'sessionStorage', { get() { throw new Error('SecurityError'); } });
   vm.runInContext(SOURCE, vm.createContext({ window, document, location: window.location, setTimeout: window.setTimeout, URLSearchParams }));
   assert.deepEqual(srcs(appended), [CDN + 'global.js']);
 });

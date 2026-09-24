@@ -63,7 +63,7 @@ function makeEl(extra = {}) {
   return el;
 }
 
-function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {} } = {}) {
+function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {}, search = '', local = {}, dd = null } = {}) {
   const docListeners = {};
   const winListeners = {};
   const jqDocHandlers = [];
@@ -88,7 +88,7 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
     hostname: 'www.carsa.co.uk',
     origin: 'https://www.carsa.co.uk',
     pathname: '/vehicles/used/bl73dmu',
-    search: '',
+    search,
     hash: '',
     href: 'https://www.carsa.co.uk/vehicles/used/bl73dmu',
   };
@@ -103,6 +103,7 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
     removeEventListener() {},
   };
   if (vdp) window.__CARSA_VDP = { ...vdp };
+  if (dd) window.DD_LOGS = dd;
 
   function wrap(els) {
     const $w = {
@@ -184,7 +185,7 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
     $: jQuery,
     gsap: { registerPlugin() {}, timeline: () => ({ to() {} }), to: () => ({ play() {} }), delayedCall() {} },
     fetch,
-    localStorage: makeStorage(),
+    localStorage: makeStorage(local),
     sessionStorage: makeStorage(),
     setTimeout: (fn) => { timers.push(fn); return timers.length; },
     clearTimeout() {},
@@ -315,9 +316,44 @@ test('late start: readyState loading defers both blocks until DOMContentLoaded f
   assert.ok(quoteCall(env));
 });
 
-test('window load: the UTM-link and APR blocks register load listeners', () => {
-  const env = makeEnv();
+const QUOTE_LINKS = 'a[href*="quote.carsa.co.uk/build-deal/"],a[href*="quote.carsa.co.uk/book/"],a[href*="quote.carsa.co.uk/eligibility/questions"]';
+
+test('window load: while the document is still loading, the UTM-link and APR blocks wait for load', () => {
+  const link = makeEl({ href: 'https://quote.carsa.co.uk/book/BL73DMU' });
+  const env = makeEnv({ readyState: 'loading', search: '?utm_source=early', nodes: { [QUOTE_LINKS]: [link] } });
   assert.equal(env.winListeners.load.length, 2);
+  assert.equal(link.href, 'https://quote.carsa.co.uk/book/BL73DMU');
+  env.winListeners.load.forEach((fn) => fn({}));
+  assert.equal(link.href, 'https://quote.carsa.co.uk/book/BL73DMU?utm_source=early');
+});
+
+test('window load: with the document already complete, the UTM-link block runs at once and binds no load listener', () => {
+  const link = makeEl({ href: 'https://quote.carsa.co.uk/book/BL73DMU' });
+  const env = makeEnv({ readyState: 'complete', search: '?utm_source=late', nodes: { [QUOTE_LINKS]: [link] } });
+  assert.equal(link.href, 'https://quote.carsa.co.uk/book/BL73DMU?utm_source=late');
+  assert.equal(env.winListeners.load, undefined);
+});
+
+test('missing config: warns through Datadog browser logs when they are present', () => {
+  const warned = [];
+  const env = makeEnv({ vdp: null, dd: { logger: { warn: (...a) => warned.push(a), error() {} } } });
+  assert.equal(warned.length, 1);
+  assert.match(warned[0][0], /__CARSA_VDP/);
+  assert.equal(env.fetches.length, 0);
+});
+
+test('missing key: a config without status still runs the blocks after the schema block', () => {
+  const { status, ...partial } = BASE_VDP;
+  const cta = makeEl();
+  const ld = { textContent: JSON.stringify({ '@type': 'Product', offers: { '@type': 'Offer', price: 1, availability: 'https://schema.org/InStock' } }) };
+  const env = makeEnv({ vdp: partial, nodes: { '[data-button="cta-option"]': [cta], 'script[type="application/ld+json"]': [ld] } });
+  assert.equal(JSON.parse(ld.textContent).offers.availability, 'https://schema.org/InStock');
+  assert.equal(cta.getAttribute('href'), 'https://quote.carsa.co.uk/book/BL73DMU');
+  assert.equal(env.logs.length, 0);
+});
+
+test('source: window load is bound only inside onLoad', () => {
+  assert.equal(SOURCE.match(/\.on\(['"]load['"]/g).length, 1);
 });
 
 test('source: DOMContentLoaded appears only inside onReady', () => {

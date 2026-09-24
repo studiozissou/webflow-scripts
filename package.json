@@ -18,7 +18,7 @@
     "test:ea": "node --test 'tests/entity-audit/*.test.js'",
     "test:nem": "node --test 'tests/nem/*.test.js'",
     "test:rhp": "node --test 'tests/rhp/*.test.js'",
-    "test:carsa": "node --test 'tests/carsa/*.test.js' projects/carsa/tests/init.test.js projects/carsa/tests/global.test.js projects/carsa/tests/at-price-total.test.js",
+    "test:carsa": "node --test 'tests/carsa/*.test.js' projects/carsa/tests/init.test.js projects/carsa/tests/global.test.js projects/carsa/tests/check-finance.test.js projects/carsa/tests/at-price-total.test.js projects/carsa/tests/vdp.test.js",
     "test:jayshetty": "node --test 'tests/jayshetty/*.test.js'",
     "test:internal": "node --test 'tests/internal/*.test.js'",
     "test:tsc": "node --test 'tests/tsc/*.test.js'",

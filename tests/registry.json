@@ -464,6 +464,16 @@
       "description": "carsa-v1.1.0: check-finance.js loads once on every page from the release folder, inline copies gone from all 13 car-card page types, homepage and widget cards swap to the eligibility URL. Gated by CARSA_V110=1."
     },
     {
+      "slug": "carsa-vdp-module",
+      "url": "https://www.carsa.co.uk/vehicles/used/bl73dmu",
+      "spec": "tests/acceptance/carsa-vdp-module.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-24",
+      "description": "carsa-v1.1.0 VDP module: vdp.js loads once from the release folder, the template keeps only the __CARSA_VDP config block, finance calculator and links still initialise after a late start. Gated by CARSA_V110=1."
+    },
+    {
       "slug": "nem-validation-round-1",
       "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
       "spec": "tests/acceptance/nem-validation-round-1.spec.js",

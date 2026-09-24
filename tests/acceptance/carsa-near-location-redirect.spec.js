@@ -7,7 +7,7 @@
  * - Clicking a zero-count location triggers navigation to /used-cars
  * - Script does not interfere on non-near pages
  *
- * Requires: STAGING_URL_CARSA in .env.test (e.g. https://carsa-v2.webflow.io)
+ * Defaults to the live site; set STAGING_URL_CARSA in .env.test to run against staging
  *
  * Related spec: projects/carsa/.claude/specs/near-location-redirect.md
  */
@@ -16,7 +16,7 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.test" });
 
-const BASE = process.env.STAGING_URL_CARSA || "https://carsa-v2.webflow.io";
+const BASE = process.env.STAGING_URL_CARSA || "https://www.carsa.co.uk";
 const NEAR_PAGE = `${BASE}/used-cars/near/wakefield?cars_sort_dated-added=desc&cars_location_equal=%5B%22Bradford%22%5D`;
 const USED_CARS_PAGE = `${BASE}/used-cars`;
 

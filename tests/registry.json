@@ -100,7 +100,7 @@
     },
     {
       "slug": "carsa-near-location-redirect",
-      "url": "https://carsa-v2.webflow.io/used-cars/near/wakefield",
+      "url": "https://www.carsa.co.uk/used-cars/near/wakefield",
       "spec": "tests/acceptance/carsa-near-location-redirect.spec.js",
       "type": "acceptance",
       "source": "plan",
@@ -435,7 +435,7 @@
     },
     {
       "slug": "carsa-at-price-total",
-      "url": "https://carsa-v2.webflow.io/vehicles/used/ef72otu",
+      "url": "https://www.carsa.co.uk/vehicles/used/ef72otu",
       "spec": "tests/acceptance/carsa-at-price-total.spec.js",
       "type": "acceptance",
       "source": "plan",
@@ -445,7 +445,7 @@
     },
     {
       "slug": "carsa-body-colour-guard",
-      "url": "https://carsa-v2.webflow.io/vehicles/used/cf23rpx",
+      "url": "https://www.carsa.co.uk/vehicles/used/cf23rpx",
       "spec": "tests/acceptance/carsa-body-colour-guard.spec.js",
       "type": "acceptance",
       "source": "debug",

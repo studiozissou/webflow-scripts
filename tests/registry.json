@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-23",
+  "lastUpdated": "2026-09-24",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -100,7 +100,7 @@
     },
     {
       "slug": "carsa-near-location-redirect",
-      "url": "https://carsa-v2.webflow.io/used-cars/near/wakefield",
+      "url": "https://www.carsa.co.uk/used-cars/near/wakefield",
       "spec": "tests/acceptance/carsa-near-location-redirect.spec.js",
       "type": "acceptance",
       "source": "plan",
@@ -435,7 +435,7 @@
     },
     {
       "slug": "carsa-at-price-total",
-      "url": "https://carsa-v2.webflow.io/vehicles/used/ef72otu",
+      "url": "https://www.carsa.co.uk/vehicles/used/ef72otu",
       "spec": "tests/acceptance/carsa-at-price-total.spec.js",
       "type": "acceptance",
       "source": "plan",
@@ -445,13 +445,33 @@
     },
     {
       "slug": "carsa-body-colour-guard",
-      "url": "https://carsa-v2.webflow.io/vehicles/used/cf23rpx",
+      "url": "https://www.carsa.co.uk/vehicles/used/cf23rpx",
       "spec": "tests/acceptance/carsa-body-colour-guard.spec.js",
       "type": "acceptance",
       "source": "debug",
       "critical": false,
       "created": "2026-09-15",
       "description": "Carsa body colour guard - the VDP Material UI carousel injects body { color: rgba(0,0,0,.87) } at runtime; a site-wide html body rule in the head custom code keeps text brand purple. Asserts the rule ships and body/paragraph colour is #511e62 on home and VDP."
+    },
+    {
+      "slug": "carsa-release-v1-1-0",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-release-v1-1-0.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-24",
+      "description": "carsa-v1.1.0: check-finance.js loads once on every page from the release folder, inline copies gone from all 13 car-card page types, homepage and widget cards swap to the eligibility URL. Gated by CARSA_V110=1."
+    },
+    {
+      "slug": "carsa-vdp-module",
+      "url": "https://www.carsa.co.uk/vehicles/used/bl73dmu",
+      "spec": "tests/acceptance/carsa-vdp-module.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-09-24",
+      "description": "carsa-v1.1.0 VDP module: vdp.js loads once from the release folder, the template keeps only the __CARSA_VDP config block, finance calculator and links still initialise after a late start. Gated by CARSA_V110=1."
     },
     {
       "slug": "nem-validation-round-1",

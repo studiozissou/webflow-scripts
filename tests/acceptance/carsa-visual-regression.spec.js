@@ -11,8 +11,9 @@
  * 2. Console error collection works
  * 3. Broken link detection works
  */
-const { test, expect } = require('@playwright/test');
-require('dotenv').config({ path: '.env.test' });
+import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.test' });
 
 // ── Config ────────────────────────────────────────────────────
 const SLUG = 'carsa-visual-regression';

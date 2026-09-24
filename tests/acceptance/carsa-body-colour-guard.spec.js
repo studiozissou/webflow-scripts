@@ -12,7 +12,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 
 const SLUG = 'carsa-body-colour-guard';
-const STAGING_URL = process.env.STAGING_URL_CARSA || 'https://carsa-v2.webflow.io';
+const STAGING_URL = process.env.STAGING_URL_CARSA || 'https://www.carsa.co.uk';
 const VDP_PATH = '/vehicles/used/cf23rpx';
 const BRAND_PURPLE = 'rgb(81, 30, 98)';
 

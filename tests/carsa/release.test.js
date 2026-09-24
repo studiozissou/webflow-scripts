@@ -17,8 +17,8 @@ const reader = (calls = []) => (tag, file) => {
   return `// ${file} at ${tag}\n`;
 };
 
-test('release set is the loader, global.js and the two VDP scripts', () => {
-  assert.deepEqual(RELEASE_FILES, ['init.js', 'global.js', 'battery-animation.js', 'at-price-total.js']);
+test('release set is the loader, global.js, check-finance.js, vdp.js and the two VDP scripts', () => {
+  assert.deepEqual(RELEASE_FILES, ['init.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js']);
 });
 
 test('tag name follows the repo convention', () => {

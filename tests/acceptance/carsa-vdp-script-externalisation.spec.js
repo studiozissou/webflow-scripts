@@ -2,13 +2,14 @@
  * Acceptance tests for carsa-vdp-script-externalisation
  *
  * Verifies that Carsa VDP inline scripts work correctly when
- * externalised to a single CDN-hosted vdp.js bundle.
+ * externalised to a vdp.js module loaded by init.js from the release folder.
  *
  * Phase 1: scripts moved as-is (jQuery deps preserved)
  * Phase 2: refactored to vanilla JS + modular init.js loader
  */
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
+import { RELEASE_PATH_RE } from './helpers/carsa.js';
 dotenv.config({ path: '.env.test' });
 
 // ── Config ────────────────────────────────────────────────────
@@ -38,6 +39,10 @@ async function loadPage(page, path = PRIMARY_VDP) {
   await waitForReady(page);
   await page.waitForTimeout(2000); // VDP scripts + jQuery init
 }
+
+const V110_SKIP = 'v1.1.0 not published yet; set CARSA_V110=1 once the footer tag points at v1.1.0';
+const VDP_MODULE_SEL = 'script[src*="/webflow/"][src$="/vdp.js"]';
+const isVdpModule = (url) => RELEASE_PATH_RE.test(url) && new URL(url).pathname.endsWith('/vdp.js');
 
 function collectErrors(page) {
   const errors = [];
@@ -88,13 +93,12 @@ test.describe(`${SLUG} — Console Errors`, () => {
 /* 2. External script loading */
 test.describe(`${SLUG} — External Script`, () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(!process.env.CARSA_V110, V110_SKIP);
     await loadPage(page);
   });
 
   test('external vdp.js script tag is present', async ({ page }) => {
-    const externalScript = page.locator(
-      'script[src*="cdn.jsdelivr.net"][src*="carsa/vdp"]'
-    );
+    const externalScript = page.locator(VDP_MODULE_SEL);
     await expect(externalScript).toBeAttached();
   });
 });
@@ -421,6 +425,10 @@ test.describe(`${SLUG} — Cold Banner`, () => {
 
 /* 10. Cache behaviour — repeat visit */
 test.describe(`${SLUG} — Cache`, () => {
+  test.beforeEach(() => {
+    test.skip(!process.env.CARSA_V110, V110_SKIP);
+  });
+
   test('vdp.js served from cache on repeat visit', async ({ page }) => {
     // First visit — cold load
     await loadPage(page);
@@ -428,7 +436,7 @@ test.describe(`${SLUG} — Cache`, () => {
     // Collect network requests on second visit
     const vdpRequests = [];
     page.on('response', (res) => {
-      if (res.url().includes('carsa/vdp')) {
+      if (isVdpModule(res.url())) {
         vdpRequests.push({
           url: res.url(),
           fromCache: res.fromServiceWorker() || res.request().resourceType() === 'script',
@@ -445,7 +453,7 @@ test.describe(`${SLUG} — Cache`, () => {
     expect(vdpRequests.length, 'vdp.js should have been requested').toBeGreaterThan(0);
 
     const req = vdpRequests[0];
-    // jsDelivr serves with immutable cache headers on pinned commits
+    // Release folders are immutable, so the CDN serves long-lived cache headers
     const cacheControl = req.headers['cache-control'] || '';
     const servedFromCache = req.status === 304 || req.status === 200;
 
@@ -482,7 +490,7 @@ test.describe(`${SLUG} — Cache`, () => {
 
     const vdpRequestIds = [];
     client.on('Network.requestWillBeSent', (params) => {
-      if (params.request.url.includes('carsa/vdp')) {
+      if (isVdpModule(params.request.url)) {
         vdpRequestIds.push(params.requestId);
       }
     });

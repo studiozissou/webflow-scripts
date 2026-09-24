@@ -1,19 +1,28 @@
 // Carsa vehicle detail page behaviour moved out of the Webflow template body: UTM links, finance calculator and config, APR painter, valuation and search-similar links, form UTMs, equal-height cards, schema status, SVG draw-line and similar-car links, reading CMS values from window.__CARSA_VDP.
 (function ($) {
   var DEBUG = false;
-  var VDP = window.__CARSA_VDP;
-  if (!VDP) {
+  var KEYS = ['price', 'registrationDate', 'odometer', 'vrm', 'financeType', 'depositContribution', 'locationName', 'isStorageLocation', 'makeName', 'modelName', 'status'];
+  var config = window.__CARSA_VDP;
+  if (!config) {
     DEBUG && console.log('vdp.js: window.__CARSA_VDP missing');
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('vdp.js: window.__CARSA_VDP missing, vehicle page scripts skipped');
     return;
   }
+  var VDP = {};
+  for (var k = 0; k < KEYS.length; k++) VDP[KEYS[k]] = config[KEYS[k]] == null ? '' : String(config[KEYS[k]]);
 
   function onReady(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
     else fn();
   }
 
+  function onLoad(fn) {
+    if (document.readyState === 'complete') fn();
+    else $(window).on('load', fn);
+  }
+
   (function () {
-    $(window).on('load', function(){
+    onLoad(function(){
       const HOST = location.hostname.replace(/^www\./,'');
       const isInternal = d => !!d && (d===HOST || d.endsWith('.'+HOST));
 
@@ -461,7 +470,7 @@
 
       paintApr();
       if (FIN) FIN.ready.then(paintApr);
-      $(window).on('load', paintApr);
+      onLoad(paintApr);
     });
   })();
 

@@ -31,6 +31,7 @@ h1 { margin: 0; }
 .scheme-green-light { --scheme-background: #E2F4E3; }
 .scheme-green { --scheme-background: #3B6741; }
 .scheme-green-dark { --scheme-background: #152D18; }
+.scheme-yellow { --scheme-background: #FEF6E5; }
 .padding-global { padding-left: 5%; padding-right: 5%; }
 .container-large { max-width: 80rem; margin-left: auto; margin-right: auto; }
 .padding-section-large { padding-top: 7rem; padding-bottom: 7rem; }
@@ -161,6 +162,10 @@ describe('rule 1: single section root', () => {
 describe('rule 2: exactly one scheme class on the root', () => {
   test('passes with one known scheme', () => {
     expectOk(wrap('', { root: 'section_hero scheme-green-dark' }));
+  });
+
+  test('passes with the yellow scheme', () => {
+    expectOk(wrap('', { root: 'section_hero scheme-yellow' }));
   });
 
   test('fails with no scheme', () => {

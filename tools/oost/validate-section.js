@@ -5,7 +5,15 @@ import { fileURLToPath } from 'node:url';
 
 const DEBUG = false;
 
-export const SCHEMES = ['cream', 'white', 'buff', 'green-light', 'green', 'green-dark'];
+export const SCHEMES = [
+  'cream',
+  'white',
+  'buff',
+  'yellow',
+  'green-light',
+  'green',
+  'green-dark',
+];
 
 const VOID_TAGS = new Set([
   'area',

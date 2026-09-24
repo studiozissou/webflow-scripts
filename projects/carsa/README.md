@@ -52,7 +52,7 @@ A release is a git tag `carsa-vX.Y.Z`. Copy it into Carsa's repo with:
 node tools/carsa/release.js v1.0.0 ~/carsa-website-support
 ```
 
-This reads `init.js`, `global.js`, `check-finance.js`, `vdp.js`, `battery-animation.js` and `at-price-total.js` from the tag (not the working tree) into `webflow/releases/v1.0.0/`, and refuses to overwrite an existing folder. Carsa's `WebflowStack` serves every folder with `immutable` caching and never purges old ones, because the previous folder is the rollback target.
+This reads `init.js`, `global.js`, `check-finance.js`, `vdp.js`, `battery-animation.js` and `at-price-total.js` from the tag (not the working tree) into `webflow/releases/v1.0.0/`, and refuses to overwrite an existing folder. Carsa's existing `CarouselStack` distribution serves every folder from `/webflow/vX.Y.Z/` with `immutable` caching and never purges old ones, because the previous folder is the rollback target.
 
 ## Local development
 

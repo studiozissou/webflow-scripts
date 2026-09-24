@@ -7,8 +7,9 @@
  * Raw HTML is checked with request.get rather than the rendered DOM, because the sold-car
  * schema bug this work sits next to is precisely a raw-versus-rendered mismatch.
  */
-const { test, expect } = require('@playwright/test');
-require('dotenv').config({ path: '.env.test' });
+import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.test' });
 
 const BASE = process.env.CARSA_URL || 'https://www.carsa.co.uk';
 const SLUG = 'carsa-seo-autofixes-2026-09';

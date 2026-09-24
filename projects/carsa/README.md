@@ -19,7 +19,7 @@ The Webflow site footer holds one tag:
 | every page | `global.js`, `check-finance.js` |
 | `/vehicles/*` | `vdp.js`, `battery-animation.js`, `at-price-total.js` |
 
-Routes are added as each page's inline code is removed from Webflow. `vdp.js` comes first on the VDP because its code was inline in the page body, which ran before the two footer modules.
+Routes are added as each page's inline code is removed from Webflow. `vdp.js` comes first on the VDP because its code was inline in the page body, which ran before the two footer modules. It reads its CMS values from `window.__CARSA_VDP`, normalising every key to a string (missing keys become `''`) so one drifted config field cannot stop the blocks after it, warns through Datadog when the object is missing entirely, and uses the same `onReady` / `onLoad` helpers as `global.js`.
 
 ### Why `check-finance.js` loads everywhere
 

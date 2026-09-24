@@ -1,11 +1,11 @@
-// Carsa site loader: waits for Webflow's jQuery and GSAP, then loads global.js and the current route's modules, in order, from the same versioned folder as this file; the ?carsa=local dev switch only works when the tag carries data-allow-local and lasts for the browser session.
+// Carsa site loader: waits for Webflow's jQuery and GSAP, then loads global.js, check-finance.js and the current route's modules, in order, from the same versioned folder as this file; the ?carsa=local dev switch only works when the tag carries data-allow-local and lasts for the browser session.
 (function () {
   'use strict';
 
   if (window.__CARSA_LOADER) return;
 
   var ROUTES = [
-    { match: /^\/vehicles\/.+/, modules: ['battery-animation.js', 'at-price-total.js'] }
+    { match: /^\/vehicles\/.+/, modules: ['vdp.js', 'battery-animation.js', 'at-price-total.js'] }
   ];
   var DEP_POLL_MS = 50;
   var DEP_TIMEOUT_MS = 3000;
@@ -34,7 +34,7 @@
   }
 
   var base = readSwitch() || script.src.slice(0, script.src.lastIndexOf('/') + 1);
-  var modules = ['global.js'];
+  var modules = ['global.js', 'check-finance.js'];
   for (var i = 0; i < ROUTES.length; i++) {
     if (ROUTES[i].match.test(window.location.pathname)) modules = modules.concat(ROUTES[i].modules);
   }

@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const RELEASE_FILES = ['init.js', 'global.js', 'battery-animation.js', 'at-price-total.js'];
+export const RELEASE_FILES = ['init.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js'];
 
 const VERSION_RE = /^v\d+\.\d+\.\d+$/;
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');

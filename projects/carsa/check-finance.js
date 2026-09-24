@@ -1,7 +1,4 @@
-// Module: check-finance
-// Project: Carsa
-// Deps: none (vanilla JS, no build step)
-
+// Carsa check-finance: on hover or click of a finance card, points its car-card link at the eligibility quote URL with the VRM and stored attribution, and restores it on mouseout.
 (() => {
   const BASE = 'https://quote.carsa.co.uk/eligibility/questions';
   const SELECTOR = '[data-link="check-finance"]';
@@ -23,7 +20,7 @@
       try {
         const d = new URL(document.referrer).hostname.replace(/^www\./, '');
         if (!(d === HOST || d.endsWith('.' + HOST))) refDomain = d;
-      } catch (_) { /* invalid referrer URL */ }
+      } catch (_) {}
     }
     const params = { ...utms };
     if (refDomain) params.referrer = refDomain;
@@ -51,7 +48,6 @@
     return addParams(url, getAttributionParams());
   }
 
-  // Hover: swap ancestor <a> href so browser status bar shows finance URL
   document.body.addEventListener('mouseover', (e) => {
     const el = e.target.closest(SELECTOR);
     if (!el) return;
@@ -79,7 +75,6 @@
     }
   });
 
-  // Click fallback: if href wasn't swapped yet (keyboard/touch), swap it now
   document.body.addEventListener('click', (e) => {
     const el = e.target.closest(SELECTOR);
     if (!el) return;

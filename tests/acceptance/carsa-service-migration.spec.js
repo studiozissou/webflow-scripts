@@ -7,8 +7,9 @@
  *
  * Spec: projects/carsa/.claude/specs/carsa-service-migration.md
  */
-const { test, expect } = require('@playwright/test');
-require('dotenv').config({ path: '.env.test' });
+import { test, expect } from '@playwright/test';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.test' });
 
 // ── Config ────────────────────────────────────────────────────
 const SLUG = 'carsa-service-migration';

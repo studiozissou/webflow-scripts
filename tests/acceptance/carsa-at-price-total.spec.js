@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 
-const STAGING_URL = process.env.STAGING_URL_CARSA || 'https://carsa-v2.webflow.io';
+const STAGING_URL = process.env.STAGING_URL_CARSA || 'https://www.carsa.co.uk';
 const VDP_PATHS = [
   '/vehicles/used/ef72otu',
   '/vehicles/used/va22hmc',

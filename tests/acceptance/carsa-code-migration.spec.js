@@ -322,10 +322,14 @@ test.describe('carsa-code-migration — Search: 404 toast', () => {
 
 // ── Generic per-page guards (one block per page as it migrates) ─
 
-const MIGRATED = [];
+const MIGRATED = [{ path: '/vehicles/used/bl73dmu', module: 'vdp.js', gate: 'CARSA_V110' }];
 
-for (const { path, module } of MIGRATED) {
+for (const { path, module, gate } of MIGRATED) {
   test.describe(`carsa-code-migration — ${path}`, () => {
+    test.beforeEach(() => {
+      test.skip(!!gate && !process.env[gate], `${module} not published yet; set ${gate}=1 once the footer tag points at the release that ships it`);
+    });
+
     test(`${path}-no-errors: zero JS console errors`, async ({ page }) => {
       const errors = collectErrors(page);
       await loadPage(page, path);

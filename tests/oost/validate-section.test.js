@@ -41,6 +41,7 @@ h1 { margin: 0; }
 .button:hover { color: red; }
 .menu_group { padding-top: 3rem; }
 .hero_title { font-size: 2rem; }
+.heading-style-h2 { font-size: 3rem; }
 .bad_margin { margin-top: 1rem; }
 .bad_padding { padding-bottom: 1rem; }
 .hero_frame::before { padding: 1rem; margin: 2px; }
@@ -136,7 +137,7 @@ describe('parseCssClasses', () => {
 
 describe('rule 1: single section root', () => {
   test('passes a single section.section_<name> root, with an id', () => {
-    expectOk(wrap('<h1>Hi</h1>', { attrs: ' id="menukaart"' }));
+    expectOk(wrap('<h1 class="heading-style-h2">Hi</h1>', { attrs: ' id="menukaart"' }));
   });
 
   test('fails with two root elements', () => {
@@ -285,6 +286,20 @@ describe('rule 7: no margins, padding only on layout classes', () => {
     const map = parseCssClasses(CSS);
     assert.ok(map.get('container-large').some((d) => d.property === 'margin-left'));
     expectOk(wrap(''));
+  });
+});
+
+describe('rule 9: headings carry a heading-style class', () => {
+  test('passes a heading with a heading-style class', () => {
+    expectOk(wrap('<h2 class="heading-style-h2 hero_title">a</h2>'));
+  });
+
+  test('fails a heading without one', () => {
+    expectError(wrap('<h2 class="hero_title">a</h2>'), /rule 9: <h2.*heading-style/);
+  });
+
+  test('fails a bare heading', () => {
+    expectError(wrap('<h1>a</h1>'), /rule 9: <h1.*heading-style/);
   });
 });
 

@@ -4,10 +4,10 @@
 
   if (window.OOST && window.OOST.base) return;
 
-  var VERSION = '2026.9.24.1';
+  var VERSION = '2026.9.28.1';
   var STYLES = ['https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.css'];
   var DEPS = ['https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.min.js'];
-  var GLOBAL_MODULES = ['smooth-scroll.js'];
+  var GLOBAL_MODULES = ['smooth-scroll.js', 'utils.js'];
   var ROUTES = [];
 
   var script = document.currentScript;

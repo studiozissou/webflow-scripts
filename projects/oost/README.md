@@ -7,13 +7,13 @@ Scripts for Restaurant Oost (Haarlem), served from this repo through jsDelivr. V
 Webflow has one script tag, in the site footer:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.1.0/projects/oost/init.js" data-allow-local></script>
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.2.0/projects/oost/init.js" data-allow-local></script>
 ```
 
 `init.js` reads its own URL, so every module comes from the same pinned tag. It appends, in order:
 
 1. Lenis stylesheet and script (pinned npm version on jsDelivr)
-2. the global modules (`smooth-scroll.js`)
+2. the global modules (`smooth-scroll.js`, `utils.js`)
 3. any per-route modules from `ROUTES` (none yet)
 
 Dynamic scripts are added with `async = false`, which makes the browser execute them in insertion order, so a module can rely on the dependencies listed before it without polling.
@@ -27,6 +27,7 @@ Webflow custom code is limited and hard to review. One tag pointing at a git tag
 | File | Does |
 |---|---|
 | `smooth-scroll.js` | Starts Lenis with `anchors: true`, so `#menukaart` and `#offerte` links scroll smoothly. Skipped when the visitor prefers reduced motion or when Lenis failed to load. Exposes `window.OOST.lenis`; call `stop()` before opening an overlay and `start()` after. |
+| `utils.js` | Sets `rel="noreferrer noopener"` on every `target="_blank"` link, writes the current year into `#year`, and adds hidden `Conversion Page` (the URL without `utm_` parameters) and `utm_*` fields to every form so Webflow form submissions carry their source. Moved out of the Webflow footer code so all site scripts ship through the loader and one tag. |
 
 Add a module by dropping a file in this folder, adding it to `GLOBAL_MODULES` or a `ROUTES` entry in `init.js`, and adding a test in `tests/oost/`.
 

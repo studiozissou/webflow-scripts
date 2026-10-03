@@ -5,7 +5,15 @@ import { fileURLToPath } from 'node:url';
 
 const DEBUG = false;
 
-export const SCHEMES = ['cream', 'white', 'buff', 'green-light', 'green', 'green-dark'];
+export const SCHEMES = [
+  'cream',
+  'white',
+  'buff',
+  'yellow',
+  'green-light',
+  'green',
+  'green-dark',
+];
 
 const VOID_TAGS = new Set([
   'area',
@@ -387,6 +395,9 @@ function checkElements(root, cssMap, errors) {
       errors.push(`rule 4: style= attribute on ${describeNode(node)}`);
     const cls = classesOf(node);
     cls.forEach((c) => used.add(c));
+    if (/^h[1-6]$/.test(node.tag) && !cls.some((c) => c.startsWith('heading-style-'))) {
+      errors.push(`rule 9: ${describeNode(node)} needs a heading-style- class`);
+    }
     const spacer = cls.find((c) => c.startsWith('spacer-'));
     if (spacer) {
       if (node.tag !== 'div')

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-30",
+  "lastUpdated": "2026-10-03",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -512,6 +512,16 @@
       "critical": false,
       "created": "2026-09-30",
       "description": "Oost /privacybeleid and /algemene-voorwaarden (NL + EN): Content 12 layout with text-rich-text body, meta row, footer VAT/e-mail/legal links for MultiSafepay onboarding, cookie-settings link opens ConsentPro, banner links to the policy, SEO + sitemap, axe."
+      },
+      {
+      "slug": "oost-faq-cms",
+      "url": "https://oosteten.webflow.io/",
+      "spec": "tests/acceptance/oost-faq-cms.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-03",
+      "description": "Oost FAQ from CMS on home/afhalen/catering (NL+EN): counts, first-open only, WAAPI open/close incl. interrupt + keyboard, reduced motion, all-open without JS, microdata FAQPage with no JSON-LD duplicate, catering link, loader-pinned module, axe. Gated on OOST_FAQ_CMS=1."
     }
   ]
 }

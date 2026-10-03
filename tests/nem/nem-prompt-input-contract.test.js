@@ -54,6 +54,19 @@ const branch = (wf, name, i) =>
 const generateReportBody = node(verify, 'Generate Report').parameters.jsonBody;
 const normalizeCode = node(submit, 'Normalize').parameters.jsCode;
 
+/* nem-relationship-labels (applied 2026-09-24) wrapped the relationship read in a label map.
+ * Changesets cut before it hold the raw read; this puts it back so they still compare. */
+const RELATIONSHIP_BEFORE =
+  "'\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + ";
+const withoutRelationshipLabels = (body) => {
+  const head = "'\\nRelationship status: ' + ({";
+  const tail = "|| $('Validate Token').first().json.relationshipStatus) + ";
+  const start = body.indexOf(head);
+  const end = body.indexOf(tail, start);
+  if (start === -1 || end === -1) return body;
+  return body.slice(0, start) + RELATIONSHIP_BEFORE + body.slice(end + tail.length);
+};
+
 /** Profile row as Validate Token spreads it. Overridable per case. */
 const profile = (overrides = {}) => ({
   token: 't-123',
@@ -323,7 +336,7 @@ describe('/submit — conclusionText rides the payload into the profile row (7b)
 
 describe('the changeset files cannot drift from the snapshots', () => {
   const read = (f) => readFileSync(path.join(CHANGESET, f), 'utf8');
-  const bodyBeforeRuntimeConfig = generateReportBody.replace(
+  const bodyBeforeRuntimeConfig = withoutRelationshipLabels(generateReportBody).replace(
     "$('Runtime Config').first().json.systemPrompt",
     "$('Report Prompt').first().json.systemPrompt",
   );
@@ -405,9 +418,6 @@ describe('Generate Report — relationship status reaches the prompt as an Engli
     ['samenwonend-met-kinderen', 'With a partner - with children'],
     ['anders', 'Other'],
   ];
-  const RELATIONSHIP_BEFORE =
-    "'\\nRelationship status: ' + $('Validate Token').first().json.relationshipStatus + ";
-
   for (const [value, label] of LABELS) {
     test(`${value} → Relationship status: ${label}`, () => {
       const msg = labelled({ relationshipStatus: value });
@@ -459,16 +469,12 @@ describe('Generate Report — relationship status reaches the prompt as an Engli
 
   test('the changeset is a one-expression diff against the snapshot (or identical once applied)', () => {
     if (generateReportBody === labelsBody) return;
-    const head = "'\\nRelationship status: ' + ({";
-    const tail = "|| $('Validate Token').first().json.relationshipStatus) + ";
-    const start = labelsBody.indexOf(head);
-    const end = labelsBody.indexOf(tail, start);
-    assert.ok(start !== -1 && end !== -1, 'relationship mapping expression not found in the changeset body');
+    const reverted = withoutRelationshipLabels(labelsBody);
+    assert.notEqual(reverted, labelsBody, 'relationship mapping expression not found in the changeset body');
     assert.ok(
       generateReportBody.includes(RELATIONSHIP_BEFORE),
       'snapshot no longer has the unmapped expression — regenerate the changeset',
     );
-    const reverted = labelsBody.slice(0, start) + RELATIONSHIP_BEFORE + labelsBody.slice(end + tail.length);
     assert.equal(reverted, generateReportBody);
   });
 

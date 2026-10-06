@@ -1,4 +1,4 @@
-// Acceptance tests for oost-site-test-remediation: the English pages link, read and share in English, the WhatsApp links use the real number, /en/catering fits a phone, the catering form labels are bound, menu text meets contrast, and the booking iframe is named.
+// Acceptance tests for oost-site-test-remediation: the English pages link, read and share in English, the WhatsApp links use the real number, /en/catering fits a phone, the catering form labels are bound, menu text meets contrast, the Instagram link goes to the restaurant profile, and the booking iframe is named.
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import dotenv from 'dotenv';
@@ -10,6 +10,7 @@ const NL_PAGES = ['/', '/afhalen', '/catering', '/privacybeleid', '/algemene-voo
 const EN_PAGES = ['/en', '/en/afhalen', '/en/catering', '/en/privacybeleid', '/en/algemene-voorwaarden'];
 const ALL_PAGES = [...NL_PAGES, ...EN_PAGES];
 const PLACEHOLDER_NUMBER = '31600000000';
+const INSTAGRAM = /^https:\/\/www\.instagram\.com\/restaurantoost\/?$/;
 const PHONE = { width: 375, height: 812 };
 const IGNORED_CONSOLE = /consentpro|gtag|googletagmanager|zenchef|turnstile|cloudflare|jsdelivr/i;
 const DUTCH_MARKERS = ['Indonesisch', 'Afhalen bij', 'Bestel ', 'voor je feest', 'gekookt zoals'];
@@ -196,12 +197,21 @@ test.describe('oost-site-test-remediation', () => {
     }
   });
 
-  test('Instagram link ends in a handle and every page has a share image', async ({ page }) => {
-    test.skip(process.env.OOST_OWNER_INPUTS !== '1', 'Waits on the Instagram handle and photos from the owner.');
+  test('Instagram link goes to the restaurant profile on every page', async ({ page }) => {
     for (const path of ALL_PAGES) {
       await loadPage(page, path);
-      const instagram = await page.locator('a[href*="instagram.com"]').first().getAttribute('href');
-      expect(instagram, `${path} Instagram link`).toMatch(/instagram\.com\/[A-Za-z0-9_.]+\/?$/);
+      const links = await page.locator('a[href*="instagram.com"]').evaluateAll((all) => all.map((a) => a.getAttribute('href')));
+      expect(links.length, `${path} has an Instagram link`).toBeGreaterThan(0);
+      for (const href of links) {
+        expect(href, `${path} Instagram link`).toMatch(INSTAGRAM);
+      }
+    }
+  });
+
+  test('every page has a share image', async ({ page }) => {
+    test.skip(process.env.OOST_OWNER_INPUTS !== '1', 'Waits on photos from the owner.');
+    for (const path of ALL_PAGES) {
+      await loadPage(page, path);
       await expect(page.locator('meta[property="og:image"]'), `${path} og:image`).toHaveAttribute('content', /^https:\/\//);
     }
   });

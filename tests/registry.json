@@ -524,6 +524,16 @@
       "description": "Oost FAQ from CMS on home/afhalen/catering (NL+EN): counts, first-open only, WAAPI open/close incl. interrupt + keyboard, reduced motion, all-open without JS, microdata FAQPage with no JSON-LD duplicate, catering link, loader-pinned module, axe. Gated on OOST_FAQ_CMS=1."
     },
     {
+      "slug": "oost-lighthouse-performance",
+      "url": "https://oosteten.webflow.io/",
+      "spec": "tests/acceptance/oost-lighthouse-performance.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-06",
+      "description": "Oost lazy Zenchef: no Zenchef/AWS WAF request before load+1.5s, no auto-open, nav/hero/EN Reserveer open the widget (early tap + after idle preload), SDK injected once, no #reserveer hash, deferred init.js and no lenis.css, mobile CLS < 0.1, no page errors. Gated on OOST_PERF=1."
+    },
+    {
       "slug": "oost-site-test-remediation",
       "url": "https://oosteten.webflow.io/en",
       "spec": "tests/acceptance/oost-site-test-remediation.spec.js",

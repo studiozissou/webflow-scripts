@@ -14,7 +14,8 @@ const SOURCE = readFileSync(
 const CDN =
   'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.1.0/projects/oost/';
 const LENIS_JS = 'https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.min.js';
-const LENIS_CSS = 'https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.css';
+const MODULES = ['smooth-scroll.js', 'utils.js', 'faq-accordion.js', 'zenchef.js'];
+const EXPECTED = [LENIS_JS, ...MODULES.map((m) => CDN + m)];
 
 function makeStorage(seed = {}) {
   const data = { ...seed };
@@ -69,37 +70,21 @@ function run({
 const urls = (appended) => appended.map((el) => el.src || el.href);
 const scripts = (appended) => appended.filter((el) => el.tagName === 'SCRIPT');
 
-test('loads the Lenis stylesheet and script, then smooth-scroll.js, utils.js and faq-accordion.js from the same folder as init.js', () => {
+test('loads the Lenis script, then smooth-scroll.js, utils.js, faq-accordion.js and zenchef.js from the same folder as init.js', () => {
   const { appended } = run();
-  assert.deepEqual(urls(appended), [
-    LENIS_CSS,
-    LENIS_JS,
-    CDN + 'smooth-scroll.js',
-    CDN + 'utils.js',
-    CDN + 'faq-accordion.js',
-  ]);
+  assert.deepEqual(urls(appended), EXPECTED);
 });
 
-test('the stylesheet is a link element and the scripts keep insertion order', () => {
+test('appends no stylesheet: every element is a script that keeps insertion order', () => {
   const { appended } = run();
-  assert.equal(appended[0].tagName, 'LINK');
-  assert.equal(appended[0].rel, 'stylesheet');
-  assert.ok(scripts(appended).every((el) => el.async === false));
+  assert.equal(scripts(appended).length, appended.length);
+  assert.ok(appended.every((el) => el.async === false));
+  assert.ok(urls(appended).every((url) => !url.endsWith('.css')));
 });
 
 test('every page gets the same global modules', () => {
   for (const pathname of ['/', '/afhalen', '/catering', '/geen-pagina']) {
-    assert.deepEqual(
-      urls(run({ pathname }).appended),
-      [
-        LENIS_CSS,
-        LENIS_JS,
-        CDN + 'smooth-scroll.js',
-        CDN + 'utils.js',
-        CDN + 'faq-accordion.js',
-      ],
-      pathname,
-    );
+    assert.deepEqual(urls(run({ pathname }).appended), EXPECTED, pathname);
   }
 });
 
@@ -107,10 +92,7 @@ test('exposes the base, version and module list for debugging', () => {
   const { window } = run();
   assert.equal(window.OOST.base, CDN);
   assert.match(window.OOST.version, /^\d{4}\.\d{1,2}\.\d{1,2}\.\d+$/);
-  assert.deepEqual(
-    [...window.OOST.modules],
-    ['smooth-scroll.js', 'utils.js', 'faq-accordion.js'],
-  );
+  assert.deepEqual([...window.OOST.modules], MODULES);
 });
 
 test('runs once even if the tag is pasted twice', () => {
@@ -135,24 +117,24 @@ test('runs once even if the tag is pasted twice', () => {
 });
 
 test('skips a dependency or module whose exact URL is already on the page', () => {
-  const { appended } = run({ preloaded: [LENIS_JS, LENIS_CSS] });
+  const { appended } = run({ preloaded: [LENIS_JS, CDN + 'utils.js'] });
   assert.deepEqual(urls(appended), [
     CDN + 'smooth-scroll.js',
-    CDN + 'utils.js',
     CDN + 'faq-accordion.js',
+    CDN + 'zenchef.js',
   ]);
 });
 
 test('?oost=local is ignored unless the tag carries data-allow-local', () => {
   const { appended, sessionStorage } = run({ search: '?oost=local' });
-  assert.equal(urls(appended)[2], CDN + 'smooth-scroll.js');
+  assert.equal(urls(appended)[1], CDN + 'smooth-scroll.js');
   assert.deepEqual(sessionStorage.data, {});
 });
 
 test('with data-allow-local, ?oost=local loads modules from the local server for the session', () => {
   const { appended, sessionStorage } = run({ search: '?oost=local', allowLocal: true });
   assert.equal(
-    urls(appended)[2],
+    urls(appended)[1],
     'https://localhost:8080/projects/oost/smooth-scroll.js',
   );
   assert.equal(sessionStorage.data['oost-source'], 'local');
@@ -160,11 +142,11 @@ test('with data-allow-local, ?oost=local loads modules from the local server for
 
 test('?oost-port only accepts a 4-5 digit port', () => {
   assert.equal(
-    urls(run({ search: '?oost=local&oost-port=8081', allowLocal: true }).appended)[2],
+    urls(run({ search: '?oost=local&oost-port=8081', allowLocal: true }).appended)[1],
     'https://localhost:8081/projects/oost/smooth-scroll.js',
   );
   assert.equal(
-    urls(run({ search: '?oost=local&oost-port=evil.com', allowLocal: true }).appended)[2],
+    urls(run({ search: '?oost=local&oost-port=evil.com', allowLocal: true }).appended)[1],
     'https://localhost:8080/projects/oost/smooth-scroll.js',
   );
 });
@@ -175,7 +157,7 @@ test('?oost=cdn clears the local switch', () => {
     storage: { 'oost-source': 'local', 'oost-port': '8083' },
     allowLocal: true,
   });
-  assert.equal(urls(appended)[2], CDN + 'smooth-scroll.js');
+  assert.equal(urls(appended)[1], CDN + 'smooth-scroll.js');
   assert.equal(sessionStorage.data['oost-source'], undefined);
 });
 
@@ -197,7 +179,7 @@ test('blocked storage falls back to the CDN instead of throwing', () => {
     SOURCE,
     vm.createContext({ window, document, location: window.location, URLSearchParams }),
   );
-  assert.equal(urls(appended)[2], CDN + 'smooth-scroll.js');
+  assert.equal(urls(appended)[1], CDN + 'smooth-scroll.js');
 });
 
 test('no currentScript (e.g. injected by a tag manager) does nothing rather than guess a host', () => {

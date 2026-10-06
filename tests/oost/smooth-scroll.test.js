@@ -12,8 +12,19 @@ const SOURCE = readFileSync(
   'utf8',
 );
 
+function makeDocument() {
+  const appended = [];
+  return {
+    appended,
+    head: { appendChild: (el) => appended.push(el) },
+    createElement: (tag) => ({ tagName: tag.toUpperCase(), id: '', textContent: '' }),
+    getElementById: (id) => appended.find((el) => el.id === id) || null,
+  };
+}
+
 function run({ reducedMotion = false, lenis = true } = {}) {
   const instances = [];
+  const document = makeDocument();
   class Lenis {
     constructor(options) {
       this.options = options;
@@ -29,11 +40,12 @@ function run({ reducedMotion = false, lenis = true } = {}) {
       matches: reducedMotion && q.includes('prefers-reduced-motion'),
     }),
     OOST: { modules: [] },
+    document,
   };
   if (lenis) window.Lenis = Lenis;
   window.window = window;
   vm.runInContext(SOURCE, vm.createContext({ window }));
-  return { window, instances };
+  return { window, instances, styles: document.appended };
 }
 
 test('starts one Lenis instance with automatic frames and anchor handling', () => {
@@ -67,4 +79,20 @@ test('running twice replaces the first instance instead of stacking a second', (
   assert.equal(instances.length, 2);
   assert.equal(instances[0].destroyed, true);
   assert.equal(window.OOST.lenis, instances[1]);
+});
+
+test('inlines the Lenis CSS once as #oost-lenis-css when Lenis starts', () => {
+  const { window, styles } = run();
+  assert.equal(styles.length, 1);
+  assert.equal(styles[0].tagName, 'STYLE');
+  assert.equal(styles[0].id, 'oost-lenis-css');
+  assert.match(styles[0].textContent, /lenis-stopped/);
+  assert.match(styles[0].textContent, /overflow:clip/);
+  vm.runInContext(SOURCE, vm.createContext({ window }));
+  assert.equal(styles.length, 1);
+});
+
+test('injects no Lenis CSS under reduced motion or when Lenis did not load', () => {
+  assert.equal(run({ reducedMotion: true }).styles.length, 0);
+  assert.equal(run({ lenis: false }).styles.length, 0);
 });

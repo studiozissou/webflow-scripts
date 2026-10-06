@@ -4,10 +4,9 @@
 
   if (window.OOST && window.OOST.base) return;
 
-  var VERSION = '2026.10.3.1';
-  var STYLES = ['https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.css'];
+  var VERSION = '2026.10.6.1';
   var DEPS = ['https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.min.js'];
-  var GLOBAL_MODULES = ['smooth-scroll.js', 'utils.js', 'faq-accordion.js'];
+  var GLOBAL_MODULES = ['smooth-scroll.js', 'utils.js', 'faq-accordion.js', 'zenchef.js'];
   var ROUTES = [];
 
   var script = document.currentScript;
@@ -47,14 +46,6 @@
   window.OOST.version = VERSION;
   window.OOST.modules = modules;
 
-  function addStylesheet(href) {
-    if (document.querySelector('link[href="' + href + '"]')) return;
-    var el = document.createElement('link');
-    el.rel = 'stylesheet';
-    el.href = href;
-    document.head.appendChild(el);
-  }
-
   function addScript(src) {
     if (document.querySelector('script[src="' + src + '"]')) return;
     var el = document.createElement('script');
@@ -63,7 +54,6 @@
     document.head.appendChild(el);
   }
 
-  for (var s = 0; s < STYLES.length; s++) addStylesheet(STYLES[s]);
   for (var d = 0; d < DEPS.length; d++) addScript(DEPS[d]);
   for (var m = 0; m < modules.length; m++) addScript(base + modules[m]);
 })();

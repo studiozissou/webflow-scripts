@@ -8,7 +8,7 @@ Webflow has one script tag, in the site footer:
 
 <!-- prettier-ignore -->
 ```html
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.3.0/projects/oost/init.js" defer data-allow-local></script>
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.3.1/projects/oost/init.js" defer data-allow-local></script>
 ```
 
 `init.js` reads its own URL, so every module comes from the same pinned tag. It appends, in order:
@@ -27,12 +27,12 @@ Webflow custom code is limited and hard to review. One tag pointing at a git tag
 
 ## Modules
 
-| File | Does |
-|---|---|
-| `smooth-scroll.js` | Starts Lenis with `anchors: true`, so `#menukaart` and `#offerte` links scroll smoothly. Skipped when the visitor prefers reduced motion or when Lenis failed to load. Exposes `window.OOST.lenis`; call `stop()` before opening an overlay and `start()` after. |
-| `utils.js` | Sets `rel="noreferrer noopener"` on every `target="_blank"` link, writes the current year into `#year`, and adds hidden `Conversion Page` (the URL without `utm_` parameters) and `utm_*` fields to every form so Webflow form submissions carry their source. Moved out of the Webflow footer code so all site scripts ship through the loader and one tag. |
-| `faq-accordion.js` | On pages with a `.faq_list`, closes every FAQ `details` except the first and sets `html.faq-ready`. It animates open (400 ms) and close (300 ms) with the Web Animations API, on the same `cubic-bezier(0.22, 1, 0.36, 1)` curve as the chevron. A click mid-animation reverses from the current height. Reduced motion and browser-driven toggles (find-in-page) stay native and instant. Exposes `window.OOST.faq.init(root)` / `destroy()`. Each bound `details` carries `data-faq-bound`, so a second `init` does nothing. |
-| `zenchef.js` | Owns the Zenchef booking SDK. Turns every `data-formitable="open"` or `data-zc-action="open"` button into a widget trigger. Loads the SDK after `load` + 2 s idle, or on the first hover, touch or focus of a Reserveer button, whichever comes first. A tap before the widget is ready shows `is-loading` and `aria-busy`, then opens the widget when it signals ready. After 8 s, or if the SDK fails, it sends the visitor to the bookings page (same tab, so popup blockers can't stop it). Never auto-opens. |
+| File               | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `smooth-scroll.js` | Starts Lenis with `anchors: true`, so `#menukaart` and `#offerte` links scroll smoothly. Skipped when the visitor prefers reduced motion or when Lenis failed to load. Exposes `window.OOST.lenis`; call `stop()` before opening an overlay and `start()` after.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `utils.js`         | Sets `rel="noreferrer noopener"` on every `target="_blank"` link, writes the current year into `#year`, and adds hidden `Conversion Page` (the URL without `utm_` parameters) and `utm_*` fields to every form so Webflow form submissions carry their source. Moved out of the Webflow footer code so all site scripts ship through the loader and one tag.                                                                                                                                                                                                                                                                                                             |
+| `faq-accordion.js` | On pages with a `.faq_list`, closes every FAQ `details` except the first and sets `html.faq-ready`. It animates open (400 ms) and close (300 ms) with the Web Animations API, on the same `cubic-bezier(0.22, 1, 0.36, 1)` curve as the chevron. A click mid-animation reverses from the current height. Reduced motion and browser-driven toggles (find-in-page) stay native and instant. Exposes `window.OOST.faq.init(root)` / `destroy()`. Each bound `details` carries `data-faq-bound`, so a second `init` does nothing.                                                                                                                                           |
+| `zenchef.js`       | Owns the Zenchef booking SDK. Turns every `data-formitable="open"` or `data-zc-action="open"` button into a widget trigger. Loads the SDK after `load` + 2 s idle, or on the first hover, touch or focus of a Reserveer button, whichever comes first. A tap before the widget is ready shows `is-loading` and `aria-busy`, then opens the widget when it signals ready. After 8 s, or if the SDK fails, it sends the visitor to the bookings page (same tab, so popup blockers can't stop it). Never auto-opens. When the widget signals ready it sets a `title` on the booking iframe, in Dutch or English from the page `lang`, so screen readers can name the frame. |
 
 Add a module by dropping a file in this folder, adding it to `GLOBAL_MODULES` or a `ROUTES` entry in `init.js`, and adding a test in `tests/oost/`.
 
@@ -76,6 +76,25 @@ Site settings, footer code:
 ## Local dev
 
 Serve the repo root on `https://localhost:8080`, open the staging site with `?oost=local`, and the loader pulls modules from your machine for the rest of the browser session. `?oost=cdn` switches back. The switch only works while the tag carries `data-allow-local`; remove that attribute at launch.
+
+## Locale check
+
+`npm run oost:locale-guard -- https://www.oosteten.nl` crawls the sitemap without a browser and reports English-locale regressions. Run it after every publish that touches links or the English locale. Add `--strict` to turn the share-image warning into a failure.
+
+| Check               | Fails when                                                       |
+| ------------------- | ---------------------------------------------------------------- |
+| English link leak   | an `/en` page links to a Dutch URL outside the language switcher |
+| Placeholder number  | a page still carries the placeholder WhatsApp number             |
+| Bare social link    | an Instagram link has no handle                                  |
+| Untranslated title  | an `/en` page has the same `<title>` as its Dutch twin           |
+| Run-together list   | a list item is over 30 characters with no space                  |
+| Missing share image | a page has no `og:image` (warning unless `--strict`)             |
+
+Exit code `0` is clean, `1` means findings, `2` means a page could not be fetched.
+
+Webflow locale overrides freeze: when a Dutch link is fixed, the English override keeps its old value and nothing flags it. The 6 Oct 2026 site test found the English pages linking to Dutch URLs and a placeholder WhatsApp number that had been fixed in Dutch three days earlier. The check reads the published HTML, so it sees what crawlers see. A runtime script that rewrote the links was rejected because crawlers would still get the wrong HTML.
+
+The crawl is not part of `npm run test:oost` because it needs the network. Its unit tests in `tests/oost/locale-guard.test.js` are, and run on inline HTML.
 
 ## Tests
 

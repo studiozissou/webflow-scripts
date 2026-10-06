@@ -1,4 +1,4 @@
-// Acceptance tests for oost-lighthouse-performance: Zenchef loads after page load or on Reserveer intent, never auto-opens, opens from every Reserveer button, and the loader no longer blocks rendering; skipped until OOST_PERF=1.
+// Acceptance tests for oost-lighthouse-performance: Zenchef loads after page load or on Reserveer intent, never auto-opens, opens from every Reserveer button, and the loader no longer blocks rendering; "open" means the SDK iframe's --zc-widget-height is above the 80px collapsed bar; skipped until OOST_PERF=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -11,7 +11,10 @@ const NAV_TRIGGER = `nav ${TRIGGER.split(', ').join(', nav ')}`;
 const HERO_TRIGGER = `.hero_content ${TRIGGER.split(', ').join(', .hero_content ')}`;
 const WIDGET_IFRAME = 'iframe[src*="bookings.zenchef.com"]';
 
-test.skip(process.env.OOST_PERF !== '1', 'set OOST_PERF=1 once lazy Zenchef is on staging');
+test.skip(
+  process.env.OOST_PERF !== '1',
+  'set OOST_PERF=1 once lazy Zenchef is on staging',
+);
 
 function collectErrors(page) {
   const errors = [];
@@ -22,11 +25,18 @@ function collectErrors(page) {
 async function widgetOpen(page) {
   return page.evaluate((sel) => {
     return [...document.querySelectorAll(sel)].some((f) => {
-      const r = f.getBoundingClientRect();
       const s = getComputedStyle(f);
-      return r.width > 200 && r.height > 300 && s.visibility !== 'hidden' && s.display !== 'none';
+      const contentHeight =
+        parseFloat(f.style.getPropertyValue('--zc-widget-height')) || 0;
+      return contentHeight > 200 && s.visibility !== 'hidden' && s.display !== 'none';
     });
   }, WIDGET_IFRAME);
+}
+
+async function waitForModule(page) {
+  await page.waitForFunction(() => window.OOST && window.OOST.zenchef, null, {
+    timeout: 10_000,
+  });
 }
 
 test.describe('oost-lighthouse-performance', () => {
@@ -59,6 +69,7 @@ test.describe('oost-lighthouse-performance', () => {
   test('nav Reserveer opens the Zenchef widget on an early tap', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await waitForModule(page);
     await page.locator(NAV_TRIGGER).first().click();
     await expect.poll(() => widgetOpen(page), { timeout: 10_000 }).toBe(true);
   });
@@ -92,7 +103,9 @@ test.describe('oost-lighthouse-performance', () => {
     await expect.poll(() => widgetOpen(page), { timeout: 10_000 }).toBe(true);
   });
 
-  test('init.js tag is deferred and no lenis.css stylesheet is requested', async ({ page }) => {
+  test('init.js tag is deferred and no lenis.css stylesheet is requested', async ({
+    page,
+  }) => {
     const css = [];
     page.on('request', (req) => {
       if (req.url().includes('lenis') && req.url().endsWith('.css')) css.push(req.url());

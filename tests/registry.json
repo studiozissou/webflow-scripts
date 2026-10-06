@@ -512,8 +512,8 @@
       "critical": false,
       "created": "2026-09-30",
       "description": "Oost /privacybeleid and /algemene-voorwaarden (NL + EN): Content 12 layout with text-rich-text body, meta row, footer VAT/e-mail/legal links for MultiSafepay onboarding, cookie-settings link opens ConsentPro, banner links to the policy, SEO + sitemap, axe."
-      },
-      {
+    },
+    {
       "slug": "oost-faq-cms",
       "url": "https://oosteten.webflow.io/",
       "spec": "tests/acceptance/oost-faq-cms.spec.js",
@@ -552,6 +552,16 @@
       "critical": false,
       "created": "2026-10-06",
       "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): no placeholder WhatsApp number, English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
+    },
+    {
+      "slug": "oost-consent-ga-performance",
+      "url": "https://oosteten.webflow.io/",
+      "spec": "tests/acceptance/oost-consent-ga-performance.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-06",
+      "description": "Oost GA4 blocked until ConsentPro analytics consent (no GA request or _ga cookie before a choice, denied Consent Mode default before ConsentPro, GA hit with gcs=G101 after Accepteren, none after Weigeren), hero fonts preloaded and used, ConsentPro and font host preconnected, banner still above Zenchef on phones, no page errors on / and /en. Gated on OOST_CONSENT=1."
     }
   ]
 }

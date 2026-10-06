@@ -552,6 +552,16 @@
       "critical": false,
       "created": "2026-10-06",
       "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): no placeholder WhatsApp number, English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
+    },
+    {
+      "slug": "nem-final-report-handover",
+      "url": "https://nem-life-1.webflow.io/report-pdf-template",
+      "spec": "tests/acceptance/nem-final-report-handover.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-06",
+      "description": "Alex's vAlex report design published at /report-pdf-template with every Build HTML slot, no /nl/ links, contact link to www.nemlife.com/contact; expected to fail until the Designer slug swap + link fix ship."
     }
   ]
 }

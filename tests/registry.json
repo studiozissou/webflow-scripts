@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-24",
+  "lastUpdated": "2026-10-06",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -502,6 +502,16 @@
       "critical": false,
       "created": "2026-09-23",
       "description": "Carsa Phase 2 VDP swap: __CARSA_VDP config global, vdp.js loaded once via the loader, no moved code inline, late start after DOMContentLoaded, empty contribution binding, staging-vs-live parity incl. promoted car, removed car SoldOut. Module guards gated on CARSA_VDP_MODULE=1."
+    },
+      {
+      "slug": "oost-phone-links",
+      "url": "https://oosteten.webflow.io/",
+      "spec": "tests/acceptance/oost-phone-links.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-06",
+      "description": "Oost NL+EN (13 pages incl. 404): every tel: and wa.me link points at +31 23 785 1562 with WhatsApp prefill intact, no 06-48979760 or 31600000000 in HTML, home JSON-LD telephone, llms.txt."
     }
   ]
 }

@@ -4,7 +4,7 @@
 
   if (window.OOST && window.OOST.base) return;
 
-  var VERSION = '2026.10.6.2';
+  var VERSION = '2026.10.6.3';
   var DEPS = ['https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.min.js'];
   var GLOBAL_MODULES = ['smooth-scroll.js', 'utils.js', 'faq-accordion.js', 'zenchef.js'];
   var ROUTES = [];

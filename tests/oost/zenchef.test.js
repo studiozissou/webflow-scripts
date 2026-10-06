@@ -69,6 +69,7 @@ function run({
   idle = true,
   buttons = [{ 'data-formitable': 'open' }, { 'data-formitable': 'open' }],
   iframe = null,
+  banner = null,
 } = {}) {
   const docListeners = {};
   const winListeners = {};
@@ -99,6 +100,15 @@ function run({
     : null;
   const existing = existingSdk ? makeElement('script', { id: 'zenchef-sdk' }) : null;
 
+  const observers = [];
+  const consentRoot = banner
+    ? {
+        shadowRoot: {
+          querySelector: (sel) =>
+            sel === '[fs-consent-element="banner"]' ? banner : null,
+        },
+      }
+    : null;
   const document = {
     readyState,
     documentElement: { lang },
@@ -107,6 +117,7 @@ function run({
     querySelector: (sel) => {
       if (sel === '.zc-widget-config') return configEl;
       if (sel === `iframe[src^="${BOOKINGS}"]`) return iframe;
+      if (sel === '[fs-consent-element="root"]') return consentRoot;
       return null;
     },
     querySelectorAll: (sel) => triggers.filter((el) => matches(el, sel)),
@@ -134,6 +145,14 @@ function run({
     },
   };
   if (idle) window.requestIdleCallback = (fn) => idleQueue.push(fn);
+  window.MutationObserver = class {
+    constructor(callback) {
+      this.callback = callback;
+    }
+    observe(target, options) {
+      observers.push({ target, options, callback: this.callback });
+    }
+  };
   window.window = window;
 
   vm.runInContext(
@@ -149,9 +168,20 @@ function run({
   const sdkScripts = () => appended.filter((el) => el.src === SDK_SRC);
   const postMessage = (origin, data) =>
     (winListeners.message || []).slice().forEach((fn) => fn({ origin, data }));
+  const setBannerActive = (active) => {
+    if (active) banner.setAttribute('fs-consent-active', '');
+    else banner.removeAttribute('fs-consent-active');
+    observers
+      .filter((o) => o.target === banner)
+      .forEach((o) =>
+        o.callback([{ type: 'attributes', attributeName: 'fs-consent-active' }]),
+      );
+  };
   return {
     window,
     triggers,
+    observers,
+    setBannerActive,
     appended,
     opened,
     events,
@@ -444,4 +474,85 @@ test('naming the iframe never loads the SDK on its own', () => {
   page.widgetListening();
   assert.equal(page.sdkScripts().length, 0);
   assert.equal(iframe.getAttribute('title'), null);
+});
+
+const UNDER_CONSENT = 'oost-zc-under-consent';
+
+function consentPage(bannerOpen = true) {
+  const iframe = makeElement('iframe', { src: `${BOOKINGS}/?rid=388830` });
+  const banner = makeElement('div', bannerOpen ? { 'fs-consent-active': '' } : {});
+  const page = run({ iframe, banner });
+  return { page, iframe, banner };
+}
+
+async function widgetReady(page) {
+  page.triggers[0].dispatch('pointerenter');
+  page.widgetListening();
+  await flush();
+}
+
+test('puts the booking iframe under the cookie banner while the banner is open', async () => {
+  const { page, iframe } = consentPage(true);
+  await widgetReady(page);
+  assert.equal(iframe.classList.contains(UNDER_CONSENT), true);
+});
+
+test('injects the mobile-only z-index rule once, just below the banner', async () => {
+  const { page } = consentPage(true);
+  await widgetReady(page);
+  page.setBannerActive(false);
+  page.setBannerActive(true);
+  const styles = page.appended.filter((el) => el.id === 'oost-zenchef-css');
+  assert.equal(styles.length, 1);
+  assert.match(styles[0].textContent, /@media \(max-width: 767px\)/);
+  assert.match(
+    styles[0].textContent,
+    /iframe\.oost-zc-under-consent\s*\{\s*z-index: 99998 !important/,
+  );
+});
+
+test('lifts the booking iframe back up when the cookie banner closes', async () => {
+  const { page, iframe } = consentPage(true);
+  await widgetReady(page);
+  page.setBannerActive(false);
+  assert.equal(iframe.classList.contains(UNDER_CONSENT), false);
+});
+
+test('leaves the booking iframe on top when the banner is already closed', async () => {
+  const { page, iframe } = consentPage(false);
+  await widgetReady(page);
+  assert.equal(iframe.classList.contains(UNDER_CONSENT), false);
+});
+
+test('puts the iframe under the banner again when cookie settings reopen it', async () => {
+  const { page, iframe } = consentPage(false);
+  await widgetReady(page);
+  page.setBannerActive(true);
+  assert.equal(iframe.classList.contains(UNDER_CONSENT), true);
+});
+
+test('watches only the fs-consent-active attribute on the banner', async () => {
+  const { page, banner } = consentPage(true);
+  await widgetReady(page);
+  assert.equal(page.observers.length, 1);
+  assert.equal(page.observers[0].target, banner);
+  assert.equal(
+    JSON.stringify(page.observers[0].options),
+    JSON.stringify({ attributes: true, attributeFilter: ['fs-consent-active'] }),
+  );
+});
+
+test('a Reserveer click brings the booking widget above the open banner', async () => {
+  const { page, iframe } = consentPage(true);
+  await widgetReady(page);
+  page.triggers[0].click();
+  assert.equal(iframe.classList.contains(UNDER_CONSENT), false);
+});
+
+test('does not touch the iframe or throw when ConsentPro is missing', async () => {
+  const iframe = makeElement('iframe', { src: `${BOOKINGS}/?rid=388830` });
+  const page = run({ iframe });
+  await widgetReady(page);
+  assert.equal(iframe.classList.contains(UNDER_CONSENT), false);
+  assert.equal(page.observers.length, 0);
 });

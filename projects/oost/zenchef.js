@@ -13,6 +13,15 @@
     nl: 'Reserveren bij Restaurant Oost',
     en: 'Book a table at Restaurant Oost',
   };
+  var CONSENT_ROOT = '[fs-consent-element="root"]';
+  var CONSENT_BANNER = '[fs-consent-element="banner"]';
+  var CONSENT_ACTIVE = 'fs-consent-active';
+  var UNDER_CONSENT = 'oost-zc-under-consent';
+  var STYLE_ID = 'oost-zenchef-css';
+  var UNDER_CONSENT_CSS =
+    '@media (max-width: 767px) { iframe.' +
+    UNDER_CONSENT +
+    ' { z-index: 99998 !important; } }';
   var PRELOAD_DELAY = 2000;
   var FALLBACK_DELAY = 8000;
 
@@ -44,6 +53,41 @@
     iframe.setAttribute('title', IFRAME_TITLES[pageLang()] || IFRAME_TITLES.nl);
   }
 
+  function consentBanner() {
+    var root = document.querySelector(CONSENT_ROOT);
+    if (!root || !root.shadowRoot) return null;
+    return root.shadowRoot.querySelector(CONSENT_BANNER);
+  }
+
+  function addStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    var style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = UNDER_CONSENT_CSS;
+    document.head.appendChild(style);
+  }
+
+  function setUnderConsent(under) {
+    var iframe = document.querySelector(IFRAME);
+    if (!iframe) return;
+    if (under) iframe.classList.add(UNDER_CONSENT);
+    else iframe.classList.remove(UNDER_CONSENT);
+  }
+
+  function layerUnderConsent() {
+    var banner = consentBanner();
+    if (!banner || !window.MutationObserver) return;
+    addStyles();
+    function sync() {
+      setUnderConsent(banner.hasAttribute(CONSENT_ACTIVE));
+    }
+    sync();
+    new window.MutationObserver(sync).observe(banner, {
+      attributes: true,
+      attributeFilter: [CONSENT_ACTIVE],
+    });
+  }
+
   function injectSdk() {
     var script = document.createElement('script');
     script.id = SDK_ID;
@@ -61,6 +105,7 @@
         window.removeEventListener('message', onMessage);
         isReady = true;
         titleIframe();
+        layerUnderConsent();
         DEBUG && console.log('[oost/zenchef] widget ready');
         resolve();
       });
@@ -120,6 +165,7 @@
     var trigger = target && target.closest ? target.closest(TRIGGER) : null;
     if (!trigger) return;
     event.preventDefault();
+    setUnderConsent(false);
     if (!isReady) waitForWidget(trigger);
   }
 

@@ -30,6 +30,11 @@ test('does not claim all five national dishes are on the menu', () => {
   assert.doesNotMatch(SOURCE, /gado-gado/i);
 });
 
+test('does not claim half the menu is vegetarian', () => {
+  assert.doesNotMatch(SOURCE, /half of it is vegetarian/i);
+  assert.match(SOURCE, /large part of it is vegetarian/);
+});
+
 test('lists only the current phone number', () => {
   assert.doesNotMatch(SOURCE, /06-?48979760/);
   assert.match(SOURCE, /023-785 1562/);

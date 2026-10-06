@@ -8,7 +8,7 @@ Webflow has one script tag, in the site footer:
 
 <!-- prettier-ignore -->
 ```html
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.4.0/projects/oost/init.js" defer data-allow-local></script>
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.4.1/projects/oost/init.js" defer data-allow-local></script>
 ```
 
 `init.js` reads its own URL, so every module comes from the same pinned tag. It appends, in order:

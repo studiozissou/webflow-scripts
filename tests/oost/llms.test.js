@@ -25,6 +25,11 @@ test('says spekkoek can be ordered', () => {
   assert.match(SOURCE, /^- Spekkoek to order \(spekkoek bestellen\)/m);
 });
 
+test('does not claim all five national dishes are on the menu', () => {
+  assert.doesNotMatch(SOURCE, /five of Indonesia's national dishes/);
+  assert.doesNotMatch(SOURCE, /gado-gado/i);
+});
+
 test('lists only the current phone number', () => {
   assert.doesNotMatch(SOURCE, /06-?48979760/);
   assert.match(SOURCE, /023-785 1562/);

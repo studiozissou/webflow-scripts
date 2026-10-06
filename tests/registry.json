@@ -512,8 +512,8 @@
       "critical": false,
       "created": "2026-09-30",
       "description": "Oost /privacybeleid and /algemene-voorwaarden (NL + EN): Content 12 layout with text-rich-text body, meta row, footer VAT/e-mail/legal links for MultiSafepay onboarding, cookie-settings link opens ConsentPro, banner links to the policy, SEO + sitemap, axe."
-      },
-      {
+    },
+    {
       "slug": "oost-faq-cms",
       "url": "https://oosteten.webflow.io/",
       "spec": "tests/acceptance/oost-faq-cms.spec.js",
@@ -552,6 +552,16 @@
       "critical": false,
       "created": "2026-10-06",
       "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): no placeholder WhatsApp number, English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
+    },
+    {
+      "slug": "oost-seo-quick-wins",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/oost-seo-quick-wins.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-06",
+      "description": "Oost SEO quick wins (NL + EN, 6 pages): 1200x630 share image, English page schema on /en, no webflow.io in schema, H1s name Restaurant Oost and Haarlem, CMS menu microdata (9 sections, 36 dishes, 24 offers matching visible prices), hasMenu links to menu itemid, FAQ stays microdata, llms.txt email. Gated on OOST_SEO_QUICK_WINS=1; share image also needs OOST_SHARE_CARD=1."
     }
   ]
 }

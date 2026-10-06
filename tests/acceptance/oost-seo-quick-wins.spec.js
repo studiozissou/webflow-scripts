@@ -39,7 +39,8 @@ async function menuTree(page) {
         visible: item.innerText,
       };
     });
-    return { itemid: menu.getAttribute('itemid'), sections: sections.length, items };
+    const itemid = new URL(menu.getAttribute('itemid'), location.href).href;
+    return { itemid, sections: sections.length, items };
   });
 }
 

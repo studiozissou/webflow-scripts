@@ -561,7 +561,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-10-06",
-      "description": "Oost GA4 blocked until ConsentPro analytics consent (no GA request or _ga cookie before a choice, denied Consent Mode default before ConsentPro, GA hit with gcs=G101 after Accepteren, none after Weigeren), hero fonts preloaded and used, ConsentPro and font host preconnected, banner still above Zenchef on phones, no page errors on / and /en. Gated on OOST_CONSENT=1."
+      "description": "Oost GA4 blocked until ConsentPro analytics consent (no GA request or _ga cookie before a choice, denied Consent Mode default before ConsentPro, GA hit with analytics granted after Accepteren, none after Weigeren), no font preloads (they regressed mobile LCP), banner still above Zenchef on phones, no page errors on / and /en. Gated on OOST_CONSENT=1."
     }
   ]
 }

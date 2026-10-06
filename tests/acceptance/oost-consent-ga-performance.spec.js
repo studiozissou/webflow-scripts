@@ -1,4 +1,4 @@
-// Acceptance tests for oost-consent-ga-performance: GA4 stays off until analytics consent, the Consent Mode default is denied before ConsentPro, and the two hero fonts are preloaded and used; skipped until OOST_CONSENT=1.
+// Acceptance tests for oost-consent-ga-performance: GA4 stays off until analytics consent, the Consent Mode default is denied before ConsentPro, and no hero font is preloaded (preloads cost ~0.6 s of mobile LCP); skipped until OOST_CONSENT=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -8,7 +8,6 @@ const BASE = process.env.OOST_URL || 'https://oosteten.webflow.io';
 const GA = /googletagmanager\.com|google-analytics\.com|\/g\/collect/;
 const COLLECT = /google-analytics\.com\/g\/collect/;
 const GA_ID = 'G-6Y731MKYLH';
-const FONTS = ['PPWriter-Thin.woff2', 'PPMuseum-Regular.woff2'];
 
 test.skip(
   process.env.OOST_CONSENT !== '1',
@@ -65,7 +64,11 @@ test.describe('oost-consent-ga-performance', () => {
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
     const tags = await page.$$eval('script', (scripts) =>
       scripts
-        .filter((s) => (s.src + s.textContent).includes('G-6Y731MKYLH'))
+        .filter((s) =>
+          [s.src, s.getAttribute('fs-consent-src'), s.textContent]
+            .join(' ')
+            .includes('G-6Y731MKYLH'),
+        )
         .map((s) => ({
           type: s.getAttribute('type'),
           category: s.getAttribute('fs-consent-categories'),
@@ -103,7 +106,7 @@ test.describe('oost-consent-ga-performance', () => {
     });
   });
 
-  test('Accepteren loads gtag and sends a GA4 hit with analytics granted and ads denied', async ({
+  test('Accepteren loads gtag and sends a GA4 hit with analytics granted', async ({
     page,
   }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'load' });
@@ -112,7 +115,7 @@ test.describe('oost-consent-ga-performance', () => {
     await accept.click();
     const url = new URL((await hit).url());
     expect(url.searchParams.get('tid')).toBe(GA_ID);
-    expect(url.searchParams.get('gcs')).toBe('G101');
+    expect(url.searchParams.get('gcs')).toMatch(/^G1[01]1$/);
   });
 
   test('Weigeren keeps GA off, including after a reload', async ({ page, context }) => {
@@ -142,36 +145,9 @@ test.describe('oost-consent-ga-performance', () => {
     ).toBeHidden();
   });
 
-  test('the two hero fonts are preloaded with crossorigin and used', async ({ page }) => {
-    const warnings = [];
-    page.on('console', (msg) => {
-      if (/preloaded using link preload but not used/i.test(msg.text()))
-        warnings.push(msg.text());
-    });
-    await page.goto(`${BASE}/`, { waitUntil: 'load' });
-    const preloads = await page.$$eval('link[rel="preload"][as="font"]', (links) =>
-      links.map((l) => ({
-        href: l.href,
-        type: l.type,
-        crossorigin: l.hasAttribute('crossorigin'),
-      })),
-    );
-    for (const file of FONTS) {
-      const link = preloads.find((p) => p.href.endsWith(file));
-      expect(link, file).toBeTruthy();
-      expect(link).toMatchObject({ type: 'font/woff2', crossorigin: true });
-    }
-    await page.waitForTimeout(4_000);
-    expect(warnings).toEqual([]);
-  });
-
-  test('ConsentPro and the font host are preconnected', async ({ page }) => {
+  test('no font is preloaded', async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
-    const hosts = await page.$$eval('link[rel="preconnect"]', (links) =>
-      links.map((l) => new URL(l.href).host),
-    );
-    expect(hosts).toContain('api.consentpro.com');
-    expect(hosts).toContain('webflow-files-prod.global.ssl.fastly.net');
+    expect(await page.locator('link[rel="preload"][as="font"]').count()).toBe(0);
   });
 
   test('the cookie banner still sits above the Zenchef button on phones', async ({

@@ -68,6 +68,7 @@ function run({
   lang = 'nl',
   idle = true,
   buttons = [{ 'data-formitable': 'open' }, { 'data-formitable': 'open' }],
+  iframe = null,
 } = {}) {
   const docListeners = {};
   const winListeners = {};
@@ -103,7 +104,11 @@ function run({
     documentElement: { lang },
     head: { appendChild: (el) => appended.push(el) },
     createElement: (tag) => makeElement(tag),
-    querySelector: (sel) => (sel === '.zc-widget-config' ? configEl : null),
+    querySelector: (sel) => {
+      if (sel === '.zc-widget-config') return configEl;
+      if (sel === `iframe[src^="${BOOKINGS}"]`) return iframe;
+      return null;
+    },
     querySelectorAll: (sel) => triggers.filter((el) => matches(el, sel)),
     getElementById: (id) => {
       if (id === 'zenchef-sdk' && existing) return existing;
@@ -385,4 +390,58 @@ test('exposes a load function on window.OOST.zenchef for debugging', () => {
   page.window.OOST.zenchef.load();
   page.window.OOST.zenchef.load();
   assert.equal(page.sdkScripts().length, 1);
+});
+
+test('names the booking iframe in Dutch after the widget-listening message when lang is nl', async () => {
+  const iframe = makeElement('iframe', { src: `${BOOKINGS}/?rid=388830` });
+  const page = run({ iframe });
+  page.triggers[0].dispatch('pointerenter');
+  page.widgetListening();
+  await flush();
+  assert.equal(iframe.getAttribute('title'), 'Reserveren bij Restaurant Oost');
+});
+
+test('names the booking iframe in English when lang is en', async () => {
+  const iframe = makeElement('iframe', { src: `${BOOKINGS}/?rid=388830` });
+  const page = run({ iframe, lang: 'en-GB' });
+  page.triggers[0].dispatch('pointerenter');
+  page.widgetListening();
+  await flush();
+  assert.equal(iframe.getAttribute('title'), 'Book a table at Restaurant Oost');
+});
+
+test('falls back to the Dutch iframe title for any other lang', async () => {
+  const iframe = makeElement('iframe', { src: `${BOOKINGS}/?rid=388830` });
+  const page = run({ iframe, lang: 'de' });
+  page.triggers[0].dispatch('pointerenter');
+  page.widgetListening();
+  await flush();
+  assert.equal(iframe.getAttribute('title'), 'Reserveren bij Restaurant Oost');
+});
+
+test('does nothing and does not throw when the booking iframe is missing', async () => {
+  const page = run();
+  page.triggers[0].dispatch('pointerenter');
+  assert.doesNotThrow(() => page.widgetListening());
+  await flush();
+  assert.equal(page.sdkScripts().length, 1);
+});
+
+test('does not name the iframe before widget-listening, nor for a message from another origin', async () => {
+  const iframe = makeElement('iframe', { src: `${BOOKINGS}/?rid=388830` });
+  const page = run({ iframe });
+  page.triggers[0].dispatch('pointerenter');
+  assert.equal(iframe.getAttribute('title'), null);
+  page.postMessage('https://evil.example', { type: 'widget-listening' });
+  page.postMessage(BOOKINGS, { type: 'height', height: 80 });
+  await flush();
+  assert.equal(iframe.getAttribute('title'), null);
+});
+
+test('naming the iframe never loads the SDK on its own', () => {
+  const iframe = makeElement('iframe', { src: `${BOOKINGS}/?rid=388830` });
+  const page = run({ iframe });
+  page.widgetListening();
+  assert.equal(page.sdkScripts().length, 0);
+  assert.equal(iframe.getAttribute('title'), null);
 });

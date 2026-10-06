@@ -118,7 +118,11 @@ test('runs once even if the tag is pasted twice', () => {
 
 test('skips a dependency or module whose exact URL is already on the page', () => {
   const { appended } = run({ preloaded: [LENIS_JS, CDN + 'utils.js'] });
-  assert.deepEqual(urls(appended), [CDN + 'smooth-scroll.js', CDN + 'faq-accordion.js', CDN + 'zenchef.js']);
+  assert.deepEqual(urls(appended), [
+    CDN + 'smooth-scroll.js',
+    CDN + 'faq-accordion.js',
+    CDN + 'zenchef.js',
+  ]);
 });
 
 test('?oost=local is ignored unless the tag carries data-allow-local', () => {

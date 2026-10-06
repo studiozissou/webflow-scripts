@@ -542,6 +542,16 @@
       "critical": false,
       "created": "2026-10-06",
       "description": "Oost NL+EN (13 pages incl. 404): every tel: and wa.me link points at +31 23 785 1562 with WhatsApp prefill intact, no 06-48979760 or 31600000000 in HTML, home JSON-LD telephone, llms.txt."
+    },
+    {
+      "slug": "oost-site-test-remediation",
+      "url": "https://oosteten.webflow.io/en",
+      "spec": "tests/acceptance/oost-site-test-remediation.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-06",
+      "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): no placeholder WhatsApp number, English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
     }
   ]
 }

@@ -1,4 +1,4 @@
-// Owns the Zenchef booking widget: turns the Reserveer buttons into widget triggers and loads the SDK after page load or on first intent, with a loading state and a bookings-page fallback for early taps.
+// Owns the Zenchef booking widget: turns the Reserveer buttons into widget triggers, loads the SDK after page load or on first intent with a loading state and a bookings-page fallback for early taps, and titles the booking iframe once it is ready.
 (function () {
   'use strict';
 
@@ -8,6 +8,11 @@
   var BOOKINGS_ORIGIN = 'https://bookings.zenchef.com';
   var TRIGGER = '[data-zc-action="open"]';
   var TRIGGERS = '[data-formitable="open"], ' + TRIGGER;
+  var IFRAME = 'iframe[src^="' + BOOKINGS_ORIGIN + '"]';
+  var IFRAME_TITLES = {
+    nl: 'Reserveren bij Restaurant Oost',
+    en: 'Book a table at Restaurant Oost',
+  };
   var PRELOAD_DELAY = 2000;
   var FALLBACK_DELAY = 8000;
 
@@ -29,6 +34,16 @@
     );
   }
 
+  function pageLang() {
+    return (document.documentElement.lang || 'nl').slice(0, 2);
+  }
+
+  function titleIframe() {
+    var iframe = document.querySelector(IFRAME);
+    if (!iframe) return;
+    iframe.setAttribute('title', IFRAME_TITLES[pageLang()] || IFRAME_TITLES.nl);
+  }
+
   function injectSdk() {
     var script = document.createElement('script');
     script.id = SDK_ID;
@@ -45,6 +60,7 @@
         if (!isWidgetListening(event)) return;
         window.removeEventListener('message', onMessage);
         isReady = true;
+        titleIframe();
         DEBUG && console.log('[oost/zenchef] widget ready');
         resolve();
       });
@@ -74,8 +90,9 @@
   }
 
   function openBookingsPage() {
-    var lang = (document.documentElement.lang || 'nl').slice(0, 2);
-    window.location.assign(BOOKINGS_ORIGIN + '/results?rid=' + rid + '&lang=' + lang);
+    window.location.assign(
+      BOOKINGS_ORIGIN + '/results?rid=' + rid + '&lang=' + pageLang(),
+    );
   }
 
   function onReady() {

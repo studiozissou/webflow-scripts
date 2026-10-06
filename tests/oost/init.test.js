@@ -69,13 +69,14 @@ function run({
 const urls = (appended) => appended.map((el) => el.src || el.href);
 const scripts = (appended) => appended.filter((el) => el.tagName === 'SCRIPT');
 
-test('loads the Lenis stylesheet and script, then smooth-scroll.js and utils.js from the same folder as init.js', () => {
+test('loads the Lenis stylesheet and script, then smooth-scroll.js, utils.js and faq-accordion.js from the same folder as init.js', () => {
   const { appended } = run();
   assert.deepEqual(urls(appended), [
     LENIS_CSS,
     LENIS_JS,
     CDN + 'smooth-scroll.js',
     CDN + 'utils.js',
+    CDN + 'faq-accordion.js',
   ]);
 });
 
@@ -90,7 +91,13 @@ test('every page gets the same global modules', () => {
   for (const pathname of ['/', '/afhalen', '/catering', '/geen-pagina']) {
     assert.deepEqual(
       urls(run({ pathname }).appended),
-      [LENIS_CSS, LENIS_JS, CDN + 'smooth-scroll.js', CDN + 'utils.js'],
+      [
+        LENIS_CSS,
+        LENIS_JS,
+        CDN + 'smooth-scroll.js',
+        CDN + 'utils.js',
+        CDN + 'faq-accordion.js',
+      ],
       pathname,
     );
   }
@@ -100,7 +107,10 @@ test('exposes the base, version and module list for debugging', () => {
   const { window } = run();
   assert.equal(window.OOST.base, CDN);
   assert.match(window.OOST.version, /^\d{4}\.\d{1,2}\.\d{1,2}\.\d+$/);
-  assert.deepEqual([...window.OOST.modules], ['smooth-scroll.js', 'utils.js']);
+  assert.deepEqual(
+    [...window.OOST.modules],
+    ['smooth-scroll.js', 'utils.js', 'faq-accordion.js'],
+  );
 });
 
 test('runs once even if the tag is pasted twice', () => {
@@ -121,12 +131,16 @@ test('runs once even if the tag is pasted twice', () => {
       URLSearchParams,
     }),
   );
-  assert.equal(appended.length, 4);
+  assert.equal(appended.length, 5);
 });
 
 test('skips a dependency or module whose exact URL is already on the page', () => {
   const { appended } = run({ preloaded: [LENIS_JS, LENIS_CSS] });
-  assert.deepEqual(urls(appended), [CDN + 'smooth-scroll.js', CDN + 'utils.js']);
+  assert.deepEqual(urls(appended), [
+    CDN + 'smooth-scroll.js',
+    CDN + 'utils.js',
+    CDN + 'faq-accordion.js',
+  ]);
 });
 
 test('?oost=local is ignored unless the tag carries data-allow-local', () => {

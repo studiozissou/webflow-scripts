@@ -54,9 +54,10 @@ test.describe('oost-legal-pages', () => {
     await expect(rich).toBeVisible();
     expect(await rich.locator('h2').count()).toBeGreaterThanOrEqual(8);
     const text = await rich.innerText();
-    for (const term of ['Google Analytics', 'Zenchef', 'WhatsApp', 'Webflow', 'Autoriteit Persoonsgegevens', 'NL869546223B01']) {
+    for (const term of ['Google Analytics', 'Zenchef', 'Webflow', 'Autoriteit Persoonsgegevens', 'NL869546223B01']) {
       expect(text, `policy mentions ${term}`).toContain(term);
     }
+    expect(text, 'policy no longer mentions WhatsApp').not.toMatch(/whats\s?app/i);
     expect(text).not.toMatch(PLACEHOLDER);
   });
 

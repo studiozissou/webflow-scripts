@@ -1,4 +1,4 @@
-// Acceptance tests for oost-site-test-remediation: the English pages link, read and share in English, the WhatsApp links use the real number, /en/catering fits a phone, the catering form labels are bound, menu text meets contrast, the Instagram link goes to the restaurant profile, and the booking iframe is named.
+// Acceptance tests for oost-site-test-remediation: the English pages link, read and share in English, /en/catering fits a phone, the catering form labels are bound, menu text meets contrast, the Instagram link goes to the restaurant profile, and the booking iframe is named.
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import dotenv from 'dotenv';
@@ -9,7 +9,6 @@ const BASE = (process.env.OOST_URL || 'https://oosteten.webflow.io').replace(/\/
 const NL_PAGES = ['/', '/afhalen', '/catering', '/privacybeleid', '/algemene-voorwaarden'];
 const EN_PAGES = ['/en', '/en/afhalen', '/en/catering', '/en/privacybeleid', '/en/algemene-voorwaarden'];
 const ALL_PAGES = [...NL_PAGES, ...EN_PAGES];
-const PLACEHOLDER_NUMBER = '31600000000';
 const INSTAGRAM = /^https:\/\/www\.instagram\.com\/restaurantoost\/?$/;
 const PHONE = { width: 375, height: 812 };
 const IGNORED_CONSOLE = /consentpro|gtag|googletagmanager|zenchef|turnstile|cloudflare|jsdelivr/i;
@@ -35,10 +34,6 @@ function collectErrors(page) {
   return errors;
 }
 
-async function whatsappLinks(page) {
-  return page.locator('a[href*="wa.me/"]').evaluateAll((links) => links.map((a) => a.getAttribute('href')));
-}
-
 async function seoFields(page) {
   return page.evaluate(() => {
     const meta = (selector) => document.querySelector(selector)?.getAttribute('content') || '';
@@ -57,27 +52,6 @@ test.describe('oost-site-test-remediation', () => {
     'Set OOST_REMEDIATION=1 once the remediation is on the target site.'
   );
   test.use({ viewport: { width: 1440, height: 900 } });
-
-  test('no page links to the placeholder WhatsApp number', async ({ page }) => {
-    for (const path of ALL_PAGES) {
-      await loadPage(page, path);
-      const links = await whatsappLinks(page);
-      expect(links.length, `${path} has WhatsApp links`).toBeGreaterThan(0);
-      expect(links.filter((href) => href.includes(PLACEHOLDER_NUMBER)), `${path} placeholder links`).toEqual([]);
-    }
-  });
-
-  test('English WhatsApp links use the same number as the Dutch pages and prefill English text', async ({ page }) => {
-    await loadPage(page, '/');
-    const number = (await whatsappLinks(page))[0].match(/wa\.me\/(\d+)/)[1];
-    for (const path of EN_PAGES) {
-      await loadPage(page, path);
-      for (const href of await whatsappLinks(page)) {
-        expect(href, `${path} WhatsApp number`).toContain(`wa.me/${number}`);
-        expect(decodeURIComponent(href), `${path} WhatsApp prefill`).not.toMatch(/\bHoi\b|\bik wil\b/i);
-      }
-    }
-  });
 
   test('internal links on English pages stay on English URLs', async ({ page }) => {
     for (const path of EN_PAGES) {

@@ -83,16 +83,16 @@ Serve the repo root on `https://localhost:8080`, open the staging site with `?oo
 
 ## Locale check
 
-`npm run oost:locale-guard -- https://www.oosteten.nl` crawls the sitemap without a browser and reports English-locale regressions. Run it after every publish that touches links or the English locale. Add `--strict` to turn the share-image warning into a failure.
+`npm run oost:locale-guard -- https://www.oosteten.nl` crawls the sitemap without a browser and reports English-locale regressions and any WhatsApp link. Run it after every publish that touches links or the English locale. Add `--strict` to turn the share-image warning into a failure.
 
-| Check               | Fails when                                                       |
-| ------------------- | ---------------------------------------------------------------- |
-| English link leak   | an `/en` page links to a Dutch URL outside the language switcher |
-| Placeholder number  | a page still carries the placeholder WhatsApp number             |
-| Bare social link    | an Instagram link has no handle                                  |
-| Untranslated title  | an `/en` page has the same `<title>` as its Dutch twin           |
-| Run-together list   | a list item is over 30 characters with no space                  |
-| Missing share image | a page has no `og:image` (warning unless `--strict`)             |
+| Check               | Fails when                                                                   |
+| ------------------- | ---------------------------------------------------------------------------- |
+| English link leak   | an `/en` page links to a Dutch URL outside the language switcher             |
+| WhatsApp link       | a page links to WhatsApp (Oost takes orders by phone only since 10 Oct 2026) |
+| Bare social link    | an Instagram link has no handle                                              |
+| Untranslated title  | an `/en` page has the same `<title>` as its Dutch twin                       |
+| Run-together list   | a list item is over 30 characters with no space                              |
+| Missing share image | a page has no `og:image` (warning unless `--strict`)                         |
 
 Exit code `0` is clean, `1` means findings, `2` means a page could not be fetched.
 

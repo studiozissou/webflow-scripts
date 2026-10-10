@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-06",
+  "lastUpdated": "2026-10-10",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -512,8 +512,8 @@
       "critical": false,
       "created": "2026-09-30",
       "description": "Oost /privacybeleid and /algemene-voorwaarden (NL + EN): Content 12 layout with text-rich-text body, meta row, footer VAT/e-mail/legal links for MultiSafepay onboarding, cookie-settings link opens ConsentPro, banner links to the policy, SEO + sitemap, axe."
-      },
-      {
+    },
+    {
       "slug": "oost-faq-cms",
       "url": "https://oosteten.webflow.io/",
       "spec": "tests/acceptance/oost-faq-cms.spec.js",
@@ -552,6 +552,16 @@
       "critical": false,
       "created": "2026-10-06",
       "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): no placeholder WhatsApp number, English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
+    },
+    {
+      "slug": "oost-remove-whatsapp",
+      "url": "https://oosteten.webflow.io/",
+      "spec": "tests/acceptance/oost-remove-whatsapp.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-10",
+      "description": "Oost NL+EN (12 pages incl. legal + 404): no wa.me links or WhatsApp wording/JSON-LD/Meta processor, WhatsApp buttons became tel: call links, /afhalen hero has one call button and the walk-in line, footer keeps Route, llms.txt. Gated on OOST_NO_WHATSAPP=1."
     }
   ]
 }

@@ -50,7 +50,8 @@ test.describe('oost-remove-whatsapp', () => {
         errors = [];
         page.on('pageerror', (err) => errors.push(err.message));
         page.on('console', (msg) => {
-          if (msg.type() === 'error' && !IGNORED_CONSOLE.test(msg.text())) errors.push(msg.text());
+          const notFoundSelf = path.includes('pagina-bestaat-niet') && /status of 404/.test(msg.text());
+          if (msg.type() === 'error' && !IGNORED_CONSOLE.test(msg.text()) && !notFoundSelf) errors.push(msg.text());
         });
         await page.goto(BASE + path, { waitUntil: 'domcontentloaded', timeout: 30000 });
       });

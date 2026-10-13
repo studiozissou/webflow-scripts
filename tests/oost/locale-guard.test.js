@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   checkEnglishLinks,
-  checkPlaceholderNumber,
+  checkWhatsAppLink,
   checkBareSocial,
   checkUntranslatedTitle,
   checkRunTogetherList,
@@ -101,21 +101,52 @@ describe('checkEnglishLinks', () => {
   });
 });
 
-describe('checkPlaceholderNumber', () => {
-  test('flags wa.me/31600000000', () => {
-    const findings = checkPlaceholderNumber(
+describe('checkWhatsAppLink', () => {
+  test('flags a wa.me link to the restaurant number', () => {
+    const findings = checkWhatsAppLink(
+      page({ body: '<a href="https://wa.me/31237851562?text=Hoi">wa</a>' }),
+      NL,
+    );
+    assert.equal(findings.length, 1);
+    assert.equal(findings[0].check, 'whatsapp-link');
+    assert.equal(findings[0].severity, 'error');
+    assert.match(findings[0].detail, /wa\.me\/31237851562/);
+  });
+
+  test('flags the old placeholder number', () => {
+    const findings = checkWhatsAppLink(
       page({ body: '<a href="https://wa.me/31600000000?text=Hoi">wa</a>' }),
       NL,
     );
     assert.equal(findings.length, 1);
-    assert.equal(findings[0].check, 'placeholder-number');
-    assert.equal(findings[0].severity, 'error');
+    assert.equal(findings[0].check, 'whatsapp-link');
   });
 
-  test('allows any other WhatsApp link', () => {
+  test('flags api.whatsapp.com and whatsapp.com/send links', () => {
+    const findings = checkWhatsAppLink(
+      page({
+        body:
+          '<a href="https://api.whatsapp.com/send?phone=31237851562">a</a>' +
+          '<a href="https://www.whatsapp.com/send?phone=31237851562">b</a>',
+      }),
+      NL,
+    );
+    assert.equal(findings.length, 2);
+  });
+
+  test('reports each WhatsApp href once', () => {
+    const href = 'https://wa.me/31237851562';
+    const findings = checkWhatsAppLink(
+      page({ body: `<a href="${href}">a</a><a href="${href}">b</a>` }),
+      NL,
+    );
+    assert.equal(findings.length, 1);
+  });
+
+  test('passes a page without WhatsApp links', () => {
     assert.deepEqual(
-      checkPlaceholderNumber(
-        page({ body: '<a href="https://wa.me/message/EXAMPLE">wa</a>' }),
+      checkWhatsAppLink(
+        page({ body: '<a href="tel:+31237851562">Bel ons</a><a href="https://www.instagram.com/oost">ig</a>' }),
         NL,
       ),
       [],

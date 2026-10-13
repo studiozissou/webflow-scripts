@@ -1,4 +1,4 @@
-// Acceptance tests for oost-legal-pages: /privacybeleid and /algemene-voorwaarden exist in NL and EN, the footer carries the MultiSafepay company details and legal links, and the cookie-settings link opens ConsentPro.
+// Acceptance tests for oost-legal-pages: /privacybeleid and /algemene-voorwaarden exist in NL and EN, stay noindex and out of the sitemap, the footer carries the MultiSafepay company details and legal links, and the cookie-settings link opens ConsentPro.
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import dotenv from 'dotenv';
@@ -54,9 +54,10 @@ test.describe('oost-legal-pages', () => {
     await expect(rich).toBeVisible();
     expect(await rich.locator('h2').count()).toBeGreaterThanOrEqual(8);
     const text = await rich.innerText();
-    for (const term of ['Google Analytics', 'Zenchef', 'WhatsApp', 'Webflow', 'Autoriteit Persoonsgegevens', 'NL869546223B01']) {
+    for (const term of ['Google Analytics', 'Zenchef', 'Webflow', 'Autoriteit Persoonsgegevens', 'NL869546223B01']) {
       expect(text, `policy mentions ${term}`).toContain(term);
     }
+    expect(text, 'policy no longer mentions WhatsApp').not.toMatch(/whats\s?app/i);
     expect(text).not.toMatch(PLACEHOLDER);
   });
 
@@ -149,7 +150,7 @@ test.describe('oost-legal-pages', () => {
     }
   });
 
-  test('SEO title, description, index status and sitemap entries', async ({ page, request }) => {
+  test('SEO title and description, noindex, and no sitemap entries', async ({ page, request }) => {
     const cases = [
       { path: PRIVACY, title: 'Privacybeleid | Restaurant Oost' },
       { path: TERMS, title: 'Algemene voorwaarden | Restaurant Oost' },
@@ -162,11 +163,11 @@ test.describe('oost-legal-pages', () => {
       const description = await page.locator('meta[name="description"]').getAttribute('content');
       expect(description, `${path} description`).toBeTruthy();
       expect(description.length, `${path} description length`).toBeLessThanOrEqual(160);
-      await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0);
+      await expect(page.locator('meta[name="robots"]'), `${path} robots`).toHaveAttribute('content', /noindex/);
     }
     const sitemap = await (await request.get(`${BASE}/sitemap.xml`)).text();
-    expect(sitemap).toContain(`${BASE}${PRIVACY}`);
-    expect(sitemap).toContain(`${BASE}${TERMS}`);
+    expect(sitemap).not.toContain(`${BASE}${PRIVACY}`);
+    expect(sitemap).not.toContain(`${BASE}${TERMS}`);
   });
 
   test('no console errors on NL and EN pages', async ({ page }) => {

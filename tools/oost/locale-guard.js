@@ -19,7 +19,7 @@ export const FALLBACK_PATHS = [
   '/en/algemene-voorwaarden',
 ];
 
-const PLACEHOLDER = 'wa.me/31600000000';
+const WHATSAPP_HOST = /^(wa\.me|api\.whatsapp\.com)$/i;
 const RUN_TOGETHER_MIN = 30;
 const VOID_TAGS = new Set([
   'area',
@@ -167,10 +167,26 @@ export function checkEnglishLinks(html, pageUrl) {
   return findings;
 }
 
-export function checkPlaceholderNumber(html, pageUrl) {
-  return html.includes(PLACEHOLDER)
-    ? [finding('placeholder-number', pageUrl, `placeholder WhatsApp link ${PLACEHOLDER}`)]
-    : [];
+function isWhatsApp(target) {
+  if (WHATSAPP_HOST.test(target.hostname)) return true;
+  return /(^|\.)whatsapp\.com$/i.test(target.hostname) && /^\/send\b/i.test(target.pathname);
+}
+
+export function checkWhatsAppLink(html, pageUrl) {
+  const seen = new Set();
+  const findings = [];
+  for (const { attrs } of anchorHrefs(html)) {
+    let target;
+    try {
+      target = new URL(attrs.href.trim(), pageUrl);
+    } catch {
+      continue;
+    }
+    if (!isWhatsApp(target) || seen.has(attrs.href)) continue;
+    seen.add(attrs.href);
+    findings.push(finding('whatsapp-link', pageUrl, `WhatsApp link ${attrs.href}`));
+  }
+  return findings;
 }
 
 export function checkBareSocial(html, pageUrl) {
@@ -253,7 +269,7 @@ export function checkShareImage(html, pageUrl, strict) {
 function checkPage(html, url, strict) {
   return [
     ...checkEnglishLinks(html, url),
-    ...checkPlaceholderNumber(html, url),
+    ...checkWhatsAppLink(html, url),
     ...checkBareSocial(html, url),
     ...checkRunTogetherList(html, url),
     ...checkShareImage(html, url, strict),

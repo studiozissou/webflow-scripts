@@ -39,3 +39,12 @@ test('lists only the current phone number', () => {
   assert.doesNotMatch(SOURCE, /06-?48979760/);
   assert.match(SOURCE, /023-785 1562/);
 });
+
+test('puts the station a 15-minute walk away', () => {
+  assert.match(SOURCE, /15 minutes' walk from Haarlem station/);
+  assert.doesNotMatch(SOURCE, /10 minutes' walk/);
+});
+
+test('does not mention WhatsApp', () => {
+  assert.doesNotMatch(SOURCE, /whatsapp/i);
+});

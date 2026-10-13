@@ -8,7 +8,7 @@ Webflow has one script tag, in the site footer:
 
 <!-- prettier-ignore -->
 ```html
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.4.1/projects/oost/init.js" defer data-allow-local></script>
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.4.2/projects/oost/init.js" defer></script>
 ```
 
 `init.js` reads its own URL, so every module comes from the same pinned tag. It appends, in order:
@@ -50,6 +50,10 @@ The FAQ lists are Webflow Collection Lists on the `FAQ` collection. Every templa
 
 Zenchef gives its iframe the highest possible z-index and appends it last, so on phones its floating "Reserveer een tafel" button covered the banner's **Accepteren** button. ConsentPro renders the banner inside a shadow root, so page CSS can't tell when it's open. `zenchef.js` watches the banner's `fs-consent-active` attribute and toggles `oost-zc-under-consent` on the iframe, which drops it to z-index 99998 (the banner is 99999). A Reserveer tap removes the class so the booking widget always opens on top.
 
+## Why GA4 waits for consent
+
+ConsentPro (Finsweet) gates the GA4 tag in the site head: the tag carries `type="fs-consent"` with `fs-consent-categories="analytics"`, and an inline snippet sets a Google Consent Mode `default` of denied before any Google code runs. Nothing reaches Google before a visitor taps Accepteren, and nothing after Weigeren. Visitors who decline are not counted, which is the trade-off the client accepted on 6 Oct 2026. ConsentPro stays synchronous and early so its auto-blocker can catch trackers; only the preconnect is async. The head code is in the private repo (`oost-consent-ga-performance` spec), not in this loader, because it must run before any script tag.
+
 ## Why Zenchef is lazy
 
 PageSpeed Insights on 3 Oct 2026 scored the home page 20 on mobile. A local Lighthouse run gave LCP 14.6 s and CLS 0.29. The eager Zenchef snippet pulled 1.47 MB (bookings iframe, captcha, SDK) before LCP, and `data-open="2000"` auto-opened the widget, causing most of the layout shift.
@@ -79,20 +83,20 @@ Site settings, footer code:
 
 ## Local dev
 
-Serve the repo root on `https://localhost:8080`, open the staging site with `?oost=local`, and the loader pulls modules from your machine for the rest of the browser session. `?oost=cdn` switches back. The switch only works while the tag carries `data-allow-local`; remove that attribute at launch.
+Serve the repo root on `https://localhost:8080`, open the staging site with `?oost=local`, and the loader pulls modules from your machine for the rest of the browser session. `?oost=cdn` switches back. The switch only works while the tag carries `data-allow-local`. The live tag does not carry it (removed 13 Oct 2026), so add the attribute to the footer tag in Site settings while you develop, and take it off again before publishing.
 
 ## Locale check
 
-`npm run oost:locale-guard -- https://www.oosteten.nl` crawls the sitemap without a browser and reports English-locale regressions. Run it after every publish that touches links or the English locale. Add `--strict` to turn the share-image warning into a failure.
+`npm run oost:locale-guard -- https://www.oosteten.nl` crawls the sitemap without a browser and reports English-locale regressions and any WhatsApp link. Run it after every publish that touches links or the English locale. Add `--strict` to turn the share-image warning into a failure.
 
-| Check               | Fails when                                                       |
-| ------------------- | ---------------------------------------------------------------- |
-| English link leak   | an `/en` page links to a Dutch URL outside the language switcher |
-| Placeholder number  | a page still carries the placeholder WhatsApp number             |
-| Bare social link    | an Instagram link has no handle                                  |
-| Untranslated title  | an `/en` page has the same `<title>` as its Dutch twin           |
-| Run-together list   | a list item is over 30 characters with no space                  |
-| Missing share image | a page has no `og:image` (warning unless `--strict`)             |
+| Check               | Fails when                                                                   |
+| ------------------- | ---------------------------------------------------------------------------- |
+| English link leak   | an `/en` page links to a Dutch URL outside the language switcher             |
+| WhatsApp link       | a page links to WhatsApp (Oost takes orders by phone only since 10 Oct 2026) |
+| Bare social link    | an Instagram link has no handle                                              |
+| Untranslated title  | an `/en` page has the same `<title>` as its Dutch twin                       |
+| Run-together list   | a list item is over 30 characters with no space                              |
+| Missing share image | a page has no `og:image` (warning unless `--strict`)                         |
 
 Exit code `0` is clean, `1` means findings, `2` means a page could not be fetched.
 

@@ -554,6 +554,16 @@
       "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): no placeholder WhatsApp number, English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
     },
     {
+      "slug": "carsa-oct-2026-canonicals-store-schema",
+      "url": "https://www.carsa.co.uk/stores/bradford",
+      "spec": "tests/acceptance/carsa-oct-2026-canonicals-store-schema.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-13",
+      "description": "Carsa Oct 2026 - absolute https canonicals on six pages; store JSON-LD gains openingHoursSpecification from new CMS hour fields, clean street/locality/region from new CMS fields, generic phone, no HTML entities."
+    },
+    {
       "slug": "carsa-oct-2026-report-fixes",
       "url": "https://www.carsa.co.uk/",
       "spec": "tests/acceptance/carsa-oct-2026-report-fixes.spec.js",

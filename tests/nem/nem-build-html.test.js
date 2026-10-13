@@ -17,7 +17,7 @@
  *   - an empty intro line removes its whole block (the `data-slot-wrap` elements), not
  *     just the text — no empty rule, no stray spacer
  *   - the export is PDF-safe: no <script>, no lazy images, print rules and embedded
- *     fonts injected, fixed slots (logo, labels, disclaimer, site-url) untouched
+ *     fonts injected, fixed slots (logo, labels, disclaimer) untouched
  *   - a template missing a required slot throws rather than shipping placeholder copy
  *   - reportText is untouched: the plain-text alternative is model output only
  *
@@ -220,13 +220,12 @@ describe("the export is PDF-safe", () => {
     assert.match(html, /print-color-adjust:\s*exact/);
   });
 
-  test("fixed slots are untouched: logo, labels, disclaimer, site-url", async () => {
+  test("fixed slots are untouched: logo, labels, disclaimer", async () => {
     const { html } = await runBuildHtml();
     assert.ok(html.includes('data-slot="logo"'));
-    assert.equal(slot(html, "label-opening"), "Wat je herkent");
-    assert.equal(slot(html, "label-closing"), "Wat nu");
-    assert.match(slot(html, "disclaimer"), /^Dit rapport is geen psychologische diagnose\./);
-    assert.equal(slot(html, "site-url"), "nemmatters.com");
+    assert.equal(slot(html, "label-opening"), "Zo gaat het meestal");
+    assert.equal(slot(html, "label-closing"), "Dit is niet wie je bent");
+    assert.match(slot(html, "disclaimer"), /^Dit rapport is geen diagnose\./);
   });
 });
 

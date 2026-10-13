@@ -39,19 +39,33 @@ const makeDollar = (outputs) => (name) => {
   return { first: () => ({ json: outputs[name] }) };
 };
 
-function evaluate(expression, outputs) {
+const makeNow = (iso) => ({
+  setZone: (zone) => ({
+    toFormat: (format) => {
+      assert.strictEqual(format, 'yyyy-MM-dd', 'the $now stub only knows yyyy-MM-dd');
+      return new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' })
+        .format(new Date(iso));
+    },
+  }),
+});
+
+function evaluate(expression, outputs, nowIso) {
   const match = expression.trim().match(/^=\{\{([\s\S]*)\}\}$/);
   assert.ok(match, 'expression must be of the form ={{ … }}');
-  return new Function('$', `return (${match[1]});`)(makeDollar(outputs));
+  return new Function('$', '$now', `return (${match[1]});`)(makeDollar(outputs), makeNow(nowIso));
 }
 
-const send = (locale = 'nl') =>
+const send = (locale = 'nl', nowIso = '2026-09-24T10:00:00Z') =>
   JSON.parse(
-    evaluate(fs.readFileSync(EXPRESSION_FILE, 'utf8'), {
-      'Validate Token': { ...validateToken, locale },
-      'Encode PDF': encodePdf,
-      'Report Mail Config': mailConfig,
-    })
+    evaluate(
+      fs.readFileSync(EXPRESSION_FILE, 'utf8'),
+      {
+        'Validate Token': { ...validateToken, locale },
+        'Encode PDF': encodePdf,
+        'Report Mail Config': mailConfig,
+      },
+      nowIso
+    )
   );
 
 describe('nem /verify — Send Report jsonBody', () => {
@@ -77,10 +91,19 @@ describe('nem /verify — Send Report jsonBody', () => {
     assert.strictEqual(p.data.first_name, "Sjoerd d'Anjou");
   });
 
-  test('keeps the PDF attachment byte for byte', () => {
+  test('keeps the PDF attachment byte for byte, named after the send date', () => {
     assert.deepStrictEqual(send().attachments, [
-      { content: encodePdf.pdfBase64, filename: 'NEM-rapport.pdf', disposition: 'attachment' },
+      { content: encodePdf.pdfBase64, filename: 'NEM-Life-rapport-2026-09-24.pdf', disposition: 'attachment' },
     ]);
+  });
+
+  test('the EN branch names the file in English', () => {
+    assert.strictEqual(send('en').attachments[0].filename, 'NEM-Life-report-2026-09-24.pdf');
+  });
+
+  test('the date in the filename is the Amsterdam date, not UTC', () => {
+    assert.strictEqual(send('nl', '2026-09-23T22:30:00Z').attachments[0].filename, 'NEM-Life-rapport-2026-09-24.pdf');
+    assert.strictEqual(send('nl', '2026-01-31T23:30:00Z').attachments[0].filename, 'NEM-Life-rapport-2026-02-01.pdf');
   });
 
   test('the body lives in the template — no text or html in the request', () => {

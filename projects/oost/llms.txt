@@ -34,8 +34,8 @@ Prices in euros. (v) vegetarian, (spicy) marked pittig on the menu.
 
 ### Complete meals (Compleet samengesteld)
 
-- Nasi Campur, €16.00: rice or bami, two meat/fish/chicken dishes, two vegetarian dishes and an egg
-- Nasi Campur Speciaal, €19.50: rice or bami, three meat/chicken/fish dishes, two vegetarian dishes, an egg, a saté skewer and garnishes
+- Nasi Tjampoer, €16.00: rice or bami, two meat/fish/chicken dishes, two vegetarian dishes and an egg
+- Nasi Tjampoer Speciaal, €19.50: rice or bami, three meat/fish/chicken dishes, two vegetarian dishes, an egg, a saté skewer and garnishes
 - Rijsttafel OOST, €26.50 pp (from 2 people): meat, chicken, fish, vegetarian dishes, saté, rice, bami and garnishes to share
 - Vegetarische Rijsttafel (v), €24.50 pp (from 2 people)
 - Saté Combi, €17.50: saté ayam, domba and udang with house sauces
@@ -43,34 +43,30 @@ Prices in euros. (v) vegetarian, (spicy) marked pittig on the menu.
 
 All dishes below can also be ordered separately.
 
-### Mains: meat, chicken and fish
+### Mains: meat, fish and chicken
 
-- Daging Rendang: beef slow-cooked in coconut milk and spices
-- Daging Empal: fried beef in an aromatic spice paste
-- Ayam Ketjap: chicken thigh in sweet soy sauce with onion
-- Ayam Rica-Rica (spicy): chicken thigh stewed in a fresh, hot spice mix
-- Sambal Goreng Udang (spicy): black tiger prawns in a mildly hot red sauce with peteh beans
-- Cumi Cumi Hitam: squid in a dark, heavily spiced sauce
+- Daging Rendang, €10.50: beef slow-cooked in coconut milk and spices
+- Daging Empal, €10.50: fried beef in a spiced boemboe
+- Ayam Ketjap, €9.50: chicken thigh in sweet soy sauce with onion
+- Ayam Rica-Rica (spicy), €9.50: chicken thigh stewed in a fresh, hot spice mix
+- Sambal Goreng Udang (spicy), €12.50: black tiger prawns in a mildly hot red sauce with peteh beans, lime leaf and tomato
+- Cumi Cumi Hitam, €12.50: squid in a dark, heavily spiced sauce
 
 ### Vegetarian dishes
 
-- Sambal Goreng Boontjes (v, spicy): green beans in sambal sauce
-- Sayur Lodeh (v): vegetables in creamy coconut broth
-- Tahoe Taotjo (v): fried tofu in fermented soybean sauce
-- Tumis Kailan (v, spicy): stir-fried kailan with garlic and chilli
-- Sambal Goreng Telor Peteh (v, spicy): boiled eggs in a hot red sauce with peteh beans
-- Terong Balado (v, spicy): fried aubergine in tomato sambal
+- Sambal Goreng Boontjes (v, spicy), €7.00: green beans in sambal sauce
+- Sayur Lodeh (v), €7.00: vegetables in creamy coconut broth
+- Tahoe Taotjo (v), €8.50: fried tofu in fermented soybean sauce
+- Tumis Kailan (v, spicy), €10.50: stir-fried Chinese broccoli with garlic and chilli
+- Kerrie Eitje (v), €1.75: boiled egg in curry sauce
+- Sambal Goreng Telor Peteh (v, spicy), €1.75: boiled egg in a hot red sauce with peteh beans
+- Terong Balado (v, spicy), €8.50: fried aubergine in tomato sambal
 
 ### Saté (3 skewers)
 
-- Saté Ayam, €7.50: grilled chicken thigh with peanut sauce
+- Saté Ayam, €8.00: grilled chicken thigh with peanut sauce
 - Saté Domba, €9.50: grilled lamb with shallot-ketjap sauce
 - Saté Udang, €10.50: grilled prawns with garlic-coriander sauce
-
-### Eggs
-
-- Heet Eitje (spicy), €1.75: boiled egg in hot sauce
-- Kerrie Eitje, €1.75: boiled egg in curry sauce
 
 ### Rice and bami
 
@@ -81,21 +77,21 @@ All dishes below can also be ordered separately.
 
 ### Snacks
 
-- Lemper, €3.00: sticky rice filled with spiced coconut chicken
-- Pasteitje, €3.00: pastry filled with vegetables and beef
-- Loempia Semarang (v), €2.25: house-made vegetarian spring roll
+- Lemper, €3.50: sticky rice filled with spiced coconut chicken
+- Pasteitje, €3.50: pastry filled with vegetables and beef
+- Loempia Semarang (v), €2.50: vegetarian spring roll
 - Perkedel Jagung, €3.50: corn fritter
 
 ### Soups
 
-- Soto Ayam, €8.50: spiced chicken soup
-- Soto Vega (v), €8.50
+- Soto Ayam, small €9.50 / large €15.50: chicken soup with glass noodles, bean sprouts, chicken and an egg
+- Soto Vega (v), small €9.50 / large €15.50
 
 ### Desserts
 
-- Spekkoek met IJs, €7.50: Indonesian layer cake with ice cream
-- Dadar Gulung, €8.50: pandan pancake with palm sugar and coconut, with ice cream
-- Kokofogatto, €5.50: coconut ice cream with an espresso shot
+- Spekkoek met IJs, €7.50: Indonesian layer cake with coconut ice cream
+- Dadar Gulung, €8.50: pandan pancake with palm sugar and coconut, with coconut ice cream
+- Kokofogato, €5.50: coconut ice cream with an espresso shot
 
 ## Takeaway
 

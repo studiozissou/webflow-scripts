@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-06",
+  "lastUpdated": "2026-10-13",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -562,6 +562,16 @@
       "critical": false,
       "created": "2026-10-06",
       "description": "Oost SEO quick wins (NL + EN, 6 pages): 1200x630 share image, English page schema on /en, no webflow.io in schema, H1s name Restaurant Oost and Haarlem, CMS menu microdata (9 sections, 36 dishes, 24 offers matching visible prices), hasMenu links to menu itemid, FAQ stays microdata, llms.txt email. Gated on OOST_SEO_QUICK_WINS=1; share image also needs OOST_SHARE_CARD=1."
+    },
+    {
+      "slug": "oost-cleanup",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/oost-cleanup.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-13",
+      "description": "Oost post-launch cleanup (NL + EN, 10 pages): no template placeholders or image captions, decorative map boxes, 15-minute walk everywhere, whole spekkoek on catering, EN says takeaway, consistent postcode/phone, EN 404 title, EN terms link to EN privacy, bound catering form labels, eager nav logo, no data-allow-local, EN legal og:image share card, legal pages noindex, llms.txt 15 minutes, no console errors. Gated on OOST_CLEANUP=1; reviews test also needs OOST_REVIEWS=1."
     }
   ]
 }

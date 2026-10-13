@@ -536,7 +536,7 @@ function nemButtonHoverHandlers(active: boolean) {
 const PILL_BORDER = "var(--_token---accent-grey, #9f9c8b)";
 const PILL_TEXT = "var(--_token---text-olive, #706d56)";
 const PILL_BORDER_HOVER = "rgba(0, 0, 0, 0.1)";
-const PILL_BG_HOVER = "var(--color--button-bg-hover, #f2f24a)";
+const PILL_BG_HOVER = "var(--color--accent, #fafa7d)";
 
 function Quiz({
   submitWebhookUrl,

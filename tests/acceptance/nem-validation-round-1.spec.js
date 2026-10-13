@@ -96,10 +96,10 @@ test.describe(SLUG, () => {
     const pill = module(page).locator('.nem-answers button').first();
     await pill.hover();
     expect(await computed(pill, 'border-color')).toBe('rgba(0, 0, 0, 0.1)');
-    const siteHover = await page.evaluate(
-      () => getComputedStyle(document.documentElement).getPropertyValue('--color--button-bg-hover').trim()
+    const siteAccent = await page.evaluate(
+      () => getComputedStyle(document.documentElement).getPropertyValue('--color--accent').trim()
     );
-    const expected = siteHover || '#f2f24a';
+    const expected = siteAccent || '#fafa7d';
     const pillBg = await computed(pill, 'background-color');
     const normalise = (c) =>
       page.evaluate((v) => {

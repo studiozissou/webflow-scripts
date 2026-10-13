@@ -622,6 +622,16 @@
       "critical": false,
       "created": "2026-10-13",
       "description": "Oost final food menu (Roos, 5 Oct) - NL and EN dish count, every dish priced with matching Offer microdata, NL/EN prices identical, JSON-LD valid; gated on OOST_MENU_FINAL=1."
+    },
+    {
+      "slug": "carsa-oct-2026-report-fixes",
+      "url": "https://www.carsa.co.uk/",
+      "spec": "tests/acceptance/carsa-oct-2026-report-fixes.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-13",
+      "description": "October report fixes via Webflow MCP: footer complaints/FCA link text, no Learn more links, unique part-exchange meta, blog/FAQ links off 301s, broken blog images, old adaptive-cruise related card. Expected to fail until the spec is executed."
     }
   ]
 }

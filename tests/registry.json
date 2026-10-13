@@ -602,6 +602,26 @@
       "critical": false,
       "created": "2026-10-10",
       "description": "Oost NL+EN (12 pages incl. legal + 404): no wa.me links or WhatsApp wording/JSON-LD/Meta processor, WhatsApp buttons became tel: call links, /afhalen hero has one call button and the walk-in line, footer keeps Route, llms.txt. Gated on OOST_NO_WHATSAPP=1."
+    },
+    {
+      "slug": "carsa-oct-2026-canonicals-store-schema",
+      "url": "https://www.carsa.co.uk/stores/bradford",
+      "spec": "tests/acceptance/carsa-oct-2026-canonicals-store-schema.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-13",
+      "description": "Carsa Oct 2026 - absolute https canonicals on six pages; store JSON-LD gains openingHoursSpecification from new CMS hour fields, clean street/locality/region from new CMS fields, generic phone, no HTML entities."
+    },
+    {
+      "slug": "oost-menu-final-prices",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/oost-menu-final-prices.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-13",
+      "description": "Oost final food menu (Roos, 5 Oct) - NL and EN dish count, every dish priced with matching Offer microdata, NL/EN prices identical, JSON-LD valid; gated on OOST_MENU_FINAL=1."
     }
   ]
 }

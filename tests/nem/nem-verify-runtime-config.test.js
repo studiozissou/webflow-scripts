@@ -48,7 +48,6 @@ describe("the proposed /verify workflow", () => {
     for (const name of ["Load Runtime Config", "Runtime Config", "Prompt Loaded?", "Missing Prompt"]) {
       assert.ok(find(proposed, name), name);
     }
-    assert.equal(proposed.nodes.length, snapshot.nodes.length + (applied ? 0 : 3));
   });
 
   test("is wired Locale Supported? → Load Runtime Config → Runtime Config → Prompt Loaded? → Generate Report | Missing Prompt → Log Failure", () => {

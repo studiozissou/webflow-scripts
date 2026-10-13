@@ -50,6 +50,18 @@ The FAQ lists are Webflow Collection Lists on the `FAQ` collection. Every templa
 
 Zenchef gives its iframe the highest possible z-index and appends it last, so on phones its floating "Reserveer een tafel" button covered the banner's **Accepteren** button. ConsentPro renders the banner inside a shadow root, so page CSS can't tell when it's open. `zenchef.js` watches the banner's `fs-consent-active` attribute and toggles `oost-zc-under-consent` on the iframe, which drops it to z-index 99998 (the banner is 99999). A Reserveer tap removes the class so the booking widget always opens on top.
 
+## Why GA4 lives in the site head code, behind ConsentPro
+
+Webflow's Google Analytics integration put `gtag` in `<head>` ahead of ConsentPro, so a fresh visit set `_ga` cookies and sent hits before the visitor chose anything. The integration is now empty. GA4 sits in the site head code as three marked blocks:
+
+- `oost:consent-default`, above ConsentPro: sets the Consent Mode default to denied for all four signals. ConsentPro only ever sends `gtag('consent','update',…)`, so the page must set the default itself.
+- ConsentPro's two scripts stay synchronous and early, so its auto-blocker can catch trackers.
+- `oost:ga4`, right after ConsentPro: the gtag loader and config as `<script type="fs-consent" fs-consent-categories="analytics">`, with no `async`. ConsentPro moves the `src` into `fs-consent-src` and only runs them after analytics consent.
+
+Visitors who click Weigeren aren't counted. Accepteren grants every category, marketing included, so hits carry `gcs=G111` (ads granted). No ad tags exist, so nothing uses that signal.
+
+The hero fonts are not preloaded. A local A/B (Lighthouse mobile, 3 runs each) put preloading both at a median of 89 (LCP 3.3 s), against 93 (LCP 2.7 s) without: the 120 KB of fonts competes with the render-blocking CSS and scripts.
+
 ## Why Zenchef is lazy
 
 PageSpeed Insights on 3 Oct 2026 scored the home page 20 on mobile. A local Lighthouse run gave LCP 14.6 s and CLS 0.29. The eager Zenchef snippet pulled 1.47 MB (bookings iframe, captcha, SDK) before LCP, and `data-open="2000"` auto-opened the widget, causing most of the layout shift.

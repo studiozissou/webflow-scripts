@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.test' });
 
-const BASE = process.env.OOST_URL || 'https://oosteten.webflow.io';
+const BASE = process.env.OOST_URL || 'https://www.oosteten.nl';
 const PAGES = [
   { path: '/', count: 9 },
   { path: '/afhalen', count: 7 },

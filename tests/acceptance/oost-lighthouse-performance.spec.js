@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.test' });
 
-const BASE = process.env.OOST_URL || 'https://oosteten.webflow.io';
+const BASE = process.env.OOST_URL || 'https://www.oosteten.nl';
 const ZENCHEF = /zenchef\.com|awswaf\.com/;
 const TRIGGER = '[data-zc-action="open"], [data-formitable="open"]';
 const NAV_TRIGGER = `nav ${TRIGGER.split(', ').join(', nav ')}`;

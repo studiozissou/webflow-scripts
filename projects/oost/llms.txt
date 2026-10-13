@@ -2,7 +2,7 @@
 
 > Indonesian family restaurant at Zijlweg 82 in Haarlem, the Netherlands. Dine in, takeaway (afhalen) and rijsttafel catering for groups of 10 or more.
 
-Oost is run by Levy (kitchen) and Nijne (front of house), who cook the way their grandmothers Oma Fanny and Oma Norma taught them. The menu carries all five of Indonesia's national dishes (gado-gado, soto, saté, nasi goreng, rendang), and half of it is vegetarian. Every dish is marked vegetarian and/or spicy, sambal comes on the side, and everything on the menu can be taken away. The site is in Dutch, with an English version under /en.
+Oost is run by Levy (kitchen) and Nijne (front of house), who cook the way their grandmothers Oma Fanny and Oma Norma taught them. The menu includes rendang, saté, soto and nasi goreng, and a large part of it is vegetarian. Every dish is marked vegetarian and/or spicy, sambal comes on the side, and everything on the menu can be taken away. The site is in Dutch, with an English version under /en.
 
 ## Key pages
 
@@ -17,7 +17,7 @@ Oost is run by Levy (kitchen) and Nijne (front of house), who cook the way their
 
 ## Visit
 
-- Address: Zijlweg 82, 2013 DL Haarlem, 10 minutes' walk from Haarlem station
+- Address: Zijlweg 82, 2013 DL Haarlem, 15 minutes' walk from Haarlem station
 - Bus stop: Hoofmanstraat, almost at the door
 - Parking: paid street parking nearby; bikes can go out front
 - Hours: Mon 12:00–22:00, Tue closed, Wed–Fri 12:00–22:00, Sat–Sun 17:00–22:00
@@ -113,7 +113,7 @@ All dishes below can also be ordered separately.
 - Rijsttafel buffet: 8–12 dishes, delivered hot in serving trays with a label per dish, from €28.50 pp (vegetarian from €25.50)
 - Lunchbox: nasi campur per person with four dishes, rice, egg, kroepoek and sambal, from €17.50 pp; available from 11:30
 - Borrel: saté with peanut sauce and loempia with sambal, priced per piece
-- Spekkoek: whole, or sliced and wrapped per piece
+- Spekkoek to order (spekkoek bestellen): whole, or sliced and wrapped per piece
 - Pickup from 10 people; delivery and set-up from 20 people
 - Delivery area: Haarlem, Heemstede, Bloemendaal, Overveen, Aerdenhout, Zandvoort, Spaarndam, Hoofddorp, Velserbroek; further by arrangement
 - Food only, in dishes or chafing dishes with serving spoons; plates and warmers at cost price
@@ -123,6 +123,7 @@ All dishes below can also be ordered separately.
 
 ## Contact
 
+- Name: Restaurant Oost, Zijlweg 82, 2013 DL Haarlem
 - Phone (reservations and takeaway): 023-785 1562
 - Catering email: info@oosteten.nl
 - Website: https://www.oosteten.nl

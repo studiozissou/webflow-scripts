@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.test' });
 
-const BASE = (process.env.OOST_URL || 'https://oosteten.webflow.io').replace(/\/$/, '');
+const BASE = (process.env.OOST_URL || 'https://www.oosteten.nl').replace(/\/$/, '');
 const NL_PAGES = ['/', '/afhalen', '/catering', '/privacybeleid', '/algemene-voorwaarden'];
 const EN_PAGES = ['/en', '/en/afhalen', '/en/catering', '/en/privacybeleid', '/en/algemene-voorwaarden'];
 const ALL_PAGES = [...NL_PAGES, ...EN_PAGES];

@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.test' });
 
-const BASE = (process.env.OOST_URL || 'https://oosteten.webflow.io').replace(/\/$/, '');
+const BASE = (process.env.OOST_URL || 'https://www.oosteten.nl').replace(/\/$/, '');
 const TEL = 'tel:+31237851562';
 const LLMS = fileURLToPath(new URL('../../projects/oost/llms.txt', import.meta.url));
 const IGNORED_CONSOLE = /consentpro|gtag|googletagmanager|zenchef|turnstile|cloudflare|jsdelivr/i;

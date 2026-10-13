@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-10",
+  "lastUpdated": "2026-10-13",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -511,11 +511,11 @@
       "source": "plan",
       "critical": false,
       "created": "2026-09-30",
-      "description": "Oost /privacybeleid and /algemene-voorwaarden (NL + EN): Content 12 layout with text-rich-text body, meta row, footer VAT/e-mail/legal links for MultiSafepay onboarding, cookie-settings link opens ConsentPro, banner links to the policy, SEO + sitemap, axe."
+      "description": "Oost /privacybeleid and /algemene-voorwaarden (NL + EN): Content 12 layout with text-rich-text body, meta row, footer VAT/e-mail/legal links for MultiSafepay onboarding, cookie-settings link opens ConsentPro, banner links to the policy, SEO titles and descriptions, noindex and out of the sitemap (13 Oct decision), axe."
     },
     {
       "slug": "oost-faq-cms",
-      "url": "https://oosteten.webflow.io/",
+      "url": "https://www.oosteten.nl/",
       "spec": "tests/acceptance/oost-faq-cms.spec.js",
       "type": "acceptance",
       "source": "plan",
@@ -525,7 +525,7 @@
     },
     {
       "slug": "oost-lighthouse-performance",
-      "url": "https://oosteten.webflow.io/",
+      "url": "https://www.oosteten.nl/",
       "spec": "tests/acceptance/oost-lighthouse-performance.spec.js",
       "type": "acceptance",
       "source": "plan",
@@ -535,23 +535,43 @@
     },
     {
       "slug": "oost-phone-links",
-      "url": "https://oosteten.webflow.io/",
+      "url": "https://www.oosteten.nl/",
       "spec": "tests/acceptance/oost-phone-links.spec.js",
       "type": "acceptance",
       "source": "plan",
       "critical": false,
       "created": "2026-10-06",
-      "description": "Oost NL+EN (13 pages incl. 404): every tel: and wa.me link points at +31 23 785 1562 with WhatsApp prefill intact, no 06-48979760 or 31600000000 in HTML, home JSON-LD telephone, llms.txt."
+      "description": "Oost NL+EN (13 pages incl. 404): every tel: link points at +31 23 785 1562, no 06-48979760 or 31600000000 in HTML, home JSON-LD telephone, llms.txt. WhatsApp links were removed on 10 Oct (see oost-remove-whatsapp)."
     },
     {
       "slug": "oost-site-test-remediation",
-      "url": "https://oosteten.webflow.io/en",
+      "url": "https://www.oosteten.nl/en",
       "spec": "tests/acceptance/oost-site-test-remediation.spec.js",
       "type": "acceptance",
       "source": "plan",
       "critical": false,
       "created": "2026-10-06",
-      "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): no placeholder WhatsApp number, English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
+      "description": "Oost fixes from the 6 Oct full-site test (NL + EN, 10 pages): English links stay on /en, English SEO and share text, /en/catering region list and 375px overflow, menu contrast, bound catering form labels, eager nav logo, titled booking iframe, Instagram profile link, no console errors. Gated on OOST_REMEDIATION=1; og:image also needs OOST_OWNER_INPUTS=1."
+    },
+    {
+      "slug": "oost-seo-quick-wins",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/oost-seo-quick-wins.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-06",
+      "description": "Oost SEO quick wins (NL + EN, 6 pages): 1200x630 share image, English page schema on /en, no webflow.io in schema, H1s name Restaurant Oost and Haarlem, CMS menu microdata (9 sections, 36 dishes, 24 offers matching visible prices), hasMenu links to menu itemid, FAQ stays microdata, llms.txt email. Gated on OOST_SEO_QUICK_WINS=1; share image also needs OOST_SHARE_CARD=1."
+    },
+    {
+      "slug": "oost-cleanup",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/oost-cleanup.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-13",
+      "description": "Oost post-launch cleanup (NL + EN, 10 pages): no template placeholders or image captions, decorative map boxes, 15-minute walk everywhere, whole spekkoek on catering, EN says takeaway, consistent postcode/phone, EN 404 title, EN terms link to EN privacy, bound catering form labels, eager nav logo, no data-allow-local, EN legal og:image share card, legal pages noindex, llms.txt 15 minutes, no console errors. Gated on OOST_CLEANUP=1; reviews test also needs OOST_REVIEWS=1."
     },
     {
       "slug": "oost-consent-ga-performance",
@@ -575,7 +595,7 @@
     },
     {
       "slug": "oost-remove-whatsapp",
-      "url": "https://oosteten.webflow.io/",
+      "url": "https://www.oosteten.nl/",
       "spec": "tests/acceptance/oost-remove-whatsapp.spec.js",
       "type": "acceptance",
       "source": "plan",

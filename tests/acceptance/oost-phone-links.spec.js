@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.test' });
 
-const BASE = process.env.OOST_URL || 'https://oosteten.webflow.io';
+const BASE = process.env.OOST_URL || 'https://www.oosteten.nl';
 const NUMBER = '31237851562';
 const TEL = `tel:+${NUMBER}`;
 const OLD = ['648979760', '600000000', '06-48979760', '06-48 97 97 60'];

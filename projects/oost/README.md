@@ -8,7 +8,7 @@ Webflow has one script tag, in the site footer:
 
 <!-- prettier-ignore -->
 ```html
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.4.1/projects/oost/init.js" defer data-allow-local></script>
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@oost-v0.4.2/projects/oost/init.js" defer></script>
 ```
 
 `init.js` reads its own URL, so every module comes from the same pinned tag. It appends, in order:
@@ -91,7 +91,7 @@ Site settings, footer code:
 
 ## Local dev
 
-Serve the repo root on `https://localhost:8080`, open the staging site with `?oost=local`, and the loader pulls modules from your machine for the rest of the browser session. `?oost=cdn` switches back. The switch only works while the tag carries `data-allow-local`; remove that attribute at launch.
+Serve the repo root on `https://localhost:8080`, open the staging site with `?oost=local`, and the loader pulls modules from your machine for the rest of the browser session. `?oost=cdn` switches back. The switch only works while the tag carries `data-allow-local`. The live tag does not carry it (removed 13 Oct 2026), so add the attribute to the footer tag in Site settings while you develop, and take it off again before publishing.
 
 ## Locale check
 

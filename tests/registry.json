@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-13",
+  "lastUpdated": "2026-10-14",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -632,6 +632,16 @@
       "critical": false,
       "created": "2026-10-13",
       "description": "October report fixes via Webflow MCP: footer complaints/FCA link text, no Learn more links, unique part-exchange meta, blog/FAQ links off 301s, broken blog images, old adaptive-cruise related card. Expected to fail until the spec is executed."
+    },
+    {
+      "slug": "oost-feestdagen-2026",
+      "url": "https://www.oosteten.nl/afhalen",
+      "spec": "tests/acceptance/oost-feestdagen-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-14",
+      "description": "Oost Christmas and New Year 2026 - feestdagen block on /afhalen NL+EN with four takeaway-only days 15-17, home and footer pointers per locale, four dated OpeningHoursSpecification entries matching visible dates, llms.txt line; gated on OOST_FEESTDAGEN=1, removal checks on OOST_FEESTDAGEN_REMOVED=1."
     }
   ]
 }

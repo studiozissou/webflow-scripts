@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-13",
+  "lastUpdated": "2026-10-14",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -632,6 +632,16 @@
       "critical": false,
       "created": "2026-10-13",
       "description": "October report fixes via Webflow MCP: footer complaints/FCA link text, no Learn more links, unique part-exchange meta, blog/FAQ links off 301s, broken blog images, old adaptive-cruise related card. Expected to fail until the spec is executed."
+    },
+    {
+      "slug": "tsc-iso-footer-and-nav-hide",
+      "url": "https://tsc-v2.webflow.io",
+      "spec": "tests/acceptance/tsc-iso-footer-and-nav-hide.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-14",
+      "description": "TSC footer ISO 9001:2015 seal + legal-row text link to the certificate PDF; Products CMS 'Hide in nav' switch filters Telecom Box out of the mega-menu (desktop + mobile) while it stays in the footer Products column and on its own page."
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-13",
+  "lastUpdated": "2026-10-14",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -632,6 +632,16 @@
       "critical": false,
       "created": "2026-10-13",
       "description": "October report fixes via Webflow MCP: footer complaints/FCA link text, no Learn more links, unique part-exchange meta, blog/FAQ links off 301s, broken blog images, old adaptive-cruise related card. Expected to fail until the spec is executed."
+    },
+    {
+      "slug": "sz-site-redesign",
+      "url": "https://studiozissou.webflow.io/",
+      "spec": "tests/acceptance/sz-site-redesign.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-14",
+      "description": "Studio Zissou redesign: every v1 EN/NL page has one H1, compliant title/description, canonical and OG, no dead nav links or template leftovers, FAQ microdata, Service/ProfessionalService/Article JSON-LD, UTM capture on the contact form, Dutch alternates, llms.txt and sitemap; gated on SZ_REDESIGN=1."
     }
   ]
 }

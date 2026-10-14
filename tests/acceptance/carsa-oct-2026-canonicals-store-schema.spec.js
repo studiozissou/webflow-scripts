@@ -20,10 +20,12 @@ const CANONICAL_PAGES = [
   '/used-cars/models',
 ];
 
-const STORES = [
-  'bca-bristol', 'bolton', 'bradford', 'cannock', 'durham', 'gloucester',
-  'halesowen', 'mountsorrel', 'portsmouth', 'southampton', 'towcester', 'wolverhampton',
+const OPEN_STORES = [
+  'bolton', 'bradford', 'cannock', 'durham', 'gloucester',
+  'mountsorrel', 'portsmouth', 'southampton', 'towcester', 'wolverhampton',
 ];
+const CLOSED_STORES = ['halesowen'];
+const STORES = [...OPEN_STORES, ...CLOSED_STORES];
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -61,18 +63,27 @@ test.describe('carsa-oct-2026-canonicals-store-schema', () => {
 
   test.describe('store schema', () => {
     for (const slug of STORES) {
-      test(`/stores/${slug} carries structured hours, a clean address and the generic phone`, async ({ request }) => {
+      const closed = CLOSED_STORES.includes(slug);
+      const title = closed ? 'claims no opening hours' : 'carries structured hours';
+      test(`/stores/${slug} ${title}, a clean address and the generic phone`, async ({ request }) => {
         const source = await html(request, `/stores/${slug}`);
         const node = storeNode(source);
         expect(node, 'store JSON-LD node').toBeTruthy();
 
-        const hours = node.openingHoursSpecification;
-        expect(Array.isArray(hours) && hours.length > 0, 'openingHoursSpecification present').toBe(true);
-        const covered = hours.flatMap((h) => [].concat(h.dayOfWeek).map((d) => String(d).replace(/^https?:\/\/schema\.org\//, '')));
-        for (const day of DAYS) expect(covered, `${day} covered`).toContain(day);
-        for (const h of hours) {
-          expect(h.opens).toMatch(/^\d{2}:\d{2}(:\d{2})?$/);
-          expect(h.closes).toMatch(/^\d{2}:\d{2}(:\d{2})?$/);
+        const hours = node.openingHoursSpecification || [];
+        if (closed) {
+          for (const h of hours) {
+            expect(h.opens || '', 'closed store opens').toBe('');
+            expect(h.closes || '', 'closed store closes').toBe('');
+          }
+        } else {
+          expect(hours.length > 0, 'openingHoursSpecification present').toBe(true);
+          const covered = hours.flatMap((h) => [].concat(h.dayOfWeek).map((d) => String(d).replace(/^https?:\/\/schema\.org\//, '')));
+          for (const day of DAYS) expect(covered, `${day} covered`).toContain(day);
+          for (const h of hours) {
+            expect(h.opens).toMatch(/^\d{2}:\d{2}(:\d{2})?$/);
+            expect(h.closes).toMatch(/^\d{2}:\d{2}(:\d{2})?$/);
+          }
         }
 
         const a = node.address;

@@ -1,7 +1,4 @@
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  },
   "permissions": {
     "allow": [
       "Edit(projects/**)",
@@ -66,6 +63,10 @@
           {
             "type": "command",
             "command": "FILE=$(cat /dev/stdin | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''))\" 2>/dev/null); [ -n \"$FILE\" ] && [[ \"$FILE\" =~ \\.(js|ts|css|json)$ ]] && prettier --write \"$FILE\" 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(cat /dev/stdin | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''))\" 2>/dev/null); case \"$FILE\" in */tests/*|*.spec.js|*.test.js) exit 0;; */projects/*.js|*/shared/*.js) if grep -nE '^[[:space:]]*console\\.log' \"$FILE\" >/dev/null 2>&1; then echo \"Unguarded console.log in $FILE (use DEBUG && console.log): $(grep -nE '^[[:space:]]*console\\.log' \"$FILE\" | head -3 | tr '\\n' ' ')\" >&2; exit 2; fi;; esac; exit 0"
           }
         ]
       }

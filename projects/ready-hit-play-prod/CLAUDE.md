@@ -8,6 +8,7 @@ Vanilla ES2022+, no build step. Single CDN entry via `init.js` → loads deps + 
 - `init.js` is the only script tag in Webflow (head). It self-loads everything.
 - jsDelivr serves files pinned to a git tag (e.g. `...@rhp-live-v2/projects/ready-hit-play-prod/init.js?v=N`), never a commit ID.
 - Local dev: serve repo root on localhost; `init.js` detects local origin and loads from disk.
+- Local dev override (used by `/build`): set `window.__RHP_BASE` to `https://localhost:<port>/projects/ready-hit-play-prod` before reload to load modules from a local server on the staging domain. Health probe: `window.RHP?.scriptsOk === true`. Loader path for the server check: `projects/ready-hit-play-prod/init.js`.
 - On deploy: bump `CONFIG.version` in `init.js`, push, create the next `rhp-live-vN` tag, update the tag + `?v=` in Webflow.
 - CSS (`ready-hit-play.css`) is also linked from jsDelivr in the same Webflow head block.
 

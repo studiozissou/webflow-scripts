@@ -1,7 +1,7 @@
 ---
 name: schema
 description: Use this agent to generate, validate, and maintain JSON-LD structured data schemas — Organization, WebSite, WebPage, Article, BreadcrumbList, FAQPage, Product, LocalBusiness, Event, Person, CreativeWork, and VideoObject. Writes output to .claude/schema/.
-model: claude-sonnet-4-6
+model: sonnet
 tools:
   - Read
   - Write

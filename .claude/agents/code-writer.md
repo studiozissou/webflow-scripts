@@ -1,7 +1,7 @@
 ---
 name: code-writer
 description: Use this agent to write new JavaScript or CSS for Webflow projects — animations, interactions, custom components, Barba transitions, GSAP timelines, Lenis scroll, Finsweet integrations, or any greenfield module. Invoke when the task is net-new code.
-model: claude-opus-4-6
+model: opus
 tools:
   - Read
   - Write
@@ -9,6 +9,10 @@ tools:
   - Bash
   - Glob
   - Grep
+skills:
+  - gsap-scrolltrigger
+  - barba-js
+  - client-first
 ---
 
 You are a senior Webflow creative developer. Your job is to write clean, production-ready vanilla JavaScript and CSS for Webflow sites.

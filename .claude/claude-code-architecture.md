@@ -16,23 +16,20 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 ---
 
-## Agents (13 total)
+## Agents (7 total)
+
+Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged into `design-critic` (lens argument); `perf` folded into `qa`; `pm` folded into the `/plan` skill; `convention-auditor` replaced by `/skill-doctor`. Agents are spawned by skills, not by hand: `/build` runs `code-writer`, `refactor` and three `code-reviewer`s on every build, and the spec's `agents:` frontmatter (written by `/plan`) routes the specialists as a second review wave. Models use aliases (`sonnet`, `opus`); `code-reviewer`, `qa`, `seo` and `design-critic` keep project-scoped memory.
 
 | Agent | Purpose | Key tools |
 |-------|---------|-----------|
-| `code-writer` | New JS/CSS — animations, Barba transitions, GSAP, Lenis, Finsweet. Includes Client First spacing rules. | Read, Write, Edit, Bash, Glob, Grep |
-| `code-reviewer` | Review code for pattern violations, Webflow gotchas, a11y, Barba lifecycle, selector validity, spacing compliance. Read-only — PASS/WARN/FAIL verdict. | Read, Glob, Grep, Bash, mcp__webflow__element_snapshot_tool, mcp__webflow__style_tool |
+| `code-writer` | New JS/CSS — animations, Barba transitions, GSAP, Lenis, Finsweet. Preloads gsap-scrolltrigger, barba-js and client-first skills. | Read, Write, Edit, Bash, Glob, Grep |
+| `code-reviewer` | Review code for pattern violations, Webflow gotchas, a11y, Barba lifecycle, selector validity, spacing compliance. Read-only — PASS/WARN/FAIL verdict. | Read, Glob, Grep, Bash, Webflow MCP snapshot/style |
 | `refactor` | Behaviour-preserving JS/CSS improvement | Read, Write, Edit, Bash, Glob, Grep |
-| `qa` | Cross-browser, animation regression, a11y, CMS edge cases, Barba integrity | Read, Glob, Grep, Bash |
-| `perf` | Script weight, frame budgets, memory leaks, CDN strategy | Read, Glob, Grep, Bash, WebFetch |
-| `seo` | Meta tags, structured data, Core Web Vitals, Open Graph | Read, Glob, Grep, WebFetch, WebSearch |
+| `qa` | Cross-browser, animation regression, a11y, CMS edge cases, Barba integrity, performance budgets, Lighthouse | Read, Glob, Grep, Bash, WebFetch, Chrome DevTools lighthouse + trace |
+| `seo` | Meta tags, structured data, Core Web Vitals, Open Graph, keyword research, position tracking, site audits. Preloads ai-search-aeo. | Read, Glob, Grep, WebFetch, WebSearch, SEMRush MCP |
 | `architect` | Structural decisions, module org, ADR authoring | Read, Write, Glob, Grep, WebSearch |
-| `pm` | Specs, task breakdown, queue.json, briefs, questioning | Read, Write, Edit, Glob |
-| `content` | Copy review/generation, microcopy, aria-labels, alt text | Read, Glob, Grep |
-| `art-director` | Motion design critique, typography, spacing, Figma→Webflow | Read, Glob, Grep, WebFetch |
-| `ux-researcher` | Heuristic eval, user flows, competitor analysis, a11y (UX lens) | Read, Write, Glob, WebFetch, WebSearch |
+| `design-critic` | UX heuristics and flows, motion/typography/spacing critique, creative dev suggestions, brand voice and copy, AEO structure. Lens: ux, visual, copy or all. Preloads ai-search-aeo. | Read, Write, Glob, Grep, WebFetch, WebSearch, Figma MCP |
 | `schema` | JSON-LD generation (12 types), validation, Webflow placement | Read, Write, Glob, Grep, WebSearch |
-| `convention-auditor` | Audit .claude/ files for project conventions (YAML frontmatter + markdown). Read-only — PASS/WARN/FAIL per file. | Read, Glob, Grep |
 
 ---
 
@@ -41,8 +38,8 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 ### Core workflow
 | Command | What it does |
 |---------|-------------|
-| `/plan` | Plan-before-code: **research subagents** (GSD-inspired — 3 parallel Explore agents gather codebase patterns, specs/ADRs, and page DOM) → pm-questioning (informed by research) → spec to `specs/` → tasks to `queue.json` → agents list. Project version also generates Playwright acceptance tests. |
-| `/build` | Read spec → selector verification → spacing check → **fresh executor context** (GSD-inspired — spawns Task subagent for steps 3–7: code-writer → refactor → code-reviewer → qa-check) → verify loop in parent context. Project version adds: commit → purge CDN → acceptance tests → retry loop (up to 8x) → smoke + a11y suites. |
+| `/plan` | Skill at `skills/plan/`. Size gate (Small skips approach exploration) → parallel research agents → pm-questioning → approach exploration (Medium/Large) → spec with `agents:` routing, verify loop and three-tier test plan → acceptance tests + registry. `--auto` (or a background job) takes recommended options and records them under Assumptions instead of asking. |
+| `/build` | Skill at `skills/build/`. Spec + verify-loop gate → test inventory → selector/spacing checks → fresh-context `code-writer` executor(s) → `refactor` → wave 1: three parallel `code-reviewer`s → wave 2: the spec's `agents:` specialists → `/qa-check` → browser-MCP verify loop (project-aware dev override from the project CLAUDE.md) → manual checklist. Review runs in the parent context because subagents cannot spawn agents. |
 | `/debug` | Pre-flight diagnostics → isolate/hypothesise/instrument/test/fix/confirm loop → debug log. |
 | `/status` | Root: full overview (git, specs, ADRs, logs). Project: compact queue table. |
 | `/qa-check` | Checklist: no console errors, mobile, reduced-motion, Barba cleanup, CLS, keyboard access, Playwright. |
@@ -170,7 +167,7 @@ See `claude-code-project-setup.md` for full workflow documentation (§4, §11–
 
 ```
 .claude/
-├── agents/           # 13 agent configs (code-writer, qa, architect, pm, convention-auditor, etc.)
+├── agents/           # 7 agent configs (code-writer, code-reviewer, refactor, qa, seo, architect, design-critic, schema)
 ├── commands/         # 25 slash command .md files
 ├── skills/           # 20 skills in subdirectories (skill-name/SKILL.md)
 ├── reference/        # rate-card.md, about-me.md (singleton config files)
@@ -262,8 +259,7 @@ Every parallelised command follows the same pattern:
 
 ### Agent Teams
 
-Enabled via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.claude/settings.json`.
-No command uses Agent Teams by default — available as user-selected option in the gate.
+Disabled (flag removed from `.claude/settings.json` on 2026-10-14: no command used teams, and with the flag on, named subagents launch as teammates at roughly 2.5x token cost). Re-enable with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` if a command needs mid-task coordination between agents.
 
 ---
 

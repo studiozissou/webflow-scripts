@@ -1,4 +1,4 @@
-// Acceptance tests for sz-site-redesign: every v1 page has sound SEO meta, no template leftovers, FAQ and schema markup, working doors, UTM capture, Dutch alternates, llms.txt and sitemap; skipped until SZ_REDESIGN=1.
+// Acceptance tests for sz-site-redesign: every v1 page has sound SEO meta, no template leftovers, FAQ and schema markup, nav links to both audience pages, UTM capture, Dutch alternates, llms.txt and sitemap; skipped until SZ_REDESIGN=1.
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import dotenv from 'dotenv';
@@ -111,11 +111,12 @@ test.describe('sz-site-redesign', () => {
       await visit(page, '/');
     });
 
-    test('homepage has two door links that resolve to the door pages', async ({ page }) => {
-      const doors = page.locator('[data-sz="doors"]');
-      await expect(doors.locator('a[href="/for-businesses"]')).toHaveCount(1);
-      await expect(doors.locator('a[href="/for-agencies"]')).toHaveCount(1);
-      await doors.locator('a[href="/for-businesses"]').click();
+    test('homepage nav links to both audience pages and the agency strip links to /for-agencies', async ({ page }) => {
+      const nav = page.locator('[data-sz="nav"]');
+      await expect(nav.locator('a[href="/for-businesses"]')).toHaveCount(1);
+      await expect(nav.locator('a[href="/for-agencies"]')).toHaveCount(1);
+      await expect(page.locator('[data-sz="cta-band"] a[href="/for-agencies"]')).toHaveCount(1);
+      await nav.locator('a[href="/for-businesses"]').click();
       await expect(page).toHaveURL(/\/for-businesses$/);
       await expect(page.locator('h1')).toHaveCount(1);
     });

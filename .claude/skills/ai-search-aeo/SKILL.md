@@ -251,16 +251,16 @@ Ask: "What's the most advanced pattern visible on the site?" That's the level. D
 
 - **`design-context` skill** — when a Design Context Block is in scope, the copywriting rules in this skill layer *underneath* the brand voice. Structure first, voice on top.
 - **`seo` agent** — handles traditional SEO (meta, titles, canonicals, CWV). AEO is an extension of good SEO, not a replacement. Defer to that agent for non-AEO concerns; come back here for answer-first scoring and content quality checks.
-- **`content` agent** — owns brand voice and copy review. References this skill for AEO writing rules, especially answer-first leads and non-commodity content angle.
+- **`design-critic` agent (copy lens)** — owns brand voice and copy review. References this skill for AEO writing rules, especially answer-first leads and non-commodity content angle.
 - **`schema` agent** — owns JSON-LD generation. Schema is a useful quality signal for AI engines but not a prerequisite for citations. Consult the schema agent when adding structured data; don't treat schema as the primary AEO lever.
-- **`/copy-review` command** — includes this skill in the content agent's context block so copy reviews get AEO scoring in addition to voice scoring.
+- **`/copy-review` command** — relies on the design-critic agent, which preloads this skill, so copy reviews get AEO scoring in addition to voice scoring.
 - **`/intake` command** — Phase 4 includes an AEO audit stream that runs this rubric against the homepage + 2–3 top pages and saves findings under `.claude/audits/<client>/aeo.md`.
 
 ### What this skill does *not* do
 
 - **It doesn't calculate Flesch scores precisely.** Estimate in your head; the target is directional. If the user needs an exact number, recommend a browser extension.
 - **It doesn't monitor AI citations in real time.** Tools like Profound and Ahrefs do that. This skill scores content *before* it's published, not citation velocity after.
-- **It doesn't rewrite copy automatically.** It gives the rules; the `content` agent applies them (optionally with brand voice from `design-context`).
+- **It doesn't rewrite copy automatically.** It gives the rules; the `design-critic` agent applies them (optionally with brand voice from `design-context`).
 </integration>
 
 <success_criteria>
@@ -270,6 +270,6 @@ Ask: "What's the most advanced pattern visible on the site?" That's the level. D
 - Copywriting reviews apply structural rules + brand voice *together* when a Design Context Block is available
 - Maturity assessment is offered only when the scope is strategic/site-wide, never on single-page audits
 - The agent never invents analytics data — `NEEDS VERIFY` is the correct answer when data is missing
-- Integration with `seo`, `content`, `schema`, `/copy-review`, and `/intake` is additive; nothing in those flows breaks when this skill isn't loaded
+- Integration with `seo`, `design-critic`, `schema`, `/copy-review`, and `/intake` is additive; nothing in those flows breaks when this skill isn't loaded
 - Mythbusting corrections are given when clients ask about LLMS.txt, content chunking, or AI-specific tricks
 </success_criteria>

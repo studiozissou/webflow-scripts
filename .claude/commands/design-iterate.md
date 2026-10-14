@@ -14,7 +14,7 @@ Same process as `/design-review` Step 1.
 
 Run the same parallel critique as `/design-review` (Steps 2–5):
 1. Fetch inspiration (if URLs provided)
-2. Parallelisation gate with 3 streams (ux-researcher, art-director, content)
+2. Parallelisation gate with 3 streams (design-critic with the ux, visual and copy lenses)
 3. Fan out and collect results
 4. Merge into unified findings
 
@@ -38,7 +38,7 @@ If the art director suggested visual changes and `GOOGLE_AI_API_KEY` is availabl
 If `GOOGLE_AI_API_KEY` is not set, include the art director's Nano Banana prompts as text descriptions instead.
 
 ### Copy rewrites
-Alternative text options from the content agent. For each:
+Alternative text options from the design-critic copy lens. For each:
 - Original copy (quoted)
 - 2-3 rewrite options ranked by preference
 - Rationale tied to brand voice and goals

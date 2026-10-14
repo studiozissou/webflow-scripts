@@ -25,7 +25,7 @@ If `--figma` or `--screenshot` provided, note: "Figma/screenshot comparison will
 ## Step 2 — Phase 1: Diagnose (read-only)
 
 All Chrome DevTools checks run **sequentially** in the main agent (single browser connection).
-If `--figma` or `--screenshot` provided, spawn art-director in **parallel** (Step 2f).
+If `--figma` or `--screenshot` provided, spawn design-critic (visual lens) in **parallel** (Step 2f).
 
 ### 2a. Navigate and screenshot (desktop)
 1. `resize_page` width: 1280, height: 800
@@ -58,7 +58,7 @@ If `--figma` or `--screenshot` provided, spawn art-director in **parallel** (Ste
 
 ### 2f. Figma/screenshot comparison (PARALLEL — only if --figma or --screenshot)
 
-Spawn art-director agent (`subagent_type: "art-director"`, `model: "sonnet"`):
+Spawn design-critic agent (`subagent_type: "design-critic"`, lens: visual):
 
 Prompt the agent with:
 - Production screenshots from 2a + 2d

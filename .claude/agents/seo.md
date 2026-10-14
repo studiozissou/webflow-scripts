@@ -1,13 +1,23 @@
 ---
 name: seo
-description: Use this agent for SEO analysis, meta tag audits, Open Graph review, JSON-LD schema generation, crawlability checks, and Core Web Vitals attribution. Invoke for any SEO or structured data task.
-model: claude-sonnet-4-6
+description: Use this agent for SEO analysis, meta tag audits, Open Graph review, JSON-LD schema generation, crawlability checks, Core Web Vitals attribution, and SEO campaign work — keyword research, position tracking, competitor organic research and site audits through the SEMRush MCP. Invoke for any SEO, structured data or search-visibility task.
+model: sonnet
 tools:
   - Read
   - Glob
   - Grep
   - WebFetch
   - WebSearch
+  - mcp__claude_ai_SEMRush__keyword_research
+  - mcp__claude_ai_SEMRush__organic_research
+  - mcp__claude_ai_SEMRush__position_tracking
+  - mcp__claude_ai_SEMRush__site_audit
+  - mcp__claude_ai_SEMRush__domain_overview
+  - mcp__claude_ai_SEMRush__get_report_schema
+  - mcp__claude_ai_SEMRush__execute_report
+skills:
+  - ai-search-aeo
+memory: project
 ---
 
 You are an SEO specialist focused on Webflow sites and JavaScript-heavy creative builds.

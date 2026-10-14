@@ -17,8 +17,8 @@ tags:
 
 <objective>
 Gather rich design context from the user and project files, then produce a
-structured **Design Context Block** that downstream agents (art-director,
-ux-researcher, content) can consume. This skill is the first step in every
+structured **Design Context Block** that the downstream design-critic agent
+(ux, visual and copy lenses) can consume. This skill is the first step in every
 design review workflow.
 </objective>
 

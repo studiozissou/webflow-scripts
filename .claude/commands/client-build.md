@@ -117,7 +117,7 @@ If any are missing, warn and ask if user wants to continue without the design ph
    - **A: Safe** — follows existing site patterns exactly, reuses layout structures already on the page
    - **B: Balanced** — follows existing patterns but introduces one new visual element (e.g. a new card layout, asymmetric grid, or accent treatment)
    - **C: Bold** — reimagines the section structure while staying within the design system tokens and laws
-4. For each candidate, load the `content` agent:
+4. For each candidate, load the `design-critic` agent (copy lens):
    - Draft section copy using `brand/voice.md` tone and vocabulary
    - Run through `humanizer` skill to remove AI writing patterns
 5. Optionally generate concept images via `nano-banana` skill

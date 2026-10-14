@@ -72,7 +72,7 @@ Write to `intake.json` under `checks`.
 
 ### Step 2 — Parallelisation gate
 
-Reference the `parallelisation` skill. Present the gate with 4 independent streams:
+Read `.claude/skills/parallelisation/SKILL.md` directly (the skill is not auto-loaded). Present the gate with 4 independent streams:
 
 | # | Stream | Agent type | Est. tokens | Est. wall time |
 |---|--------|-----------|-------------|----------------|

@@ -1,0 +1,23 @@
+{
+  "skill_name": "plan",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/plan fix the about page slider arrows not showing on mobile Safari for ready-hit-play-prod --auto",
+      "expected_output": "Classified Small. Only research agents 1-2 spawned, no approach exploration, no blocking question. Spec saved with an Assumptions section and a Verify Loop; agents: absent or [design-critic:ux]. Acceptance test and registry entry created.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "/plan add a sticky FAQ accordion with JSON-LD FAQPage markup to the Carsa service pages",
+      "expected_output": "Classified Medium. Four research agents attempted (MCP ones skipped if not connected), pm-questioning asked, three approaches explored and presented. Spec frontmatter has agents: [design-critic:ux, seo, schema]. Barba Impact says N/A for Carsa. Test plan has all three tiers.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "how should we approach adding a second Lenis-driven case study scroll wrapper on RHP without breaking the dial?",
+      "expected_output": "Skill triggers without the slash command. Classified Large, architect consulted, ADR flagged, Barba Impact answered in full, agents: includes design-critic:visual and qa.",
+      "files": []
+    }
+  ]
+}

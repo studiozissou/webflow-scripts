@@ -147,7 +147,7 @@ Record the code inventory for Stream C.
 
 ### Parallelisation gate
 
-Reference the `parallelisation` skill. Present the gate with 5 independent streams:
+Read `.claude/skills/parallelisation/SKILL.md` directly (the skill is not auto-loaded). Present the gate with 5 independent streams:
 
 | # | Stream | Agent type | Tools | Est. tokens |
 |---|--------|-----------|-------|-------------|
@@ -495,7 +495,7 @@ counts per category — see template for format.
 
 ## Phase 6c — Narrative (auto-generated)
 
-Immediately after Phase 6b, spawn a **content agent** that reads the completed internal
+Immediately after Phase 6b, spawn a **design-critic agent (copy lens)** that reads the completed internal
 report and generates `proposals/narrative-YYYY-MM-DD.md`.
 
 Read and follow the template at `.claude/templates/site-audit-narrative.md`. The narrative

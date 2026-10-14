@@ -28,13 +28,13 @@ Run fetches in parallel if multiple URLs. Skip if no inspiration URLs were provi
 
 ## Step 3 — Parallelisation gate
 
-Reference the `parallelisation` skill. Present the gate with 3 independent streams:
+Read `.claude/skills/parallelisation/SKILL.md` directly (the skill is not auto-loaded). Present the gate with 3 independent streams:
 
 | # | Stream | Agent type | Est. tokens | Est. wall time |
 |---|--------|-----------|-------------|----------------|
-| 1 | UX review | ux-researcher | ~25k | ~20s |
-| 2 | Art direction | art-director | ~25k | ~20s |
-| 3 | Copy review | content | ~15k | ~10s |
+| 1 | UX review | design-critic (lens: ux) | ~25k | ~20s |
+| 2 | Art direction | design-critic (lens: visual) | ~25k | ~20s |
+| 3 | Copy review | design-critic (lens: copy) | ~15k | ~10s |
 
 Sequential: ~50s / ~65k tokens. Parallel: ~25s / ~72k tokens (~2x faster, +1.1x cost).
 All streams are read-only — low risk.
@@ -52,7 +52,7 @@ Each subagent receives:
 
 If user chooses sequential, run each review one at a time in the order listed.
 
-### Stream 1 — UX review (ux-researcher agent)
+### Stream 1 — UX review (design-critic agent, lens: ux)
 - Goal-driven evaluation: does the layout serve stated project goals?
 - Heuristic evaluation (Nielsen's 10)
 - User flow analysis for key scenarios
@@ -60,7 +60,7 @@ If user chooses sequential, run each review one at a time in the order listed.
 - Mobile and accessibility considerations
 - Cognitive load and content density assessment
 
-### Stream 2 — Art direction review (art-director agent)
+### Stream 2 — Art direction review (design-critic agent, lens: visual)
 - Does visual execution match the stated art direction?
 - Inspiration comparison: where does the design align/diverge from references?
 - Typography, spacing, colour, and motion critique
@@ -68,7 +68,7 @@ If user chooses sequential, run each review one at a time in the order listed.
 - Nano Banana concept prompt if visual changes are suggested
 - Figma alignment notes (if design file was referenced)
 
-### Stream 3 — Copy review (content agent)
+### Stream 3 — Copy review (design-critic agent, lens: copy)
 - Brand voice evaluation against stated tone and audience
 - CTA effectiveness and goal alignment
 - Heading hierarchy and microcopy

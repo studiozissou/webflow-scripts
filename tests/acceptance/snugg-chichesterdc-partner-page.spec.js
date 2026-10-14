@@ -14,6 +14,9 @@ import AxeBuilder from '@axe-core/playwright';
 const SNUGG_URL = (process.env.SNUGG_URL || 'https://www.snugg.com').replace(/\/$/, '');
 const SLUG = process.env.SNUGG_SLUG || 'chichesterdc';
 const PAGE_URL = `${SNUGG_URL}/${SLUG}`;
+// Confirmed by Snugg tech (Tom via Courtney, 14 Oct 2026): the link into the
+// app must carry utm_source=cdc, overriding the site script's slug fallback.
+const UTM_SOURCE = process.env.SNUGG_UTM_SOURCE || 'cdc';
 const UTM_FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 
 // Third-party noise we do not own (Webflow, GTM, Meta pixel, Turnstile).
@@ -54,7 +57,7 @@ test.describe('snugg-chichesterdc-partner-page', () => {
     await expect(page.getByText(/trusted local installers in Chichester/i).first()).toBeVisible();
   });
 
-  test('postcode form posts to the Snugg app with UTM fields and the slug as utm_source', async ({ page }) => {
+  test('postcode form posts to the Snugg app with UTM fields and utm_source=cdc', async ({ page }) => {
     const form = page.locator('form.postcode-form').first();
     await expect(form).toBeVisible();
     await expect(form).toHaveAttribute('action', /^https:\/\/app\.snugg\.com\//);
@@ -64,17 +67,17 @@ test.describe('snugg-chichesterdc-partner-page', () => {
     for (const name of UTM_FIELDS) {
       await expect(form.locator(`input[type="hidden"][name="${name}"]`)).toHaveCount(1);
     }
-    await expect(form.locator('input[name="utm_source"]')).toHaveValue(SLUG);
+    await expect(form.locator('input[name="utm_source"]')).toHaveValue(UTM_SOURCE);
     await expect(form.locator('input[type="submit"], button[type="submit"]').first()).toHaveValue(/get started/i);
   });
 
-  test('UTM params in the URL override the slug default', async ({ page }) => {
+  test('UTM params in the URL pass through but utm_source stays cdc', async ({ page }) => {
     await page.goto(`${PAGE_URL}?utm_source=leaflet&utm_medium=print&utm_campaign=cdc-launch`, {
       waitUntil: 'domcontentloaded',
     });
     await page.waitForTimeout(1500);
     const form = page.locator('form.postcode-form').first();
-    await expect(form.locator('input[name="utm_source"]')).toHaveValue('leaflet');
+    await expect(form.locator('input[name="utm_source"]')).toHaveValue(UTM_SOURCE);
     await expect(form.locator('input[name="utm_medium"]')).toHaveValue('print');
     await expect(form.locator('input[name="utm_campaign"]')).toHaveValue('cdc-launch');
   });

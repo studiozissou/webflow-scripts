@@ -641,7 +641,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-10-14",
-      "description": "Chichester District Council partner page on snugg.com: lockup header with no nav links, hero copy, postcode form to app.snugg.com with utm_source=slug, four-step band, no footer, cookie banner reject button, 375px layout, axe. Expected to fail until the page is built in Webflow."
+      "description": "Chichester District Council partner page on snugg.com: lockup header with no nav links, hero copy, postcode form to app.snugg.com with utm_source=cdc forced by page code, four-step band, no footer, cookie banner reject button, 375px layout, axe. Expected to fail until the page is built in Webflow."
     }
   ]
 }

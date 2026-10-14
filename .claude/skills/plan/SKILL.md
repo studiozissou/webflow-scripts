@@ -1,8 +1,8 @@
 ---
 name: plan
 description: Plan a feature before writing any code — parallel codebase research, a size gate, the PM questions that matter, a spec with a verify loop and routed review agents, and acceptance tests. Use whenever the user asks to plan, spec, scope or think through a feature or fix before building it, and before any multi-file change, even if they only say "how should we do X".
-argument-hint: <feature description> [--auto]
-effort: max
+argument-hint: <feature description> [--size mini|small|medium|large] [--auto]
+effort: high
 ---
 
 Plan a feature before writing any code. The output is a spec that `/build` can execute without asking questions, plus acceptance tests that prove it works.
@@ -17,24 +17,27 @@ Branch: !`git branch --show-current 2>/dev/null || true`
 
 ## 0. Size gate
 
-Classify before spending tokens. Most work here is small, and a six-agent pipeline on a two-line fix costs more than it finds.
+Size sets the agent budget for both `/plan` and `/build`. Most work here is small, and a six-agent pipeline on a two-line fix costs more than it finds.
 
-| Size | Signals | Flow |
-|------|---------|------|
-| Small | `fix-*`, one or two files, no new module, no new DOM | Research agents 1–2 only, skip step 2.5, at most one clarifying question, short spec |
-| Medium | New module or 3–5 files | Full flow |
-| Large | New page, cross-project change, new dependency, anything needing an ADR | Full flow, architect agent consulted in step 3 |
+| Size | Signals | `/plan` agents | `/build` agents |
+|------|---------|----------------|-----------------|
+| Mini | One file, a few lines, no new DOM or behaviour | None: Grep and Read inline | None: code and self-review in the parent |
+| Small | `fix-*`, one or two files, no new module | Agent 1 only | code-writer, one reviewer |
+| Medium | New module or 3–5 files | Agents 1–2, plus 3–4 when DOM is touched | Full wave 1, wave 2 from `agents:` |
+| Large | New page, cross-project change, new dependency, ADR | All of step 1, approach explorers, architect | Full |
 
-State the size and why in one line, then follow that row.
+If `--size` was passed, use it and skip the question. Otherwise read just enough (Grep, Read, no agents) to recommend a size, then ask with `AskUserQuestion`: all four sizes, the recommended one first with "(Recommended)" and a one-line reason drawn from the signals. Auto: take the recommendation. Record the size in the spec frontmatter, since `/build` reads its budget from there.
 
-## 1. Research (parallel, read-only)
+Outside the budget, spawn an agent only when it would read many files whose content you will not need afterwards, or when it genuinely runs in parallel with others. Otherwise search directly.
 
-Spawn these in one message so they run concurrently. Sonnet is enough for all of them.
+## 1. Research (read-only)
+
+Spawn the agents the size allows in one message so they run concurrently. Sonnet is enough for all of them. Mini does this step inline with Grep and Read.
 
 - **Agent 1 — Codebase patterns** (`Explore`): existing code similar to this feature; reusable functions in `shared/utils.js`, the project orchestrator, related page modules.
 - **Agent 2 — Specs, ADRs, conventions** (`Explore`): relevant specs, ADRs and CLAUDE.md sections; constraints and decisions already made.
-- **Agent 3 — Designer DOM** (only if Webflow MCP is connected): `element_snapshot_tool` on the target page for structure and selectors.
-- **Agent 4 — Live DOM** (only if a browser MCP is connected): navigate to the staging URL (`.env.test` STAGING_URL, then project CLAUDE.md, else skip), `take_snapshot`, compare with Agent 3 for injected elements, CMS items and JS-modified classes. Optionally `lighthouse_audit` for an accessibility and performance baseline.
+- **Agent 3 — Designer DOM** (only if the feature touches DOM and Webflow MCP is connected): `element_snapshot_tool` on the target page for structure and selectors.
+- **Agent 4 — Live DOM** (only if the feature touches DOM and a browser MCP is connected): navigate to the staging URL (`.env.test` STAGING_URL, then project CLAUDE.md, else skip), `take_snapshot`, compare with Agent 3 for injected elements, CMS items and JS-modified classes. Optionally `lighthouse_audit` for an accessibility and performance baseline.
 
 Write a **Research Summary**: reusable code (file and function), patterns to follow, constraints, confirmed selectors (Designer and live, with discrepancies), Lighthouse baseline.
 
@@ -44,7 +47,7 @@ Use the `pm-questioning` skill. Reference the research findings in the questions
 
 ## 2.5 Approach exploration (Medium and Large only)
 
-Formulate three genuinely different approaches, spawn one `Explore` agent per approach in parallel using the template in `references/approach-exploration.md`, and merge into the comparison table there. Interactive: `AskUserQuestion` with the three approaches plus "Hybrid". Auto: take the highest-confidence approach.
+Formulate three genuinely different approaches and fill the comparison table in `references/approach-exploration.md`. Medium: compare them inline from the research summary. Large: spawn one `Explore` agent per approach in parallel using the template there. Interactive: `AskUserQuestion` with the three approaches plus "Hybrid". Auto: take the highest-confidence approach.
 
 ## 3. Spec
 
@@ -71,7 +74,7 @@ Break the feature into ordered tasks with the agent for each (code-writer, refac
 
 ## 6. Acceptance tests
 
-Check for test infrastructure: `tests/acceptance/` at the repo or project root, plus Playwright in `package.json`. If present, follow `references/acceptance-tests.md` to write `tests/acceptance/<slug>.spec.js` and register it in `tests/registry.json`. If absent, say so in the spec and skip. Do not run the tests now; `/build` and `/deploy` run them.
+Check for test infrastructure: `tests/acceptance/` at the repo or project root, plus Playwright in `package.json`. If present, follow `references/acceptance-tests.md` to write `tests/acceptance/<slug>.spec.js` and register it in `tests/registry.json`. If absent, or the size is Mini, say so in the spec and skip. Do not run the tests now; `/build` and `/deploy` run them.
 
 ## 7. Verify loop self-check
 

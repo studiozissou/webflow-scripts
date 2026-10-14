@@ -1,6 +1,6 @@
 ---
 name: build
-description: Build a planned feature end-to-end from its spec — fresh-context code-writer, refactor pass, three parallel code reviewers, the spec's routed specialist review wave, QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
+description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, refactor pass, three parallel code reviewers and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
 argument-hint: <feature-slug> [--auto]
 effort: max
 ---
@@ -18,7 +18,13 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 ## 1. Find the spec and gate it
 
 - Try `.claude/specs/<slug>.md`, then glob `.claude/specs/*<slug>*.md`. One partial match: use it. Several: list them and ask (auto: take the most recently modified). None: ask for a description (auto: stop, nothing to build).
-- Read the frontmatter: `size`, `agents`, and the **Execution** note under Tasks.
+- Read the frontmatter: `size`, `agents`, and the **Execution** note under Tasks. Size sets the agent budget for steps 4–7; a spec without one is Medium.
+
+| Size | Implement | Refactor | Wave 1 | Wave 2 |
+|------|-----------|----------|--------|--------|
+| Mini | In the parent, no agent | Skip | Self-review with the conventions lens, no agent | Skip |
+| Small | One code-writer | Skip | One code-reviewer, correctness lens | Only if `agents:` is set |
+| Medium, Large | As below | As below | As below | As below |
 - **Verify-loop gate.** The spec needs a section describing how to confirm the feature works (headed verify, verification, test plan, acceptance, or how to confirm). Missing: re-read once more, then interactive `AskUserQuestion` with "Generate one now" (recommended), "Skip — I'll verify manually", "Stop — let me update the spec". Auto: generate one from the acceptance criteria and append it to the spec.
 
 ## 2. Test inventory

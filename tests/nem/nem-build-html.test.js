@@ -212,7 +212,10 @@ describe("the export is PDF-safe", () => {
      * to fit, and the sub-pixel scale left hairlines at the top and right (2026-09-02). */
     const { html } = await runBuildHtml();
     assert.match(html, /html,\s*body\s*\{[^}]*overflow-x:\s*clip/);
-    assert.match(html, /\.report_header \.report_bg-olive\s*\{[^}]*top:\s*-2px[^}]*left:\s*-50vw[^}]*right:\s*-50vw/);
+    /* vAlex's olive layer is already 100vw wide and self-centred; a -50vw side bleed on top
+     * of that shoves it 397px left and bares the strip right of the logo (2026-10-13). */
+    assert.match(html, /\.report_header \.report_bg-olive\s*\{[^}]*top:\s*-2px/);
+    assert.doesNotMatch(html, /\.report_header \.report_bg-olive\s*\{[^}]*(left|right):/);
     assert.match(html, /\.block-conclusion\s*\{[^}]*break-inside:\s*avoid/);
     assert.match(html, /\.report_block\.is-disclaimer[^{]*\{[^}]*break-inside:\s*avoid/);
     assert.match(html, /h2,\s*h2 \+ div\s*\{[^}]*break-after:\s*avoid/);

@@ -1,7 +1,7 @@
 ---
 name: build
 description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, refactor pass, three parallel code reviewers and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
-argument-hint: <feature-slug> [--auto]
+argument-hint: <feature-slug> [--size mini|small|medium|large] [--auto]
 effort: max
 ---
 
@@ -18,14 +18,17 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 ## 1. Find the spec and gate it
 
 - Try `.claude/specs/<slug>.md`, then glob `.claude/specs/*<slug>*.md`. One partial match: use it. Several: list them and ask (auto: take the most recently modified). None: ask for a description (auto: stop, nothing to build).
-- Read the frontmatter: `size`, `agents`, and the **Execution** note under Tasks. Size sets the agent budget for steps 4–7; a spec without one is Medium.
+- Read the frontmatter: `size`, `agents`, and the **Execution** note under Tasks.
+- **Size.** If `--size` was passed, use it and skip the question. Otherwise recommend the spec's `size:`, or a different size when the spec has none or the files its tasks touch point elsewhere (signals in `../plan/SKILL.md` step 0), then ask with `AskUserQuestion`: all four sizes, the recommended one first with "(Recommended)" and a one-line reason. Auto: take the recommendation. A pick that differs from the spec goes back into its `size:`.
+- **Verify-loop gate.** The spec needs a section describing how to confirm the feature works (headed verify, verification, test plan, acceptance, or how to confirm). Missing: re-read once more, then interactive `AskUserQuestion` with "Generate one now" (recommended), "Skip — I'll verify manually", "Stop — let me update the spec". Auto: generate one from the acceptance criteria and append it to the spec.
+
+Size sets the agent budget for steps 4–7:
 
 | Size | Implement | Refactor | Wave 1 | Wave 2 |
 |------|-----------|----------|--------|--------|
 | Mini | In the parent, no agent | Skip | Self-review with the conventions lens, no agent | Skip |
 | Small | One code-writer | Skip | One code-reviewer, correctness lens | Only if `agents:` is set |
-| Medium, Large | As below | As below | As below | As below |
-- **Verify-loop gate.** The spec needs a section describing how to confirm the feature works (headed verify, verification, test plan, acceptance, or how to confirm). Missing: re-read once more, then interactive `AskUserQuestion` with "Generate one now" (recommended), "Skip — I'll verify manually", "Stop — let me update the spec". Auto: generate one from the acceptance criteria and append it to the spec.
+| Medium, Large | Step 4 | Step 5 | Step 6 | Step 7 |
 
 ## 2. Test inventory
 

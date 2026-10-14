@@ -8,7 +8,7 @@ slug: <feature-slug>
 client: <client>
 date: <YYYY-MM-DD>
 status: Draft | Review | Approved
-size: Small | Medium | Large
+size: Mini | Small | Medium | Large
 agents: [design-critic:visual, seo]
 ---
 

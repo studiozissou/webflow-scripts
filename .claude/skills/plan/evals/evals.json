@@ -4,19 +4,31 @@
     {
       "id": 1,
       "prompt": "/plan fix the about page slider arrows not showing on mobile Safari for ready-hit-play-prod --auto",
-      "expected_output": "Classified Small. Only research agents 1-2 spawned, no approach exploration, no blocking question. Spec saved with an Assumptions section and a Verify Loop; agents: absent or [design-critic:ux]. Acceptance test and registry entry created.",
+      "expected_output": "Recommends Small, auto mode takes it without asking. At most one research agent, no approach explorers, no blocking question. Spec has size: Small, an Assumptions section and a Verify Loop; agents: absent or [design-critic:ux]. Acceptance test and registry entry created.",
       "files": []
     },
     {
       "id": 2,
       "prompt": "/plan add a sticky FAQ accordion with JSON-LD FAQPage markup to the Carsa service pages",
-      "expected_output": "Classified Medium. Four research agents attempted (MCP ones skipped if not connected), pm-questioning asked, three approaches explored and presented. Spec frontmatter has agents: [design-critic:ux, seo, schema]. Barba Impact says N/A for Carsa. Test plan has all three tiers.",
+      "expected_output": "AskUserQuestion offers Mini/Small/Medium/Large with Medium marked (Recommended) and a one-line reason. After Medium is picked: at most two research agents plus MCP DOM agents only because the feature touches DOM, no approach-explorer agents (approaches compared inline), pm-questioning asked. Spec has size: Medium and agents: [design-critic:ux, seo, schema]. Barba Impact says N/A for Carsa. Test plan has all three tiers.",
       "files": []
     },
     {
       "id": 3,
       "prompt": "how should we approach adding a second Lenis-driven case study scroll wrapper on RHP without breaking the dial?",
-      "expected_output": "Skill triggers without the slash command. Classified Large, architect consulted, ADR flagged, Barba Impact answered in full, agents: includes design-critic:visual and qa.",
+      "expected_output": "Skill triggers without the slash command. Recommends Large and asks; after confirmation architect consulted, approach explorers spawned, ADR flagged, Barba Impact answered in full, agents: includes design-critic:visual and qa.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "/plan change the footer copyright year to be dynamic on Carsa",
+      "expected_output": "Recommends Mini and asks. After Mini is picked: zero Agent calls, research by Grep/Read inline, at most one clarifying question, short spec with size: Mini, no agents: field, no acceptance test file.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "/plan add a hover state to the nav links on RHP --size small",
+      "expected_output": "Size question skipped because --size was given. Proceeds as Small.",
       "files": []
     }
   ]

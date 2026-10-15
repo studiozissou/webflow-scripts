@@ -1,7 +1,7 @@
 ---
 name: refactor
 description: Use this agent to refactor existing JavaScript or CSS — improve structure, reduce duplication, extract shared utilities, modernise syntax, or break large orchestrators into smaller modules. Invoke when the task is improving existing code without changing behaviour.
-model: claude-sonnet-4-6
+model: sonnet
 tools:
   - Read
   - Write

@@ -8,7 +8,7 @@ Read all relevant files for the feature.
 
 ## Step 2 — Parallelisation gate
 
-Reference the `parallelisation` skill. Present the gate with 3 independent streams:
+Read `.claude/skills/parallelisation/SKILL.md` directly (the skill is not auto-loaded). Present the gate with 3 independent streams:
 
 | # | Stream | Agent type | Est. tokens | Est. wall time |
 |---|--------|-----------|-------------|----------------|

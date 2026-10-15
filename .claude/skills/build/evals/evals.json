@@ -1,0 +1,23 @@
+{
+  "skill_name": "build",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/build check-finance-link --auto",
+      "expected_output": "Spec found by partial match. Test inventory printed. One code-writer executor spawned, then refactor, then three code-reviewers in parallel from the parent context. Spec has no agents: field so no wave 2. qa-check runs. Verify loop runs against staging as deployed because Carsa has no local dev override. No AskUserQuestion calls; status set to ready-for-review.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "/build rhp-about-swipers",
+      "expected_output": "Verify-loop gate passes. Executor spawned with RHP CLAUDE.md and orchestrator. Wave 1 reviewers run in parent. Wave 2 spawns design-critic with the visual lens and qa in parallel because the spec lists them. Worktree server started if in a worktree, __RHP_BASE override applied, scriptsOk polled. Manual checklist and status question at the end.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "build the oost menu final prices feature please",
+      "expected_output": "Skill triggers without the slash. Spec resolved by globbing oost-menu-final-prices. Flow runs as in eval 1 with interactive prompts at the status question only.",
+      "files": []
+    }
+  ]
+}

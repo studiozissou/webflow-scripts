@@ -13,7 +13,7 @@ Specify: `discover <client-slug>` or `discover all`
 
 ## For all clients — parallelisation gate
 
-Reference the `parallelisation` skill. Present the gate:
+Read `.claude/skills/parallelisation/SKILL.md` directly (the skill is not auto-loaded). Present the gate:
 
 | # | Stream | Agent type | Est. tokens | Est. wall time |
 |---|--------|-----------|-------------|----------------|

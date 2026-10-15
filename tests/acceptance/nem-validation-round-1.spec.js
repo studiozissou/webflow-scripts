@@ -91,6 +91,28 @@ test.describe(SLUG, () => {
     expect(lineSize).toBeLessThan(questionSize);
   });
 
+  test('screen 1: hovered answer pill mirrors the site button hover', async ({ page }) => {
+    await loadPage(page);
+    const pill = module(page).locator('.nem-answers button').first();
+    await pill.hover();
+    expect(await computed(pill, 'border-color')).toBe('rgba(0, 0, 0, 0.1)');
+    const siteAccent = await page.evaluate(
+      () => getComputedStyle(document.documentElement).getPropertyValue('--color--accent').trim()
+    );
+    const expected = siteAccent || '#fafa7d';
+    const pillBg = await computed(pill, 'background-color');
+    const normalise = (c) =>
+      page.evaluate((v) => {
+        const el = document.createElement('div');
+        el.style.color = v;
+        document.body.append(el);
+        const out = getComputedStyle(el).color;
+        el.remove();
+        return out;
+      }, c);
+    expect(pillBg).toBe(await normalise(expected));
+  });
+
   test('screen 2: back arrow carries a "Terug" tooltip', async ({ page }) => {
     await loadPage(page);
     await answerQuestion(page, 'soms');

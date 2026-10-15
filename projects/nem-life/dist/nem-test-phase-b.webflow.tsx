@@ -854,6 +854,8 @@ function nemButtonHoverHandlers(active: boolean) {
 
 const PILL_BORDER = "var(--_token---accent-grey, #9f9c8b)";
 const PILL_TEXT = "var(--_token---text-olive, #706d56)";
+const PILL_BORDER_HOVER = "rgba(0, 0, 0, 0.1)";
+const PILL_BG_HOVER = "var(--color--accent, #fafa7d)";
 
 function Quiz({
   submitWebhookUrl,
@@ -1273,8 +1275,8 @@ function Quiz({
                   }}
                   onMouseEnter={(e) => {
                     if (!isSelected && !isTransitioning) {
-                      e.currentTarget.style.borderColor = ACCENT_MAIN;
-                      e.currentTarget.style.backgroundColor = `color-mix(in srgb, ${ACCENT_MAIN} 20%, white)`;
+                      e.currentTarget.style.borderColor = PILL_BORDER_HOVER;
+                      e.currentTarget.style.backgroundColor = PILL_BG_HOVER;
                     }
                   }}
                   onMouseLeave={(e) => {

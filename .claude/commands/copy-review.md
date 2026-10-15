@@ -44,12 +44,12 @@ Organise extracted text by section/component for structured review.
 
 ## Step 3 — Parallelisation gate
 
-Reference the `parallelisation` skill. Present the gate with 2 streams:
+Read `.claude/skills/parallelisation/SKILL.md` directly (the skill is not auto-loaded). Present the gate with 2 streams:
 
 | # | Stream | Agent type | Est. tokens | Est. wall time |
 |---|--------|-----------|-------------|----------------|
 | 1 | Copy quality | content | ~20k | ~15s |
-| 2 | Content UX | ux-researcher | ~15k | ~10s |
+| 2 | Content UX | design-critic (lens: ux) | ~15k | ~10s |
 
 Sequential: ~25s / ~35k tokens. Parallel: ~15s / ~39k tokens (~1.7x faster, +1.1x cost).
 Both streams are read-only — low risk.
@@ -63,9 +63,9 @@ Each subagent receives:
 - The full **Design Context Block** from Step 1
 - Competitor copy (if URLs were fetched)
 
-### Stream 1 — Copy quality (content agent)
+### Stream 1 — Copy quality (design-critic agent, lens: copy)
 
-Hand the content agent the `ai-search-aeo` skill alongside the Design Context Block so the review applies AEO structural rules + brand voice together. Review all copy against both lenses:
+Hand the design-critic the Design Context Block; it has the `ai-search-aeo` skill preloaded, so the review applies AEO structural rules + brand voice together. Review all copy against both lenses:
 
 - **Tone match**: does every piece of copy match the stated tone adjectives?
 - **Audience calibration**: vocabulary, complexity, and assumed knowledge — right for the audience?
@@ -78,7 +78,7 @@ Hand the content agent the `ai-search-aeo` skill alongside the Design Context Bl
 - **Competitor voice comparison**: if competitor copy available, compare positioning, messaging gaps, differentiation
 - **AEO scoring** (from `ai-search-aeo` skill): answer-first lead, question-shaped H2s, paragraph length, extractable chunks, freshness signals, Flesch 80+ target. Surface any failing AEO checks in the issue list alongside voice issues.
 
-### Stream 2 — Content UX (ux-researcher agent)
+### Stream 2 — Content UX (design-critic agent, lens: ux)
 
 Review copy from an information architecture and UX perspective:
 - **Information hierarchy**: is the most important content most prominent?

@@ -36,6 +36,12 @@
       "prompt": "/plan rewrite the About page story for nem-life --auto",
       "expected_output": "Tagged copy, and the spec frontmatter agents: includes design-critic:copy. Step 3 runs storyteller craft mode and records three options built on named cards, with the recommended one under Approach and the other two under Assumptions. No new agent or lens appears.",
       "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "/plan add a newsletter signup strip to the nem-life footer (run as a background job, no --auto)",
+      "expected_output": "Interactive mode despite running as a background job: the Brief and Setup AskUserQuestion calls are made and the skill waits for answers. No Assumptions section is written in place of asking. Auto mode only ever comes from the --auto flag.",
+      "files": []
     }
   ]
 }

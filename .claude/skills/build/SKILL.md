@@ -11,9 +11,9 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 
 ## Modes
 
-**Interactive** (default): ask at the decision points marked below.
+**Interactive** (default, always, unless `--auto` is passed): ask at the decision points marked below.
 
-**Auto** (`--auto`, or when this runs as a background job with no live user): take the recommended option, record it in the build summary, keep going. Auto mode has two hard stops: the 20-iteration cap in the verify loop, and a patch that fails `git apply --check` in step 4b.
+**Auto** (only when `--auto` is passed; a background job without it stays interactive): take the recommended option, record it in the build summary, keep going. Auto mode has two hard stops: the 20-iteration cap in the verify loop, and a patch that fails `git apply --check` in step 4b.
 
 ## 1. Find the spec and gate it
 

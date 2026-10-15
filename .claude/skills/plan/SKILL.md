@@ -11,9 +11,9 @@ Branch: !`git branch --show-current 2>/dev/null || true`
 
 ## Modes
 
-**Interactive** (default): ask two sets of questions up front, brief then setup, and otherwise only at the decision points below.
+**Interactive** (default, always, unless `--auto` is passed): ask two sets of questions up front, brief then setup, and otherwise only at the decision points below.
 
-**Auto** (`--auto`, or when this runs as a background job with no live user): never block on a question. Take the recommended option at each decision point and record every choice under a `## Assumptions` heading in the spec so the user can veto at review. A plan that stalls on a question nobody can answer is worth less than a plan with stated assumptions.
+**Auto** (only when `--auto` is passed; a background job without it stays interactive): never block on a question. Take the recommended option at each decision point and record every choice under a `## Assumptions` heading in the spec so the user can veto at review. A plan that stalls on a question nobody can answer is worth less than a plan with stated assumptions.
 
 ## 0. Size gate
 

@@ -26,13 +26,13 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
   Whatever the table below says, spawn only the ticked agents; an unticked step runs in the parent (implement, self-review) or is skipped (refactor, specialist wave). Auto: take the recommendations. A size that differs from the spec goes back into its `size:`.
 - **Verify-loop gate.** The spec needs a section describing how to confirm the feature works (headed verify, verification, test plan, acceptance, or how to confirm). Missing: re-read once more, then interactive `AskUserQuestion` with "Generate one now" (recommended), "Skip — I'll verify manually", "Stop — let me update the spec". Auto: generate one from the acceptance criteria and append it to the spec.
 
-Size sets the agent budget for steps 4–7:
+Size sets the agent budget for steps 4–8:
 
-| Size | Implement | Refactor | Wave 1 | Wave 2 |
-|------|-----------|----------|--------|--------|
-| Mini | In the parent, no agent | Skip | Self-review with the conventions lens, no agent | Skip |
-| Small | One code-writer | Skip | One code-reviewer, correctness lens | Only if `agents:` is set |
-| Medium, Large | Step 4 | Step 5 | Step 6 | Step 7 |
+| Size | Implement | Refactor | Wave 1 | Wave 2 | QA |
+|------|-----------|----------|--------|--------|----|
+| Mini | In the parent, no agent | Skip | Self-review with the conventions lens, no agent | Skip | Skip |
+| Small | One code-writer, `model: "sonnet"` | Skip | One code-reviewer, correctness lens | Only if `agents:` is set | Only as wave 2 `qa`, when `agents:` lists it |
+| Medium, Large | Step 4 | Step 5 | Step 6 | Step 7 | Step 8 |
 
 ## 2. Test inventory
 
@@ -58,7 +58,7 @@ Read every file the spec touches, the project orchestrator, and `shared/utils.js
 
 ## 4. Implement in a fresh context
 
-Spawn one `code-writer` agent per file group in the spec's Execution note (one agent when it says sequential). Each gets: the full spec, the project CLAUDE.md, the acceptance test, the orchestrator, the files the spec names, the confirmed selectors, and the spacing rules above. `code-writer` has the GSAP, Barba and Client First skills preloaded, so the prompt does not need to restate them.
+Spawn one `code-writer` agent per file group in the spec's Execution note (one agent when it says sequential). Each gets: the full spec, the project CLAUDE.md, the acceptance test, the orchestrator, the files the spec names, the confirmed selectors, and the spacing rules above. `code-writer` has the GSAP, Barba and Client First skills preloaded, so the prompt does not need to restate them. Small passes `model: "sonnet"` on the Agent call; Medium and Large leave it unset so code-writer keeps its own Opus.
 
 The executor only writes code. It returns the list of files created or modified. Review, QA and verification run here in the parent, because a subagent cannot spawn agents of its own, and the reviewers need a context that has not just written the code.
 
@@ -80,7 +80,7 @@ Specialist review is read-only, so a FAIL here costs one fix cycle. This wave is
 
 ## 8. QA
 
-Run `/qa-check`.
+Medium and Large: run `/qa-check`. Mini and Small skip it; see the size table.
 
 ## 9. Verify loop
 

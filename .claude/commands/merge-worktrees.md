@@ -1,3 +1,8 @@
+---
+description: "Inspect all active git worktrees, prioritise by oldest commit, merge each into the current branch one by one with smoke tests between merges, and clean up after each successful merge."
+model: sonnet
+---
+
 Inspect all active git worktrees, prioritise by oldest commit, merge each into the current branch one by one with smoke tests between merges, and clean up after each successful merge.
 
 ## Step 1 — Inventory

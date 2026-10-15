@@ -36,6 +36,18 @@
       "prompt": "/build rhp-nav-hover --size mini",
       "expected_output": "Size question skipped because --size was given. Runs as Mini with zero Agent calls even though the spec says Small, and the spec's size: is updated to Mini.",
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "/build two-group-clean-integration --auto",
+      "expected_output": "Spec's Execution note names two disjoint file groups. Step 4 spawns two code-writer agents in one message, each with isolation: worktree on the Agent call, its own file group only, the spec and acceptance test inline, and an absolute patch path under the job tmp dir. Each executor ends with git add -A, excluding .claude/session-mode and .claude/logs, then git diff --cached --binary into its patch file. Step 4b applies each patch in spec order with git apply --check --index, then git apply --index. Every changed file, new files included, shows in git diff HEAD. Each executor worktree and its worktree-agent-* branch is removed after its patch applies, gated on git rev-list --count origin/main..BRANCH being 0. Refactor, wave 1, QA and the verify loop run on the integrated parent tree. No AskUserQuestion calls; status set to ready-for-review.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "/build two-group-overlap-blocked --auto",
+      "expected_output": "Two isolated executors as in eval 7, but both groups change the same line of one file. The first patch applies. The second fails at git apply --check --index: nothing from it is applied, no conflict is auto-resolved, its worktree and patch file are kept on disk, and no further groups are integrated. Refactor, review, QA and the verify loop are skipped. The build summary names the blocker with the worktree path, branch and patch path; status set to blocked. In interactive mode the same failure stops and shows the error instead.",
+      "files": []
     }
   ]
 }

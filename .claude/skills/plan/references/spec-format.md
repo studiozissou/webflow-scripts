@@ -68,6 +68,10 @@ None, or the decision that needs one before work begins.
 
 Agent name, optionally with a lens after a colon. Valid: `design-critic:ux`, `design-critic:visual`, `design-critic:copy`, `design-critic` (all lenses), `seo`, `schema`, `qa`. Omit the field entirely when no specialist review is needed.
 
+## Execution note
+
+`sequential` means one executor. Two or more file groups mean `/build` runs one `code-writer` per group in its own git worktree and integrates each by patch, so the groups must be disjoint. The note must name any file both groups need, such as the orchestrator or a shared stylesheet. The parent edits those shared files after integration, so no executor touches them.
+
 ## Barba transition impact
 
 Answer in the spec when the project uses Barba.js:

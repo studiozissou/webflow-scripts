@@ -1,6 +1,6 @@
 ---
 name: build
-description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, refactor pass, three parallel code reviewers and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
+description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, or one per file group in its own git worktree when the spec names two or more groups, then a refactor pass, three parallel code reviewers and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
 argument-hint: <feature-slug> [--size mini|small|medium|large] [--auto]
 effort: max
 ---
@@ -13,7 +13,7 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 
 **Interactive** (default): ask at the decision points marked below.
 
-**Auto** (`--auto`, or when this runs as a background job with no live user): take the recommended option, record it in the build summary, keep going. The only hard stop in auto mode is the 20-iteration cap in the verify loop.
+**Auto** (`--auto`, or when this runs as a background job with no live user): take the recommended option, record it in the build summary, keep going. Auto mode has two hard stops: the 20-iteration cap in the verify loop, and a patch that fails `git apply --check` in step 4b.
 
 ## 1. Find the spec and gate it
 
@@ -54,9 +54,52 @@ Read every file the spec touches, the project orchestrator, and `shared/utils.js
 
 ## 4. Implement in a fresh context
 
-Spawn one `code-writer` agent per file group in the spec's Execution note (one agent when it says sequential). Each gets: the full spec, the project CLAUDE.md, the acceptance test, the orchestrator, the files the spec names, the confirmed selectors, and the spacing rules above. `code-writer` has the GSAP, Barba and Client First skills preloaded, so the prompt does not need to restate them.
+The spec's Execution note sets the executors:
 
-The executor only writes code. It returns the list of files created or modified. Review, QA and verification run here in the parent, because a subagent cannot spawn agents of its own, and the reviewers need a context that has not just written the code.
+- **One group, or sequential**: one `code-writer` with no `isolation` parameter, working in the parent tree.
+- **Two or more file groups**: one `code-writer` per group, all spawned in one message, each with `isolation: "worktree"` on the Agent call, so no executor can overwrite another's files. `isolation` goes on the call, never in the agent frontmatter. Do not give these executors a `name`: with the agent-teams flag on, a named subagent runs as a teammate in the main working directory and ignores `isolation`, and this skill must not rely on that flag staying off.
+
+Every executor gets: the full spec, the project CLAUDE.md, the acceptance test, the orchestrator, the files the spec names, the confirmed selectors, and the spacing rules above. `code-writer` has the GSAP, Barba and Client First skills preloaded, so the prompt does not need to restate them.
+
+Isolated executors need a patch directory before they are spawned. `CLAUDE_JOB_DIR` is set in a background job. An interactive session falls back to the gitignored `.claude/worktrees-backup/` in the main checkout.
+
+```bash
+P_DIR="${CLAUDE_JOB_DIR:-$(git worktree list | head -1 | awk '{print $1}')/.claude/worktrees-backup}/tmp"
+mkdir -p "$P_DIR"
+```
+
+Number the executors from 1 in spec order. Executor n also gets its own file group only, the spec and acceptance test inline, and the absolute patch path `$P_DIR/<slug>-<n>.patch`. Its worktree is cut from `origin/main`, so it has neither the private `.claude/specs` symlink nor any uncommitted file. Its prompt restates the isolated-worktree rules from `code-writer.md`: no commits, no tests, nothing written under `.claude/` apart from the patch file, and no git command other than the export in step 4b and the read-only `git branch --show-current`.
+
+The executor only writes code. It returns the list of files created or modified, and an isolated one adds the lines `EXECUTOR_PATH=<pwd>` and `EXECUTOR_BRANCH=<git branch --show-current>`. Review, QA and verification run here in the parent, because a subagent cannot spawn agents of its own, and the reviewers need a context that has not just written the code.
+
+## 4b. Integrate isolated executors
+
+Skip this step for a single executor.
+
+As its last action, each isolated executor runs these two commands from its own worktree:
+
+```bash
+git add -A -- . ':!.claude/session-mode' ':!.claude/logs'
+git diff --cached --binary > <patch path>
+```
+
+The executor exports its own patch because a parent running as a background job is itself worktree-isolated, and that guard refuses any `git -C <other worktree>` command.
+
+After every executor has returned, integrate each one in spec order. An executor that reports no files and whose worktree was removed automatically changed nothing: skip it and note that in the build summary. Take `WT` and `BR` from the completion notification's `worktreePath` and `worktreeBranch`, falling back to the `EXECUTOR_PATH` and `EXECUTOR_BRANCH` lines of its report. `P` is its patch path.
+
+```bash
+git apply --check --index "$P"
+git apply --index "$P"
+git rev-list --count origin/main.."$BR"
+git worktree remove --force "$WT"
+git branch -D "$BR"
+```
+
+Run the lines one at a time. `--index` is what makes new files show in `git diff HEAD`, so the reviewers see them. A missing or empty patch fails the check: `git apply` exits 128 on an empty file. Remove the worktree and branch only when the `rev-list` count is 0, the same invariant `/tidy` uses. Otherwise keep both and name them in the build summary. The patch file stays on disk for debugging.
+
+**When `git apply --check` fails**, integrate no further groups, and keep that worktree and its patch file. Interactive: stop and show the error. Auto: record the blocker (worktree path, branch, patch path), skip to step 10 and set the status to blocked. Either way the summary says which patches were already applied and lists every worktree still on disk. Never resolve a conflict here.
+
+Files the Execution note lists as shared between groups are edited here in the parent, after integration.
 
 ## 5. Refactor pass
 
@@ -93,3 +136,4 @@ Follow `references/verify-loop.md`: project-aware dev server, browser MCP checks
 - No bare `console.log`; a settings hook flags any that slip through
 - Verify selectors via Webflow MCP before targeting them, when connected
 - Client First spacer divs for vertical rhythm, never margin between components
+- No git writes between integration and the build commit: the reviewers and the verify loop read `git diff HEAD`, so integrated changes stay uncommitted until the build ends

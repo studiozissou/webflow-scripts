@@ -2,7 +2,7 @@
 name: build
 description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, refactor pass, three parallel code reviewers and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
 argument-hint: <feature-slug> [--size mini|small|medium|large] [--auto]
-effort: max
+effort: high
 ---
 
 Build a feature end-to-end from its spec. The spec says what to build and how to know it works; this skill supplies the agents and the order.
@@ -19,7 +19,11 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 
 - Try `.claude/specs/<slug>.md`, then glob `.claude/specs/*<slug>*.md`. One partial match: use it. Several: list them and ask (auto: take the most recently modified). None: ask for a description (auto: stop, nothing to build).
 - Read the frontmatter: `size`, `agents`, and the **Execution** note under Tasks.
-- **Size.** If `--size` was passed, use it and skip the question. Otherwise recommend the spec's `size:`, or a different size when the spec has none or the files its tasks touch point elsewhere (signals in `../plan/SKILL.md` step 0), then ask with `AskUserQuestion`: all four sizes, the recommended one first with "(Recommended)" and a one-line reason. Auto: take the recommendation. A pick that differs from the spec goes back into its `size:`.
+- **Size and agents.** Recommend the spec's `size:`, or a different size when the spec has none or the files its tasks touch point elsewhere (signals in `../plan/SKILL.md` step 0). Check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask once with `AskUserQuestion`, two questions in the same call:
+  1. **Size** (single select): all four sizes, the recommended one first with "(Recommended)" and a one-line reason. Skip if `--size` was passed.
+  2. **Agents** (multiSelect), four options: "code-writer", "refactor", "code reviewers" (three for Medium and up, one for Small) and "specialist wave" (naming the spec's `agents:`). Mark those the recommended size allows "(Recommended)", each with a one-line reason tied to this spec. Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session.
+
+  Whatever the table below says, spawn only the ticked agents; an unticked step runs in the parent (implement, self-review) or is skipped (refactor, specialist wave). Auto: take the recommendations. A size that differs from the spec goes back into its `size:`.
 - **Verify-loop gate.** The spec needs a section describing how to confirm the feature works (headed verify, verification, test plan, acceptance, or how to confirm). Missing: re-read once more, then interactive `AskUserQuestion` with "Generate one now" (recommended), "Skip — I'll verify manually", "Stop — let me update the spec". Auto: generate one from the acceptance criteria and append it to the spec.
 
 Size sets the agent budget for steps 4–7:

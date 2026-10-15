@@ -26,9 +26,14 @@ Size sets the agent budget for both `/plan` and `/build`. Most work here is smal
 | Medium | New module or 3–5 files | Agents 1–2, plus 3–4 when DOM is touched | Full wave 1, wave 2 from `agents:` |
 | Large | New page, cross-project change, new dependency, ADR | All of step 1, approach explorers, architect | Full |
 
-If `--size` was passed, use it and skip the question. Otherwise read just enough (Grep, Read, no agents) to recommend a size, then ask with `AskUserQuestion`: all four sizes, the recommended one first with "(Recommended)" and a one-line reason drawn from the signals. Auto: take the recommendation. Record the size in the spec frontmatter, since `/build` reads its budget from there.
+Read just enough (Grep, Read, no agents) to recommend a size, and check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask once with `AskUserQuestion`, two questions in the same call:
 
-Outside the budget, spawn an agent only when it would read many files whose content you will not need afterwards, or when it genuinely runs in parallel with others. Otherwise search directly.
+1. **Size** (single select): all four sizes, the recommended one first with "(Recommended)" and a one-line reason drawn from the signals. Skip this question if `--size` was passed.
+2. **Agents** (multiSelect): every agent this `/plan` run could spawn (research agents 1–4, approach explorers, architect; group to fit four options). Mark those the recommended size allows "(Recommended)" and give each a one-line reason, e.g. "Explore: codebase patterns — 3+ modules to scan, saves reading them here". Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session. Anything left unticked is done inline with Grep and Read.
+
+Spawn only the ticked agents, whatever the size table says. Auto: take the recommendations. Record the size in the spec frontmatter, since `/build` reads its budget from there.
+
+Outside the approved list, spawn nothing. Search directly instead.
 
 ## 1. Research (read-only)
 

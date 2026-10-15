@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "/build rhp-about-swipers",
-      "expected_output": "Size question asked with the spec's size first, marked (Recommended), and a one-line reason. Verify-loop gate passes. Executor spawned with RHP CLAUDE.md and orchestrator. Wave 1 reviewers run in parent. Wave 2 spawns design-critic with the visual lens and qa in parallel because the spec lists them. Worktree server started if in a worktree, __RHP_BASE override applied, scriptsOk polled. Manual checklist and status question at the end.",
+      "expected_output": "Size question asked with the spec's size first, marked (Recommended), and a one-line reason, plus a multiSelect Agents question (code-writer, refactor, code reviewers, specialist wave) in the same call. Only ticked agents are spawned. Verify-loop gate passes. Executor spawned with RHP CLAUDE.md and orchestrator. Wave 1 reviewers run in parent. Wave 2 spawns design-critic with the visual lens and qa in parallel because the spec lists them. Worktree server started if in a worktree, __RHP_BASE override applied, scriptsOk polled. Manual checklist and status question at the end.",
       "files": []
     },
     {
@@ -34,7 +34,7 @@
     {
       "id": 6,
       "prompt": "/build rhp-nav-hover --size mini",
-      "expected_output": "Size question skipped because --size was given. Runs as Mini with zero Agent calls even though the spec says Small, and the spec's size: is updated to Mini.",
+      "expected_output": "Size question skipped because --size was given; the Agents checklist is still asked. Runs as Mini with zero Agent calls even though the spec says Small, and the spec's size: is updated to Mini.",
       "files": []
     }
   ]

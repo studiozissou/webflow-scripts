@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "/plan add a sticky FAQ accordion with JSON-LD FAQPage markup to the Carsa service pages",
-      "expected_output": "AskUserQuestion offers Mini/Small/Medium/Large with Medium marked (Recommended) and a one-line reason. After Medium is picked: at most two research agents plus MCP DOM agents only because the feature touches DOM, no approach-explorer agents (approaches compared inline), pm-questioning asked. Spec has size: Medium and agents: [design-critic:ux, seo, schema]. Barba Impact says N/A for Carsa. Test plan has all three tiers.",
+      "expected_output": "AskUserQuestion offers Mini/Small/Medium/Large with Medium marked (Recommended) and a one-line reason, plus a multiSelect Agents question in the same call with agents 1–2 marked (Recommended), each with a reason. Only ticked agents are spawned. After Medium is picked: at most two research agents plus MCP DOM agents only because the feature touches DOM, no approach-explorer agents (approaches compared inline), pm-questioning asked. Spec has size: Medium and agents: [design-critic:ux, seo, schema]. Barba Impact says N/A for Carsa. Test plan has all three tiers.",
       "files": []
     },
     {
@@ -28,7 +28,7 @@
     {
       "id": 5,
       "prompt": "/plan add a hover state to the nav links on RHP --size small",
-      "expected_output": "Size question skipped because --size was given. Proceeds as Small.",
+      "expected_output": "Size question skipped because --size was given, but the Agents checklist is still asked. Proceeds as Small.",
       "files": []
     }
   ]

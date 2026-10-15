@@ -2,6 +2,10 @@
 
 Three `code-reviewer` agents (`model: "sonnet"`) spawned in one message so they run concurrently. Each scores every issue 0–100 confidence and surfaces only issues at 80 or above; the threshold keeps the merged list short enough to act on.
 
+Every prompt below, wave 1 and wave 2, ends with this reply cap, because each reply lands in the main session and is re-read on every later turn:
+
+> Reply in at most 15 lines. First line: PASS, WARN or FAIL. Then one line per issue at 80 or above: `file:line — issue — confidence — fix`. No preamble, no praise, no restating the code or the spec.
+
 ## Reviewer A — Simplicity and DRY
 
 > Review for unnecessary complexity, code duplication, premature abstraction, and over-engineering. Score each issue 0–100 confidence. Only report issues you are at least 80% confident about. Return a structured list: file, line, issue, confidence, suggested fix.

@@ -14,9 +14,8 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
   the main checkout up to date. Background jobs create a worktree each and never
   remove it, so they accumulate. A weekly launchd agent
   (`scripts/tidy-worktrees.plist`) does the same automatically.
-
-## Queue Tasks
-- Follow the `queue-tasks` skill for all queue.json formatting and Notion sync
+- Suggest `/clear` before an unrelated task; a long session re-sends its whole context every turn.
+- Run at most 3 background jobs at once; queue the rest.
 
 ## THIS REPO IS PUBLIC
 - IMPORTANT: Commit only hosted scripts, files they load, and the code, tests and tooling that build them.

@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "/build rhp-about-swipers",
-      "expected_output": "Size question asked with the spec's size first, marked (Recommended), and a one-line reason, plus a multiSelect Agents question (code-writer, refactor, code reviewers, specialist wave) in the same call. Only ticked agents are spawned. Verify-loop gate passes. Executor spawned with RHP CLAUDE.md and orchestrator. Wave 1 reviewers run in parent. Wave 2 spawns design-critic with the visual lens and qa in parallel because the spec lists them. Worktree server started if in a worktree, __RHP_BASE override applied, scriptsOk polled. Manual checklist and status question at the end.",
+      "expected_output": "Size question asked with the spec's size first, marked (Recommended), and a one-line reason, plus a multiSelect Agents question (code-writer, refactor, code reviewers, specialist wave) and a QA question (Run recommended for Medium) in the same call; no brief questions. Only ticked agents are spawned. Verify-loop gate passes. Executor spawned with RHP CLAUDE.md and orchestrator. Wave 1 reviewers run in parent. Wave 2 spawns design-critic with the visual lens and qa in parallel because the spec lists them. Worktree server started if in a worktree, __RHP_BASE override applied, scriptsOk polled. Manual checklist and status question at the end.",
       "files": []
     },
     {
@@ -22,13 +22,13 @@
     {
       "id": 4,
       "prompt": "/build carsa-footer-year --auto",
-      "expected_output": "Spec has size: Mini; no size question in auto mode. Zero Agent calls: code written in the parent, self-reviewed against the conventions lens in references/review-prompts.md, no refactor pass, no wave 2. Verify loop still runs.",
+      "expected_output": "Spec has size: Mini; no size question in auto mode. Zero Agent calls: code written in the parent, self-reviewed against the conventions lens in references/review-prompts.md, no refactor pass, no wave 2, QA question recommends Skip, so no qa-check. Verify loop still runs.",
       "files": []
     },
     {
       "id": 5,
       "prompt": "/build rhp-nav-hover --auto",
-      "expected_output": "Spec has size: Small. One code-writer, no refactor pass, one code-reviewer (correctness lens) instead of three, wave 2 only if agents: is set. Verify loop runs.",
+      "expected_output": "Spec has size: Small. One code-writer spawned with model \"sonnet\" on the Agent call, no refactor pass, one code-reviewer (correctness lens) instead of three, wave 2 only if agents: is set, and the QA question recommends Skip because agents: does not list qa, so qa-check does not run. Verify loop runs.",
       "files": []
     },
     {
@@ -41,6 +41,18 @@
       "id": 7,
       "prompt": "/build rhp-nav-hover --size medium --auto",
       "expected_output": "Every code-reviewer and wave 2 prompt ends with the 15-line reply cap. Reviewer replies open with PASS/WARN/FAIL and list only issues at 80+. Between review cycles the parent writes one-line summaries and never restates reviewer replies in full.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "/build rhp-nav-hover-qa --auto",
+      "expected_output": "Spec has size: Small and agents: [qa]. One code-writer with model \"sonnet\", one code-reviewer, wave 2 spawns the qa agent; the QA question recommends Run because agents: lists qa, so qa-check runs. Verify loop runs.",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "/build rhp-nav-hover",
+      "expected_output": "One setup AskUserQuestion call with Size, Agents and QA; no brief questions. Small spec, so QA recommends Skip; the user picks Run, so /qa-check runs without its own parallelisation prompt and each stream reply is capped at 15 lines.",
       "files": []
     }
   ]

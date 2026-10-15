@@ -22,6 +22,10 @@ Falls back to 2-stream (A + B only) if MCP browser is not connected.
 
 **Recommendation: Parallel** (independent checklists, read-only analysis).
 
+Run from `/build`, skip this gate and go parallel: `/build`'s setup QA question already approved the agents.
+
+Every stream prompt ends with the 15-line reply cap from `.claude/skills/build/references/review-prompts.md`, because each reply lands in the main session.
+
 ### Stream A — Code quality + accessibility
 - No console errors
 - Works on mobile

@@ -11,7 +11,7 @@ Branch: !`git branch --show-current 2>/dev/null || true`
 
 ## Modes
 
-**Interactive** (default): ask the user at the three decision points below.
+**Interactive** (default): ask two sets of questions up front, brief then setup, and otherwise only at the decision points below.
 
 **Auto** (`--auto`, or when this runs as a background job with no live user): never block on a question. Take the recommended option at each decision point and record every choice under a `## Assumptions` heading in the spec so the user can veto at review. A plan that stalls on a question nobody can answer is worth less than a plan with stated assumptions.
 
@@ -26,7 +26,11 @@ Size sets the agent budget for both `/plan` and `/build`. Most work here is smal
 | Medium | New module or 3–5 files | Agents 1–2, plus 3–4 when DOM is touched | Full wave 1, wave 2 from `agents:` |
 | Large | New page, cross-project change, new dependency, ADR | All of step 1, approach explorers, architect | Full |
 
-Read just enough (Grep, Read, no agents) to recommend a size, and check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask once with `AskUserQuestion`, two questions in the same call:
+Read just enough (Grep, Read, no agents) to understand the request. Then ask two `AskUserQuestion` calls, brief first, because its answers can change the size:
+
+**Brief** (one call, up to four questions): from the `pm-questioning` skill's five questions, ask only those the request and the inline read leave open, preferring the ones that change scope or size. Skip the call when nothing is open. Auto: write the answers as assumptions.
+
+**Setup** (one call): recommend a size, and check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask the two setup questions in the same call:
 
 1. **Size** (single select): all four sizes, the recommended one first with "(Recommended)" and a one-line reason drawn from the signals. Skip this question if `--size` was passed.
 2. **Agents** (multiSelect): every agent this `/plan` run could spawn (research agents 1–4, approach explorers, architect; group to fit four options). Mark those the recommended size allows "(Recommended)" and give each a one-line reason, e.g. "Explore: codebase patterns — 3+ modules to scan, saves reading them here". Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session. Anything left unticked is done inline with Grep and Read.
@@ -46,9 +50,9 @@ Spawn the agents the size allows in one message so they run concurrently. Sonnet
 
 Write a **Research Summary**: reusable code (file and function), patterns to follow, constraints, confirmed selectors (Designer and live, with discrepancies), Lighthouse baseline.
 
-## 2. Clarifying questions
+## 2. Follow-up questions
 
-Use the `pm-questioning` skill. Reference the research findings in the questions so the user decides with the facts in front of them. Auto mode: write the five answers as assumptions instead of asking.
+Only when the research raised something the brief did not settle: one `AskUserQuestion` call, up to four questions, each citing the finding behind it. Usually there is none. Auto: write the answers as assumptions.
 
 ## 2.5 Approach exploration (Medium and Large only)
 

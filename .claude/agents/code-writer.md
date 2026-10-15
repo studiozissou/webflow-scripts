@@ -76,5 +76,5 @@ Always check `projects/<client>/orchestrator.js` and `shared/utils.js` before wr
 - Do not commit, stash, checkout, reset, branch, or run any other git command that writes.
 - Do not run tests.
 - Do not write under `.claude/`. The patch file the prompt names is the one exception.
-- Your last action is the patch export the prompt gives you: `git add -A -- . ':!.claude/session-mode' ':!.claude/logs'`, then `git diff --cached --binary > <patch path>`. Those two and the read-only `git branch --show-current` are the only git commands you run.
+- Your last action is the patch export the prompt gives you: `git add -A -- . ':!.claude/session-mode'`, then `git diff --cached --binary > <patch path>`. Those two and the read-only `git branch --show-current` are the only git commands you run.
 - Return the list of files you created or modified, with paths relative to the repo root, then the lines `EXECUTOR_PATH=<pwd>` and `EXECUTOR_BRANCH=<git branch --show-current>`.

@@ -662,6 +662,16 @@
       "critical": false,
       "created": "2026-10-14",
       "description": "Oost Christmas and New Year 2026 - feestdagen block on /afhalen NL+EN with four takeaway-only days 15-17, home and footer pointers per locale, four dated OpeningHoursSpecification entries matching visible dates, llms.txt line; gated on OOST_FEESTDAGEN=1, removal checks on OOST_FEESTDAGEN_REMOVED=1."
+    },
+    {
+      "slug": "sz-site-redesign",
+      "url": "https://studiozissou.webflow.io/",
+      "spec": "tests/acceptance/sz-site-redesign.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-14",
+      "description": "Studio Zissou redesign: every v1 EN/NL page has one H1, compliant title/description, canonical and OG, no dead nav links or template leftovers, FAQ microdata, Service/ProfessionalService/Article JSON-LD, UTM capture on the contact form, Dutch alternates, llms.txt and sitemap; gated on SZ_REDESIGN=1."
     }
   ]
 }

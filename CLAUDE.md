@@ -17,9 +17,6 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - Suggest `/clear` before an unrelated task; a long session re-sends its whole context every turn.
 - Run at most 3 background jobs at once; queue the rest.
 
-## Queue Tasks
-- Follow the `queue-tasks` skill for all queue.json formatting and Notion sync
-
 ## THIS REPO IS PUBLIC
 - IMPORTANT: Commit only hosted scripts, files they load, and the code, tests and tooling that build them.
   Everything else (client docs, notes, pricing, screenshots, personal skills) goes in `~/webflow-internal`

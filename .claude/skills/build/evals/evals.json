@@ -44,7 +44,7 @@
       "files": []
     },
     {
-      "id": 7,
+      "id": 8,
       "prompt": "/build rhp-nav-hover-qa --auto",
       "expected_output": "Spec has size: Small and agents: [qa]. One code-writer with model \"sonnet\", one code-reviewer, wave 2 spawns the qa agent; qa-check does not run. Verify loop runs.",
       "files": []

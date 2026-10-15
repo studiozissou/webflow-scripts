@@ -140,4 +140,4 @@ State classes added by JS to `[data-barba="wrapper"]`:
 `YYYY.M.D.N` — year, month, day, daily build number. Bump `CONFIG.version` in `init.js` on each deploy.
 
 ## Testing
-Playwright e2e + a11y suites run against the live staging site. Full workflow, suite contents, and the when-to-run policy live in the `rhp-testing` skill — invoke it when testing this project.
+Playwright e2e + a11y suites run against the live staging site. Full workflow, suite contents, and the when-to-run policy live in `~/webflow-internal/.claude/archive/skills/rhp-testing/SKILL.md` (archived skill) — read it when testing this project.

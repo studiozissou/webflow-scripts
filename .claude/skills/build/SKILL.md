@@ -76,6 +76,8 @@ Read `agents:` from the spec frontmatter. For each entry spawn that agent in par
 
 Specialist review is read-only, so a FAIL here costs one fix cycle. This wave is why `/plan` tags the feature: the tags are the only thing that brings design, SEO or QA eyes onto a build without the user remembering to ask.
 
+**Keep the main session lean.** Review runs here, and everything here is re-read on every later turn, so the 15-line reply cap in `references/review-prompts.md` is what keeps a build cheap. Never quote, restate or merge reviewer replies back out in full; after each cycle write one line ("wave 1 cycle 2: FAIL, fixed `nav.js:42` null check; re-running") and act on that.
+
 ## 8. QA
 
 Run `/qa-check`.

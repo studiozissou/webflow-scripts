@@ -36,6 +36,12 @@
       "prompt": "/build rhp-nav-hover --size mini",
       "expected_output": "Size question skipped because --size was given; the Agents checklist is still asked. Runs as Mini with zero Agent calls even though the spec says Small, and the spec's size: is updated to Mini.",
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "/build rhp-nav-hover --size medium --auto",
+      "expected_output": "Every code-reviewer and wave 2 prompt ends with the 15-line reply cap. Reviewer replies open with PASS/WARN/FAIL and list only issues at 80+. Between review cycles the parent writes one-line summaries and never restates reviewer replies in full.",
+      "files": []
     }
   ]
 }

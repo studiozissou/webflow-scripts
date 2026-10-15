@@ -56,6 +56,12 @@ Formulate three genuinely different approaches and fill the comparison table in 
 
 ## 3. Spec
 
+**Story-led copy.** When the feature's deliverable includes narrative copy and `.claude/skills/storyteller/` exists, run the `storyteller` skill's craft mode before writing the spec. Narrative copy means an About page, a case study, a founder story, a landing-page narrative or a story-led blog post.
+- Interactive mode: let the user pick the story.
+- Auto mode: take the recommended option and list the other two under Assumptions.
+
+Record the chosen story, with its cards, beats and hook, under Approach. Skip this silently when the skill is not linked.
+
 Write `.claude/specs/<feature-slug>.md` using `references/spec-format.md`. It defines the frontmatter, the required sections (including Barba impact and the verify loop) and the three-tier test plan. Incorporate the research: reusable code, confirmed selectors, existing patterns. Large features: spawn the `architect` agent for the structural decision and flag any ADR needed before work begins.
 
 ## 4. Route review agents

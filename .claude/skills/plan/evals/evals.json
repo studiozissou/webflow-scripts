@@ -30,6 +30,12 @@
       "prompt": "/plan add a hover state to the nav links on RHP --size small",
       "expected_output": "Size question skipped because --size was given, but the Agents checklist is still asked. Proceeds as Small.",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "/plan rewrite the About page story for nem-life --auto",
+      "expected_output": "Tagged copy, and the spec frontmatter agents: includes design-critic:copy. Step 3 runs storyteller craft mode and records three options built on named cards, with the recommended one under Approach and the other two under Assumptions. No new agent or lens appears.",
+      "files": []
     }
   ]
 }

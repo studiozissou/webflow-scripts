@@ -88,6 +88,9 @@ Review copy from an information architecture and UX perspective:
 - **Cognitive load**: too much text? Too dense? Right amount of chunking?
 - **Mobile readability**: will this copy work on small screens?
 
+### Story review (narrative pages only)
+Use this when the page is an About page, case study, founder story or story-led post, and `.claude/skills/storyteller/` exists. While the two streams run, run the `storyteller` skill's review mode on the extracted copy in this conversation. Merge its findings into Step 5 under "Story".
+
 ## Step 5 — Merge and generate rewrites
 
 Collect results from both agents and produce:

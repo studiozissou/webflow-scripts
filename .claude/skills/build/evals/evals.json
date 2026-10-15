@@ -66,6 +66,12 @@
       "prompt": "/build two-group-overlap-blocked --auto",
       "expected_output": "Two isolated executors as in eval 7, but both groups change the same line of one file. The first patch applies. The second fails at git apply --check --index: nothing from it is applied, no conflict is auto-resolved, its worktree and patch file are kept on disk, and no further groups are integrated. Refactor, review, QA and the verify loop are skipped. The build summary names the blocker with the worktree path, branch and patch path; status set to blocked. In interactive mode the same failure stops and shows the error instead.",
       "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "/build carsa-footer-year (run as a background job, no --auto)",
+      "expected_output": "Interactive mode despite running as a background job: the Setup AskUserQuestion call (size, agents, QA) is made and the skill waits for answers, and the status question is asked at the end. Auto mode only ever comes from the --auto flag.",
+      "files": []
     }
   ]
 }

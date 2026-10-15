@@ -75,6 +75,7 @@ projects/*/.claude
 .claude/skills/queue-tasks
 .claude/skills/zissou-scan
 .claude/skills/carsa-webflow
+.claude/skills/storyteller
 .claude/commands/triage.md
 .claude/commands/carsa-build.md
 

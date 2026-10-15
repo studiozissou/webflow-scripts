@@ -18,6 +18,12 @@
       "prompt": "how should we approach adding a second Lenis-driven case study scroll wrapper on RHP without breaking the dial?",
       "expected_output": "Skill triggers without the slash command. Classified Large, architect consulted, ADR flagged, Barba Impact answered in full, agents: includes design-critic:visual and qa.",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "/plan rewrite the About page story for nem-life --auto",
+      "expected_output": "Tagged copy, and the spec frontmatter agents: includes design-critic:copy. Step 3 runs storyteller craft mode and records three options built on named cards, with the recommended one under Approach and the other two under Assumptions. No new agent or lens appears.",
+      "files": []
     }
   ]
 }

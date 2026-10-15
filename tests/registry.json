@@ -642,6 +642,16 @@
       "critical": false,
       "created": "2026-10-14",
       "description": "TSC footer ISO 9001:2015 seal + legal-row text link to the certificate PDF; Products CMS 'Hide in nav' switch filters Telecom Box out of the mega-menu (desktop + mobile) while it stays in the footer Products column and on its own page."
+    },
+    {
+      "slug": "snugg-chichesterdc-partner-page",
+      "url": "https://www.snugg.com/chichesterdc",
+      "spec": "tests/acceptance/snugg-chichesterdc-partner-page.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-14",
+      "description": "Chichester District Council partner page on snugg.com: lockup header with no nav links, hero copy, postcode form to app.snugg.com with utm_source=cdc forced by page code, four-step band, no footer, cookie banner reject button, 375px layout, axe. Expected to fail until the page is built in Webflow."
     }
   ]
 }

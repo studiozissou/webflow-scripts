@@ -15,7 +15,7 @@ const EN_SERVICES = [
   '/services/webflow-development',
   '/services/get-found',
 ];
-const EN_OTHER = ['/industries/restaurants', '/locations/haarlem', '/locations/amsterdam', '/work/oost'];
+const EN_OTHER = ['/industries/restaurants', '/locations/den-haag', '/locations/haarlem', '/locations/amsterdam', '/work/oost'];
 const NL_PAGES = [
   '/nl',
   '/nl/voor-ondernemers',
@@ -23,6 +23,7 @@ const NL_PAGES = [
   '/nl/diensten/website-laten-maken',
   '/nl/diensten/gevonden-worden',
   '/nl/branches/restaurants',
+  '/nl/locaties/den-haag',
   '/nl/locaties/haarlem',
   '/nl/locaties/amsterdam',
   '/nl/tarieven',
@@ -30,7 +31,7 @@ const NL_PAGES = [
   '/nl/contact',
 ];
 const EN_WITH_NL_TWIN = ['/', '/for-businesses', '/services/website-care', '/pricing', '/about', '/contact'];
-const FAQ_PAGES = ['/', '/for-businesses', '/for-agencies', ...EN_SERVICES, ...EN_OTHER.slice(0, 3)];
+const FAQ_PAGES = ['/', '/for-businesses', '/for-agencies', ...EN_SERVICES, ...EN_OTHER.slice(0, 4)];
 const ALL_EN = [...EN_STATIC, ...EN_SERVICES, ...EN_OTHER];
 const ALL = [...ALL_EN, ...NL_PAGES];
 const LEFTOVERS = /Destinazione|Provienza|Data della presentazione|Oggi|Lorem ipsum|Thank you! Your submission has been received!|Oops! Something went wrong/i;
@@ -183,7 +184,7 @@ test.describe('sz-site-redesign', () => {
     });
   }
 
-  for (const path of ['/locations/haarlem', '/locations/amsterdam']) {
+  for (const path of ['/locations/den-haag', '/locations/haarlem', '/locations/amsterdam']) {
     test(`location page ${path} exposes ProfessionalService schema with areaServed`, async ({ page }) => {
       await visit(page, path);
       const blocks = (await jsonLd(page)).flatMap((b) => (Array.isArray(b['@graph']) ? b['@graph'] : [b]));

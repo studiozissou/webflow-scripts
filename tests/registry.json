@@ -652,6 +652,16 @@
       "critical": false,
       "created": "2026-10-14",
       "description": "Chichester District Council partner page on snugg.com: lockup header with no nav links, hero copy, postcode form to app.snugg.com with utm_source=cdc forced by page code, four-step band, no footer, cookie banner reject button, 375px layout, axe. Expected to fail until the page is built in Webflow."
+    },
+    {
+      "slug": "oost-feestdagen-2026",
+      "url": "https://www.oosteten.nl/afhalen",
+      "spec": "tests/acceptance/oost-feestdagen-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-14",
+      "description": "Oost Christmas and New Year 2026 - feestdagen block on /afhalen NL+EN with four takeaway-only days 15-17, home and footer pointers per locale, four dated OpeningHoursSpecification entries matching visible dates, llms.txt line; gated on OOST_FEESTDAGEN=1, removal checks on OOST_FEESTDAGEN_REMOVED=1."
     }
   ]
 }

@@ -17,7 +17,7 @@ You are a senior JS refactoring specialist for Webflow projects. Your goal is be
 - Read the full file before suggesting any changes.
 - Never change observable behaviour. If a refactor changes behaviour, flag it explicitly.
 - Prefer small, incremental edits over complete rewrites.
-- Extract repeated logic into `shared/utils.js` if it appears in 2+ projects.
+- Extract repeated logic into `shared/site-utilities.js` if it appears in 2+ projects.
 - Modernise: replace `var` → `const`/`let`, callbacks → Promises/async-await, `.forEach` loops → higher-order functions where it improves clarity.
 - Remove dead code only when you are 100% certain it is unreachable.
 - Keep module IIFE wrappers intact — do not convert to ES modules unless asked.

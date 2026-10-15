@@ -56,7 +56,7 @@ const <ModuleName> = (() => {
 })();
 ```
 
-Always check `projects/<client>/orchestrator.js` and `shared/utils.js` before writing new utilities — avoid duplication.
+Always check `projects/<client>/orchestrator.js` and `shared/site-utilities.js` before writing new utilities — avoid duplication.
 
 ## Spacing rules
 

@@ -1,0 +1,24 @@
+{
+  "domain": "oosteten.nl",
+  "locales": [
+    { "code": "nl", "name": "Dutch" },
+    { "code": "en", "name": "English" }
+  ],
+  "placeholders": ["31600000000"],
+  "allowLocalAttr": "data-allow-local",
+  "blockWhatsApp": true,
+  "listItemClasses": ["region_item"],
+  "fallbackPaths": [
+    "/",
+    "/afhalen",
+    "/catering",
+    "/privacybeleid",
+    "/algemene-voorwaarden",
+    "/en",
+    "/en/afhalen",
+    "/en/catering",
+    "/en/privacybeleid",
+    "/en/algemene-voorwaarden"
+  ],
+  "schemes": ["cream", "white", "buff", "yellow", "green-light", "green", "green-dark"]
+}

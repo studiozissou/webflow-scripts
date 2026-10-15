@@ -48,7 +48,7 @@ Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged in
 ### Setup workflow
 | Command | What it does |
 |---------|-------------|
-| `/dev-setup` | Live status tracker for the setup phase — shows ✅/❌/⚠️/⏸ for each step |
+| `client-onboarding` skill | "new client" / "onboard" / "kick off": brief, private folder, template copy, owner inputs, Gate 0 status |
 | `/client-brief` | Client context questions → writes `client.md` from template |
 | `/figma-audit` | Figma extraction → tokens, reference images, interaction specs, flags |
 | `/component-plan` | Component identification, flag resolution, sign-off → inventory |
@@ -68,7 +68,7 @@ Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged in
 ### Scaffolding & generation
 | Command | What it does |
 |---------|-------------|
-| `/bootstrap` | Scaffold new client project with orchestrator.js template. Now includes Webflow site discovery if MCP connected. |
+| `client-onboarding --animated` | Adds the GSAP/Barba/Lenis orchestrator and Playwright test templates to a new client project. |
 | `/new-section` | Scaffold animated section module + Webflow Designer steps. |
 | `/gsap-build` | GSAP animation builder with `gsap.context()` + reduced-motion guard. |
 | `/generate-schema` | JSON-LD structured data with `FILL_IN` placeholders. |
@@ -145,7 +145,7 @@ New projects follow the setup phase sequence before any code is written:
 /client-brief → /figma-audit → /component-plan → /arch-review → /webflow-connect → /dev-queue → /style-guide (optional)
 ```
 
-Run `/dev-setup` at any time to check progress. Each step has pre-flight checks that enforce ordering.
+Start with the `client-onboarding` skill; it ends with Gate 0 status and the next step. Each step has pre-flight checks that enforce ordering.
 
 For existing sites, use `/intake` instead — captures context, audits the site read-only, and produces a prioritised report.
 
@@ -254,7 +254,7 @@ Every parallelised command follows the same pattern:
 | `/refactor` | refactor → review → test — each step depends on previous |
 | `/debug` | Hypothesis testing is inherently iterative |
 | `/architect` | Single-agent decision process |
-| `/bootstrap`, `/new-section`, `/gsap-build` | Single-agent scaffolding |
+| `client-onboarding`, `/new-section`, `/gsap-build` | Single-agent scaffolding |
 | `/status`, `/cheatsheet`, `/local` | Trivial / instant |
 
 ### Agent Teams
@@ -265,7 +265,7 @@ Disabled (flag removed from `.claude/settings.json` on 2026-10-14: no command us
 
 ## Key Patterns
 
-- **Setup workflow:** `/dev-setup` → `/client-brief` → `/figma-audit` → `/component-plan` → `/arch-review` → `/webflow-connect` → `/dev-queue` → `/style-guide`
+- **Setup workflow:** `client-onboarding` (runs `/client-brief`) → `/figma-audit` → `/component-plan` → `/arch-review` → `/webflow-connect` → `/dev-queue` → `/style-guide`
 - **Build workflow:** `/plan` (research agents → pm-questioning → spec + acceptance tests) → `/build` (fresh executor context → commit → purge CDN → run tests) → human review
 - **Complex build:** `/plan` → `/architect` → `/build` (for state, GSAP, Barba, Finsweet, shared state)
 - **GSD patterns:** Research subagents in `/plan` produce informed specs; fresh executor contexts in `/build` prevent context rot across multi-component builds

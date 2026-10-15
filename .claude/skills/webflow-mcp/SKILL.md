@@ -20,11 +20,12 @@ When to use Webflow MCP:
 <workflow>
 Rules:
 1. Read before write. Always read current state before proposing changes.
-2. Never auto-publish. Always requires explicit human approval.
+2. Never auto-publish. Always requires explicit human approval. Publishing ships **everything** pending, including other sessions' Designer edits: compare `lastUpdated` with `lastPublished` (`get_site`) first and say what else will go out.
 3. Designer tools need the companion app. If a Designer API call fails, tell the developer to open the MCP Bridge App before retrying.
 4. Data API tools work without the companion app.
 5. Read CLAUDE.md first. Contains site ID, staging URL, and known gotchas.
-6. Prefer official Webflow skills. `site-audit`, `link-checker`, `bulk-cms-update` are maintained by Webflow — use them rather than reimplementing the same logic.
+6. Pre-flight before planning: `get_site` must succeed and, for Designer work, the Designer tab must be foregrounded. Spell domains and emails from `get_site` → `customDomains`, never from notes.
+7. Prefer official Webflow skills. `site-audit`, `link-checker`, `bulk-cms-update` are maintained by Webflow — use them rather than reimplementing the same logic.
 
 Selector verification pattern:
 1. Use `element_snapshot_tool` with site name/ID and page name/ID
@@ -42,7 +43,7 @@ Selector verification pattern:
 </success_criteria>
 
 <v2_gotchas>
-Learned the hard way on Coconut, Aug 2026 (MCP v2.0.1). Several of these fail
+Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of these fail
 *silently* — the call returns success and does nothing.
 
 **Writes that lie**
@@ -67,6 +68,28 @@ Learned the hard way on Coconut, Aug 2026 (MCP v2.0.1). Several of these fail
   `div._25-collapse-title` returns "This element doesn't support text"; its
   String child works.
 
+**`data_whtml_builder` loses things — check after every insert**
+- `target="_blank"` and link settings are dropped. Re-apply them after the insert, then re-read.
+- A nested `<section>` comes in without its classes. Create the class (and any combo class) first, then insert.
+- Passing CSS for a class that already exists creates a duplicate `<name>-1` class. Send classes by name only; style existing classes separately.
+- `var()` inside a gradient is frozen to its current value. Set gradients that use variables in the Designer.
+- An empty boolean `open` attribute is dropped. Write `open="open"`.
+
+**Links**
+- Use native link settings (Link → Page, anchors Page → Section). Never a custom `href` attribute or a URL-typed `/path`: only Page links are localized, so URL links on a secondary locale point back at the primary.
+
+**Binding limits**
+- A `<span>` can't bind to a CMS field. Bind a text element (paragraph, heading, text block) instead.
+- Option fields can't drive conditional visibility. Use a Switch field for show/hide.
+
+**Localization**
+- `get_page_content` on a secondary locale lists only the nodes that have overrides. Write locale content against the **primary** node IDs.
+- Get every link right before translating. Translation stores a per-locale link override, and MCP can't reset it; that's a Designer job (switch locale → select link → reset).
+- Links inside translated rich text never inherit the primary link. Give them the locale path directly (`/en/page`).
+- Re-fetch the live secondary-locale pages after every publish, not just the primary.
+
+**Budget a Designer slot** — MCP can't do these: reset locale link overrides, translate CMS option names (Site settings › Localization), set favicon/webclip.
+
 **Schemas are inconsistent — expect to probe**
 Param names vary per tool: `siteId` vs `site_id`, `collection_id` vs `siteId`,
 `id` vs `element_id`, `pages: [{id}]` not `page_ids`. `create_collection_items`
@@ -86,7 +109,7 @@ mutates nothing — it's a safe probe.
 
 **Don't infer page architecture from URL patterns**
 A CMS template can carry two alternative sections and switch on a field. On
-Coconut, `/features/*` renders a `DynamoList` bound to a multi-reference for
+one site, `/features/*` renders a `DynamoList` bound to a multi-reference for
 most items, but a *static* section for the one item with `new-layout: true` —
 so its multi-reference rendered nowhere. Confirm where a page actually reads
 its content from before writing to it, and diff a sibling item to check a

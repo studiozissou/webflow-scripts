@@ -35,8 +35,7 @@ cd projects/client-name && claude
 ### New build from Figma
 ```bash
 cd projects/client-name && claude
-/dev-setup          # check where you are
-/client-brief       # client context
+"onboard <client>"  # client-onboarding skill: brief, template, owner inputs
 /figma-audit        # Figma extraction
 /component-plan     # component sign-off
 /arch-review        # architecture review
@@ -45,8 +44,8 @@ cd projects/client-name && claude
 /style-guide        # optional
 ```
 
-Run each in a separate session. Check `/dev-setup` status at the start of any session
-to see where you are.
+Run each in a separate session. The `client-onboarding` skill ends with Gate 0 status
+and the next step.
 
 ### Existing site + new build
 Run `/intake` first. `/client-brief` detects existing `client.md` and skips questions.
@@ -85,7 +84,7 @@ build session uncovers unexpected complexity.
 
 | File | Created by | Purpose |
 |---|---|---|
-| `CLAUDE.md` | `/bootstrap` or `/dev-queue` | Project memory — read at every session start |
+| `CLAUDE.md` | `client-onboarding` skill or `/dev-queue` | Project memory — read at every session start |
 | `.claude/client.md` | `/intake` or `/client-brief` | Client brief and contacts |
 | `.claude/intake.json` | `/intake` | Machine-readable audit findings |
 | `.claude/queue.json` | `/dev-queue` | Task queue — source of truth |

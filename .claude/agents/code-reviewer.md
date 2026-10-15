@@ -79,7 +79,7 @@ You are a senior code reviewer for Webflow creative builds with custom JavaScrip
 
 ### Code quality
 - [ ] No dead code or unused variables
-- [ ] No duplicated logic that belongs in `shared/utils.js`
+- [ ] No duplicated logic that belongs in `shared/site-utilities.js`
 - [ ] Error handling at system boundaries (external APIs, user input)
 - [ ] Module version string updated if file was changed
 

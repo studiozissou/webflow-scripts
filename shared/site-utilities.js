@@ -1,67 +1,56 @@
-/**
- * Shared site-wide utilities
- *
- * Included in every project's init.js loader.
- * Import these functions or copy them into your loader's boot().
- *
- * - setExternalLinkRels()  — adds rel="noreferrer noopener" to target="_blank" links
- * - setFooterYear()        — sets #year element to current year
- * - injectUTMTracking()    — injects UTM params + conversion page into forms
- */
+// Site-wide helpers every client loads: rel="noreferrer noopener" on new-tab links, the current year in #year, and hidden Conversion Page and utm_ fields added once to every form.
+(function () {
+  'use strict';
 
-export function setExternalLinkRels() {
-  document.querySelectorAll('a[target="_blank"]').forEach((a) => {
-    a.setAttribute('rel', 'noreferrer noopener');
-  });
-}
+  var document = window.document;
 
-export function setFooterYear() {
-  const el = document.getElementById('year');
-  if (el) el.textContent = new Date().getFullYear();
-}
-
-export function injectUTMTracking() {
-  const forms = document.querySelectorAll('form');
-  if (!forms.length) return;
-
-  const url = new URL(window.location.href);
-  const params = url.searchParams;
-
-  const cleanURL = new URL(url.origin + url.pathname);
-  for (const [key, val] of params) {
-    if (!key.startsWith('utm_')) cleanURL.searchParams.set(key, val);
+  function secureNewTabLinks() {
+    var links = document.querySelectorAll('a[target="_blank"]');
+    for (var i = 0; i < links.length; i++)
+      links[i].setAttribute('rel', 'noreferrer noopener');
   }
-  const conversionPage = cleanURL.toString();
 
-  forms.forEach((form) => {
-    if (form.dataset.trackingInjected) return;
-    form.dataset.trackingInjected = 'true';
+  function writeYear() {
+    var el = document.getElementById('year');
+    if (el) el.textContent = String(new Date().getFullYear());
+  }
 
-    form.append(
-      Object.assign(document.createElement('input'), {
-        type: 'hidden',
-        name: 'Conversion Page',
-        value: conversionPage,
-      })
-    );
+  function hiddenInput(name, value) {
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    return input;
+  }
 
-    for (const [key, val] of params) {
-      if (key.startsWith('utm_')) {
-        form.append(
-          Object.assign(document.createElement('input'), {
-            type: 'hidden',
-            name: key,
-            value: val,
-          })
-        );
-      }
+  function tagForms() {
+    var forms = document.querySelectorAll('form');
+    if (!forms.length) return;
+
+    var url = new URL(window.location.href);
+    var page = new URL(url.origin + url.pathname);
+    var utm = [];
+    url.searchParams.forEach(function (value, key) {
+      if (key.indexOf('utm_') === 0) utm.push([key, value]);
+      else page.searchParams.set(key, value);
+    });
+
+    for (var i = 0; i < forms.length; i++) {
+      var form = forms[i];
+      if (form.dataset.trackingInjected) continue;
+      form.dataset.trackingInjected = 'true';
+      form.append(hiddenInput('Conversion Page', page.toString()));
+      for (var j = 0; j < utm.length; j++) form.append(hiddenInput(utm[j][0], utm[j][1]));
     }
-  });
-}
+  }
 
-/** Run all site-wide utilities. Call from your loader's boot(). */
-export function runSiteUtilities() {
-  setExternalLinkRels();
-  setFooterYear();
-  injectUTMTracking();
-}
+  function run() {
+    secureNewTabLinks();
+    writeYear();
+    tagForms();
+  }
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();

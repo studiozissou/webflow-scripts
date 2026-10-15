@@ -1,6 +1,6 @@
 # Claude Code Architecture — Webflow Scripts Monorepo
 
-> Last updated: 2026-03-10
+> Last updated: 2026-10-15
 > Paste this into any Claude conversation to bring it up to speed on the workspace setup.
 
 ---
@@ -16,7 +16,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 ---
 
-## Agents (7 total)
+## Agents (8 total)
 
 Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged into `design-critic` (lens argument); `perf` folded into `qa`; `pm` folded into the `/plan` skill; `convention-auditor` replaced by `/skill-doctor`. Agents are spawned by skills, not by hand: `/build` runs `code-writer`, `refactor` and three `code-reviewer`s on every build, and the spec's `agents:` frontmatter (written by `/plan`) routes the specialists as a second review wave. Models use aliases (`sonnet`, `opus`); `code-reviewer`, `qa`, `seo` and `design-critic` keep project-scoped memory.
 
@@ -39,7 +39,7 @@ Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged in
 | Command | What it does |
 |---------|-------------|
 | `/plan` | Skill at `skills/plan/`. Size gate (Small skips approach exploration) → parallel research agents → pm-questioning → approach exploration (Medium/Large) → spec with `agents:` routing, verify loop and three-tier test plan → acceptance tests + registry. `--auto` (or a background job) takes recommended options and records them under Assumptions instead of asking. |
-| `/build` | Skill at `skills/build/`. Spec + verify-loop gate → test inventory → selector/spacing checks → fresh-context `code-writer` executor(s) → `refactor` → wave 1: three parallel `code-reviewer`s → wave 2: the spec's `agents:` specialists → `/qa-check` → browser-MCP verify loop (project-aware dev override from the project CLAUDE.md) → manual checklist. Review runs in the parent context because subagents cannot spawn agents. |
+| `/build` | Skill at `skills/build/`. Spec + verify-loop gate → test inventory → selector/spacing checks → fresh-context `code-writer` executor(s) (when the spec's Execution note names two or more file groups, each executor runs in its own git worktree and is integrated by patch into the parent tree before `refactor`) → `refactor` → wave 1: three parallel `code-reviewer`s → wave 2: the spec's `agents:` specialists → `/qa-check` → browser-MCP verify loop (project-aware dev override from the project CLAUDE.md) → manual checklist. Review runs in the parent context because subagents cannot spawn agents. |
 | `/debug` | Pre-flight diagnostics → isolate/hypothesise/instrument/test/fix/confirm loop → debug log. |
 | `/status` | Root: full overview (git, specs, ADRs, logs). Project: compact queue table. |
 | `/qa-check` | Checklist: no console errors, mobile, reduced-motion, Barba cleanup, CLS, keyboard access, Playwright. |
@@ -167,7 +167,7 @@ See `claude-code-project-setup.md` for full workflow documentation (§4, §11–
 
 ```
 .claude/
-├── agents/           # 7 agent configs (code-writer, code-reviewer, refactor, qa, seo, architect, design-critic, schema)
+├── agents/           # 8 agent configs (code-writer, code-reviewer, refactor, qa, seo, architect, design-critic, schema)
 ├── commands/         # 25 slash command .md files
 ├── skills/           # 20 skills in subdirectories (skill-name/SKILL.md)
 ├── reference/        # rate-card.md, about-me.md (singleton config files)

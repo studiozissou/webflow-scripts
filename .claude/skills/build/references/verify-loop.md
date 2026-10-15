@@ -24,6 +24,10 @@ Projects without an override verify against the staging URL as deployed. The DOM
 
 Not in a worktree: run `/local` normally if the project supports it, otherwise verify as deployed.
 
+## Integrated builds
+
+When `/build` step 4b integrated two or more executors, verify only after every patch has applied: the integrated code lives in the parent tree, and executor worktrees are never served. Start the worktree server, or `/local`, from the parent tree (the job worktree or the main checkout), never from an `agent-*` worktree. A build that step 4b marked blocked skips the verify loop.
+
 ## Checks
 
 1. `navigate_page` to the staging URL.

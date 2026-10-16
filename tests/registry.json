@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-15",
+  "lastUpdated": "2026-10-17",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -682,6 +682,16 @@
       "critical": false,
       "created": "2026-10-14",
       "description": "Studio Zissou redesign: every v1 EN/NL page has one H1, compliant title/description, canonical and OG, no dead nav links or template leftovers, FAQ microdata, Service/ProfessionalService/Article JSON-LD, UTM capture on the contact form, Dutch alternates, llms.txt and sitemap; gated on SZ_REDESIGN=1."
+    },
+    {
+      "slug": "sz-crosslinking",
+      "url": "https://studiozissou.webflow.io/",
+      "spec": "tests/acceptance/sz-crosslinking.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-17",
+      "description": "Studio Zissou internal linking: every EN/NL page links to the care hub and contact in body copy, nested pages carry a breadcrumb matching BreadcrumbList JSON-LD, collection pages show a 3-6 item related block, lean footer carries 12 EN / 10 NL links, locations link to restaurants and Oost, Dutch pages never leak English or EN-only links; gated on SZ_REDESIGN=1."
     }
   ]
 }

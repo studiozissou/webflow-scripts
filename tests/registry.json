@@ -1,10 +1,20 @@
 {
-  "lastUpdated": "2026-10-14",
+  "lastUpdated": "2026-10-15",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
   "lastDeployedHash": "677502e",
   "testPages": [
+    {
+      "slug": "carsa-ab-testing-posthog",
+      "url": "https://carsa-v2.webflow.io/used-cars",
+      "spec": "tests/acceptance/carsa-ab-testing-posthog.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-15",
+      "description": "PostHog snippet loads only after Finsweet consent; experiments.js applies exp-* flag payloads (hide View car on widget-injected cards), pushes experiment_exposure, captures card_click, honours ?exp-preview=1. Expected to fail until T3/T4 of carsa-ab-testing-posthog ship."
+    },
     {
       "slug": "tsc-leadership-modal",
       "url": "https://tsc-v2.webflow.io/leadership",

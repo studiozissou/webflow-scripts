@@ -51,7 +51,7 @@ Missing Tier 1 tests only narrow the verify loop to smoke and a11y; say so and c
 
 ## 3. Read before writing
 
-Read every file the spec touches, the project orchestrator, and `shared/utils.js`. New utilities go in `shared/` only when nothing there already does the job.
+Read every file the spec touches, the project orchestrator, and `shared/site-utilities.js`. New utilities go in `shared/` only when nothing there already does the job.
 
 **Selectors** (Webflow MCP connected): `element_snapshot_tool` on the target page and confirm every selector the spec names. A missing selector is a stop, not an assumption; ask (auto: record it as a blocker and build the rest). Note confirmed selectors in the project CLAUDE.md under "## Known selectors".
 
@@ -139,7 +139,7 @@ Follow `references/verify-loop.md`: project-aware dev server, browser MCP checks
 ## Rules
 
 - Never write code before reading the existing files
-- Check `shared/utils.js` and the orchestrator before adding a utility
+- Check `shared/site-utilities.js` and the orchestrator before adding a utility
 - No bare `console.log`; a settings hook flags any that slip through
 - Verify selectors via Webflow MCP before targeting them, when connected
 - Client First spacer divs for vertical rhythm, never margin between components

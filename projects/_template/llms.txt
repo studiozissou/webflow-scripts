@@ -1,0 +1,28 @@
+# TODO-business-name
+
+> TODO-one-sentence: what the business is, where it is, and who it serves.
+
+TODO-short-paragraph: what makes it different, the languages the site is in, and anything a visitor or assistant should know first.
+
+## Key pages
+
+- [Home](https://TODO-domain/): TODO-what-is-on-it
+- [TODO-page](https://TODO-domain/TODO-path): TODO-what-is-on-it
+
+## Visit
+
+- Address: TODO-address
+- Hours: TODO-hours
+- Bookings: TODO-booking-policy
+- Payment: TODO-payment-methods
+
+## Services
+
+- TODO-service, TODO-price: TODO-description
+
+## Contact
+
+- Name: TODO-legal-name, TODO-address
+- Phone: TODO-phone
+- Email: TODO-email
+- Website: https://TODO-domain

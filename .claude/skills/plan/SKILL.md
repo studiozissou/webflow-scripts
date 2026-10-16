@@ -43,7 +43,7 @@ Outside the approved list, spawn nothing. Search directly instead.
 
 Spawn the agents the size allows in one message so they run concurrently. Sonnet is enough for all of them. Mini does this step inline with Grep and Read.
 
-- **Agent 1 — Codebase patterns** (`Explore`): existing code similar to this feature; reusable functions in `shared/utils.js`, the project orchestrator, related page modules.
+- **Agent 1 — Codebase patterns** (`Explore`): existing code similar to this feature; reusable functions in `shared/site-utilities.js`, the project orchestrator, related page modules.
 - **Agent 2 — Specs, ADRs, conventions** (`Explore`): relevant specs, ADRs and CLAUDE.md sections; constraints and decisions already made.
 - **Agent 3 — Designer DOM** (only if the feature touches DOM and Webflow MCP is connected): `element_snapshot_tool` on the target page for structure and selectors.
 - **Agent 4 — Live DOM** (only if the feature touches DOM and a browser MCP is connected): navigate to the staging URL (`.env.test` STAGING_URL, then project CLAUDE.md, else skip), `take_snapshot`, compare with Agent 3 for injected elements, CMS items and JS-modified classes. Optionally `lighthouse_audit` for an accessibility and performance baseline.

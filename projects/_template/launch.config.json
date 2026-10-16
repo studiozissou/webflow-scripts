@@ -1,0 +1,9 @@
+{
+  "domain": "example.com",
+  "locales": [{ "code": "en", "name": "English" }],
+  "placeholders": [],
+  "allowLocalAttr": "data-allow-local",
+  "blockWhatsApp": false,
+  "listItemClasses": [],
+  "fallbackPaths": ["/"]
+}

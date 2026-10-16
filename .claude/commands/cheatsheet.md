@@ -10,7 +10,7 @@ Run each in its own session, reviewing output before the next.
 
 | # | Command | What it does |
 |---|---------|-------------|
-| 0 | `/dev-setup` | See where you are (all X on a fresh project) |
+| 0 | `client-onboarding` skill | Say "new client" or "onboard": brief, private folder, template copy, owner inputs, Gate 0 |
 | 1 | `/client-brief` | Load client context and write client.md |
 | 2 | `/figma-audit` | Extract and analyse a Figma design for implementation |
 | 3 | `/style-guide` | Set up design system — variables, base CF classes, visual reference |
@@ -19,7 +19,7 @@ Run each in its own session, reviewing output before the next.
 | 6 | `/webflow-connect` | Webflow connection and variable setup |
 | 7 | `/dev-queue` | Generate queue.json and CLAUDE.md for the project |
 
-Check `/dev-setup` at the start of any session to see current status.
+The `client-onboarding` skill ends with Gate 0 status and the next step.
 
 Setup sequence:
 ```
@@ -70,7 +70,7 @@ Complex = state, GSAP, Barba hooks, Finsweet, or shared state. When in doubt, st
 | `/new-section` | Scaffold a new animated section for a Webflow page |
 | `/refactor` | Plan-first refactor with code review + test loop (Opus refactors, Sonnet reviews) |
 | `/generate-schema` | Generate JSON-LD structured data for a Webflow page or site |
-| `/bootstrap` | Bootstrap a new Webflow project in this monorepo |
+| `client-onboarding` skill | Start a new client project (`--animated` adds the GSAP/Barba/Lenis orchestrator) |
 
 ### Auditing
 

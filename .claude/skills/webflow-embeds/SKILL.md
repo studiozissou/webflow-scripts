@@ -130,6 +130,37 @@ collection's fields via the API, so check for them before concluding a field is 
   value. Make fields required in the collection where schema correctness depends on them.
 </cms_schema_bindings>
 
+<consent_and_third_party>
+**Consent (any site with analytics).** Webflow's native GA integration sets cookies before consent and can't be gated. Never use it alongside a consent manager (CMP). Put this in Site Settings › Head, in this order:
+```html
+<!-- client:consent -->
+<!-- 1. Very top of head: Consent Mode default, before any tag loads -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied' });
+</script>
+<!-- 2. CMP script, synchronous (no async/defer) and early -->
+<script src="https://cmp.example/loader.js"></script>
+<!-- 3. GA, inert until the analytics category is accepted -->
+<script type="fs-consent" fs-consent-categories="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
+<script type="fs-consent" fs-consent-categories="analytics">
+  gtag('js', new Date()); gtag('config', 'G-XXXX');
+</script>
+<!-- /client:consent -->
+```
+Verify on staging: no `_ga` cookie and no `collect` request until you accept.
+
+**Third-party widgets (booking, chat, reviews).** Never paste a vendor snippet verbatim: eager load and auto-open wreck LCP and can cover the hero or the consent banner.
+- Load on idle (`requestIdleCallback`) or on intent (first hover/focus/click of a trigger), not at page load.
+- Wire the triggers yourself and open only after the widget's own ready signal (callback, event or global); queue the click until then.
+- Every trigger is a real link to the vendor's hosted URL, so it still works if the script fails or is blocked.
+- No auto-open. Give the widget's iframe a `title`.
+- Keep floating launchers below the consent banner's `z-index`; test both together on a phone.
+
+**Idempotent marker blocks.** Wrap every block you add to head/footer custom code in named markers (`<!-- client:block -->` … `<!-- /client:block -->`). To update, replace between the markers; never append. Re-running a write must not duplicate a tag.
+</consent_and_third_party>
+
 <anti_patterns>
 - Do NOT use inline template variables in **JS** script tags: `var title = "{{wf ...}}"` — use data attributes instead. The exception is a JSON-LD schema block on a Collection Page template, where bindings are the intended mechanism — see cms_schema_bindings.
 - Do NOT write bare `{{ field }}` or an invented placeholder like `+{{Field Name}}` into the schema field — Webflow flags it as invalid and publishes it as an empty string
@@ -146,4 +177,6 @@ collection's fields via the API, so check for them before concluding a field is 
 - CMS data accessed via data attributes (not inline template variables)
 - No custom JS running in Webflow Designer preview (all tested on staging)
 - Embed elements kept minimal — no large scripts inline
+- No analytics cookie or request before consent; no Webflow GA integration
+- Third-party widgets lazy, with fallback links, no auto-open, below the consent banner
 </success_criteria>

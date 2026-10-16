@@ -1,63 +1,85 @@
-Commit all staged and unstaged changes, then push to the remote.
+Commit and push all changes. If the push touches a client loader, cut a tagged release for that client and swap the tag on the live Webflow site.
 
-> **Testing responsibility:** `/deploy` is the ONLY command that runs CLI test suites (`npm test`, `npx playwright test`, `npm run test:registry`). These tests hit the live CDN URL, so they only make sense after the code is pushed and the jsDelivr hash is updated. `/build` and `/debug` verify via Playwright MCP only.
+> **Testing responsibility:** `/deploy` is the ONLY command that runs CLI test suites (`npm test`, `npx playwright test`, `npm run test:registry`). These tests hit the live CDN URL, so they only make sense after the release is tagged and the Webflow footer points at it. `/build` and `/debug` verify via Playwright MCP only.
 
-1. Run `git status` and `git diff` to see what changed.
-2. Stage all changed files (but never `.env`, credentials, or secrets).
-3. Write a concise commit message summarising the changes.
-4. Commit.
-5. Push to the remote (`git push`).
-6. Report the commit hash.
+## 1. Commit and push
 
-## CDN deploy (jsDelivr commit-hash projects)
+1. `git status` and `git diff` to see what changed.
+2. Stage all changed files (never `.env`, credentials or secrets).
+3. Commit with a concise message, push, report the commit hash.
 
-If the project uses jsDelivr with commit-hash pinning (check project CLAUDE.md for jsDelivr/CDN references):
+## 2. Detect client releases
 
-7. Determine changes since last deploy:
-   - Find the commit hash currently in use on the CDN (ask user, or check CLAUDE.md / queue.json for last deployed hash)
-   - Run `git log --oneline LAST_HASH..HEAD` to list all commits since last deploy
-   - Identify all changed JS/CSS files across those commits
-   - List the features/fixes included in this deploy
-8. Show the new commit hash and the jsDelivr URL pattern:
-   `https://cdn.jsdelivr.net/gh/OWNER/REPO@NEW_HASH/path/to/init.js`
-9. Tell the user: "Update the script URL in Webflow Designer head block with the new commit hash above and bump the `?v=` parameter."
-10. Ask via `AskUserQuestion`: **"Post-deploy verification?"**
-    1. **"Full regression" (Recommended)** — runs all specs in registry + smoke + a11y
-    2. **"Since last deploy"** — runs only specs created after last deploy date + all critical specs
-    3. **"Skip all tests"** — no tests, just stamp the deploy. Log: "Tests skipped by user"
+List the `projects/<client>/` folders touched by the pushed commits. A client needs a release when its `init.js` declares a `VERSION`.
 
-    If user chooses **Skip all tests**: jump straight to step 13 (stamp deploy).
+- Loader without `VERSION` (e.g. carsa, released with `tools/carsa/release.js`): skip it and say so.
+- No touched loader (tools, skills, tests only): skip to step 8. Same behaviour as a plain commit + push.
+- Not on `main`: releases only cut from `main`, so skip to step 8 and say the release waits for the merge.
 
-11. If running tests, wait 30s for jsDelivr to index the new commit, then show the **regression summary**:
+Steps 3–7 run once per client.
 
-    Read `tests/registry.json` and count entries. Read `lastDeployed` date from registry (if present). Show:
-    ```
-    Regression gate:
-      Total specs in registry: N (~Xm estimated at 20s/spec)
-      Last deploy: YYYY-MM-DD (or "never")
-      New since last deploy: M specs
-    ```
+## 3. Bump VERSION
 
-    If the project has no `tests/registry.json`, fall back to `npm test` (smoke + a11y) and skip the gate.
+1. Ask via `AskUserQuestion`: **patch**, **minor** or **major**.
+2. Latest tag: `git tag --list '<client>-v*' --sort=-v:refname | head -1`.
+3. Bump `VERSION` in `projects/<client>/init.js` (semver `X.Y.Z`). If the current value isn't semver (e.g. a date-style cache buster), use the next patch above the latest `<client>-vX.Y.Z` tag, or `0.1.0` if there is none.
+4. Commit (`release: <client> vX.Y.Z`) and push.
 
-    **Full regression:**
-    ```
-    npm run test:registry
-    ```
+## 4. Preflight
 
-    **Since last deploy:**
-    - Read `lastDeployed` from `tests/registry.json`
-    - Filter entries where `created > lastDeployed` OR `critical: true`
-    - Build a file list from the filtered entries
-    - Run:
-      ```
-      npx playwright test [filtered files] --config=tests/playwright.config.js --reporter=list
-      ```
+```
+git fetch
+npm run preflight -- <client>
+```
 
-    Report pass/fail per suite + total spec count.
+Any failure stops the release: show the failures and fix them first. Never tag around a failed preflight.
 
-12. If any test fails: report failures — user decides whether to fix and re-deploy or accept.
+## 5. Tag
 
-13. **Stamp deploy** — after successful verification (or if user accepts despite failures):
-    - Update `tests/registry.json`: set `lastDeployed` to today's date, set `lastDeployedHash` to the new commit hash
-    - This becomes the baseline for the next deploy's "since last deploy" filter
+```
+git tag <client>-vX.Y.Z
+git push origin <client>-vX.Y.Z
+```
+
+## 6. Purge jsDelivr
+
+For `init.js` and every module in its module lists:
+
+```
+curl -s https://purge.jsdelivr.net/gh/studiozissou/webflow-scripts@<client>-vX.Y.Z/projects/<client>/<file>
+```
+
+## 7. Swap the tag in Webflow
+
+1. Webflow MCP `get_site` first. Show `lastUpdated` vs `lastPublished` and list the pending unpublished changes: publishing ships all of them.
+2. Read the site footer code, replace the old `@<client>-v…` in the `init.js` script tag with the new tag, write it back via MCP. Change nothing else in the footer.
+3. Ask before publishing. Publish only on a yes.
+
+If the Webflow MCP isn't connected, stop and ask Will to re-authorise the Webflow MCP with the Designer tab open, then resume at 7.1. Never fall back to a manual paste.
+
+## 8. Post-deploy tests
+
+Ask via `AskUserQuestion`: **"Post-deploy verification?"**
+1. **"Full regression" (Recommended)**: all specs in the registry + smoke + a11y
+2. **"Since last deploy"**: specs created after `lastDeployed` + every critical spec
+3. **"Skip all tests"**: no tests, go to step 9. Log: "Tests skipped by user"
+
+If running tests, wait 30 s for jsDelivr, then show the regression gate from `tests/registry.json`:
+
+```
+Regression gate:
+  Total specs in registry: N (~Xm estimated at 20s/spec)
+  Last deploy: YYYY-MM-DD (or "never")
+  New since last deploy: M specs
+```
+
+No `tests/registry.json`: run `npm test` (smoke + a11y) and skip the gate.
+
+- **Full regression:** `npm run test:registry`
+- **Since last deploy:** filter entries where `created > lastDeployed` or `critical: true`, then `npx playwright test [files] --config=tests/playwright.config.js --reporter=list`
+
+Report pass/fail per suite and the total spec count. On failures, Will decides: fix and re-deploy, or accept.
+
+## 9. Stamp the deploy
+
+After verification passes (or Will accepts failures), update `tests/registry.json`: `lastDeployed` to today, `lastDeployedTag` to the tag just cut (several clients: comma-separated; no release: leave it), and remove the retired `lastDeployedHash` key if present. This is the baseline for the next "since last deploy" run.

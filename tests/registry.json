@@ -702,6 +702,16 @@
       "critical": false,
       "created": "2026-10-17",
       "description": "Studio Zissou PostHog: cookieless snippet (no ph_ cookies or storage), story and locale super properties, cta_click / story_section_reached / lead_submitted events, shared experiments.js runner applies exp-* show/hide payloads, records exposure, ignores bad payloads and non-exp flags, honours ?exp-preview=1; gated on SZ_REDESIGN=1 and SZ_POSTHOG=1."
+    },
+    {
+      "slug": "sz-growth-review",
+      "url": "https://studiozissou.webflow.io/",
+      "spec": "tests/acceptance/sz-growth-review.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-17",
+      "description": "Studio Zissou weekly growth review: every page the Claude job changed in the last 28 days still meets the meta, JSON-LD, FAQ, link and locale rules, autopilot-off weeks produced no changes, and a sample of unchanged pages still passes; gated on SZ_REDESIGN=1 and the experiment log."
     }
   ]
 }

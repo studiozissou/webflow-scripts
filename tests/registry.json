@@ -692,6 +692,16 @@
       "critical": false,
       "created": "2026-10-17",
       "description": "Studio Zissou internal linking: every EN/NL page links to the care hub and contact in body copy, nested pages carry a breadcrumb matching BreadcrumbList JSON-LD, collection pages show a 3-6 item related block, lean footer carries 12 EN / 10 NL links, locations link to restaurants and Oost, Dutch pages never leak English or EN-only links; gated on SZ_REDESIGN=1."
+    },
+    {
+      "slug": "sz-growth-review",
+      "url": "https://studiozissou.webflow.io/",
+      "spec": "tests/acceptance/sz-growth-review.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-17",
+      "description": "Studio Zissou weekly growth review: every page the Claude job changed in the last 28 days still meets the meta, JSON-LD, FAQ, link and locale rules, autopilot-off weeks produced no changes, and a sample of unchanged pages still passes; gated on SZ_REDESIGN=1 and the experiment log."
     }
   ]
 }

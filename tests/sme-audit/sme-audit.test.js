@@ -10,7 +10,8 @@ const SKILL = join(ROOT, '.claude', 'skills', 'sme-audit', 'SKILL.md');
 const COMMAND = join(ROOT, '.claude', 'commands', 'sme-audit.md');
 const REPORT = join(ROOT, '.claude', 'templates', 'sme-audit-report.md');
 const GBP = join(ROOT, '.claude', 'templates', 'sme-gbp-copy-pack.md');
-const PUBLIC_FILES = [SKILL, COMMAND, REPORT, GBP];
+const WORK_PLAN = join(ROOT, '.claude', 'templates', 'sme-work-plan.md');
+const PUBLIC_FILES = [SKILL, COMMAND, REPORT, GBP, WORK_PLAN];
 
 const read = (file) => readFileSync(file, 'utf8');
 const headings = (text) =>
@@ -19,7 +20,7 @@ const headings = (text) =>
     .filter((line) => /^#{1,3} /.test(line))
     .map((line) => line.replace(/^#+ /, '').trim());
 
-test('the skill, command and both templates exist', () => {
+test('the skill, command and all three templates exist', () => {
   for (const file of PUBLIC_FILES) assert.ok(existsSync(file), file);
 });
 
@@ -41,8 +42,9 @@ test('the skill runs its phases in order, starting by reading past learnings and
     'Phase 5 — AI search',
     'Phase 6 — Landing-page plan',
     'Phase 7 — Write the report',
-    'Phase 8 — Publish',
-    'Phase 9 — Retro and learn',
+    'Phase 8 — Plan the work',
+    'Phase 9 — Publish',
+    'Phase 10 — Retro and learn',
   ];
   let last = -1;
   for (const phase of phases) {
@@ -108,6 +110,30 @@ test('the GBP copy pack template covers the paste-ready fields', () => {
     'Review request',
   ])
     assert.ok(found.includes(section), section);
+});
+
+test('the work plan template groups every task by kind and gives each one an effort, owner and approval gate', () => {
+  const text = read(WORK_PLAN);
+  const found = headings(text);
+  for (const section of [
+    'How to use this plan',
+    'Bugs and broken things',
+    'Quick SEO fixes',
+    'Google and listings',
+    'Upgrades',
+    'Later',
+    'Waiting on the owner',
+  ])
+    assert.ok(found.includes(section), section);
+  for (const column of ['ID', 'Task', 'Why', 'Effort (h)', 'Owner', 'Needs approval', 'Depends on', 'Spec'])
+    assert.ok(text.includes(`| ${column} |`) || text.includes(`| ${column}`), column);
+});
+
+test('the skill turns findings into a work plan and learns from estimated versus actual hours', () => {
+  const text = read(SKILL);
+  assert.ok(text.includes('sme-work-plan.md'));
+  assert.match(text, /estimated (versus|vs\.?) actual hours/i);
+  assert.match(text, /\/plan/);
 });
 
 test('public files carry no client names, contact details or prices', () => {

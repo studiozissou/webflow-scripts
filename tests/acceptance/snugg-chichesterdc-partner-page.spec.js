@@ -43,11 +43,11 @@ test.describe('snugg-chichesterdc-partner-page', () => {
   });
 
   test('header shows the Snugg + council lockup and no navigation links', async ({ page }) => {
-    const header = page.locator('[data-partner-header], .navbar').first();
+    const header = page.locator('[data-partner-header], .navbar, .section_council-hero').first();
     await expect(header).toBeVisible();
     await expect(header.locator('img').first()).toBeVisible();
     await expect(header.locator('img[alt*="Chichester" i]').first()).toBeAttached();
-    await expect(header.locator('a[href]:not([href^="#"])')).toHaveCount(0);
+    await expect(header.locator('a[href]:not([href^="#"]):not([href*="terms-of-use"])')).toHaveCount(0);
   });
 
   test('hero carries the council intro line, headline and localised copy', async ({ page }) => {

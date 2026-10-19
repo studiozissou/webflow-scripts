@@ -1,0 +1,12 @@
+{
+  "domain": "www.rolfingamsterdam.nl",
+  "locales": [
+    { "code": "en", "name": "English" },
+    { "code": "nl", "name": "Nederlands" }
+  ],
+  "placeholders": [],
+  "allowLocalAttr": "data-allow-local",
+  "blockWhatsApp": false,
+  "listItemClasses": [],
+  "fallbackPaths": ["/", "/contact", "/book-session"]
+}

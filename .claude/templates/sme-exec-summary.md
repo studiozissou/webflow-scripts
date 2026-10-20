@@ -6,7 +6,7 @@
 > - No hours, effort or prices. Say what will be done, never how long it takes.
 > - Keep the open text short: about 700 words plus the chart, with the fix lists folded away. Plain words only; if a term needs explaining, leave it out.
 > - Build the categories from the work plan, grouped by what the owner gets, not by tool or task type. Three to five categories.
-> - Each category says, in a sentence each, what is wrong, what it costs the business (lost visitors, enquiries or trust), and how we fix it.
+> - Each category says, in a sentence each, what is wrong, what it costs the business (lost visitors, enquiries or trust), and how we fix it. Write these in general terms ("We found several content errors that could confuse visitors"); specifics such as page names, counts and examples go in the fix list.
 > - Each category ends with a collapsed list of every work-plan task in it, one plain sentence per task, so the owner can see all the work. In Notion it becomes a toggle.
 > - Every fix named here has a task in the work plan; anything not in the plan stays out.
 
@@ -24,7 +24,7 @@
 
 ### {{category_name}}
 
-**The problem:** {{problem}}: what is wrong today, in one or two sentences.
+**The problem:** {{problem}}: what is wrong today, in general terms, in one or two sentences.
 
 **Why it hurts you:** {{cost}}: what it costs the business, such as visitors who never arrive, enquiries lost or trust dented.
 
@@ -40,7 +40,7 @@
 
 ### {{category_name}}
 
-**The problem:** {{problem}}: what is wrong today, in one or two sentences.
+**The problem:** {{problem}}: what is wrong today, in general terms, in one or two sentences.
 
 **Why it hurts you:** {{cost}}: what it costs the business, such as visitors who never arrive, enquiries lost or trust dented.
 

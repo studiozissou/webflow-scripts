@@ -36,6 +36,10 @@ test('each work category explains the problem, its cost to the business and the 
   }
 });
 
+test('the problem, cost and fix lines stay general and leave specifics to the fix list', () => {
+  assert.match(read(TEMPLATE), /general terms[^\n]*specifics[^\n]*fix list/i);
+});
+
 test('each work category lists every fix in a collapsed accordion', () => {
   const work = read(TEMPLATE).split('## What we will do')[1].split('## What we need from you')[0];
   for (const category of work.split('### ').slice(1)) {

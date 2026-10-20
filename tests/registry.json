@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-17",
+  "lastUpdated": "2026-10-19",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-07-15",
@@ -712,6 +712,16 @@
       "critical": false,
       "created": "2026-10-17",
       "description": "Studio Zissou weekly growth review: every page the Claude job changed in the last 28 days still meets the meta, JSON-LD, FAQ, link and locale rules, autopilot-off weeks produced no changes, and a sample of unchanged pages still passes; gated on SZ_REDESIGN=1 and the experiment log."
+    },
+    {
+      "slug": "tsc-cover-image-srcset",
+      "url": "https://tsc-v2.webflow.io/careers",
+      "spec": "tests/acceptance/tsc-cover-image-srcset.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-19",
+      "description": "TSC object-fit: cover images pick a srcset candidate large enough for the rendered box at DPR 2 (Webflow's width-only sizes hint is corrected in init.js); careers hero sharp; PZB hero source >= 2000px; no console errors."
     }
   ]
 }

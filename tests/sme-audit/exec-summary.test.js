@@ -25,6 +25,24 @@ test('the exec summary carries the projection chart', () => {
   assert.ok(read(TEMPLATE).includes('traffic-trajectory-{{yyyy_mm}}.png'));
 });
 
+test('each work category explains the problem, its cost to the business and the fix', () => {
+  const work = read(TEMPLATE).split('## What we will do')[1].split('## What we need from you')[0];
+  const categories = work.split('### ').slice(1);
+  assert.ok(categories.length >= 2, 'template shows at least two example categories');
+  for (const category of categories) {
+    for (const label of ['**The problem:**', '**Why it hurts you:**', '**How we fix it:**']) {
+      assert.ok(category.includes(label), `category missing ${label}`);
+    }
+  }
+});
+
+test('each work category lists every fix in a collapsed accordion', () => {
+  const work = read(TEMPLATE).split('## What we will do')[1].split('## What we need from you')[0];
+  for (const category of work.split('### ').slice(1)) {
+    assert.match(category, /<details>\s*<summary>[^<]+<\/summary>[\s\S]*?- \{\{fix_sentence\}\}[\s\S]*?<\/details>/);
+  }
+});
+
 test('the exec summary shows no hours or effort estimates', () => {
   const text = read(TEMPLATE);
   assert.ok(text.includes('No hours'), 'template tells the writer to leave hours out');

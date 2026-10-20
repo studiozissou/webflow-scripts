@@ -4,8 +4,10 @@
 > **Output file:** `projects/{client}/.claude/reports/exec-summary-YYYY-MM.md`
 >
 > - No hours, effort or prices. Say what will be done, never how long it takes.
-> - Fit on one screen: about 300 words plus the chart. Plain words only; if a term needs explaining, leave it out.
-> - Build the categories from the work plan, grouped by what the owner gets, not by tool or task type. Three to five categories, two to four fixes each.
+> - Keep the open text short: about 700 words plus the chart, with the fix lists folded away. Plain words only; if a term needs explaining, leave it out.
+> - Build the categories from the work plan, grouped by what the owner gets, not by tool or task type. Three to five categories.
+> - Each category says, in a sentence each, what is wrong, what it costs the business (lost visitors, enquiries or trust), and how we fix it.
+> - Each category ends with a collapsed list of every work-plan task in it, one plain sentence per task, so the owner can see all the work. In Notion it becomes a toggle.
 > - Every fix named here has a task in the work plan; anything not in the plan stays out.
 
 ## Where you stand
@@ -22,17 +24,35 @@
 
 ### {{category_name}}
 
-{{category_description}}: one sentence on what this means for the business.
+**The problem:** {{problem}}: what is wrong today, in one or two sentences.
 
-- {{main_fix}}
-- {{main_fix}}
+**Why it hurts you:** {{cost}}: what it costs the business, such as visitors who never arrive, enquiries lost or trust dented.
+
+**How we fix it:** {{approach}}: the fix in one or two sentences.
+
+<details>
+<summary>All fixes in this area</summary>
+
+- {{fix_sentence}}
+- {{fix_sentence}}
+
+</details>
 
 ### {{category_name}}
 
-{{category_description}}
+**The problem:** {{problem}}: what is wrong today, in one or two sentences.
 
-- {{main_fix}}
-- {{main_fix}}
+**Why it hurts you:** {{cost}}: what it costs the business, such as visitors who never arrive, enquiries lost or trust dented.
+
+**How we fix it:** {{approach}}: the fix in one or two sentences.
+
+<details>
+<summary>All fixes in this area</summary>
+
+- {{fix_sentence}}
+- {{fix_sentence}}
+
+</details>
 
 (Repeat for three to five categories.)
 

@@ -90,12 +90,12 @@ The Maps consent wall blocks automated checks. Anything behind it is OWNER-CHECK
    - Every fix: for each keyword a planned task targets, pick a reachable position per month and apply typical click rates (about 28% at 1, 15% at 2, 10% at 3, 7% at 4, 5% at 5, 2–3% at 6–10, 1% at 11–20). Halve the gain on informational searches that show AI Overviews, and distrust difficulty scores when health or authority sites hold the top results.
    - Write the inputs to `research/trajectory-<YYYY-MM>.json` (`history`, `doNothing`, `everyFix`) and run `node tools/sme-audit/trajectory-chart.js research/trajectory-<YYYY-MM>.json reports/traffic-trajectory-<YYYY-MM>.svg --png`. Look at the PNG before it ships.
    - Fill "Where your visits are heading" in the report, and add Sources rows for the history (Semrush, date) and the projection (estimate, method).
-6. Fill `.claude/templates/sme-exec-summary.md` into `reports/exec-summary-<YYYY-MM>.md`: the chart, three to five plain-language categories of work drawn from the plan, the owner inputs needed to start, and next steps. No hours or estimates.
+6. Fill `.claude/templates/sme-exec-summary.md` into `reports/exec-summary-<YYYY-MM>.md`: the chart, three to five plain-language categories of work drawn from the plan (each with the problem, what it costs the business, how we fix it, and a collapsed list of every task in it, one sentence each), the owner inputs needed to start, and next steps. No hours or estimates.
 7. Run the mandatory `humanizer` skill pass on the finished report, exec summary, GBP pack and work plan. Record it in the report's Sources.
 
 ## Phase 9 — Publish
 
-1. Follow the `/site-audit` Notion push steps: find the client's Notes database with `notion-search`, then create the page with `notion-create-pages`. Publish the exec summary as its own Notes page, linking to the full report page; it is the page the client reads first.
+1. Follow the `/site-audit` Notion push steps: find the client's Notes database with `notion-search`, then create the page with `notion-create-pages`. Publish the exec summary as its own Notes page, linking to the full report page; it is the page the client reads first. Each category's fix list becomes a toggle.
 2. Upload `reports/traffic-trajectory-<YYYY-MM>.png` with `notion-create-file-upload` and place it as an image in "Where your visits are heading".
 3. Relate the page to the client, set Note Type = Research, fill the Summary property with `notion-update-page`.
 4. ASK before sharing the page with the client.

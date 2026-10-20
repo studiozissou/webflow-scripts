@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-19",
+  "lastUpdated": "2026-10-20",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -471,7 +471,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-09-24",
-      "description": "carsa-v1.1.0: check-finance.js loads once on every page from the release folder, inline copies gone from all 13 car-card page types, homepage and widget cards swap to the eligibility URL. Gated by CARSA_V110=1."
+      "description": "carsa-v1.1.x: check-finance.js loads once on every page from the release folder; inline copies gone on each page listed in CARSA_V111_DONE (comma list of entries, or all), double-run safe on the rest; homepage and widget cards swap to the eligibility URL. Gated by CARSA_V110=1."
     },
     {
       "slug": "carsa-vdp-module",

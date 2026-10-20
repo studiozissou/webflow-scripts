@@ -11,6 +11,7 @@
   const src = (document.currentScript && document.currentScript.src) || '';
   const BASE = src.substring(0, src.lastIndexOf('/') + 1);
   const DEBUG = false;
+  const VERSION = '0.1.0';
 
   /* ── Vendor deps (loaded first) ────────────────────────── */
   const deps = [
@@ -19,9 +20,7 @@
   ];
 
   /* ── Project modules (loaded after deps) ───────────────── */
-  const modules = [
-    // 'hero-anim.js',
-  ];
+  const modules = [];
 
   const pageModules = {
     '6ab10852f344a15a2b01d930': 'datasheet-unlock.js',

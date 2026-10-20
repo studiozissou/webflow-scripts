@@ -8,6 +8,9 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CLIENT_RE = /^[a-z0-9][a-z0-9-]*$/;
 const VERSION_RE = /\bVERSION\s*=\s*['"]v?(\d+(?:\.\d+)*)['"]/;
 const MODULE_LIST_RE = /\b[A-Za-z_$]*modules\s*[:=]\s*\[([^\]]*)\]/gi;
+const MODULE_MAP_RE = /\b[A-Za-z_$]*modules\s*[:=]\s*\{([^}]*)\}/gi;
+const MAP_VALUE_RE = /:\s*['"]([^'"]+)['"]/g;
+const LINE_COMMENT_RE = /^\s*\/\/.*$/gm;
 const STRING_RE = /['"]([^'"]+)['"]/g;
 const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
@@ -17,11 +20,16 @@ export function tagFor(client, version) {
 
 export function parseInit(source) {
   const version = source.match(VERSION_RE)?.[1] ?? null;
+  const code = source.replace(LINE_COMMENT_RE, '');
   const modules = [];
-  for (const list of source.matchAll(MODULE_LIST_RE)) {
-    for (const [, name] of list[1].matchAll(STRING_RE)) {
-      if (!name.includes('://') && !modules.includes(name)) modules.push(name);
-    }
+  const add = (name) => {
+    if (!name.includes('://') && !modules.includes(name)) modules.push(name);
+  };
+  for (const list of code.matchAll(MODULE_LIST_RE)) {
+    for (const [, name] of list[1].matchAll(STRING_RE)) add(name);
+  }
+  for (const map of code.matchAll(MODULE_MAP_RE)) {
+    for (const [, name] of map[1].matchAll(MAP_VALUE_RE)) add(name);
   }
   return { version, modules };
 }

@@ -23,9 +23,28 @@ const TOLERANCE = 0.9;
 
 test.use({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
 
-async function loadPage(page, path) {
+async function loadPage(page, path, { scroll = false } = {}) {
   await page.goto(`${STAGING_URL}${path}`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.readyState === 'complete', { timeout: 30_000 });
+  if (scroll) await page.evaluate(async () => {
+    const imgs = [...document.querySelectorAll('img.image_cover')];
+    for (const img of imgs) {
+      img.scrollIntoView({ block: 'center' });
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    await Promise.all(
+      imgs.map((img) =>
+        img.complete && img.naturalWidth
+          ? null
+          : new Promise((r) => {
+              img.addEventListener('load', r, { once: true });
+              img.addEventListener('error', r, { once: true });
+              setTimeout(r, 5000);
+            }),
+      ),
+    );
+    window.scrollTo(0, 0);
+  });
   await page.waitForTimeout(1500);
 }
 
@@ -71,7 +90,7 @@ async function coverImageReport(page) {
 
 test.describe('tsc-cover-image-srcset — careers hero', () => {
   test('careers hero candidate covers the box height at DPR 2', async ({ page }) => {
-    await loadPage(page, '/careers');
+    await loadPage(page, '/careers', { scroll: true });
     const report = await coverImageReport(page);
     const hero = report.find((r) => /is-careers/.test(r.cls));
     expect(hero, 'careers hero image present').toBeTruthy();
@@ -82,7 +101,7 @@ test.describe('tsc-cover-image-srcset — careers hero', () => {
 test.describe('tsc-cover-image-srcset — site-wide', () => {
   for (const path of PAGES) {
     test(`cover images on ${path} are not upscaled beyond 10 percent`, async ({ page }) => {
-      await loadPage(page, path);
+      await loadPage(page, path, { scroll: true });
       const report = (await coverImageReport(page)).filter((r) => r.visible);
       const failures = report.filter(
         (r) => r.chosenW < r.neededPx * TOLERANCE && r.chosenW < r.maxW,

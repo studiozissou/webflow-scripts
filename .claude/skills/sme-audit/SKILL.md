@@ -1,7 +1,7 @@
 ---
 name: sme-audit
 description: Fixed-scope website and online-presence audit for a small independent business (site, Google search, Business Profile, AI search) that ends in a plain-English report, a GBP copy pack and an estimated work plan, and learns from every past audit. Use when the user runs /sme-audit or asks to audit a small business's site and Google presence.
-checklist-version: 2
+checklist-version: 3
 ---
 
 <objective>
@@ -47,6 +47,7 @@ Run the same audit on any small business, reuse existing tools instead of redefi
 2. Research keywords in the local language and in EN. Local-language volume usually dominates.
 3. WebSearch is US-only; don't use it for local rankings or volumes.
 4. Expect thin data for small sites; record it as a baseline, not a failure.
+5. Pull 12 months of traffic history: `resource_rank_history`, `display_limit` 12, sorted `date_desc`, columns date, organic_keywords, organic_traffic, positions_1_3, positions_4_10 (about 120 units). Save the table in `research/keywords-<date>.md`; it feeds the Phase 8 projection.
 
 ## Phase 4 — Google Business Profile
 
@@ -76,7 +77,7 @@ The Maps consent wall blocks automated checks. Anything behind it is OWNER-CHECK
 2. Fill `.claude/templates/sme-gbp-copy-pack.md` into `reports/gbp-copy-<YYYY-MM>.md`. Unknown fields are OWNER-CHECK.
 3. Use `/generate-schema` to draft the JSON-LD fix pack. Proposed, not applied.
 4. Claim gate: apply `/site-audit`'s Phase 6 claim gate, including its known-stale list, before anything ships.
-5. Leave "Fix these first" and "What we need from you" until Phase 8 has task IDs.
+5. Leave "Fix these first", "What we need from you" and "Where your visits are heading" until Phase 8 has task IDs.
 
 ## Phase 8 — Plan the work
 
@@ -84,14 +85,20 @@ The Maps consent wall blocks automated checks. Anything behind it is OWNER-CHECK
 2. Every report finding and every OWNER-CHECK item gets a task, and every task links back to its report section. No orphans either way.
 3. Tasks already tracked in their own spec are listed and pointed at, not re-planned.
 4. Draw the report's "Fix these first" and "What we need from you" from the plan's IDs. Cross-check that the two agree.
-5. Run the mandatory `humanizer` skill pass on the finished report, GBP pack and work plan. Record it in the report's Sources.
+5. Project monthly visits from Google at 1, 3, 6 and 12 months as low–high ranges, do nothing vs every fix:
+   - Do nothing: start from the history's range and average, then thin it by the trend in top-10 positions. Never draw a decline the history does not show.
+   - Every fix: for each keyword a planned task targets, pick a reachable position per month and apply typical click rates (about 28% at 1, 15% at 2, 10% at 3, 7% at 4, 5% at 5, 2–3% at 6–10, 1% at 11–20). Halve the gain on informational searches that show AI Overviews, and distrust difficulty scores when health or authority sites hold the top results.
+   - Write the inputs to `research/trajectory-<YYYY-MM>.json` (`history`, `doNothing`, `everyFix`) and run `node tools/sme-audit/trajectory-chart.js research/trajectory-<YYYY-MM>.json reports/traffic-trajectory-<YYYY-MM>.svg --png`. Look at the PNG before it ships.
+   - Fill "Where your visits are heading" in the report, and add Sources rows for the history (Semrush, date) and the projection (estimate, method).
+6. Run the mandatory `humanizer` skill pass on the finished report, GBP pack and work plan. Record it in the report's Sources.
 
 ## Phase 9 — Publish
 
 1. Follow the `/site-audit` Notion push steps: find the client's Notes database with `notion-search`, then create the page with `notion-create-pages`.
-2. Relate the page to the client, set Note Type = Research, fill the Summary property with `notion-update-page`.
-3. ASK before sharing the page with the client.
-4. ASK before creating work-plan tasks in the Notion Tasks Tracker. Each task relates to the client.
+2. Upload `reports/traffic-trajectory-<YYYY-MM>.png` with `notion-create-file-upload` and place it as an image in "Where your visits are heading".
+3. Relate the page to the client, set Note Type = Research, fill the Summary property with `notion-update-page`.
+4. ASK before sharing the page with the client.
+5. ASK before creating work-plan tasks in the Notion Tasks Tracker. Each task relates to the client.
 
 ## Phase 10 — Retro and learn
 
@@ -141,3 +148,4 @@ Never put prices in public files.
 
 - v1, 2026-10-19: First version. AEO scale decision: this skill's 20-check rubric (from `ai-search-aeo`, PASS=1, NEEDS ATTENTION=0.5, FAIL=0, NEEDS VERIFY=0) is canonical for new audits.
 - v2, 2026-10-19: promoted 24 repeat findings from the first three audits (link and redirect faults, titles and descriptions, headings, share image, structured data, image weight, link names and alt text, Search Console, listing consistency, nearby towns, AEO opening lines and freshness, author and sources, FAQ, thin service pages).
+- v3, 2026-10-20: traffic trajectory. Phase 3 pulls 12 months of traffic history; Phase 8 projects do nothing vs every fix at 1, 3, 6 and 12 months and draws it with `tools/sme-audit/trajectory-chart.js`; the report gains "Where your visits are heading" under Looking ahead.

@@ -401,6 +401,8 @@ After core audit, present three optional layers:
 - Positioning analysis
 - Writes to `audits/competitor-benchmark-YYYY-MM-DD.md`
 
+Layers A and B follow the SEMRush unit budget in `.claude/agents/seo.md`. Top ranking keywords and top pages are capped at 50 rows each, sorted by traffic. The 12-month trend is capped at 12 rows. Keyword overlap is capped at 30 rows per competitor. A full A+B run should stay under about 500 rows.
+
 **Layer C: Client change-list mapping**
 - User provides the change-list (paste, file path, or URL)
 - Save verbatim to `client-requests/change-list-YYYY-MM-DD.md`

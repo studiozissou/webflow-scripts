@@ -184,6 +184,16 @@ test('parseInit handles a lowercase modules array and no VERSION', () => {
   assert.deepEqual([...parsed.modules].sort(), ['check-finance.js', 'global.js', 'vdp.js']);
 });
 
+test('parseInit ignores commented-out module entries', () => {
+  const src = "const modules = [\n  // 'hero-anim.js',\n  'live.js',\n];\n";
+  assert.deepEqual(parseInit(src).modules, ['live.js']);
+});
+
+test('parseInit reads module files from a page-ID map', () => {
+  const src = "const modules = [\n  // 'hero-anim.js',\n];\nconst pageModules = {\n  '6ab10852f344a15a2b01d930': 'datasheet-unlock.js',\n};\n";
+  assert.deepEqual(parseInit(src).modules, ['datasheet-unlock.js']);
+});
+
 test('compareVersions orders numerically and pads missing parts', () => {
   assert.ok(compareVersions('0.10.0', '0.9.9') > 0);
   assert.equal(compareVersions('1.0.0', '1.0.0'), 0);

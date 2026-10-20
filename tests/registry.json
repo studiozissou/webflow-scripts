@@ -664,6 +664,16 @@
       "description": "Chichester District Council partner page on snugg.com: lockup header with no nav links, hero copy, postcode form to app.snugg.com with utm_source=cdc forced by page code, four-step band, no footer, cookie banner reject button, 375px layout, axe. Expected to fail until the page is built in Webflow."
     },
     {
+      "slug": "snugg-chichesterdc-option-b",
+      "url": "https://www.snugg.com/chichesterdc-v2",
+      "spec": "tests/acceptance/snugg-chichesterdc-option-b.spec.js",
+      "type": "acceptance",
+      "source": "build",
+      "critical": false,
+      "created": "2026-10-19",
+      "description": "Option B of the Chichester DC partner page: no navbar, centred Snugg logo above a white card centred at 1440px holding the council logo, h1, postcode form and terms line; phone beside the card on desktop and below it on mobile. Run the partner-page spec with SNUGG_SLUG=chichesterdc-v2 for the shared checks."
+    },
+    {
       "slug": "oost-feestdagen-2026",
       "url": "https://www.oosteten.nl/afhalen",
       "spec": "tests/acceptance/oost-feestdagen-2026.spec.js",

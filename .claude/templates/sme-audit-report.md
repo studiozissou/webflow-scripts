@@ -219,6 +219,22 @@ The same prompts are saved and re-run in later reports. Run on {{prompt_test_dat
 
 - **{{topic}}:** {{note}} *Not urgent / Worth planning now.* ({{task_id}})
 
+### Where your visits are heading
+
+{{history_summary}}: one or two sentences on the last 12 months of visits from Google (range and average), and whether top-10 positions are holding or slipping. Say "steady" if it is steady; never imply a decline the numbers do not show.
+
+![Monthly site visits from Google, do nothing vs every fix](traffic-trajectory-{{yyyy_mm}}.png)
+
+<table fit-page-width header-row="true">
+<tr><td>After</td><td>If nothing changes</td><td>With every fix in the plan</td></tr>
+<tr><td>1 month</td><td>{{dn_1_low}}–{{dn_1_high}}</td><td color="green_bg">{{fx_1_low}}–{{fx_1_high}}</td></tr>
+<tr><td>3 months</td><td>{{dn_3_low}}–{{dn_3_high}}</td><td color="green_bg">{{fx_3_low}}–{{fx_3_high}}</td></tr>
+<tr><td>6 months</td><td>{{dn_6_low}}–{{dn_6_high}}</td><td color="green_bg">{{fx_6_low}}–{{fx_6_high}}</td></tr>
+<tr><td>12 months</td><td>{{dn_12_low}}–{{dn_12_high}}</td><td color="green_bg">{{fx_12_low}}–{{fx_12_high}}</td></tr>
+</table>
+
+{{projection_caveats}}: these are estimates, not promises. Name where most of the growth comes from, that research-stage visitors book less often than people searching the business by name, that Business Profile calls and directions are not counted, and when real Search Console numbers will replace the estimate.
+
 ---
 
 ## What we need from you

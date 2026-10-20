@@ -2,8 +2,8 @@
   "lastUpdated": "2026-10-19",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
-  "lastDeployed": "2026-07-15",
-  "lastDeployedHash": "677502e",
+  "lastDeployed": "2026-10-20",
+  "lastDeployedTag": "the-signalling-company-v0.1.0",
   "testPages": [
     {
       "slug": "carsa-ab-testing-posthog",

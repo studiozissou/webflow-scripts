@@ -965,6 +965,29 @@
     });
   }
 
+  /* Webflow writes `sizes` from width alone; object-fit:cover boxes taller than the photo scale by height, so widen `sizes` to the cover-fit width. */
+  function fixCoverSizes() {
+    const imgs = document.querySelectorAll('img.image_cover[srcset]');
+    if (!imgs.length || !window.ResizeObserver) return;
+    const original = new WeakMap();
+    const apply = (img) => {
+      const box = img.getBoundingClientRect();
+      if (!box.width || !box.height || !img.naturalWidth || !img.naturalHeight) return;
+      const needed = Math.ceil(Math.max(box.width, (box.height * img.naturalWidth) / img.naturalHeight));
+      const loaded = img.srcset.split(',').map((c) => c.trim().split(/\s+/)).find(([url]) => url === img.currentSrc);
+      if (needed > box.width && loaded && parseInt(loaded[1], 10) >= needed * window.devicePixelRatio * 0.9) return;
+      const next = needed > box.width ? needed + 'px' : original.get(img);
+      DEBUG && console.log('[init][cover-sizes]', next, box.width);
+      if (img.sizes !== next) img.sizes = next;
+    };
+    const observer = new ResizeObserver((entries) => entries.forEach((e) => apply(e.target)));
+    imgs.forEach((img) => {
+      original.set(img, img.sizes);
+      observer.observe(img);
+      img.addEventListener('load', () => apply(img));
+    });
+  }
+
   /* ── Loader helpers ────────────────────────────────────── */
 
   function loadScript(url) {
@@ -1007,6 +1030,7 @@
     /* Performance quick-wins — each sets up its own observers/timeouts */
     setupDeferredSpline();
     setupBackgroundVideos();
+    fixCoverSizes();
     revealHeroFailsafe();
     watchSplitAria();
 

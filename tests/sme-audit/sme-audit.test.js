@@ -1,4 +1,4 @@
-// Structural checks for the /sme-audit skill, command and templates: required phases and sections exist, the learning loop is wired in, and no client data or prices leak into these public files.
+// Structural checks for the /sme-audit skill and templates: required phases and sections exist, the learning loop is wired in, and no client data or prices leak into these public files.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
@@ -7,11 +7,10 @@ import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SKILL = join(ROOT, '.claude', 'skills', 'sme-audit', 'SKILL.md');
-const COMMAND = join(ROOT, '.claude', 'commands', 'sme-audit.md');
 const REPORT = join(ROOT, '.claude', 'templates', 'sme-audit-report.md');
 const GBP = join(ROOT, '.claude', 'templates', 'sme-gbp-copy-pack.md');
 const WORK_PLAN = join(ROOT, '.claude', 'templates', 'sme-work-plan.md');
-const PUBLIC_FILES = [SKILL, COMMAND, REPORT, GBP, WORK_PLAN];
+const PUBLIC_FILES = [SKILL, REPORT, GBP, WORK_PLAN];
 
 const read = (file) => readFileSync(file, 'utf8');
 const headings = (text) =>
@@ -20,7 +19,7 @@ const headings = (text) =>
     .filter((line) => /^#{1,3} /.test(line))
     .map((line) => line.replace(/^#+ /, '').trim());
 
-test('the skill, command and all three templates exist', () => {
+test('the skill and all three templates exist', () => {
   for (const file of PUBLIC_FILES) assert.ok(existsSync(file), file);
 });
 
@@ -71,12 +70,6 @@ test('the skill reuses the existing tools instead of redefining them', () => {
   for (const ref of ['ai-search-aeo', 'launch-guard', 'generate-schema', 'humanizer', 'Claim gate'])
     assert.ok(text.includes(ref), ref);
   assert.match(text, /20[- ]check/);
-});
-
-test('the command is a thin entry point to the skill', () => {
-  const text = read(COMMAND);
-  assert.match(text, /sme-audit <client-slug> <url>/);
-  assert.ok(text.includes('skills/sme-audit/SKILL.md'));
 });
 
 test('the report template has every client-facing section', () => {

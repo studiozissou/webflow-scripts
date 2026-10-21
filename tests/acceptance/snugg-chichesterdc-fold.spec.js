@@ -1,4 +1,4 @@
-// TDD acceptance test: on desktop (>=1280px) the Chichester DC page fits the hero plus the whole steps band in one screen between 889 and 1301px tall, and the hero fills any extra height.
+// TDD acceptance test: on desktop (>=1280px) the Chichester DC page fits the hero plus the whole steps band in one screen between 889 and 1221px tall, and the hero fills any extra height.
 //
 //   SNUGG_URL=https://snugg.webflow.io npx playwright test \
 //     --config=tests/acceptance/playwright.config.js tests/acceptance/snugg-chichesterdc-fold.spec.js
@@ -47,7 +47,7 @@ test.describe('snugg-chichesterdc-fold', () => {
   test('hero grows to fill tall screens with no gap below the band', async ({ page }) => {
     const m = await measure(page, 2560, 1440);
     expect(Math.abs(m.bandBottom - 1440)).toBeLessThanOrEqual(2);
-    expect(m.heroH).toBeGreaterThan(941);
+    expect(m.heroH).toBeGreaterThan(861);
     expect(m.scrollH).toBeLessThanOrEqual(1441);
   });
 

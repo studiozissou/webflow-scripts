@@ -65,6 +65,18 @@ test('the learning loop reads and writes the private learnings, findings library
   assert.match(text, /two or more (audits|businesses)/i);
 });
 
+test('Phase 2 scans for unlinked mentions and Phase 8 turns them into tasks', () => {
+  const text = read(SKILL);
+  const phase2 = text.slice(text.indexOf('## Phase 2'), text.indexOf('## Phase 3'));
+  const phase8 = text.slice(text.indexOf('## Phase 8'), text.indexOf('## Phase 9'));
+  assert.match(phase2, /Crosslink scan/);
+  assert.ok(phase2.includes('research/crosslink-opportunities-<date>.csv'));
+  assert.match(phase2, /more than 5 pages/);
+  assert.match(phase8, /crosslink scan/i);
+  assert.ok(Number(text.match(/\nchecklist-version: (\d+)\n/)[1]) >= 5);
+  assert.match(text, /\n- v5, \d{4}-\d{2}-\d{2}: .*crosslink/i);
+});
+
 test('the skill reuses the existing tools instead of redefining them', () => {
   const text = read(SKILL);
   for (const ref of ['ai-search-aeo', 'launch-guard', 'generate-schema', 'humanizer', 'Claim gate'])
@@ -155,8 +167,8 @@ test('the report has "Who you\'re up against" under "Being found on Google"', ()
   assert.match(section(read(REPORT), 'Being found on Google'), /^### Who you're up against$/m);
 });
 
-test('the skill is at checklist-version 4 with a v4 changelog line', () => {
+test('the skill is at checklist-version 4 or later with a v4 changelog line', () => {
   const text = read(SKILL);
-  assert.match(text, /\nchecklist-version: 4\n/);
+  assert.ok(Number(text.match(/\nchecklist-version: (\d+)\n/)[1]) >= 4);
   assert.match(section(text, 'Changelog'), /^- v4, \d{4}-\d{2}-\d{2}: /m);
 });

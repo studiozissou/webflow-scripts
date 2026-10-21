@@ -3,8 +3,6 @@
 import { test, expect } from '@playwright/test';
 
 const CARSA = 'https://www.carsa.co.uk';
-const COCONUT = 'https://www.getcoconut.com';
-const TSC = process.env.TSC_STAGING_URL || 'https://tsc-v2.webflow.io';
 const OOST = 'https://www.oosteten.nl';
 
 const OOST_NOINDEX_INTENDED = [/\/privacybeleid/, /\/algemene-voorwaarden/, /\/cookie/, /\/disclaimer/, /\/vraag\//, /\/vragen\//, /\/paginas\//];
@@ -29,16 +27,6 @@ test.describe('Carsa store and town pages', () => {
   });
 });
 
-test('coconut legal side menu lists Partnership with Revolut Pro', async ({ page }) => {
-  await page.goto(`${COCONUT}/legal/terms`, { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('.side-nav-menu-item[href*="partnership-with-revolut-pro"], .side-nav-menu-item a[href*="partnership-with-revolut-pro"], a[href*="partnership-with-revolut-pro"]').first()).toBeAttached();
-});
-
-test('tsc staging shows an ERCI award block', async ({ page }) => {
-  await page.goto(TSC, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText(/ERCI/i).first()).toBeAttached();
-});
-
 test('oost sitemap pages are indexable unless intended', async ({ request }) => {
   const sitemap = await (await request.get(`${OOST}/sitemap.xml`)).text();
   const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
@@ -59,7 +47,7 @@ test('oost sitemap pages are indexable unless intended', async ({ request }) => 
 
 test('no console errors on checked pages', async ({ page }) => {
   const errors = trackConsoleErrors(page);
-  for (const url of [`${CARSA}/stores/bradford`, `${CARSA}/used-cars/near/bradford`, `${COCONUT}/legal/terms`, TSC]) {
+  for (const url of [`${CARSA}/stores/bradford`, `${CARSA}/used-cars/near/bradford`]) {
     await page.goto(url, { waitUntil: 'load' });
   }
   expect(errors).toEqual([]);

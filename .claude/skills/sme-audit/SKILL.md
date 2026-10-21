@@ -1,7 +1,7 @@
 ---
 name: sme-audit
 description: Fixed-scope website and online-presence audit for a small independent business (site, Google search, Business Profile, AI search) that ends in a plain-English report, a GBP copy pack and an estimated work plan, and learns from every past audit. Use when the user runs /sme-audit or asks to audit a small business's site and Google presence.
-checklist-version: 3
+checklist-version: 4
 ---
 
 <objective>
@@ -43,11 +43,13 @@ Run the same audit on any small business, reuse existing tools instead of redefi
 ## Phase 3 — Google search
 
 1. SEMRush MCP, `nl` database (or the client's local database): `domain_overview`, `organic_research`, `keyword_research`.
-   Every SEMRush call follows the unit budget in `.claude/agents/seo.md`: set `display_limit` (default 30, max 50), sort domain keyword lists by traffic and cap them at 50 rows, batch up to 20 keywords per `phrase_these` call, keep history to 12 rows or fewer, and don't re-query data saved in `research/` or `audits/` in the last 30 days. The full `nl` + EN run should stay under about 300 rows.
+   Every SEMRush call follows the unit budget in `.claude/agents/seo.md`: set `display_limit` (default 30, max 50), sort domain keyword lists by traffic and cap them at 50 rows, batch up to 20 keywords per `phrase_these` call, keep history to 12 rows or fewer, and don't re-query data saved in `research/` or `audits/` in the last 30 days. The full `nl` + EN run, including steps 6 and 7, should stay under about 450 rows.
 2. Research keywords in the local language and in EN. Local-language volume usually dominates.
 3. WebSearch is US-only; don't use it for local rankings or volumes.
 4. Expect thin data for small sites; record it as a baseline, not a failure.
 5. Pull 12 months of traffic history: `resource_rank_history`, `display_limit` 12, sorted `date_desc`, columns date, organic_keywords, organic_traffic, positions_1_3, positions_4_10 (about 120 units). Save the table in `research/keywords-<date>.md`; it feeds the Phase 8 projection.
+6. Competitor gap: load the `competitor-gap` skill and run modules 1 and 2 only. Pick up to 3 local search competitors, starting from the Phase 1 known competitors. Keyword gap max 30 rows for each competitor, in the local database. Write `research/competitor-gap-<date>.md`. Phase 5 records competitors named against this list, and the gap keywords feed Phase 6.
+7. Backlink snapshot: load the `backlink-audit` skill and run steps 1 and 6 only: `backlinks_overview` for the client, then the competitor referring-domain gap (max 20 rows for each of up to 3 competitors). Frame what it finds as local link and citation opportunities: directories, associations, local press. No toxicity review and no disavow. Write `audits/backlinks-<date>.md`.
 
 ## Phase 4 — Google Business Profile
 
@@ -61,13 +63,13 @@ The Maps consent wall blocks automated checks. Anything behind it is OWNER-CHECK
 2. AI prompt test:
    - Pick 6–8 fixed prompts in the local language and EN. Start from the sector patterns in `.claude/reference/sme-audit/ai-prompts.md`.
    - Run each in ChatGPT, Perplexity, Gemini and Google AI Overview.
-   - Per run record: business named (y/n), business cited (y/n), competitors named.
+   - Per run record: business named (y/n), business cited (y/n), competitors named. Mark which named competitors are on the Phase 3 competitor-gap list.
    - Browser MCP connected: drive the runs. Otherwise Will runs them and pastes results into `research/ai-prompt-test-<date>.md`.
    - Save the prompt set in that file so later audits repeat it exactly.
 
 ## Phase 6 — Landing-page plan
 
-1. Propose audience and symptom pages plus nearby-town targeting, from the Phase 1 audiences and Phase 3 keywords.
+1. Propose audience and symptom pages plus nearby-town targeting, from the Phase 1 audiences, the Phase 3 keywords and the competitor-gap keywords. A content brief (`content-brief` skill) for any proposed page is on request after the audit, not part of it.
 2. Each page: target search terms (local language and EN) with volumes, the page's job, and where it links from.
 3. Propose them as CMS items when a fitting collection exists; name the collection and fields.
 
@@ -82,7 +84,7 @@ The Maps consent wall blocks automated checks. Anything behind it is OWNER-CHECK
 ## Phase 8 — Plan the work
 
 1. Fill `.claude/templates/sme-work-plan.md` into `projects/<client>/.claude/specs/work-plan-<YYYY-MM>.md`, following its rules. Tasks over 1 h or touching more than one page are `/plan`-ready.
-2. Every report finding and every OWNER-CHECK item gets a task, and every task links back to its report section. No orphans either way.
+2. Every report finding and every OWNER-CHECK item gets a task, and every task links back to its report section. No orphans either way. Every link opportunity from the Phase 3 backlink snapshot becomes a task (owner or us) linked to "Being found on Google".
 3. Tasks already tracked in their own spec are listed and pointed at, not re-planned.
 4. Draw the report's "Fix these first" and "What we need from you" from the plan's IDs. Cross-check that the two agree.
 5. Project monthly visits from Google at 1, 3, 6 and 12 months as low–high ranges, do nothing vs every fix:
@@ -137,7 +139,7 @@ A lesson or finding seen in two or more audits is promoted into this public SKIL
 | File | Location |
 |---|---|
 | Research, AI prompt test | `projects/<client>/.claude/research/` |
-| launch-guard, SEMRush, Lighthouse, AEO | `projects/<client>/.claude/audits/` |
+| launch-guard, SEMRush, backlinks, Lighthouse, AEO | `projects/<client>/.claude/audits/` |
 | Report, GBP copy pack | `projects/<client>/.claude/reports/` |
 | Work plan | `projects/<client>/.claude/specs/` |
 | Learnings, findings library, benchmarks, prompt patterns | `.claude/reference/sme-audit/` (private) |
@@ -150,3 +152,4 @@ Never put prices in public files.
 - v1, 2026-10-19: First version. AEO scale decision: this skill's 20-check rubric (from `ai-search-aeo`, PASS=1, NEEDS ATTENTION=0.5, FAIL=0, NEEDS VERIFY=0) is canonical for new audits.
 - v2, 2026-10-19: promoted 24 repeat findings from the first three audits (link and redirect faults, titles and descriptions, headings, share image, structured data, image weight, link names and alt text, Search Console, listing consistency, nearby towns, AEO opening lines and freshness, author and sources, FAQ, thin service pages).
 - v3, 2026-10-20: traffic trajectory. Phase 3 pulls 12 months of traffic history; Phase 8 projects do nothing vs every fix at 1, 3, 6 and 12 months and draws it with `tools/sme-audit/trajectory-chart.js`; the report gains "Where your visits are heading" under Looking ahead. Phase 8 also writes a one-page exec summary (`sme-exec-summary.md`) with no hours, published as its own Notion page.
+- v4, 2026-10-21: Phase 3 adds a competitor gap and backlink snapshot via the Semrush `competitor-gap` and `backlink-audit` skills; budget about 450 rows.

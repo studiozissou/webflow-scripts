@@ -76,6 +76,9 @@ projects/*/.claude
 .claude/skills/zissou-scan
 .claude/skills/carsa-webflow
 .claude/skills/storyteller
+.claude/skills/content-brief
+.claude/skills/competitor-gap
+.claude/skills/backlink-audit
 .claude/commands/triage.md
 .claude/commands/carsa-build.md
 

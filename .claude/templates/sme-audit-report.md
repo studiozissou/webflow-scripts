@@ -114,6 +114,19 @@ The starting point. A later monthly report adds a column per month and diffs aga
 
 Volumes are monthly searches from {{keyword_source}}, {{keyword_date}}. "Not ranking" means outside the top 100.
 
+### Who you're up against
+
+{{competitor_summary}}: one or two sentences on who shows up instead of you, and why.
+
+<table fit-page-width header-row="true">
+<tr><td>Competitor</td><td>Searches you share</td><td>Searches they win</td><td>Sites linking to them</td></tr>
+<tr><td>{{competitor}}</td><td>{{shared_keywords}}</td><td>{{keywords_they_win}}</td><td>{{referring_domains}}</td></tr>
+</table>
+
+**Places that link to them but not to you:** {{link_opportunities}}: local directories, associations and local press worth a listing or mention, each with its task ID.
+
+Competitor and link data from {{competitor_source}}, {{competitor_date}}.
+
 ---
 
 ## New pages worth adding

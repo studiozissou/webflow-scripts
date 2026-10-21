@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-20",
+  "lastUpdated": "2026-10-21",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -732,6 +732,16 @@
       "critical": false,
       "created": "2026-10-19",
       "description": "TSC object-fit: cover images pick a srcset candidate large enough for the rendered box at DPR 2 (Webflow's width-only sizes hint is corrected in init.js); careers hero sharp; PZB hero source >= 2000px; no console errors."
+    },
+    {
+      "slug": "claude-tasks-oct-2026",
+      "url": "https://www.carsa.co.uk/stores/bradford",
+      "spec": "tests/acceptance/claude-tasks-oct-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-21",
+      "description": "Oct 2026 Claude task batch: Carsa store and town pages link to each other, Coconut legal side menu lists Partnership with Revolut Pro, TSC staging shows an ERCI award block, Oost sitemap pages are indexable unless intended; no console errors."
     }
   ]
 }

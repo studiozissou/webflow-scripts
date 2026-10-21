@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-20",
+  "lastUpdated": "2026-10-21",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -672,6 +672,16 @@
       "critical": false,
       "created": "2026-10-19",
       "description": "Option B of the Chichester DC partner page: no navbar, centred Snugg logo above a white card centred at 1440px holding the council logo, h1, postcode form and terms line; phone beside the card on desktop and below it on mobile. Run the partner-page spec with SNUGG_SLUG=chichesterdc-v2 for the shared checks."
+    },
+    {
+      "slug": "snugg-chichesterdc-fold",
+      "url": "https://www.snugg.com/chichesterdc-v2",
+      "spec": "tests/acceptance/snugg-chichesterdc-fold.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-21",
+      "description": "Chichester DC page on desktop (>=1280px): hero plus the whole How Snugg can help band fit one screen from 889 to 1301px tall via vh-scaled spacing, hero fills taller screens, short screens scroll, phone clear of the card, no change below 1280px. Expected to fail until the Designer change ships."
     },
     {
       "slug": "oost-feestdagen-2026",

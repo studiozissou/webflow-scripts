@@ -58,4 +58,31 @@ test.describe('snugg-chichesterdc-option-b', () => {
     c = await card.boundingBox();
     expect(p?.y ?? 0).toBeGreaterThan((c?.y ?? 0) + (c?.height ?? 0) - 1);
   });
+
+  test('council logo tile sits left of the card on desktop and above it on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const tile = page.locator('.council-hero_council-tile');
+    const card = page.locator('.council-hero_card');
+    await expect(tile).toHaveCount(1);
+    await expect(tile.locator('img[alt*="Chichester" i]')).toBeVisible();
+    let t = await tile.boundingBox();
+    let c = await card.boundingBox();
+    expect((t?.x ?? 0) + (t?.width ?? 0)).toBeLessThan((c?.x ?? 0) + 40);
+    expect(t?.x ?? 0).toBeGreaterThanOrEqual(0);
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.waitForTimeout(300);
+    t = await tile.boundingBox();
+    c = await card.boundingBox();
+    expect((t?.y ?? 0) + (t?.height ?? 0)).toBeLessThanOrEqual((c?.y ?? 0) + 1);
+    await expect(tile).toBeVisible();
+  });
+
+  test('"How Snugg can help" heading starts above a 900px desktop fold', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const heading = page.locator('h2', { hasText: /how snugg can help/i });
+    await expect(heading).toBeVisible();
+    const box = await heading.boundingBox();
+    expect(box?.y ?? 9999).toBeLessThan(880);
+  });
 });

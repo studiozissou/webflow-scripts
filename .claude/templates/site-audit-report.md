@@ -55,6 +55,12 @@ Run `/test-page` separately to generate these.")
 (If Layer B ran. Include: competitor comparison table, keyword overlap, positioning analysis.)
 (If not run: "Section not yet run. Requires Layer A+B.")
 
+## Backlink Profile
+(If Layer D ran. Include: profile snapshot table (Authority Score, backlinks, referring domains,
+follow/nofollow, source and date), top referring domains, anchor mix, competitor referring-domain
+gaps as opportunities, review candidates.)
+(If not run: "Section not yet run. Re-invoke `/site-audit` with Layer D to populate.")
+
 ## AEO Score
 (Category | Score | Detail table. Overall score /20 with maturity level.)
 
@@ -131,7 +137,7 @@ expected impact table.)
 
 ## Sub-audits
 (Links to all audit files: audits/structure.md, audits/seo.md, audits/content.md,
-audits/aeo.md, competitor benchmark if run, brand-voice.md, ideal-customer-profiles.md,
+audits/aeo.md, competitor benchmark if run, audits/backlinks-YYYY-MM-DD.md if run, brand-voice.md, ideal-customer-profiles.md,
 client change-list files if created.)
 ```
 

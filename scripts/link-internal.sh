@@ -16,6 +16,7 @@ TOP_PATHS=(
   .claude/specs .claude/research .claude/briefs .claude/plans .claude/screenshots .claude/reference .claude/triage .claude/queue.json
   .claude/skills/triage .claude/skills/gmail-triage .claude/skills/draft-email .claude/skills/next
   .claude/skills/notion-dashboard .claude/skills/carsa-webflow .claude/skills/storyteller
+  .claude/skills/content-brief .claude/skills/competitor-gap .claude/skills/backlink-audit
   .claude/commands/triage.md .claude/commands/carsa-build.md
 )
 

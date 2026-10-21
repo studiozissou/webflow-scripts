@@ -133,3 +133,30 @@ test('public files carry no client names, contact details or prices', () => {
   const banned = /rolfing|janco|oost|carsa|€\s?\d|\d+\s?euro|@[a-z0-9-]+\.(nl|com|co\.uk)/i;
   for (const file of PUBLIC_FILES) assert.doesNotMatch(read(file), banned, file);
 });
+
+const section = (text, heading) => {
+  const start = text.indexOf(`\n## ${heading}\n`);
+  assert.ok(start >= 0, `no ## ${heading} section`);
+  const rest = text.slice(start + 1);
+  const end = rest.indexOf('\n## ');
+  return end >= 0 ? rest.slice(0, end) : rest;
+};
+
+test('Phase 3 runs a competitor gap and backlink snapshot within about 450 rows, with no disavow', () => {
+  const text = section(read(SKILL), 'Phase 3 — Google search');
+  assert.ok(text.includes('`competitor-gap`'), 'Phase 3 does not load competitor-gap');
+  assert.ok(text.includes('`backlink-audit`'), 'Phase 3 does not load backlink-audit');
+  assert.match(text, /about 450 rows/);
+  assert.doesNotMatch(text, /about 300 rows/);
+  assert.match(text, /no disavow/i);
+});
+
+test('the report has "Who you\'re up against" under "Being found on Google"', () => {
+  assert.match(section(read(REPORT), 'Being found on Google'), /^### Who you're up against$/m);
+});
+
+test('the skill is at checklist-version 4 with a v4 changelog line', () => {
+  const text = read(SKILL);
+  assert.match(text, /\nchecklist-version: 4\n/);
+  assert.match(section(text, 'Changelog'), /^- v4, \d{4}-\d{2}-\d{2}: /m);
+});

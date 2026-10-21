@@ -13,6 +13,9 @@ tools:
   - mcp__claude_ai_SEMRush__position_tracking
   - mcp__claude_ai_SEMRush__site_audit
   - mcp__claude_ai_SEMRush__domain_overview
+  - mcp__claude_ai_SEMRush__backlinks_research
+  - mcp__claude_ai_SEMRush__competitors_research
+  - mcp__claude_ai_SEMRush__traffic_overview
   - mcp__claude_ai_SEMRush__get_report_schema
   - mcp__claude_ai_SEMRush__execute_report
 skills:

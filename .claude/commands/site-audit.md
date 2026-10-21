@@ -385,7 +385,7 @@ with available data. The missing stream can be re-run separately.
 
 ## Phase 5 — Optional enrichment layers
 
-After core audit, present three optional layers:
+After core audit, present four optional layers:
 
 **Layer A: SEMRush organic intelligence**
 - Domain overview (all markets)
@@ -394,14 +394,10 @@ After core audit, present three optional layers:
 - 12-month trend
 - Writes to `audits/seo.md` (appended) or separate `audits/semrush-YYYY-MM-DD.md`
 
-**Layer B: Competitor benchmark** (requires Layer A)
-- Top 4-5 organic competitors from SEMRush
-- Keyword overlap
-- Traffic comparison
-- Positioning analysis
+**Layer B: Competitor gap** (requires Layer A)
+- Load the `competitor-gap` skill with the Skill tool and run its modules 1, 2, 3 and 5
+- Run module 4 (backlink gaps) only when Layer D is not selected, because Layer D covers it
 - Writes to `audits/competitor-benchmark-YYYY-MM-DD.md`
-
-Layers A and B follow the SEMRush unit budget in `.claude/agents/seo.md`. Top ranking keywords and top pages are capped at 50 rows each, sorted by traffic. The 12-month trend is capped at 12 rows. Keyword overlap is capped at 30 rows per competitor. A full A+B run should stay under about 500 rows.
 
 **Layer C: Client change-list mapping**
 - User provides the change-list (paste, file path, or URL)
@@ -409,14 +405,29 @@ Layers A and B follow the SEMRush unit budget in `.claude/agents/seo.md`. Top ra
 - Map each item onto audit findings with justification tags
 - Write to `client-requests/change-list-mapped-YYYY-MM-DD.md`
 
+**Layer D: Backlink audit** (needs nothing else)
+- Load the `backlink-audit` skill with the Skill tool
+- Start with `backlinks_overview`
+- Referring domains and anchors are capped at 20 rows each
+- Competitor referring-domain gap is capped at 20 rows for each of up to 3 competitors
+- Never produce a disavow file without the skill's safety check and Will's sign-off
+- Writes to `audits/backlinks-YYYY-MM-DD.md`
+- Fills the report's Backlink Profile section
+
+Layers B and D run in the parent session. It loads the skill with the Skill tool and calls the SEMRush tools directly; the skills are not preloaded into the `seo` agent.
+
+Layers A, B and D follow the SEMRush unit budget in `.claude/agents/seo.md`. Top ranking keywords and top pages are capped at 50 rows each, sorted by traffic. The 12-month trend is capped at 12 rows. Keyword overlap is capped at 30 rows per competitor. A full A+B+D run should stay under about 650 rows.
+
 Gate question:
 
 > Which optional layers would you like to add? (These can also be run later.)
 > - A only (SEMRush organic intelligence)
-> - A+B (SEMRush + competitor benchmark)
+> - A+B (SEMRush + competitor gap)
+> - A+B+D (SEMRush + competitor gap + backlink audit)
+> - D only (backlink audit)
 > - C only (client change-list mapping)
-> - A+B+C (all three)
-> - Skip all
+> - all (A, B, C and D)
+> - skip
 
 If skipped, the report will include "Section not yet run" placeholders for these sections.
 
@@ -652,3 +663,5 @@ If yes:
 28. No `FAQPage` task is justified on rich-results grounds for a non-gov/health site — but FAQPage recommended on AI-extraction / page-type-signal grounds is correct and should not be stripped
 29. Every platform claim in a justification carries `[source, YYYY]`, is rewritten to rest on a site claim, is marked `NEEDS VERIFY`, or the task is dropped
 30. The client-facing report asserts nothing the internal report did not establish; humanizer has not strengthened any hedged claim
+31. Layer B ran through the `competitor-gap` skill, and module 4 was skipped when Layer D ran
+32. Layer D wrote `audits/backlinks-YYYY-MM-DD.md`, row lists stayed at 20 or under, and no disavow file was produced without sign-off

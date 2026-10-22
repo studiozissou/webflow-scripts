@@ -1,7 +1,7 @@
 ---
 name: sme-audit
 description: Fixed-scope website and online-presence audit for a small independent business (site, Google search, Business Profile, AI search) that ends in a plain-English report, a GBP copy pack and an estimated work plan, and learns from every past audit. Use when the user runs /sme-audit or asks to audit a small business's site and Google presence.
-checklist-version: 4
+checklist-version: 5
 ---
 
 <objective>
@@ -44,7 +44,7 @@ Run the same audit on any small business, reuse existing tools instead of redefi
 
 1. SEMRush MCP, `nl` database (or the client's local database): `domain_overview`, `organic_research`, `keyword_research`.
    Every SEMRush call follows the unit budget in `.claude/agents/seo.md`: set `display_limit` (default 30, max 50), sort domain keyword lists by traffic and cap them at 50 rows, batch up to 20 keywords per `phrase_these` call, keep history to 12 rows or fewer, and don't re-query data saved in `research/` or `audits/` in the last 30 days. The full `nl` + EN run, including steps 6 and 7, should stay under about 450 rows.
-2. Research keywords in the local language and in EN. Local-language volume usually dominates.
+2. Research every keyword in the local language and in EN, always limited to the client's country: Semrush `nl` database, DataForSEO `location_code` 2528 with `language_code` `nl` and then `en`. Add a city-level run when the business serves one city (e.g. Amsterdam): look up its code with `keywords_data/google_ads/locations`. Local-language volume usually dominates. Labs keyword difficulty supports only `nl` for the Netherlands, and Ads volume may not split by language within a country, so treat EN figures as an upper bound. Check the Semrush unit balance first and fall back to DataForSEO for volumes.
 3. WebSearch is US-only; don't use it for local rankings or volumes.
 4. Expect thin data for small sites; record it as a baseline, not a failure.
 5. Pull 12 months of traffic history: `resource_rank_history`, `display_limit` 12, sorted `date_desc`, columns date, organic_keywords, organic_traffic, positions_1_3, positions_4_10 (about 120 units). Save the table in `research/keywords-<date>.md`; it feeds the Phase 8 projection.
@@ -153,3 +153,4 @@ Never put prices in public files.
 - v2, 2026-10-19: promoted 24 repeat findings from the first three audits (link and redirect faults, titles and descriptions, headings, share image, structured data, image weight, link names and alt text, Search Console, listing consistency, nearby towns, AEO opening lines and freshness, author and sources, FAQ, thin service pages).
 - v3, 2026-10-20: traffic trajectory. Phase 3 pulls 12 months of traffic history; Phase 8 projects do nothing vs every fix at 1, 3, 6 and 12 months and draws it with `tools/sme-audit/trajectory-chart.js`; the report gains "Where your visits are heading" under Looking ahead. Phase 8 also writes a one-page exec summary (`sme-exec-summary.md`) with no hours, published as its own Notion page.
 - v4, 2026-10-21: Phase 3 adds a competitor gap and backlink snapshot via the Semrush `competitor-gap` and `backlink-audit` skills; budget about 450 rows.
+- v5, 2026-10-22: Phase 3 keyword research runs in the local language and EN, limited to the client's country, plus a city run for single-city businesses; DataForSEO is the volume fallback when Semrush units run out.

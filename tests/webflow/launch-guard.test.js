@@ -265,6 +265,32 @@ describe('checkUngatedAnalytics', () => {
     assert.deepEqual(checkUngatedAnalytics(page({ head: GA_GATED }), HOME), []);
   });
 
+  test('allows gtag config inside a Finsweet Cookie Consent v1 fs-cc script', () => {
+    const head =
+      '<script type="fs-cc" fs-cc-categories="analytics">window.dataLayer=window.dataLayer||[];gtag(\'js\',new Date());gtag(\'config\',\'G-TEST1234\');</script>';
+    assert.deepEqual(checkUngatedAnalytics(page({ head }), HOME), []);
+  });
+
+  test('matches the gated script type case-insensitively and ignoring whitespace', () => {
+    const head = '<script type=" FS-CC " fs-cc-categories="analytics">gtag(\'config\',\'G-TEST1234\');</script>';
+    assert.deepEqual(checkUngatedAnalytics(page({ head }), HOME), []);
+  });
+
+  test('flags an fs-cc script with no category or only the essential category', () => {
+    for (const head of [
+      '<script type="fs-cc">gtag(\'config\',\'G-TEST1234\');</script>',
+      '<script type="fs-cc" fs-cc-categories="">gtag(\'config\',\'G-TEST1234\');</script>',
+      '<script type="fs-cc" fs-cc-categories="essential">gtag(\'config\',\'G-TEST1234\');</script>',
+    ]) {
+      assert.equal(checkUngatedAnalytics(page({ head }), HOME).length, 1, head);
+    }
+  });
+
+  test('names both gated types in the finding message', () => {
+    const [found] = checkUngatedAnalytics(page({ head: "<script>gtag('config','G-X');</script>" }), HOME);
+    assert.match(found.detail, /consent-gated script \(fs-consent or fs-cc\)/);
+  });
+
   test('allows the Consent Mode default call', () => {
     const head = "<script>gtag('consent','default',{analytics_storage:'denied'});</script>";
     assert.deepEqual(checkUngatedAnalytics(page({ head }), HOME), []);

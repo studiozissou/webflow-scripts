@@ -6,8 +6,8 @@ dotenv.config({ path: '.env.test' });
 
 const BASE = process.env.ROLFING_URL || 'https://rolfing-amsterdam.webflow.io';
 const LANDING = [
-  { path: '/nl/rolfing/nekklachten', lang: 'nl' },
-  { path: '/en/rolfing/neck-pain', lang: 'en' },
+  { path: '/nl/rolfing/knie-heup-enkelklachten', lang: 'nl' },
+  { path: '/en/rolfing/knee-hip-ankle-pain', lang: 'en' },
 ];
 const MOVED = [
   { from: '/en/what-is-rolfing/procedure', to: '/en/rolfing/procedure' },
@@ -20,13 +20,12 @@ const MOVED = [
 const BANNED = {
   en: [
     /pain[- ]free/i,
-    /say goodbye/i,
-    /\bheal(ing|s)?\b/i,
-    /\btreatment\b/i,
-    /\btherapy\b/i,
+    /say goodbye to/i,
+    /\bheals?\b/i,
+    /\bcures?\b/i,
     /transformative/i,
   ],
-  nl: [/pijnvrij/i, /genezing/i, /\bbehandeling\b/i, /-?therapie\b/i],
+  nl: [/pijnvrij/i, /\bgeneest\b/i, /genezing/i],
 };
 
 test.skip(

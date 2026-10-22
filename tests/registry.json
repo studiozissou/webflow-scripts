@@ -755,7 +755,7 @@
     },
     {
       "slug": "rolfing-landing-pages",
-      "url": "https://rolfing-amsterdam.webflow.io/nl/rolfing/nekklachten",
+      "url": "https://rolfing-amsterdam.webflow.io/nl/rolfing/knie-heup-enkelklachten",
       "spec": "tests/acceptance/rolfing-landing-pages.spec.js",
       "type": "acceptance",
       "source": "plan",

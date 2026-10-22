@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-21",
+  "lastUpdated": "2026-10-22",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -752,6 +752,16 @@
       "critical": false,
       "created": "2026-10-21",
       "description": "Oct 2026 Claude task batch: Carsa store and town pages link to each other, Oost sitemap pages are indexable unless intended; no console errors."
+    },
+    {
+      "slug": "rolfing-landing-pages",
+      "url": "https://rolfing-amsterdam.webflow.io/nl/rolfing/nekklachten",
+      "spec": "tests/acceptance/rolfing-landing-pages.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-22",
+      "description": "Rolfing /rolfing/ landing pages: single 301 from /what-is-rolfing/, one h1, branded title, description length, 3-5 FAQ items with microdata, hero alt, WebPage + BreadcrumbList JSON-LD with no medical types, no outcome claims; gated on ROLFING_LANDING=1, expected to fail until T3-T5 of rolfing-growth-oct-2026 ship."
     }
   ]
 }

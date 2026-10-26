@@ -29,6 +29,11 @@ const DEPOSIT = '[data-number="deposit"]';
 const PARITY_TEXT = [idOrData('pcp-price'), idOrData('hp-price'), idOrData('pcp-total-amount-payable'), idOrData('hp-total-amount-payable'), DEPOSIT, '[data-number="apr"]'];
 const PARITY_HREF = ['[data-button="booking-options"]', '[data-link="search-similar"]'];
 
+function vdpSwapped() {
+  const done = (process.env.CARSA_V111_DONE || '').split(',').map((s) => s.trim());
+  return done.includes('all') || done.includes('/vehicles/used/');
+}
+
 async function readVdp(page) {
   return page.evaluate(() => window.__CARSA_VDP || null);
 }
@@ -53,6 +58,7 @@ async function snapshot(page) {
 test.describe('carsa-vdp-module', () => {
   test.beforeEach(() => {
     test.skip(!process.env.CARSA_V110, 'v1.1.0 not published yet; set CARSA_V110=1 once the footer tag points at v1.1.0');
+    test.skip(!vdpSwapped(), 'VDP body not swapped yet; add /vehicles/used/ to CARSA_V111_DONE once it is published');
   });
 
   test('config-global: window.__CARSA_VDP carries all 11 string values and the VRM matches the slug', async ({ page }) => {

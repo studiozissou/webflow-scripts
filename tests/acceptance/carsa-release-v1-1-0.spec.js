@@ -9,6 +9,8 @@ import {
   unexpectedErrors,
   firstPath,
   seedAttribution,
+  mockFinance,
+  waitForQuotes,
   RELEASE_PATH_RE,
 } from './helpers/carsa.js';
 
@@ -16,6 +18,8 @@ const SEED = { utms: { utm_source: 'seed', utm_medium: 'v110' }, referrer: 'http
 const CARD = 'a [data-link="check-finance"][vrm], a[data-link="check-finance"][vrm]';
 const MODULE = 'script[src*="/webflow/"][src$="/check-finance.js"]';
 const ELIGIBILITY = 'https://quote.carsa.co.uk/eligibility/questions?vrm=';
+const VDP_PATH = '/vehicles/used/bl73dmu';
+const VDP_MODULE = 'script[src*="/webflow/"][src$="/vdp.js"]';
 
 const STATIC_PAGES = ['/', '/used-cars', '/used-cars/deals', '/car-finance-calculator', '/reserve'];
 const TEMPLATE_PREFIXES = [
@@ -138,6 +142,19 @@ test.describe('carsa-release-v1-1-0', () => {
     const errors = collectErrors(page);
     await loadPage(page, '/faq');
     expect(await page.locator(MODULE).count()).toBe(1);
+    expect(unexpectedErrors(errors)).toEqual([]);
+  });
+
+  test('vdp-inert-before-swap: on the old VDP body vdp.js loads, finds no __CARSA_VDP and leaves the inline blocks to quote alone', async ({ page }) => {
+    test.skip(isDone('/vehicles/used/'), 'VDP already swapped');
+    const calls = await mockFinance(page);
+    const errors = collectErrors(page);
+    await loadPage(page, VDP_PATH, 4000);
+    expect(await page.locator(VDP_MODULE).count()).toBe(1);
+    expect(await page.evaluate(() => (window.__CARSA_LOADER || {}).modules || [])).toContain('vdp.js');
+    expect(await page.evaluate(() => window.__CARSA_VDP === undefined)).toBe(true);
+    expect(await waitForQuotes(page, calls, 1)).toBeGreaterThanOrEqual(1);
+    expect(calls.config).toBe(1);
     expect(unexpectedErrors(errors)).toEqual([]);
   });
 

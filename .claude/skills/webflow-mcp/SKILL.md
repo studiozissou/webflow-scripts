@@ -1,6 +1,6 @@
 ---
 name: webflow-mcp
-description: Guides the agent through using Webflow MCP tools to read site structure, verify selectors, audit pages, and manage CMS content. Activates when working with Webflow projects that have the MCP connected.
+description: Guides the agent through using Webflow MCP tools to read site structure, verify selectors, audit pages, and manage CMS content, and picks which of the two Webflow MCP slots (`webflow` or `webflow-2`) sees a client's site. Activates when working with Webflow projects that have the MCP connected, before the first Webflow MCP call for a client, or on a "site cannot be found" error.
 ---
 
 <objective>
@@ -16,6 +16,34 @@ When to use Webflow MCP:
 - Push CMS content updates (requires human approval)
 - Check what custom code is already embedded on a page
 </quick_start>
+
+<slot_routing>
+Webflow's OAuth lets one connection see sites in one workspace only, so there are two
+general slots: `webflow` (project `.mcp.json`) and `webflow-2` (user scope, works in
+worktrees and background jobs). "Webflow MCP" in any skill or command means whichever
+slot sees the site.
+
+1. **Pick the slot before the first Webflow call for a client.** Call
+   `data_sites_tool > get_site` with the site ID from the client's `client.md` on
+   `webflow`. On "site cannot be found", try `webflow-2`. Use whichever answers for the
+   rest of the session. Note the slot once in your reply so later turns don't re-probe.
+2. **Neither answers:** say which client and which workspace (`Workspace ID` in
+   `client.md`) is missing, and ask Will to re-authorise one slot in `/mcp`. Never
+   re-authorise mid-task without saying which client loses access: re-authorising a slot
+   drops the workspace it saw before (the 26 Oct Rolfing run lost its site this way).
+3. **Never call `webflow_guide_tool`.** It returns ~100k characters (~25k tokens) and
+   each slot asks for it once. Pass `session_id: "start"` on the first real call to a
+   slot and keep the issued `ses_` ID for that slot. When a usage detail is unclear,
+   grep the cached guide instead of reading it whole:
+   `grep -n -i -A20 '<topic>' ~/webflow-internal/.claude/reference/webflow-mcp-guide.txt`
+4. **Refresh the cache when the version changes.** The cache covers Webflow MCP 2.2.0.
+   If a server response reports a different "Webflow MCP version", tell Will the cache
+   is stale; refreshing it means one deliberate `webflow_guide_tool` call, saved over the
+   cached file with the `session_id` header lines removed so it starts with
+   "Webflow MCP version".
+5. **New client:** onboarding uses `webflow` by default. Record the site's
+   `Workspace ID` in `client.md` (from `data_sites_tool > list_sites`, summary mode).
+</slot_routing>
 
 <workflow>
 Rules:

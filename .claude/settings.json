@@ -41,7 +41,8 @@
       "Bash(npx *)",
       "Bash(python3 *)",
       "Bash(open *)",
-      "mcp__webflow"
+      "mcp__webflow",
+      "mcp__webflow-2"
     ],
     "deny": [
       "Read(.env)",

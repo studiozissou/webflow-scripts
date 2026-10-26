@@ -37,3 +37,5 @@ infrastructure notes live in `~/.claude/projects/-Users-willmorley-Library-Mobil
 **Do not preload.** Read it only when you need specific context (e.g. before
 touching RHP's work-dial.js, when investigating a Barba issue, or when a
 pattern question comes up). Auto-injection is disabled via `autoMemoryEnabled: false`.
+
+Webflow MCP has two slots, `webflow` and `webflow-2`; the `webflow-mcp` skill says which to use.

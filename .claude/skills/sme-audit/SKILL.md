@@ -1,7 +1,7 @@
 ---
 name: sme-audit
 description: Fixed-scope website and online-presence audit for a small independent business (site, Google search, Business Profile, AI search) that ends in a plain-English report, a GBP copy pack and an estimated work plan, and learns from every past audit. Use when the user runs /sme-audit or asks to audit a small business's site and Google presence.
-checklist-version: 4
+checklist-version: 5
 ---
 
 <objective>
@@ -39,6 +39,12 @@ Run the same audit on any small business, reuse existing tools instead of redefi
 5. Run Chrome DevTools MCP `lighthouse_audit`, mobile, on home plus one inner page.
 6. SEMRush Site Audit: reuse an existing project crawl if there is one; start a new crawl only if none exists or it is stale. Write `audits/semrush-<date>.md` as fixed / still open / noise. Pull `issue_details` only for the issue types that are in the report.
 7. For SEO and schema coverage, follow `/site-audit` Stream B rather than a new list.
+8. Crosslink scan: crawl every sitemap page, then search each page's visible body copy for mentions of another page's topic that are not yet a link.
+   - Build a phrase map first: each service, audience, location and guide page gets the phrases a reader would use for it. Mark broad phrases (an audience name, "pricing") lower priority and require topic context in the same paragraph.
+   - Skip the header, footer, hidden blocks, headings, text already inside a link, and any block that repeats on more than 5 pages (listing cards, CTAs). Skip pages that already link to the target, and noindex, legal and utility pages as sources.
+   - Keep the first mention per page per target. A phrase with no page to link to is a content gap for Phase 6.
+   - Spot-check 20 random rows before reporting and tighten the map until about 17 in 20 are worth adding.
+   - Save `research/crosslink-opportunities-<date>.csv` (page, phrase, link_to, priority, context) and report totals by page type.
 
 ## Phase 3 — Google search
 
@@ -86,6 +92,7 @@ The Maps consent wall blocks automated checks. Anything behind it is OWNER-CHECK
 1. Fill `.claude/templates/sme-work-plan.md` into `projects/<client>/.claude/specs/work-plan-<YYYY-MM>.md`, following its rules. Tasks over 1 h or touching more than one page are `/plan`-ready.
 2. Every report finding and every OWNER-CHECK item gets a task, and every task links back to its report section. No orphans either way. Every link opportunity from the Phase 3 backlink snapshot becomes a task (owner or us) linked to "Being found on Google".
 3. Tasks already tracked in their own spec are listed and pointed at, not re-planned.
+   The Phase 2 crosslink scan becomes tasks grouped by page type (service pages, audience pages, articles), each pointing at the CSV, plus one task to re-run the scan after new pages go live.
 4. Draw the report's "Fix these first" and "What we need from you" from the plan's IDs. Cross-check that the two agree.
 5. Project monthly visits from Google at 1, 3, 6 and 12 months as low–high ranges, do nothing vs every fix:
    - Do nothing: start from the history's range and average, then thin it by the trend in top-10 positions. Never draw a decline the history does not show.
@@ -153,3 +160,4 @@ Never put prices in public files.
 - v2, 2026-10-19: promoted 24 repeat findings from the first three audits (link and redirect faults, titles and descriptions, headings, share image, structured data, image weight, link names and alt text, Search Console, listing consistency, nearby towns, AEO opening lines and freshness, author and sources, FAQ, thin service pages).
 - v3, 2026-10-20: traffic trajectory. Phase 3 pulls 12 months of traffic history; Phase 8 projects do nothing vs every fix at 1, 3, 6 and 12 months and draws it with `tools/sme-audit/trajectory-chart.js`; the report gains "Where your visits are heading" under Looking ahead. Phase 8 also writes a one-page exec summary (`sme-exec-summary.md`) with no hours, published as its own Notion page.
 - v4, 2026-10-21: Phase 3 adds a competitor gap and backlink snapshot via the Semrush `competitor-gap` and `backlink-audit` skills; budget about 450 rows.
+- v5, 2026-10-21: Phase 2 adds a crosslink scan (unlinked mentions of other pages in body copy) and Phase 8 turns it into tasks. Added at Will's request after the Coconut IA audit, ahead of the two-audit Promotion rule.

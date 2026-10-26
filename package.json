@@ -23,6 +23,7 @@
     "test:rolfing-amsterdam": "node --test 'tests/rolfing-amsterdam/*.test.js'",
     "rolfing-amsterdam:launch-guard": "node tools/webflow/launch-guard.js --client rolfing-amsterdam",
     "test:sme-audit": "node --test 'tests/sme-audit/*.test.js'",
+    "test:site-audit": "node --test 'tests/site-audit/*.test.js'",
     "test:shared": "node --test 'tests/shared/*.test.js'",
     "test:template": "node --test 'tests/_template/*.test.js'",
     "test:release": "node --test 'tests/release/*.test.js'",

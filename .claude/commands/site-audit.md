@@ -292,6 +292,7 @@ SEMRush.
 | `llms.txt` | Present at root — recommend if absent |
 | Hreflang | Present if multi-locale, check for conflicts |
 | Broken external links | Flag pages with broken outbound links |
+| Crosslink opportunities | Body copy that mentions another page's topic without linking to it (see below) |
 
 **FAQPage eligibility rule.** Since August 2023, Google shows FAQ rich results only for
 authoritative government and health sites. For every other site — SaaS, ecommerce, agency,
@@ -304,6 +305,8 @@ AI-citation extraction and page-type signal. So flag a missing `FAQPage` when th
 government or health domain, **or** when the justification is limited to those two grounds. Never
 write "so Google can display them as expandable Q&As in search results" for a commercial site. If
 the whole value of the task rests on rich results, drop the task.
+
+**Crosslink scan.** Run it as `/sme-audit` Phase 2 step 8 describes: phrase map per page, body copy only, repeated blocks and existing links skipped, a 20-row spot-check before reporting. Save `research/crosslink-opportunities-YYYY-MM-DD.csv` and summarise totals by page type in `audits/seo.md`. In the report, each page-type group becomes a P-band task (`SEO`), plus one task to re-run the scan after new pages go live. Phrases with no page to link to are content gaps.
 
 Write to `audits/seo.md`.
 
@@ -376,6 +379,7 @@ After all streams complete, confirm all 5 output files exist:
 - `audits/seo.md`
 - `audits/content.md`
 - `audits/aeo.md`
+- `research/crosslink-opportunities-YYYY-MM-DD.csv`
 - `.claude/brand-voice.md` + `.claude/ideal-customer-profiles.md`
 
 If a stream failed (e.g. WebFetch timeout), note the failure in the merge summary and proceed
@@ -665,3 +669,4 @@ If yes:
 30. The client-facing report asserts nothing the internal report did not establish; humanizer has not strengthened any hedged claim
 31. Layer B ran through the `competitor-gap` skill, and module 4 was skipped when Layer D ran
 32. Layer D wrote `audits/backlinks-YYYY-MM-DD.md`, row lists stayed at 20 or under, and no disavow file was produced without sign-off
+33. Stream B wrote `research/crosslink-opportunities-YYYY-MM-DD.csv` after a 20-row spot-check, and each page-type group of crosslink opportunities is a P-band task

@@ -1,4 +1,4 @@
-// Acceptance tests for oost-hours-kerst-2026: the 17:00–21:00 hours everywhere, the lunch copy gone, the Christmas pre-order block on /afhalen with home and footer pointers, closed 24–26 Dec in the schema, and the llms.txt lines; removal checks run when OOST_KERST_REMOVED=1.
+// Acceptance tests for oost-hours-kerst-2026: the 17:00–21:00 hours everywhere, the lunch copy and lunch catering gone, the Christmas pre-order block on /afhalen with home and footer pointers, closed 24–26 Dec in the schema, and the llms.txt lines; removal checks run when OOST_KERST_REMOVED=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -30,7 +30,6 @@ const LOCALES = {
     wine: /wijn/i,
     sunday: /17:00 tot 21:00/,
     lunchIntro: /^lunch met collega/im,
-    eveningOnly: /pas 's avonds open/i,
   },
   en: {
     home: '/en',
@@ -50,7 +49,6 @@ const LOCALES = {
     wine: /wine/i,
     sunday: /17:00 to 21:00/,
     lunchIntro: /^lunch with colleagues/im,
-    eveningOnly: /only open in the evening|11:30 AM/i,
   },
 };
 
@@ -208,9 +206,11 @@ test.describe('oost-hours-kerst-2026', () => {
       });
     });
 
-    test(`${lang} catering FAQ no longer says the restaurant is only open in the evening`, async ({ page }) => {
+    test(`${lang} catering page no longer offers lunch`, async ({ page }) => {
       await goto(page, L.catering);
-      expect(await page.locator('body').innerText()).not.toMatch(L.eveningOnly);
+      const text = await page.locator('body').innerText();
+      expect(text).not.toMatch(/lunch/i);
+      expect(text).not.toContain('11:30');
     });
   }
 
@@ -221,13 +221,15 @@ test.describe('oost-hours-kerst-2026', () => {
     expect(text).not.toMatch(/afhalen|gesloten|bestel|kerstdag|witte|gele/i);
   });
 
-  test('llms.txt carries the new hours and the Christmas line', async ({ request }) => {
+  test('llms.txt carries the new hours and the Christmas line and no lunch', async ({ request }) => {
     const res = await request.get(`${BASE}/llms.txt`);
     expect(res.status()).toBe(200);
     const text = await res.text();
     expect(text).toMatch(/Hours: 17:00–21:00 every day except Tuesday/);
     expect(text).toMatch(/Christmas 2026: closed 24, 25 and 26 Dec/);
     expect(text).not.toMatch(/12:00–22:00|17:00–22:00/);
+    expect(text).not.toMatch(/lunch/i);
+    expect(text).not.toContain('11:30');
   });
 });
 

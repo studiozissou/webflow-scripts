@@ -752,6 +752,16 @@
       "critical": false,
       "created": "2026-10-21",
       "description": "Oct 2026 Claude task batch: Carsa store and town pages link to each other, Oost sitemap pages are indexable unless intended; no console errors."
+    },
+    {
+      "slug": "coconut-site-overhaul",
+      "url": "https://getcoconut.webflow.io/",
+      "spec": "tests/acceptance/coconut-site-overhaul.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-21",
+      "description": "Coconut overhaul, phase-tagged @phase1-4: CLS from injected padding, link hygiene, one h1/title, breadcrumb schema; fonts, hero priority, consent-gated tags, pinned init.js; knowledge-hub index, authors + Person schema, six-item keyboard nav, breadcrumbs; Client-First skeleton, no legacy text classes, shared CSS <= 260 KB"
     }
   ]
 }

@@ -154,7 +154,7 @@ test.describe(SLUG, () => {
       const index = await request.get(`${BASE_URL}/authors`, { maxRedirects: 0 });
       expect(index.status()).toBe(200);
       await loadPage(page, '/authors');
-      const profiles = (await page.$$eval('a[href^="/authors/"]', (a) => [...new Set(a.map((l) => l.getAttribute('href')))])).slice(0, 3);
+      const profiles = (await page.$$eval('a[href^="/author/"]', (a) => [...new Set(a.map((l) => l.getAttribute('href')))])).slice(0, 3);
       expect(profiles.length).toBeGreaterThan(0);
       for (const href of profiles) {
         expect((await request.get(`${BASE_URL}${href}`, { maxRedirects: 0 })).status()).toBe(200);
@@ -163,7 +163,7 @@ test.describe(SLUG, () => {
 
     test('article shows a linked author byline and Person schema with sameAs', async ({ page }) => {
       await loadPage(page, ARTICLE);
-      await expect(page.locator('a[href^="/authors/"]').first()).toBeVisible();
+      await expect(page.locator('a[href^="/author/"]').first()).toBeVisible();
       const person = (await jsonLd(page)).flatMap((d) => [d, d.author].filter(Boolean)).find((d) => d['@type'] === 'Person');
       expect(person).toBeTruthy();
       expect([].concat(person.sameAs || []).some((u) => u.includes('linkedin.com'))).toBe(true);

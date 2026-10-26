@@ -50,7 +50,7 @@ function params(href) {
 }
 
 async function resolve(request, entry) {
-  if (!entry.endsWith('/')) return entry;
+  if (entry === '/' || !entry.endsWith('/')) return entry;
   const path = await firstPath(request, entry);
   test.skip(!path, `no ${entry} item in sitemap`);
   return path;
@@ -94,7 +94,7 @@ test.describe('carsa-release-v1-1-0', () => {
       await seedAttribution(context, SEED);
       await loadPage(page, await resolve(request, entry), 4000);
       test.skip((await inlineCopies(page)).length === 0, `${entry} has no inline copy on this build`);
-      const card = page.locator(CARD).first();
+      const card = page.locator(CARD).filter({ visible: true }).first();
       test.skip((await card.count()) === 0, `no finance card rendered on ${entry}`);
       const r = await hoverSwap(page, card);
       expect(r.swapped.startsWith(ELIGIBILITY + encodeURIComponent(r.vrm))).toBe(true);

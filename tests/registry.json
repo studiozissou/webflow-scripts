@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-21",
+  "lastUpdated": "2026-10-26",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -684,16 +684,6 @@
       "description": "Chichester DC page on desktop (>=1280px): hero plus the whole How Snugg can help band fit one screen from 889 to 1301px tall via vh-scaled spacing, hero fills taller screens, short screens scroll, phone clear of the card, no change below 1280px. Expected to fail until the Designer change ships."
     },
     {
-      "slug": "oost-feestdagen-2026",
-      "url": "https://www.oosteten.nl/afhalen",
-      "spec": "tests/acceptance/oost-feestdagen-2026.spec.js",
-      "type": "acceptance",
-      "source": "plan",
-      "critical": false,
-      "created": "2026-10-14",
-      "description": "Oost Christmas and New Year 2026 - feestdagen block on /afhalen NL+EN with four takeaway-only days 15-17, home and footer pointers per locale, four dated OpeningHoursSpecification entries matching visible dates, llms.txt line; gated on OOST_FEESTDAGEN=1, removal checks on OOST_FEESTDAGEN_REMOVED=1."
-    },
-    {
       "slug": "sz-site-redesign",
       "url": "https://studiozissou.webflow.io/",
       "spec": "tests/acceptance/sz-site-redesign.spec.js",
@@ -752,6 +742,16 @@
       "critical": false,
       "created": "2026-10-21",
       "description": "Oct 2026 Claude task batch: Carsa store and town pages link to each other, Oost sitemap pages are indexable unless intended; no console errors."
+    },
+    {
+      "slug": "oost-hours-kerst-2026",
+      "url": "https://www.oosteten.nl/afhalen",
+      "spec": "tests/acceptance/oost-hours-kerst-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-26",
+      "description": "Oost hours 17:00-21:00 daily (Tue closed) on every hours list NL+EN incl. 404, no old 12-22/17-22 text, lunch copy gone, Christmas pre-order block #feestdagen on /afhalen (closed 24-26 Dec, order before 20 Dec, pickup 23/24 Dec 15-17, dishes, bases, wine), home and footer pointers, JSON-LD one regular entry plus closed 24-26 Dec, llms.txt lines; removal checks on OOST_KERST_REMOVED=1. Expected to fail until the Designer change ships."
     }
   ]
 }

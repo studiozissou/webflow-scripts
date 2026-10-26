@@ -471,17 +471,24 @@ export function checkJsonLdHost(html, pageUrl) {
   return findings;
 }
 
+function isConsentGated(attrs) {
+  const type = (attrs.type ?? '').trim().toLowerCase();
+  if (type === 'fs-consent') return true;
+  if (type !== 'fs-cc') return false;
+  const categories = (attrs['fs-cc-categories'] ?? '').toLowerCase().split(/[\s,]+/).filter(Boolean);
+  return categories.some((category) => category !== 'essential');
+}
+
 export function checkUngatedAnalytics(html, pageUrl) {
   const ungated = scriptTags(html).some(
-    ({ attrs, body }) =>
-      (attrs.type ?? '').trim().toLowerCase() !== 'fs-consent' && GTAG_CONFIG.test(body),
+    ({ attrs, body }) => !isConsentGated(attrs) && GTAG_CONFIG.test(body),
   );
   return ungated
     ? [
         finding(
           'ungated-analytics',
           pageUrl,
-          "gtag('config' runs outside an fs-consent script (Webflow GA integration or ungated GA)",
+          "gtag('config' runs outside a consent-gated script (fs-consent or fs-cc); Webflow GA integration or ungated GA",
         ),
       ]
     : [];

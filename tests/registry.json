@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-21",
+  "lastUpdated": "2026-10-22",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -762,6 +762,16 @@
       "critical": false,
       "created": "2026-10-21",
       "description": "Coconut overhaul, phase-tagged @phase1-4: CLS from injected padding, link hygiene, one h1/title, breadcrumb schema; fonts, hero priority, consent-gated tags, pinned init.js; knowledge-hub index, authors + Person schema, six-item keyboard nav, breadcrumbs; Client-First skeleton, no legacy text classes, shared CSS <= 260 KB"
+    },
+    {
+      "slug": "rolfing-landing-pages",
+      "url": "https://rolfing-amsterdam.webflow.io/nl/rolfing/knie-heup-enkelklachten",
+      "spec": "tests/acceptance/rolfing-landing-pages.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-22",
+      "description": "Rolfing /rolfing/ landing pages: single 301 from /what-is-rolfing/, one h1, branded title, description length, 3-5 FAQ items with microdata, hero alt, WebPage + BreadcrumbList JSON-LD with no medical types, no outcome claims; gated on ROLFING_LANDING=1, expected to fail until T3-T5 of rolfing-growth-oct-2026 ship."
     }
   ]
 }

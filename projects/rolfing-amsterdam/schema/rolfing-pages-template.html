@@ -1,0 +1,110 @@
+<!-- ROLFING PAGES TEMPLATE — WebPage + BreadcrumbList JSON-LD, one Code Embed with an EN block and an NL block -->
+<!-- EN (primary locale): paste into the Code Embed on the Rolfing Pages template -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.rolfingamsterdam.nl/en/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#webpage",
+      "url": "https://www.rolfingamsterdam.nl/en/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "name": "{{wf {&quot;path&quot;:&quot;seo-title&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "description": "{{wf {&quot;path&quot;:&quot;seo-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "inLanguage": "en",
+      "isPartOf": { "@id": "https://www.rolfingamsterdam.nl/#website" },
+      "about": { "@id": "https://www.rolfingamsterdam.nl/#business" },
+      "publisher": { "@id": "https://www.rolfingamsterdam.nl/#business" },
+      "author": { "@id": "https://www.rolfingamsterdam.nl/en/about-janco#janco-volk" },
+      "dateModified": "{{wf {&quot;path&quot;:&quot;updated&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+      "primaryImageOfPage": { "@type": "ImageObject", "url": "{{wf {&quot;path&quot;:&quot;photo&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}" },
+      "breadcrumb": { "@id": "https://www.rolfingamsterdam.nl/en/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://www.rolfingamsterdam.nl/en/about-janco#janco-volk",
+      "name": "Janco Volk",
+      "url": "https://www.rolfingamsterdam.nl/en/about-janco",
+      "worksFor": { "@id": "https://www.rolfingamsterdam.nl/#business" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.rolfingamsterdam.nl/en/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.rolfingamsterdam.nl/en"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Discover Rolfing",
+          "item": "https://www.rolfingamsterdam.nl/en/what-is-rolfing"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+          "item": "https://www.rolfingamsterdam.nl/en/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<!-- NL (secondary locale): paste into the same Code Embed in the NL locale override -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.rolfingamsterdam.nl/nl/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#webpage",
+      "url": "https://www.rolfingamsterdam.nl/nl/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "name": "{{wf {&quot;path&quot;:&quot;seo-title&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "description": "{{wf {&quot;path&quot;:&quot;seo-description&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "inLanguage": "nl",
+      "isPartOf": { "@id": "https://www.rolfingamsterdam.nl/#website" },
+      "about": { "@id": "https://www.rolfingamsterdam.nl/#business" },
+      "publisher": { "@id": "https://www.rolfingamsterdam.nl/#business" },
+      "author": { "@id": "https://www.rolfingamsterdam.nl/en/about-janco#janco-volk" },
+      "dateModified": "{{wf {&quot;path&quot;:&quot;updated&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+      "primaryImageOfPage": { "@type": "ImageObject", "url": "{{wf {&quot;path&quot;:&quot;photo&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}" },
+      "breadcrumb": { "@id": "https://www.rolfingamsterdam.nl/nl/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://www.rolfingamsterdam.nl/en/about-janco#janco-volk",
+      "name": "Janco Volk",
+      "url": "https://www.rolfingamsterdam.nl/nl/about-janco",
+      "worksFor": { "@id": "https://www.rolfingamsterdam.nl/#business" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.rolfingamsterdam.nl/nl/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.rolfingamsterdam.nl/nl"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Ontdek Rolfing",
+          "item": "https://www.rolfingamsterdam.nl/nl/what-is-rolfing"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+          "item": "https://www.rolfingamsterdam.nl/nl/rolfing/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+        }
+      ]
+    }
+  ]
+}
+</script>

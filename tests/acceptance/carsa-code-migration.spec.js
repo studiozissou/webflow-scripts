@@ -322,12 +322,14 @@ test.describe('carsa-code-migration — Search: 404 toast', () => {
 
 // ── Generic per-page guards (one block per page as it migrates) ─
 
-const MIGRATED = [{ path: '/vehicles/used/bl73dmu', module: 'vdp.js', gate: 'CARSA_V110' }];
+const MIGRATED = [{ path: '/vehicles/used/bl73dmu', module: 'vdp.js', gate: 'CARSA_V110', done: '/vehicles/used/' }];
+const V111_DONE = (process.env.CARSA_V111_DONE || '').split(',').map((s) => s.trim());
 
-for (const { path, module, gate } of MIGRATED) {
+for (const { path, module, gate, done } of MIGRATED) {
   test.describe(`carsa-code-migration — ${path}`, () => {
     test.beforeEach(() => {
       test.skip(!!gate && !process.env[gate], `${module} not published yet; set ${gate}=1 once the footer tag points at the release that ships it`);
+      test.skip(!!done && !V111_DONE.includes('all') && !V111_DONE.includes(done), `${path} body not swapped yet; add ${done} to CARSA_V111_DONE once it is published`);
     });
 
     test(`${path}-no-errors: zero JS console errors`, async ({ page }) => {

@@ -9,6 +9,8 @@ tools:
   - Bash
   - mcp__webflow__element_snapshot_tool
   - mcp__webflow__style_tool
+  - mcp__webflow-2__element_snapshot_tool
+  - mcp__webflow-2__style_tool
 memory: project
 ---
 
@@ -54,7 +56,7 @@ You are a senior code reviewer for Webflow creative builds with custom JavaScrip
 - [ ] Any selectors targeting elements that may not exist on all Barba namespaces?
 - [ ] New Webflow classes introduced in this change — documented in CLAUDE.md under
   "## Known selectors"?
-- [ ] Use `mcp__webflow__element_snapshot_tool` to verify — do not approve selectors
+- [ ] Use `element_snapshot_tool` on the slot that sees the site (`webflow` or `webflow-2`) to verify — do not approve selectors
   on assumption alone
 
 ### Spacing compliance

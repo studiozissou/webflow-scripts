@@ -20,7 +20,8 @@ When to use Webflow MCP:
 <slot_routing>
 Webflow's OAuth lets one connection see sites in one workspace only, so there are two
 general slots: `webflow` (project `.mcp.json`) and `webflow-2` (user scope, works in
-worktrees and background jobs). "Webflow MCP" in any skill or command means whichever
+worktrees and background jobs). `webflow-2` uses `https://mcp.webflow.com/mcp?slot=2`:
+Claude Code hides a server whose URL matches another, and Webflow ignores the query. "Webflow MCP" in any skill or command means whichever
 slot sees the site.
 
 1. **Pick the slot before the first Webflow call for a client.** Call

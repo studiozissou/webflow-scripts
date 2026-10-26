@@ -11,7 +11,7 @@ One-time setup. Installed at user scope — applies to all client projects.
 
 ```bash
 claude mcp add webflow --transport http https://mcp.webflow.com/mcp --scope user
-claude mcp add --transport http -s user webflow-2 https://mcp.webflow.com/mcp  # second workspace; see the webflow-mcp skill
+claude mcp add --transport http -s user webflow-2 'https://mcp.webflow.com/mcp?slot=2'  # second workspace; see the webflow-mcp skill
 claude mcp list          # triggers OAuth — authorise your sites
 claude plugin add webflow-skills
 ```

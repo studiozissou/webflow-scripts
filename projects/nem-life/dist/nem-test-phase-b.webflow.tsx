@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
- * GENERATED FILE — do not edit here. Paste this whole file into the Webflow
+* GENERATED FILE — do not edit here. Paste this whole file into the Webflow
  * custom code component.
  *
  * Regenerate with:  npm run build:nem   (regenerates, then typechecks)

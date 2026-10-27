@@ -391,3 +391,7 @@ test('source: fifteen block IIFEs inside the outer wrapper', () => {
   assert.equal(SOURCE.match(/^ {2}\(function \(\) \{$/gm).length, 15);
   assert.equal(SOURCE.match(/^ {2}\}\)\(\);$/gm).length, 15);
 });
+
+test('source: the draw-line block gives each svg the __svgDrawPlay hook the radio CTA calls', () => {
+  assert.match(SOURCE, /svg\.__svgDrawPlay = \(\) => driver\.pause\(0\)\.play\(\);/);
+});

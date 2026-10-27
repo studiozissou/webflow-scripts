@@ -4,8 +4,20 @@
 
   if (window.__CARSA_LOADER) return;
 
+  var SHARED = ['animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js'];
   var ROUTES = [
-    { match: /^\/vehicles\/.+/, modules: ['vdp.js', 'battery-animation.js', 'at-price-total.js'] }
+    { match: /^\/vehicles\/.+/, modules: ['vdp.js', 'battery-animation.js', 'at-price-total.js'] },
+    { match: /^(?!\/vehicles\/)/, modules: SHARED },
+    { match: /^\/used-cars\/near\/[^/]+\/?$/, modules: ['near.js'] },
+    { match: /^\/car-finance-calculator\/?$/, modules: ['finance-calculator.js'] },
+    { match: /^\/get-started\/?$/, modules: ['get-started.js'] },
+    { match: /^\/faq\/?$/, modules: ['faq.js'] },
+    { match: /^\/used-cars\/models\/[^/]+\/?$/, modules: ['models-template.js'] },
+    { match: /^\/used-cars\/fuel\/[^/]+\/?$/, modules: ['fuel-template.js'] },
+    { match: /^\/used-cars\/promotions\/[^/]+\/?$/, modules: ['promotions-template.js'] },
+    { match: /^\/used-cars\/models\/?$/, modules: ['all-models.js'] },
+    { match: /^\/blog\/?$/, modules: ['blog.js'] },
+    { match: /^\/car-redirect\/?$/, modules: ['car-redirect.js'] }
   ];
   var DEP_POLL_MS = 50;
   var DEP_TIMEOUT_MS = 3000;

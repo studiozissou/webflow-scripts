@@ -5,7 +5,12 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const RELEASE_FILES = ['init.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js'];
+export const RELEASE_FILES = [
+  'init.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js',
+  'animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js',
+  'near.js', 'finance-calculator.js', 'get-started.js', 'faq.js', 'models-template.js', 'fuel-template.js',
+  'promotions-template.js', 'all-models.js', 'blog.js', 'car-redirect.js',
+];
 
 const VERSION_RE = /^v\d+\.\d+\.\d+$/;
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');

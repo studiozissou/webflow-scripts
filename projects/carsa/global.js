@@ -1,4 +1,4 @@
-// Carsa site-wide behaviour moved out of the Webflow site footer: menu scroll lock, promo links, store list order, attribution storage, eligibility link UTMs, external link rel, copyright year and the n8n chat widget.
+// Carsa site-wide behaviour moved out of the Webflow site footer: menu scroll lock, promo links, store list order, attribution storage, eligibility link UTMs, external link rel, copyright year, the n8n chat widget and, on marked pages, the missing-VDP 404 redirect.
 (function ($) {
   function block(fn) {
     try {
@@ -317,5 +317,14 @@
           throw err;
         });
       });
+  });
+
+  block(() => {
+    if (!window.__CARSA_PAGE) return;
+    $(function () {
+      if ($('#404-message').length && window.location.pathname.includes('/vehicles/used/')) {
+        window.location.href = '/used-cars';
+      }
+    });
   });
 })(window.jQuery);

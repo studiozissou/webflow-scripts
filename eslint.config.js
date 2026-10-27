@@ -38,11 +38,6 @@ export default [
       '**/*.min.js',
       // Webflow embed snippets: HTML + <script> tags saved with a .js extension.
       // Not parseable as JavaScript — see note in the repo docs.
-      'projects/carsa/filter-submit-fix.js',
-      'projects/carsa/homepage.js',
-      'projects/carsa/make-model-redirect.js',
-      'projects/carsa/make-model.old.js',
-      'projects/carsa/near-location-redirect.js',
       'projects/coconut/snippets/thetimes-utm.js',
       'projects/coconut/snippets/times-cookie-overwrite.js',
     ],

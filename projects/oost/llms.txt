@@ -9,7 +9,7 @@ Oost is run by Levy (kitchen) and Nijne (front of house), who cook the way their
 - [Home and menu](https://www.oosteten.nl/): full menu, opening hours, story and FAQ
 - [Menu](https://www.oosteten.nl/#menukaart): all dishes with prices
 - [Takeaway (Afhalen)](https://www.oosteten.nl/afhalen): how to order, takeaway rijsttafel, reheating, FAQ
-- [Catering](https://www.oosteten.nl/catering): buffet, lunchboxes, borrel snacks, delivery area, quote form
+- [Catering](https://www.oosteten.nl/catering): buffet, borrel snacks, delivery area, quote form
 - [Our story (Over ons)](https://www.oosteten.nl/#ons-verhaal)
 - [English: Home](https://www.oosteten.nl/en)
 - [English: Takeaway](https://www.oosteten.nl/en/afhalen)
@@ -20,7 +20,7 @@ Oost is run by Levy (kitchen) and Nijne (front of house), who cook the way their
 - Address: Zijlweg 82, 2013 DL Haarlem, 15 minutes' walk from Haarlem station
 - Bus stop: Hoofmanstraat, almost at the door
 - Parking: paid street parking nearby; bikes can go out front
-- Hours: Mon 12:00–22:00, Tue closed, Wed–Fri 12:00–22:00, Sat–Sun 17:00–22:00
+- Hours: 17:00–21:00 every day except Tuesday (closed)
 - Reservations: not required, but advised on Friday and Saturday; walk-ins welcome
 - Solo diners: sit at the large shared table (stamtafel)
 - Groups: welcome, call ahead to check space
@@ -105,9 +105,8 @@ All dishes below can also be ordered separately.
 
 ## Catering
 
-- For 10+ people in Haarlem and surroundings: birthdays, borrels, weddings, office lunches
+- For 10+ people in Haarlem and surroundings: birthdays, borrels, weddings, company parties
 - Rijsttafel buffet: 8–12 dishes, delivered hot in serving trays with a label per dish, from €28.50 pp (vegetarian from €25.50)
-- Lunchbox: nasi campur per person with four dishes, rice, egg, kroepoek and sambal, from €17.50 pp; available from 11:30
 - Borrel: saté with peanut sauce and loempia with sambal, priced per piece
 - Spekkoek to order (spekkoek bestellen): whole, or sliced and wrapped per piece
 - Pickup from 10 people; delivery and set-up from 20 people

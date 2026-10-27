@@ -1,4 +1,4 @@
-// Unit tests for the Oost llms.txt: correct email domain, the restaurant name line, the spekkoek order line and the current phone number.
+// Unit tests for the Oost llms.txt: correct email domain, the restaurant name line, the spekkoek order line, the current phone number and the 17:00–21:00 hours line.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -47,4 +47,15 @@ test('puts the station a 15-minute walk away', () => {
 
 test('does not mention WhatsApp', () => {
   assert.doesNotMatch(SOURCE, /whatsapp/i);
+});
+
+test('gives the new hours: 17:00–21:00 every day except Tuesday', () => {
+  assert.match(SOURCE, /^- Hours: 17:00–21:00 every day except Tuesday \(closed\)$/m);
+  assert.doesNotMatch(SOURCE, /12:00|22:00/);
+});
+
+test('no longer offers lunch or lunchboxes', () => {
+  assert.doesNotMatch(SOURCE, /lunch/i);
+  assert.doesNotMatch(SOURCE, /11:30/);
+  assert.match(SOURCE, /company parties/);
 });

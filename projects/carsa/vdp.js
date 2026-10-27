@@ -793,6 +793,7 @@
           });
 
           const driver = gsap.to(tl, { progress: 1, duration: totalDur, ease: "power1.inOut", paused: true });
+          svg.__svgDrawPlay = () => driver.pause(0).play();
 
           const playNow = () => gsap.delayedCall(0.2, () => driver.play());
           const playAfterFirstScroll = () => {

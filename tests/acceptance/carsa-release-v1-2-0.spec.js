@@ -34,7 +34,7 @@ const ENTRIES = [
   { entry: '/blog', modules: ['blog.js', 'animations.js'] },
   { entry: '/contact', modules: ['animations.js'], done: 'sweep' },
   { entry: '/about/carsa', modules: ['animations.js'], done: 'sweep' },
-  { entry: '/500-deposit-on-us', modules: ['animations.js'], done: 'sweep' },
+  { entry: '/car-care/overview', modules: ['animations.js'], done: 'sweep' },
 ];
 
 const CONFIG_BLOCKS = [

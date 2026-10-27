@@ -32,7 +32,7 @@ function link(href, attrs = {}) {
   return el;
 }
 
-function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', referrer = '', local = {}, session = {} } = {}) {
+function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', referrer = '', local = {}, session = {}, pathname = '/', marker = false } = {}) {
   const docListeners = {};
   const winListeners = {};
   const timers = [];
@@ -46,7 +46,7 @@ function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', 
     querySelectorAll: (sel) => nodes[sel] || [],
     getElementById: (id) => byId[id] || null,
   };
-  const location = { hostname: 'www.carsa.co.uk', origin: 'https://www.carsa.co.uk', search, href: 'https://www.carsa.co.uk/' + search };
+  const location = { hostname: 'www.carsa.co.uk', origin: 'https://www.carsa.co.uk', pathname, search, href: 'https://www.carsa.co.uk' + pathname + search };
   const window = {
     location,
     innerWidth: 1280,
@@ -56,6 +56,7 @@ function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', 
     addEventListener: (t, fn) => (winListeners[t] ||= []).push(fn),
     setTimeout: (fn) => timers.push(fn),
   };
+  if (marker) window.__CARSA_PAGE = { release: 'v1.2.0' };
   const jQuery = (arg) => {
     if (typeof arg === 'function') return arg();
     if (arg === window) return { on: (t, fn) => window.addEventListener(t, fn) };
@@ -63,6 +64,7 @@ function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', 
     const els = (arg.startsWith('#') ? [byId[arg.slice(1)]].filter(Boolean) : nodes[arg]) || [];
     return {
       el: els[0],
+      length: els.length,
       each: (fn) => els.forEach((el, i) => fn.call(el, i, el)),
       prepend: (other) => els.forEach((el) => el.children.unshift(other.el || other)),
     };
@@ -184,4 +186,25 @@ test('isolation: one failing block does not stop the rest, and its error resurfa
 test('chat: the widget is imported from the n8n bundle once the DOM is ready', () => {
   assert.match(SOURCE, /import\(['"]https:\/\/cdn\.jsdelivr\.net\/npm\/@n8n\/chat\/dist\/chat\.bundle\.es\.js['"]\)/);
   assert.match(SOURCE, /webhookUrl: 'https:\/\/carsa\.app\.n8n\.cloud\/webhook\/88d110ef-b4ab-4c22-9306-1e492c9f7687\/chat'/);
+});
+
+test('404 on a missing VDP with the v1.2.0 marker: redirects to /used-cars and sets no toast flag', () => {
+  const env = makeEnv({ pathname: '/vehicles/used/zz99zzz', marker: true, byId: { '404-message': {} } });
+  assert.equal(env.window.location.href, '/used-cars');
+  assert.equal(env.context.sessionStorage.getItem('from404Used'), null);
+});
+
+test('404 without the marker: leaves the redirect to the inline copy', () => {
+  const env = makeEnv({ pathname: '/vehicles/used/zz99zzz', byId: { '404-message': {} } });
+  assert.equal(env.window.location.href, 'https://www.carsa.co.uk/vehicles/used/zz99zzz');
+});
+
+test('404 outside /vehicles/used/: no redirect', () => {
+  const env = makeEnv({ pathname: '/no-such-page', marker: true, byId: { '404-message': {} } });
+  assert.equal(env.window.location.href, 'https://www.carsa.co.uk/no-such-page');
+});
+
+test('a live VDP (no #404-message) is never redirected', () => {
+  const env = makeEnv({ pathname: '/vehicles/used/bl73dmu', marker: true });
+  assert.equal(env.window.location.href, 'https://www.carsa.co.uk/vehicles/used/bl73dmu');
 });

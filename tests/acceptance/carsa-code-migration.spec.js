@@ -7,7 +7,7 @@
  */
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
-import { seedSessionOnce, unexpectedErrors } from './helpers/carsa.js';
+import { seedSessionOnce, unexpectedErrors, v120Done } from './helpers/carsa.js';
 
 dotenv.config({ path: '.env.test' });
 
@@ -48,8 +48,8 @@ test.describe('carsa-code-migration — Homepage', () => {
       .toHaveLength(0);
   });
 
-  test('homepage-make-model-block-dead: the make/model redirect script is present but has no select[name=make] or .model-data to bind', async ({ page }) => {
-    expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /make-model-redirect v2/.test(s.textContent)).length)).toBe(1);
+  test('homepage-make-model-block-dead: the make/model redirect script is present (gone after v1.2.0) but has no select[name=make] or .model-data to bind', async ({ page }) => {
+    expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /make-model-redirect v2/.test(s.textContent)).length)).toBe(v120Done('/') ? 0 : 1);
     expect(await page.locator('select[name="make"], .model-data').count()).toBe(0);
   });
 
@@ -307,11 +307,11 @@ test.describe('carsa-code-migration — Search: 404 toast', () => {
     expect(await page.evaluate(() => sessionStorage.getItem('from404Used'))).toBe('true');
   });
 
-  test('srp-toast-element-missing: /used-cars carries the toast script but no #redirect-message element', async ({ page, context }) => {
+  test('srp-toast-element-missing: /used-cars has no #redirect-message element; its toast script consumes the flag until v1.2.0 drops it', async ({ page, context }) => {
     await seedSessionOnce(context, 'from404Used', 'true');
     await loadPage(page, '/used-cars');
     expect(await page.locator('#redirect-message').count()).toBe(0);
-    expect(await page.evaluate(() => sessionStorage.getItem('from404Used'))).toBeNull();
+    expect(await page.evaluate(() => sessionStorage.getItem('from404Used'))).toBe(v120Done('/used-cars') ? 'true' : null);
   });
 
   test('deals-no-toast-by-default: #redirect-message stays hidden on a normal visit', async ({ page }) => {

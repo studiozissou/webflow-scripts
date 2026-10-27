@@ -3,7 +3,13 @@ const BASE = process.env.STAGING_URL_CARSA || 'https://www.carsa.co.uk';
 
 const PHASE1 = !!process.env.CARSA_PHASE1;
 
-const KNOWN_ERRORS = [/filtered is not defined/, /reading 'length'/, ...(PHASE1 ? [] : [/setting 'innerText'/])];
+const V120_DONE = (process.env.CARSA_V120_DONE || '').split(',').map((s) => s.trim()).filter(Boolean);
+
+function v120Done(key) {
+  return V120_DONE.includes('all') || V120_DONE.includes(key);
+}
+
+const KNOWN_ERRORS = [...(v120Done('/used-cars/near/') ? [] : [/filtered is not defined/]), /reading 'length'/, ...(PHASE1 ? [] : [/setting 'innerText'/])];
 
 const RELEASE_PATH_RE = /\/webflow\/v\d+\.\d+\.\d+\//;
 
@@ -135,6 +141,7 @@ export {
   BASE,
   PHASE1,
   KNOWN_ERRORS,
+  v120Done,
   RELEASE_PATH_RE,
   FINANCE_HOST,
   FINANCE_CONFIG,

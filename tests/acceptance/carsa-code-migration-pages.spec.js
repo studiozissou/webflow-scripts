@@ -14,6 +14,7 @@ import {
   errorStacks,
   firstPath,
   sitemapPaths,
+  v120Done,
 } from './helpers/carsa.js';
 
 async function faqJsonLd(page, timeout = 16_000) {
@@ -24,13 +25,14 @@ async function faqJsonLd(page, timeout = 16_000) {
 // ── FAQ, blog, models index ───────────────────────────────────
 
 test.describe('carsa-code-migration — Pages: FAQ index', () => {
-  test('faq-view-all-block-dead: /faq carries the view-all mover but neither #category-list nor #view-all exists', async ({ page }) => {
+  test('faq-view-all-block-dead: /faq carries the view-all mover (gone after v1.2.0) but neither #category-list nor #view-all exists', async ({ page }) => {
     await loadPage(page, '/faq');
-    expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /#view-all/.test(s.textContent)).length)).toBe(1);
+    expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /#view-all/.test(s.textContent)).length)).toBe(v120Done('/faq') ? 0 : 1);
     expect(await page.locator('#category-list, #view-all').count()).toBe(0);
   });
 
   test('faq-schema-built: a FAQPage JSON-LD is injected once from the hidden render-all list', async ({ page }) => {
+    test.skip(v120Done('/faq'), 'replaced by faq-schema-complete in carsa-release-v1-2-0');
     await loadPage(page, '/faq');
     const data = await faqJsonLd(page);
     expect(data['@type']).toBe('FAQPage');
@@ -199,16 +201,19 @@ test.describe('carsa-code-migration — Pages: near template', () => {
     await expect(page.locator('#results-list [data-element="promo-card"]').first()).toBeAttached({ timeout: 15_000 });
   });
 
-  test('near-search-locations-block-dead: the block throws before it runs and its target button does not exist', async ({ page }) => {
+  test('near-search-locations-block-dead: the block throws before it runs (deleted after v1.2.0) and its target button does not exist', async ({ page }) => {
     await loadPage(page, near, 3000);
     expect(await page.locator('[data-button="search-locations"]').count()).toBe(0);
+    if (v120Done('/used-cars/near/')) {
+      expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /search-locations/.test(s.textContent)).length)).toBe(0);
+    }
   });
 
-  test('near-known-error-only: the only JS error on a near page is the known search-locations bug', async ({ page }) => {
+  test('near-known-error-only: the only JS error on a near page is the known search-locations bug, and none once v1.2.0 removes it', async ({ page }) => {
     const errors = collectErrors(page);
     await loadPage(page, near, 3000);
     expect(unexpectedErrors(errors)).toEqual([]);
-    expect(errors.map((e) => e.message).some((m) => /filtered is not defined/.test(m))).toBe(true);
+    expect(errors.map((e) => e.message).some((m) => /filtered is not defined/.test(m))).toBe(!v120Done('/used-cars/near/'));
   });
 });
 
@@ -261,8 +266,11 @@ test.describe('carsa-code-migration — Pages: reserve, 404, car-redirect', () =
     });
   }
 
-  test('reserve-faq-schema-dead: /reserve carries the FAQ schema block but has no FAQ markup, so nothing is injected', async ({ page }) => {
+  test('reserve-faq-schema-dead: /reserve has no FAQ markup, so nothing is injected (and after v1.2.0 the block is gone)', async ({ page }) => {
     await loadPage(page, '/reserve');
+    if (v120Done('/reserve')) {
+      expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /__FAQ_SCHEMA_MINI__/.test(s.textContent)).length)).toBe(0);
+    }
     expect(await page.locator('[data-faq-question]').count()).toBe(0);
     expect(await page.locator('script[data-faq-jsonld]').count()).toBe(0);
   });

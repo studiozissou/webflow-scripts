@@ -10,6 +10,7 @@ import {
   unexpectedErrors,
   firstPath,
   seedAttribution,
+  v120Done,
 } from './helpers/carsa.js';
 
 const SEED = { utms: { utm_source: 'seed', utm_medium: 'phase0', utm_extra: 'e1' }, referrer: 'https://www.google.com/', referrerDomain: 'google.com' };
@@ -150,9 +151,9 @@ test.describe('carsa-code-migration — Leads: part-exchange', () => {
     });
   }
 
-  test('px-home-block-dead: the homepage carries the PX link script but no px-vrm input for it to bind', async ({ page }) => {
+  test('px-home-block-dead: the homepage carries the PX link script (gone after v1.2.0) but no px-vrm input for it to bind', async ({ page }) => {
     await loadPage(page, '/');
-    expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /px-vrm/.test(s.textContent)).length)).toBe(1);
+    expect(await page.evaluate(() => [...document.scripts].filter((s) => !s.src && /px-vrm/.test(s.textContent)).length)).toBe(v120Done('/') ? 0 : 1);
     expect(await page.locator('[name="px-vrm"]').count()).toBe(0);
   });
 

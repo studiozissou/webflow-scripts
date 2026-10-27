@@ -17,8 +17,19 @@ const reader = (calls = []) => (tag, file) => {
   return `// ${file} at ${tag}\n`;
 };
 
-test('release set is the loader, global.js, check-finance.js, vdp.js and the two VDP scripts', () => {
-  assert.deepEqual(RELEASE_FILES, ['init.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js']);
+test('release set is the loader, global.js, check-finance.js, the VDP scripts, the shared modules and the page modules', () => {
+  assert.deepEqual(RELEASE_FILES, [
+    'init.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js',
+    'animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js',
+    'near.js', 'finance-calculator.js', 'get-started.js', 'faq.js', 'models-template.js', 'fuel-template.js',
+    'promotions-template.js', 'all-models.js', 'blog.js', 'car-redirect.js',
+  ]);
+});
+
+test('every module the loader can request ships in the release', () => {
+  const loader = readFileSync(new URL('../../projects/carsa/init.js', import.meta.url), 'utf8');
+  const named = new Set(loader.match(/'[a-z-]+\.js'/g).map((s) => s.slice(1, -1)));
+  for (const file of named) assert.ok(RELEASE_FILES.includes(file), `${file} is loaded by init.js but missing from RELEASE_FILES`);
 });
 
 test('tag name follows the repo convention', () => {

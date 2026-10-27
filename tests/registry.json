@@ -474,6 +474,16 @@
       "description": "carsa-v1.1.x: check-finance.js loads once on every page from the release folder; inline copies gone on each page listed in CARSA_V111_DONE (comma list of entries, or all), double-run safe on the rest; homepage and widget cards swap to the eligibility URL. Gated by CARSA_V110=1."
     },
     {
+      "slug": "carsa-release-v1-2-0",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-release-v1-2-0.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-26",
+      "description": "carsa-v1.2.0: remaining inline page scripts move to loader modules that stay inert until window.__CARSA_PAGE is set; per page, modules load once and run, inline code gone (CARSA_V120_DONE comma list of entries, vdp, sweep, or all); FAQ schema complete on slow networks, near filtered error gone, VDP draw-play, 404 and car-redirect. Gated by CARSA_V120=1."
+    },
+    {
       "slug": "carsa-vdp-module",
       "url": "https://www.carsa.co.uk/vehicles/used/bl73dmu",
       "spec": "tests/acceptance/carsa-vdp-module.spec.js",

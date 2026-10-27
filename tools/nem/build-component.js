@@ -39,6 +39,7 @@ const MODULES = [
   "nem-test-scoring.js",
   "nem-conclusion-texts.js",
   "nem-intro-lines.js",
+  "nem-page-disclaimer.js",
 ];
 
 /* The component imports the text tables under different local names. Aliased imports are

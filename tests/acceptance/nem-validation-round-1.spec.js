@@ -214,7 +214,8 @@ test.describe(SLUG, () => {
     });
     expect(px(await computed(intro, 'font-size'))).toBeGreaterThanOrEqual(16);
     await expect(module(page).getByText(GDPR_NOTE)).toBeVisible();
-    await expect(module(page).getByText(REPORT_DISCLAIMER)).toBeVisible();
+    await expect(page.locator('[data-element="disclaimer"]')).toBeVisible();
+    await expect(page.locator('[data-element="disclaimer"]')).toHaveText(REPORT_DISCLAIMER);
     await expect(module(page).getByText('Geen spam', { exact: false })).toHaveCount(0);
   });
 
@@ -272,7 +273,8 @@ test.describe(SLUG, () => {
     expect(await computed(link, 'color')).toBe(await computed(fallback, 'color'));
     expect(await computed(link, 'text-decoration-line')).toContain('underline');
 
-    await expect(module(page).getByText(REPORT_DISCLAIMER)).toBeVisible();
+    await expect(page.locator('[data-element="disclaimer"]')).toBeVisible();
+    await expect(page.locator('[data-element="disclaimer"]')).toHaveText(REPORT_DISCLAIMER);
   });
 
   test('quiz page has no console errors', async ({ page }) => {

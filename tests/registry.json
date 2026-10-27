@@ -13,7 +13,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-10-15",
-      "description": "PostHog snippet loads only after Finsweet consent; experiments.js applies exp-* flag payloads (hide View car on widget-injected cards), pushes experiment_exposure, captures card_click, honours ?exp-preview=1. Expected to fail until T3/T4 of carsa-ab-testing-posthog ship."
+      "description": "PostHog snippet loads only after Finsweet consent; experiments.js applies exp-* flag payloads (hide View car on widget-injected cards), pushes experiment_exposure, captures card_click, honours ?exp-preview=1. Skipped unless CARSA_POSTHOG=1; set it once T3/T4 of carsa-ab-testing-posthog ship."
     },
     {
       "slug": "tsc-leadership-modal",

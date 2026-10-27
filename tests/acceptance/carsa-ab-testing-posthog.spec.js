@@ -5,6 +5,8 @@ import { BASE, VIEWPORT_MOBILE, loadPage, collectErrors, unexpectedErrors } from
 
 dotenv.config({ path: '.env.test' });
 
+test.skip(!process.env.CARSA_POSTHOG, 'PostHog is not on the site yet; set CARSA_POSTHOG=1 once T3/T4 of carsa-ab-testing-posthog ship');
+
 const SRP = '/used-cars';
 const FLAG = 'exp-srp-hide-view-car';
 const BUTTON = '.car-card .button.is-view';

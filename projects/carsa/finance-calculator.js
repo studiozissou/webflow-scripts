@@ -1,41 +1,16 @@
 // Carsa /car-finance-calculator page behaviour moved out of the Webflow page body: the HP finance calculator driven by the live finance config, and the mobile view-results scroll.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('finance-calculator.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('finance-calculator.js');
 
   var DEBUG = false;
 
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
-  }
-
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  onReady(function() {
+  H.onReady(function() {
     const depositInput = document.getElementById("finance-deposit");
     const carPriceInput = document.getElementById("finance-car-price");
     const totalPriceEl = document.getElementById("total-price");
@@ -49,22 +24,34 @@
     };
     const TIER = { 'excellent':'Excellent', 'very-good':'VeryGood', 'good':'Good', 'fair':'Fair' };
 
+    const dirty = {};
+    let configSettled = false;
+    let timedOut = false;
+    const configFetch = fetch('https://consumer-finance.carsanet.co.uk/finance-config')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(c => {
+        const a = c && c.representativeApr;
+        if (typeof a === 'number' && isFinite(a) && a >= 0 && a <= 40) {
+          Object.keys(c).forEach(k => { if (c[k] !== null && c[k] !== undefined && c[k] !== '') CFG[k] = c[k]; });
+          return true;
+        }
+        return false;
+      })
+      .catch(err => {
+        console.error('finance-config fetch failed', err);
+        if (window.DD_LOGS) window.DD_LOGS.logger.error('finance-config fetch failed', { error: String(err) });
+        return false;
+      })
+      .then(merged => {
+        configSettled = true;
+        return merged;
+      });
     const cfgReady = Promise.race([
-      fetch('https://consumer-finance.carsanet.co.uk/finance-config')
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(c => {
-          const a = c && c.representativeApr;
-          if (typeof a === 'number' && isFinite(a) && a >= 0 && a <= 40) {
-            Object.keys(c).forEach(k => { if (c[k] !== null && c[k] !== undefined && c[k] !== '') CFG[k] = c[k]; });
-          }
-          return CFG;
-        })
-        .catch(err => {
-          console.error('finance-config fetch failed', err);
-          if (window.DD_LOGS) window.DD_LOGS.logger.error('finance-config fetch failed', { error: String(err) });
-          return CFG;
-        }),
-      new Promise(res => setTimeout(() => res(CFG), 3000))
+      configFetch,
+      new Promise(res => setTimeout(() => {
+        if (!configSettled) timedOut = true;
+        res(false);
+      }, 3000))
     ]);
 
     const fmtGBP = (v, opts={minimumFractionDigits:0, maximumFractionDigits:0}) =>
@@ -175,20 +162,27 @@
     }
 
     function applyDefaults() {
-      depositInput.value = fmtGBP(depositDefault());
+      if (!dirty.deposit) depositInput.value = fmtGBP(depositDefault());
 
-      cmsPrice = parseGBP(carPriceInput.value || "10000");
-      carPriceInput.value = fmtGBP(cmsPrice);
-      if (totalPriceEl) totalPriceEl.textContent = fmtGBP(cmsPrice);
+      if (!dirty.price) {
+        cmsPrice = parseGBP(carPriceInput.value || "10000");
+        carPriceInput.value = fmtGBP(cmsPrice);
+        if (totalPriceEl) totalPriceEl.textContent = fmtGBP(cmsPrice);
+      }
 
-      setRadio(document.getElementById(String(CFG.defaultTerm)));
+      if (!dirty['finance-term']) setRadio(document.getElementById(String(CFG.defaultTerm)));
 
-      setRadio(document.querySelector('input[type="radio"][data-name="apr"][value="very-good"]'));
+      if (!dirty.apr) setRadio(document.querySelector('input[type="radio"][data-name="apr"][value="very-good"]'));
 
       getSelectedAPRAndUpdateUI();
     }
 
     applyDefaults();
+
+    ['input', 'change'].forEach(t => {
+      depositInput.addEventListener(t, () => { dirty.deposit = true; });
+      carPriceInput.addEventListener(t, () => { dirty.price = true; });
+    });
 
     carPriceInput.addEventListener("input", () => {
       cmsPrice = parseGBP(carPriceInput.value);
@@ -224,6 +218,7 @@
     function wireScopedRadios(groupName) {
       document.querySelectorAll('input[type="radio"][data-name="'+groupName+'"]').forEach(input => {
         input.addEventListener("change", function() {
+          dirty[groupName] = true;
           setRadio(this);
 
           if (groupName === "apr") {
@@ -243,13 +238,17 @@
     document.querySelectorAll('#finance-deposit, #finance-car-price, input[type="radio"][data-name="finance-term"], input[type="radio"][data-name="apr"]')
       .forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); }));
 
-    cfgReady.then(() => {
+    function refresh() {
       applyDefaults();
       callFinanceAPI();
+    }
+    cfgReady.then(refresh);
+    configFetch.then(merged => {
+      if (timedOut && merged) refresh();
     });
   });
 
-  onReady(function() {
+  H.onReady(function() {
     DEBUG && console.log("DOM Loaded")
     const btn = document.querySelector('[data-analytics-event="finance-calculator-cta-view-results-mobile"]');
     const results = document.getElementById("finance-calculator-results");

@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { loadHelpers } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(__dirname, '..', 'check-finance.js'), 'utf8');
@@ -41,12 +42,16 @@ function makeCard(anchor, vrm = 'AB12CDE') {
   return card;
 }
 
-function makeEnv({ session = {}, local = {}, referrer = '' } = {}) {
+function makeEnv({ session = {}, local = {}, referrer = '', search = '', helpers = true, dd = null } = {}) {
   const listeners = {};
+  const timers = [];
   const body = { addEventListener: (t, fn) => (listeners[t] ||= []).push(fn) };
-  const document = { body, referrer };
-  const location = { hostname: 'www.carsa.co.uk', origin: 'https://www.carsa.co.uk' };
+  const document = { body, referrer, readyState: 'complete', addEventListener() {} };
+  const location = { hostname: 'www.carsa.co.uk', origin: 'https://www.carsa.co.uk', search };
+  const window = { location, document, setTimeout: (fn) => timers.push(fn), addEventListener() {} };
+  if (dd) window.DD_LOGS = dd;
   const context = vm.createContext({
+    window,
     document,
     location,
     sessionStorage: makeStorage(session),
@@ -54,9 +59,10 @@ function makeEnv({ session = {}, local = {}, referrer = '' } = {}) {
     URL,
     URLSearchParams,
   });
+  if (helpers) loadHelpers(context);
   vm.runInContext(SOURCE, context);
   const fire = (type, target, relatedTarget = null) => listeners[type].forEach((fn) => fn({ target, relatedTarget }));
-  return { listeners, fire };
+  return { listeners, fire, timers, window };
 }
 
 const params = (href) => Object.fromEntries(new URL(href).searchParams);
@@ -128,12 +134,44 @@ test('click without a prior hover swaps href and analytics, and a later hover do
   assert.equal(anchor.href, ORIGINAL);
 });
 
-test('session attribution utms win over local attribution utms', () => {
+test('guard: without window.__CARSA it warns once and binds nothing', () => {
+  const warned = [];
+  const env = makeEnv({ helpers: false, dd: { logger: { warn: (m) => warned.push(m) } } });
+  assert.deepEqual(warned, ['check-finance.js: window.__CARSA missing']);
+  assert.deepEqual(Object.keys(env.listeners), []);
+});
+
+test('guard: without window.__CARSA or DD_LOGS it returns quietly', () => {
+  assert.doesNotThrow(() => makeEnv({ helpers: false }));
+});
+
+test('attribution case 1: stored first-touch utms and referrerDomain', () => {
+  const anchor = hover({ local: { attribution: JSON.stringify({ utms: { utm_source: 'ls', utm_medium: 'cpc' }, referrerDomain: 'google.com' }) } });
+  assert.deepEqual(params(anchor.href), { vrm: 'AB12CDE', utm_source: 'ls', utm_medium: 'cpc', referrer: 'google.com' });
+});
+
+test('attribution case 2: no stored utms falls back to the URL utm_* params (first-touch helper; the old copy ignored the URL)', () => {
+  const anchor = hover({ search: '?utm_source=url&utm_campaign=c1&x=1', local: { attribution: JSON.stringify({ utms: {} }) } });
+  assert.deepEqual(params(anchor.href), { vrm: 'AB12CDE', utm_source: 'url', utm_campaign: 'c1' });
+});
+
+test('attribution case 3: nothing stored, external document.referrer only', () => {
+  const anchor = hover({ referrer: 'https://www.facebook.com/' });
+  assert.deepEqual(params(anchor.href), { vrm: 'AB12CDE', referrer: 'facebook.com' });
+});
+
+test('attribution case 4: session utms that differ from stored first-touch are ignored (was session-first)', () => {
   const anchor = hover({
-    session: { attribution_session: JSON.stringify({ utms: { utm_source: 'session' } }) },
-    local: { attribution: JSON.stringify({ utms: { utm_source: 'local', utm_medium: 'cpc' } }) },
+    session: { attribution_session: JSON.stringify({ utms: { utm_source: 'session' }, referrerDomain: 'bing.com' }) },
+    local: { attribution: JSON.stringify({ utms: { utm_source: 'local', utm_medium: 'cpc' }, referrerDomain: 'google.com' }) },
   });
-  assert.deepEqual(params(anchor.href), { vrm: 'AB12CDE', utm_source: 'session' });
+  assert.deepEqual(params(anchor.href), { vrm: 'AB12CDE', utm_source: 'local', utm_medium: 'cpc', referrer: 'google.com' });
+});
+
+test('source: uses the shared helpers, no local attribution copies', () => {
+  assert.match(SOURCE, /H\.addParams\(url, H\.getAttributionParams\(\)\)/);
+  assert.ok(!/function (getAttributionParams|addParams)/.test(SOURCE));
+  assert.ok(!SOURCE.includes('attribution_session'));
 });
 
 test('local attribution utms are used when session utms are empty', () => {

@@ -1,5 +1,10 @@
 // Carsa vehicle detail page behaviour moved out of the Webflow template body: UTM links, finance calculator and config, APR painter, valuation and search-similar links, form UTMs, equal-height cards, schema status, SVG draw-line and similar-car links, reading CMS values from window.__CARSA_VDP.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('vdp.js: window.__CARSA missing');
+    return;
+  }
   var DEBUG = false;
   var KEYS = ['price', 'registrationDate', 'odometer', 'vrm', 'financeType', 'depositContribution', 'locationName', 'isStorageLocation', 'makeName', 'modelName', 'status'];
   var config = window.__CARSA_VDP;
@@ -11,65 +16,12 @@
   var VDP = {};
   for (var k = 0; k < KEYS.length; k++) VDP[KEYS[k]] = config[KEYS[k]] == null ? '' : String(config[KEYS[k]]);
 
-  function onReady(fn) {
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-    else fn();
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') fn();
-    else $(window).on('load', fn);
-  }
-
   (function () {
-    onLoad(function(){
-      const HOST = location.hostname.replace(/^www\./,'');
-      const isInternal = d => !!d && (d===HOST || d.endsWith('.'+HOST));
-
-      let store = {};
-      try { store = JSON.parse(localStorage.getItem('attribution') || '{}'); } catch(e){}
-      const utms = store.utms || {};
-
-      let refDomain = '';
-      if (store.referrerDomain && !isInternal(store.referrerDomain)) {
-        refDomain = store.referrerDomain;
-      } else if (store.referrer) {
-        try {
-          const d = new URL(store.referrer).hostname.replace(/^www\./,'');
-          if(!isInternal(d)) refDomain = d;
-        } catch(e){}
-      } else if (document.referrer) {
-        try {
-          const d = new URL(document.referrer).hostname.replace(/^www\./,'');
-          if(!isInternal(d)) refDomain = d;
-        } catch(e){}
-      }
-
-      if (!Object.keys(utms).length) {
-        const qs = new URLSearchParams(location.search);
-        qs.forEach((v,k)=>{ if(/^utm_/i.test(k) && v) utms[k]=v; });
-      }
-
-      const toAdd = {...utms};
-      if (refDomain) toAdd.referrer = refDomain;
-
-      function addParams(url, obj){
-        try {
-          const u = new URL(url, location.origin);
-          for (const k in obj) if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]);
-          return u.toString();
-        } catch(_) {
-          const hasQ = url.includes('?'); const parts=[];
-          for (const k in obj)
-            if (!new RegExp('([?&])'+k+'=').test(url)) parts.push(k+'='+encodeURIComponent(obj[k]));
-          return parts.length ? url + (hasQ?'&':'?') + parts.join('&') : url;
-        }
-      }
-
+    H.onLoad(function(){
       $('a[href*="quote.carsa.co.uk/build-deal/"],' +
         'a[href*="quote.carsa.co.uk/book/"],' +
         'a[href*="quote.carsa.co.uk/eligibility/questions"]').each(function(){
-          this.href = addParams(this.href, toAdd);
+          this.href = H.addParams(this.href, H.getAttributionParams());
       });
     });
   })();
@@ -185,7 +137,7 @@
   })();
 
   (function () {
-    onReady(function() {
+    H.onReady(function() {
 
     function preventSafariJump(fn){
       const x = window.scrollX, y = window.scrollY;
@@ -260,10 +212,11 @@
           }
           document.querySelectorAll('[data-number="deposit-contribution"]').forEach(el => el.textContent = formatCurrency(cmsContribution));
 
+          var defaultTerm;
           if (VDP.financeType === "HP") {
-            var defaultTerm = document.getElementById("60");
+            defaultTerm = document.getElementById("60");
           } else {
-            var defaultTerm = document.getElementById(String(cfg.defaultTerm));
+            defaultTerm = document.getElementById(String(cfg.defaultTerm));
           }
           FIN.setRadio(defaultTerm);
 
@@ -470,7 +423,7 @@
 
       paintApr();
       if (FIN) FIN.ready.then(paintApr);
-      onLoad(paintApr);
+      H.onLoad(paintApr);
     });
   })();
 
@@ -489,43 +442,9 @@
 
   (function () {
     $(function(){
-      const HOST = location.hostname.replace(/^www\./,'');
-
-      function getAttributionParams(){
-        let params = {};
-        try {
-          const store = JSON.parse(localStorage.getItem('attribution') || '{}');
-          if (store.utms) Object.assign(params, store.utms);
-          if (store.referrerDomain) params.referrer = store.referrerDomain;
-        } catch(e){}
-
-        if (!Object.keys(params).some(k=>k.startsWith('utm_'))) {
-          const qs = new URLSearchParams(location.search);
-          qs.forEach((v,k)=>{ if(/^utm_/i.test(k) && v) params[k]=v; });
-        }
-
-        if (!params.referrer && document.referrer){
-          try{
-            const d = new URL(document.referrer).hostname.replace(/^www\./,'');
-            const isInternal = d===HOST || d.endsWith('.'+HOST);
-            if (!isInternal) params.referrer = d;
-          }catch(e){}
-        }
-        return params;
-      }
-
       function generatePxURL(pxVrm){
         const base = 'https://quote.carsa.co.uk/get-px-valuation/' + VDP.vrm + '/?px_vrm=' + encodeURIComponent(pxVrm);
-        const add = getAttributionParams();
-        try {
-          const u = new URL(base);
-          Object.keys(add).forEach(k => { if(!u.searchParams.has(k)) u.searchParams.set(k, add[k]); });
-          return u.toString();
-        } catch(e){
-          const hasQ = base.includes('?');
-          const extra = Object.keys(add).map(k=>k+'='+encodeURIComponent(add[k])).join('&');
-          return extra ? base + (hasQ?'&':'?') + extra : base;
-        }
+        return H.addParams(base, H.getAttributionParams());
       }
 
       function updateButtonHref($form, $button){
@@ -569,7 +488,7 @@
   })();
 
   (function () {
-    onReady(function() {
+    H.onReady(function() {
       const make  = VDP.makeName.trim();
       const model = VDP.modelName.trim();
 
@@ -602,32 +521,18 @@
 
   (function () {
     $(function () {
-      const HOST = location.hostname.replace(/^www\./,'');
       const STD = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
 
-      const getStored = () => { try { return JSON.parse(localStorage.getItem('attribution') || '{}'); } catch { return {}; } };
-      const getURLUtms = () => { const o={}, qs=new URLSearchParams(location.search); qs.forEach((v,k)=>/^utm_/i.test(k)&&v&&(o[k]=v)); return o; };
-      const getUTMs = () => {
-        const s = getStored().utms || {};
-        return Object.keys(s).length ? s : getURLUtms();
-      };
-      const getRefDomain = () => {
-        const s = getStored();
-        if (s.referrerDomain) return s.referrerDomain;
-        if (!document.referrer) return '';
-        try {
-          const d = new URL(document.referrer).hostname.replace(/^www\./,'');
-          return (d===HOST || d.endsWith('.'+HOST)) ? '' : d;
-        } catch { return ''; }
-      };
+      const attribution = H.getAttributionParams();
+      const refDomain = attribution.referrer || '';
+      const utms = {};
+      Object.keys(attribution).forEach(k => { if (k !== 'referrer') utms[k] = attribution[k]; });
       const getCleanPageURL = () => {
         const keep=[]; const qs=new URLSearchParams(location.search);
         qs.forEach((v,k)=>{ if(!/^utm_/i.test(k)) keep.push(k+'='+encodeURIComponent(v)); });
         return location.origin + location.pathname + (keep.length ? '?'+keep.join('&') : '');
       };
 
-      const utms = getUTMs();
-      const refDomain = getRefDomain();
       const conversionPage = getCleanPageURL();
 
       $('form[data-form="add-utms"]').each(function(){
@@ -773,7 +678,7 @@
 
           let totalLen = 0;
           els.forEach(function(el){
-            let len = 0;
+            let len;
             try { len = (typeof el.getTotalLength === 'function') ? el.getTotalLength() : 0; } catch(e){ len = 0; }
             if (!isFinite(len) || len <= 0) {
               const b = el.getBBox?.();
@@ -835,35 +740,10 @@
 
   (function () {
     $(function () {
-      const HOST = location.hostname.replace(/^www\./,'');
-
-      function getAttributionParams(){
-        const pick = (s)=>{ try{ return JSON.parse(s.getItem('attribution_session')||'null') || JSON.parse(s.getItem('attribution')||'null'); }catch(_){ return null; } };
-        const ss = pick(sessionStorage) || {};
-        const ls = pick(localStorage)  || {};
-        const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms||{}));
-        let refDomain = ss.referrerDomain || ls.referrerDomain || '';
-        if(!refDomain && document.referrer){
-          try{
-            const d = new URL(document.referrer).hostname.replace(/^www\./,'');
-            if(!(d===HOST || d.endsWith('.'+HOST))) refDomain = d;
-          }catch(_){}
-        }
-        const params = {...utms};
-        if(refDomain) params.referrer = refDomain;
-        return params;
-      }
-
-      function addParams(url, obj){
-        const u = new URL(url, location.origin);
-        for(const k in obj){ if(!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
-        return u.toString();
-      }
-
       function generateOrderURL(vrm, mileage){
         const base = 'https://sellcar.carsa.co.uk/new-order?vrm=' + encodeURIComponent(vrm)
                    + '&mileage=' + encodeURIComponent(mileage || '');
-        return addParams(base, getAttributionParams());
+        return H.addParams(base, H.getAttributionParams());
       }
 
       function getFormValues($form){
@@ -916,56 +796,6 @@
 
       const VRM = VDP.vrm.trim().toUpperCase();
 
-      const HOST = location.hostname.replace(/^www\./, '');
-      const isInternal = d => !!d && (d === HOST || d.endsWith('.' + HOST));
-
-      function getAttributionParams() {
-        let store = {};
-        try { store = JSON.parse(localStorage.getItem('attribution') || '{}'); } catch (e) {}
-        const utms = store.utms || {};
-
-        if (!Object.keys(utms).length) {
-          new URLSearchParams(location.search).forEach((v, k) => {
-            if (/^utm_/i.test(k) && v) utms[k] = v;
-          });
-        }
-
-        let refDomain = '';
-        if (store.referrerDomain && !isInternal(store.referrerDomain)) {
-          refDomain = store.referrerDomain;
-        } else if (store.referrer) {
-          try {
-            const d = new URL(store.referrer).hostname.replace(/^www\./, '');
-            if (!isInternal(d)) refDomain = d;
-          } catch (e) {}
-        } else if (document.referrer) {
-          try {
-            const d = new URL(document.referrer).hostname.replace(/^www\./, '');
-            if (!isInternal(d)) refDomain = d;
-          } catch (e) {}
-        }
-
-        const params = { ...utms };
-        if (refDomain) params.referrer = refDomain;
-        return params;
-      }
-
-      function appendParams(url, params) {
-        try {
-          const u = new URL(url, location.origin);
-          Object.keys(params).forEach(k => {
-            if (!u.searchParams.has(k)) u.searchParams.set(k, params[k]);
-          });
-          return u.toString();
-        } catch (_) {
-          const hasQ = url.includes('?');
-          const parts = Object.keys(params)
-            .filter(k => !new RegExp('([?&])' + k + '=').test(url))
-            .map(k => k + '=' + encodeURIComponent(params[k]));
-          return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
-        }
-      }
-
       function getPostcode() {
         return ($('[data-field="postcode"]').val() || '')
           .replace(/[^a-zA-Z0-9]/g, '')
@@ -983,7 +813,7 @@
           url = 'https://quote.carsa.co.uk/build-deal/' + VRM + '?skip_intro=';
         }
 
-        return appendParams(url, getAttributionParams());
+        return H.addParams(url, H.getAttributionParams());
       }
 
       function updateCTAs(option) {

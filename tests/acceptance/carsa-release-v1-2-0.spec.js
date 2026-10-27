@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 import { BASE, loadPage, collectErrors, unexpectedErrors, firstPath } from './helpers/carsa.js';
 
-const V120_PATH_RE = /\/webflow\/v1\.2\.\d+\//;
+const V120_PATH_RE = /\/webflow\/v1\.[23]\.\d+\//;
 const VDP_PATH = '/vehicles/used/bl73dmu';
 const MISSING_VDP = '/vehicles/used/zz99zzz';
 const SHARED = ['animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js'];

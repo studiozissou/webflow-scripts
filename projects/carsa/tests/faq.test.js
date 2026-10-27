@@ -6,21 +6,28 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { loadHelpers } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(__dirname, '..', 'faq.js'), 'utf8');
 
-function makeEnv({ path = '/faq', marker = true, search = '?question_contain=how-does-finance-work' } = {}) {
+function makeEnv({ path = '/faq', marker = true, search = '?question_contain=how-does-finance-work', helpers = true, ids = null } = {}) {
   const timers = [];
   const clicks = [];
-  const question = { click: () => clicks.push('how-does-finance-work') };
+  const warns = [];
+  const byId = ids || { 'how-does-finance-work': { click: () => clicks.push('how-does-finance-work') } };
   const document = {
     readyState: 'complete',
     addEventListener() {},
-    querySelector: (s) => (s === '#how-does-finance-work' ? question : null),
+    getElementById: (id) => byId[id] || null,
+    querySelector: (s) => {
+      if (/^#\d/.test(s)) throw new SyntaxError(`'${s}' is not a valid selector`);
+      const id = s.slice(1).split(/[ .]/)[0];
+      return byId[id] || null;
+    },
   };
   const location = { pathname: path, search };
-  const window = { location, addEventListener() {}, setTimeout: (fn, ms) => timers.push({ fn, ms }) };
+  const window = { location, addEventListener() {}, setTimeout: (fn, ms) => timers.push({ fn, ms }), DD_LOGS: { logger: { warn: (m) => warns.push(m) } } };
   if (marker) window.__CARSA_PAGE = { release: 'v1.2.0' };
   const jQuery = (arg) => (typeof arg === 'function' ? arg() : {});
   window.jQuery = jQuery;
@@ -34,8 +41,9 @@ function makeEnv({ path = '/faq', marker = true, search = '?question_contain=how
     URLSearchParams,
     console,
   });
+  if (helpers) loadHelpers(context);
   vm.runInContext(SOURCE, context);
-  return { window, timers, clicks };
+  return { window, timers, clicks, warns };
 }
 
 test('marker gate: without __CARSA_PAGE nothing runs and __CARSA_RAN stays undefined', () => {
@@ -66,6 +74,23 @@ test('open FAQ: an unknown slug does not throw', () => {
   assert.equal(env.clicks.length, 0);
 });
 
+test('open FAQ: slugs that are not valid CSS ids neither throw nor click the wrong node', () => {
+  for (const slug of ['1-deposit', 'a.b c']) {
+    const clicks = [];
+    const ids = { [slug]: { click: () => clicks.push(slug) }, a: { click: () => clicks.push('a') }, 1: { click: () => clicks.push('1') } };
+    const env = makeEnv({ search: '?question_contain=' + encodeURIComponent(slug), ids });
+    assert.doesNotThrow(() => env.timers[0].fn(), slug);
+    assert.deepEqual(clicks, [slug], slug);
+  }
+});
+
+test('guard: without window.__CARSA the module warns to Datadog and stops', () => {
+  const env = makeEnv({ helpers: false });
+  assert.deepEqual(env.warns, ['faq.js: window.__CARSA missing']);
+  assert.equal(env.window.__CARSA_RAN, undefined);
+  assert.equal(env.timers.length, 0);
+});
+
 test('gates: a marked page other than /faq gets nothing', () => {
   for (const p of ['/car-finance', '/faq/x', '/']) {
     const env = makeEnv({ path: p });
@@ -75,8 +100,8 @@ test('gates: a marked page other than /faq gets nothing', () => {
   assert.equal(makeEnv({ path: '/faq/' }).timers.length, 1);
 });
 
-test('source: marker gate is the first statement in the wrapper', () => {
-  assert.match(SOURCE, /^\(function \(\$\) \{\n {2}if \(!window\.__CARSA_PAGE\) return;\n {2}\(window\.__CARSA_RAN = window\.__CARSA_RAN \|\| \[\]\)\.push\('faq\.js'\);/m);
+test('source: the __CARSA guard then the marker gate open the wrapper', () => {
+  assert.match(SOURCE, /^\(function \(\$\) \{\n {2}var H = window\.__CARSA;\n {2}if \(!H\) \{\n {4}if \(window\.DD_LOGS\) window\.DD_LOGS\.logger\.warn\('faq\.js: window\.__CARSA missing'\);\n {4}return;\n {2}\}\n {2}if \(!window\.__CARSA_PAGE\) return;\n {2}\(window\.__CARSA_RAN = window\.__CARSA_RAN \|\| \[\]\)\.push\('faq\.js'\);/m);
 });
 
 test('source: the /faq view-all mover is not carried over', () => {
@@ -91,10 +116,16 @@ test('source: console.log only behind DEBUG &&', () => {
   (SOURCE.match(/.{0,9}console\.log/g) || []).forEach((l) => assert.match(l, /DEBUG && console\.log$/));
 });
 
-test('source: DOMContentLoaded and load are bound only inside onReady / onLoad', () => {
-  assert.equal((SOURCE.match(/DOMContentLoaded/g) || []).length, 1);
-  assert.equal((SOURCE.match(/addEventListener\('load'/g) || []).length, 1);
+test('source: DOMContentLoaded and load are left to H.onReady / H.onLoad', () => {
+  assert.equal((SOURCE.match(/DOMContentLoaded/g) || []).length, 0);
+  assert.equal((SOURCE.match(/addEventListener\('load'/g) || []).length, 0);
   assert.ok(!/\.on\(['"]load/.test(SOURCE));
+});
+
+test('source: no local copies of the shared helpers', () => {
+  for (const name of ['block', 'onReady', 'onLoad', 'onPage', 'getAttributionParams', 'addParams']) {
+    assert.ok(!new RegExp('function ' + name + '\\b').test(SOURCE), name);
+  }
 });
 
 test('source: exactly one comment, on line 1', () => {

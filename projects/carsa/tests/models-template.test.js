@@ -5,173 +5,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import vm from 'node:vm';
+import { makeEnv as baseEnv, makeEl, MARKER } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MODULE = 'models-template.js';
 const SOURCE = readFileSync(join(__dirname, '..', MODULE), 'utf8');
-const MARKER = { release: 'v1.2.0' };
-
-function makeStorage(seed = {}) {
-  const data = { ...seed };
-  return {
-    data,
-    getItem: (k) => (k in data ? data[k] : null),
-    setItem: (k, v) => { data[k] = String(v); },
-    removeItem: (k) => { delete data[k]; },
-  };
-}
-
-function makeEl(props = {}) {
-  const listeners = {};
-  const classes = new Set();
-  const el = {
-    attrs: {},
-    style: {},
-    children: [],
-    dataset: {},
-    textContent: '',
-    value: '',
-    checked: false,
-    listeners,
-    classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) },
-    setAttribute: (k, v) => { el.attrs[k] = String(v); },
-    getAttribute: (k) => (k in el.attrs ? el.attrs[k] : null),
-    removeAttribute: (k) => { delete el.attrs[k]; },
-    addEventListener: (t, fn) => (listeners[t] ||= []).push(fn),
-    removeEventListener() {},
-    closest: () => null,
-    querySelectorAll: () => [],
-    matches: () => false,
-    ...props,
-  };
-  return el;
-}
-
-function makeEnv({ marker = MARKER, config = {}, nodes = {}, search = '', pathname = '/', readyState = 'complete', title = '', referrer = '', local = {}, session = {}, globals = {} } = {}) {
-  const docListeners = {};
-  const winListeners = {};
-  const delegated = [];
-  const timers = [];
-  const dataStore = new WeakMap();
-  const document = {
-    readyState,
-    referrer,
-    title,
-    head: makeEl(),
-    body: makeEl(),
-    documentElement: { clientHeight: 800 },
-    addEventListener: (t, fn) => (docListeners[t] ||= []).push(fn),
-    querySelector: (s) => (nodes[s] || [])[0] || null,
-    querySelectorAll: (s) => nodes[s] || [],
-    getElementById: (id) => (nodes['#' + id] || [])[0] || null,
-  };
-  const location = {
-    hostname: 'www.carsa.co.uk',
-    origin: 'https://www.carsa.co.uk',
-    pathname,
-    search,
-    href: 'https://www.carsa.co.uk' + pathname + search,
-    replace: (u) => { location.replacedWith = u; },
-  };
-  const window = {
-    location,
-    document,
-    innerHeight: 800,
-    addEventListener: (t, fn) => (winListeners[t] ||= []).push(fn),
-    removeEventListener() {},
-    setTimeout: (fn) => timers.push(fn),
-    open() {},
-    ...config,
-  };
-  if (marker) window.__CARSA_PAGE = marker;
-
-  function wrap(list) {
-    const els = list.filter(Boolean);
-    const c = {
-      els,
-      length: els.length,
-      0: els[0],
-      each(fn) { els.forEach((el, i) => fn.call(el, i, el)); return c; },
-      get() { return els; },
-      first() { return wrap(els.slice(0, 1)); },
-      closest(s) { return wrap(els.map((e) => e.closest(s))); },
-      find(s) { return wrap(els.flatMap((e) => Array.from(e.querySelectorAll(s)))); },
-      attr(k, v) {
-        if (typeof k === 'string' && v === undefined) return els[0] ? (els[0].getAttribute(k) ?? undefined) : undefined;
-        const o = typeof k === 'string' ? { [k]: v } : k;
-        els.forEach((e) => Object.entries(o).forEach(([a, b]) => e.setAttribute(a, b)));
-        return c;
-      },
-      text(v) {
-        if (v === undefined) return els.map((e) => e.textContent).join('');
-        els.forEach((e) => { e.textContent = String(v); });
-        return c;
-      },
-      val(v) {
-        if (v === undefined) return els[0] ? els[0].value : undefined;
-        els.forEach((e) => { e.value = v; });
-        return c;
-      },
-      css(k, v) {
-        const o = typeof k === 'string' ? { [k]: v } : k;
-        els.forEach((e) => Object.assign(e.style, o));
-        return c;
-      },
-      removeClass(n) { els.forEach((e) => e.classList.remove(n)); return c; },
-      hasClass(n) { return els.some((e) => e.classList.contains(n)); },
-      is(s) { return els.some((e) => e.matches(s)); },
-      data(k, v) {
-        const e = els[0];
-        if (!e) return undefined;
-        const d = dataStore.get(e) || {};
-        dataStore.set(e, d);
-        if (v === undefined) return k in d ? d[k] : e.dataset[k];
-        d[k] = v;
-        return c;
-      },
-      on(t, fn) { els.forEach((e) => e.addEventListener(t, fn)); return c; },
-      trigger(t) { els.forEach((e) => (e.listeners[t] || []).forEach((fn) => fn.call(e, { type: t }))); return c; },
-      append(h) { els.forEach((e) => e.children.push(h)); return c; },
-      prepend(o) { els.forEach((e) => e.children.unshift(...(o && o.els ? o.els : [o]))); return c; },
-      appendTo(t) { t.els.forEach((e) => e.children.push(...els)); return c; },
-    };
-    return c;
-  }
-
-  const $ = (arg, props) => {
-    if (typeof arg === 'function') { arg($); return undefined; }
-    if (arg === document) return { ready: (fn) => fn($), on: (t, sel, fn) => delegated.push({ t, sel, fn }) };
-    if (typeof arg === 'string' && arg.startsWith('<')) return wrap([makeEl({ tagName: arg.slice(1, -1).toUpperCase(), ...props })]);
-    if (typeof arg === 'string') return wrap([...(nodes[arg] || [])]);
-    return wrap([arg]);
-  };
-  $.trim = (s) => String(s == null ? '' : s).trim();
-  window.jQuery = window.$ = $;
-
-  const context = vm.createContext({
-    window,
-    document,
-    location,
-    jQuery: $,
-    $,
-    localStorage: makeStorage(local),
-    sessionStorage: makeStorage(session),
-    URL,
-    URLSearchParams,
-    setTimeout: window.setTimeout,
-    console,
-    ...globals,
-  });
-  window.localStorage = context.localStorage;
-  window.sessionStorage = context.sessionStorage;
-  vm.runInContext(SOURCE, context);
-  const fire = (target, type) => ((target === 'doc' ? docListeners : winListeners)[type] || []).forEach((fn) => fn({}));
-  const delegate = (t, sel, el, e = {}) => delegated
-    .filter((d) => d.t === t && (sel == null || d.sel === sel))
-    .forEach((d) => d.fn.call(el, { type: t, preventDefault() {}, ...e }));
-  return { window, document, location, timers, fire, delegate, delegated, docListeners, winListeners };
-}
+const makeEnv = (opts) => baseEnv(SOURCE, opts);
 
 function sourceChecks(name) {
   const lines = SOURCE.trimEnd().split('\n');
@@ -192,19 +31,26 @@ function sourceChecks(name) {
     assert.equal(all.length, gated.length);
     if (all.length) assert.match(SOURCE, /var DEBUG = false;/);
   });
-  test(`${name} source: DOMContentLoaded and load listeners only inside onReady/onLoad`, () => {
-    assert.ok((SOURCE.match(/DOMContentLoaded/g) || []).length <= 1);
-    assert.ok((SOURCE.match(/addEventListener\('load'/g) || []).length <= 1);
-    assert.doesNotMatch(SOURCE, /addEventListener\("(DOMContentLoaded|load)"/);
+  test(`${name} source: no DOMContentLoaded or load listeners of its own`, () => {
+    assert.doesNotMatch(SOURCE, /DOMContentLoaded/);
+    assert.doesNotMatch(SOURCE, /addEventListener\(['"]load['"]/);
     assert.doesNotMatch(SOURCE, /\$\(window\)\.on\(['"]load/);
   });
-  test(`${name} source: classic script with the marker gate first`, () => {
+  test(`${name} source: classic script with the __CARSA guard, then the marker gate`, () => {
     assert.doesNotMatch(SOURCE, /^\s*(import|export)\s/m);
     assert.doesNotMatch(SOURCE, /^(const|let)\s/m);
     assert.equal(lines[1], '(function ($) {');
-    assert.equal(lines[2].trim(), 'if (!window.__CARSA_PAGE) return;');
-    assert.equal(lines[3].trim(), `(window.__CARSA_RAN = window.__CARSA_RAN || []).push('${name}');`);
+    assert.equal(lines[2].trim(), 'var H = window.__CARSA;');
+    assert.equal(lines[3].trim(), 'if (!H) {');
+    assert.equal(lines[4].trim(), `if (window.DD_LOGS) window.DD_LOGS.logger.warn('${name}: window.__CARSA missing');`);
+    assert.equal(lines[5].trim(), 'return;');
+    assert.equal(lines[6].trim(), '}');
+    assert.equal(lines[7].trim(), 'if (!window.__CARSA_PAGE) return;');
+    assert.equal(lines[8].trim(), `(window.__CARSA_RAN = window.__CARSA_RAN || []).push('${name}');`);
     assert.equal(lines[lines.length - 1], '})(window.jQuery);');
+  });
+  test(`${name} source: no local copies of the shared helpers`, () => {
+    assert.doesNotMatch(SOURCE, /function\s+(block|onReady|onLoad|onPage|cms|getAttributionParams|addParams)\b/);
   });
 }
 
@@ -220,6 +66,17 @@ function markerTests(name, opts = {}) {
   test(`${name}: with the marker it pushes its name once`, () => {
     const env = makeEnv(opts);
     assert.deepEqual([...env.window.__CARSA_RAN], [name]);
+  });
+  test(`${name}: without window.__CARSA it warns once and stands down before the marker gate`, () => {
+    const warns = [];
+    const DD_LOGS = { logger: { warn: (m) => warns.push(m) } };
+    const env = makeEnv({ ...opts, helpers: false, config: { ...(opts.config || {}), DD_LOGS } });
+    assert.deepEqual(warns, [`${name}: window.__CARSA missing`]);
+    assert.equal(env.window.__CARSA_RAN, undefined);
+    assert.equal(env.delegated.length, 0);
+    assert.equal(Object.keys(env.docListeners).length, 0);
+    assert.equal(env.timers.length, 0);
+    assert.doesNotThrow(() => makeEnv({ ...opts, helpers: false }));
   });
 }
 
@@ -238,9 +95,9 @@ function rerunWithHead(models, opts = {}) {
   Object.defineProperty(nodes, 'meta[name="description"]', {
     enumerable: true,
     get: () => {
-      const appended = headEl.children.map((html) => {
+      const appended = headEl.children.map((el) => {
         const m = makeEl();
-        m.setAttribute('content', /content="([^"]*)"/.exec(html)[1]);
+        m.setAttribute('content', el.content);
         return m;
       });
       return [...metas, ...appended];
@@ -248,7 +105,7 @@ function rerunWithHead(models, opts = {}) {
   });
   const config = models === undefined ? {} : { __CARSA_MODELS: models };
   const env = makeEnv({ pathname: '/used-cars/models/audi-a3', config, nodes, title: opts.title || '' });
-  return { env, description, headEl };
+  return { env, description, headEl, meta };
 }
 
 markerTests(MODULE, { config: { __CARSA_MODELS: { make: 'Audi', name: 'A3' } } });
@@ -256,7 +113,10 @@ markerTests(MODULE, { config: { __CARSA_MODELS: { make: 'Audi', name: 'A3' } } }
 test('models meta: appends a default description, sets #description and fills an empty title', () => {
   const { env, description, headEl } = rerunWithHead({ make: 'Audi', name: 'A3' });
   const desc = 'The Audi A3 blends everyday practicality with signature Audi' + DESC_TAIL;
-  assert.deepEqual(headEl.children, ['<meta name="description" content="' + desc + '">']);
+  assert.equal(headEl.children.length, 1);
+  assert.equal(headEl.children[0].tagName, 'META');
+  assert.equal(headEl.children[0].name, 'description');
+  assert.equal(headEl.children[0].content, desc);
   assert.equal(description.textContent, desc);
   assert.equal(env.document.title, 'Shop used Audi A3' + TITLE_TAIL);
 });
@@ -266,6 +126,22 @@ test('models meta: keeps an existing description and title', () => {
   assert.deepEqual(headEl.children, []);
   assert.equal(description.textContent, 'Existing');
   assert.equal(env.document.title, 'Audi A3 | Carsa');
+});
+
+test('models meta: quotes and angle brackets in the name stay literal text in one tag', () => {
+  const { description, headEl } = rerunWithHead({ make: 'Ford', name: '"Puma" <ST>' });
+  const desc = 'The Ford "Puma" <ST> blends everyday practicality with signature Ford' + DESC_TAIL;
+  assert.equal(headEl.children.length, 1);
+  assert.equal(headEl.children[0].content, desc);
+  assert.equal(description.textContent, desc);
+});
+
+test('models meta: an existing empty description tag is filled, not duplicated', () => {
+  const { description, headEl, meta } = rerunWithHead({ make: 'Audi', name: 'A3' }, { metaContent: '' });
+  const desc = 'The Audi A3 blends everyday practicality with signature Audi' + DESC_TAIL;
+  assert.equal(headEl.children.length, 0);
+  assert.equal(meta.attrs.content, desc);
+  assert.equal(description.textContent, desc);
 });
 
 test('models meta: values with surrounding whitespace are trimmed', () => {
@@ -400,6 +276,26 @@ describe('FAQ scrub', () => {
     const scripts = scrub([faqBlock, graphBlock]);
     assert.equal(scripts[0]._removed, true);
     assert.equal(JSON.parse(scripts[1].textContent)['@graph'][0].mainEntity, undefined);
+  });
+
+  it('gives the same @graph result when the @graph block comes before the FAQPage block', () => {
+    const graphBlock = () => ({
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'CollectionPage', mainEntity: { '@id': 'https://www.carsa.co.uk/used-cars/models/test#faq' } },
+        { '@type': 'BreadcrumbList' },
+      ],
+    });
+    const emptyFaq = { '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: '', acceptedAnswer: { '@type': 'Answer', text: '' } }] };
+    const liveFaq = { '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: 'Q1?', acceptedAnswer: { '@type': 'Answer', text: 'A1' } }] };
+    [emptyFaq, liveFaq].forEach((faq) => {
+      const after = scrub([faq, graphBlock()]);
+      const before = scrub([graphBlock(), faq]);
+      assert.equal(before[1]._removed, after[0]._removed);
+      assert.equal(before[0].textContent, after[1].textContent);
+    });
+    const removed = scrub([graphBlock(), emptyFaq]);
+    assert.equal(JSON.parse(removed[0].textContent)['@graph'][0].mainEntity, undefined);
   });
 
   it('preserves mainEntity ref when FAQPage has valid questions', () => {

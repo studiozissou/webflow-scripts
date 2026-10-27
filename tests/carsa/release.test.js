@@ -17,9 +17,9 @@ const reader = (calls = []) => (tag, file) => {
   return `// ${file} at ${tag}\n`;
 };
 
-test('release set is the loader, global.js, check-finance.js, the VDP scripts, the shared modules and the page modules', () => {
+test('release set is the loader, helpers.js, global.js, check-finance.js, the VDP scripts, the shared modules and the page modules', () => {
   assert.deepEqual(RELEASE_FILES, [
-    'init.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js',
+    'init.js', 'helpers.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js',
     'animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js',
     'near.js', 'finance-calculator.js', 'get-started.js', 'faq.js', 'models-template.js', 'fuel-template.js',
     'promotions-template.js', 'all-models.js', 'blog.js', 'car-redirect.js',

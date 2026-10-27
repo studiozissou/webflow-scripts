@@ -1,39 +1,14 @@
 // Carsa /used-cars/models page behaviour moved out of the Webflow page body: updates the make dropdown label on press and closes the dropdown after a choice.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('all-models.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('all-models.js');
 
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
-  }
-
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  block(() => {
+  H.block(() => {
     (function ($) {
       var $label = $('#select-text');
 

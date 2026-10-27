@@ -10,14 +10,15 @@ The Webflow site footer holds one tag:
 <script src="https://{WEBFLOW_SCRIPTS_CDN}/webflow/v1.0.0/init.js"></script>
 ```
 
-`v1.1.0` adds `check-finance.js` and `vdp.js`. `v1.2.0` moves every remaining inline page script into the modules below. The tag moves to each once published.
+`v1.1.0` adds `check-finance.js` and `vdp.js`. `v1.2.0` moves every remaining inline page script into the modules below. `v1.3.0` adds `helpers.js` and loads it first. The tag moves to each once published.
 
-`init.js` works out its folder from its own `src`, waits for Webflow's jQuery and GSAP (up to 3 s), then appends `global.js`, `check-finance.js` and the current route's modules as ordered scripts from that same folder.
+`init.js` works out its folder from its own `src`. On `/car-redirect` it appends `car-redirect.js` at once, before any waiting. It then waits for Webflow's jQuery and GSAP (up to 3 s) and appends `helpers.js`, `global.js`, `check-finance.js` and the current route's modules as ordered scripts from that same folder.
 
 | Route | Modules |
 |---|---|
-| every page | `global.js`, `check-finance.js` |
-| `/vehicles/*` | `vdp.js`, `battery-animation.js`, `at-price-total.js` |
+| `/car-redirect` | `car-redirect.js`, before the jQuery/GSAP wait |
+| every page | `helpers.js`, `global.js`, `check-finance.js` |
+| `/vehicles/*` (not on a 404 page) | `vdp.js`, `battery-animation.js`, `at-price-total.js` |
 | every page except `/vehicles/*` | `animations.js`, `valuation-links.js`, `equal-height.js`, `faq-schema.js` |
 | `/used-cars/near/<slug>` | `near.js` |
 | `/car-finance-calculator` | `finance-calculator.js` |
@@ -28,9 +29,12 @@ The Webflow site footer holds one tag:
 | `/used-cars/promotions/<slug>` | `promotions-template.js` (reads `window.__CARSA_PROMO`) |
 | `/used-cars/models` | `all-models.js` |
 | `/blog` | `blog.js` |
-| `/car-redirect` | `car-redirect.js` |
 
 Every regex is anchored (`^…$` or `^…/[^/]+/?$`), so `/car-finance` never picks up the calculator and `/used-cars/models` never picks up the template.
+
+### Why `helpers.js` loads first (v1.3.0)
+
+Every module used to carry its own copy of `block`, `onReady`, `onLoad`, `onPage`, `cms` and, in four files, two different attribution readers. `helpers.js` defines each once as `window.__CARSA = { block, onReady, onLoad, onPage, cms, getAttributionParams, addParams }`, and every module except `init.js` and `car-redirect.js` starts with `var H = window.__CARSA` and returns early with a Datadog warn when it is missing. A broken or blocked helpers file therefore stops every module loudly rather than half-working; the rollback is the footer tag back to the previous folder. `getAttributionParams` is first-touch only: the 30-day `attribution` record `global.js` writes, then the current URL's `utm_*` when that record has none, then an external `document.referrer` when no referrer is stored. Nothing reads `attribution_session` for links any more. ADR 004 records the decision. `car-redirect.js` keeps its own ten-line `block` because it runs before jQuery, GSAP or the helpers exist.
 
 ### Why the v1.2.0 modules wait for a page marker
 

@@ -1,58 +1,25 @@
 // Carsa models template behaviour moved out of the Webflow template body: the meta description and title fallback built from window.__CARSA_MODELS, and the FAQ JSON-LD scrub that drops empty questions.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('models-template.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('models-template.js');
 
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
-  }
-
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  function cms(config, keys) {
-    if (!config || typeof config !== 'object') return null;
-    var out = {};
-    keys.forEach(function (k) {
-      var v = config[k];
-      out[k] = String(v == null ? '' : v).trim();
-    });
-    return out;
-  }
-
-  var MODELS = cms(window.__CARSA_MODELS, ['make', 'name']);
+  var MODELS = H.cms(window.__CARSA_MODELS, ['make', 'name']);
   if (!MODELS && window.DD_LOGS) window.DD_LOGS.logger.warn('models-template.js: window.__CARSA_MODELS missing, meta description fallback skipped');
 
-  if (MODELS) block(() => {
+  if (MODELS) H.block(() => {
     $(function () {
       var defaultDesc = 'The ' + MODELS.make + ' ' + MODELS.name + ' blends everyday practicality with signature ' + MODELS.make + ' craftsmanship. Expect responsive engines, refined comfort, advanced infotainment and safety tech packaged in a distinctive design that turns routine drives into rewarding journeys.';
 
       var metaDesc = $('meta[name="description"]');
-      if (!metaDesc.length || !metaDesc.attr('content')) {
-        $('head').append('<meta name="description" content="' + defaultDesc + '">');
+      if (!metaDesc.length) {
+        $('<meta>', { name: 'description', content: defaultDesc }).appendTo($('head'));
+      } else if (!metaDesc.attr('content')) {
+        metaDesc.first().attr('content', defaultDesc);
       }
 
       var descText = $('meta[name="description"]').attr('content') || defaultDesc;
@@ -65,9 +32,10 @@
     });
   });
 
-  block(() => {
+  H.block(() => {
     (function () {
       var blocks = document.querySelectorAll('script[type="application/ld+json"]');
+      var faqAlive = false;
       for (var i = 0; i < blocks.length; i++) {
         var txt = blocks[i].textContent;
         if (!txt) continue;
@@ -86,30 +54,28 @@
             } else {
               data.mainEntity = kept;
               blocks[i].textContent = JSON.stringify(data);
+              faqAlive = true;
+            }
+          } else if (data['@type'] === 'FAQPage') {
+            faqAlive = true;
+          }
+        } catch (_) {}
+      }
+      if (faqAlive) return;
+      for (var j = 0; j < blocks.length; j++) {
+        if (!blocks[j].parentNode || !blocks[j].textContent) continue;
+        try {
+          var graphData = JSON.parse(blocks[j].textContent);
+          if (!Array.isArray(graphData['@graph'])) continue;
+          var changed = false;
+          for (var g = 0; g < graphData['@graph'].length; g++) {
+            var node = graphData['@graph'][g];
+            if (node && node.mainEntity && typeof node.mainEntity['@id'] === 'string' && node.mainEntity['@id'].indexOf('#faq') !== -1) {
+              delete node.mainEntity;
+              changed = true;
             }
           }
-          if (data['@graph']) {
-            for (var g = 0; g < data['@graph'].length; g++) {
-              var node = data['@graph'][g];
-              if (node.mainEntity && typeof node.mainEntity['@id'] === 'string' && node.mainEntity['@id'].indexOf('#faq') !== -1) {
-                var faqAlive = false;
-                for (var f = 0; f < blocks.length; f++) {
-                  if (!blocks[f].parentNode) continue;
-                  try {
-                    var check = JSON.parse(blocks[f].textContent);
-                    if (check['@type'] === 'FAQPage') {
-                      faqAlive = true;
-                      break;
-                    }
-                  } catch (_) {}
-                }
-                if (!faqAlive) {
-                  delete node.mainEntity;
-                  blocks[i].textContent = JSON.stringify(data);
-                }
-              }
-            }
-          }
+          if (changed) blocks[j].textContent = JSON.stringify(graphData);
         } catch (_) {}
       }
     })();

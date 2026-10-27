@@ -1,47 +1,12 @@
 // Carsa shared SVG animations moved out of Webflow page bodies: the GSAP draw-line and draw-shape (grow and pop-up) timelines, each limited to the pages that carried it inline.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('animations.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('animations.js');
-
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
-  }
-
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  function onPage(paths, prefixes) {
-    var p = location.pathname;
-    if (p.length > 1) p = p.replace(/\/+$/, '');
-    if (paths.indexOf(p) !== -1) return true;
-    return (prefixes || []).some(function (x) {
-      var rest = p.indexOf(x + '/') === 0 ? p.slice(x.length + 1) : '';
-      return rest !== '' && rest.indexOf('/') === -1;
-    });
-  }
 
   var DRAW_LINE_PATHS = [
     '/',
@@ -100,8 +65,8 @@
   ];
   var DRAW_SHAPE_TEMPLATES = ['/blog', '/used-cars/fuel', '/used-cars/promotions'];
 
-  block(() => {
-    if (!onPage(DRAW_LINE_PATHS, DRAW_LINE_TEMPLATES)) return;
+  H.block(() => {
+    if (!H.onPage(DRAW_LINE_PATHS, DRAW_LINE_TEMPLATES)) return;
     $(function () {
       if (typeof gsap === "undefined") return;
       if (typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
@@ -133,7 +98,7 @@
 
           let totalLen = 0;
           els.forEach(function(el){
-            let len = 0;
+            let len;
             try { len = (typeof el.getTotalLength === 'function') ? el.getTotalLength() : 0; } catch(e){ len = 0; }
             if (!isFinite(len) || len <= 0) {
               const b = el.getBBox?.();
@@ -197,8 +162,8 @@
     });
   });
 
-  block(() => {
-    if (!onPage(DRAW_SHAPE_PATHS, DRAW_SHAPE_TEMPLATES) && !document.querySelector('#404-message')) return;
+  H.block(() => {
+    if (!H.onPage(DRAW_SHAPE_PATHS, DRAW_SHAPE_TEMPLATES) && !document.getElementById('404-message')) return;
     $(function () {
       if (typeof gsap === "undefined") return;
       if (typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);

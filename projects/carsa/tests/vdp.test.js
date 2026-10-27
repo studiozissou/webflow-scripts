@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { loadHelpers } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(__dirname, '..', 'vdp.js'), 'utf8');
@@ -63,19 +64,20 @@ function makeEl(extra = {}) {
   return el;
 }
 
-function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {}, search = '', local = {}, dd = null } = {}) {
+function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {}, search = '', local = {}, session = {}, referrer = '', dd = null, helpers = true, globals = {} } = {}) {
   const docListeners = {};
   const winListeners = {};
   const jqDocHandlers = [];
   const timers = [];
   const logs = [];
   const fetches = [];
+  const opened = [];
   const ids = { ...byId };
   const getEl = (id) => (ids[id] ||= makeEl({ id }));
 
   const document = {
     readyState,
-    referrer: '',
+    referrer,
     body: makeEl(),
     documentElement: { clientHeight: 800 },
     activeElement: null,
@@ -98,9 +100,10 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
     scrollX: 0,
     scrollY: 0,
     scrollTo() {},
-    open() {},
+    open: (...a) => opened.push(a),
     addEventListener: (t, fn) => (winListeners[t] ||= []).push(fn),
     removeEventListener() {},
+    setTimeout: (fn) => { timers.push(fn); return timers.length; },
   };
   if (vdp) window.__CARSA_VDP = { ...vdp };
   if (dd) window.DD_LOGS = dd;
@@ -112,6 +115,7 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
       on(type, a, b) {
         if (els[0] === window && type === 'load') window.addEventListener('load', a);
         if (els[0] === document) jqDocHandlers.push({ type, selector: a, fn: b });
+        else if (els[0] !== window) els.forEach((el) => el.addEventListener && el.addEventListener(type, typeof a === 'function' ? a : b));
         return $w;
       },
       ready(fn) { fn(); return $w; },
@@ -143,8 +147,8 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
         return $w;
       },
       css(k) { return typeof k === 'string' && arguments.length === 1 ? '' : $w; },
-      find: () => wrap([]),
-      closest: () => wrap([]),
+      find: (sel) => wrap(els.flatMap((el) => (el.querySelectorAll ? Array.from(el.querySelectorAll(sel)) : []))),
+      closest: (sel) => wrap(els.map((el) => (el.closest ? el.closest(sel) : null)).filter(Boolean)),
       first: () => wrap(els.slice(0, 1)),
       is: () => false,
       get: (i) => (i === undefined ? els.slice() : els[i]),
@@ -152,7 +156,7 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
       hide: () => $w,
       show: () => $w,
       remove: () => $w,
-      append: () => $w,
+      append: (x) => { els.forEach((el) => el.children && el.children.push(...(x && x.get ? x.get() : [x]))); return $w; },
       toggleClass: () => $w,
       animate: () => $w,
     };
@@ -160,11 +164,11 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
     return $w;
   }
 
-  const jQuery = (arg) => {
+  const jQuery = (arg, props) => {
     if (typeof arg === 'function') { arg(); return undefined; }
     if (arg === window || arg === document) return wrap([arg]);
     if (typeof arg === 'object') return wrap([arg]);
-    if (arg.startsWith('<')) return wrap([]);
+    if (arg.startsWith('<')) return wrap([{ tag: arg, ...props }]);
     if (/^#[\w-]+$/.test(arg)) return wrap([getEl(arg.slice(1))]);
     return wrap(nodes[arg] || []);
   };
@@ -186,7 +190,7 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
     gsap: { registerPlugin() {}, timeline: () => ({ to() {} }), to: () => ({ play() {} }), delayedCall() {} },
     fetch,
     localStorage: makeStorage(local),
-    sessionStorage: makeStorage(),
+    sessionStorage: makeStorage(session),
     setTimeout: (fn) => { timers.push(fn); return timers.length; },
     clearTimeout() {},
     requestAnimationFrame() {},
@@ -196,13 +200,15 @@ function makeEnv({ vdp = BASE_VDP, readyState = 'complete', nodes = {}, byId = {
     URL,
     URLSearchParams,
     console: { log: (...a) => logs.push(a), error: (...a) => logs.push(a), warn: (...a) => logs.push(a) },
+    ...globals,
   });
   window.localStorage = context.localStorage;
   window.sessionStorage = context.sessionStorage;
   window.fetch = fetch;
+  if (helpers) loadHelpers(context);
   vm.runInContext(SOURCE, context);
   const fire = (type) => (docListeners[type] || []).forEach((fn) => fn({}));
-  return { context, window, document, ids, timers, logs, fetches, docListeners, winListeners, jqDocHandlers, fire };
+  return { context, window, document, ids, timers, logs, fetches, opened, docListeners, winListeners, jqDocHandlers, fire };
 }
 
 const flush = async () => { for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r)); };
@@ -352,13 +358,114 @@ test('missing key: a config without status still runs the blocks after the schem
   assert.equal(env.logs.length, 0);
 });
 
-test('source: window load is bound only inside onLoad', () => {
-  assert.equal(SOURCE.match(/\.on\(['"]load['"]/g).length, 1);
+test('source: window load and DOMContentLoaded are bound only through H.onLoad / H.onReady', () => {
+  assert.equal((SOURCE.match(/\.on\(['"]load['"]/g) || []).length, 0);
+  assert.equal((SOURCE.match(/DOMContentLoaded/g) || []).length, 0);
+  assert.ok(!/function (onReady|onLoad)\(/.test(SOURCE));
+  assert.match(SOURCE, /H\.onReady\(/);
+  assert.match(SOURCE, /H\.onLoad\(/);
 });
 
-test('source: DOMContentLoaded appears only inside onReady', () => {
-  assert.equal(SOURCE.match(/DOMContentLoaded/g).length, 1);
-  assert.match(SOURCE, /function onReady\(fn\) \{[^}]*DOMContentLoaded/);
+test('source: no local attribution copies; nothing reads attribution_session or localStorage attribution', () => {
+  assert.ok(!/function (getAttributionParams|addParams|appendParams)\(/.test(SOURCE));
+  assert.ok(!SOURCE.includes('attribution_session'));
+  assert.ok(!SOURCE.includes("getItem('attribution'"));
+});
+
+test('guard: without window.__CARSA it warns once, before the __CARSA_VDP check, and does nothing else', () => {
+  const warned = [];
+  const env = makeEnv({ helpers: false, dd: { logger: { warn: (m) => warned.push(m), error() {} } } });
+  assert.deepEqual(warned, ['vdp.js: window.__CARSA missing']);
+  assert.deepEqual(env.docListeners, {});
+  assert.deepEqual(env.winListeners, {});
+  assert.equal(env.jqDocHandlers.length, 0);
+  assert.equal(env.fetches.length, 0);
+  assert.equal(env.window.CARSA_FIN, undefined);
+});
+
+test('guard: without window.__CARSA or DD_LOGS it returns quietly', () => {
+  assert.doesNotThrow(() => makeEnv({ helpers: false, vdp: null }));
+});
+
+test('isolation: a throwing ready callback no longer stops the ready callbacks after it', () => {
+  const btn = makeEl();
+  const env = makeEnv({ readyState: 'loading', nodes: { '[data-link="search-similar"]': [btn], '[data-number="deposit"]': { forEach() { throw new Error('boom'); } } } });
+  assert.doesNotThrow(() => env.fire('DOMContentLoaded'));
+  assert.match(btn.getAttribute('href'), /^\/used-cars\?cars_make_equal=Land\+Rover/);
+  assert.throws(() => env.timers.forEach((fn) => fn()), /boom/);
+});
+
+const qp = (href) => Object.fromEntries(new URL(href).searchParams);
+const without = (o, ...keys) => Object.fromEntries(Object.entries(o).filter(([k]) => !keys.includes(k)));
+
+function attributionSinks(opts) {
+  const link = makeEl({ href: 'https://quote.carsa.co.uk/eligibility/questions' });
+  const cta = makeEl();
+  const pxInput = makeEl({ value: 'AB12CDE' });
+  const pxForm = makeEl({ querySelectorAll: (sel) => (sel === '[name="px-vrm"]' ? [pxInput] : []) });
+  const pxButton = makeEl();
+  const vrm = makeEl({ value: 'cd34 efg' });
+  const mileage = makeEl({ value: '1000' });
+  const sellForm = makeEl({ querySelectorAll: (sel) => (sel === '[name="vrm"]' ? [vrm] : sel === '[name="mileage"]' ? [mileage] : []) });
+  const valuation = makeEl({ closest: (sel) => (sel === 'form' ? sellForm : null) });
+  const utmForm = makeEl();
+  const env = makeEnv({
+    ...opts,
+    byId: { 'px-form-large': pxForm, 'px-button-large': pxButton },
+    nodes: { [QUOTE_LINKS]: [link], '[data-button="cta-option"]': [cta], 'form[data-form="add-utms"]': [utmForm] },
+  });
+  pxButton.listeners.click.forEach((fn) => fn.call(pxButton, {}));
+  env.jqDocHandlers.find((h) => h.type === 'click' && h.selector === '[data-link="valuation"]').fn.call(valuation, { preventDefault() {} });
+  const fields = Object.fromEntries(utmForm.children.filter((c) => c.value !== '').map((c) => [c.name, c.value]));
+  return {
+    link: qp(link.href),
+    cta: without(qp(cta.getAttribute('href')), 'postcode'),
+    px: without(qp(pxButton.getAttribute('href')), 'px_vrm'),
+    valuation: without(qp(env.opened[0][0]), 'vrm', 'mileage'),
+    form: without(fields, 'conversion_page'),
+  };
+}
+
+const ALL_SINKS = (want) => ({ link: want, cta: want, px: want, valuation: want, form: want });
+const stored = (rec) => ({ attribution: JSON.stringify(rec) });
+
+test('attribution case 1: stored first-touch utms and referrerDomain reach every VDP link and the form fields', () => {
+  const got = attributionSinks({ local: stored({ utms: { utm_source: 'ls', utm_medium: 'cpc' }, referrerDomain: 'google.com' }) });
+  assert.deepEqual(got, ALL_SINKS({ utm_source: 'ls', utm_medium: 'cpc', referrer: 'google.com' }));
+});
+
+test('attribution case 2: no stored utms falls back to URL utm_* everywhere (valuation link flips: its old copy ignored the URL)', () => {
+  const got = attributionSinks({ search: '?utm_source=url&utm_campaign=c1', local: stored({ utms: {} }) });
+  assert.deepEqual(got, ALL_SINKS({ utm_source: 'url', utm_campaign: 'c1' }));
+});
+
+test('attribution case 3: nothing stored, external document.referrer everywhere', () => {
+  const got = attributionSinks({ referrer: 'https://www.facebook.com/' });
+  assert.deepEqual(got, ALL_SINKS({ referrer: 'facebook.com' }));
+});
+
+test('attribution case 4: session utms that differ from first-touch are ignored everywhere (valuation link flips from session-first)', () => {
+  const got = attributionSinks({
+    session: { attribution_session: JSON.stringify({ utms: { utm_source: 'session' }, referrerDomain: 'bing.com' }) },
+    local: stored({ utms: { utm_source: 'local' }, referrerDomain: 'google.com' }),
+  });
+  assert.deepEqual(got, ALL_SINKS({ utm_source: 'local', referrer: 'google.com' }));
+});
+
+test('valuation link: an unparsable URL falls back to string params instead of throwing', () => {
+  class StrictURL extends URL {
+    constructor(u, b) {
+      if (String(u).includes('sellcar.carsa.co.uk')) throw new TypeError('Invalid URL');
+      super(u, b);
+    }
+  }
+  const vrm = makeEl({ value: 'CD34EFG' });
+  const sellForm = makeEl({ querySelectorAll: (sel) => (sel === '[name="vrm"]' ? [vrm] : []) });
+  const valuation = makeEl({ closest: (sel) => (sel === 'form' ? sellForm : null) });
+  const env = makeEnv({ local: stored({ utms: { utm_source: 'ls' } }), globals: { URL: StrictURL } });
+  const handler = env.jqDocHandlers.find((h) => h.type === 'click' && h.selector === '[data-link="valuation"]');
+  assert.doesNotThrow(() => handler.fn.call(valuation, { preventDefault() {} }));
+  assert.equal(env.opened[0][0], 'https://sellcar.carsa.co.uk/new-order?vrm=CD34EFG&mileage=&utm_source=ls');
 });
 
 test('source: the check-finance handler (block 12) is not included', () => {

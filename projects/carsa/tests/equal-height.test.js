@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { loadHelpers } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(__dirname, '..', 'equal-height.js'), 'utf8');
@@ -25,7 +26,8 @@ function wrap(els) {
   return w;
 }
 
-function makeEnv({ path = '/', marker = true, readyState = 'complete', cards = [card(100), card(240)] } = {}) {
+function makeEnv({ path = '/', marker = true, readyState = 'complete', cards = [card(100), card(240)], helpers = true } = {}) {
+  const warns = [];
   const winListeners = {};
   const jqWin = {};
   const observers = [];
@@ -40,6 +42,7 @@ function makeEnv({ path = '/', marker = true, readyState = 'complete', cards = [
     location,
     addEventListener: (t, fn) => (winListeners[t] ||= []).push(fn),
     setTimeout() {},
+    DD_LOGS: { logger: { warn: (m) => warns.push(m) } },
   };
   if (marker) window.__CARSA_PAGE = { release: 'v1.2.0' };
   const jQuery = (arg) => {
@@ -61,8 +64,9 @@ function makeEnv({ path = '/', marker = true, readyState = 'complete', cards = [
     },
     console,
   });
+  if (helpers) loadHelpers(context);
   vm.runInContext(SOURCE, context);
-  return { window, cards, winListeners, jqWin, observers };
+  return { window, cards, winListeners, jqWin, observers, warns };
 }
 
 test('marker gate: without __CARSA_PAGE nothing runs and __CARSA_RAN stays undefined', () => {
@@ -123,13 +127,21 @@ test('gates: a marked page outside both lists gets nothing', () => {
   }
 });
 
-test('source: marker gate is the first statement in the wrapper', () => {
-  assert.match(SOURCE, /^\(function \(\$\) \{\n {2}if \(!window\.__CARSA_PAGE\) return;\n {2}\(window\.__CARSA_RAN = window\.__CARSA_RAN \|\| \[\]\)\.push\('equal-height\.js'\);/m);
+test('guard: without window.__CARSA the module warns to Datadog and stops', () => {
+  const env = makeEnv({ helpers: false });
+  assert.deepEqual(env.warns, ['equal-height.js: window.__CARSA missing']);
+  assert.equal(env.window.__CARSA_RAN, undefined);
+  assert.equal(env.observers.length, 0);
+  assert.equal(env.winListeners.resize, undefined);
+});
+
+test('source: the __CARSA guard then the marker gate open the wrapper', () => {
+  assert.match(SOURCE, /^\(function \(\$\) \{\n {2}var H = window\.__CARSA;\n {2}if \(!H\) \{\n {4}if \(window\.DD_LOGS\) window\.DD_LOGS\.logger\.warn\('equal-height\.js: window\.__CARSA missing'\);\n {4}return;\n {2}\}\n {2}if \(!window\.__CARSA_PAGE\) return;\n {2}\(window\.__CARSA_RAN = window\.__CARSA_RAN \|\| \[\]\)\.push\('equal-height\.js'\);/m);
 });
 
 test('source: load resize became onLoad plus a resize binding', () => {
   assert.ok(!SOURCE.includes("'load resize'"));
-  assert.match(SOURCE, /onLoad\(setEqualHeight\);\n\s*\$\(window\)\.on\('resize', setEqualHeight\);/);
+  assert.match(SOURCE, /H\.onLoad\(setEqualHeight\);\n\s*\$\(window\)\.on\('resize', setEqualHeight\);/);
 });
 
 test('source: no Webflow bindings left', () => {
@@ -140,10 +152,16 @@ test('source: console.log only behind DEBUG &&', () => {
   (SOURCE.match(/.{0,9}console\.log/g) || []).forEach((l) => assert.match(l, /DEBUG && console\.log$/));
 });
 
-test('source: DOMContentLoaded and load are bound only inside onReady / onLoad', () => {
-  assert.equal((SOURCE.match(/DOMContentLoaded/g) || []).length, 1);
-  assert.equal((SOURCE.match(/addEventListener\('load'/g) || []).length, 1);
+test('source: DOMContentLoaded and load are left to H.onReady / H.onLoad', () => {
+  assert.equal((SOURCE.match(/DOMContentLoaded/g) || []).length, 0);
+  assert.equal((SOURCE.match(/addEventListener\('load'/g) || []).length, 0);
   assert.ok(!/\.on\(['"]load/.test(SOURCE));
+});
+
+test('source: no local copies of the shared helpers', () => {
+  for (const name of ['block', 'onReady', 'onLoad', 'onPage', 'getAttributionParams', 'addParams']) {
+    assert.ok(!new RegExp('function ' + name + '\\b').test(SOURCE), name);
+  }
 });
 
 test('source: exactly one comment, on line 1', () => {

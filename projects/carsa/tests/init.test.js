@@ -24,7 +24,7 @@ function makeStorage(seed = {}) {
   };
 }
 
-function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, storage = {}, preloaded = [], allowLocal = false } = {}) {
+function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, storage = {}, preloaded = [], allowLocal = false, ids = [] } = {}) {
   const appended = [];
   const timers = [];
   const sessionStorage = makeStorage(storage);
@@ -38,6 +38,7 @@ function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, 
       const m = sel.match(/src="([^"]+)"/);
       return m && preloaded.includes(m[1]) ? {} : null;
     },
+    getElementById: (id) => (ids.includes(id) ? { id } : null),
   };
   const window = {
     location: { pathname, search },
@@ -59,10 +60,14 @@ function run({ src = CDN + 'init.js', pathname = '/', search = '', deps = true, 
 }
 
 const srcs = (appended) => appended.map((el) => el.src);
+const BASE_LIST = [CDN + 'helpers.js', CDN + 'global.js', CDN + 'check-finance.js'];
+const SHARED = ['animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js'].map((f) => CDN + f);
+const VDP = ['vdp.js', 'battery-animation.js', 'at-price-total.js'].map((f) => CDN + f);
+const local = (port) => ['helpers.js', 'global.js', 'check-finance.js'].map((f) => `https://localhost:${port}/projects/carsa/${f}`);
 
-test('loads global.js and check-finance.js from the same versioned folder as init.js', () => {
+test('loads helpers.js, global.js and check-finance.js from the same versioned folder as init.js', () => {
   const { appended } = run();
-  assert.deepEqual(srcs(appended).slice(0, 2), [CDN + 'global.js', CDN + 'check-finance.js']);
+  assert.deepEqual(srcs(appended).slice(0, 3), BASE_LIST);
 });
 
 test('dynamic scripts keep insertion order (async false)', () => {
@@ -70,25 +75,22 @@ test('dynamic scripts keep insertion order (async false)', () => {
   assert.ok(appended.every((el) => el.async === false));
 });
 
-const BASE_LIST = [CDN + 'global.js', CDN + 'check-finance.js'];
-const SHARED = ['animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js'].map((f) => CDN + f);
-
 test('VDP route adds vdp.js, battery-animation.js and at-price-total.js, in that order, after the base list, with no shared modules', () => {
   const { appended } = run({ pathname: '/vehicles/used/ab12cde' });
-  assert.deepEqual(srcs(appended), [...BASE_LIST, CDN + 'vdp.js', CDN + 'battery-animation.js', CDN + 'at-price-total.js']);
+  assert.deepEqual(srcs(appended), [...BASE_LIST, ...VDP]);
 });
 
-test('check-finance.js loads on every route, directly after global.js', () => {
-  for (const pathname of ['/', '/used-cars', '/faq', '/vehicles/used/x']) {
+test('helpers.js is the first file on every route, then global.js, then check-finance.js', () => {
+  for (const pathname of ['/', '/used-cars', '/faq', '/vehicles/used/x', '/used-cars/near/leeds', '/blog', '/get-started']) {
     const list = srcs(run({ pathname }).appended);
-    assert.equal(list[0], CDN + 'global.js', pathname);
-    assert.equal(list.indexOf(CDN + 'check-finance.js'), 1, pathname);
+    assert.deepEqual(list.slice(0, 3), BASE_LIST, pathname);
+    assert.equal(list.filter((s) => s === CDN + 'helpers.js').length, 1, pathname);
   }
 });
 
 test('every route outside /vehicles/ loads the four shared modules after the base list', () => {
   for (const pathname of ['/', '/used-cars', '/faq', '/contact', '/blog/some-post', '/stores/leeds', '/404-anything', '/vehicles']) {
-    assert.deepEqual(srcs(run({ pathname }).appended).slice(0, 6), [...BASE_LIST, ...SHARED], pathname);
+    assert.deepEqual(srcs(run({ pathname }).appended).slice(0, 7), [...BASE_LIST, ...SHARED], pathname);
   }
 });
 
@@ -103,7 +105,6 @@ test('page routes add their own module after the shared modules', () => {
     '/used-cars/promotions/black-friday': 'promotions-template.js',
     '/used-cars/models': 'all-models.js',
     '/blog': 'blog.js',
-    '/car-redirect': 'car-redirect.js',
   };
   for (const [pathname, file] of Object.entries(cases)) {
     assert.deepEqual(srcs(run({ pathname }).appended), [...BASE_LIST, ...SHARED, CDN + file], pathname);
@@ -124,19 +125,72 @@ test('a trailing slash still matches a page route', () => {
 test('exposes the base and module list for debugging', () => {
   const { window } = run({ pathname: '/vehicles/used/ab12cde' });
   assert.equal(window.__CARSA_LOADER.base, CDN);
-  assert.deepEqual([...window.__CARSA_LOADER.modules], ['global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js']);
+  assert.deepEqual([...window.__CARSA_LOADER.modules], ['helpers.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js']);
+});
+
+test('/car-redirect appends car-redirect.js at once, before the jQuery/GSAP gate resolves', () => {
+  for (const pathname of ['/car-redirect', '/car-redirect/']) {
+    const env = run({ pathname, deps: false });
+    assert.deepEqual(srcs(env.appended), [CDN + 'car-redirect.js'], pathname);
+    assert.equal(env.appended[0].async, false, pathname);
+  }
+});
+
+test('/car-redirect does not append car-redirect.js again after the gate', () => {
+  const env = run({ pathname: '/car-redirect', deps: false });
+  env.window.jQuery = function () {};
+  env.window.gsap = {};
+  env.tick();
+  assert.deepEqual(srcs(env.appended), [CDN + 'car-redirect.js', ...BASE_LIST, ...SHARED]);
+  assert.deepEqual(srcs(run({ pathname: '/car-redirect' }).appended), [CDN + 'car-redirect.js', ...BASE_LIST, ...SHARED]);
+});
+
+test('/car-redirect: the debug module list puts car-redirect.js first, once', () => {
+  const { window } = run({ pathname: '/car-redirect' });
+  assert.deepEqual([...window.__CARSA_LOADER.modules], ['car-redirect.js', 'helpers.js', 'global.js', 'check-finance.js', 'animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js']);
+});
+
+test('/car-redirect: a car-redirect.js already on the page is not appended again', () => {
+  const env = run({ pathname: '/car-redirect', deps: false, preloaded: [CDN + 'car-redirect.js'] });
+  assert.equal(env.appended.length, 0);
+});
+
+test('car-redirect.js is only pre-gated on /car-redirect itself', () => {
+  for (const pathname of ['/x/car-redirect', '/car-redirect/x', '/']) {
+    assert.equal(run({ pathname, deps: false }).appended.length, 0, pathname);
+  }
+});
+
+test('404 guard: a /vehicles/ 404 (#404-message present) loads the base list only, no VDP modules', () => {
+  const env = run({ pathname: '/vehicles/used/zz99zzz', ids: ['404-message'] });
+  assert.deepEqual(srcs(env.appended), BASE_LIST);
+  assert.deepEqual([...env.window.__CARSA_LOADER.modules], ['helpers.js', 'global.js', 'check-finance.js']);
+});
+
+test('404 guard: a /vehicles/ 404 gets no shared modules either, since SHARED excludes /vehicles/', () => {
+  const list = srcs(run({ pathname: '/vehicles/used/zz99zzz', ids: ['404-message'] }).appended);
+  for (const f of [...VDP, ...SHARED]) assert.ok(!list.includes(f), f);
+});
+
+test('404 guard: a real VDP without #404-message still loads the VDP modules', () => {
+  assert.deepEqual(srcs(run({ pathname: '/vehicles/used/ab12cde', ids: ['other'] }).appended), [...BASE_LIST, ...VDP]);
+});
+
+test('404 guard: #404-message off /vehicles/ leaves the other routes alone', () => {
+  assert.deepEqual(srcs(run({ pathname: '/faq', ids: ['404-message'] }).appended), [...BASE_LIST, ...SHARED, CDN + 'faq.js']);
+  assert.deepEqual(srcs(run({ pathname: '/404-anything', ids: ['404-message'] }).appended), [...BASE_LIST, ...SHARED]);
 });
 
 test('runs once even if the tag is pasted twice', () => {
   const { window, appended } = run({ pathname: '/vehicles/used/x' });
   const document = { currentScript: { src: CDN + 'init.js', hasAttribute: () => false }, head: { appendChild: (el) => appended.push(el) }, createElement: () => ({}), querySelector: () => null };
   vm.runInContext(SOURCE, vm.createContext({ window, document, sessionStorage: window.sessionStorage, location: window.location, setTimeout: window.setTimeout, URLSearchParams }));
-  assert.equal(appended.length, 5);
+  assert.equal(appended.length, 6);
 });
 
 test('skips a module whose exact URL is already on the page', () => {
   const { appended } = run({ pathname: '/vehicles/used/ab12cde', preloaded: [CDN + 'battery-animation.js'] });
-  assert.deepEqual(srcs(appended), [CDN + 'global.js', CDN + 'check-finance.js', CDN + 'vdp.js', CDN + 'at-price-total.js']);
+  assert.deepEqual(srcs(appended), [...BASE_LIST, CDN + 'vdp.js', CDN + 'at-price-total.js']);
 });
 
 test('waits for jQuery and GSAP before loading anything', () => {
@@ -147,47 +201,47 @@ test('waits for jQuery and GSAP before loading anything', () => {
   assert.equal(env.appended.length, 0);
   env.window.gsap = {};
   env.tick();
-  assert.deepEqual(srcs(env.appended).slice(0, 2), [CDN + 'global.js', CDN + 'check-finance.js']);
+  assert.deepEqual(srcs(env.appended).slice(0, 3), BASE_LIST);
 });
 
 test('gives up waiting after about 3 seconds and loads anyway', () => {
   const env = run({ deps: false });
   const step = env.timers[0].ms;
   env.tick(Math.ceil(3000 / step) + 1);
-  assert.deepEqual(srcs(env.appended).slice(0, 2), [CDN + 'global.js', CDN + 'check-finance.js']);
+  assert.deepEqual(srcs(env.appended).slice(0, 3), BASE_LIST);
   assert.equal(env.timers.length, 0);
 });
 
 test('?carsa=local is ignored unless the tag carries data-allow-local', () => {
   const { appended, sessionStorage } = run({ search: '?carsa=local&carsa-port=8081' });
-  assert.deepEqual(srcs(appended).slice(0, 2), [CDN + 'global.js', CDN + 'check-finance.js']);
+  assert.deepEqual(srcs(appended).slice(0, 3), BASE_LIST);
   assert.deepEqual(sessionStorage.data, {});
 });
 
 test('a stored local source is ignored unless the tag carries data-allow-local', () => {
   const { appended } = run({ storage: { 'carsa-source': 'local', 'carsa-port': '8083' } });
-  assert.deepEqual(srcs(appended).slice(0, 2), [CDN + 'global.js', CDN + 'check-finance.js']);
+  assert.deepEqual(srcs(appended).slice(0, 3), BASE_LIST);
 });
 
 test('with data-allow-local, ?carsa=local switches to the local server for the session', () => {
   const { appended, sessionStorage } = run({ search: '?carsa=local', allowLocal: true });
-  assert.deepEqual(srcs(appended).slice(0, 2), ['https://localhost:8080/projects/carsa/global.js', 'https://localhost:8080/projects/carsa/check-finance.js']);
+  assert.deepEqual(srcs(appended).slice(0, 3), local(8080));
   assert.equal(sessionStorage.data['carsa-source'], 'local');
 });
 
 test('with data-allow-local, a session-stored local source survives navigation, with a custom port', () => {
   const { appended } = run({ storage: { 'carsa-source': 'local', 'carsa-port': '8083' }, allowLocal: true });
-  assert.deepEqual(srcs(appended).slice(0, 2), ['https://localhost:8083/projects/carsa/global.js', 'https://localhost:8083/projects/carsa/check-finance.js']);
+  assert.deepEqual(srcs(appended).slice(0, 3), local(8083));
 });
 
 test('?carsa-port only accepts a 4-5 digit port', () => {
-  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=8081', allowLocal: true }).appended).slice(0, 2), ['https://localhost:8081/projects/carsa/global.js', 'https://localhost:8081/projects/carsa/check-finance.js']);
-  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=evil.com', allowLocal: true }).appended).slice(0, 2), ['https://localhost:8080/projects/carsa/global.js', 'https://localhost:8080/projects/carsa/check-finance.js']);
+  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=8081', allowLocal: true }).appended).slice(0, 3), local(8081));
+  assert.deepEqual(srcs(run({ search: '?carsa=local&carsa-port=evil.com', allowLocal: true }).appended).slice(0, 3), local(8080));
 });
 
 test('?carsa=cdn clears the local switch', () => {
   const { appended, sessionStorage } = run({ search: '?carsa=cdn', storage: { 'carsa-source': 'local', 'carsa-port': '8083' }, allowLocal: true });
-  assert.deepEqual(srcs(appended).slice(0, 2), [CDN + 'global.js', CDN + 'check-finance.js']);
+  assert.deepEqual(srcs(appended).slice(0, 3), BASE_LIST);
   assert.equal(sessionStorage.data['carsa-source'], undefined);
   assert.equal(sessionStorage.data['carsa-port'], undefined);
 });
@@ -198,7 +252,7 @@ test('blocked storage falls back to the CDN instead of throwing', () => {
   const window = { location: { pathname: '/', search: '?carsa=local' }, setTimeout: () => {}, jQuery() {}, gsap: {} };
   Object.defineProperty(window, 'sessionStorage', { get() { throw new Error('SecurityError'); } });
   vm.runInContext(SOURCE, vm.createContext({ window, document, location: window.location, setTimeout: window.setTimeout, URLSearchParams }));
-  assert.deepEqual(srcs(appended).slice(0, 2), [CDN + 'global.js', CDN + 'check-finance.js']);
+  assert.deepEqual(srcs(appended).slice(0, 3), BASE_LIST);
 });
 
 test('no currentScript (e.g. injected by a tag manager) does nothing rather than guess a host', () => {

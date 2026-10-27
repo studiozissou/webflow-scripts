@@ -1,47 +1,12 @@
 // Carsa shared instant-valuation links moved out of Webflow page bodies: builds the sellcar order URL from the form's VRM and mileage plus stored UTMs and the external referrer, on the pages that carried it inline.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('valuation-links.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('valuation-links.js');
-
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
-  }
-
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  function onPage(paths, prefixes) {
-    var p = location.pathname;
-    if (p.length > 1) p = p.replace(/\/+$/, '');
-    if (paths.indexOf(p) !== -1) return true;
-    return (prefixes || []).some(function (x) {
-      var rest = p.indexOf(x + '/') === 0 ? p.slice(x.length + 1) : '';
-      return rest !== '' && rest.indexOf('/') === -1;
-    });
-  }
 
   var VALUATION_PATHS = [
     '/',
@@ -61,38 +26,13 @@
     '/sell-car/store',
   ];
 
-  block(() => {
-    if (!onPage(VALUATION_PATHS, VALUATION_TEMPLATES)) return;
+  H.block(() => {
+    if (!H.onPage(VALUATION_PATHS, VALUATION_TEMPLATES)) return;
     $(function () {
-      const HOST = location.hostname.replace(/^www\./,'');
-
-      function getAttributionParams(){
-        const pick = (s)=>{ try{ return JSON.parse(s.getItem('attribution_session')||'null') || JSON.parse(s.getItem('attribution')||'null'); }catch(_){ return null; } };
-        const ss = pick(sessionStorage) || {};
-        const ls = pick(localStorage)  || {};
-        const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms||{}));
-        let refDomain = ss.referrerDomain || ls.referrerDomain || '';
-        if(!refDomain && document.referrer){
-          try{
-            const d = new URL(document.referrer).hostname.replace(/^www\./,'');
-            if(!(d===HOST || d.endsWith('.'+HOST))) refDomain = d;
-          }catch(_){}
-        }
-        const params = {...utms};
-        if(refDomain) params.referrer = refDomain;
-        return params;
-      }
-
-      function addParams(url, obj){
-        const u = new URL(url, location.origin);
-        for(const k in obj){ if(!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
-        return u.toString();
-      }
-
       function generateOrderURL(vrm, mileage){
         const base = 'https://sellcar.carsa.co.uk/new-order?vrm=' + encodeURIComponent(vrm)
                    + '&mileage=' + encodeURIComponent(mileage || '');
-        return addParams(base, getAttributionParams());
+        return H.addParams(base, H.getAttributionParams());
       }
 
       function getFormValues($form){

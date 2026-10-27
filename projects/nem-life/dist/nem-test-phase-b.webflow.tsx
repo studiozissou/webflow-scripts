@@ -10,6 +10,7 @@
  *   projects/nem-life/src/nem-test-scoring.js
  *   projects/nem-life/src/nem-conclusion-texts.js
  *   projects/nem-life/src/nem-intro-lines.js
+ *   projects/nem-life/src/nem-page-disclaimer.js
  *
  * The modules are inlined because everything in Webflow runs inside one component,
  * so relative imports cannot resolve. They stay separate in the repo because the
@@ -323,6 +324,17 @@ const NL_INTRO = {
 };
 
 const EN_INTRO = {};
+
+const REPORT_PHASES = ["optin", "confirmation"];
+
+function syncPageDisclaimer(doc, phase, reportCopy) {
+  const el = doc.querySelector('[data-element="disclaimer"]');
+  if (!el) return null;
+  if (el.dataset.testCopy === undefined) el.dataset.testCopy = el.textContent;
+  const text = REPORT_PHASES.includes(phase) ? reportCopy : el.dataset.testCopy;
+  el.textContent = text;
+  return text;
+}
 
 const REAL_NL_VROUW = NL_VROUW;
 const REAL_NL_MAN = NL_MAN;
@@ -771,14 +783,6 @@ const mutedNoteStyle: React.CSSProperties = {
   margin: 0,
 };
 
-const disclaimerStyle: React.CSSProperties = {
-  fontSize: "0.875rem",
-  lineHeight: 1.5,
-  color: "var(--_token---accent-grey, #9f9c8b)",
-  textAlign: "center",
-  margin: 0,
-};
-
 const NEM_BUTTON_BG = ACCENT_MAIN;
 const NEM_BUTTON_BG_HOVER = "#f2f24a";
 const NEM_BUTTON_BG_ACTIVE = "#e4e43b";
@@ -1001,6 +1005,10 @@ function Quiz({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") syncPageDisclaimer(document, phase, t.disclaimer);
+  }, [phase, t.disclaimer]);
 
   const result = useMemo(
     () => calculateScores(answers, GENDER_TO_ENGINE[gender] || "male"),
@@ -1629,8 +1637,6 @@ function Quiz({
               <NemButtonContent label={submitting ? "..." : ctaLabel} />
             </button>
 
-            <p style={disclaimerStyle}>{t.disclaimer}</p>
-
           </div>
         </div>
       )}
@@ -1683,8 +1689,6 @@ function Quiz({
               {t.wrongEmailLink}
             </button>
           </p>
-
-          <p style={disclaimerStyle}>{t.disclaimer}</p>
         </div>
       )}
     </div>

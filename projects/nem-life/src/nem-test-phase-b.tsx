@@ -11,6 +11,7 @@ import {
   EN_MAN as REAL_EN_MAN,
 } from "./nem-conclusion-texts.js";
 import { NL_INTRO as REAL_NL_INTRO, EN_INTRO as REAL_EN_INTRO } from "./nem-intro-lines.js";
+import { syncPageDisclaimer } from "./nem-page-disclaimer.js";
 
 declare global {
   interface Window {
@@ -452,14 +453,6 @@ const mutedNoteStyle: React.CSSProperties = {
   margin: 0,
 };
 
-const disclaimerStyle: React.CSSProperties = {
-  fontSize: "0.875rem",
-  lineHeight: 1.5,
-  color: "var(--_token---accent-grey, #9f9c8b)",
-  textAlign: "center",
-  margin: 0,
-};
-
 const NEM_BUTTON_BG = ACCENT_MAIN;
 const NEM_BUTTON_BG_HOVER = "#f2f24a";
 const NEM_BUTTON_BG_ACTIVE = "#e4e43b";
@@ -682,6 +675,10 @@ function Quiz({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") syncPageDisclaimer(document, phase, t.disclaimer);
+  }, [phase, t.disclaimer]);
 
   const result = useMemo(
     () => calculateScores(answers, GENDER_TO_ENGINE[gender] || "male"),
@@ -1310,8 +1307,6 @@ function Quiz({
               <NemButtonContent label={submitting ? "..." : ctaLabel} />
             </button>
 
-            <p style={disclaimerStyle}>{t.disclaimer}</p>
-
           </div>
         </div>
       )}
@@ -1364,8 +1359,6 @@ function Quiz({
               {t.wrongEmailLink}
             </button>
           </p>
-
-          <p style={disclaimerStyle}>{t.disclaimer}</p>
         </div>
       )}
     </div>

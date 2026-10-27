@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-26",
+  "lastUpdated": "2026-10-27",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -772,6 +772,16 @@
       "critical": false,
       "created": "2026-10-26",
       "description": "Oost hours 17:00-21:00 daily (Tue closed) on every hours list NL+EN incl. 404, no old 12-22/17-22 text, lunch copy gone, Christmas pre-order block #feestdagen on /afhalen (closed 24-26 Dec, order before 20 Dec, pickup 23/24 Dec 15-17, dishes, bases, wine), home and footer pointers, JSON-LD one regular entry plus closed 24-26 Dec, llms.txt lines; removal checks on OOST_KERST_REMOVED=1. Expected to fail until the Designer change ships."
+    },
+    {
+      "slug": "nem-validation-round-2",
+      "url": "https://nem-life-1.webflow.io/zelftesten/waarom-reageer-ik-zo",
+      "spec": "tests/acceptance/nem-validation-round-2.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-27",
+      "description": "NEM Test validation round 2 (Alex 1-2, 4-4, 4-5): one disclaimer per screen below the card, Notion test copy on screens 1-4 in 0.875rem #9f9c8b, report copy on opt-in and confirmation (webhook mocked), no in-card disclaimer, reload restores test copy, no console errors. Expected to fail until the component paste and Designer copy ship."
     }
   ]
 }

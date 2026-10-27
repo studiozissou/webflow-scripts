@@ -1,50 +1,15 @@
 // Carsa shared FAQ JSON-LD moved out of Webflow page bodies: the /faq builder, which now waits for Finsweet to load every list item, and the small #section-faq builder on the finance and sell-car pages.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('faq-schema.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('faq-schema.js');
 
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
-  }
-
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  function onPage(paths, prefixes) {
-    var p = location.pathname;
-    if (p.length > 1) p = p.replace(/\/+$/, '');
-    if (paths.indexOf(p) !== -1) return true;
-    return (prefixes || []).some(function (x) {
-      var rest = p.indexOf(x + '/') === 0 ? p.slice(x.length + 1) : '';
-      return rest !== '' && rest.indexOf('/') === -1;
-    });
-  }
-
-  block(() => {
-    if (!onPage(['/faq']) || !document.querySelector('#faq-schema-list')) return;
+  H.block(() => {
+    if (!H.onPage(['/faq']) || !document.querySelector('#faq-schema-list')) return;
     (function () {
       if (window.__FAQ_SCHEMA_INIT__) return;
       window.__FAQ_SCHEMA_INIT__ = true;
@@ -184,8 +149,8 @@
     })();
   });
 
-  block(() => {
-    if (!onPage(['/car-finance', '/sell-car/part-exchange', '/sell-car/value-car']) || !document.querySelector('#section-faq')) return;
+  H.block(() => {
+    if (!H.onPage(['/car-finance', '/sell-car/part-exchange', '/sell-car/value-car']) || !document.querySelector('#section-faq')) return;
     (function () {
       if (window.__FAQ_SCHEMA_MINI__) return;
       window.__FAQ_SCHEMA_MINI__ = true;

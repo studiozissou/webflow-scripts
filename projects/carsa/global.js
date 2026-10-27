@@ -1,36 +1,12 @@
 // Carsa site-wide behaviour moved out of the Webflow site footer: menu scroll lock, promo links, store list order, attribution storage, eligibility link UTMs, external link rel, copyright year, the n8n chat widget and, on marked pages, the missing-VDP 404 redirect.
 (function ($) {
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('global.js: window.__CARSA missing');
+    return;
   }
 
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  block(() => {
+  H.block(() => {
     const nav = document.querySelector('.navbar7_component');
     if (!nav) return;
 
@@ -68,7 +44,7 @@
     observer.observe(btn, { attributes: true, attributeFilter: ['aria-expanded'] });
   });
 
-  onReady(() => {
+  H.onReady(() => {
     const promoBase = '/used-cars/deals?cars_sort_reduced-amount-true=desc&cars_promotion_equal=';
     document.querySelectorAll('a[data-link="promo"]').forEach((link) => {
       const txt = link.textContent.trim();
@@ -76,11 +52,11 @@
     });
   });
 
-  onReady(() => {
+  H.onReady(() => {
     $('#store-list').prepend($('#find-store-link'));
   });
 
-  onReady(() => {
+  H.onReady(() => {
     const LS_KEY = 'attribution',
       SS_KEY = 'attribution_session',
       TTL_DAYS = 30;
@@ -130,7 +106,7 @@
       );
     } catch (_) {}
 
-    let localObj = null;
+    let localObj;
     try {
       localObj = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
     } catch (_) {
@@ -169,71 +145,24 @@
     }
   });
 
-  onLoad(() => {
-    const HOST = location.hostname.replace(/^www\./, '');
-    const isInternal = (d) => !!d && (d === HOST || d.endsWith('.' + HOST));
-
-    let store = {};
-    try {
-      store = JSON.parse(localStorage.getItem('attribution') || '{}');
-    } catch (e) {}
-    const utms = store.utms || {};
-
-    let refDomain = '';
-    if (store.referrerDomain && !isInternal(store.referrerDomain)) {
-      refDomain = store.referrerDomain;
-    } else if (store.referrer) {
-      try {
-        const d = new URL(store.referrer).hostname.replace(/^www\./, '');
-        if (!isInternal(d)) refDomain = d;
-      } catch (e) {}
-    } else if (document.referrer) {
-      try {
-        const d = new URL(document.referrer).hostname.replace(/^www\./, '');
-        if (!isInternal(d)) refDomain = d;
-      } catch (e) {}
-    }
-
-    if (!Object.keys(utms).length) {
-      const qs = new URLSearchParams(location.search);
-      qs.forEach((v, k) => {
-        if (/^utm_/i.test(k) && v) utms[k] = v;
-      });
-    }
-
-    const toAdd = { ...utms };
-    if (refDomain) toAdd.referrer = refDomain;
-
-    function addParams(url, obj) {
-      try {
-        const u = new URL(url, location.origin);
-        for (const k in obj) if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]);
-        return u.toString();
-      } catch (_) {
-        const hasQ = url.includes('?');
-        const parts = [];
-        for (const k in obj) if (!new RegExp('([?&])' + k + '=').test(url)) parts.push(k + '=' + encodeURIComponent(obj[k]));
-        return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
-      }
-    }
-
+  H.onLoad(() => {
     $('a[href*="quote.carsa.co.uk/eligibility/questions"]').each(function () {
-      this.href = addParams(this.href, toAdd);
+      this.href = H.addParams(this.href, H.getAttributionParams());
     });
   });
 
-  onReady(() => {
+  H.onReady(() => {
     document.querySelectorAll('a[target="_blank"]').forEach((e) => {
       if (!e.href.includes('carsa.co.uk')) e.setAttribute('rel', 'noreferrer noopener');
     });
   });
 
-  block(() => {
+  H.block(() => {
     const year = document.getElementById('year');
     if (year) year.innerText = new Date().getFullYear();
   });
 
-  onReady(() => {
+  H.onReady(() => {
     import('https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js')
       .then(({ createChat }) => {
         function updateViewportHeight() {
@@ -319,7 +248,7 @@
       });
   });
 
-  block(() => {
+  H.block(() => {
     if (!window.__CARSA_PAGE) return;
     $(function () {
       if ($('#404-message').length && window.location.pathname.includes('/vehicles/used/')) {

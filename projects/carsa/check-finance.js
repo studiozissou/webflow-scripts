@@ -1,51 +1,18 @@
 // Carsa check-finance: on hover or click of a finance card, points its car-card link at the eligibility quote URL with the VRM and stored attribution, and restores it on mouseout.
 (() => {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('check-finance.js: window.__CARSA missing');
+    return;
+  }
   const BASE = 'https://quote.carsa.co.uk/eligibility/questions';
   const SELECTOR = '[data-link="check-finance"]';
   const ANALYTICS_VALUE = 'check-finance-car-card-click';
-  const HOST = location.hostname.replace(/^www\./, '');
-
-  function getAttributionParams() {
-    const pick = (s) => {
-      try {
-        return JSON.parse(s.getItem('attribution_session') || 'null') ||
-               JSON.parse(s.getItem('attribution') || 'null');
-      } catch (_) { return null; }
-    };
-    const ss = pick(sessionStorage) || {};
-    const ls = pick(localStorage) || {};
-    const utms = (ss.utms && Object.keys(ss.utms).length ? ss.utms : (ls.utms || {}));
-    let refDomain = ss.referrerDomain || ls.referrerDomain || '';
-    if (!refDomain && document.referrer) {
-      try {
-        const d = new URL(document.referrer).hostname.replace(/^www\./, '');
-        if (!(d === HOST || d.endsWith('.' + HOST))) refDomain = d;
-      } catch (_) {}
-    }
-    const params = { ...utms };
-    if (refDomain) params.referrer = refDomain;
-    return params;
-  }
-
-  function addParams(url, obj) {
-    try {
-      const u = new URL(url, location.origin);
-      for (const k in obj) { if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]); }
-      return u.toString();
-    } catch (_) {
-      const hasQ = url.indexOf('?') > -1;
-      const parts = [];
-      for (const k in obj) {
-        if (!new RegExp('([?&])' + k + '=').test(url)) parts.push(k + '=' + encodeURIComponent(obj[k]));
-      }
-      return parts.length ? url + (hasQ ? '&' : '?') + parts.join('&') : url;
-    }
-  }
 
   function buildURL(vrm) {
     let url = BASE;
     if (vrm) url += '?vrm=' + encodeURIComponent(vrm);
-    return addParams(url, getAttributionParams());
+    return H.addParams(url, H.getAttributionParams());
   }
 
   document.body.addEventListener('mouseover', (e) => {

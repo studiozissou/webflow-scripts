@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { loadHelpers } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(__dirname, '..', 'global.js'), 'utf8');
@@ -32,7 +33,7 @@ function link(href, attrs = {}) {
   return el;
 }
 
-function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', referrer = '', local = {}, session = {}, pathname = '/', marker = false } = {}) {
+function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', referrer = '', local = {}, session = {}, pathname = '/', marker = false, helpers = true, dd = null } = {}) {
   const docListeners = {};
   const winListeners = {};
   const timers = [];
@@ -57,6 +58,7 @@ function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', 
     setTimeout: (fn) => timers.push(fn),
   };
   if (marker) window.__CARSA_PAGE = { release: 'v1.2.0' };
+  if (dd) window.DD_LOGS = dd;
   const jQuery = (arg) => {
     if (typeof arg === 'function') return arg();
     if (arg === window) return { on: (t, fn) => window.addEventListener(t, fn) };
@@ -85,6 +87,7 @@ function makeEnv({ readyState = 'complete', nodes = {}, byId = {}, search = '', 
   });
   window.localStorage = context.localStorage;
   window.sessionStorage = context.sessionStorage;
+  if (helpers) loadHelpers(context);
   vm.runInContext(SOURCE, context);
   const fire = (target, type) => ((target === 'doc' ? docListeners : winListeners)[type] || []).forEach((fn) => fn({}));
   return { context, window, document, timers, fire, docListeners, winListeners };
@@ -171,6 +174,57 @@ test('eligibility links: wait for window load while the page is still loading', 
   assert.doesNotMatch(a.href, /utm_source/);
   env.fire('win', 'load');
   assert.match(a.href, /utm_source=late/);
+});
+
+const eligibility = (opts) => {
+  const a = link('https://quote.carsa.co.uk/eligibility/questions');
+  makeEnv({ ...opts, nodes: { [ELIGIBILITY]: [a] } });
+  return Object.fromEntries(new URL(a.href).searchParams);
+};
+const fresh = (rec) => JSON.stringify({ referrer: '', referrerDomain: '', updatedAt: Date.now(), expiresAt: Date.now() + DAY, ...rec });
+
+test('eligibility attribution case 1: stored first-touch utms and referrerDomain', () => {
+  assert.deepEqual(eligibility({ local: { attribution: fresh({ utms: { utm_source: 'ls', utm_medium: 'cpc' }, referrerDomain: 'google.com' }) } }),
+    { utm_source: 'ls', utm_medium: 'cpc', referrer: 'google.com' });
+});
+
+test('eligibility attribution case 2: no stored utms, URL utm_* params used', () => {
+  assert.deepEqual(eligibility({ search: '?utm_source=url&utm_campaign=c1&x=1', local: { attribution: fresh({ utms: {} }) } }),
+    { utm_source: 'url', utm_campaign: 'c1' });
+});
+
+test('eligibility attribution case 3: nothing stored, external document.referrer', () => {
+  assert.deepEqual(eligibility({ referrer: 'https://www.facebook.com/' }), { referrer: 'facebook.com' });
+});
+
+test('eligibility attribution case 4: session utms that differ from first-touch are ignored (unchanged, already first-touch)', () => {
+  assert.deepEqual(eligibility({
+    search: '?utm_source=second',
+    session: { attribution_session: JSON.stringify({ utms: { utm_source: 'session' } }) },
+    local: { attribution: fresh({ utms: { utm_source: 'first' }, referrerDomain: 'google.com' }) },
+  }), { utm_source: 'first', referrer: 'google.com' });
+});
+
+test('guard: without window.__CARSA it warns once and does nothing else', () => {
+  const warned = [];
+  const year = { innerText: '' };
+  const env = makeEnv({ helpers: false, byId: { year }, search: '?utm_source=x', dd: { logger: { warn: (m) => warned.push(m) } } });
+  assert.deepEqual(warned, ['global.js: window.__CARSA missing']);
+  assert.equal(year.innerText, '');
+  assert.deepEqual({ ...env.context.localStorage.data }, {});
+  assert.deepEqual({ ...env.context.sessionStorage.data }, {});
+  assert.deepEqual(env.docListeners, {});
+  assert.deepEqual(env.winListeners, {});
+});
+
+test('guard: without window.__CARSA or DD_LOGS it returns quietly', () => {
+  assert.doesNotThrow(() => makeEnv({ helpers: false }));
+});
+
+test('source: no local helper copies; eligibility links use H.addParams and H.getAttributionParams', () => {
+  assert.ok(!/function (block|onReady|onLoad|addParams|getAttributionParams)\(/.test(SOURCE));
+  assert.match(SOURCE, /H\.addParams\(this\.href, H\.getAttributionParams\(\)\)/);
+  assert.ok(!SOURCE.includes('let localObj = null'));
 });
 
 test('isolation: one failing block does not stop the rest, and its error resurfaces asynchronously', () => {

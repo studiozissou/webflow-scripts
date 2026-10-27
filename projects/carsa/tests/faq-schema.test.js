@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { loadHelpers } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(__dirname, '..', 'faq-schema.js'), 'utf8');
@@ -41,7 +42,8 @@ function deferred() {
   return { promise, resolve };
 }
 
-function makeEnv({ path = '/faq', marker = true, readyState = 'complete', scope = null, section = null, preset = {} } = {}) {
+function makeEnv({ path = '/faq', marker = true, readyState = 'complete', scope = null, section = null, preset = {}, helpers = true } = {}) {
+  const warns = [];
   let now = 0;
   let seq = 0;
   const timers = new Map();
@@ -71,7 +73,7 @@ function makeEnv({ path = '/faq', marker = true, readyState = 'complete', scope 
     clearInterval: (id) => timers.delete(id),
   };
   const location = { pathname: path, search: '' };
-  const window = { location, addEventListener() {}, ...clock, ...preset };
+  const window = { location, addEventListener() {}, DD_LOGS: { logger: { warn: (m) => warns.push(m) } }, ...clock, ...preset };
   if (marker) window.__CARSA_PAGE = { release: 'v1.2.0' };
   const jQuery = (arg) => (typeof arg === 'function' ? arg() : {});
   window.jQuery = jQuery;
@@ -85,6 +87,7 @@ function makeEnv({ path = '/faq', marker = true, readyState = 'complete', scope 
     ...clock,
     console,
   });
+  if (helpers) loadHelpers(context);
   vm.runInContext(SOURCE, context);
 
   const advance = (ms) => {
@@ -102,7 +105,7 @@ function makeEnv({ path = '/faq', marker = true, readyState = 'complete', scope 
   const schemas = () => head.children.filter((c) => c.dataset.faqJsonld);
   const count = () => (schemas()[0] ? JSON.parse(schemas()[0].text).mainEntity.length : 0);
   const listCallbacks = () => (window.FinsweetAttributes || []).filter((e) => Array.isArray(e) && e[0] === 'list').map((e) => e[1]);
-  return { window, advance, schemas, count, listCallbacks };
+  return { window, advance, schemas, count, listCallbacks, warns };
 }
 
 function instanceFor(scope, { loaded, loading } = {}) {
@@ -244,8 +247,17 @@ test('faq mini: a marked page outside its list, or without #section-faq, gets no
   assert.equal(bare.window.__FAQ_SCHEMA_MINI__, undefined);
 });
 
-test('source: marker gate is the first statement in the wrapper', () => {
-  assert.match(SOURCE, /^\(function \(\$\) \{\n {2}if \(!window\.__CARSA_PAGE\) return;\n {2}\(window\.__CARSA_RAN = window\.__CARSA_RAN \|\| \[\]\)\.push\('faq-schema\.js'\);/m);
+test('guard: without window.__CARSA the module warns to Datadog and stops', () => {
+  const env = makeEnv({ helpers: false, scope: container(items(1, 3)) });
+  assert.deepEqual(env.warns, ['faq-schema.js: window.__CARSA missing']);
+  assert.equal(env.window.__CARSA_RAN, undefined);
+  assert.equal(env.window.FinsweetAttributes, undefined);
+  env.advance(20000);
+  assert.equal(env.schemas().length, 0);
+});
+
+test('source: the __CARSA guard then the marker gate open the wrapper', () => {
+  assert.match(SOURCE, /^\(function \(\$\) \{\n {2}var H = window\.__CARSA;\n {2}if \(!H\) \{\n {4}if \(window\.DD_LOGS\) window\.DD_LOGS\.logger\.warn\('faq-schema\.js: window\.__CARSA missing'\);\n {4}return;\n {2}\}\n {2}if \(!window\.__CARSA_PAGE\) return;\n {2}\(window\.__CARSA_RAN = window\.__CARSA_RAN \|\| \[\]\)\.push\('faq-schema\.js'\);/m);
 });
 
 test('source: builds from the Finsweet v2 list callback', () => {
@@ -267,8 +279,14 @@ test('source: every DOMContentLoaded listener sits behind a readyState check', (
   lines.forEach((line, i) => {
     if (line.includes('DOMContentLoaded')) assert.match(lines[i - 1], /document\.readyState === 'loading'/, `line ${i + 1}`);
   });
-  assert.equal((SOURCE.match(/addEventListener\('load'/g) || []).length, 1);
+  assert.equal((SOURCE.match(/addEventListener\('load'/g) || []).length, 0);
   assert.ok(!/\.on\(['"]load/.test(SOURCE));
+});
+
+test('source: no local copies of the shared helpers', () => {
+  for (const name of ['block', 'onReady', 'onLoad', 'onPage', 'getAttributionParams', 'addParams']) {
+    assert.ok(!new RegExp('function ' + name + '\\b').test(SOURCE), name);
+  }
 });
 
 test('source: exactly one comment, on line 1', () => {

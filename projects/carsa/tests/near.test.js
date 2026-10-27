@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { loadHelpers } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(__dirname, '..', 'near.js'), 'utf8');
@@ -33,13 +34,14 @@ function makeEl(extra = {}) {
   };
 }
 
-function makeEnv({ marker = true, readyState = 'complete', path = '/used-cars/near/leeds', search = '', byId = {} } = {}) {
+function makeEnv({ marker = true, readyState = 'complete', path = '/used-cars/near/leeds', search = '', byId = {}, helpers = true, mobile = false, jqOverride = () => undefined, ddLogs } = {}) {
   const docListeners = {};
   const winListeners = {};
   const timers = [];
   const intervals = [];
   const jq = [];
   const ids = { ...byId };
+  const appended = [];
   const location = {
     pathname: path,
     search,
@@ -52,7 +54,7 @@ function makeEnv({ marker = true, readyState = 'complete', path = '/used-cars/ne
 
   const document = {
     readyState,
-    head: makeEl({ appendChild() {} }),
+    head: makeEl({ appendChild: (n) => appended.push(n) }),
     getElementById: (id) => ids[id] || null,
     querySelector: () => null,
     querySelectorAll: () => [],
@@ -61,6 +63,8 @@ function makeEnv({ marker = true, readyState = 'complete', path = '/used-cars/ne
   };
 
   const jQuery = (arg) => {
+    const custom = jqOverride(arg, jQuery);
+    if (custom) return custom;
     const rec = { arg, calls: [] };
     jq.push(rec);
     const proxy = new Proxy(function () {}, {
@@ -80,13 +84,14 @@ function makeEnv({ marker = true, readyState = 'complete', path = '/used-cars/ne
 
   const window = {
     location,
-    matchMedia: () => ({ matches: false }),
+    matchMedia: () => ({ matches: mobile }),
     addEventListener: (t, fn) => (winListeners[t] ||= []).push(fn),
     setTimeout: (fn) => { timers.push(fn); return timers.length; },
     jQuery,
     $: jQuery,
   };
   if (marker) window.__CARSA_PAGE = 'near';
+  if (ddLogs) window.DD_LOGS = ddLogs;
 
   const context = vm.createContext({
     window,
@@ -107,9 +112,10 @@ function makeEnv({ marker = true, readyState = 'complete', path = '/used-cars/ne
   });
   window.window = window;
   window.document = document;
+  if (helpers) loadHelpers(context);
   vm.runInContext(SOURCE, context);
   return {
-    window, document, location, timers, intervals, jq, docListeners, winListeners,
+    window, document, location, timers, intervals, jq, docListeners, winListeners, appended,
     fire(target, type) {
       (target === 'doc' ? docListeners : winListeners)[type]?.forEach((fn) => fn({ type }));
     },
@@ -137,6 +143,170 @@ function submitEvent() {
   ev.stopImmediatePropagation = () => { ev.stopped = true; };
   return ev;
 }
+
+function makeSelect() {
+  const el = { value: '', options: [], disabled: false, classes: new Set(), handlers: {}, events: [] };
+  el.dispatchEvent = (e) => el.events.push(e.type);
+  return el;
+}
+
+function wrapSelect(el) {
+  const w = {
+    length: 1,
+    0: el,
+    off(t) { delete el.handlers[t]; return w; },
+    html() { el.options = []; return w; },
+    append(opt) { el.options.push(opt); return w; },
+    val(v) { if (v === undefined) return el.value; el.value = v; return w; },
+    prop(k, v) { el[k] = v; return w; },
+    addClass(c) { el.classes.add(c); return w; },
+    removeClass(c) { el.classes.delete(c); return w; },
+    on(t, fn) { el.handlers[t] = fn; return w; },
+  };
+  return w;
+}
+
+function dropdownEnv({ data, mobile = false, search = '' } = {}) {
+  const make = makeSelect();
+  const model = makeSelect();
+  const items = (data || [
+    { 'make-title': 'Ford', 'make-slug': 'ford', 'model-title': 'Puma', 'model-slug': 'ford-puma' },
+    { 'make-title': 'Ford', 'make-slug': 'ford', 'model-title': 'Focus', 'model-slug': 'ford-focus' },
+    { 'make-title': 'Audi', 'make-slug': 'audi', 'model-title': 'A3', 'model-slug': 'audi-a3' },
+  ]).map((attrs) => ({ dataAttrs: attrs }));
+  const jqOverride = (arg) => {
+    if (arg === '[name="make"]') return wrapSelect(make);
+    if (arg === '[name="model"]') return wrapSelect(model);
+    if (arg === '.model-data') return { each(fn) { items.forEach((it, i) => fn.call(it, i, it)); } };
+    if (arg && arg.dataAttrs) return { attr: (k) => arg.dataAttrs[k] };
+    return undefined;
+  };
+  const env = makeEnv({ mobile, search, jqOverride });
+  env.window.FinsweetAttributes[1][1]([{ instance: 'models', addHook() {} }]);
+  const docOn = env.jq.filter((r) => r.arg === env.document).flatMap((r) => r.calls).filter((c) => c.method === 'on');
+  const submit = docOn.find((c) => c.args[0] === 'click' && c.args[1] === '#mobile-search-submit').args[2];
+  const filterChange = docOn.find((c) => c.args[0] === 'change' && c.args[1] === '[fs-list-field]').args[2];
+  const choose = (sel, v) => { sel.value = v; sel.handlers['change.carsa'].call(sel); };
+  return { ...env, make, model, submit, filterChange, choose, startHref: env.location.href };
+}
+
+test('module contract: without window.__CARSA it warns to DD_LOGS and returns before the marker push', () => {
+  const warns = [];
+  const env = makeEnv({ helpers: false, ddLogs: { logger: { warn: (m) => warns.push(m) } } });
+  assert.deepEqual(warns, ['near.js: window.__CARSA missing']);
+  assert.equal(env.window.__CARSA_RAN, undefined);
+  assert.equal(env.window.FinsweetAttributes, undefined);
+  assert.equal(env.jq.length, 0);
+});
+
+test('module contract: without window.__CARSA or DD_LOGS it returns quietly', () => {
+  const env = makeEnv({ helpers: false });
+  assert.equal(env.window.__CARSA_RAN, undefined);
+  assert.equal(env.timers.length, 0);
+});
+
+test('near make/model: the models list fills make with Any plus sorted unique makes and disables model', () => {
+  const env = dropdownEnv();
+  assert.deepEqual(env.make.options.map((o) => o.value), ['', 'Audi', 'Ford']);
+  assert.deepEqual(env.make.options.map((o) => o.textContent), ['Any', 'Audi', 'Ford']);
+  assert.equal(env.make.value, '');
+  assert.deepEqual(env.model.options.map((o) => o.value), ['']);
+  assert.equal(env.model.disabled, true);
+  assert.ok(env.model.classes.has('is-disabled'));
+});
+
+test('near make/model: choosing a make fills and enables model, resets it and fires input and change', () => {
+  const env = dropdownEnv();
+  env.model.value = 'stale';
+  env.choose(env.make, 'Ford');
+  assert.deepEqual(env.model.options.map((o) => o.value), ['', 'Puma', 'Focus']);
+  assert.equal(env.model.disabled, false);
+  assert.ok(!env.model.classes.has('is-disabled'));
+  assert.equal(env.model.value, '');
+  assert.deepEqual(env.model.events, ['input', 'change']);
+});
+
+test('near make/model: choosing Any again disables model', () => {
+  const env = dropdownEnv();
+  env.choose(env.make, 'Ford');
+  env.choose(env.make, '');
+  assert.equal(env.model.disabled, true);
+  assert.deepEqual(env.model.options.map((o) => o.value), ['']);
+});
+
+test('near make/model: on desktop a make or model change does not navigate or prefetch', () => {
+  const env = dropdownEnv();
+  env.choose(env.make, 'Ford');
+  env.choose(env.model, 'Puma');
+  assert.equal(env.location.href, env.startHref);
+  assert.equal(env.appended.length, 0);
+});
+
+test('near make/model: on mobile a make change prefetches /used-cars/make/<slug> keeping other filters', () => {
+  const env = dropdownEnv({ mobile: true, search: '?cars_sort=desc&cars_model_equal=X' });
+  env.choose(env.make, 'Ford');
+  assert.equal(env.appended.length, 1);
+  assert.equal(env.appended[0].rel, 'prefetch');
+  assert.equal(env.appended[0].href, 'https://www.carsa.co.uk/used-cars/make/ford?cars_make_equal=Ford&cars_sort=desc');
+  assert.equal(env.location.href, env.startHref);
+});
+
+test('near make/model: on mobile a model change prefetches /used-cars/models/<slug>', () => {
+  const env = dropdownEnv({ mobile: true });
+  env.choose(env.make, 'Ford');
+  env.choose(env.model, 'Puma');
+  assert.equal(env.appended.at(-1).href, 'https://www.carsa.co.uk/used-cars/models/ford-puma?cars_make_equal=Ford&cars_model_equal=Puma');
+});
+
+test('near make/model: mobile submit with a model goes to the model page from the slug map', () => {
+  const env = dropdownEnv({ mobile: true, search: '?cars_sort=desc' });
+  env.choose(env.make, 'Ford');
+  env.choose(env.model, 'Focus');
+  env.submit();
+  assert.equal(env.location.href, 'https://www.carsa.co.uk/used-cars/models/ford-focus?cars_make_equal=Ford&cars_model_equal=Focus&cars_sort=desc');
+});
+
+test('near make/model: mobile submit with only a make goes to /used-cars/make/<slug>', () => {
+  const env = dropdownEnv({ mobile: true });
+  env.choose(env.make, 'Audi');
+  env.submit();
+  assert.equal(env.location.href, 'https://www.carsa.co.uk/used-cars/make/audi?cars_make_equal=Audi');
+});
+
+test('near make/model: submit with no make or model stays on the near page', () => {
+  const env = dropdownEnv({ mobile: true, search: '?cars_sort=desc' });
+  env.submit();
+  assert.equal(env.location.href, env.startHref);
+});
+
+test('near make/model: a model without a slug attribute falls back to slugify', () => {
+  const env = dropdownEnv({ mobile: true, data: [{ 'make-title': "Land Rover's", 'model-title': 'Defender 110' }] });
+  env.choose(env.make, "Land Rover's");
+  env.choose(env.model, 'Defender 110');
+  env.submit();
+  assert.equal(env.location.href, 'https://www.carsa.co.uk/used-cars/models/defender-110?cars_make_equal=Land+Rover%27s&cars_model_equal=Defender+110');
+});
+
+test('near make/model: a mobile non-make filter change prefetches after the debounce', () => {
+  const env = dropdownEnv({ mobile: true });
+  env.choose(env.make, 'Ford');
+  const before = env.appended.length;
+  const n = env.timers.length;
+  env.filterChange.call({ name: 'fuel' });
+  assert.equal(env.timers.length, n + 1);
+  env.timers.at(-1)();
+  assert.equal(env.appended.length, before + 1);
+  assert.equal(env.appended.at(-1).href, 'https://www.carsa.co.uk/used-cars/make/ford?cars_make_equal=Ford');
+});
+
+test('near make/model: the models render hook rebuilds the dropdowns', () => {
+  const env = dropdownEnv();
+  const hooks = {};
+  env.window.FinsweetAttributes[1][1]([{ instance: 'models', addHook: (n, fn) => { hooks[n] = fn; } }]);
+  env.make.options = [];
+  hooks.render();
+  assert.deepEqual(env.make.options.map((o) => o.value), ['', 'Audi', 'Ford']);
+});
 
 test('marker gate: without __CARSA_PAGE nothing runs and __CARSA_RAN stays undefined', () => {
   const { form } = formEl();
@@ -282,14 +452,34 @@ test('source: no {{wf tokens, console.log only behind DEBUG &&', () => {
   for (const l of logs) assert.match(l, /DEBUG && console\.log/);
 });
 
-test('source: no bare DOMContentLoaded or load listener outside onReady/onLoad', () => {
-  const helpers = SOURCE.indexOf('\n  block(');
-  const body = SOURCE.slice(helpers);
-  assert.doesNotMatch(body, /DOMContentLoaded/);
-  assert.doesNotMatch(body, /addEventListener\(\s*'load'/);
-  assert.doesNotMatch(body, /on\(\s*'load/);
-  assert.match(body, /onReady\(blockSubmit\)/);
-  assert.match(body, /onLoad\(windowLoaded\)/);
+test('source: no bare DOMContentLoaded or load listener, timing via H.onReady/H.onLoad', () => {
+  assert.doesNotMatch(SOURCE, /DOMContentLoaded/);
+  assert.doesNotMatch(SOURCE, /addEventListener\(\s*'load'/);
+  assert.doesNotMatch(SOURCE, /on\(\s*'load/);
+  assert.match(SOURCE, /H\.onReady\(blockSubmit\)/);
+  assert.match(SOURCE, /H\.onLoad\(windowLoaded\)/);
+});
+
+test('source: no local helper copies, every block goes through H.block', () => {
+  assert.doesNotMatch(SOURCE, /function (block|onReady|onLoad)\b/);
+  assert.doesNotMatch(SOURCE, /\n {2}block\(/);
+  assert.equal((SOURCE.match(/\n {2}H\.block\(/g) || []).length, 8);
+});
+
+test('source: module contract guard sits before the marker gate', () => {
+  const lines = SOURCE.split('\n');
+  assert.equal(lines[2].trim(), 'var H = window.__CARSA;');
+  assert.equal(lines[3].trim(), 'if (!H) {');
+  assert.equal(lines[4].trim(), "if (window.DD_LOGS) window.DD_LOGS.logger.warn('near.js: window.__CARSA missing');");
+  assert.equal(lines[5].trim(), 'return;');
+  assert.equal(lines[6].trim(), '}');
+  assert.equal(lines[7].trim(), 'if (!window.__CARSA_PAGE) return;');
+});
+
+test('source: vsrp/make/model page-context branches are gone', () => {
+  assert.doesNotMatch(SOURCE, /getPageContext|updateFacetVisibility|ctx\.type|'vsrp'/);
+  assert.doesNotMatch(SOURCE, /used-cars\\\/(make|models)\\\/\(/);
+  assert.doesNotMatch(SOURCE, /path === '\/used-cars'/);
 });
 
 test('source: marker gate and wrapper', () => {

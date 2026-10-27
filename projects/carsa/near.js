@@ -1,41 +1,16 @@
 // Carsa near template (/used-cars/near/<slug>) behaviour moved out of the page head and body: filter form submit block, list loader, make/model redirect, promo cards, mobile filters, filter accordions, near-location redirect and VRM trim.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('near.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('near.js');
 
   var DEBUG = false;
 
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
-  }
-
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  block(function () {
+  H.block(function () {
     var FORM_ID = 'wf-form-Filter-Vehicles';
 
     function blockSubmit() {
@@ -61,11 +36,11 @@
     if (document.getElementById(FORM_ID)) {
       blockSubmit();
     } else {
-      onReady(blockSubmit);
+      H.onReady(blockSubmit);
     }
   });
 
-  block(() => {
+  H.block(() => {
     window.FinsweetAttributes = window.FinsweetAttributes || [];
     window.FinsweetAttributes.push([
       'list',
@@ -96,21 +71,8 @@
     ]);
   });
 
-  block(function () {
+  H.block(function () {
     var DEBUG = false;
-
-    var _pageCtx = null;
-    function getPageContext() {
-      if (_pageCtx) return _pageCtx;
-      var path = location.pathname.replace(/\/$/, '') || '/';
-      if (path === '/used-cars') { _pageCtx = { type: 'vsrp' }; return _pageCtx; }
-      var makeMatch = path.match(/^\/used-cars\/make\/(.+)$/);
-      if (makeMatch) { _pageCtx = { type: 'make', slug: makeMatch[1] }; return _pageCtx; }
-      var modelMatch = path.match(/^\/used-cars\/models\/(.+)$/);
-      if (modelMatch) { _pageCtx = { type: 'model', slug: modelMatch[1] }; return _pageCtx; }
-      _pageCtx = { type: 'other' };
-      return _pageCtx;
-    }
 
     function isMobile() {
       return window.matchMedia('(max-width: 991px)').matches;
@@ -202,22 +164,12 @@
       var makeName = $('[name="make"]').val();
       var modelName = $('[name="model"]').val();
       var filters = getActiveFilters();
-      var ctx = getPageContext();
 
       if (modelName) {
-        var modelSlug = _modelSlugMap[modelName] || slugify(modelName);
-        if (ctx.type === 'model' && modelSlug === ctx.slug) return null;
-        return buildModelRedirectURL(modelSlug, makeName, modelName, filters);
+        return buildModelRedirectURL(_modelSlugMap[modelName] || slugify(modelName), makeName, modelName, filters);
       }
       if (makeName) {
-        var makeSlug = _makeSlugMap[makeName] || slugify(makeName);
-        if (ctx.type === 'make' && makeSlug === ctx.slug) return null;
-        return buildMakeRedirectURL(makeSlug, makeName, filters);
-      }
-      if (ctx.type === 'make' || ctx.type === 'model') {
-        var vsrpUrl = new URL('/used-cars', location.origin);
-        for (var k in filters) vsrpUrl.searchParams.set(k, filters[k]);
-        return vsrpUrl.toString();
+        return buildMakeRedirectURL(_makeSlugMap[makeName] || slugify(makeName), makeName, filters);
       }
       return null;
     }
@@ -283,135 +235,27 @@
         });
       }
 
-      var ctx = getPageContext();
-      if (ctx.type === 'make') {
-        var prefillMake = Object.keys(_makeSlugMap).find(function (name) {
-          return _makeSlugMap[name] === ctx.slug;
-        }) || uniqueMakes.find(function (name) { return slugify(name) === ctx.slug; });
-        if (prefillMake) {
-          $makeDropdown.val(prefillMake);
-          populateModels(prefillMake);
-        }
-      } else if (ctx.type === 'model') {
-        var prefillModel = Object.keys(_modelSlugMap).find(function (name) {
-          return _modelSlugMap[name] === ctx.slug;
-        }) || items.map(function (i) { return i.model; }).find(function (name) { return slugify(name) === ctx.slug; });
-        var prefillMake2 = null;
-        if (prefillModel) {
-          var modelItem = items.find(function (i) { return i.model === prefillModel; });
-          if (modelItem) prefillMake2 = modelItem.make;
-        }
-        if (!prefillMake2) prefillMake2 = new URLSearchParams(location.search).get('cars_make_equal');
-        if (prefillMake2) {
-          $makeDropdown.val(prefillMake2);
-          populateModels(prefillMake2);
-        }
-        if (prefillModel) {
-          $modelDropdown.val(prefillModel);
-        }
-      }
-
       bindMobileSubmit();
 
-      var $facetWrappers = $('.facet-wrapper');
-      function updateFacetVisibility() {
-        var ctx = getPageContext();
-        var hide = false;
-        if (ctx.type === 'make') {
-          var makeSlug = _makeSlugMap[$makeDropdown.val()] || slugify($makeDropdown.val() || '');
-          hide = $makeDropdown.val() && makeSlug !== ctx.slug;
-        } else if (ctx.type === 'model') {
-          var modelSlug = _modelSlugMap[$modelDropdown.val()] || slugify($modelDropdown.val() || '');
-          hide = $modelDropdown.val() && modelSlug !== ctx.slug;
-        }
-        $facetWrappers.css('visibility', hide ? 'hidden' : '');
-      }
-
       $makeDropdown.on('change.carsa', function () {
-        var selectedMake = this.value;
-        var ctx = getPageContext();
-        var mobile = isMobile();
-
-        populateModels(selectedMake);
+        populateModels(this.value);
         $modelDropdown.val('');
         $modelDropdown[0].dispatchEvent(new Event('input', { bubbles: true }));
         $modelDropdown[0].dispatchEvent(new Event('change', { bubbles: true }));
-        updateFacetVisibility();
-
-        if (mobile) {
-          if (ctx.type === 'model' && selectedMake) {
-            var currentPageMake = new URLSearchParams(location.search).get('cars_make_equal');
-            if (!currentPageMake) {
-              var pageModelItems = items.filter(function (i) {
-                return (_modelSlugMap[i.model] || slugify(i.model)) === ctx.slug;
-              });
-              if (pageModelItems.length) currentPageMake = pageModelItems[0].make;
-            }
-            if (selectedMake !== currentPageMake) {
-              var cleanParams = new URLSearchParams(location.search);
-              cleanParams.delete('cars_model_equal');
-              var cleanUrl = location.pathname + (cleanParams.toString() ? '?' + cleanParams.toString() : '');
-              history.replaceState(null, '', cleanUrl);
-            }
-          }
-          pendingRedirectURL = computeRedirectURL();
-          prefetchURL(pendingRedirectURL);
-          return;
-        }
-
-        if (ctx.type === 'vsrp') return;
-
-        if (ctx.type === 'make' || ctx.type === 'model') {
-          if (!selectedMake) {
-            var anyFilters = getActiveFilters();
-            var anyUrl = new URL('/used-cars', location.origin);
-            for (var k in anyFilters) anyUrl.searchParams.set(k, anyFilters[k]);
-            location.href = anyUrl.toString();
-            return;
-          }
-          var slug = _makeSlugMap[selectedMake] || slugify(selectedMake);
-          if (ctx.type === 'make' && slug === ctx.slug) return;
-          if (ctx.type === 'model') {
-            var currentPageMake = new URLSearchParams(location.search).get('cars_make_equal');
-            if (!currentPageMake) {
-              var pageModelItems = items.filter(function (i) {
-                return (_modelSlugMap[i.model] || slugify(i.model)) === ctx.slug;
-              });
-              if (pageModelItems.length) currentPageMake = pageModelItems[0].make;
-            }
-            if (selectedMake === currentPageMake) return;
-          }
-          location.href = buildMakeRedirectURL(slug, selectedMake, getActiveFilters());
-        }
+        if (!isMobile()) return;
+        pendingRedirectURL = computeRedirectURL();
+        prefetchURL(pendingRedirectURL);
       });
 
       $modelDropdown.on('change.carsa', function () {
-        var selectedModel = this.value;
-        var ctx = getPageContext();
-        var mobile = isMobile();
-        updateFacetVisibility();
-
-        if (mobile) {
-          pendingRedirectURL = computeRedirectURL();
-          prefetchURL(pendingRedirectURL);
-          return;
-        }
-
-        if (ctx.type === 'vsrp') return;
-
-        if (ctx.type === 'make') return;
-
-        if (ctx.type === 'model' && selectedModel) {
-          var currentMakeName = $makeDropdown.val();
-          var slug = _modelSlugMap[selectedModel] || slugify(selectedModel);
-          if (slug === ctx.slug) return;
-          location.href = buildModelRedirectURL(slug, currentMakeName, selectedModel, getActiveFilters());
-        }
+        if (!isMobile()) return;
+        pendingRedirectURL = computeRedirectURL();
+        prefetchURL(pendingRedirectURL);
       });
     }
   });
 
-  block(() => {
+  H.block(() => {
     window.FinsweetAttributes = window.FinsweetAttributes || [];
     window.FinsweetAttributes.push([
       'list',
@@ -460,7 +304,7 @@
     ]);
   });
 
-  block(() => {
+  H.block(() => {
     function windowLoaded() {
       const span = document.getElementById('desktop-results');
 
@@ -490,10 +334,10 @@
       }, 400);
     }
 
-    onLoad(windowLoaded);
+    H.onLoad(windowLoaded);
   });
 
-  block(() => {
+  H.block(() => {
     $(document).ready(function () {
       function bindFilterToggle() {
         if ($(window).width() <= 991) {
@@ -525,7 +369,7 @@
     });
   });
 
-  block(function () {
+  H.block(function () {
     const DEBUG = false;
 
     const path = location.pathname.replace(/\/$/, '') || '/';
@@ -751,7 +595,7 @@
     ]);
   });
 
-  block(() => {
+  H.block(() => {
     $('#vrm-search').on('input', function () {
       this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     });

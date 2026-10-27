@@ -1,39 +1,19 @@
 // Carsa /get-started page behaviour moved out of the Webflow page body: URL prefill, booking link with UTMs, radio squiggles, the radio draw-line animation and the VRM meta title.
 (function ($) {
+  var H = window.__CARSA;
+  if (!H) {
+    if (window.DD_LOGS) window.DD_LOGS.logger.warn('get-started.js: window.__CARSA missing');
+    return;
+  }
   if (!window.__CARSA_PAGE) return;
   (window.__CARSA_RAN = window.__CARSA_RAN || []).push('get-started.js');
 
-  function block(fn) {
-    try {
-      fn();
-    } catch (err) {
-      window.setTimeout(function () {
-        throw err;
-      });
-    }
+  function safeVrm(raw) {
+    var vrm = String(raw || '').replace(/\s+/g, '');
+    return /^[A-Z0-9]{2,8}$/i.test(vrm) ? encodeURIComponent(vrm) : '';
   }
 
-  function onReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        block(fn);
-      });
-    } else {
-      block(fn);
-    }
-  }
-
-  function onLoad(fn) {
-    if (document.readyState === 'complete') {
-      block(fn);
-    } else {
-      window.addEventListener('load', function () {
-        block(fn);
-      });
-    }
-  }
-
-  block(() => {
+  H.block(() => {
     $(function () {
       const params = new URLSearchParams(window.location.search);
       const vrm = params.get('vrm') || '';
@@ -56,52 +36,10 @@
     });
   });
 
-  block(() => {
+  H.block(() => {
     $(function(){
-      const params = new URLSearchParams(window.location.search);
-      const vrm = params.get('vrm') || '';
-
-      const HOST = location.hostname.replace(/^www\./,'');
-      const isInternal = d => !!d && (d===HOST || d.endsWith('.'+HOST));
-
-      let store = {};
-      try { store = JSON.parse(localStorage.getItem('attribution') || '{}'); } catch(e){}
-      const utms = store.utms || {};
-
-      let refDomain = '';
-      if (store.referrerDomain && !isInternal(store.referrerDomain)) refDomain = store.referrerDomain;
-      else if (store.referrer) {
-        try {
-          const d = new URL(store.referrer).hostname.replace(/^www\./,'');
-          if (!isInternal(d)) refDomain = d;
-        } catch(e){}
-      } else if (document.referrer) {
-        try {
-          const d = new URL(document.referrer).hostname.replace(/^www\./,'');
-          if (!isInternal(d)) refDomain = d;
-        } catch(e){}
-      }
-
-      if (!Object.keys(utms).length) {
-        const qs = new URLSearchParams(location.search);
-        qs.forEach((v,k)=>{ if(/^utm_/i.test(k) && v) utms[k]=v; });
-      }
-
-      const toAdd = {...utms};
-      if (refDomain) toAdd.referrer = refDomain;
-
-      function addParams(url, obj){
-        try {
-          const u = new URL(url, location.origin);
-          for (const k in obj) if (!u.searchParams.has(k)) u.searchParams.set(k, obj[k]);
-          return u.toString();
-        } catch(_) {
-          const hasQ = url.includes('?'); const parts=[];
-          for (const k in obj)
-            if (!new RegExp('([?&])'+k+'=').test(url)) parts.push(k+'='+encodeURIComponent(obj[k]));
-          return parts.length ? url + (hasQ?'&':'?') + parts.join('&') : url;
-        }
-      }
+      const vrm = safeVrm(new URLSearchParams(window.location.search).get('vrm'));
+      const toAdd = H.getAttributionParams();
 
       const OPTIONS = {
         'test-drive-free': {
@@ -126,8 +64,8 @@
 
       $('input[type="radio"]').on('change', function(){
         const opt = OPTIONS[this.id];
-        if (!opt) return;
-        const href = addParams(opt.url, toAdd);
+        if (!opt || !vrm) return;
+        const href = H.addParams(opt.url, toAdd);
         $('#book-button')
           .attr({
             href: href,
@@ -155,7 +93,7 @@
     });
   });
 
-  block(() => {
+  H.block(() => {
     $(document).on('change', 'input[type="radio"]', function() {
       const groupName = this.name;
 
@@ -171,7 +109,7 @@
     });
   });
 
-  block(() => {
+  H.block(() => {
     $(function () {
       if (typeof gsap === "undefined") return;
       if (typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
@@ -200,7 +138,7 @@
 
           let totalLen = 0;
           els.forEach(el => {
-            let len = 0;
+            let len;
             try { len = el.getTotalLength(); } catch { len = 0; }
             if (!isFinite(len) || len <= 0) {
               const b = el.getBBox?.();
@@ -233,7 +171,7 @@
     });
   });
 
-  block(() => {
+  H.block(() => {
     $(function() {
       const params = new URLSearchParams(window.location.search);
       const vrm = params.get('vrm');

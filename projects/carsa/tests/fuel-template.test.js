@@ -4,173 +4,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import vm from 'node:vm';
+import { makeEnv as baseEnv, makeEl, MARKER } from './_env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MODULE = 'fuel-template.js';
 const SOURCE = readFileSync(join(__dirname, '..', MODULE), 'utf8');
-const MARKER = { release: 'v1.2.0' };
-
-function makeStorage(seed = {}) {
-  const data = { ...seed };
-  return {
-    data,
-    getItem: (k) => (k in data ? data[k] : null),
-    setItem: (k, v) => { data[k] = String(v); },
-    removeItem: (k) => { delete data[k]; },
-  };
-}
-
-function makeEl(props = {}) {
-  const listeners = {};
-  const classes = new Set();
-  const el = {
-    attrs: {},
-    style: {},
-    children: [],
-    dataset: {},
-    textContent: '',
-    value: '',
-    checked: false,
-    listeners,
-    classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) },
-    setAttribute: (k, v) => { el.attrs[k] = String(v); },
-    getAttribute: (k) => (k in el.attrs ? el.attrs[k] : null),
-    removeAttribute: (k) => { delete el.attrs[k]; },
-    addEventListener: (t, fn) => (listeners[t] ||= []).push(fn),
-    removeEventListener() {},
-    closest: () => null,
-    querySelectorAll: () => [],
-    matches: () => false,
-    ...props,
-  };
-  return el;
-}
-
-function makeEnv({ marker = MARKER, config = {}, nodes = {}, search = '', pathname = '/', readyState = 'complete', title = '', referrer = '', local = {}, session = {}, globals = {} } = {}) {
-  const docListeners = {};
-  const winListeners = {};
-  const delegated = [];
-  const timers = [];
-  const dataStore = new WeakMap();
-  const document = {
-    readyState,
-    referrer,
-    title,
-    head: makeEl(),
-    body: makeEl(),
-    documentElement: { clientHeight: 800 },
-    addEventListener: (t, fn) => (docListeners[t] ||= []).push(fn),
-    querySelector: (s) => (nodes[s] || [])[0] || null,
-    querySelectorAll: (s) => nodes[s] || [],
-    getElementById: (id) => (nodes['#' + id] || [])[0] || null,
-  };
-  const location = {
-    hostname: 'www.carsa.co.uk',
-    origin: 'https://www.carsa.co.uk',
-    pathname,
-    search,
-    href: 'https://www.carsa.co.uk' + pathname + search,
-    replace: (u) => { location.replacedWith = u; },
-  };
-  const window = {
-    location,
-    document,
-    innerHeight: 800,
-    addEventListener: (t, fn) => (winListeners[t] ||= []).push(fn),
-    removeEventListener() {},
-    setTimeout: (fn) => timers.push(fn),
-    open() {},
-    ...config,
-  };
-  if (marker) window.__CARSA_PAGE = marker;
-
-  function wrap(list) {
-    const els = list.filter(Boolean);
-    const c = {
-      els,
-      length: els.length,
-      0: els[0],
-      each(fn) { els.forEach((el, i) => fn.call(el, i, el)); return c; },
-      get() { return els; },
-      first() { return wrap(els.slice(0, 1)); },
-      closest(s) { return wrap(els.map((e) => e.closest(s))); },
-      find(s) { return wrap(els.flatMap((e) => Array.from(e.querySelectorAll(s)))); },
-      attr(k, v) {
-        if (typeof k === 'string' && v === undefined) return els[0] ? (els[0].getAttribute(k) ?? undefined) : undefined;
-        const o = typeof k === 'string' ? { [k]: v } : k;
-        els.forEach((e) => Object.entries(o).forEach(([a, b]) => e.setAttribute(a, b)));
-        return c;
-      },
-      text(v) {
-        if (v === undefined) return els.map((e) => e.textContent).join('');
-        els.forEach((e) => { e.textContent = String(v); });
-        return c;
-      },
-      val(v) {
-        if (v === undefined) return els[0] ? els[0].value : undefined;
-        els.forEach((e) => { e.value = v; });
-        return c;
-      },
-      css(k, v) {
-        const o = typeof k === 'string' ? { [k]: v } : k;
-        els.forEach((e) => Object.assign(e.style, o));
-        return c;
-      },
-      removeClass(n) { els.forEach((e) => e.classList.remove(n)); return c; },
-      hasClass(n) { return els.some((e) => e.classList.contains(n)); },
-      is(s) { return els.some((e) => e.matches(s)); },
-      data(k, v) {
-        const e = els[0];
-        if (!e) return undefined;
-        const d = dataStore.get(e) || {};
-        dataStore.set(e, d);
-        if (v === undefined) return k in d ? d[k] : e.dataset[k];
-        d[k] = v;
-        return c;
-      },
-      on(t, fn) { els.forEach((e) => e.addEventListener(t, fn)); return c; },
-      trigger(t) { els.forEach((e) => (e.listeners[t] || []).forEach((fn) => fn.call(e, { type: t }))); return c; },
-      append(h) { els.forEach((e) => e.children.push(h)); return c; },
-      prepend(o) { els.forEach((e) => e.children.unshift(...(o && o.els ? o.els : [o]))); return c; },
-      appendTo(t) { t.els.forEach((e) => e.children.push(...els)); return c; },
-    };
-    return c;
-  }
-
-  const $ = (arg, props) => {
-    if (typeof arg === 'function') { arg($); return undefined; }
-    if (arg === document) return { ready: (fn) => fn($), on: (t, sel, fn) => delegated.push({ t, sel, fn }) };
-    if (typeof arg === 'string' && arg.startsWith('<')) return wrap([makeEl({ tagName: arg.slice(1, -1).toUpperCase(), ...props })]);
-    if (typeof arg === 'string') return wrap([...(nodes[arg] || [])]);
-    return wrap([arg]);
-  };
-  $.trim = (s) => String(s == null ? '' : s).trim();
-  window.jQuery = window.$ = $;
-
-  const context = vm.createContext({
-    window,
-    document,
-    location,
-    jQuery: $,
-    $,
-    localStorage: makeStorage(local),
-    sessionStorage: makeStorage(session),
-    URL,
-    URLSearchParams,
-    setTimeout: window.setTimeout,
-    console,
-    ...globals,
-  });
-  window.localStorage = context.localStorage;
-  window.sessionStorage = context.sessionStorage;
-  vm.runInContext(SOURCE, context);
-  const fire = (target, type) => ((target === 'doc' ? docListeners : winListeners)[type] || []).forEach((fn) => fn({}));
-  const delegate = (t, sel, el, e = {}) => delegated
-    .filter((d) => d.t === t && (sel == null || d.sel === sel))
-    .forEach((d) => d.fn.call(el, { type: t, preventDefault() {}, ...e }));
-  return { window, document, location, timers, fire, delegate, delegated, docListeners, winListeners };
-}
+const makeEnv = (opts) => baseEnv(SOURCE, opts);
 
 function sourceChecks(name) {
   const lines = SOURCE.trimEnd().split('\n');
@@ -191,19 +30,26 @@ function sourceChecks(name) {
     assert.equal(all.length, gated.length);
     if (all.length) assert.match(SOURCE, /var DEBUG = false;/);
   });
-  test(`${name} source: DOMContentLoaded and load listeners only inside onReady/onLoad`, () => {
-    assert.ok((SOURCE.match(/DOMContentLoaded/g) || []).length <= 1);
-    assert.ok((SOURCE.match(/addEventListener\('load'/g) || []).length <= 1);
-    assert.doesNotMatch(SOURCE, /addEventListener\("(DOMContentLoaded|load)"/);
+  test(`${name} source: no DOMContentLoaded or load listeners of its own`, () => {
+    assert.doesNotMatch(SOURCE, /DOMContentLoaded/);
+    assert.doesNotMatch(SOURCE, /addEventListener\(['"]load['"]/);
     assert.doesNotMatch(SOURCE, /\$\(window\)\.on\(['"]load/);
   });
-  test(`${name} source: classic script with the marker gate first`, () => {
+  test(`${name} source: classic script with the __CARSA guard, then the marker gate`, () => {
     assert.doesNotMatch(SOURCE, /^\s*(import|export)\s/m);
     assert.doesNotMatch(SOURCE, /^(const|let)\s/m);
     assert.equal(lines[1], '(function ($) {');
-    assert.equal(lines[2].trim(), 'if (!window.__CARSA_PAGE) return;');
-    assert.equal(lines[3].trim(), `(window.__CARSA_RAN = window.__CARSA_RAN || []).push('${name}');`);
+    assert.equal(lines[2].trim(), 'var H = window.__CARSA;');
+    assert.equal(lines[3].trim(), 'if (!H) {');
+    assert.equal(lines[4].trim(), `if (window.DD_LOGS) window.DD_LOGS.logger.warn('${name}: window.__CARSA missing');`);
+    assert.equal(lines[5].trim(), 'return;');
+    assert.equal(lines[6].trim(), '}');
+    assert.equal(lines[7].trim(), 'if (!window.__CARSA_PAGE) return;');
+    assert.equal(lines[8].trim(), `(window.__CARSA_RAN = window.__CARSA_RAN || []).push('${name}');`);
     assert.equal(lines[lines.length - 1], '})(window.jQuery);');
+  });
+  test(`${name} source: no local copies of the shared helpers`, () => {
+    assert.doesNotMatch(SOURCE, /function\s+(block|onReady|onLoad|onPage|cms|getAttributionParams|addParams)\b/);
   });
 }
 
@@ -220,6 +66,17 @@ function markerTests(name, opts = {}) {
     const env = makeEnv(opts);
     assert.deepEqual([...env.window.__CARSA_RAN], [name]);
   });
+  test(`${name}: without window.__CARSA it warns once and stands down before the marker gate`, () => {
+    const warns = [];
+    const DD_LOGS = { logger: { warn: (m) => warns.push(m) } };
+    const env = makeEnv({ ...opts, helpers: false, config: { ...(opts.config || {}), DD_LOGS } });
+    assert.deepEqual(warns, [`${name}: window.__CARSA missing`]);
+    assert.equal(env.window.__CARSA_RAN, undefined);
+    assert.equal(env.delegated.length, 0);
+    assert.equal(Object.keys(env.docListeners).length, 0);
+    assert.equal(env.timers.length, 0);
+    assert.doesNotThrow(() => makeEnv({ ...opts, helpers: false }));
+  });
 }
 
 sourceChecks(MODULE);
@@ -235,7 +92,7 @@ markerTests(MODULE, { config: { __CARSA_FUEL: { name: 'Petrol' } } });
 
 test('fuel: search-similar buttons link to /used-cars filtered by fuel type', () => {
   const { btns } = searchRun({ name: 'Plug-in Hybrid' });
-  btns.forEach((b) => assert.equal(b.attrs.href, '/used-cars?cars_fuel-type_equal=Plug-in+Hybrid'));
+  btns.forEach((b) => assert.equal(b.attrs.href, '/used-cars?cars_fuel-type_equal=Plug-in%20Hybrid'));
 });
 
 test('fuel: surrounding whitespace is trimmed, as the inline .trim() did', () => {
@@ -272,7 +129,7 @@ test('fuel: a missing window.__CARSA_FUEL skips "Search all" without throwing bu
   assert.ok(env.timers.length === 0);
 });
 
-test('fuel PX: input on the large form builds the quote link with session UTMs and the external referrer', () => {
+test('fuel PX: input on the large form builds the quote link ignoring session UTMs, with the external referrer', () => {
   const vrm = makeEl({ value: 'AB12 CDE' });
   const form = makeEl({ querySelectorAll: (s) => (s === '[name="px-vrm"]' ? [vrm] : []) });
   const button = makeEl();
@@ -286,8 +143,49 @@ test('fuel PX: input on the large form builds the quote link with session UTMs a
   const href = new URL(button.attrs.href);
   assert.equal(href.origin + href.pathname, 'https://quote.carsa.co.uk/value-my-car/enter-vrm');
   assert.equal(href.searchParams.get('px_vrm'), 'AB12 CDE');
-  assert.equal(href.searchParams.get('utm_source'), 'meta');
+  assert.equal(href.searchParams.get('utm_source'), null);
   assert.equal(href.searchParams.get('referrer'), 'google.com');
   assert.equal(button.attrs.target, '_blank');
   assert.equal(env.window.__CARSA_RAN.length, 1);
+});
+
+function pxParams({ local = {}, session = {}, search = '', referrer = '' } = {}) {
+  const vrm = makeEl({ value: 'AB12CDE' });
+  const form = makeEl({ querySelectorAll: (s) => (s === '[name="px-vrm"]' ? [vrm] : []) });
+  const button = makeEl();
+  makeEnv({
+    config: { __CARSA_FUEL: { name: 'Petrol' } },
+    search,
+    referrer,
+    local,
+    session,
+    nodes: { '#px-form-large': [form], '#px-button-large': [button], '#px-form-large [name="px-vrm"]': [vrm] },
+  });
+  vrm.listeners.input[0].call(vrm, {});
+  const u = new URL(button.attrs.href);
+  return Object.fromEntries([...u.searchParams].filter(([k]) => k !== 'px_vrm'));
+}
+
+const STORED = JSON.stringify({ utms: { utm_source: 'first', utm_medium: 'cpc' }, referrerDomain: 'bing.com' });
+
+test('fuel PX attribution 1: stored first-touch UTMs and referrer', () => {
+  assert.deepEqual(pxParams({ local: { attribution: STORED } }), { utm_source: 'first', utm_medium: 'cpc', referrer: 'bing.com' });
+});
+
+test('fuel PX attribution 2: no stored UTMs, UTMs in the URL', () => {
+  assert.deepEqual(pxParams({ search: '?utm_source=url&utm_campaign=spring' }), { utm_source: 'url', utm_campaign: 'spring' });
+});
+
+test('fuel PX attribution 3: nothing stored, external referrer', () => {
+  assert.deepEqual(pxParams({ referrer: 'https://www.google.com/search' }), { referrer: 'google.com' });
+});
+
+test('fuel PX attribution 4: session UTMs that differ from the stored first touch give the first touch', () => {
+  const session = { attribution_session: JSON.stringify({ utms: { utm_source: 'second' }, referrerDomain: 'meta.com' }) };
+  assert.deepEqual(pxParams({ local: { attribution: STORED }, session }), { utm_source: 'first', utm_medium: 'cpc', referrer: 'bing.com' });
+});
+
+test('fuel: "Search all" encodes the fuel name', () => {
+  const { btns } = searchRun({ name: 'Petrol & Electric' });
+  assert.equal(btns[0].attrs.href, '/used-cars?cars_fuel-type_equal=Petrol%20%26%20Electric');
 });

@@ -792,6 +792,16 @@
       "critical": false,
       "created": "2026-10-27",
       "description": "NEM Test validation round 2 (Alex 1-2, 4-4, 4-5): one disclaimer per screen below the card, Notion test copy on screens 1-4 in 0.875rem #9f9c8b, report copy on opt-in and confirmation (webhook mocked), no in-card disclaimer, reload restores test copy, no console errors. Expected to fail until the component paste and Designer copy ship."
+    },
+    {
+      "slug": "carsa-release-v1-3-0",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-release-v1-3-0.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-27",
+      "description": "carsa-v1.3.0 refactor: helpers.js loads first on every page and exposes the seven shared helpers; every v1.2.0 module still loads once and runs from the v1.3 folder; every lead link carries the same first-touch UTMs (session record ignored); car-redirect pre-gate and VRM check, FAQ digit slug, fuel link encoding, models single meta and @graph order, dead VDP URL no Datadog warn. Gated by CARSA_V130=1; run with CARSA_V120=1 CARSA_V120_DONE=all."
     }
   ]
 }

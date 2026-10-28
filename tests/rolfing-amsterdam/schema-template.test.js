@@ -21,7 +21,7 @@ const SAMPLES = {
   slug: SLUG,
   name: 'Knee, hip and ankle pain',
   'seo-title': 'Knee, Hip and Ankle Pain | Rolfing Amsterdam',
-  'seo-description': 'Rolfing for knee, hip and ankle pain in Amsterdam: how a session works and what to expect.',
+  'meta-description': 'Rolfing for knee, hip and ankle pain in Amsterdam: how a session works and what to expect.',
   updated: '2026-10-22',
   photo: 'https://cdn.prod.website-files.com/sample/photo.jpg',
 };
@@ -89,7 +89,7 @@ for (const { code, index, discover } of LOCALES) {
       assert.equal(page.url, url);
       assert.equal(page['@id'], `${url}#webpage`);
       assert.equal(page.name, SAMPLES['seo-title']);
-      assert.equal(page.description, SAMPLES['seo-description']);
+      assert.equal(page.description, SAMPLES['meta-description']);
       assert.equal(page.dateModified, SAMPLES.updated);
       assert.deepEqual(page.primaryImageOfPage, { '@type': 'ImageObject', url: SAMPLES.photo });
       assert.deepEqual(page.isPartOf, { '@id': `${HOST}/#website` });

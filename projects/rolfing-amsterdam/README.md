@@ -44,8 +44,8 @@ Add `data-allow-local` to the footer tag on staging, serve the repo root on `htt
 `schema/rolfing-pages-template.html` holds the WebPage + BreadcrumbList JSON-LD for the Rolfing Pages template: an EN block and an NL block. Paste the EN block into a Code Embed on the template, then paste the NL block into the same embed in the NL locale override.
 
 - It is an embed, not page head code, because head code is single-locale in Webflow; only `inLanguage`, the URL prefix and the breadcrumb names differ between the blocks.
-- It binds `seo-title`, `seo-description`, `updated` and `photo`, which come from the Rolfing Pages field step in the Oct 2026 growth spec (2a). Add those fields before pasting.
-- Webflow does not JSON-escape bindings, so a straight `"`, a backslash or a line break in `name`, `seo-title` or `seo-description` breaks the whole block. Make those fields single-line, use typographic quotes in copy, and make `updated` and `photo` required for landing pages so they never render as `""`.
+- It binds `seo-title`, `meta-description`, `updated` and `photo`. The first two predate the Oct 2026 growth spec (S1); `updated` and `photo` came with its field step (2a).
+- Webflow does not JSON-escape bindings, so a straight `"`, a backslash or a line break in `name`, `seo-title` or `meta-description` breaks the whole block. Make those fields single-line, use typographic quotes in copy, and make `updated` and `photo` required for landing pages so they never render as `""`.
 - It carries a minimal Person node for Janco (shared `@id` with the About page) so each page names its author even before the site-wide graph (S5) ships.
 - No `Medical*` types and no FAQPage: the FAQ is microdata on the CMS list.
 - `npm run test:rolfing-amsterdam` fills the bindings with sample values and checks both blocks parse and agree on locale, URLs and breadcrumb.

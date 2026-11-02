@@ -5,5 +5,8 @@
   "allowLocalAttr": "data-allow-local",
   "blockWhatsApp": false,
   "listItemClasses": [],
-  "fallbackPaths": ["/"]
+  "fallbackPaths": ["/"],
+  "stagingUrl": "",
+  "redirects": [],
+  "apexDefault": false
 }

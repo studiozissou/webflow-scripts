@@ -15,7 +15,7 @@ const MAX_REDIRECTS = 10;
  * @param {Map} cache - shared per-run cache
  * @param {object} [opts]
  * @param {number} [opts.timeoutMs] - override timeout (default 15s)
- * @returns {Promise<{ html: string, headers: Object, statusCode: number, redirectChain: string[] }>}
+ * @returns {Promise<{ html: string, headers: Object, statusCode: number, redirectChain: string[], finalUrl: string }>}
  */
 async function fetchPage(url, cache, opts = {}) {
   if (cache.has(url)) {
@@ -65,6 +65,7 @@ async function fetchPage(url, cache, opts = {}) {
       headers,
       statusCode: response.status,
       redirectChain,
+      finalUrl: currentUrl,
     };
 
     cache.set(url, result);

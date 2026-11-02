@@ -21,7 +21,7 @@ When clients or teammates ask about these, correct them — these are common mis
 - **AI-specific rewrites are not needed.** You don't need to write in a special way "for AI." Write clear, well-structured content for your audience — that's what gets cited.
 - **Inauthentic mentions don't work.** Seeking fake mentions, reviews, or citations across the web is ineffective and risky. AI engines (especially Perplexity) evaluate source credibility through multi-layer quality scoring.
 - **Structured data is helpful but not required.** Google says: "Structured data isn't required for generative AI search, and there's no special schema.org markup you need to add." Schema is a useful quality signal, not a prerequisite for AI visibility.
-- **FAQ schema no longer produces FAQ rich results.** Since August 2023, Google shows FAQ rich results only for authoritative government and health sites. On a SaaS, ecommerce, or agency site, `FAQPage` markup will never render expandable Q&As in the SERP. Never justify FAQ markup on rich-result grounds for a commercial client — it is a promise the platform will not keep. The markup is still worth adding for AI extraction and as a page-type signal; say that instead. (`HowTo` rich results were removed in the same period. Same rule.)
+- **FAQ schema no longer produces FAQ rich results.** Google retired FAQ rich results on 7 May 2026 for all sites (secondary sources; Google's page couldn't be read). `FAQPage` markup will not render expandable Q&As in the SERP, so never justify it on rich-result grounds — it is a promise the platform will not keep. The markup is optional and a missing one is not a defect; its value is AI extraction and page-type signal, so say that instead. (`HowTo` rich results were removed in 2023. Same rule.)
 - **There is no "AEO hack" shortcut.** Google explicitly warns against prioritising "AEO/GEO hacks" over effective SEO. The best AEO strategy is excellent content with clear structure.
 </mythbusting>
 
@@ -189,7 +189,7 @@ Pick one archetype per page. Hybrid content (e.g. "a guide with stats") is fine 
 
 - **Anchor page** — a flagship piece (annual report, research study, definitive guide) that serves as the authority hub. One per topic domain.
 - **Supporting answer cluster** — 5–15 pages answering related questions, all internal-linking to the anchor. This is how semantic clustering works.
-- **FAQ block** — on product/service pages, a 5–10 question Q&A section. Even low-traffic FAQ blocks earn citations because they match query shape directly. Add FAQPage schema if you have one — it helps AI extraction, but the content structure matters more than the markup, and it will not produce FAQ rich results for a commercial site (see `<mythbusting>`).
+- **FAQ block** — on product/service pages, a 5–10 question Q&A section. Even low-traffic FAQ blocks earn citations because they match query shape directly. FAQPage schema is optional — it helps AI extraction, but the content structure matters more than the markup, and it will not produce FAQ rich results on any site (see `<mythbusting>`).
 - **Segmented landing pages** — at L4+ (see `<maturity_assessment>`), one landing page per industry/persona/use-case with tailored examples and CTAs.
 - **Internal linking architecture** — every update adds 1–2 internal links to related recent pages. This is the single highest-leverage habit for AI visibility.
 - **Freshness component** — a visible "last updated: YYYY-MM-DD" block with a quarterly review cadence documented in the content ops doc.

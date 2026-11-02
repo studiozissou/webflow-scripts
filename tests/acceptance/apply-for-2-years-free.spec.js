@@ -70,9 +70,7 @@ test.describe('apply-for-2-years-free', () => {
   test('shows the normal banner after the steps', async ({ page }) => {
     const order = await page.evaluate(() => {
       const steps = document.querySelector('._25-how-to-get-start-section');
-      const trust = [...document.querySelectorAll('.trustpilot-widget')].find(
-        (el) => !el.closest('nav') && !el.closest('footer'),
-      );
+      const trust = document.querySelector('.top-hero-badge .trustpilot-widget');
       if (!steps || !trust) return null;
       return Boolean(steps.compareDocumentPosition(trust) & Node.DOCUMENT_POSITION_FOLLOWING);
     });

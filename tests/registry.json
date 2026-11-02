@@ -774,6 +774,16 @@
       "description": "Rolfing /rolfing/ landing pages: single 301 from /what-is-rolfing/, one h1, branded title, description length, 3-5 FAQ items with microdata, hero alt, WebPage + BreadcrumbList JSON-LD with no medical types, no outcome claims; gated on ROLFING_LANDING=1, expected to fail until T3-T5 of rolfing-growth-oct-2026 ship."
     },
     {
+      "slug": "rolfing-content-pages",
+      "url": "https://rolfing-amsterdam.webflow.io/en/rolfing/knee-hip-ankle-pain",
+      "spec": "tests/acceptance/rolfing-content-pages.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "Ten Rolfing landing pages on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_PAGES=U14 limits it to the pattern page, expected to fail until the build ships."
+    },
+    {
       "slug": "oost-hours-kerst-2026",
       "url": "https://www.oosteten.nl/afhalen",
       "spec": "tests/acceptance/oost-hours-kerst-2026.spec.js",

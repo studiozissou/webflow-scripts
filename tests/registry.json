@@ -782,6 +782,16 @@
       "critical": false,
       "created": "2026-10-28",
       "description": "Rolfing Pages template rebuild (track 2a): explainers keep the icon hero with no empty or landing-only blocks; the template-test fixture shows photo hero (right on desktop, stacked on mobile), intro, symptoms, last updated, session + About Janco, bound testimonial instead of slider, native details FAQ with Question/Answer microdata, related cards; gated on ROLFING_TEMPLATE=1, ROLFING_FOLDER=rolfing after the rename."
+      },
+      {
+      "slug": "rolfing-content-pages",
+      "url": "https://rolfing-amsterdam.webflow.io/en/rolfing/knee-hip-ankle-pain",
+      "spec": "tests/acceptance/rolfing-content-pages.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "Ten Rolfing landing pages on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_PAGES=U14 limits it to the pattern page, expected to fail until the build ships."
     },
     {
       "slug": "oost-hours-kerst-2026",

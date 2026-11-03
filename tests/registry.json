@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-27",
+  "lastUpdated": "2026-10-28",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -772,6 +772,16 @@
       "critical": false,
       "created": "2026-10-22",
       "description": "Rolfing /rolfing/ landing pages: single 301 from /what-is-rolfing/, one h1, branded title, description length, 3-5 FAQ items with microdata, hero alt, WebPage + BreadcrumbList JSON-LD with no medical types, no outcome claims; gated on ROLFING_LANDING=1, expected to fail until T3-T5 of rolfing-growth-oct-2026 ship."
+    },
+    {
+      "slug": "rolfing-template-2a",
+      "url": "https://rolfing-amsterdam.webflow.io/en/what-is-rolfing/template-test",
+      "spec": "tests/acceptance/rolfing-template-2a.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-28",
+      "description": "Rolfing Pages template rebuild (track 2a): explainers keep the icon hero with no empty or landing-only blocks; the template-test fixture shows photo hero (right on desktop, stacked on mobile), intro, symptoms, last updated, session + About Janco, bound testimonial instead of slider, native details FAQ with Question/Answer microdata, related cards; gated on ROLFING_TEMPLATE=1, ROLFING_FOLDER=rolfing after the rename."
     },
     {
       "slug": "oost-hours-kerst-2026",

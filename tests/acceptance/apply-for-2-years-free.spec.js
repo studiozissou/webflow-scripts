@@ -88,6 +88,17 @@ test.describe('apply-for-2-years-free', () => {
     );
   });
 
+  test('lists Revolut before Zempler, matching the cards', async ({ page }) => {
+    const terms = await page.locator('.apply-free-terms-link').allInnerTexts();
+    expect(terms).toEqual(['Revolut terms', 'Zempler terms']);
+    const text = await page.locator('body').innerText();
+    expect(text).toContain('Open an eligible Revolut or Zempler account');
+  });
+
+  test('has no hero icon', async ({ page }) => {
+    await expect(page.locator('.apply-free-hero img')).toHaveCount(0);
+  });
+
   test('Revolut Apply button goes to the supplied URL', async ({ page }) => {
     const url = process.env.REVOLUT_APPLY_URL;
     test.skip(!url, 'Waiting on the Revolut URL from Anna');

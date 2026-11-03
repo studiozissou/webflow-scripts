@@ -764,6 +764,16 @@
       "description": "Oct 2026 Claude task batch: Carsa store and town pages link to each other, Oost sitemap pages are indexable unless intended; no console errors."
     },
     {
+      "slug": "coconut-named-authors",
+      "url": "https://getcoconut.webflow.io/authors",
+      "spec": "tests/acceptance/coconut-named-authors.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "Coconut named authors: byline in raw HTML linked to /author/{slug}, role, 375 px fit; one BlogPosting with real author url, sameAs and Organization team author; profile pages and /authors index return 200 with no placeholder authors. Expected to fail until the build ships and Coconut's author data is loaded."
+    },
+    {
       "slug": "coconut-site-overhaul",
       "url": "https://getcoconut.webflow.io/",
       "spec": "tests/acceptance/coconut-site-overhaul.spec.js",

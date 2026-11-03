@@ -644,6 +644,16 @@
       "description": "Oost final food menu (Roos, 5 Oct) - NL and EN dish count, every dish priced with matching Offer microdata, NL/EN prices identical, JSON-LD valid; gated on OOST_MENU_FINAL=1."
     },
     {
+      "slug": "carsa-nov-2026-report-fixes",
+      "url": "https://www.carsa.co.uk/",
+      "spec": "tests/acceptance/carsa-nov-2026-report-fixes.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "November report fixes via Webflow MCP: tax strategy canonical, no Learn more links on promotions and car care pages, two shortened titles, distinct titles and descriptions on the two £500 promotions. Expected to fail until the spec is executed."
+    },
+    {
       "slug": "carsa-oct-2026-report-fixes",
       "url": "https://www.carsa.co.uk/",
       "spec": "tests/acceptance/carsa-oct-2026-report-fixes.spec.js",

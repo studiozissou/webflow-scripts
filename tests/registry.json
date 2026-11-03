@@ -842,6 +842,16 @@
       "critical": false,
       "created": "2026-11-02",
       "description": "Coconut noindex landing page for the 2-years-free Revolut and Zempler offer: copy, bank cards, three steps, normal banner below the steps, terms links, no trial leftovers, no mobile overflow. Apply URL checks skip until REVOLUT_APPLY_URL and ZEMPLER_APPLY_URL are set; sitemap check runs on production only."
+      },
+      {
+      "slug": "coconut-mtd-freelancers-page",
+      "url": "https://getcoconut.webflow.io/mtd-software/freelancers",
+      "spec": "tests/acceptance/coconut-mtd-freelancers-page.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut MTD for Freelancers page, duplicated from Landlords: approved copy verbatim, meta, tables, links, FAQ schema, no Landlords residue; Landlords H1 as regression control",
+      "created": "2026-11-02"
     }
   ]
 }

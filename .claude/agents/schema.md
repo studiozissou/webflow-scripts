@@ -54,7 +54,7 @@ Schema is a useful quality signal for AI engines but not the primary driver of A
 
 Useful schema types for AI-visible pages (in rough order of value):
 1. **Article** — blog posts, case studies, news. Include `author`, `datePublished`, `dateModified` for freshness signals.
-2. **FAQPage** — any visible Q&A block. Matches query shape directly. Value is AI extraction and page-type signal only: since August 2023 Google has shown FAQ rich results for authoritative government and health sites alone, so never justify this type to a commercial client on rich-result grounds.
+2. **FAQPage** — any visible Q&A block. Optional; a missing one is not a defect. Matches query shape directly. Value is AI extraction and page-type signal only: Google retired FAQ rich results on 7 May 2026 for all sites (secondary sources), so never justify this type on rich-result grounds.
 3. **Organization / LocalBusiness** — entity clarity helps AI engines attribute content.
 
 When helping with an AEO audit, consult the `ai-search-aeo` skill for the full 20-check rubric. Schema is two of those checks — content quality and structure are the other eighteen.

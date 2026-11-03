@@ -132,7 +132,7 @@ Load the `ai-search-aeo` skill and run the 20-check audit rubric against the hom
 
 | Check | What to look for |
 |---|---|
-| Schema (A1–A4) | JSON-LD present, FAQPage on Q&A content, HowTo on tutorials |
+| Schema (A1–A4) | JSON-LD present, FAQPage optional on Q&A content (missing is not a defect), HowTo on tutorials |
 | Answer structure (B5–B10) | Answer-first lead, question H2s, paragraph and section length, list intros, active voice |
 | Freshness (C11–C13) | Visible "last updated" timestamp, recent update, no time-sensitive hedge words |
 | Authority (D14–D17) | Original data/stats, author/entity signals, external citations, cite-magnet archetype |

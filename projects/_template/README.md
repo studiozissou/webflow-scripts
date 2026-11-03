@@ -46,7 +46,13 @@ Add `data-allow-local` to the footer tag on staging, serve the repo root on `htt
 
 Run `/launch-check <staging url>` before the domain goes live, and again after. It runs `launch-guard` on every locale, the consent check, page and schema tests, and prints the phone checklist. The rules behind it are in the `webflow-launch` skill.
 
-`npm run <client>:launch-guard -- <url>` runs the crawl on its own: exit `0` clean, `1` findings, `2` fetch failure.
+`npm run <client>:launch-guard -- <url>` runs the crawl and site checks on its own: exit `0` no errors (warnings may print), `1` errors, `2` a page fetch failed or the config or arguments are bad. An optional file that can't be fetched, such as `robots.txt`, `sitemap.xml` or `llms.txt`, is a warning and doesn't cause exit `2`.
+
+Optional fields in `launch.config.json`:
+
+- `stagingUrl`: the `*.webflow.io` URL. When set, the guard errors if its `robots.txt` allows crawling. When blank, check subdomain indexing by hand.
+- `redirects`: a list of `{ "from", "to" }`. The guard errors if a `from` doesn't end on its `to`.
+- `apexDefault`: set `true` if the site's default domain is the apex. Otherwise the guard warns when both hosts end on the apex.
 
 ## Deploying
 

@@ -11,6 +11,7 @@ Stop the usual launch defects (dummy values, locale link leaks, ungated analytic
 - If `.claude/reference/webflow-launch-lessons.md` exists (private symlink, may be absent), read it now. It holds the real defect history behind these rules; add any new defect to it after launch.
 - Read `projects/<client>/launch.config.json` (`domain`, `locales`, `placeholders`, `allowLocalAttr`). Without it, `launch-guard` can't run: write it first.
 - Webflow MCP pre-flight per the `webflow-mcp` skill: `get_site` succeeds before any planning.
+- For "what's left?", a launch or an audit, read `references/launch-audit-checklist.md`: the full item list with each item's phase and how it gets checked. Anything nobody could check is **Not run**, never a pass.
 </before_you_start>
 
 <rules>
@@ -26,11 +27,11 @@ Stop the usual launch defects (dummy values, locale link leaks, ungated analytic
 1. Primary locale complete and correct: real values, Page links, final copy.
 2. Only then translate secondary locales. Each translated link becomes a per-locale override that later primary fixes don't reach, and the MCP can't reset it (Designer only; see `webflow-mcp` v2 gotchas).
 3. Links inside translated rich text don't inherit: give them the locale path by hand (`/<locale>/page`).
-4. Per locale: SEO title (50–62 chars) and description (120–155 chars), CMS option-name translations (Site settings › Localization), consent banner and widget languages.
+4. Per locale: SEO title (50–60 chars) and description (150–160 chars), as guides rather than limits, CMS option-name translations (Site settings › Localization), consent banner and widget languages.
 
-**Placeholders and template leftovers.** No `TODO-`, `[...]`, `Example text`, `example.com`, `0000000`, configured placeholder numbers, template "Site Name" schema, style-guide page or utility blocks on the live domain.
+**Placeholders and template leftovers.** No `TODO-`, `[...]`, `Example text`, `example.com`, `0000000`, configured placeholder numbers, template "Site Name" schema, style-guide page (keep it as a Designer draft, never published) or utility blocks on the live domain.
 
-**Consent.** Follow the consent pattern in the `webflow-embeds` skill (`<consent_and_third_party>`). Never enable Webflow's native GA integration on a site with a consent manager. Before a choice: no `_ga*`/`_gcl*` cookies, no `g/collect` request. The privacy policy must match live behaviour.
+**Consent.** Follow the consent pattern in the `webflow-embeds` skill (`<consent_and_third_party>`). Never enable Webflow's native GA integration on a site with a consent manager. Gate GA4 with the consent manager, or use GTM with Consent Mode. Before a choice: no `_ga*`/`_gcl*` cookies, and no `g/collect` request unless defaults are `denied` (`gcs=G100`), because Consent Mode sends cookieless pings by design. The privacy policy must match live behaviour.
 
 **Third-party widgets.** Use the lazy widget pattern in the `webflow-embeds` skill: load on idle or intent, wait for the widget's ready signal, fallback URL, no auto-open, titled iframe, stacked under the consent banner. Never paste a vendor snippet verbatim.
 
@@ -62,7 +63,7 @@ Each gate must be clean before the next phase. `/launch-check` covers the automa
 - JSON-LD uses the custom domain, not `webflow.io` URLs.
 - Template leftovers removed; favicon and webclip set (Designer slot).
 - `data-allow-local` gone from the footer loader tag; loader pinned to the launch tag.
-- DNS + SSL live; 301s from `www`/apex and any typo or defensive domains.
+- DNS + SSL live; `www` is the default domain unless the config sets `apexDefault: true`; 301s from the other host and any typo or defensive domains.
 - `get_site`: pending changes are only what you expect. Ask, then publish.
 - `/launch-check <live-url>` on every locale. Then submit the sitemap in Search Console and Bing Webmaster Tools.
 </gates>
@@ -71,6 +72,8 @@ Each gate must be clean before the next phase. `/launch-check` covers the automa
 **Day 14**
 - Five key URLs per locale indexed (Search Console URL inspection).
 - `launch-guard` and Lighthouse mobile on live, every locale. Fix anything new.
+- SEMrush site audit as extra evidence, per the checklist. No project, data or units: record **Not run**.
+- The checklist's post-launch (`L`) items.
 - Append any new defect class to `.claude/reference/webflow-launch-lessons.md` (if present) and, if a script could catch it, to `tools/webflow/launch-guard.js` with a test.
 
 **Day 30**
@@ -82,7 +85,7 @@ Each gate must be clean before the next phase. `/launch-check` covers the automa
 <success_criteria>
 - No `TODO-` or dummy value on the live domain
 - Every locale links only to its own locale's pages
-- No analytics cookie or request before consent
+- No analytics cookie before consent; no analytics request except denied-mode Consent Mode pings
 - No widget loads before idle/intent or covers the consent banner
 - Every publish was preceded by a `get_site` pending-changes check and explicit approval
 - Day 14 and day 30 checks scheduled at launch

@@ -411,15 +411,22 @@ test('source: selecting a radio draws its squiggle and hides the others', () => 
   assert.match(handler, /isSelected \? playSquiggle\(\$label\) : resetSquiggle\(\$label\);/);
 });
 
-test('source: a deselected squiggle fades out over 200ms, then resets only if still faded', () => {
+test('source: a deselected squiggle wrapper fades out over 200ms, then the line resets only if still faded', () => {
   const reset = SOURCE.slice(SOURCE.indexOf('function resetSquiggle'), SOURCE.indexOf("$('input[type=\"radio\"][name=\"Book\"]').on('change'"));
-  assert.match(reset, /\$\(svg\)\.css\(\{ transition: 'opacity 200ms ease', opacity: 0 \}\);/);
-  assert.match(reset, /setTimeout\(\(\) => \{ if \(svg\.style\.opacity === '0'\) svg\.__svgDrawReset\(\); \}, 200\);/);
+  assert.match(reset, /\$\(wrap\)\.css\(\{ transition: 'opacity 200ms ease', opacity: 0 \}\);/);
+  assert.match(reset, /setTimeout\(\(\) => \{ if \(wrap\.style\.opacity === '0'\) svg\.__svgDrawReset\(\); \}, 200\);/);
+  assert.doesNotMatch(reset, /\$\(svg\)\.css/);
 });
 
-test('source: a selected squiggle is made visible at once before it draws', () => {
+test('source: a selected squiggle wrapper is made visible at once before the line draws', () => {
   const play = SOURCE.slice(SOURCE.indexOf('function playSquiggle'), SOURCE.indexOf('function resetSquiggle'));
-  assert.match(play, /\$\(svg\)\.css\(\{ transition: 'none', opacity: 1 \}\);\s*svg\.__svgDrawPlay\(\);/);
+  assert.match(play, /\$\(wrap\)\.css\(\{ transition: 'none', opacity: 1 \}\);\s*svg\.__svgDrawPlay\(\);/);
+  assert.doesNotMatch(play, /\$\(svg\)\.css/);
+});
+
+test('source: on load the default option draws its squiggle and the others are hidden at once', () => {
+  const init = SOURCE.slice(SOURCE.indexOf("$('#reserve-test-drive').prop('checked', true);"), SOURCE.indexOf("document.getElementById('cta-postcode')"));
+  assert.match(init, /this\.checked \? playSquiggle\(\$label\) : \$label\.find\('\[data-svg="draw-line"\]'\)\.css\(\{ transition: 'none', opacity: 0 \}\);/);
 });
 
 test('source: financeTerm is read from window.__CARSA_VDP (CARSA-8249)', () => {

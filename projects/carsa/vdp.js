@@ -1042,17 +1042,19 @@
       }
 
       function playSquiggle($label) {
-        const svg = $label.find('[data-svg="draw-line"] svg')[0];
+        const wrap = $label.find('[data-svg="draw-line"]')[0];
+        const svg = wrap && wrap.querySelector('svg');
         if (!svg || !svg.__svgDrawPlay) return;
-        $(svg).css({ transition: 'none', opacity: 1 });
+        $(wrap).css({ transition: 'none', opacity: 1 });
         svg.__svgDrawPlay();
       }
 
       function resetSquiggle($label) {
-        const svg = $label.find('[data-svg="draw-line"] svg')[0];
+        const wrap = $label.find('[data-svg="draw-line"]')[0];
+        const svg = wrap && wrap.querySelector('svg');
         if (!svg || !svg.__svgDrawReset) return;
-        $(svg).css({ transition: 'opacity 200ms ease', opacity: 0 });
-        setTimeout(() => { if (svg.style.opacity === '0') svg.__svgDrawReset(); }, 200);
+        $(wrap).css({ transition: 'opacity 200ms ease', opacity: 0 });
+        setTimeout(() => { if (wrap.style.opacity === '0') svg.__svgDrawReset(); }, 200);
       }
 
       $('input[type="radio"][name="Book"]').on('change', function () {
@@ -1085,6 +1087,7 @@
       $('input[type="radio"][name="Book"]').each(function () {
         const $label = $(this).closest('.details_radio-field');
         $label.toggleClass('is-list-active', this.checked);
+        this.checked ? playSquiggle($label) : $label.find('[data-svg="draw-line"]').css({ transition: 'none', opacity: 0 });
         if (!this.checked) $label.find('.details_radio_content').css({ display: 'none' });
       });
 

@@ -76,6 +76,9 @@ const GOV_LINK_FRAGMENTS = [
   'find-software-that-works-with-making-tax-digital-for-income-tax',
 ];
 
+const FAQ_TITLE = '._25-collapse-title';
+const THIRD_PARTY_NOISE = /OptinMonster|omappapi\.com|intercom|facebook|connect\.facebook\.net/i;
+
 const headings = (page, level) =>
   page.locator(level).evaluateAll((nodes) => nodes.map((n) => n.textContent.replace(/\s+/g, ' ').trim()));
 
@@ -101,7 +104,9 @@ test.describe('coconut-mtd-freelancers-page', () => {
 
   test('shows all benefit card and FAQ headings', async ({ page }) => {
     const h3s = await headings(page, 'h3');
-    for (const text of [...BENEFITS, ...FAQS]) expect(h3s).toContain(text);
+    for (const text of BENEFITS) expect(h3s).toContain(text);
+    const questions = await headings(page, FAQ_TITLE);
+    expect(questions).toEqual(FAQS);
   });
 
   test('no Landlords copy remains', async ({ page }) => {
@@ -142,7 +147,7 @@ test.describe('coconut-mtd-freelancers-page', () => {
   });
 
   test('first FAQ opens on click', async ({ page }) => {
-    const question = page.locator('h3', { hasText: FAQS[0] });
+    const question = page.locator(FAQ_TITLE, { hasText: FAQS[0] });
     await question.scrollIntoViewIfNeeded();
     await question.click();
     await page.waitForTimeout(1000);
@@ -158,7 +163,10 @@ test.describe('coconut-mtd-freelancers-page', () => {
 
   test('no console errors on load', async ({ page }) => {
     const errors = [];
-    page.on('console', (message) => message.type() === 'error' && errors.push(message.text()));
+    page.on('console', (message) => {
+      const source = `${message.text()} ${message.location().url}`;
+      if (message.type() === 'error' && !THIRD_PARTY_NOISE.test(source)) errors.push(message.text());
+    });
     await page.reload({ waitUntil: 'load', timeout: 60000 });
     await page.waitForTimeout(1500);
     expect(errors).toEqual([]);

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-27",
+  "lastUpdated": "2026-11-04",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -802,6 +802,16 @@
       "critical": false,
       "created": "2026-10-27",
       "description": "carsa-v1.3.0 refactor: helpers.js loads first on every page and exposes the seven shared helpers; every v1.2.0 module still loads once and runs from the v1.3 folder; every lead link carries the same first-touch UTMs (session record ignored); car-redirect pre-gate and VRM check, FAQ digit slug, fuel link encoding, models single meta and @graph order, dead VDP URL no Datadog warn. Gated by CARSA_V130=1; run with CARSA_V120=1 CARSA_V120_DONE=all."
+    },
+    {
+      "slug": "cf-page-skill",
+      "url": "https://getcoconut.webflow.io/mtd-software-cf",
+      "spec": "tests/acceptance/cf-page-skill.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-04",
+      "description": "A /cf-page staging duplicate is Client First V3: noindex, page-wrapper > main.main-wrapper, every section has section_* with a container-* first child, no _25-/_26-/max-width-1248 classes outside kept components, elements <= 70% of ORIGINAL_ELEMENTS, one h1, no console errors. Skipped unless CF_PAGE_PATH is set; first pilot is Coconut /mtd-software after C2."
     }
   ]
 }

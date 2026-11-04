@@ -1,0 +1,481 @@
+{
+ "label": "fixture",
+ "action": "get_all_elements",
+ "result": [
+  {
+   "status": "success",
+   "message": "fixture",
+   "data": {
+    "id": {
+     "component": "p",
+     "element": "e1"
+    },
+    "type": "Body",
+    "children": [
+     {
+      "id": {
+       "component": "p",
+       "element": "e2"
+      },
+      "type": "Block",
+      "styleNames": [
+       "page-wrapper"
+      ],
+      "settings": {
+       "tag": "div",
+       "visibility": true
+      },
+      "children": [
+       {
+        "id": {
+         "component": "p",
+         "element": "e3"
+        },
+        "type": "ComponentInstance",
+        "instanceDetails": {
+         "type": "ComponentInstance",
+         "id": "c1",
+         "name": "Top Nav Bar"
+        }
+       },
+       {
+        "id": {
+         "component": "p",
+         "element": "e4"
+        },
+        "type": "Block",
+        "styleNames": [
+         "main-wrapper"
+        ],
+        "settings": {
+         "tag": "main",
+         "visibility": true
+        },
+        "children": [
+         {
+          "id": {
+           "component": "p",
+           "element": "e5"
+          },
+          "type": "ComponentInstance",
+          "instanceDetails": {
+           "type": "ComponentInstance",
+           "id": "c2",
+           "name": "Breadcrumbs Section"
+          }
+         },
+         {
+          "id": {
+           "component": "p",
+           "element": "e6"
+          },
+          "type": "Section",
+          "styleNames": [
+           "25 Testimonial Section"
+          ],
+          "settings": {
+           "tag": "section",
+           "visibility": true
+          },
+          "children": [
+           {
+            "id": {
+             "component": "p",
+             "element": "e7"
+            },
+            "type": "BlockContainer",
+            "styleNames": [
+             "Max Width 1248"
+            ],
+            "settings": {
+             "tag": "div",
+             "visibility": true
+            },
+            "children": [
+             {
+              "id": {
+               "component": "p",
+               "element": "e8"
+              },
+              "type": "Block",
+              "styleNames": [
+               "Position",
+               "Relative"
+              ],
+              "settings": {
+               "tag": "div",
+               "visibility": true
+              },
+              "children": [
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e9"
+                },
+                "type": "Block",
+                "styleNames": [
+                 "max-width-large",
+                 "align-center",
+                 "text-align-center"
+                ],
+                "settings": {
+                 "tag": "div",
+                 "visibility": true
+                },
+                "children": [
+                 {
+                  "id": {
+                   "component": "p",
+                   "element": "e10"
+                  },
+                  "type": "Heading",
+                  "styleNames": [
+                   "25 Heading 1",
+                   "Center"
+                  ],
+                  "settings": {
+                   "tag": "h2",
+                   "visibility": true,
+                   "headingLevel": 2
+                  },
+                  "children": [
+                   {
+                    "id": {
+                     "component": "p",
+                     "element": "e11"
+                    },
+                    "type": "String",
+                    "textContent": "text"
+                   }
+                  ]
+                 },
+                 {
+                  "id": {
+                   "component": "p",
+                   "element": "e12"
+                  },
+                  "type": "Paragraph",
+                  "styleNames": [
+                   "text-size-medium"
+                  ],
+                  "settings": {
+                   "visibility": true
+                  },
+                  "children": [
+                   {
+                    "id": {
+                     "component": "p",
+                     "element": "e13"
+                    },
+                    "type": "String",
+                    "textContent": "text"
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e14"
+                },
+                "type": "Image",
+                "styleNames": [
+                 "25 Testimonal Quote Graphic"
+                ],
+                "settings": {
+                 "visibility": true
+                }
+               },
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e15"
+                },
+                "type": "Image",
+                "styleNames": [
+                 "25 Testimonal Quote Graphic",
+                 "Close"
+                ],
+                "settings": {
+                 "visibility": true
+                }
+               },
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e16"
+                },
+                "type": "Block",
+                "styleNames": [
+                 "25 Testimonial Grid"
+                ],
+                "settings": {
+                 "tag": "div",
+                 "visibility": true
+                },
+                "children": [
+                 {
+                  "id": {
+                   "component": "p",
+                   "element": "e17"
+                  },
+                  "type": "Block",
+                  "styleNames": [
+                   "25 Testimonial Trustpilot"
+                  ],
+                  "settings": {
+                   "tag": "div",
+                   "visibility": true
+                  },
+                  "children": [
+                   {
+                    "id": {
+                     "component": "p",
+                     "element": "e18"
+                    },
+                    "type": "HtmlEmbed",
+                    "settings": {
+                     "visibility": true
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "id": {
+           "component": "p",
+           "element": "e19"
+          },
+          "type": "Section",
+          "styleNames": [
+           "25 Plans Section 2"
+          ],
+          "settings": {
+           "tag": "section",
+           "visibility": true
+          },
+          "children": [
+           {
+            "id": {
+             "component": "p",
+             "element": "e20"
+            },
+            "type": "BlockContainer",
+            "styleNames": [
+             "Max Width 1248",
+             "25 Plans Container"
+            ],
+            "settings": {
+             "tag": "div",
+             "visibility": true
+            },
+            "children": [
+             {
+              "id": {
+               "component": "p",
+               "element": "e21"
+              },
+              "type": "Image",
+              "styleNames": [
+               "25 Plans Decor Coconut"
+              ],
+              "settings": {
+               "visibility": true
+              }
+             },
+             {
+              "id": {
+               "component": "p",
+               "element": "e22"
+              },
+              "type": "Block",
+              "styleNames": [
+               "Position",
+               "Relative",
+               "z-index 1",
+               "25 Margin",
+               "Bottom 40px"
+              ],
+              "settings": {
+               "tag": "div",
+               "visibility": true
+              },
+              "children": [
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e23"
+                },
+                "type": "Heading",
+                "styleNames": [
+                 "heading-style-h3",
+                 "text-align-center"
+                ],
+                "settings": {
+                 "tag": "h2",
+                 "visibility": true,
+                 "headingLevel": 2
+                },
+                "children": [
+                 {
+                  "id": {
+                   "component": "p",
+                   "element": "e24"
+                  },
+                  "type": "String",
+                  "textContent": "text"
+                 }
+                ]
+               },
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e25"
+                },
+                "type": "Block",
+                "styleNames": [
+                 "spacer-small"
+                ],
+                "settings": {
+                 "tag": "div",
+                 "visibility": true
+                }
+               },
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e26"
+                },
+                "type": "Paragraph",
+                "styleNames": [
+                 "25 Pargraph 30",
+                 "Center",
+                 "No Background 31"
+                ],
+                "settings": {
+                 "visibility": true
+                },
+                "children": [
+                 {
+                  "id": {
+                   "component": "p",
+                   "element": "e27"
+                  },
+                  "type": "Strong",
+                  "settings": {
+                   "visibility": true
+                  },
+                  "children": [
+                   {
+                    "id": {
+                     "component": "p",
+                     "element": "e28"
+                    },
+                    "type": "String",
+                    "textContent": "text"
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "id": {
+                 "component": "p",
+                 "element": "e29"
+                },
+                "type": "Block",
+                "styleNames": [
+                 "max-width-large",
+                 "align-center",
+                 "text-align-center"
+                ],
+                "settings": {
+                 "tag": "div",
+                 "visibility": true
+                },
+                "children": [
+                 {
+                  "id": {
+                   "component": "p",
+                   "element": "e30"
+                  },
+                  "type": "Paragraph",
+                  "styleNames": [
+                   "text-size-medium"
+                  ],
+                  "settings": {
+                   "visibility": true
+                  },
+                  "children": [
+                   {
+                    "id": {
+                     "component": "p",
+                     "element": "e31"
+                    },
+                    "type": "String",
+                    "textContent": "text"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "id": {
+               "component": "p",
+               "element": "e32"
+              },
+              "type": "ComponentInstance",
+              "instanceDetails": {
+               "type": "ComponentInstance",
+               "id": "c3",
+               "name": "26 Price Table"
+              }
+             }
+            ]
+           },
+           {
+            "id": {
+             "component": "p",
+             "element": "e33"
+            },
+            "type": "Image",
+            "styleNames": [
+             "25 Plan Decor Palm Tree"
+            ],
+            "settings": {
+             "visibility": true
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": {
+         "component": "p",
+         "element": "e34"
+        },
+        "type": "ComponentInstance",
+        "instanceDetails": {
+         "type": "ComponentInstance",
+         "id": "c4",
+         "name": "Footer"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

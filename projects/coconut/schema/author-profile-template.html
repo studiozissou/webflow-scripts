@@ -1,0 +1,50 @@
+<!-- Author profile template JSON-LD (ProfilePage with the author as mainEntity + BreadcrumbList), pasted into the Authors template's Page Settings > Schema markup. -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "@id": "https://www.getcoconut.com/author/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#profilepage",
+    "url": "https://www.getcoconut.com/author/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+    "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+    "inLanguage": "en-GB",
+    "isPartOf": { "@id": "https://www.getcoconut.com/#website" },
+    "breadcrumb": { "@id": "https://www.getcoconut.com/author/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb" },
+    "mainEntity": {
+      "@type": "{{wf {&quot;path&quot;:&quot;schema-type&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "@id": "https://www.getcoconut.com/author/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#author",
+      "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "url": "https://www.getcoconut.com/author/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "image": "{{wf {&quot;path&quot;:&quot;picture&quot;,&quot;type&quot;:&quot;ImageRef&quot;\} }}",
+      "jobTitle": "{{wf {&quot;path&quot;:&quot;position-and-company&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "description": "{{wf {&quot;path&quot;:&quot;bio-summary&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+      "sameAs": ["{{wf {&quot;path&quot;:&quot;linkedin-url&quot;,&quot;type&quot;:&quot;Link&quot;\} }}"]
+    }
+  }
+</script>
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "@id": "https://www.getcoconut.com/author/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.getcoconut.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Authors",
+        "item": "https://www.getcoconut.com/authors"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+      }
+    ]
+  }
+</script>

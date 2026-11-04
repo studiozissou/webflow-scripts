@@ -760,6 +760,7 @@
 
         const startMode = (wrapper.getAttribute('data-svg-start') || 'auto').toLowerCase();
         const totalDur  = Math.max(0.001, parseFloat(wrapper.getAttribute('data-svg-duration')) || 2);
+        const manual = !!wrapper.closest('.details_radio-field');
 
         const svgs = Array.from(wrapper.querySelectorAll('svg'));
         if (!svgs.length) return;
@@ -794,6 +795,8 @@
 
           const driver = gsap.to(tl, { progress: 1, duration: totalDur, ease: "power1.inOut", paused: true });
           svg.__svgDrawPlay = () => driver.pause(0).play();
+          svg.__svgDrawReset = () => driver.pause(0);
+          if (manual) return;
 
           const playNow = () => gsap.delayedCall(0.2, () => driver.play());
           const playAfterFirstScroll = () => {
@@ -1040,6 +1043,11 @@
         if (svg && svg.__svgDrawPlay) svg.__svgDrawPlay();
       }
 
+      function resetSquiggle($label) {
+        const svg = $label.find('[data-svg="draw-line"] svg')[0];
+        if (svg && svg.__svgDrawReset) svg.__svgDrawReset();
+      }
+
       $('input[type="radio"][name="Book"]').on('change', function () {
         if (!this.checked) return;
         const option = this.id;
@@ -1048,11 +1056,11 @@
         }).get();
 
         updateCTAs(option);
-        playSquiggle($(this).closest('.details_radio-field'));
 
         $allLabels.forEach(label => {
           const $label = $(label);
           const isSelected = $label.find('input[type="radio"]').prop('checked');
+          isSelected ? playSquiggle($label) : resetSquiggle($label);
           isSelected ? showContent($label, true) : hideContent($label);
           $label.toggleClass('is-list-active', isSelected);
         });

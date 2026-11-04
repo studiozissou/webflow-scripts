@@ -395,3 +395,19 @@ test('source: fifteen block IIFEs inside the outer wrapper', () => {
 test('source: the draw-line block gives each svg the __svgDrawPlay hook the radio CTA calls', () => {
   assert.match(SOURCE, /svg\.__svgDrawPlay = \(\) => driver\.pause\(0\)\.play\(\);/);
 });
+
+test('source: radio squiggles are primed hidden and never auto-play on load', () => {
+  const block = SOURCE.slice(SOURCE.indexOf("$('[data-svg=\"draw-line\"]')"), SOURCE.indexOf('pastOnLoad'));
+  assert.match(block, /const manual = !!wrapper\.closest\('\.details_radio-field'\);/);
+  assert.match(block, /if \(manual\) return;/);
+});
+
+test('source: the draw-line block gives each svg a __svgDrawReset hook that hides the line again', () => {
+  assert.match(SOURCE, /svg\.__svgDrawReset = \(\) => driver\.pause\(0\);/);
+});
+
+test('source: selecting a radio draws its squiggle and hides the others', () => {
+  const handler = SOURCE.slice(SOURCE.indexOf("$('input[type=\"radio\"][name=\"Book\"]').on('change'"));
+  assert.match(handler, /isSelected \? playSquiggle\(\$label\) : resetSquiggle\(\$label\);/);
+  assert.match(SOURCE, /function resetSquiggle\(\$label\) \{\s*const svg = \$label\.find\('\[data-svg="draw-line"\] svg'\)\[0\];\s*if \(svg && svg\.__svgDrawReset\) svg\.__svgDrawReset\(\);\s*\}/);
+});

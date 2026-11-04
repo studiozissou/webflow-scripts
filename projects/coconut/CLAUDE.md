@@ -4,10 +4,10 @@
 Schema markup and snippets for https://www.getcoconut.com/ (Webflow site `6069af2a39978132d0155fd7`, use the `webflow-2` MCP slot). No hosted scripts yet.
 
 ## Schema files
-- `schema/knowledge-hub-template.html`: article template, Page Settings > Schema markup. The head custom code holds no JSON-LD.
-- `schema/author-profile-template.html`: Authors template (`/author/{slug}`), Page Settings > Schema markup.
-- `schema/authors-index.json`: static `/authors` page. Plain JSON, so the MCP can write it.
-- The Webflow API rejects schema containing `{{wf ...}}` binding tokens ("must be valid JSON"), so the two template files are pasted in the Designer.
+- `schema/knowledge-hub-template.html`: article template, Page Settings > Custom code > Head (after Finsweet and the table styles). Schema markup field empty.
+- `schema/author-profile-template.html`: Authors template (`/author/{slug}`), Custom code > Head. Schema markup field empty.
+- `schema/authors-index.json`: static `/authors` page, Page Settings > Schema markup. Plain JSON, so the MCP writes it.
+- The Schema markup API rejects `{{wf ...}}` binding tokens ("must be valid JSON"), but `set_page_freeform_code` accepts them, so template schema lives in head code. Keep exactly one BlogPosting per article.
 - The BreadcrumbList blocks in the two template files are near-copies. Change both together.
 - Bindings can't be conditional: an empty CMS field renders `""`. Author `schema-type` is `Person` or `Organization` (The Coconut Team).
 

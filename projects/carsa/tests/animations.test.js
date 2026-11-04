@@ -50,7 +50,7 @@ function wrap(els) {
 }
 
 function makeEnv({ path = '/', marker = true, nodes = {}, gsapPresent = true } = {}) {
-  const calls = { set: [], timeline: 0, delayed: 0, scrollTriggers: 0 };
+  const calls = { set: [], timeline: 0, delayed: 0, scrollTriggers: 0, errors: [] };
   const gsap = {
     registerPlugin() {},
     timeline: () => {
@@ -65,7 +65,11 @@ function makeEnv({ path = '/', marker = true, nodes = {}, gsapPresent = true } =
     readyState: 'complete',
     documentElement: { clientHeight: 800 },
     addEventListener() {},
-    querySelector: (s) => (nodes[s] || [])[0] || null,
+    querySelector: (s) => {
+      if (/^#\d/.test(s)) throw new SyntaxError(`'${s}' is not a valid selector.`);
+      return (nodes[s] || [])[0] || null;
+    },
+    getElementById: (id) => (nodes[`#${id}`] || [])[0] || null,
     querySelectorAll: (s) => nodes[s] || [],
   };
   const location = { pathname: path, search: '', hostname: 'www.carsa.co.uk' };
@@ -74,7 +78,9 @@ function makeEnv({ path = '/', marker = true, nodes = {}, gsapPresent = true } =
     innerHeight: 800,
     addEventListener() {},
     removeEventListener() {},
-    setTimeout: () => {},
+    setTimeout: (fn) => {
+      try { fn(); } catch (err) { calls.errors.push(err); }
+    },
   };
   if (marker) window.__CARSA_PAGE = { release: 'v1.2.0' };
   const jQuery = (arg) => {
@@ -170,6 +176,7 @@ test('gates: the 404 page (any path with #404-message) draws shapes only', () =>
   const r = run('/vehicles/used/zz99zzz', { nodes: { '#404-message': [{}] } });
   assert.equal(r.shapeRan, true);
   assert.equal(r.lineRan, false);
+  assert.deepEqual(r.calls.errors, []);
 });
 
 test('gates: a marked page outside both lists gets nothing', () => {
@@ -178,6 +185,7 @@ test('gates: a marked page outside both lists gets nothing', () => {
   assert.equal(r.lineRan, false);
   assert.equal(r.shapeRan, false);
   assert.equal(r.calls.timeline, 0);
+  assert.deepEqual(r.calls.errors, []);
 });
 
 test('without gsap both blocks return quietly', () => {

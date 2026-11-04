@@ -198,7 +198,7 @@
   });
 
   block(() => {
-    if (!onPage(DRAW_SHAPE_PATHS, DRAW_SHAPE_TEMPLATES) && !document.querySelector('#404-message')) return;
+    if (!onPage(DRAW_SHAPE_PATHS, DRAW_SHAPE_TEMPLATES) && !document.getElementById('404-message')) return;
     $(function () {
       if (typeof gsap === "undefined") return;
       if (typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);

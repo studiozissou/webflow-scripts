@@ -1040,12 +1040,16 @@
 
       function playSquiggle($label) {
         const svg = $label.find('[data-svg="draw-line"] svg')[0];
-        if (svg && svg.__svgDrawPlay) svg.__svgDrawPlay();
+        if (!svg || !svg.__svgDrawPlay) return;
+        $(svg).css({ transition: 'none', opacity: 1 });
+        svg.__svgDrawPlay();
       }
 
       function resetSquiggle($label) {
         const svg = $label.find('[data-svg="draw-line"] svg')[0];
-        if (svg && svg.__svgDrawReset) svg.__svgDrawReset();
+        if (!svg || !svg.__svgDrawReset) return;
+        $(svg).css({ transition: 'opacity 200ms ease', opacity: 0 });
+        setTimeout(() => { if (svg.style.opacity === '0') svg.__svgDrawReset(); }, 200);
       }
 
       $('input[type="radio"][name="Book"]').on('change', function () {

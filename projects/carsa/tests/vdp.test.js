@@ -409,5 +409,15 @@ test('source: the draw-line block gives each svg a __svgDrawReset hook that hide
 test('source: selecting a radio draws its squiggle and hides the others', () => {
   const handler = SOURCE.slice(SOURCE.indexOf("$('input[type=\"radio\"][name=\"Book\"]').on('change'"));
   assert.match(handler, /isSelected \? playSquiggle\(\$label\) : resetSquiggle\(\$label\);/);
-  assert.match(SOURCE, /function resetSquiggle\(\$label\) \{\s*const svg = \$label\.find\('\[data-svg="draw-line"\] svg'\)\[0\];\s*if \(svg && svg\.__svgDrawReset\) svg\.__svgDrawReset\(\);\s*\}/);
+});
+
+test('source: a deselected squiggle fades out over 200ms, then resets only if still faded', () => {
+  const reset = SOURCE.slice(SOURCE.indexOf('function resetSquiggle'), SOURCE.indexOf("$('input[type=\"radio\"][name=\"Book\"]').on('change'"));
+  assert.match(reset, /\$\(svg\)\.css\(\{ transition: 'opacity 200ms ease', opacity: 0 \}\);/);
+  assert.match(reset, /setTimeout\(\(\) => \{ if \(svg\.style\.opacity === '0'\) svg\.__svgDrawReset\(\); \}, 200\);/);
+});
+
+test('source: a selected squiggle is made visible at once before it draws', () => {
+  const play = SOURCE.slice(SOURCE.indexOf('function playSquiggle'), SOURCE.indexOf('function resetSquiggle'));
+  assert.match(play, /\$\(svg\)\.css\(\{ transition: 'none', opacity: 1 \}\);\s*svg\.__svgDrawPlay\(\);/);
 });

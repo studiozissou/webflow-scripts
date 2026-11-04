@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-27",
+  "lastUpdated": "2026-11-04",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -702,6 +702,16 @@
       "critical": false,
       "created": "2026-10-14",
       "description": "Studio Zissou redesign: every v1 EN/NL page has one H1, compliant title/description, canonical and OG, no dead nav links or template leftovers, FAQ microdata, Service/ProfessionalService/Article JSON-LD, UTM capture on the contact form, Dutch alternates, llms.txt and sitemap; gated on SZ_REDESIGN=1."
+    },
+    {
+      "slug": "sz-launch-2026",
+      "url": "https://wdmorley.webflow.io/",
+      "spec": "tests/acceptance/sz-launch-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "created": "2026-11-04",
+      "description": "Studio Zissou launch: rebuilt homepage SEO meta, canonical to studiozissou.com, JSON-LD, no placeholders or old markup, no console errors or overflow, axe, fonts, links, labelled form with attribution fields, pinned init.js, privacy/terms/404; SZ_LIVE=1 adds the wdmorley.com redirect map, defensive domains, sitemap/robots and proposal 404s."
     },
     {
       "slug": "sz-crosslinking",

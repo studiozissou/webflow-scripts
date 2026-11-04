@@ -1,7 +1,7 @@
 // Carsa vehicle detail page behaviour moved out of the Webflow template body: UTM links, finance calculator and config, APR painter, valuation and search-similar links, form UTMs, equal-height cards, schema status, SVG draw-line and similar-car links, reading CMS values from window.__CARSA_VDP.
 (function ($) {
   var DEBUG = false;
-  var KEYS = ['price', 'registrationDate', 'odometer', 'vrm', 'financeType', 'depositContribution', 'locationName', 'isStorageLocation', 'makeName', 'modelName', 'status'];
+  var KEYS = ['price', 'registrationDate', 'odometer', 'vrm', 'financeType', 'depositContribution', 'locationName', 'isStorageLocation', 'makeName', 'modelName', 'status', 'financeTerm'];
   var config = window.__CARSA_VDP;
   if (!config) {
     DEBUG && console.log('vdp.js: window.__CARSA_VDP missing');
@@ -263,7 +263,10 @@
           if (VDP.financeType === "HP") {
             var defaultTerm = document.getElementById("60");
           } else {
-            var defaultTerm = document.getElementById(String(cfg.defaultTerm));
+            var storedTerm = document.getElementById(String(parseInt(VDP.financeTerm, 10)));
+            var defaultTerm = (storedTerm && storedTerm.type === 'radio' && storedTerm.getAttribute('data-name') === 'finance-term')
+              ? storedTerm
+              : document.getElementById(String(cfg.defaultTerm));
           }
           FIN.setRadio(defaultTerm);
 

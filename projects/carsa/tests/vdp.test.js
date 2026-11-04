@@ -421,3 +421,12 @@ test('source: a selected squiggle is made visible at once before it draws', () =
   const play = SOURCE.slice(SOURCE.indexOf('function playSquiggle'), SOURCE.indexOf('function resetSquiggle'));
   assert.match(play, /\$\(svg\)\.css\(\{ transition: 'none', opacity: 1 \}\);\s*svg\.__svgDrawPlay\(\);/);
 });
+
+test('source: financeTerm is read from window.__CARSA_VDP (CARSA-8249)', () => {
+  assert.match(SOURCE, /var KEYS = \[[^\]]*'status', 'financeTerm'\]/);
+});
+
+test('source: a PCP car opens on its stored finance-term radio, else cfg.defaultTerm (CARSA-8249)', () => {
+  assert.match(SOURCE, /var storedTerm = document\.getElementById\(String\(parseInt\(VDP\.financeTerm, 10\)\)\);/);
+  assert.match(SOURCE, /storedTerm && storedTerm\.type === 'radio' && storedTerm\.getAttribute\('data-name'\) === 'finance-term'\)\s*\?\s*storedTerm\s*:\s*document\.getElementById\(String\(cfg\.defaultTerm\)\)/);
+});

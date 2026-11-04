@@ -1,0 +1,81 @@
+{
+  "id": { "component": "p", "element": "e1" },
+  "type": "Body",
+  "children": [
+    {
+      "id": { "component": "p", "element": "e2" },
+      "type": "Block",
+      "styleNames": ["page-wrapper"],
+      "settings": { "tag": "div", "visibility": true },
+      "children": [
+        {
+          "id": { "component": "p", "element": "e3" },
+          "type": "Block",
+          "styleNames": ["main-wrapper"],
+          "settings": { "tag": "main", "visibility": true },
+          "children": [
+            {
+              "id": { "component": "p", "element": "e4" },
+              "type": "Section",
+              "styleNames": ["Promo Section", "hide"],
+              "settings": { "tag": "section", "visibility": true },
+              "children": [
+                {
+                  "id": { "component": "p", "element": "e5" },
+                  "type": "Block",
+                  "styleNames": ["promo_content"],
+                  "settings": { "tag": "div", "visibility": true }
+                }
+              ]
+            },
+            {
+              "id": { "component": "p", "element": "e6" },
+              "type": "Section",
+              "styleNames": ["Legacy Section"],
+              "settings": { "tag": "section", "visibility": false }
+            },
+            {
+              "id": { "component": "p", "element": "e7" },
+              "type": "ComponentInstance",
+              "instanceDetails": { "type": "ComponentInstance", "id": "c1", "name": "Logo Strip" }
+            },
+            {
+              "id": { "component": "p", "element": "e8" },
+              "type": "Block",
+              "styleNames": ["section_plain"],
+              "settings": { "tag": "section", "visibility": true },
+              "children": [
+                {
+                  "id": { "component": "p", "element": "e9" },
+                  "type": "Block",
+                  "styleNames": ["container-large"],
+                  "settings": { "tag": "div", "visibility": true },
+                  "children": [
+                    {
+                      "id": { "component": "p", "element": "e10" },
+                      "type": "Heading",
+                      "styleNames": ["heading-style-h2", "Card Title "],
+                      "settings": { "tag": "h2", "visibility": true, "headingLevel": 2 },
+                      "children": [
+                        { "id": { "component": "p", "element": "e11" }, "type": "String", "textContent": "text" }
+                      ]
+                    },
+                    {
+                      "id": { "component": "p", "element": "e12" },
+                      "type": "Paragraph",
+                      "styleNames": ["Card Title"],
+                      "settings": { "visibility": true },
+                      "children": [
+                        { "id": { "component": "p", "element": "e13" }, "type": "String", "textContent": "text" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

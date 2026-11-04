@@ -22,6 +22,7 @@
     "oost:locale-guard": "node tools/oost/locale-guard.js",
     "test:rolfing-amsterdam": "node --test 'tests/rolfing-amsterdam/*.test.js'",
     "rolfing-amsterdam:launch-guard": "node tools/webflow/launch-guard.js --client rolfing-amsterdam",
+    "test:cf-page": "node --test 'tests/cf-page/*.test.js'",
     "test:sme-audit": "node --test 'tests/sme-audit/*.test.js'",
     "test:site-audit": "node --test 'tests/site-audit/*.test.js'",
     "test:shared": "node --test 'tests/shared/*.test.js'",

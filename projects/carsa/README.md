@@ -38,7 +38,7 @@ Every module used to carry its own copy of `block`, `onReady`, `onLoad`, `onPage
 
 ### Why the v1.2.0 modules wait for a page marker
 
-A module running beside its inline copy would double-run the homepage dropdown, the FAQ schema and the draw-line timelines. So every v1.2.0 module returns early unless the page body sets `window.__CARSA_PAGE = { release: 'v1.2.0' }`, which is pasted in the same write that strips that page's inline code. The 404 redirect in `global.js` uses the same gate. A module that passes the gate pushes its name to `window.__CARSA_RAN`, so tests can tell "loaded and inert" from "loaded and ran".
+A module running beside its inline copy would double-run the homepage dropdown, the FAQ schema and the draw-line timelines. So every v1.2.0 module returns early unless the page sets `window.__CARSA_PAGE = { release: 'v1.2.0' }`, which is pasted in the same publish that strips that page's inline code. The gate checks only that the marker exists, not its `release` value, so later releases need no re-marking. The marker (and the config objects on the fuel, models and promotions templates) goes on the first line of the page's head code, not its body code: Webflow outputs page body code after the site footer's `init.js`, and a module already in the browser cache could run before a marker placed later in the HTML. The 404 redirect in `global.js` uses the same gate. A module that passes the gate pushes its name to `window.__CARSA_RAN`, so tests can tell "loaded and inert" from "loaded and ran".
 
 ### Why the shared modules carry path lists
 

@@ -111,6 +111,16 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
   `query_elements` with `element_filter: { attribute_name: "class" }`; any match is a
   fail. Fix: `remove_attribute` `class` (add the class with `set_style` first if
   `styleNames` is empty), then re-run the query to zero.
+- **Native first.** Raw HTML through `data_whtml_builder` only for tags Webflow has no
+  element for (`details`, `summary`, `dialog`), one insert per such element. Everything
+  else (div, section, headings, links, lists) goes in as plain native markup in its own
+  insert with no attributes, then gets attributes with `set_attributes`. A `div` carrying
+  attributes in the same paste can come in as a custom `DOM` element (Rolfing FAQ answer
+  wrapper, Oct 2026). Every custom element must be named in the spec.
+- `set_attributes` and `set_settings › attributes` on a freshly inserted element inside a
+  collection list item fail with `MPS rejected update … [Conflict] … component map` (5 Nov
+  2026, three tries). Add the attributes before moving the element into the list, or hand
+  it to Will in the Designer; don't leave a half-swapped element.
 - `query_elements` reads the page you pass as `pageId`, not the Designer's open page. Its
   `tag` filter only matches Block/DOM elements; filter headings by `type: "Heading"`.
 - Collection list `source` can't be set through `set_settings` (returns success, writes

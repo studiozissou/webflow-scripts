@@ -11,7 +11,8 @@ Rolfing Pages template (`/{en,nl}/what-is-rolfing/{slug}`), confirmed via Webflo
 | `.hero-secondary_component` | Hero; becomes a 2-column grid on landing pages |
 | `.hero-secondary_intro` | Intro paragraph, bound to `intro`; present only when `landing-page` is on, and used as the landing marker by the template style embed |
 | `.hero-secondary_image-wrapper img` | Hero photo, bound to `photo` / `photo-alt` |
-| `.section_symptoms`, `.symptoms_rich-text li` | Symptoms block |
+| `.section_symptoms`, `.symptoms_rich-text li` | Symptoms block; heading left, list in `.symptoms_card` right (5 Nov 2026) |
+| `.note_component > .rolfing_content-heading`, `.note_component > p` | Note: icon + h2 left, text right, reusing the Home "What is Rolfing?" heading class |
 | `.section_hero-secondary .content_updated` | "Last updated" line, in the hero under the intro since 5 Nov 2026 |
 | `.section_experience`, `.section_discover`, `.section_rolfing-can-help-with`, `.section_note` | Landing blocks 1-3 and the note (5 Nov 2026), bound to `block-{1,2,3}-*` and `note-*`; between symptoms and `section_content` |
 | `.section_content` | Rich text and sidebar; hidden when `content` is empty (landing pages) |

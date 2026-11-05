@@ -484,6 +484,16 @@
       "description": "carsa-v1.2.0: remaining inline page scripts move to loader modules that stay inert until window.__CARSA_PAGE is set; per page, modules load once and run, inline code gone (CARSA_V120_DONE comma list of entries, vdp, sweep, or all); FAQ schema complete on slow networks, near filtered error gone, VDP draw-play, 404 and car-redirect. Gated by CARSA_V120=1."
     },
     {
+      "slug": "carsa-release-v1-2-6",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-release-v1-2-6.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-05",
+      "description": "carsa-v1.2.6: nav and footer WhatsApp prefill, VDP #car-info sentence (generic fallback for an empty location), VDP utm-gated cold-banner Swiper, /reserve VRM finder (window.crsaFindCar) and blog tooltip run from loader modules; none left inline. Gated by CARSA_V126=1."
+    },
+    {
       "slug": "carsa-vdp-module",
       "url": "https://www.carsa.co.uk/vehicles/used/bl73dmu",
       "spec": "tests/acceptance/carsa-vdp-module.spec.js",

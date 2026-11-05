@@ -84,3 +84,43 @@ describe('matchTarget', () => {
     assert.equal(matchTarget(item({ price: null }), phrase, config), null);
   });
 });
+
+describe('matchTarget exclusions', () => {
+  const excl = {
+    ...config,
+    excludeBrands: ['quickwear', 'bargain & co'],
+    junkTitleWords: ['replica', 'chinamist', 'betruger', 'dupe'],
+  };
+  const material = { id: 'm', kind: 'material', search_text: 'fine cloth', price_to: 40, flagRule: 'cap', excludeBrands: ['fine cloth'] };
+
+  it('never flags a globally excluded brand on cap searches', () => {
+    assert.equal(matchTarget(item({ brand: 'QuickWear' }), phrase, excl), null);
+    assert.equal(matchTarget(item({ brand: 'Quickwear Man' }), phrase, excl), null);
+    assert.equal(matchTarget(item({ brand: 'Bargain & Co' }), phrase, excl), null);
+  });
+
+  it('still flags a brand that only shares a prefix with an excluded brand', () => {
+    assert.ok(matchTarget(item({ brand: 'Quickwearing' }), phrase, excl));
+  });
+
+  it('applies per-search excludeBrands on top of the global list', () => {
+    assert.equal(matchTarget(item({ brand: 'Fine Cloth' }), material, excl), null);
+    assert.ok(matchTarget(item({ brand: 'Fine Cloth' }), phrase, excl));
+    assert.ok(matchTarget(item({ brand: 'Other Maker' }), material, excl));
+  });
+
+  it('drops items whose title contains a junk word, whole word and accent-insensitive', () => {
+    assert.equal(matchTarget(item({ title: 'Wool coat REPLICA' }), phrase, excl), null);
+    assert.equal(matchTarget(item({ title: 'Billigster Chinamist von Betrügerbanden!!' }), phrase, excl), null);
+    assert.equal(matchTarget(item({ title: 'Betrüger coat' }), phrase, excl), null);
+    assert.ok(matchTarget(item({ title: 'Replicated pattern coat' }), phrase, excl));
+  });
+
+  it('applies exclusions to brand-rule searches too', () => {
+    assert.equal(matchTarget(item({ title: 'Alderwick dupe jacket' }), band, excl), null);
+  });
+
+  it('flags as before when no exclusion lists are configured', () => {
+    assert.ok(matchTarget(item({ brand: 'QuickWear' }), phrase, config));
+  });
+});

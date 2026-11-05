@@ -821,7 +821,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-11-02",
-      "description": "Ten Rolfing landing pages on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_PAGES=U14 limits it to the pattern page, expected to fail until the build ships."
+      "description": "Eight Rolfing landing pages (U4, U12 folded in, D8) on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_PAGES=U14 limits it to the pattern page, expected to fail until the build ships."
     },
     {
       "slug": "rolfing-landing-sections",

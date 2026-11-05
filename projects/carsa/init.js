@@ -17,6 +17,8 @@
     { match: /^\/used-cars\/promotions\/[^/]+\/?$/, modules: ['promotions-template.js'] },
     { match: /^\/used-cars\/models\/?$/, modules: ['all-models.js'] },
     { match: /^\/blog\/?$/, modules: ['blog.js'] },
+    { match: /^\/blog\/[^/]+\/?$/, modules: ['blog-post.js'] },
+    { match: /^\/reserve\/?$/, modules: ['reserve.js'] },
     { match: /^\/car-redirect\/?$/, modules: ['car-redirect.js'] }
   ];
   var DEP_POLL_MS = 50;

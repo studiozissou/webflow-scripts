@@ -208,3 +208,39 @@ test('a live VDP (no #404-message) is never redirected', () => {
   const env = makeEnv({ pathname: '/vehicles/used/bl73dmu', marker: true });
   assert.equal(env.window.location.href, 'https://www.carsa.co.uk/vehicles/used/bl73dmu');
 });
+
+const WA = 'https://wa.me/442046322989?text=';
+
+test('nav WhatsApp: off a VDP the href carries the generic message', () => {
+  const wa = { href: '#' };
+  makeEnv({ pathname: '/used-cars', byId: { 'nav_open-whatsapp': wa } });
+  assert.equal(wa.href, WA + encodeURIComponent('Hi, I have a question about a car on your website'));
+});
+
+test('nav WhatsApp: on /vehicles/used/<vrm> the href names the upper-case VRM', () => {
+  const wa = { href: '#' };
+  makeEnv({ pathname: '/vehicles/used/ab12cde', byId: { 'nav_open-whatsapp': wa } });
+  assert.equal(wa.href, WA + encodeURIComponent('Hi, please tell me more about AB12CDE'));
+});
+
+test('nav WhatsApp: runs without the page marker and is idempotent', () => {
+  const wa = { href: '#' };
+  const env = makeEnv({ pathname: '/vehicles/used/ab12cde', marker: false, byId: { 'nav_open-whatsapp': wa } });
+  const first = wa.href;
+  vm.runInContext(SOURCE, env.context);
+  assert.equal(wa.href, first);
+  assert.match(first, /AB12CDE$/);
+});
+
+test('nav WhatsApp: waits for DOMContentLoaded while the document is still loading', () => {
+  const wa = { href: '#' };
+  const env = makeEnv({ readyState: 'loading', pathname: '/used-cars', byId: { 'nav_open-whatsapp': wa } });
+  assert.equal(wa.href, '#');
+  env.fire('doc', 'DOMContentLoaded');
+  assert.equal(wa.href, WA + encodeURIComponent('Hi, I have a question about a car on your website'));
+});
+
+test('nav WhatsApp: a page without the icon does not throw', () => {
+  const { timers } = makeEnv({ pathname: '/vehicles/used/ab12cde' });
+  assert.equal(timers.length, 0);
+});

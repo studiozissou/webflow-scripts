@@ -10,7 +10,7 @@ The Webflow site footer holds one tag:
 <script src="https://{WEBFLOW_SCRIPTS_CDN}/webflow/v1.0.0/init.js"></script>
 ```
 
-`v1.1.0` adds `check-finance.js` and `vdp.js`. `v1.2.0` moves every remaining inline page script into the modules below. The tag moves to each once published.
+`v1.1.0` adds `check-finance.js` and `vdp.js`. `v1.2.0` moves every remaining inline page script into the modules below. `v1.2.6` moves the last six inline blocks: nav WhatsApp prefill into `global.js`; footer WhatsApp, the `#car-info` store sentence (with a generic sentence when the location is empty) and the cold-banner carousel (Swiper load failures to Datadog) into `vdp.js`; the `/reserve` VRM finder into `reserve.js`; the blog tooltip into `blog-post.js`. The tag moves to each once published.
 
 `init.js` works out its folder from its own `src`, waits for Webflow's jQuery and GSAP (up to 3 s), then appends `global.js`, `check-finance.js` and the current route's modules as ordered scripts from that same folder.
 
@@ -28,6 +28,8 @@ The Webflow site footer holds one tag:
 | `/used-cars/promotions/<slug>` | `promotions-template.js` (reads `window.__CARSA_PROMO`) |
 | `/used-cars/models` | `all-models.js` |
 | `/blog` | `blog.js` |
+| `/blog/<slug>` | `blog-post.js` |
+| `/reserve` | `reserve.js` (keeps `window.crsaFindCar` global for the button's `onclick`) |
 | `/car-redirect` | `car-redirect.js` |
 
 Every regex is anchored (`^…$` or `^…/[^/]+/?$`), so `/car-finance` never picks up the calculator and `/used-cars/models` never picks up the template.

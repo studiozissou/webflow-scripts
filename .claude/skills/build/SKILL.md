@@ -130,6 +130,8 @@ Run `/qa-check` when the setup QA question was answered Run (auto: the recommend
 
 Follow `references/verify-loop.md`: project-aware dev server, browser MCP checks against the spec's pass/fail criteria, the fix-and-retry loop, and the bridge that turns MCP-found bugs into regression specs. Browser MCP only; CLI test suites run in `/deploy` after the CDN push, because against the CDN they would test old code.
 
+**Webflow write gate** (any build that wrote to Webflow through the MCP): on every page and component it touched, run `query_elements` with `element_filter: { attribute_name: "class" }`. Any match is a FAIL: remove the attribute (the real class is usually already applied; `set_style` it if not), re-run the query to zero, and list the fixed elements in the build summary.
+
 ## 10. Wrap up
 
 - Present the spec's Tier 3 manual checklist plus anything found during the build that cannot be automated, or "No manual tests needed".

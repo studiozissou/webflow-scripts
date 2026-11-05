@@ -109,6 +109,10 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
   to class-based audits. After every insert, run `query_elements` with
   `element_filter: { attribute_name: "class" }` on the page; any match is a fail. Fix with
   `set_style` (the class must exist), then `remove_attribute` `class`, then re-read.
+- Collection list `source` can't be set through `set_settings` (returns success, writes
+  nothing), and a list sourced from a multi-reference field still reads back as the plain
+  collection ID with its old filters. Verify a list source on the published page (item
+  count), not through `get_settings`.
 
 **Links**
 - Use native link settings (Link → Page, anchors Page → Section). Never a custom `href` attribute or a URL-typed `/path`: only Page links are localized, so URL links on a secondary locale point back at the primary.

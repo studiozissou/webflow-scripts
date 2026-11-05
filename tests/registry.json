@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-04",
+  "lastUpdated": "2026-11-05",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -822,6 +822,16 @@
       "critical": false,
       "created": "2026-11-02",
       "description": "Ten Rolfing landing pages on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_PAGES=U14 limits it to the pattern page, expected to fail until the build ships."
+    },
+    {
+      "slug": "rolfing-landing-sections",
+      "url": "https://rolfing-amsterdam.webflow.io/en/what-is-rolfing/knee-hip-ankle-pain",
+      "spec": "tests/acceptance/rolfing-landing-sections.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-05",
+      "description": "Rolfing landing pages built from copied site sections: blocks 1-3 and the note each in their own section in order, rich-text content section hidden, last updated in the hero, photos with alt and booking links in blocks 1-2, one-column block without photo, no repeated adjacent background, no overflow at 375 px; explainers unchanged; gated on ROLFING_SECTIONS=1."
     },
     {
       "slug": "oost-hours-kerst-2026",

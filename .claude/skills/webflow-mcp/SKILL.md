@@ -103,6 +103,12 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
 - Passing CSS for a class that already exists creates a duplicate `<name>-1` class. Send classes by name only; style existing classes separately.
 - `var()` inside a gradient is frozen to its current value. Set gradients that use variables in the Designer.
 - An empty boolean `open` attribute is dropped. Write `open="open"`.
+- Custom elements (`<summary>`, `<details>`, any DOM type) can end up with `class` as a
+  custom attribute in Settings › Attributes instead of a Webflow class (Rolfing FAQ
+  `faq_summary`, Nov 2026). It renders, but the class is invisible to the Style panel and
+  to class-based audits. After every insert, run `query_elements` with
+  `element_filter: { attribute_name: "class" }` on the page; any match is a fail. Fix with
+  `set_style` (the class must exist), then `remove_attribute` `class`, then re-read.
 
 **Links**
 - Use native link settings (Link → Page, anchors Page → Section). Never a custom `href` attribute or a URL-typed `/path`: only Page links are localized, so URL links on a secondary locale point back at the primary.

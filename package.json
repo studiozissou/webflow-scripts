@@ -5,7 +5,6 @@
   "type": "module",
   "description": "Monorepo of custom JS/CSS for Webflow production sites",
   "scripts": {
-    "wf-gen": "node scripts/webflow/wf-gen.js",
     "test:wf": "node --test 'tests/webflow/*.test.js'",
     "test:sr": "node --test 'tests/site-review/**/*.test.js'",
     "test:site-archive": "node --test 'tests/site-archive/*.test.js'",

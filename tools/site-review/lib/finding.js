@@ -6,7 +6,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { SEVERITIES, CATEGORIES } from '../config.js';
+import { LEGACY_SEVERITIES as SEVERITIES, CATEGORIES } from '../config.js';
 
 const REQUIRED_FIELDS = ['check', 'severity', 'category', 'title', 'description'];
 

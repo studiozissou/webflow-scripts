@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { createFinding, validateFinding } from '../../tools/site-review/lib/finding.js';
-import { SEVERITIES, CATEGORIES } from '../../tools/site-review/config.js';
+import { LEGACY_SEVERITIES as SEVERITIES, CATEGORIES } from '../../tools/site-review/config.js';
 
 describe('createFinding', () => {
   const validInput = {

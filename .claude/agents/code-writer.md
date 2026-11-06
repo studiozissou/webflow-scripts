@@ -60,15 +60,17 @@ Always check `projects/<client>/orchestrator.js` and `shared/site-utilities.js` 
 
 ## Spacing rules
 
-- **Vertical rhythm between components:** Client First spacer divs only
-  (`.padding-global`, `.padding-section-small/medium/large/xlarge`,
-  `.padding-custom`). Never use `margin-top` or `margin-bottom` for spacing
-  between components.
+- **Vertical rhythm between components:** Client First v3 spacing only:
+  section padding via the Layout variables on `section_*`, `gap-[size]` on a
+  flex or grid parent, or a one-class `padding-[direction]-[size]` /
+  `margin-[direction]-[size]` utility. Never ad-hoc `margin-top` or
+  `margin-bottom` between components, and no `spacer-*` divs.
 - **Component-internal layout:** flex or grid where Figma auto-layout maps cleanly.
 - **Absolute placements from Figma:** use nearest approximation. Add a comment:
   `/* manual placement — verify against design */`
 - **No custom spacing classes or variables** unless no Client First utility covers
-  the use case — and only after confirming with the developer.
+  the use case — and only after confirming with the developer. A custom class may
+  carry spacing when its value comes from a Layout › Spacing variable.
 
 ## If running in an isolated worktree
 

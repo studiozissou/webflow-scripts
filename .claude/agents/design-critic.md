@@ -86,7 +86,7 @@ When asked for a written study, save to `.claude/research/<topic>-<YYYY-MM-DD>.m
 ### Spacing and grid
 - Custom property tokens match the design system (`--space-*`, `--grid-*`)
 - No magic numbers
-- Client First spacer divs for vertical rhythm, flex or grid for component-internal layout
+- Client First v3 spacing for vertical rhythm (section padding variables, `gap-[size]`, one-class `margin-*`/`padding-*` utilities), flex or grid for component-internal layout
 
 ### Figma to Webflow
 - Flag Figma styles Webflow cannot represent (complex masks, blend modes)

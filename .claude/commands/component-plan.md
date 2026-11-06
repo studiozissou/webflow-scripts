@@ -72,7 +72,7 @@ Do not batch questions. One flag → one answer → one recorded decision → ne
 ## Step 4 — Document spacing approach per component
 
 For each component, record in the inventory:
-- Internal layout: flex / grid / Client First spacer divs / mixed
+- Internal layout: flex / grid / Client First spacing utilities / mixed
 - Any absolute placements: note the Figma value as reference and flag for manual review
 - Auto-layout gaps/padding: note as reference values only — not variables
 
@@ -96,7 +96,7 @@ Write `.claude/design/component-inventory.md`:
 - **Variants:**
 - **CMS-bound:** yes / no
 - **Finsweet attributes:** CMS Filter / CMS Load / CMS Nest / none
-- **Internal layout:** flex / grid / Client First spacers / mixed
+- **Internal layout:** flex / grid / Client First spacing utilities / mixed
 - **Spacing reference:** [auto-layout gap/padding values from Figma — reference only]
 - **Absolute placements:** [describe — flagged for manual review]
 - **Interaction notes:**

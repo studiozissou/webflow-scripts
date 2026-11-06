@@ -4,7 +4,7 @@ description: Provides the system prompt for Anthropic API calls that generate @w
 ---
 
 <objective>
-Serve as the system prompt template for AI-generated Webflow clipboard JSON — enforcing the 5-step generation sequence (plan, name, UUID, CSS, output) with Client First conventions and longhand CSS rules.
+Serve as the system prompt template for AI-generated Webflow clipboard JSON — enforcing the 5-step generation sequence (plan, name, UUID, CSS, output) with Client First v3 conventions and longhand CSS rules.
 </objective>
 
 <quick_start>
@@ -20,26 +20,26 @@ Determine the element hierarchy from the description. Think about:
 - Parent-child nesting
 - How many elements total
 
-Step 2 — NAME (Client First Convention):
-Apply Client First naming rules:
+Step 2 — NAME (Client First v3 Convention):
+Apply Client First v3 naming rules. The full verified list is in the `client-first` skill's `references/v3-utilities.md`.
 
 Use existing utility classes wherever they exist:
-- Structure: `padding-global`, `container-large`, `container-medium`, `container-small`, `padding-section-small`, `padding-section-medium`, `padding-section-large`
+- Structure: `page-wrapper`, `main-wrapper`, `container-large`, `container-medium`, `container-small`. Alternative layer only: `padding-global`, `padding-section-small|medium|large`
 - Typography: `heading-style-h1` through `heading-style-h6`, `text-size-large`, `text-size-medium`, `text-size-regular`, `text-size-small`, `text-size-tiny`
 - Text weight: `text-weight-light`, `text-weight-normal`, `text-weight-medium`, `text-weight-semibold`, `text-weight-bold`, `text-weight-xbold`
-- Text style: `text-style-italic`, `text-style-uppercase`, `text-align-center`, `text-align-left`, `text-align-right`
-- Colors: `background-color-primary`, `background-color-secondary`, `background-color-tertiary`, `background-color-alternate`, `text-color-primary`, `text-color-secondary`, `text-color-tertiary`, `text-color-alternate`
-- Spacing: `spacer-xxsmall`, `spacer-xsmall`, `spacer-small`, `spacer-medium`, `spacer-large`, `spacer-xlarge`, `spacer-xxlarge`
-- Layout: `max-width-full`, `max-width-large`, `max-width-medium`, `max-width-small`, `max-width-xsmall`, `align-center`, `overflow-hidden`
-- Visibility: `hide-mobile-portrait`, `hide-mobile-landscape`, `hide-tablet`, `hide-desktop`
+- Text style: `text-style-allcaps`, `text-style-italic`, `text-style-muted`, `text-style-nowrap`, `text-style-balance`, `text-style-pretty`, `text-style-link`, `text-style-quote`, `text-style-strikethrough`, `text-style-1line|2lines|3lines`, `text-align-center|left|right`
+- Colors: `background-color-primary|secondary|tertiary|alternate`, `text-color-primary|secondary|alternate`
+- Spacing (one class, direction and size together): `margin-[direction]-[size]`, `padding-[direction]-[size]`, `gap-[size]`; directions `top|bottom|left|right|horizontal|vertical`; sizes `0|xxtiny|xtiny|tiny|xxsmall|xsmall|small|medium|large|xlarge|xxlarge|huge|xhuge|xxhuge`
+- Layout: `max-width-xxlarge|xlarge|large|medium|small|xsmall|xxsmall`, `max-width-full`, `align-center`, `overflow-hidden`, `grid-autofit`, `grid-span-full`, `display-inline-flex`
+- Visibility: `hide`, `hide-tablet`, `hide-mobile-landscape`, `hide-mobile-portrait`
 
-For component-specific classes, use lowercase-hyphenated descriptive names.
+For component-specific classes, use Client First custom names: `[folder]_[element]`, lowercase-hyphenated, general to specific (`hero_grid`, `hero_image-wrapper`). Combo variants start with `is-`.
 
 Layout rules:
-- Structure classes go on structural wrapper divs
-- Typography classes go on text elements
-- Spacing between siblings uses `spacer-*` divs, not margin
-- Typical section: `section.padding-global > div.container-large > div.padding-section-large > [content]`
+- Typical section: `section.section_[name] > div.container-large > [content]`. The section carries left/right and top/bottom padding, linked to the Layout variables in the Designer; write the rem values in `styleLess` and note that they are to be relinked.
+- When the project still runs Client First v2, or the padding variables don't exist yet, use the one-div alternative layer instead: `section.section_[name] > div.padding-global.padding-section-large > div.container-large > [content]`.
+- Spacing between siblings: `gap-[size]` on a flex or grid parent first; otherwise a `padding-bottom-[size]` spacing block or a `margin-[direction]-[size]` wrapper. Never `spacer-*` divs, never margin on text elements.
+- Structure classes go on structural wrapper divs; typography classes go on text elements; never stack more than four classes.
 
 Step 3 — UUID:
 Generate ALL UUIDs upfront using v4 format. Every node and every style needs a unique UUID. Never reuse IDs.

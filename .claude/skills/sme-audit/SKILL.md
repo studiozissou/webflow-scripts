@@ -86,6 +86,7 @@ The Maps consent wall blocks automated checks. Anything behind it is OWNER-CHECK
 3. Use `/generate-schema` to draft the JSON-LD fix pack. Proposed, not applied.
 4. Claim gate: apply `/site-audit`'s Phase 6 claim gate, including its known-stale list, before anything ships.
 5. Leave "Fix these first", "What we need from you" and "Where your visits are heading" until Phase 8 has task IDs.
+6. Write the executive summary and the owner tasks 80% of the way to ASD-STE100 (Simplified Technical English): sentences of about 15 words, active voice, one instruction per sentence, one word for one thing.
 
 ## Phase 8 — Plan the work
 

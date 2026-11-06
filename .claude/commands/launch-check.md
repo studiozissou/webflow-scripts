@@ -70,6 +70,8 @@ Then the go-live steps from the `webflow-launch` skill's staging → live checkl
 ## Report
 Write `projects/<client>/.claude/reports/launch-check-<YYYY-MM-DD>.md` (append `-2`, `-3` if it exists):
 
+Write the verdict, the manual checklist and the go-live steps (the summary and the owner tasks) 80% of the way to ASD-STE100 (Simplified Technical English): sentences of about 15 words, active voice, one instruction per sentence, one word for one thing.
+
 ```markdown
 # Launch check — <client> — <YYYY-MM-DD>
 URL: <url> | Locales: <list> | Verdict: BLOCKED / PASS WITH WARNINGS / PASS

@@ -1,0 +1,998 @@
+[
+  {
+    "id": "http-4xx",
+    "label": "Page returns a 4xx status",
+    "category": "seo",
+    "severity": "error",
+    "check": "status",
+    "facts": [
+      "status"
+    ],
+    "semrushId": 2,
+    "semrushLabel": "4XX errors",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "http-5xx",
+    "label": "Page returns a 5xx status",
+    "category": "seo",
+    "severity": "error",
+    "check": "status",
+    "facts": [
+      "status"
+    ],
+    "semrushId": 1,
+    "semrushLabel": "5XX errors",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "broken-internal-link",
+    "label": "Broken internal link",
+    "category": "seo",
+    "severity": "error",
+    "check": "broken-links",
+    "facts": [
+      "links"
+    ],
+    "semrushId": 8,
+    "semrushLabel": "Broken internal links",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "broken-external-link",
+    "label": "Broken external link",
+    "category": "seo",
+    "severity": "warning",
+    "check": "broken-links",
+    "facts": [
+      "links"
+    ],
+    "semrushId": 12,
+    "semrushLabel": "Broken external links",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "broken-external-image",
+    "label": "Broken external image",
+    "category": "seo",
+    "severity": "warning",
+    "check": "broken-links",
+    "facts": [
+      "images"
+    ],
+    "semrushId": 14,
+    "semrushLabel": "Broken external images",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "redirect-chain",
+    "label": "Redirect chain or loop",
+    "category": "seo",
+    "severity": "error",
+    "check": "redirects",
+    "facts": [
+      "links",
+      "inSitemap",
+      "redirectChain",
+      "redirectLoop"
+    ],
+    "semrushId": 33,
+    "semrushLabel": "Redirect chains and loops",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "temporary-redirect",
+    "label": "Link through a temporary redirect",
+    "category": "seo",
+    "severity": "warning",
+    "check": "redirects",
+    "facts": [
+      "links",
+      "redirectChain"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Temporary redirects",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "permanent-redirect",
+    "label": "Link through a permanent redirect",
+    "category": "seo",
+    "severity": "notice",
+    "check": "redirects",
+    "facts": [
+      "links"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Permanent redirects",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "title-missing",
+    "label": "Title missing or empty",
+    "category": "seo",
+    "severity": "error",
+    "check": "titles",
+    "facts": [
+      "title"
+    ],
+    "semrushId": 3,
+    "semrushLabel": "Missing title tags",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "title-duplicate",
+    "label": "Duplicate title",
+    "category": "seo",
+    "severity": "error",
+    "check": "titles",
+    "facts": [
+      "title"
+    ],
+    "semrushId": 6,
+    "semrushLabel": "Duplicate title tags",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "title-too-long",
+    "label": "Title too long",
+    "category": "seo",
+    "severity": "warning",
+    "check": "titles",
+    "facts": [
+      "title"
+    ],
+    "semrushId": 102,
+    "semrushLabel": "Title element is too long",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "title-too-short",
+    "label": "Title too short",
+    "category": "seo",
+    "severity": "warning",
+    "check": "titles",
+    "facts": [
+      "title"
+    ],
+    "semrushId": 101,
+    "semrushLabel": "Title element is too short",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "description-missing",
+    "label": "Meta description missing or empty",
+    "category": "seo",
+    "severity": "warning",
+    "check": "descriptions",
+    "facts": [
+      "metaDescription"
+    ],
+    "semrushId": 106,
+    "semrushLabel": "Missing meta description",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "description-duplicate",
+    "label": "Duplicate meta description",
+    "category": "seo",
+    "severity": "error",
+    "check": "descriptions",
+    "facts": [
+      "metaDescription"
+    ],
+    "semrushId": 15,
+    "semrushLabel": "Duplicate meta descriptions",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "h1-missing",
+    "label": "H1 missing",
+    "category": "seo",
+    "severity": "warning",
+    "check": "headings",
+    "facts": [
+      "h1"
+    ],
+    "semrushId": 103,
+    "semrushLabel": "Missing h1",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "h1-multiple",
+    "label": "More than one H1",
+    "category": "seo",
+    "severity": "warning",
+    "check": "headings",
+    "facts": [
+      "h1"
+    ],
+    "semrushId": 104,
+    "semrushLabel": "Multiple h1 tags",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "h1-duplicates-title",
+    "label": "H1 repeats the title",
+    "category": "seo",
+    "severity": "warning",
+    "check": "headings",
+    "facts": [
+      "h1",
+      "title"
+    ],
+    "semrushId": 105,
+    "semrushLabel": "Duplicate content in h1 and title",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "duplicate-content",
+    "label": "Identical body text (exact duplicate content)",
+    "category": "seo",
+    "severity": "error",
+    "check": "content",
+    "facts": [
+      "textHash",
+      "wordCount"
+    ],
+    "semrushId": 7,
+    "semrushLabel": "Duplicate content",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "jsonld-parse-error",
+    "label": "JSON-LD block does not parse",
+    "category": "seo",
+    "severity": "error",
+    "check": "structured-data",
+    "facts": [
+      "jsonLd"
+    ],
+    "semrushId": 45,
+    "semrushLabel": "Structured data items are invalid",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "sitemap-incorrect-page",
+    "label": "Sitemap lists a non-200 or redirecting URL",
+    "category": "seo",
+    "severity": "error",
+    "check": "sitemap-hygiene",
+    "facts": [
+      "inSitemap",
+      "status",
+      "redirectChain"
+    ],
+    "semrushId": 18,
+    "semrushLabel": "Incorrect pages found in sitemap.xml",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "sitemap-noindex",
+    "label": "Noindex page in the sitemap",
+    "category": "seo",
+    "severity": "error",
+    "check": "sitemap-hygiene",
+    "facts": [
+      "inSitemap",
+      "robotsMeta"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Noindex pages in sitemap.xml",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "sitemap-missing",
+    "label": "Sitemap missing",
+    "category": "seo",
+    "severity": "error",
+    "check": "sitemap-hygiene",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Sitemap.xml not found",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "sitemap-invalid",
+    "label": "Sitemap invalid",
+    "category": "seo",
+    "severity": "error",
+    "check": "sitemap-hygiene",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Format errors in sitemap.xml",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "sitemap-orphan",
+    "label": "Sitemap page no other page links to",
+    "category": "seo",
+    "severity": "notice",
+    "check": "internal-links",
+    "facts": [
+      "inSitemap",
+      "links"
+    ],
+    "semrushId": 207,
+    "semrushLabel": "Orphaned sitemap pages",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "canonical-missing",
+    "label": "Canonical missing",
+    "category": "seo",
+    "severity": "warning",
+    "check": "canonical",
+    "facts": [
+      "canonicals"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "canonical-not-absolute",
+    "label": "Canonical is not an absolute URL",
+    "category": "seo",
+    "severity": "warning",
+    "check": "canonical",
+    "facts": [
+      "canonicals"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "canonical-multiple",
+    "label": "Multiple conflicting canonicals",
+    "category": "seo",
+    "severity": "warning",
+    "check": "canonical",
+    "facts": [
+      "canonicals"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Multiple canonical URLs",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "canonical-to-non-200",
+    "label": "Canonical points at a redirect or error",
+    "category": "seo",
+    "severity": "error",
+    "check": "canonical",
+    "facts": [
+      "canonicals"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Broken canonical URLs",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "hreflang-no-return",
+    "label": "Hreflang alternate without a return link",
+    "category": "seo",
+    "severity": "error",
+    "check": "hreflang",
+    "facts": [
+      "hreflang"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "hreflang-non-200",
+    "label": "Hreflang alternate is not a direct 200",
+    "category": "seo",
+    "severity": "error",
+    "check": "hreflang",
+    "facts": [
+      "hreflang"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": true
+  },
+  {
+    "id": "links-to-http",
+    "label": "Internal link to an http URL",
+    "category": "security",
+    "severity": "warning",
+    "check": "internal-links",
+    "facts": [
+      "links",
+      "finalUrl"
+    ],
+    "semrushId": 31,
+    "semrushLabel": "Links to HTTP pages",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "nofollow-internal-link",
+    "label": "Internal link with nofollow",
+    "category": "seo",
+    "severity": "warning",
+    "check": "internal-links",
+    "facts": [
+      "links"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Nofollow attributes in outgoing internal links",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "link-no-accessible-name",
+    "label": "Link without an accessible name",
+    "category": "accessibility",
+    "severity": "notice",
+    "check": "internal-links",
+    "facts": [
+      "links"
+    ],
+    "semrushId": 216,
+    "semrushLabel": "Links with no anchor text",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "image-missing-alt",
+    "label": "Image without an alt attribute",
+    "category": "accessibility",
+    "severity": "warning",
+    "check": "image-alt",
+    "facts": [
+      "images"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Missing alt attributes",
+    "unit": "link",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "low-text-to-html",
+    "label": "Low text to HTML ratio",
+    "category": "seo",
+    "severity": "warning",
+    "scoreWeight": 0,
+    "check": "content",
+    "facts": [
+      "textToHtmlRatio"
+    ],
+    "semrushId": 112,
+    "semrushLabel": "Low text to HTML ratio",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "low-word-count",
+    "label": "Low word count",
+    "category": "seo",
+    "severity": "warning",
+    "scoreWeight": 0,
+    "check": "content",
+    "facts": [
+      "wordCount"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Low word count",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "llms-txt-missing",
+    "label": "llms.txt missing",
+    "category": "seo",
+    "severity": "notice",
+    "check": "llms-txt",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "llms.txt not found",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "robots-txt-missing",
+    "label": "robots.txt missing",
+    "category": "seo",
+    "severity": "warning",
+    "check": "indexability",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Robots.txt not found",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "robots-txt-invalid",
+    "label": "robots.txt has format errors",
+    "category": "seo",
+    "severity": "warning",
+    "check": "indexability",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Format errors in robots.txt",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "mixed-content",
+    "label": "https page loads http resources",
+    "category": "security",
+    "severity": "warning",
+    "check": "mixed-content",
+    "facts": [
+      "resources",
+      "finalUrl"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Mixed content",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "viewport-missing",
+    "label": "Viewport meta missing",
+    "category": "seo",
+    "severity": "warning",
+    "check": "document",
+    "facts": [
+      "viewport"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Missing viewport tag",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "doctype-missing",
+    "label": "Doctype missing",
+    "category": "seo",
+    "severity": "warning",
+    "check": "document",
+    "facts": [
+      "doctype"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Doctype not declared",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "charset-missing",
+    "label": "Charset not declared",
+    "category": "seo",
+    "severity": "warning",
+    "check": "document",
+    "facts": [
+      "charset"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Encoding not declared",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "html-too-large",
+    "label": "HTML too large",
+    "category": "performance",
+    "severity": "warning",
+    "check": "page-weight",
+    "facts": [
+      "bytes"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Large HTML page size",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "too-many-links",
+    "label": "Too many on-page links",
+    "category": "seo",
+    "severity": "warning",
+    "check": "page-weight",
+    "facts": [
+      "links"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Too many on-page links",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "uncompressed-page",
+    "label": "Page served without compression",
+    "category": "performance",
+    "severity": "warning",
+    "check": "page-weight",
+    "facts": [
+      "headers"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Uncompressed pages",
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "page-fetch",
+    "label": "Page could not be fetched or parsed",
+    "category": "seo",
+    "severity": "notice",
+    "scoreWeight": 0,
+    "check": null,
+    "facts": [
+      "fetchState"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 1,
+    "statusDerived": false
+  },
+  {
+    "id": "broken-internal-image",
+    "label": "Broken internal image",
+    "category": "seo",
+    "severity": "error",
+    "check": "broken-links",
+    "facts": [
+      "images"
+    ],
+    "semrushId": null,
+    "semrushLabel": "Broken internal images",
+    "unit": "link",
+    "priority": 2,
+    "statusDerived": true
+  },
+  {
+    "id": "hsts-missing",
+    "label": "Strict-Transport-Security header missing",
+    "category": "security",
+    "severity": "notice",
+    "check": "security-headers",
+    "facts": [
+      "headers"
+    ],
+    "semrushId": null,
+    "semrushLabel": "No HSTS support",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "csp-missing",
+    "label": "Content-Security-Policy header missing",
+    "category": "security",
+    "severity": "notice",
+    "check": "security-headers",
+    "facts": [
+      "headers"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "x-content-type-options-missing",
+    "label": "X-Content-Type-Options header missing",
+    "category": "security",
+    "severity": "notice",
+    "check": "security-headers",
+    "facts": [
+      "headers"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "x-frame-options-missing",
+    "label": "X-Frame-Options header missing",
+    "category": "security",
+    "severity": "notice",
+    "check": "security-headers",
+    "facts": [
+      "headers"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "referrer-policy-missing",
+    "label": "Referrer-Policy header missing",
+    "category": "security",
+    "severity": "notice",
+    "check": "security-headers",
+    "facts": [
+      "headers"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "permissions-policy-missing",
+    "label": "Permissions-Policy header missing",
+    "category": "security",
+    "severity": "notice",
+    "check": "security-headers",
+    "facts": [
+      "headers"
+    ],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false,
+    "siteLevel": true
+  },
+  {
+    "id": "psi-lcp",
+    "label": "Field LCP above threshold (PageSpeed Insights)",
+    "category": "performance",
+    "severity": "notice",
+    "check": "psi",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "psi-cls",
+    "label": "Field CLS above threshold (PageSpeed Insights)",
+    "category": "performance",
+    "severity": "notice",
+    "check": "psi",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "psi-inp",
+    "label": "Field INP above threshold (PageSpeed Insights)",
+    "category": "performance",
+    "severity": "notice",
+    "check": "psi",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "code-review",
+    "label": "Custom code review (AI, quick mode only)",
+    "category": "performance",
+    "severity": "notice",
+    "check": "code-review",
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "unminified-assets",
+    "label": "Unminified JavaScript and CSS",
+    "category": "performance",
+    "severity": "warning",
+    "scoreWeight": 0,
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Unminified JavaScript and CSS files",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "structured-data-required-fields",
+    "label": "Structured data missing required fields",
+    "category": "seo",
+    "severity": "warning",
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": null,
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "crawl-depth",
+    "label": "Page more than three clicks from the home page",
+    "category": "seo",
+    "severity": "notice",
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Pages need more than 3 clicks to be reached",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "too-many-url-parameters",
+    "label": "Too many URL parameters",
+    "category": "seo",
+    "severity": "warning",
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Too many URL parameters",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "page-speed",
+    "label": "Slow page load speed",
+    "category": "performance",
+    "severity": "error",
+    "check": null,
+    "facts": [],
+    "semrushId": 111,
+    "semrushLabel": "Slow page (HTML) load speed",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "blocked-resources",
+    "label": "Internal resources blocked by robots.txt",
+    "category": "seo",
+    "severity": "error",
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Issues with blocked internal resources in robots.txt",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "amp-issues",
+    "label": "AMP issues",
+    "category": "seo",
+    "severity": "error",
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "AMP pages with HTML issues",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "frames-used",
+    "label": "Page uses frames",
+    "category": "seo",
+    "severity": "notice",
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Frames used",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  },
+  {
+    "id": "hreflang-language-mismatch",
+    "label": "Hreflang language does not match the content",
+    "category": "seo",
+    "severity": "warning",
+    "check": null,
+    "facts": [],
+    "semrushId": null,
+    "semrushLabel": "Hreflang language mismatch issues",
+    "unit": "page",
+    "priority": 2,
+    "statusDerived": false
+  }
+]

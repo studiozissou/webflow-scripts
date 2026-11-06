@@ -21,8 +21,11 @@ const PNG = Buffer.from(
 
 const HOME_VARIANTS = ['/about/', '/About', '/about?utm_source=newsletter', '/about#team'];
 
-function listen(server) {
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server.address().port)));
+function listen(server, port = 0) {
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => resolve(server.address().port));
+  });
 }
 
 function close(server) {
@@ -78,12 +81,12 @@ function render(page, { origin, externalOrigin, variant }) {
   return html;
 }
 
-export async function startGoldenServer({ variant = 'base' } = {}) {
+export async function startGoldenServer({ variant = 'base', port: wantedPort = 0, externalPort: wantedExternal = 0 } = {}) {
   const requests = [];
   const counts = new Map();
   const pages = new Map(PAGES.map((page) => [page.path.toLowerCase(), page]));
   const external = startExternal(requests);
-  const externalPort = await listen(external);
+  const externalPort = await listen(external, wantedExternal);
   const externalOrigin = `http://127.0.0.1:${externalPort}`;
   let origin = '';
 
@@ -132,7 +135,7 @@ export async function startGoldenServer({ variant = 'base' } = {}) {
     return send(200, body, { 'content-type': page.contentType ?? html }, { gzip: page.gzip !== false });
   });
 
-  const port = await listen(server);
+  const port = await listen(server, wantedPort);
   origin = `http://127.0.0.1:${port}`;
 
   return {

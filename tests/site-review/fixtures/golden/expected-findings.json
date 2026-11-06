@@ -1,0 +1,87 @@
+{
+  "about": "Hand-written from the golden fixture design (site.js, server.js) before the pipeline existed. Paths are URL keys relative to the golden origin; {{external}} is the second fixture host. Run: base variant, audit mode, --render-sample 1 --render-drift 0, GOOGLE_PSI_API_KEY empty.",
+  "comparisonKey": ["taxonomyId", "urlKey", "target", "state", "severity"],
+  "optionalKeys": ["source", "transient", "tags", "renderChecked"],
+  "notCoveredByGolden": {
+    "links-to-http": "needs an https origin; covered by checks/internal-links.test.js",
+    "mixed-content": "needs an https origin; covered by checks/mixed-content.test.js",
+    "temporary-redirect site-level row": "the golden root does not redirect; covered by checks/redirects.test.js",
+    "sitemap-missing, sitemap-invalid, robots-txt-missing, robots-txt-invalid": "the golden site has valid files; covered by unit tests",
+    "redirect loops": "covered by fetch-page.test.js and checks/redirects.test.js"
+  },
+  "ignoreTaxonomyPrefixes": ["psi-", "code-review"],
+  "findings": [
+    { "taxonomyId": "llms-txt-missing", "urlKey": "/", "target": null, "state": "fail", "severity": "notice" },
+
+    { "taxonomyId": "title-missing", "urlKey": "/svg-title", "target": null, "state": "fail", "severity": "error", "source": "both", "renderChecked": true },
+    { "taxonomyId": "title-too-short", "urlKey": "/short-title", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "title-too-short", "urlKey": "/script-title", "target": null, "state": "fail", "severity": "notice", "source": "raw", "tags": ["fixed-after-load"], "renderChecked": true },
+    { "taxonomyId": "title-too-long", "urlKey": "/long-title", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "title-duplicate", "urlKey": "/duplicate-a", "target": null, "state": "fail", "severity": "error", "source": "both" },
+    { "taxonomyId": "title-duplicate", "urlKey": "/duplicate-b", "target": null, "state": "fail", "severity": "error", "source": "both" },
+
+    { "taxonomyId": "description-missing", "urlKey": "/no-description", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "description-duplicate", "urlKey": "/duplicate-a", "target": null, "state": "fail", "severity": "error", "source": "both" },
+    { "taxonomyId": "description-duplicate", "urlKey": "/duplicate-b", "target": null, "state": "fail", "severity": "error", "source": "both" },
+
+    { "taxonomyId": "h1-missing", "urlKey": "/no-h1", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "h1-missing", "urlKey": "/blog/one", "target": null, "state": "fail", "severity": "warning", "source": "rendered", "renderChecked": true },
+    { "taxonomyId": "h1-missing", "urlKey": "/blog/two", "target": null, "state": "fail", "severity": "warning", "source": "rendered", "renderChecked": true },
+    { "taxonomyId": "h1-missing", "urlKey": "/blog/three", "target": null, "state": "fail", "severity": "warning", "source": "rendered", "renderChecked": true },
+    { "taxonomyId": "h1-multiple", "urlKey": "/multi-h1", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "h1-duplicates-title", "urlKey": "/h1-title", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+
+    { "taxonomyId": "duplicate-content", "urlKey": "/copy-a", "target": null, "state": "fail", "severity": "error" },
+    { "taxonomyId": "duplicate-content", "urlKey": "/copy-b", "target": null, "state": "fail", "severity": "error" },
+    { "taxonomyId": "low-word-count", "urlKey": "/thin", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "low-text-to-html", "urlKey": "/heavy", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "low-text-to-html", "urlKey": "/large", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "jsonld-parse-error", "urlKey": "/jsonld-error", "target": null, "state": "fail", "severity": "error", "source": "both" },
+
+    { "taxonomyId": "canonical-missing", "urlKey": "/canonical-missing", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "canonical-missing", "urlKey": "/script-canonical", "target": null, "state": "fail", "severity": "warning", "source": "rendered", "renderChecked": true },
+    { "taxonomyId": "canonical-not-absolute", "urlKey": "/canonical-relative", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "canonical-multiple", "urlKey": "/canonical-multiple", "target": null, "state": "fail", "severity": "warning", "source": "both" },
+    { "taxonomyId": "canonical-to-non-200", "urlKey": "/canonical-redirect", "target": "/redirect-a", "state": "fail", "severity": "error", "source": "both", "transient": false },
+
+    { "taxonomyId": "hreflang-no-return", "urlKey": "/nl", "target": "/en", "state": "fail", "severity": "error", "source": "both" },
+    { "taxonomyId": "hreflang-non-200", "urlKey": "/en", "target": "/de", "state": "fail", "severity": "error", "source": "both", "transient": false },
+
+    { "taxonomyId": "sitemap-noindex", "urlKey": "/noindex", "target": null, "state": "fail", "severity": "error" },
+    { "taxonomyId": "sitemap-incorrect-page", "urlKey": "/retired", "target": null, "state": "fail", "severity": "error", "transient": false },
+    { "taxonomyId": "sitemap-incorrect-page", "urlKey": "/old-page", "target": null, "state": "fail", "severity": "error", "transient": false },
+    { "taxonomyId": "sitemap-orphan", "urlKey": "/orphan", "target": null, "state": "fail", "severity": "notice" },
+
+    { "taxonomyId": "http-4xx", "urlKey": "/retired", "target": null, "state": "fail", "severity": "error", "transient": false },
+    { "taxonomyId": "http-4xx", "urlKey": "/missing-page", "target": null, "state": "fail", "severity": "error", "transient": false },
+    { "taxonomyId": "http-4xx", "urlKey": "/de", "target": null, "state": "fail", "severity": "error", "transient": false },
+    { "taxonomyId": "http-4xx", "urlKey": "/gone-then-back", "target": null, "state": "fail", "severity": "error", "transient": true, "tags": ["transient"] },
+    { "taxonomyId": "http-5xx", "urlKey": "/always-503", "target": null, "state": "fail", "severity": "error", "transient": false },
+
+    { "taxonomyId": "broken-internal-link", "urlKey": "/links", "target": "/missing-page", "state": "fail", "severity": "error", "transient": false },
+    { "taxonomyId": "broken-internal-link", "urlKey": "/links", "target": "/gone-then-back", "state": "fail", "severity": "error", "transient": true, "tags": ["transient"] },
+    { "taxonomyId": "broken-internal-link", "urlKey": "/links", "target": "/always-503", "state": "fail", "severity": "error", "transient": false },
+    { "taxonomyId": "broken-external-link", "urlKey": "/links", "target": "{{external}}/gone", "state": "fail", "severity": "warning", "transient": false },
+    { "taxonomyId": "broken-external-link", "urlKey": "/links", "target": "http://golden-missing.invalid/", "state": "fail", "severity": "warning", "transient": false },
+    { "taxonomyId": "broken-external-link", "urlKey": "/links", "target": "{{external}}/forbidden", "state": "unknown", "severity": "warning" },
+    { "taxonomyId": "broken-external-link", "urlKey": "/links", "target": "{{external}}/rate", "state": "unknown", "severity": "warning" },
+    { "taxonomyId": "broken-external-image", "urlKey": "/links", "target": "{{external}}/img-404.png", "state": "fail", "severity": "warning", "transient": false },
+    { "taxonomyId": "redirect-chain", "urlKey": "/links", "target": "/redirect-a", "state": "fail", "severity": "error" },
+    { "taxonomyId": "temporary-redirect", "urlKey": "/links", "target": "/redirect-a", "state": "fail", "severity": "warning" },
+    { "taxonomyId": "permanent-redirect", "urlKey": "/links", "target": "/moved", "state": "fail", "severity": "notice" },
+    { "taxonomyId": "nofollow-internal-link", "urlKey": "/links", "target": "/about", "state": "fail", "severity": "warning" },
+    { "taxonomyId": "link-no-accessible-name", "urlKey": "/links", "target": "/services", "state": "fail", "severity": "notice" },
+    { "taxonomyId": "image-missing-alt", "urlKey": "/links", "target": "/images/photo.png", "state": "fail", "severity": "warning" },
+
+    { "taxonomyId": "uncompressed-page", "urlKey": "/uncompressed", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "doctype-missing", "urlKey": "/bare-document", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "viewport-missing", "urlKey": "/bare-document", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "charset-missing", "urlKey": "/bare-document", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "html-too-large", "urlKey": "/large", "target": null, "state": "fail", "severity": "warning" },
+    { "taxonomyId": "too-many-links", "urlKey": "/many-links", "target": null, "state": "fail", "severity": "warning" },
+
+    { "taxonomyId": "page-fetch", "urlKey": "/document.pdf", "target": null, "state": "unknown", "severity": "notice" },
+    { "taxonomyId": "page-fetch", "urlKey": "/reset", "target": null, "state": "unknown", "severity": "notice" },
+    { "taxonomyId": "page-fetch", "urlKey": "/private", "target": null, "state": "unknown", "severity": "notice" }
+  ]
+}

@@ -1,184 +1,139 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { createFinding, validateFinding } from '../../tools/site-review/lib/finding.js';
-import { LEGACY_SEVERITIES as SEVERITIES, CATEGORIES } from '../../tools/site-review/config.js';
+import {
+  createFinding, validateFinding, findingsFromRows, findingId, taxonomyEntry, indexTaxonomy, loadTaxonomy, clip,
+} from '../../tools/site-review/lib/finding.js';
 
-describe('createFinding', () => {
-  const validInput = {
-    check: 'meta-tags',
-    severity: 'critical',
-    category: 'seo',
-    title: 'Missing meta description',
-    description: 'The page has no meta description tag.',
-    url: 'https://example.com',
+const ENTRY = {
+  id: 'broken-internal-link', label: 'Broken internal link', category: 'seo', severity: 'error', check: 'broken-links',
+  facts: ['links'], semrushId: 8, semrushLabel: 'Broken internal links', unit: 'link', priority: 1, statusDerived: true,
+};
+
+function row(overrides = {}) {
+  return {
+    taxonomyId: 'broken-internal-link', url: 'https://example.com/links', urlKey: 'https://example.com/links',
+    target: 'https://example.com/missing', targetKey: 'https://example.com/missing', state: 'fail',
+    evidence: {
+      value: 404, source: 'raw', status: 404, finalUrl: 'https://example.com/missing', selector: 'a[href]',
+      snippet: '<a href="/missing">Missing</a>', fetchedAt: '2026-11-06T10:00:00.000Z',
+    },
+    ...overrides,
   };
+}
 
-  it('returns an object with all required fields', () => {
-    const f = createFinding(validInput);
-    assert.equal(f.check, 'meta-tags');
-    assert.equal(f.severity, 'critical');
-    assert.equal(f.category, 'seo');
-    assert.equal(f.title, 'Missing meta description');
-    assert.equal(f.description, 'The page has no meta description tag.');
-    assert.equal(f.url, 'https://example.com');
-  });
+describe('finding', () => {
+  it('finding: a fail without evidence is rejected; IDs do not change when the status changes', () => {
+    const noEvidence = createFinding(row({ evidence: undefined }), ENTRY);
+    assert.equal(validateFinding(noEvidence).valid, false);
+    assert.ok(validateFinding(noEvidence).errors.includes('Missing evidence'));
 
-  it('generates a deterministic id from check + title + url', () => {
-    const a = createFinding(validInput);
-    const b = createFinding(validInput);
+    const a = createFinding(row(), ENTRY);
+    const b = createFinding(row({ evidence: { ...row().evidence, status: 410, value: 410, snippet: 'other' } }), ENTRY);
+    assert.equal(validateFinding(a).valid, true);
     assert.equal(a.id, b.id);
-    assert.ok(a.id.startsWith('meta-tags-'));
+    assert.match(a.id, /^broken-internal-link-[0-9a-f]{12}$/);
   });
 
-  it('generates different ids for different inputs', () => {
-    const a = createFinding(validInput);
-    const b = createFinding({ ...validInput, title: 'Different title' });
-    assert.notEqual(a.id, b.id);
+  it('rejects a fail missing any one evidence key, but accepts value null', () => {
+    for (const keyName of ['value', 'source', 'status', 'finalUrl', 'selector', 'snippet', 'fetchedAt']) {
+      const evidence = { ...row().evidence };
+      delete evidence[keyName];
+      const result = validateFinding(createFinding(row({ evidence }), ENTRY));
+      assert.equal(result.valid, false, keyName);
+      assert.ok(result.errors.includes(`Missing evidence.${keyName}`));
+    }
+    assert.equal(validateFinding(createFinding(row({ evidence: { ...row().evidence, value: null } }), ENTRY)).valid, true);
   });
 
-  it('handles missing optional url in hash gracefully', () => {
-    const f = createFinding({
-      check: 'psi',
-      severity: 'warning',
-      category: 'performance',
-      title: 'Slow LCP',
-      description: 'LCP exceeds threshold.',
-    });
-    assert.ok(f.id.startsWith('psi-'));
-    assert.equal(f.url, undefined);
+  it('rejects a bad source and a snippet over 200 characters', () => {
+    const badSource = createFinding(row({ evidence: { ...row().evidence, source: 'guess' } }), ENTRY);
+    assert.equal(validateFinding(badSource).valid, false);
+    const long = createFinding(row({ evidence: { ...row().evidence, snippet: 'x'.repeat(201) } }), ENTRY);
+    assert.equal(validateFinding(long).valid, false);
+    for (const source of ['raw', 'rendered', 'both']) {
+      assert.equal(validateFinding(createFinding(row({ evidence: { ...row().evidence, source } }), ENTRY)).valid, true);
+    }
   });
 
-  it('passes through optional fields', () => {
-    const f = createFinding({
-      ...validInput,
-      element: 'head > meta[name="description"]',
-      actual: null,
-      expected: 'A description between 70 and 160 chars',
-      recommendation: 'Add a meta description tag.',
-      meta: { charCount: 0 },
-    });
-    assert.equal(f.element, 'head > meta[name="description"]');
-    assert.equal(f.actual, null);
-    assert.equal(f.expected, 'A description between 70 and 160 chars');
-    assert.equal(f.recommendation, 'Add a meta description tag.');
-    assert.deepEqual(f.meta, { charCount: 0 });
+  it('requires a known reason on unknown findings', () => {
+    const missing = createFinding(row({ state: 'unknown' }), ENTRY);
+    assert.equal(validateFinding(missing).valid, false);
+    const wrong = createFinding(row({ state: 'unknown', reason: 'flaky' }), ENTRY);
+    assert.equal(validateFinding(wrong).valid, false);
+    const ok = createFinding(row({ state: 'unknown', reason: 'blocked', evidence: undefined }), ENTRY);
+    assert.equal(validateFinding(ok).valid, true);
+    assert.equal(ok.reason, 'blocked');
   });
 
-  it('throws on missing required field: check', () => {
-    assert.throws(
-      () => createFinding({ ...validInput, check: undefined }),
-      { message: /check is required/ },
-    );
+  it('rejects pass and other states', () => {
+    assert.equal(validateFinding(createFinding(row({ state: 'pass' }), ENTRY)).valid, false);
   });
 
-  it('throws on missing required field: severity', () => {
-    assert.throws(
-      () => createFinding({ ...validInput, severity: undefined }),
-      { message: /severity is required/ },
-    );
+  it('builds the ID from taxonomyId, urlKey and targetKey only', () => {
+    const expected = findingId('broken-internal-link', 'https://example.com/links', 'https://example.com/missing');
+    assert.equal(createFinding(row(), ENTRY).id, expected);
+    const other = createFinding(row({ targetKey: 'https://example.com/elsewhere' }), ENTRY);
+    assert.notEqual(other.id, expected);
+    const pageEntry = { ...ENTRY, id: 'title-missing', unit: 'page' };
+    const pageRow = row({ taxonomyId: 'title-missing', target: undefined, targetKey: undefined });
+    assert.equal(createFinding(pageRow, pageEntry).id, findingId('title-missing', 'https://example.com/links', ''));
   });
 
-  it('throws on missing required field: category', () => {
-    assert.throws(
-      () => createFinding({ ...validInput, category: undefined }),
-      { message: /category is required/ },
-    );
+  it('copies taxonomy fields and sets the guard defaults', () => {
+    const finding = createFinding(row(), ENTRY);
+    assert.equal(finding.label, 'Broken internal link');
+    assert.equal(finding.category, 'seo');
+    assert.equal(finding.severity, 'error');
+    assert.equal(finding.scoreWeight, 1);
+    assert.equal(finding.unit, 'link');
+    assert.equal(finding.target, 'https://example.com/missing');
+    assert.equal(finding.renderChecked, false);
+    assert.equal(finding.transient, false);
+    assert.equal(finding.excludedFromParity, false);
+    assert.deepEqual(finding.tags, []);
+    assert.equal('check' in finding, false);
   });
 
-  it('throws on missing required field: title', () => {
-    assert.throws(
-      () => createFinding({ ...validInput, title: undefined }),
-      { message: /title is required/ },
-    );
+  it('tags site-level entries and rows', () => {
+    const entry = { ...ENTRY, id: 'llms-txt-missing', severity: 'notice', unit: 'page', siteLevel: true };
+    assert.deepEqual(createFinding(row({ taxonomyId: 'llms-txt-missing' }), entry).tags, ['site-level']);
+    assert.deepEqual(createFinding(row({ siteLevel: true }), ENTRY).tags, ['site-level']);
   });
 
-  it('throws on missing required field: description', () => {
-    assert.throws(
-      () => createFinding({ ...validInput, description: undefined }),
-      { message: /description is required/ },
-    );
+  it('throws when the entry does not match the row', () => {
+    assert.throws(() => createFinding(row(), undefined));
+    assert.throws(() => createFinding(row(), { ...ENTRY, id: 'other' }));
   });
 
-  it('throws on invalid severity value', () => {
-    assert.throws(
-      () => createFinding({ ...validInput, severity: 'urgent' }),
-      { message: /Invalid severity/ },
-    );
+  it('defaults scoreWeight from severity unless the entry overrides it', () => {
+    assert.equal(taxonomyEntry({ ...ENTRY, severity: 'warning' }).scoreWeight, 0.5);
+    assert.equal(taxonomyEntry({ ...ENTRY, severity: 'notice' }).scoreWeight, 0);
+    assert.equal(taxonomyEntry({ ...ENTRY, severity: 'warning', scoreWeight: 0 }).scoreWeight, 0);
   });
 
-  it('throws on invalid category value', () => {
-    assert.throws(
-      () => createFinding({ ...validInput, category: 'design' }),
-      { message: /Invalid category/ },
-    );
-  });
-});
-
-describe('validateFinding', () => {
-  it('returns { valid: true } for a well-formed finding', () => {
-    const f = createFinding({
-      check: 'psi',
-      severity: 'warning',
-      category: 'performance',
-      title: 'High CLS',
-      description: 'CLS score exceeds threshold.',
-    });
-    const result = validateFinding(f);
-    assert.equal(result.valid, true);
-    assert.deepEqual(result.errors, []);
+  it('findingsFromRows keeps valid rows, rejects bad ones with errors, and collapses repeated IDs', () => {
+    const map = indexTaxonomy([ENTRY]);
+    const { findings, rejected, duplicates } = findingsFromRows([
+      row(), row(), row({ evidence: undefined }), row({ taxonomyId: 'nope' }),
+    ], map);
+    assert.equal(findings.length, 1);
+    assert.equal(duplicates, 1);
+    assert.equal(rejected.length, 2);
+    assert.equal(rejected[0].row.taxonomyId, 'broken-internal-link');
+    assert.ok(Array.isArray(rejected[0].errors));
+    assert.match(rejected[1].errors[0], /Unknown taxonomyId/);
   });
 
-  it('returns errors for missing fields on a raw object', () => {
-    const result = validateFinding({ id: 'test-abc', check: 'psi' });
-    assert.equal(result.valid, false);
-    assert.ok(result.errors.length > 0);
-    assert.ok(result.errors.some((e) => /severity/.test(e)));
-    assert.ok(result.errors.some((e) => /category/.test(e)));
-    assert.ok(result.errors.some((e) => /title/.test(e)));
-    assert.ok(result.errors.some((e) => /description/.test(e)));
+  it('clip keeps snippets within 200 characters without splitting a surrogate pair', () => {
+    assert.equal(clip('a'.repeat(300)).length, 200);
+    assert.equal(clip(`${'a'.repeat(199)}😀`).length, 199);
+    assert.equal(clip(null), '');
   });
 
-  it('returns error for invalid severity on raw object', () => {
-    const result = validateFinding({
-      id: 'x-1',
-      check: 'psi',
-      severity: 'urgent',
-      category: 'performance',
-      title: 'Test',
-      description: 'Test desc',
-    });
-    assert.equal(result.valid, false);
-    assert.ok(result.errors.some((e) => /severity/.test(e)));
-  });
-
-  it('returns error for invalid category on raw object', () => {
-    const result = validateFinding({
-      id: 'x-1',
-      check: 'psi',
-      severity: 'info',
-      category: 'design',
-      title: 'Test',
-      description: 'Test desc',
-    });
-    assert.equal(result.valid, false);
-    assert.ok(result.errors.some((e) => /category/.test(e)));
-  });
-});
-
-describe('SEVERITIES and CATEGORIES', () => {
-  it('SEVERITIES is frozen and contains expected values', () => {
-    assert.ok(Object.isFrozen(SEVERITIES));
-    assert.ok(SEVERITIES.includes('critical'));
-    assert.ok(SEVERITIES.includes('warning'));
-    assert.ok(SEVERITIES.includes('info'));
-  });
-
-  it('CATEGORIES is frozen and contains expected values', () => {
-    assert.ok(Object.isFrozen(CATEGORIES));
-    assert.ok(CATEGORIES.includes('performance'));
-    assert.ok(CATEGORIES.includes('seo'));
-    assert.ok(CATEGORIES.includes('accessibility'));
-    assert.ok(CATEGORIES.includes('security'));
-    assert.ok(CATEGORIES.includes('code-quality'));
+  it('loadTaxonomy reads taxonomy.json with defaults applied', async () => {
+    const entries = await loadTaxonomy();
+    const pageFetch = entries.find((entry) => entry.id === 'page-fetch');
+    assert.equal(pageFetch.scoreWeight, 0);
+    assert.equal(entries.find((entry) => entry.id === 'http-4xx').scoreWeight, 1);
   });
 });

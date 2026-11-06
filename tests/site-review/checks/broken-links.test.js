@@ -1,212 +1,72 @@
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { createServer } from 'node:http';
-import { check, meta } from '../../../tools/site-review/checks/broken-links.js';
-import { loadConfig } from '../../../tools/site-review/config.js';
-import { createLogger } from '../../../tools/site-review/lib/logger.js';
+import { check } from '../../../tools/site-review/checks/broken-links.js';
+import { page, link, target, targets, config, assertValidRows, ids } from './_helpers.js';
 
-function makeMockFetchPage(htmlMap) {
-  return async (url) => ({
-    html: htmlMap[url] ?? '',
-    headers: {},
-    statusCode: 200,
-    redirectChain: [],
+const EXT = 'https://other.org';
+
+describe('broken-links check', () => {
+  it('fails internal links to 4xx and 5xx targets and gives unknown for fetch_failed or timeout', async () => {
+    const facts = [page('/links', {
+      links: [link('/missing'), link('/missing'), link('/down'), link('/ok'), link('/reset'), link('/slow')],
+    })];
+    const linkTargets = targets(
+      target('/missing', { status: 404 }), target('/down', { status: 503 }), target('/ok'),
+      target('/reset', { status: 0, fetchState: 'fetch_failed', errorCode: 'ECONNRESET' }), target('/slow', { status: 0, fetchState: 'timeout' }),
+    );
+    const rows = assertValidRows(await check({ facts, linkTargets, config: config() }));
+    assert.deepEqual(ids(rows), [
+      'broken-internal-link /links -> /down',
+      'broken-internal-link /links -> /missing',
+      'broken-internal-link /links -> /reset (fetch_failed)',
+      'broken-internal-link /links -> /slow (timeout)',
+    ]);
+    const missing = rows.find((r) => r.targetKey.endsWith('/missing'));
+    assert.equal(missing.evidence.status, 404);
+    assert.equal(missing.evidence.selector, 'a[href]');
+    assert.equal(missing.target, 'https://example.com/missing');
   });
-}
 
-describe('broken-links check — meta export', () => {
-  it('has correct meta fields', () => {
-    assert.equal(meta.name, 'broken-links');
-    assert.equal(meta.category, 'seo');
-    assert.equal(meta.tier, 1);
-    assert.equal(meta.parallel, false);
-    assert.ok(meta.label);
-  });
-});
-
-describe('broken-links check — with local server', () => {
-  let server;
-  let baseUrl;
-
-  before(async () => {
-    server = createServer((req, res) => {
-      if (req.url === '/ok') {
-        res.writeHead(200);
-        res.end('OK');
-      } else if (req.url === '/not-found') {
-        res.writeHead(404);
-        res.end('Not Found');
-      } else if (req.url === '/server-error') {
-        res.writeHead(500);
-        res.end('Server Error');
-      } else if (req.url === '/page') {
-        res.writeHead(200, { 'content-type': 'text/html' });
-        res.end('OK');
-      } else {
-        res.writeHead(200);
-        res.end('OK');
-      }
+  it('treats external 403, 429, 999, blocked and capped targets as unknown, and ENOTFOUND as a fail', async () => {
+    const urls = ['/gone', '/forbidden', '/rate', '/li', '/blocked', '/capped', '/dns', '/ok'].map((p) => `${EXT}${p}`);
+    const facts = [page('/links', { links: urls.map((u) => link(u)) })];
+    const linkTargets = targets(
+      target(urls[0], { status: 404 }), target(urls[1], { status: 403 }), target(urls[2], { status: 429 }),
+      target(urls[3], { status: 999 }), target(urls[4], { status: 0, fetchState: 'blocked' }),
+      target(urls[5], { status: 0, fetchState: 'blocked', capExceeded: true }),
+      target(urls[6], { status: 0, fetchState: 'fetch_failed', errorCode: 'ENOTFOUND' }), target(urls[7]),
+    );
+    const rows = assertValidRows(await check({ facts, linkTargets, config: config() }));
+    const byTarget = Object.fromEntries(rows.map((r) => [r.targetKey.replace(EXT, ''), r.state === 'fail' ? 'fail' : r.reason]));
+    assert.deepEqual(byTarget, {
+      '/gone': 'fail', '/forbidden': 'blocked', '/rate': 'blocked', '/li': 'blocked', '/blocked': 'blocked',
+      '/capped': 'cap_exceeded', '/dns': 'fail',
     });
-
-    await new Promise((resolve) => {
-      server.listen(0, '127.0.0.1', resolve);
-    });
-    const addr = server.address();
-    baseUrl = `http://127.0.0.1:${addr.port}`;
+    const dns = rows.find((r) => r.targetKey.endsWith('/dns'));
+    assert.equal(dns.evidence.value, 'ENOTFOUND');
+    assert.equal(dns.evidence.status, 0);
+    assert.ok(rows.every((r) => r.taxonomyId === 'broken-external-link'));
   });
 
-  after(async () => {
-    await new Promise((resolve) => server.close(resolve));
+  it('checks external and internal images and ignores pages that are not 200 HTML', async () => {
+    const facts = [
+      page('/links', {
+        images: [
+          { src: `${EXT}/img.png`, srcKey: `${EXT}/img.png`, alt: 'x', width: 1, height: 1 },
+          { src: '/local.png', srcKey: 'https://example.com/local.png', alt: 'x', width: 1, height: 1 },
+        ],
+      }),
+      page('/retired', { status: 404, links: [link('/missing')] }),
+    ];
+    const linkTargets = targets(
+      target(`${EXT}/img.png`, { status: 404 }), target('/local.png', { status: 404 }), target('/missing', { status: 404 }),
+    );
+    const rows = assertValidRows(await check({ facts, linkTargets, config: config() }));
+    assert.deepEqual(ids(rows), ['broken-external-image /links -> https://other.org/img.png', 'broken-internal-image /links -> /local.png']);
   });
 
-  it('flags 404 as critical', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const html = `<html><body>
-      <a href="${baseUrl}/ok">Good</a>
-      <a href="${baseUrl}/not-found">Bad</a>
-    </body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    const notFound = findings.find((f) => f.title.includes('404'));
-    assert.ok(notFound, 'Should find a 404 finding');
-    assert.equal(notFound.severity, 'critical');
-    assert.equal(notFound.category, 'seo');
-  });
-
-  it('flags 500 as warning', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const html = `<html><body>
-      <a href="${baseUrl}/server-error">Error</a>
-    </body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    const serverErr = findings.find((f) => f.title.includes('500'));
-    assert.ok(serverErr, 'Should find a 500 finding');
-    assert.equal(serverErr.severity, 'warning');
-  });
-
-  it('skips mailto, tel, fragment-only, and javascript links', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const html = `<html><body>
-      <a href="mailto:test@example.com">Email</a>
-      <a href="tel:+1234567890">Phone</a>
-      <a href="#section">Section</a>
-      <a href="javascript:void(0)">JS</a>
-    </body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    assert.equal(findings.length, 0, 'Should produce no findings for skippable links');
-  });
-
-  it('resolves relative URLs against page URL', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const html = `<html><body>
-      <a href="/ok">Relative</a>
-    </body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    assert.equal(findings.length, 0, 'Relative /ok should resolve and return 200');
-  });
-
-  it('deduplicates URLs before checking', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const html = `<html><body>
-      <a href="${baseUrl}/not-found">Link 1</a>
-      <a href="${baseUrl}/not-found">Link 2</a>
-      <a href="${baseUrl}/not-found">Link 3</a>
-    </body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    const notFoundFindings = findings.filter((f) => f.title.includes('404'));
-    assert.equal(notFoundFindings.length, 1, 'Should deduplicate and only report once');
-  });
-
-  it('checks img src, link href, script src attributes', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const html = `<html><head>
-      <link href="${baseUrl}/not-found" rel="stylesheet">
-    </head><body>
-      <img src="${baseUrl}/ok" alt="img">
-      <script src="${baseUrl}/server-error"></script>
-    </body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    assert.ok(findings.length >= 2, 'Should find findings for link and script');
-  });
-
-  it('handles many links without crashing (concurrency)', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const links = Array.from({ length: 30 }, (_, i) => `<a href="${baseUrl}/ok?i=${i}">Link ${i}</a>`);
-    const html = `<html><body>${links.join('\n')}</body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    // All should be 200 OK, so no findings
-    assert.equal(findings.length, 0);
-  });
-
-  it('returns no findings for page with only valid links', async () => {
-    const pageUrl = `${baseUrl}/page`;
-    const html = `<html><body>
-      <a href="${baseUrl}/ok">Good</a>
-    </body></html>`;
-
-    const findings = await check({
-      url: baseUrl,
-      pages: [pageUrl],
-      config: loadConfig(),
-      log: createLogger(false),
-      fetchPage: makeMockFetchPage({ [pageUrl]: html }),
-    });
-
-    assert.equal(findings.length, 0);
+  it('gives unknown not_run for a link target the crawl never checked', async () => {
+    const rows = assertValidRows(await check({ facts: [page('/links', { links: [link('/nowhere')] })], linkTargets: new Map(), config: config() }));
+    assert.deepEqual(ids(rows), ['broken-internal-link /links -> /nowhere (not_run)']);
   });
 });

@@ -1,216 +1,88 @@
-/**
- * psi.js — PageSpeed Insights API check (Core Web Vitals + Lighthouse)
- *
- * Calls the PSI API for each page with both mobile and desktop strategies.
- * Extracts CWV metrics (LCP, CLS, INP) and Lighthouse category scores.
- * Requires a Google PSI API key in config.
- */
+// Calls the PageSpeed Insights API and reports field Core Web Vitals above the configured thresholds, with the PSI JSON field as evidence.
 
-import { createFinding } from '../lib/finding.js';
+import { sleep } from '../lib/finding.js';
+import { contentPages, pageRow, siteRow, rootOf } from './_shared.js';
 
-const meta = {
-  name: 'psi',
-  label: 'PageSpeed Insights',
-  category: 'performance',
-  tier: 1,
-  parallel: false,
-};
-
-const PSI_API_BASE = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
-const RATE_LIMIT_MS = 2000;
+export const PSI_API_BASE = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
+export const PSI_MAX_PAGES = 10;
 const PSI_TIMEOUT_MS = 30_000;
+const STRATEGIES = ['mobile', 'desktop'];
 
-/**
- * Delay for the given ms.
- * @param {number} ms
- */
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+export const METRICS = Object.freeze([
+  { id: 'psi-lcp', key: 'LARGEST_CONTENTFUL_PAINT_MS', threshold: 'lcp', unit: 'ms', scale: 1 },
+  { id: 'psi-cls', key: 'CUMULATIVE_LAYOUT_SHIFT_SCORE', threshold: 'cls', unit: '', scale: 100 },
+  { id: 'psi-inp', key: 'INTERACTION_TO_NEXT_PAINT', threshold: 'inp', unit: 'ms', scale: 1 },
+]);
 
-/**
- * Classify a CWV metric value against config thresholds.
- * @param {number} value
- * @param {{ warning: number, critical: number }} thresholds
- * @returns {'critical'|'warning'|null}
- */
-function classifyCwv(value, thresholds) {
-  if (value > thresholds.critical) return 'critical';
-  if (value > thresholds.warning) return 'warning';
-  return null;
-}
+const DEFAULT_LIMITS = { lcp: 2500, cls: 0.1, inp: 200 };
 
-/**
- * Call the PSI API for a given URL and strategy.
- * @param {string} pageUrl
- * @param {string} strategy - 'mobile' or 'desktop'
- * @param {string} apiKey
- * @returns {Promise<object|null>} parsed JSON or null on error
- */
-async function callPsi(pageUrl, strategy, apiKey, log) {
-  const params = new URLSearchParams({
-    url: pageUrl,
-    strategy,
-    key: apiKey,
-    category: 'performance',
-  });
+export const meta = { name: 'psi', taxonomyIds: METRICS.map((m) => m.id), tier: 1, crossPage: false, audit: true };
 
-  // Also request accessibility, best-practices, seo
-  params.append('category', 'accessibility');
-  params.append('category', 'best-practices');
-  params.append('category', 'seo');
-
-  const apiUrl = `${PSI_API_BASE}?${params}`;
+async function callPsi(pageUrl, strategy, apiKey, fetchImpl, log) {
+  const params = new URLSearchParams({ url: pageUrl, strategy, key: apiKey, category: 'performance' });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PSI_TIMEOUT_MS);
-
   try {
-    const response = await fetch(apiUrl, { signal: controller.signal });
+    const response = await fetchImpl(`${PSI_API_BASE}?${params}`, { signal: controller.signal });
     if (!response.ok) {
-      log.warn(`PSI API returned ${response.status} for ${pageUrl} (${strategy})`);
+      log?.warn?.(`PSI API returned ${response.status} for ${pageUrl} (${strategy})`);
       return null;
     }
     return await response.json();
   } catch (err) {
-    log.warn(`PSI API request failed for ${pageUrl} (${strategy}): ${err.message}`);
+    log?.warn?.(`PSI API request failed for ${pageUrl} (${strategy}): ${err.message}`);
     return null;
   } finally {
     clearTimeout(timer);
   }
 }
 
-/**
- * Extract CWV findings from a PSI response.
- * @param {object} data - PSI API response
- * @param {string} pageUrl
- * @param {string} strategy
- * @param {object} thresholds - config.thresholds
- * @returns {object[]} findings
- */
-function extractCwvFindings(data, pageUrl, strategy, thresholds) {
-  const findings = [];
-  const metrics = data?.loadingExperience?.metrics;
-  if (!metrics) return findings;
+function limitOf(config, name) {
+  return config?.thresholds?.[name]?.warning ?? DEFAULT_LIMITS[name];
+}
 
-  const cwvMap = [
-    { key: 'LARGEST_CONTENTFUL_PAINT_MS', label: 'LCP', unit: 'ms', thresholds: thresholds.lcp },
-    { key: 'CUMULATIVE_LAYOUT_SHIFT_SCORE', label: 'CLS', unit: '', thresholds: thresholds.cls },
-    { key: 'INTERACTION_TO_NEXT_PAINT', label: 'INP', unit: 'ms', thresholds: thresholds.inp },
-  ];
-
-  for (const { key, label, unit, thresholds: t } of cwvMap) {
-    const metric = metrics[key];
-    if (!metric) continue;
-
-    // CLS percentile is multiplied by 100 in the API (e.g. 8 = 0.08)
-    const value = key === 'CUMULATIVE_LAYOUT_SHIFT_SCORE'
-      ? metric.percentile / 100
-      : metric.percentile;
-
-    const severity = classifyCwv(value, t);
-    if (!severity) continue;
-
-    const displayValue = unit
-      ? `${value}${unit}`
-      : value.toFixed(2);
-
-    findings.push(createFinding({
-      check: 'psi',
-      severity,
-      category: 'performance',
-      title: `Poor ${label} (${strategy}): ${displayValue}`,
-      description: `${label} for ${pageUrl} (${strategy}) is ${displayValue}, which exceeds the ${severity} threshold of ${severity === 'critical' ? t.critical : t.warning}${unit}.`,
-      url: pageUrl,
-      actual: value,
-      expected: `<= ${t.warning}${unit}`,
-      meta: { strategy, metric: label, apiCategory: metric.category },
-      recommendation: `Improve ${label} by optimizing ${label === 'LCP' ? 'largest content element loading' : label === 'CLS' ? 'layout stability' : 'interaction responsiveness'}.`,
+export function metricRows(fact, results, config) {
+  const rows = [];
+  for (const metric of METRICS) {
+    let worst = null;
+    for (const { strategy, data } of results) {
+      const field = data?.loadingExperience?.metrics?.[metric.key];
+      if (typeof field?.percentile !== 'number') continue;
+      const value = field.percentile / metric.scale;
+      if (!worst || value > worst.value) worst = { strategy, value, field };
+    }
+    if (!worst || worst.value <= limitOf(config, metric.threshold)) continue;
+    rows.push(pageRow(fact, metric.id, {
+      value: worst.field.percentile,
+      selector: `loadingExperience.metrics.${metric.key}.percentile`,
+      snippet: `${worst.strategy}: ${metric.key} percentile ${worst.field.percentile} (${worst.field.category ?? 'n/a'})`,
     }));
   }
-
-  return findings;
+  return rows;
 }
 
-/**
- * Extract Lighthouse score findings from a PSI response.
- * @param {object} data - PSI API response
- * @param {string} pageUrl
- * @param {string} strategy
- * @returns {object[]} findings
- */
-function extractLighthouseFindings(data, pageUrl, strategy) {
-  const findings = [];
-  const categories = data?.lighthouseResult?.categories;
-  if (!categories) return findings;
-
-  const categoryMap = [
-    { key: 'performance', label: 'Performance', findingCategory: 'performance' },
-    { key: 'accessibility', label: 'Accessibility', findingCategory: 'accessibility' },
-    { key: 'best-practices', label: 'Best Practices', findingCategory: 'code-quality' },
-    { key: 'seo', label: 'SEO', findingCategory: 'seo' },
-  ];
-
-  for (const { key, label, findingCategory } of categoryMap) {
-    const cat = categories[key];
-    if (!cat || cat.score == null) continue;
-
-    const score = Math.round(cat.score * 100);
-
-    let severity = null;
-    if (key === 'performance') {
-      if (score < 30) severity = 'critical';
-      else if (score < 50) severity = 'warning';
-    } else {
-      if (score < 50) severity = 'info';
+export async function check({ facts = [], site, config, log, fetchImpl = globalThis.fetch } = {}) {
+  if (!config?.googlePsiApiKey) {
+    return meta.taxonomyIds.map((id) => siteRow(site, facts, id, { state: 'unknown', reason: 'not_run', selector: 'psi', snippet: '' }));
+  }
+  const rootKey = rootOf(site, facts).urlKey;
+  const pages = contentPages(facts).sort((a, b) => (a.urlKey === rootKey ? -1 : b.urlKey === rootKey ? 1 : 0)).slice(0, PSI_MAX_PAGES);
+  const pause = config.psiDelayMs ?? 2000;
+  const rows = [];
+  let first = true;
+  for (const fact of pages) {
+    const results = [];
+    for (const strategy of STRATEGIES) {
+      if (!first && pause > 0) await sleep(pause);
+      first = false;
+      const data = await callPsi(fact.finalUrl ?? fact.url, strategy, config.googlePsiApiKey, fetchImpl, log);
+      if (data) results.push({ strategy, data });
     }
-
-    if (!severity) continue;
-
-    findings.push(createFinding({
-      check: 'psi',
-      severity,
-      category: findingCategory,
-      title: `Low Lighthouse ${label} score (${strategy}): ${score}`,
-      description: `Lighthouse ${label} score for ${pageUrl} (${strategy}) is ${score}/100.`,
-      url: pageUrl,
-      actual: score,
-      expected: '>= 50',
-      meta: { strategy, lighthouseCategory: key, score },
-      recommendation: `Improve the ${label} score by addressing Lighthouse audit recommendations.`,
-    }));
-  }
-
-  return findings;
-}
-
-async function check({ url, pages, config, log, fetchPage }) {
-  if (!config.googlePsiApiKey) {
-    log.log('psi: skipping — no Google PSI API key configured');
-    return [];
-  }
-
-  const findings = [];
-  const strategies = ['mobile', 'desktop'];
-  let isFirst = true;
-
-  for (const pageUrl of pages) {
-    for (const strategy of strategies) {
-      if (!isFirst) {
-        await delay(RATE_LIMIT_MS);
-      }
-      isFirst = false;
-
-      log.log(`psi: checking ${pageUrl} (${strategy})`);
-      const data = await callPsi(pageUrl, strategy, config.googlePsiApiKey, log);
-
-      if (!data) continue;
-
-      findings.push(...extractCwvFindings(data, pageUrl, strategy, config.thresholds));
-      findings.push(...extractLighthouseFindings(data, pageUrl, strategy));
+    if (results.length === 0) {
+      rows.push(...meta.taxonomyIds.map((id) => pageRow(fact, id, { state: 'unknown', reason: 'fetch_failed', selector: 'psi', snippet: '' })));
+      continue;
     }
+    rows.push(...metricRows(fact, results, config));
   }
-
-  return findings;
+  return rows;
 }
-
-export { check, meta };

@@ -39,21 +39,33 @@ collapsible toggles in Notion. The Notion page title is:
 
 ---
 
-## Data — ALWAYS pull fresh from SEMRush (do not reuse last month's numbers)
+## Data — ALWAYS pull fresh (do not reuse last month's numbers)
 
-Every time this report is written or rewritten, pull live data via the SEMRush MCP —
-never hand-carry or estimate figures. Standing instruction (Will, Jul 2026).
+Every time this report is written or rewritten, run the tools fresh — never hand-carry or
+estimate figures. Standing instruction (Will, Jul 2026).
 
-1. **Site-audit metrics (both columns from SEMRush):**
+1. **Site-audit metrics (from site-review):**
+   - Run `npm run site-review -- --url <url> --client <client>`. Every issue count and URL
+     comes from `findings.json` in `audits/crawl/<date>/` (webflow-internal); the "last month"
+     column and the fixed / still open / new lists come from its snapshot diff against the
+     previous month's snapshot, keyed by finding ID.
+   - Quote only final-state fails. `unknown`, `transient` and "fixed after load" findings are
+     not issues; mention them only when a client fix depends on one.
+   - Health: during the SEMrush parallel run (ADR-002) show both figures, the site-review score
+     with its footnote (formula in `tools/site-review/README.md`) and SEMRush Site Health, and
+     explain the step change once. SEMRush's figure is dropped when the parallel run ends.
+
+1b. **SEMRush Site Audit figures (parallel run only, until ADR-002 is accepted):**
    - `projects_research → list_projects` to get the project ID.
    - `siteaudit_research → snapshots` for the snapshot IDs; use the newest as the
      current month and the prior month's snapshot as the baseline. Both report columns
      come from real snapshots — that way this month's fixes show in the numbers instead
      of being flagged "reflects next crawl."
    - `snapshot` for each snapshot ID (site health = `quality.value`, pages = `pages_crawled`,
-     issue counts by ID). `meta_issues` maps issue IDs → names. Use `issue_details` to
-     confirm the composition of a big issue (e.g. structured-data errors) before writing
-     it up.
+     issue counts by ID). `meta_issues` maps issue IDs → names. Save the counts as
+     `audits/crawl/semrush-counts-<date>.json` and rerun site-review with `--semrush-counts`
+     so the Parity section records every gap. SEMRush is not a tie-breaker: an unexplained
+     gap is investigated, not resolved by quoting SEMRush.
 
 2. **Blog topic suggestions (always populate — never leave as "pending"):**
    - `organic_research → domain_organic` for the client domain (striking-distance
@@ -326,7 +338,8 @@ local expertise, unique perspective.]
 ## Source files
 
 Read these before writing:
-- `audits/semrush-YYYY-MM-DD.md` (primary data source — issue counts, comparisons)
+- `audits/crawl/YYYY-MM-DD/findings.json` and `snapshot.json` (primary data source — issue counts, evidence, month-on-month diff)
+- `audits/semrush-YYYY-MM-DD.md` (parallel-run comparison only)
 - `audits/structure.md` (Lighthouse scores, technical checks)
 - `audits/seo.md` (SEO findings)
 - `audits/content.md` (content and code inventory)

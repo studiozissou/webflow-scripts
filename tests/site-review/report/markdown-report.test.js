@@ -1,110 +1,43 @@
+// Tests report.md: sections for coverage, health, findings collapsed by fingerprint, fixed after load, transient, unknown, tool bugs and abort.
+
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { generateMarkdownReport } from '../../../tools/site-review/lib/report/markdown-report.js';
-import { createFinding } from '../../../tools/site-review/lib/finding.js';
+import { HEALTH_FORMULA } from '../../../tools/site-review/lib/health.js';
+import { buildResult } from './_result.js';
 
-const findings = [
-  createFinding({
-    check: 'meta-tags',
-    severity: 'critical',
-    category: 'seo',
-    title: 'Missing title',
-    description: 'No title tag found.',
-    url: 'https://example.com/about',
-    recommendation: 'Add a <title> tag.',
-  }),
-  createFinding({
-    check: 'security-headers',
-    severity: 'warning',
-    category: 'security',
-    title: 'Missing CSP',
-    description: 'No Content-Security-Policy header.',
-    url: 'https://example.com',
-    element: 'HTTP headers',
-    actual: 'not set',
-    expected: 'Content-Security-Policy header present',
-  }),
-  createFinding({
-    check: 'psi',
-    severity: 'info',
-    category: 'performance',
-    title: 'Good LCP',
-    description: 'LCP is within range.',
-  }),
-];
+describe('markdown report', () => {
+  const md = generateMarkdownReport(buildResult(), { generatedAt: new Date('2026-11-06T00:00:00Z') });
 
-const results = {
-  findings,
-  summary: {
-    total: 3,
-    critical: 1,
-    warning: 1,
-    info: 1,
-    byCategory: { seo: 1, security: 1, performance: 1 },
-  },
-  timing: {
-    total: 12345,
-    checks: { 'meta-tags': 200, 'security-headers': 150, psi: 884 },
-  },
-};
-
-const meta = {
-  url: 'https://example.com',
-  tier: 1,
-  pagesAudited: 5,
-  checksRun: 3,
-};
-
-describe('generateMarkdownReport', () => {
-  it('contains site review heading with domain', () => {
-    const md = generateMarkdownReport(results, meta);
-    assert.ok(md.includes('# Site Review: example.com'));
+  it('has the heading, the coverage banner and coverage', () => {
+    assert.match(md, /^# Site review: example\.com/);
+    assert.match(md, /> \*\*low_coverage:\*\* 3 of 4/);
+    assert.match(md, /3 of 4 sitemap URLs fetched \(75%\)/);
   });
 
-  it('contains summary table with severity counts', () => {
-    const md = generateMarkdownReport(results, meta);
-    assert.ok(md.includes('| Critical |'));
-    assert.ok(md.includes('| Warning |'));
-    assert.ok(md.includes('| Info |'));
-    assert.ok(md.includes('| **Total** |'));
+  it('quotes the health formula and says it is not the SEMrush figure', () => {
+    assert.ok(md.includes(HEALTH_FORMULA));
+    assert.match(md, /not SEMrush's Site Health figure/);
   });
 
-  it('groups findings by severity with headings', () => {
-    const md = generateMarkdownReport(results, meta);
-    assert.ok(md.includes('## Critical Issues'));
-    assert.ok(md.includes('## Warnings'));
-    assert.ok(md.includes('## Informational'));
+  it('collapses a shared broken target into one fingerprint row with a page count', () => {
+    assert.match(md, /### broken internal link \(`broken-internal-link`\): 2 links/);
+    assert.match(md, /\| \/gone \| target \| 2 \|/);
   });
 
-  it('includes finding details', () => {
-    const md = generateMarkdownReport(results, meta);
-    assert.ok(md.includes('Missing title'));
-    assert.ok(md.includes('No title tag found.'));
-    assert.ok(md.includes('https://example.com/about'));
+  it('lists fixed-after-load, transient, unknown and tool bugs in their own sections, outside the issues', () => {
+    assert.match(md, /## Fixed after load[\s\S]*title-too-short/);
+    assert.match(md, /## Transient[\s\S]*\/flaky/);
+    assert.match(md, /## Unknown[\s\S]*\| page-fetch \| non_html \| 1 \|/);
+    assert.match(md, /## Tool bugs[\s\S]*evidence\.snippet missing/);
+    assert.ok(!/### title too short/.test(md));
   });
 
-  it('includes optional fields when present', () => {
-    const md = generateMarkdownReport(results, meta);
-    assert.ok(md.includes('Add a <title> tag.'));
-    assert.ok(md.includes('HTTP headers'));
-  });
-
-  it('includes meta table with duration', () => {
-    const md = generateMarkdownReport(results, meta);
-    assert.ok(md.includes('12.3s'));
-    assert.ok(md.includes('| Tier |'));
-    assert.ok(md.includes('| Pages Audited |'));
-  });
-
-  it('omits severity sections with no findings', () => {
-    const onlyCritical = {
-      findings: [findings[0]],
-      summary: { total: 1, critical: 1, warning: 0, info: 0, byCategory: { seo: 1 } },
-      timing: { total: 100, checks: { 'meta-tags': 100 } },
-    };
-    const md = generateMarkdownReport(onlyCritical, meta);
-    assert.ok(md.includes('## Critical Issues'));
-    assert.ok(!md.includes('## Warnings'));
-    assert.ok(!md.includes('## Informational'));
+  it('an aborted run reports the abort and no findings', () => {
+    const result = buildResult();
+    result.sanity.abort = { code: 'bot_wall', message: 'One page body on 95% of pages: probable bot wall.' };
+    const aborted = generateMarkdownReport(result);
+    assert.match(aborted, /Run aborted \(bot_wall\)/);
+    assert.ok(!aborted.includes('## Errors'));
   });
 });

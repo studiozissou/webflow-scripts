@@ -1,86 +1,47 @@
+// Tests findings.json: every uncollapsed finding, health, coverage, tool bugs and parity.
+
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { generateJsonReport } from '../../../tools/site-review/lib/report/json-report.js';
-import { createFinding } from '../../../tools/site-review/lib/finding.js';
+import { buildJsonReport, generateJsonReport } from '../../../tools/site-review/lib/report/json-report.js';
+import { buildParity, withinTolerance } from '../../../tools/site-review/lib/report/parity.js';
+import { buildResult, TAXONOMY } from './_result.js';
 
-const findings = [
-  createFinding({
-    check: 'meta-tags',
-    severity: 'critical',
-    category: 'seo',
-    title: 'Missing title',
-    description: 'No title tag found.',
-    url: 'https://example.com',
-  }),
-  createFinding({
-    check: 'security-headers',
-    severity: 'warning',
-    category: 'security',
-    title: 'Missing CSP',
-    description: 'No Content-Security-Policy header.',
-    url: 'https://example.com',
-  }),
-  createFinding({
-    check: 'psi',
-    severity: 'info',
-    category: 'performance',
-    title: 'Good LCP',
-    description: 'LCP is within range.',
-  }),
-];
+describe('json report', () => {
+  const result = buildResult();
 
-const results = {
-  findings,
-  summary: {
-    total: 3,
-    critical: 1,
-    warning: 1,
-    info: 1,
-    byCategory: { seo: 1, security: 1, performance: 1 },
-  },
-  timing: {
-    total: 1234,
-    checks: { 'meta-tags': 200, 'security-headers': 150, psi: 884 },
-  },
-};
-
-const meta = {
-  url: 'https://example.com',
-  tier: 1,
-  pagesAudited: 5,
-  checksRun: 3,
-};
-
-describe('generateJsonReport', () => {
-  it('returns valid JSON string', () => {
-    const json = generateJsonReport(results, meta);
-    assert.doesNotThrow(() => JSON.parse(json));
+  it('is valid JSON with meta, coverage, health and every uncollapsed finding', () => {
+    const report = JSON.parse(generateJsonReport(result, { generatedAt: new Date('2026-11-06T00:00:00Z') }));
+    assert.equal(report.meta.generatedAt, '2026-11-06T00:00:00.000Z');
+    assert.equal(report.meta.client, 'example');
+    assert.equal(report.findings.length, result.findings.length);
+    assert.equal(report.coverage.ratio, 0.75);
+    assert.equal(report.health.score, result.health.score);
+    assert.equal(report.toolBugs.length, 1);
   });
 
-  it('has correct meta fields', () => {
-    const report = JSON.parse(generateJsonReport(results, meta));
-    assert.equal(report.meta.url, 'https://example.com');
-    assert.equal(report.meta.tier, 1);
-    assert.equal(report.meta.pagesAudited, 5);
-    assert.equal(report.meta.checksRun, 3);
-    assert.equal(report.meta.duration, 1234);
+  it('parity counts exclude transient, unknown and fixed-after-load findings and give reasons', () => {
+    const parity = buildParity({ findings: result.findings, taxonomy: TAXONOMY, semrushCounts: { date: '2026-11-01', counts: { 3: 1, 8: 9, 101: 1, 999: 4 } } });
+    const row = (id) => parity.rows.find((r) => r.taxonomyId === id);
+    assert.equal(row('title-missing').ours, 1);
+    assert.equal(row('title-missing').withinTolerance, true);
+    assert.equal(row('broken-internal-link').ours, 2);
+    assert.equal(row('broken-internal-link').withinTolerance, false);
+    assert.match(row('broken-internal-link').reasons.join(), /reason needed/);
+    assert.equal(row('title-too-short').ours, 0);
+    assert.match(row('title-too-short').reasons.join(), /fixed after load/);
+    assert.equal(row('hsts-missing').ours, null);
+    assert.match(row('hsts-missing').reasons.join(), /not covered/);
+    assert.equal(buildJsonReport(result, { parity }).parity.rows.length, parity.rows.length);
   });
 
-  it('generatedAt is a valid ISO date string', () => {
-    const report = JSON.parse(generateJsonReport(results, meta));
-    const date = new Date(report.meta.generatedAt);
-    assert.ok(!isNaN(date.getTime()), 'generatedAt should be a valid date');
-    assert.ok(report.meta.generatedAt.includes('T'), 'should be ISO format');
+  it('withinTolerance uses max(10%, ±2)', () => {
+    assert.ok(withinTolerance(30, 32));
+    assert.ok(withinTolerance(100, 110));
+    assert.ok(!withinTolerance(100, 112));
+    assert.ok(!withinTolerance(1, 4));
   });
 
-  it('summary matches input', () => {
-    const report = JSON.parse(generateJsonReport(results, meta));
-    assert.deepEqual(report.summary, results.summary);
-  });
-
-  it('findings array matches input', () => {
-    const report = JSON.parse(generateJsonReport(results, meta));
-    assert.equal(report.findings.length, 3);
-    assert.equal(report.findings[0].check, 'meta-tags');
+  it('parity is null without a counts file', () => {
+    assert.equal(buildParity({ findings: [], taxonomy: TAXONOMY, semrushCounts: null }), null);
   });
 });

@@ -90,17 +90,21 @@ If present, or if the user provides one:
 1. **Parse it immediately** — before launching parallel streams.
 2. Extract all flagged issues: multiple H1s, missing meta descriptions, structured data errors,
    non-descriptive anchor text, orphaned pages, duplicate content, etc.
-3. **SEMRush data has priority over agent scanning when there is a conflict.** SEMRush crawls
-   the rendered DOM like a real browser. WebFetch strips `<head>` content and often miscounts
-   headings, producing false positives. If SEMRush says a page has 0 multiple H1s but your
-   scan says 6, trust SEMRush (and verify with Chrome DevTools if needed).
-4. Feed the parsed SEMRush findings into the relevant streams so they cross-reference rather
-   than duplicate. Specifically:
-   - Stream B receives SEMRush heading, meta, and schema findings as ground truth
-   - Stream C receives SEMRush content-quality flags
-5. When merging into the report, always note the data source for disputed items. If SEMRush
-   and agent scanning disagree, flag the conflict and default to SEMRush unless DevTools
-   verification overrides both.
+3. **Evidence rule: page facts come from site-review, not from agent scanning or SEMRush.**
+   Run `npm run site-review -- --url <url> --client <client>` and treat its `facts.ndjson`
+   and `findings.json` (in webflow-internal `projects/<client>/.claude/audits/crawl/<date>/`)
+   as the only evidence for page facts: status, redirects, title, meta description,
+   canonical, H1s, hreflang, links and structured data. Agents interpret, never observe: they
+   may rank, group, explain and propose fixes for rows there, and may not state a page fact
+   that is not there. A missing fact is "not collected" (the fix is a new extractor with a
+   fixture), never a WebFetch reading, because WebFetch strips `<head>` and miscounts
+   headings. Findings marked `unknown`, `transient` or "fixed after load" are not issues.
+4. Feed the site-review findings into the relevant streams so they cross-reference rather than
+   duplicate: Stream B receives heading, meta, canonical, hreflang and schema findings; Stream C
+   receives content findings (duplicate content, low word count).
+5. SEMRush is not a tie-breaker. During the parallel run (ADR-002), pass the SEMRush counts
+   with `--semrush-counts` and log each disagreement from the report's Parity section as a gap
+   to investigate, naming which side is wrong once checked.
 
 ### Asset CSV (optional)
 
@@ -391,7 +395,7 @@ with available data. The missing stream can be re-run separately.
 
 After core audit, present four optional layers:
 
-**Layer A: SEMRush organic intelligence**
+**Layer A: SEMRush organic intelligence** (search demand and rankings only; technical site-audit findings come from site-review in Phase 2, never from a SEMRush crawl)
 - Domain overview (all markets)
 - Top ranking keywords (primary market)
 - Top pages by traffic

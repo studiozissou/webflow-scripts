@@ -1,116 +1,206 @@
-/**
- * markdown-report.js — Findings to client-readable markdown report
- *
- * Groups findings by severity, sorts within groups by category,
- * and renders all present finding fields.
- */
+// Renders report.md from a pipeline result: coverage, health, sanity, findings collapsed by fingerprint with evidence, site-wide patterns, fixed after load, transient, unknown, tool bugs, diff and parity.
 
-const SEVERITY_ORDER = ['critical', 'warning', 'info'];
+import { HEALTH_FORMULA } from '../health.js';
 
-const SEVERITY_HEADINGS = {
-  critical: 'Critical Issues',
-  warning: 'Warnings',
-  info: 'Informational',
-};
+const SEVERITY_ORDER = ['error', 'warning', 'notice'];
+const HEADINGS = { error: 'Errors', warning: 'Warnings', notice: 'Notices' };
+const MAX_ROWS = 25;
 
-/**
- * Extract domain from a URL string.
- * @param {string} url
- * @returns {string}
- */
-function extractDomain(url) {
+function cell(value) {
+  return String(value ?? '').replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+}
+
+function path(key) {
   try {
-    return new URL(url).hostname;
+    const url = new URL(key);
+    return `${url.pathname}${url.search}`;
   } catch {
-    return url;
+    return key ?? '';
   }
 }
 
-/**
- * Format milliseconds to a human-readable duration string.
- * @param {number} ms
- * @returns {string}
- */
-function formatDuration(ms) {
-  return `${(ms / 1000).toFixed(1)}s`;
+function formatValue(value) {
+  if (value === null || value === undefined) return 'absent';
+  if (typeof value === 'object') return JSON.stringify(value).slice(0, 120);
+  return String(value).slice(0, 120);
 }
 
-/**
- * Render a single finding as markdown.
- * @param {Object} finding
- * @returns {string}
- */
-function renderFinding(finding) {
-  const lines = [];
-  lines.push(`### ${finding.title}`);
-  lines.push('');
-  lines.push(finding.description);
-  lines.push('');
-
-  if (finding.url) lines.push(`**Page:** ${finding.url}`);
-  if (finding.category) lines.push(`**Category:** ${finding.category}`);
-  if (finding.element) lines.push(`**Element:** ${finding.element}`);
-  if (finding.actual !== undefined) lines.push(`**Actual:** ${finding.actual}`);
-  if (finding.expected !== undefined) lines.push(`**Expected:** ${finding.expected}`);
-  if (finding.recommendation) lines.push(`**Recommendation:** ${finding.recommendation}`);
-
-  lines.push('');
-  return lines.join('\n');
+function table(header, rows) {
+  if (rows.length === 0) return [];
+  return [`| ${header.join(' | ')} |`, `|${header.map(() => '---').join('|')}|`, ...rows.map((row) => `| ${row.map(cell).join(' | ')} |`), ''];
 }
 
-/**
- * Generate a client-readable markdown report.
- *
- * @param {{ findings: Array, summary: Object, timing: Object }} results
- * @param {{ url: string, tier: number, pagesAudited: number, checksRun: number }} meta
- * @returns {string} Markdown string
- */
-function generateMarkdownReport(results, meta) {
-  const domain = extractDomain(meta.url);
+function evidenceRows(findings) {
+  return findings.slice(0, MAX_ROWS).map((f) => [
+    path(f.url),
+    f.target ? path(f.target) : '',
+    formatValue(f.evidence?.value),
+    f.evidence?.status ?? '',
+    f.evidence?.source ?? '',
+    f.renderChecked ? 'yes' : 'no',
+    f.evidence?.snippet ? `\`${f.evidence.snippet.slice(0, 80).replace(/`/g, "'")}\`` : '',
+  ]);
+}
+
+function liveFails(findings) {
+  return findings.filter((f) => f.state === 'fail' && !f.transient && !f.tags?.includes('fixed-after-load'));
+}
+
+function findingsSection(result) {
   const lines = [];
+  const sitewideIds = new Set(result.collapsed.sitewide.map((s) => s.taxonomyId));
+  const groups = new Map(result.collapsed.groups.map((g) => [g.fingerprint, g]));
+  const live = liveFails(result.findings);
 
-  // Title
-  lines.push(`# Site Review: ${domain}`);
-  lines.push('');
-
-  // Meta table
-  lines.push('| Field | Value |');
-  lines.push('|-------|-------|');
-  lines.push(`| Date | ${new Date().toISOString().split('T')[0]} |`);
-  lines.push(`| Tier | ${meta.tier} |`);
-  lines.push(`| Pages Audited | ${meta.pagesAudited} |`);
-  lines.push(`| Checks Run | ${meta.checksRun} |`);
-  lines.push(`| Duration | ${formatDuration(results.timing.total)} |`);
-  lines.push('');
-
-  // Summary table
-  lines.push('## Summary');
-  lines.push('');
-  lines.push('| Severity | Count |');
-  lines.push('|----------|-------|');
-  lines.push(`| Critical | ${results.summary.critical} |`);
-  lines.push(`| Warning | ${results.summary.warning} |`);
-  lines.push(`| Info | ${results.summary.info} |`);
-  lines.push(`| **Total** | **${results.summary.total}** |`);
-  lines.push('');
-
-  // Findings grouped by severity
   for (const severity of SEVERITY_ORDER) {
-    const group = results.findings
-      .filter((f) => f.severity === severity)
-      .sort((a, b) => (a.category || '').localeCompare(b.category || ''));
-
-    if (group.length === 0) continue;
-
-    lines.push(`## ${SEVERITY_HEADINGS[severity]}`);
-    lines.push('');
-
-    for (const finding of group) {
-      lines.push(renderFinding(finding));
+    const ofSeverity = live.filter((f) => f.severity === severity && !sitewideIds.has(f.taxonomyId));
+    if (ofSeverity.length === 0) continue;
+    lines.push(`## ${HEADINGS[severity]}`, '');
+    const byType = new Map();
+    for (const f of ofSeverity) byType.set(f.taxonomyId, [...(byType.get(f.taxonomyId) ?? []), f]);
+    for (const [taxonomyId, list] of [...byType].sort((a, b) => b[1].length - a[1].length)) {
+      lines.push(`### ${list[0].label} (\`${taxonomyId}\`): ${list.length} ${list[0].unit === 'link' ? 'links' : 'pages'}`, '');
+      const typeGroups = [...groups.values()].filter((g) => g.taxonomyId === taxonomyId && g.count > 1);
+      if (typeGroups.length > 0) {
+        lines.push(...table(['Fingerprint', 'Kind', 'Pages', 'Example page', 'Example value'], typeGroups.slice(0, MAX_ROWS).map((g) => [
+          g.kind === 'target' ? path(g.sample?.targetKey ?? g.fingerprint) : (g.sample?.evidence?.snippet ?? '').slice(0, 60),
+          g.kind,
+          g.count,
+          path(g.sample?.url),
+          formatValue(g.sample?.evidence?.value),
+        ])));
+      }
+      lines.push(...table(['Page', 'Target', 'Value', 'Status', 'Source', 'Rendered', 'Snippet'], evidenceRows(list)));
+      if (list.length > MAX_ROWS) lines.push(`${list.length - MAX_ROWS} more in findings.json.`, '');
     }
   }
-
-  return lines.join('\n');
+  return lines;
 }
 
-export { generateMarkdownReport };
+function diffSection(diff) {
+  if (!diff) return [];
+  const rows = Object.entries(diff.byType)
+    .filter(([, v]) => v.fixed || v.new || v.stillOpen || v.unverified)
+    .map(([id, v]) => [id, v.fixed, v.stillOpen, v.new, v.unverified ?? 0]);
+  const lines = ['## Change since the previous snapshot', ''];
+  lines.push(...table(['Issue', 'Fixed', 'Still open', 'New', 'Unverified'], rows));
+  if (diff.unverified?.length) lines.push('Unverified: open last month, but the page or target could not be checked this month (unknown, transient or not fetched). Not counted as fixed.', '');
+  for (const [label, list] of [['Fixed', diff.fixed], ['New', diff.new]]) {
+    if (list.length === 0) continue;
+    lines.push(`**${label}:**`, '', ...list.slice(0, MAX_ROWS).map((e) => `- \`${e.taxonomyId}\` ${path(e.urlKey)}${e.targetKey ? ` → ${path(e.targetKey)}` : ''}`), '');
+  }
+  return lines;
+}
+
+function paritySection(parity) {
+  if (!parity) return [];
+  return [
+    `## Parity with SEMrush (${parity.date}, snapshot ${parity.snapshot ?? 'n/a'})`,
+    '',
+    `Tolerance: within max(${parity.tolerance.ratio * 100}%, ±${parity.tolerance.absolute}). Our counts exclude transient, unknown and fixed-after-load findings.`,
+    '',
+    ...table(['Issue', 'SEMrush ID', 'Unit', 'Ours', 'SEMrush', 'Within', 'Reason'], parity.rows.map((r) => [
+      r.label,
+      r.semrushId,
+      r.unit,
+      r.ours ?? 'not covered',
+      r.semrush ?? '',
+      r.withinTolerance === null ? '' : r.withinTolerance ? 'yes' : 'no',
+      r.reasons.join('; '),
+    ])),
+  ];
+}
+
+export function generateMarkdownReport(result, { parity = null, generatedAt = new Date() } = {}) {
+  const lines = [];
+  const host = (() => {
+    try {
+      return new URL(result.url).host;
+    } catch {
+      return result.url;
+    }
+  })();
+  const { coverage } = result.sanity;
+  lines.push(`# Site review: ${host}`, '');
+  lines.push(...table(['Field', 'Value'], [
+    ['Date', generatedAt.toISOString().slice(0, 10)],
+    ['Mode', result.mode],
+    ['Client', result.client ?? 'none'],
+    ['Pages fetched', result.facts.length],
+    ['Hosts', Object.keys(result.stats.hosts ?? {}).join(', ')],
+    ['Checks run', result.checksRun.length],
+    ['Rendered pages', result.renderStats.rendered ?? 0],
+  ]));
+
+  if (result.sanity.abort) {
+    lines.push(`> **Run aborted (${result.sanity.abort.code}).** ${result.sanity.abort.message}`, '');
+    lines.push('No findings are reported from an aborted run; nothing was scored or snapshotted.', '');
+    return lines.join('\n');
+  }
+  for (const banner of result.sanity.banners) lines.push(`> **${banner.code}:** ${banner.message}`, '');
+
+  lines.push('## Coverage', '');
+  lines.push(`${coverage.fetched} of ${coverage.sitemapUrls} sitemap URLs fetched (${Math.round(coverage.ratio * 1000) / 10}%).`, '');
+
+  lines.push('## Health', '');
+  const h = result.health;
+  lines.push(`**${h.score ?? 'n/a'} / 100**: ${h.pages} pages, ${h.errorPages} with errors, ${h.warningPages} with warnings only.`, '');
+  lines.push(`Formula: \`score = round(100 × (1 − (E + 0.5 × W) / P))\`. This is the site-review score, not SEMrush's Site Health figure.[^health]`, '');
+
+  const s = result.summary;
+  lines.push(...table(['Errors', 'Warnings', 'Notices', 'Fixed after load', 'Transient', 'Unknown'], [[s.error, s.warning, s.notice, s.fixedAfterLoad, s.transient, s.unknown]]));
+
+  if (result.sanity.suspect.length > 0) {
+    lines.push('## Suspect counts', '');
+    lines.push(...table(['Issue', 'Count', 'Previous'], result.sanity.suspect.map((x) => [x.taxonomyId, x.count, x.previous])));
+  }
+
+  if (result.collapsed.sitewide.length > 0) {
+    lines.push('## Site-wide patterns', '');
+    lines.push('Each fires on more than 90% of fetched pages and is shown once here. Every page still counts in the score and the diff.', '');
+    lines.push(...table(['Issue', 'Pages', 'Share'], result.collapsed.sitewide.map((x) => [x.taxonomyId, x.pages, `${Math.round(x.ratio * 100)}%`])));
+  }
+
+  lines.push(...findingsSection(result));
+
+  const fixed = result.findings.filter((f) => f.tags?.includes('fixed-after-load'));
+  if (fixed.length > 0) {
+    lines.push('## Fixed after load', '');
+    lines.push('The raw HTML fails but the rendered page passes. Crawlers read the raw HTML first, so these are notices with no score weight and stay out of parity totals.', '');
+    lines.push(...table(['Issue', 'Page', 'Raw value'], fixed.slice(0, MAX_ROWS).map((f) => [f.taxonomyId, path(f.url), formatValue(f.evidence?.value)])));
+  }
+
+  const transient = result.findings.filter((f) => f.transient);
+  if (transient.length > 0) {
+    lines.push('## Transient', '');
+    lines.push('Failed during the crawl but not on the re-verify fetch. Not counted.', '');
+    lines.push(...table(['Issue', 'Page', 'Target', 'Crawl status'], transient.slice(0, MAX_ROWS).map((f) => [f.taxonomyId, path(f.url), f.target ? path(f.target) : '', f.evidence?.status])));
+  }
+
+  const unknown = result.findings.filter((f) => f.state === 'unknown');
+  if (unknown.length > 0) {
+    lines.push('## Unknown', '');
+    lines.push('Not checked or not checkable. Never counted as issues.', '');
+    const byReason = new Map();
+    for (const f of unknown) {
+      const key = `${f.taxonomyId}|${f.reason}`;
+      byReason.set(key, [...(byReason.get(key) ?? []), f]);
+    }
+    lines.push(...table(['Issue', 'Reason', 'Count', 'Example'], [...byReason].map(([key, list]) => {
+      const [id, reason] = key.split('|');
+      return [id, reason, list.length, path(list[0].target ?? list[0].url)];
+    })));
+  }
+
+  if (result.rejected.length > 0 || result.failedChecks.length > 0) {
+    lines.push('## Tool bugs', '');
+    for (const r of result.rejected.slice(0, MAX_ROWS)) lines.push(`- Rejected row \`${r.row?.taxonomyId}\` on ${path(r.row?.url)}: ${r.errors.join(', ')}`);
+    for (const c of result.failedChecks) lines.push(`- Check \`${c.name}\` threw: ${c.message}`);
+    lines.push('');
+  }
+
+  lines.push(...diffSection(result.diff));
+  lines.push(...paritySection(parity));
+  lines.push(`[^health]: ${HEALTH_FORMULA}. Pages are classified by the highest score weight among their final fails (error 1.0, warning 0.5, notice 0). Transient, unknown and fixed-after-load findings carry no weight. See tools/site-review/README.md.`, '');
+  return lines.join('\n');
+}

@@ -124,8 +124,8 @@ export const PAGES = [
   clean('/duplicate-b', 'Shared title used by two different pages', {
     description: 'Shared description used by two different pages of the golden fixture site.',
   }),
-  clean('/copy-a', 'First page carrying the copied body text', { words: 0, body: '{{copy}}' }),
-  clean('/copy-b', 'Second page carrying the copied body text', { words: 0, body: '{{copy}}' }),
+  clean('/copy-a', 'First page carrying the copied body text', { words: 0, h1: 'Copied body text', body: '{{copy}}' }),
+  clean('/copy-b', 'Second page carrying the copied body text', { words: 0, h1: 'Copied body text', body: '{{copy}}' }),
   clean('/long-title', 'This page title is far too long for search results and keeps on going well past the limit'),
   clean('/short-title', 'Short'),
   clean('/no-description', 'A page without any meta description at all', { description: null }),

@@ -1,122 +1,46 @@
-/**
- * code-review.js — AI-powered custom code quality review
- *
- * Extracts inline <script> and <style> content from page HTML,
- * filters out known library/tracking scripts, and sends custom
- * code to Claude for quality analysis via the Anthropic SDK.
- */
+// Asks a model to review a page's custom inline code in quick mode only, so it is excluded from audit mode.
 
 import Anthropic from '@anthropic-ai/sdk';
-import { createFinding } from '../lib/finding.js';
+import { sleep } from '../lib/finding.js';
+import { contentPages, pageRow, siteRow } from './_shared.js';
 
-const meta = {
-  name: 'code-review',
-  label: 'Code Review (AI)',
-  category: 'code-quality',
-  tier: 1,
-  parallel: false,
-};
+export const meta = { name: 'code-review', taxonomyIds: ['code-review'], tier: 1, crossPage: false, audit: false };
 
 const RATE_LIMIT_MS = 2000;
-
 const VALID_SEVERITIES = ['critical', 'warning', 'info'];
-
-/**
- * Known library/tracking signatures. If any of these appear
- * in the first 5 non-empty lines of a script, it is skipped.
- */
 const KNOWN_LIBRARY_SIGNATURES = [
-  'gsap',
-  'ScrollTrigger',
-  'SplitText',
-  'jQuery',
-  '$(',
-  'Finsweet',
-  'Webflow.push',
-  'gtag(',
-  'ga(',
-  'hotjar',
-  'crisp',
-  'intercom',
-  '_hsq',
+  'gsap', 'ScrollTrigger', 'SplitText', 'jQuery', '$(', 'Finsweet', 'Webflow.push', 'gtag(', 'ga(', 'hotjar', 'crisp', 'intercom', '_hsq',
 ];
 
-/**
- * Delay for the given ms.
- * @param {number} ms
- */
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function isLibraryScript(content) {
+  const head = content.split('\n').map((line) => line.trim()).filter(Boolean).slice(0, 5).join('\n');
+  return KNOWN_LIBRARY_SIGNATURES.some((signature) => head.includes(signature));
 }
 
-/**
- * Check if a script body matches known library patterns.
- * Looks at the first 5 non-empty lines for any signature.
- * @param {string} scriptContent
- * @returns {boolean}
- */
-function isLibraryScript(scriptContent) {
-  const lines = scriptContent
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-
-  const headLines = lines.slice(0, 5).join('\n');
-
-  return KNOWN_LIBRARY_SIGNATURES.some((sig) => headLines.includes(sig));
-}
-
-/**
- * Extract custom inline code (scripts + styles) from HTML.
- * Skips scripts with src attributes and known library scripts.
- *
- * @param {string} html - Full page HTML
- * @returns {string} Concatenated custom code
- */
-function extractCustomCode(html) {
+export function extractCustomCode(html) {
   const parts = [];
-
-  // Extract inline scripts (no src attribute)
   const scriptRegex = /<script(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/gi;
   let match;
-  while ((match = scriptRegex.exec(html)) !== null) {
+  while ((match = scriptRegex.exec(html ?? '')) !== null) {
     const content = match[1].trim();
-    if (!content) continue;
-    if (isLibraryScript(content)) continue;
-    parts.push(`// --- inline script ---\n${content}`);
+    if (content && !isLibraryScript(content)) parts.push(`// --- inline script ---\n${content}`);
   }
-
-  // Extract inline styles
   const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
-  while ((match = styleRegex.exec(html)) !== null) {
+  while ((match = styleRegex.exec(html ?? '')) !== null) {
     const content = match[1].trim();
-    if (!content) continue;
-    parts.push(`/* --- inline style --- */\n${content}`);
+    if (content) parts.push(`/* --- inline style --- */\n${content}`);
   }
-
   return parts.join('\n\n');
 }
 
-/**
- * Send code to Claude for review and return structured findings.
- *
- * @param {string} code - Custom code to review
- * @param {string} pageUrl - URL of the page the code came from
- * @param {object} client - Anthropic client instance
- * @returns {Promise<object[]>} Array of Finding objects
- */
-async function reviewCode(code, pageUrl, client) {
-  if (!code || !code.trim()) {
-    return [];
-  }
-
+export async function reviewCode(code, client) {
+  if (!code || !code.trim()) return { issues: [], parsed: true };
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 4096,
-    messages: [
-      {
-        role: 'user',
-        content: `Review this custom website code for quality issues. Return a JSON array of findings.
+    messages: [{
+      role: 'user',
+      content: `Review this custom website code for quality issues. Return a JSON array of findings.
 
 Each finding should have: severity ("critical"|"warning"|"info"), title, description, recommendation.
 
@@ -134,98 +58,52 @@ ${code}
 \`\`\`
 
 Return ONLY a valid JSON array, no markdown wrapping.`,
-      },
-    ],
+    }],
   });
-
-  const rawText = response.content[0]?.text ?? '';
-
   let parsed;
   try {
-    parsed = JSON.parse(rawText);
+    parsed = JSON.parse(response.content[0]?.text ?? '');
   } catch {
-    return [
-      createFinding({
-        check: 'code-review',
-        severity: 'info',
-        category: 'code-quality',
-        title: 'AI response parse failure',
-        description: `Could not parse the AI code review response as JSON for ${pageUrl}.`,
-        url: pageUrl,
-        recommendation: 'Re-run the review or inspect the code manually.',
-      }),
-    ];
+    return { issues: [], parsed: false };
   }
-
-  if (!Array.isArray(parsed)) {
-    return [];
-  }
-
-  return parsed
+  if (!Array.isArray(parsed)) return { issues: [], parsed: false };
+  const issues = parsed
     .filter((item) => item && item.title && item.description)
-    .map((item) => {
-      const severity = VALID_SEVERITIES.includes(item.severity)
-        ? item.severity
-        : 'info';
-
-      return createFinding({
-        check: 'code-review',
-        severity,
-        category: 'code-quality',
-        title: item.title,
-        description: item.description,
-        url: pageUrl,
-        recommendation: item.recommendation || undefined,
-      });
-    });
+    .map((item) => ({
+      severity: VALID_SEVERITIES.includes(item.severity) ? item.severity : 'info',
+      title: item.title,
+      description: item.description,
+      recommendation: item.recommendation ?? null,
+    }));
+  return { issues, parsed: true };
 }
 
-/**
- * Main check entry point.
- *
- * @param {object} opts
- * @param {string} opts.url - Base site URL
- * @param {string[]} opts.pages - Page URLs to check
- * @param {object} opts.config - Site review config
- * @param {object} opts.log - Logger
- * @param {Function} opts.fetchPage - Page fetcher
- * @returns {Promise<object[]>} Array of Finding objects
- */
-async function check({ url, pages, config, log, fetchPage }) {
-  // Allow injecting a mock client for tests
-  const client = config.anthropicClient || null;
-
-  // If no injected client, check for API key
+export async function check({ facts = [], site, config, log, fetchPage } = {}) {
+  const notRun = () => [siteRow(site, facts, 'code-review', { state: 'unknown', reason: 'not_run', selector: 'script, style', snippet: '' })];
+  const client = config?.anthropicClient ?? null;
+  if (typeof fetchPage !== 'function') return notRun();
   if (!client && !process.env.ANTHROPIC_API_KEY) {
-    log.warn('code-review: skipping — no Anthropic API key configured');
-    return [];
+    log?.warn?.('code-review: skipping, no Anthropic API key configured');
+    return notRun();
   }
-
-  const anthropic = client || new Anthropic();
-  const findings = [];
-  let isFirst = true;
-
-  for (const pageUrl of pages) {
-    if (!isFirst) {
-      await delay(RATE_LIMIT_MS);
+  const anthropic = client ?? new Anthropic();
+  const pause = config?.codeReviewDelayMs ?? RATE_LIMIT_MS;
+  const rows = [];
+  let first = true;
+  for (const fact of contentPages(facts)) {
+    const page = await fetchPage(fact.url);
+    const code = extractCustomCode(page?.body ?? page?.html ?? '');
+    if (!code.trim()) continue;
+    if (!first && pause > 0) await sleep(pause);
+    first = false;
+    const { issues, parsed } = await reviewCode(code, anthropic);
+    if (!parsed) {
+      rows.push(pageRow(fact, 'code-review', { state: 'unknown', reason: 'not_run', selector: 'script, style', snippet: code }));
+    } else if (issues.length > 0) {
+      rows.push(pageRow(fact, 'code-review', {
+        value: issues.map((issue) => `${issue.severity}: ${issue.title}`), selector: 'script, style', snippet: code,
+      }));
     }
-    isFirst = false;
-
-    log.log(`code-review: extracting custom code from ${pageUrl}`);
-    const { html } = await fetchPage(pageUrl);
-    const code = extractCustomCode(html);
-
-    if (!code.trim()) {
-      log.log(`code-review: no custom code found on ${pageUrl}`);
-      continue;
-    }
-
-    log.log(`code-review: reviewing ${code.length} chars of custom code from ${pageUrl}`);
-    const pageFindings = await reviewCode(code, pageUrl, anthropic);
-    findings.push(...pageFindings);
   }
-
-  return findings;
+  return rows;
 }
-
-export { check, meta, extractCustomCode, reviewCode };

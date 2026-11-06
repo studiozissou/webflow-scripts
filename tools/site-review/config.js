@@ -1,9 +1,4 @@
-/**
- * config.js — Site Review configuration, thresholds, and env loading
- *
- * Loads .env via dotenv at import time. Exports thresholds for
- * performance metrics, SEO checks, and severity/category constants.
- */
+// Site-review constants, thresholds and defaults, with .env loaded at import time.
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -63,6 +58,7 @@ const DEFAULT_CRAWL_CONFIG = Object.freeze({
   canonicalHost: null,
   locales: Object.freeze([]),
   acceptLanguage: 'en-GB,en;q=0.9',
+  userAgent: null,
   includeHosts: Object.freeze([]),
   excludePaths: Object.freeze([]),
   concurrency: 4,
@@ -72,6 +68,7 @@ const DEFAULT_CRAWL_CONFIG = Object.freeze({
   renderMax: 500,
   renderDrift: 5,
   renderFlagged: 20,
+  renderSettleMs: 1500,
   externalCap: 2000,
   slowAbortMs: 8000,
   slowAbortSample: 50,
@@ -88,9 +85,6 @@ const CATEGORIES = Object.freeze([
   'code-quality',
 ]);
 
-/**
- * Returns the full config object with all thresholds and env-sourced keys.
- */
 function loadConfig() {
   return {
     googlePsiApiKey: process.env.GOOGLE_PSI_API_KEY || '',
@@ -101,31 +95,31 @@ function loadConfig() {
 
     thresholds: {
       lcp: {
-        warning: 2500,   // > 2.5s
-        critical: 4000,  // > 4s
+        warning: 2500,
+        critical: 4000,
       },
       cls: {
         warning: 0.1,
         critical: 0.25,
       },
       inp: {
-        warning: 200,    // > 200ms
-        critical: 500,   // > 500ms
+        warning: 200,
+        critical: 500,
       },
       titleLength: {
-        warning: { min: 30, max: 60 },  // outside this range
-        critical: null,                   // missing entirely
+        warning: { min: 30, max: 60 },
+        critical: null,
       },
       descriptionLength: {
-        warning: { min: 70, max: 160 },  // outside this range
-        critical: null,                    // missing entirely
+        warning: { min: 70, max: 160 },
+        critical: null,
       },
       redirectChain: {
-        warning: 1,   // > 1 hop
-        critical: 3,  // > 3 hops
+        warning: 1,
+        critical: 3,
       },
       brokenLink: {
-        critical: true, // any 4xx/5xx
+        critical: true,
       },
     },
 

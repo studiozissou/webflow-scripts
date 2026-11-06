@@ -75,6 +75,8 @@ opts {
   retryDelayMs?: number  // default 500, doubled per attempt, replaced by Retry-After when present (capped at 30 s)
   maxBytes?: number      // default 5_000_000
   keepAlive?: boolean    // default true (global fetch); false uses node:http / node:https with agent: false and Connection: close
+  minRetryDelayMs?: number   // floor for every retry wait; the crawl sets it from Crawl-delay for the site's own host
+  maxRetryAfterMs?: number   // cap on a Retry-After wait, default 30000; the crawl uses 5000 for external hosts
   onThrottle?: (host) => void   // called on every 429
 }
 
@@ -108,11 +110,13 @@ Longest-match wins, `Allow` beats `Disallow` on a tie, `*` and `$` supported. Th
 
 `crawlSite({ site, crawlConfig, fetchPage, log, onFact?, now? }) → Promise<{ facts, linkTargets, stats }>`
 
+Every request the crawl makes (pages, link targets, external targets, robots and sitemaps in discovery) passes `userAgent: crawlConfig.userAgent ?? DEFAULT_USER_AGENT` and `acceptLanguage: crawlConfig.acceptLanguage` to `fetchPage`, and robots rules are matched against that same user agent.
+
 1. Fetch every `site.rows` URL plus the root, at most `concurrency` per host (halved, minimum 1, on a host-level 429 via `onThrottle`), at least `crawlDelay` seconds apart per host when robots sets one. Excluded paths (`excludePaths`, prefix match on the URL path) are skipped entirely.
 2. Each result goes through `extractFacts` and `onFact(record)` (the runner streams it to NDJSON). HTML is dropped after extraction.
 3. If the first `slowAbortSample` fetches average over `slowAbortMs`, stop and return `stats.aborted = 'slow'`.
 4. Link-target pass: every unique internal key in `links[].hrefKey`, `images[]`, `canonicals[].key` and `hreflang[].key` that is not a fact record is status-checked once (HEAD, GET on 405, 403 or 501, body not read). Targets that are fact records reuse the record's status and chain.
-5. External pass, after the template histogram exists: unique external link and image targets, up to `externalCap`; beyond it, a stable per-template sample (by `wfPage` of the first linking page) fills the cap and the rest are recorded with `fetchState: 'blocked'`, `capExceeded: true`.
+5. External pass, after the template histogram exists (an external host that answers 403, 429 or 999 three times in a row trips a breaker: its remaining targets are recorded `blocked` with `errorCode: 'HOST_BREAKER'` and never fetched): unique external link and image targets, up to `externalCap`; beyond it, a stable per-template sample (by `wfPage` of the first linking page) fills the cap and the rest are recorded with `fetchState: 'blocked'`, `capExceeded: true`.
 
 ```
 LinkTarget {
@@ -313,7 +317,7 @@ The `semrushId` values are provisional until T0 confirms them against the SEMrus
 
 `confirmFindings({ findings, facts, linkTargets, site, checks, taxonomy, config, renderPage?, log, now? }) → Promise<{ findings, rendered, stats }>`
 
-- `renderPage(url) → Promise<Rendered | { error }>`. The default launches Playwright lazily (one browser, one context per 50 pages, images, media and fonts blocked, `domcontentloaded` plus 1.5 s settle). If Playwright cannot launch, every finding keeps `renderChecked: false` and `stats.notRun = true`.
+- `renderPage(url) → Promise<Rendered | { error }>`. The default launches Playwright lazily (one browser, one context per 50 pages, images, media and fonts blocked, `domcontentloaded` plus `renderSettleMs`, default 1500). If Playwright cannot launch, every finding keeps `renderChecked: false` and `stats.notRun = true`.
 - `Rendered { title, metaDescription, canonicals, robotsMeta, h1, hreflang, jsonLd: { types }, renderedAt }` with the same semantics as the raw fields (head-scoped, `title` from `head > title`).
 - Template key: `wfPage`, else `'none'`. Sample: the `renderSample` pages with the lowest `sha256(urlKey)` per template, plus `renderDrift` pages chosen by `sha256(urlKey + runMonth)` where `runMonth` is `YYYY-MM` of `now`. Flagged: per (template, render-relevant taxonomyId) with raw fails, up to `renderFlagged` of the failing pages, lowest hash first.
 - Overlay: for rendered pages, a copy of the fact record with `RENDERED_FIELDS` replaced by the rendered values. Render-relevant check modules are re-run on the facts array with overlays applied; their rows are compared with the raw rows by `(taxonomyId, urlKey, targetKey)`.

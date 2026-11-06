@@ -1,214 +1,263 @@
-/**
- * runner.js — Dynamic check loader, parallel executor, result collector
- *
- * Loads check modules from the checks/ directory (or accepts injected mocks),
- * filters by tier and skip list, runs parallel checks concurrently then
- * sequential checks in order, validates findings, and returns results.
- */
+// Runs the site-review pipeline in stage order (discover, crawl, check, confirm, reverify, sanity, score, snapshot, collapse) with every I/O dependency injectable.
 
-import { readdir } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
+import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { validateFinding } from './finding.js';
-import { fetchPage } from './fetch-page.js';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { SCHEMA_VERSION, RENDERED_FIELDS } from '../config.js';
+import { urlKey } from './url-key.js';
+import { findingsFromRows } from './finding.js';
+import { fetchPage as defaultFetchPage } from './fetch-page.js';
+import { discoverSite } from './discovery.js';
+import { crawlSite } from './crawl.js';
+import { confirmFindings } from './render-confirm.js';
+import { reverifyFindings } from './reverify.js';
+import { runSanity } from './sanity.js';
+import { computeHealth } from './health.js';
+import { buildSnapshot, diffSnapshots } from './snapshot.js';
+import { collapseFindings } from './collapse.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const CHECKS_DIR = join(__dirname, '..', 'checks');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const CHECKS_DIR = join(ROOT, 'checks');
+const TAXONOMY_PATH = join(ROOT, 'taxonomy.json');
 
-/**
- * Load all check modules from the checks/ directory.
- * @returns {Promise<Array<{ meta: Object, check: Function }>>}
- */
-async function loadCheckModules() {
-  const files = await readdir(CHECKS_DIR);
-  const jsFiles = files.filter((f) => f.endsWith('.js'));
+export async function loadCheckModules(dir = CHECKS_DIR) {
+  const files = (await readdir(dir)).filter((file) => file.endsWith('.js')).sort();
   const modules = [];
-
-  for (const file of jsFiles) {
-    const filePath = join(CHECKS_DIR, file);
-    const mod = await import(pathToFileURL(filePath).href);
-    if (mod.meta && typeof mod.check === 'function') {
-      modules.push(mod);
-    }
+  for (const file of files) {
+    const mod = await import(pathToFileURL(join(dir, file)).href);
+    if (mod.meta && typeof mod.check === 'function') modules.push(mod);
   }
-
   return modules;
 }
 
-/**
- * Run a single check, catching errors gracefully.
- * @param {Object} checkModule
- * @param {Object} checkArgs
- * @param {Object} log
- * @returns {Promise<{ name: string, findings: Array, duration: number }>}
- */
-async function executeCheck(checkModule, checkArgs, log) {
-  const name = checkModule.meta.name;
-  const start = performance.now();
-
-  try {
-    const findings = await checkModule.check(checkArgs);
-    const duration = performance.now() - start;
-
-    // Validate each finding
-    const validated = [];
-    for (const finding of findings) {
-      const result = validateFinding(finding);
-      if (!result.valid) {
-        log.warn(`Invalid finding from ${name}: ${result.errors.join(', ')}`);
-      }
-      validated.push(finding);
-    }
-
-    return { name, findings: validated, duration };
-  } catch (err) {
-    const duration = performance.now() - start;
-    log.error(`Check "${name}" threw: ${err.message}`);
-    return { name, findings: [], duration };
-  }
+export async function loadTaxonomy(path = TAXONOMY_PATH) {
+  const raw = JSON.parse(await readFile(path, 'utf8'));
+  return Array.isArray(raw) ? raw : raw.entries;
 }
 
-/**
- * Run checks with concurrency limit.
- * @param {Array} checks
- * @param {Object} checkArgs
- * @param {Object} log
- * @param {number} concurrency
- * @returns {Promise<Array<{ name: string, findings: Array, duration: number }>>}
- */
-async function runParallel(checks, checkArgs, log, concurrency) {
-  const results = [];
-  const queue = [...checks];
-
-  async function worker() {
-    while (queue.length > 0) {
-      const check = queue.shift();
-      const result = await executeCheck(check, checkArgs, log);
-      results.push(result);
-    }
-  }
-
-  const workers = Array.from(
-    { length: Math.min(concurrency, queue.length) },
-    () => worker(),
-  );
-  await Promise.all(workers);
-
-  return results;
+export function taxonomyIndex(taxonomy) {
+  return new Map(taxonomy.map((entry) => [entry.id, entry]));
 }
 
-/**
- * Build summary from findings array.
- * @param {Array} findings
- * @returns {Object}
- */
-function buildSummary(findings) {
-  const summary = {
-    total: findings.length,
-    critical: 0,
-    warning: 0,
-    info: 0,
-    byCategory: {},
+function evidenceFor(fact, reason) {
+  return {
+    value: reason,
+    source: 'raw',
+    status: fact.status ?? 0,
+    finalUrl: fact.finalUrl ?? fact.url,
+    selector: 'response',
+    snippet: '',
+    fetchedAt: fact.fetchedAt ?? null,
   };
+}
 
-  for (const f of findings) {
-    if (f.severity === 'critical') summary.critical++;
-    else if (f.severity === 'warning') summary.warning++;
-    else if (f.severity === 'info') summary.info++;
+export function pageFetchRows(facts) {
+  return facts
+    .filter((fact) => fact.fetchState !== 'ok')
+    .map((fact) => ({
+      taxonomyId: 'page-fetch',
+      url: fact.url,
+      urlKey: fact.urlKey,
+      state: 'unknown',
+      reason: fact.fetchState,
+      evidence: evidenceFor(fact, fact.fetchState),
+    }));
+}
 
-    summary.byCategory[f.category] = (summary.byCategory[f.category] || 0) + 1;
+export function notRunRows(module, root, now) {
+  return module.meta.taxonomyIds.map((taxonomyId) => ({
+    taxonomyId,
+    url: root.url,
+    urlKey: root.urlKey,
+    state: 'unknown',
+    reason: 'not_run',
+    evidence: {
+      value: 'not_run',
+      source: 'raw',
+      status: 0,
+      finalUrl: root.url,
+      selector: `check:${module.meta.name}`,
+      snippet: '',
+      fetchedAt: now.toISOString(),
+    },
+  }));
+}
+
+export function selectChecks(modules, { mode, tier = 1, skip = [] }) {
+  const run = [];
+  const skipped = [];
+  for (const mod of modules) {
+    const excluded = skip.includes(mod.meta.name) || mod.meta.tier > tier || (mode === 'audit' && mod.meta.audit === false);
+    (excluded ? skipped : run).push(mod);
+  }
+  return { run, skipped };
+}
+
+export async function runChecks({ facts, linkTargets, site, rendered = new Map(), modules, taxonomy, config, mode = 'audit', tier = 1, skip = [], log, fetchPage, now = new Date() }) {
+  const byId = taxonomyIndex(taxonomy);
+  const { run, skipped } = selectChecks(modules, { mode, tier, skip });
+  const rows = [];
+  const timing = {};
+  const failedChecks = [];
+
+  const append = (list) => {
+    for (const row of list) rows.push(row);
+  };
+  for (const mod of skipped) append(notRunRows(mod, site.root, now));
+
+  for (const mod of run) {
+    const start = performance.now();
+    try {
+      const out = await mod.check({ facts, linkTargets, site, rendered, taxonomy, config, log, fetchPage: mode === 'audit' ? undefined : fetchPage });
+      append(out);
+    } catch (err) {
+      log.error(`Check "${mod.meta.name}" threw: ${err.message}`);
+      failedChecks.push({ name: mod.meta.name, message: err.message });
+      append(notRunRows(mod, site.root, now));
+    }
+    timing[mod.meta.name] = Math.round((performance.now() - start) * 100) / 100;
   }
 
+  append(pageFetchRows(facts));
+  const { findings, rejected } = findingsFromRows(rows, byId);
+  return { findings, rejected, timing, ran: run.map((mod) => mod.meta.name), skipped: skipped.map((mod) => mod.meta.name), failedChecks };
+}
+
+export function renderRelevantModules(modules, run, taxonomy) {
+  const relevant = new Set(
+    taxonomy.filter((entry) => (entry.facts ?? []).some((field) => RENDERED_FIELDS.includes(field))).map((entry) => entry.id),
+  );
+  return modules.filter(
+    (mod) => run.includes(mod.meta.name) && mod.meta.audit !== false && mod.meta.taxonomyIds.some((id) => relevant.has(id)),
+  );
+}
+
+export function summarise(findings) {
+  const live = findings.filter((f) => f.state === 'fail' && !f.transient && !f.excludedFromParity && !f.tags?.includes('fixed-after-load'));
+  const summary = { total: live.length, error: 0, warning: 0, notice: 0, unknown: 0, transient: 0, fixedAfterLoad: 0 };
+  for (const f of findings) {
+    if (f.state === 'unknown') summary.unknown++;
+    else if (f.transient) summary.transient++;
+    if (f.tags?.includes('fixed-after-load')) summary.fixedAfterLoad++;
+  }
+  for (const f of live) summary[f.severity]++;
   return summary;
 }
 
-/**
- * Run all applicable checks and return findings, summary, and timing.
- *
- * @param {Object} options
- * @param {string} options.url - Root URL
- * @param {string[]} options.pages - Page URLs
- * @param {number} options.tier - 1 or 2
- * @param {number} [options.concurrency] - Max parallel checks (default 5)
- * @param {string[]} [options.skip] - Check names to skip
- * @param {Object} options.config
- * @param {Object} options.log - Logger instance
- * @param {Array} [options.checks] - Override check modules (for testing)
- * @returns {Promise<{ findings: Finding[], summary: Object, timing: Object }>}
- */
-async function runChecks(options) {
+export async function runAudit(options) {
   const {
     url,
-    pages,
-    tier,
-    concurrency = 5,
+    client = null,
+    mode = 'audit',
+    tier = 1,
     skip = [],
+    pages = null,
     config,
     log,
+    render = mode === 'audit',
+    reverify = mode === 'audit',
+    previousSnapshot = null,
+    onFact,
+    now = new Date(),
+    toolVersion = '2.0.0',
   } = options;
-
-  const totalStart = performance.now();
-
-  // Load or use injected check modules
-  const allChecks = options.checks ?? await loadCheckModules();
-
-  // Filter by tier and skip list
-  const applicable = allChecks.filter(
-    (mod) => mod.meta.tier <= tier && !skip.includes(mod.meta.name),
-  );
-
-  log.log(`Running ${applicable.length} checks (tier <= ${tier})`);
-
-  // Separate parallel vs sequential
-  const parallelChecks = applicable.filter((mod) => mod.meta.parallel);
-  const sequentialChecks = applicable.filter((mod) => !mod.meta.parallel);
-
-  // Build shared check args with safe fetch wrapper
-  const cache = new Map();
-  const failedPages = new Set();
-  const safeFetch = async (fetchUrl) => {
-    try {
-      return await fetchPage(fetchUrl, cache);
-    } catch (err) {
-      if (!failedPages.has(fetchUrl)) {
-        failedPages.add(fetchUrl);
-        log.warn(`Skipping unreachable page: ${fetchUrl} (${err.message})`);
-      }
-      return { html: '', status: 0, headers: new Headers(), redirectChain: [] };
-    }
+  const fetchPage = options.fetchPage ?? defaultFetchPage;
+  const crawlConfig = { ...config.crawl, url: config.crawl.url ?? url };
+  crawlConfig.canonicalHost = crawlConfig.canonicalHost ?? new URL(url).host;
+  const runConfig = { ...config, crawl: crawlConfig };
+  const modules = options.checks ?? (await loadCheckModules());
+  const taxonomy = options.taxonomy ?? (await loadTaxonomy());
+  const timing = {};
+  const stage = async (name, fn) => {
+    const start = performance.now();
+    const out = await fn();
+    timing[name] = Math.round(performance.now() - start);
+    log.log(`stage ${name}: ${timing[name]} ms`);
+    return out;
   };
-  const checkArgs = { url, pages, config, log, fetchPage: safeFetch };
 
-  // Run parallel batch
-  const parallelResults = await runParallel(parallelChecks, checkArgs, log, concurrency);
-
-  // Run sequential checks one at a time
-  const sequentialResults = [];
-  for (const check of sequentialChecks) {
-    const result = await executeCheck(check, checkArgs, log);
-    sequentialResults.push(result);
+  const site = await stage('discover', () => discoverSite(url, { crawlConfig, fetchPage, log }));
+  if (pages?.length) {
+    site.rows = pages.map((page) => {
+      const absolute = new URL(page, url).href;
+      return { url: absolute, urlKey: urlKey(absolute, { canonicalHost: crawlConfig.canonicalHost }), lastmod: null, sitemap: null };
+    });
   }
 
-  const allResults = [...parallelResults, ...sequentialResults];
+  const crawl = await stage('crawl', () => crawlSite({ site, crawlConfig, fetchPage, log, onFact }));
+  const { facts, linkTargets, stats } = crawl;
 
-  // Collect findings and timing
-  const findings = allResults.flatMap((r) => r.findings);
-  const checkTimings = {};
-  for (const r of allResults) {
-    checkTimings[r.name] = Math.round(r.duration * 100) / 100;
+  const checked = await stage('check', () =>
+    runChecks({ facts, linkTargets, site, modules, taxonomy, config: runConfig, mode, tier, skip, log, fetchPage, now }),
+  );
+  let findings = checked.findings;
+  let rendered = new Map();
+  let renderStats = { rendered: 0, notRun: true, skipped: !render };
+
+  if (render && !stats.aborted) {
+    const confirmed = await stage('confirm', () =>
+      confirmFindings({
+        findings,
+        facts,
+        linkTargets,
+        site,
+        checks: renderRelevantModules(modules, checked.ran, taxonomy),
+        taxonomy,
+        config: runConfig,
+        renderPage: options.renderPage,
+        log,
+        now,
+      }),
+    );
+    findings = confirmed.findings;
+    rendered = confirmed.rendered;
+    renderStats = confirmed.stats;
   }
 
-  const totalDuration = performance.now() - totalStart;
+  let reverifyStats = { skipped: !reverify };
+  if (reverify && !stats.aborted) {
+    const reverified = await stage('reverify', () =>
+      reverifyFindings({ findings, taxonomy, fetchPage, delayMs: crawlConfig.reverifyDelayMs, sleep: options.sleep, log }),
+    );
+    findings = reverified.findings;
+    reverifyStats = reverified.stats;
+  }
+
+  const sanity = runSanity({ facts, findings, site, previousSnapshot });
+  if (stats.aborted === 'slow' && !sanity.abort) {
+    sanity.abort = { code: 'slow', message: `Aborted: the first ${crawlConfig.slowAbortSample} fetches averaged over ${crawlConfig.slowAbortMs} ms.` };
+  }
+  const health = computeHealth({ facts, findings });
+  const collapsed = collapseFindings({ findings, facts });
+  const snapshot = sanity.abort
+    ? null
+    : buildSnapshot({ url, client, facts, findings, health, sanity, stats, crawlConfig, toolVersion, now });
+  const diff = snapshot && previousSnapshot ? diffSnapshots(previousSnapshot, snapshot) : null;
 
   return {
+    schemaVersion: SCHEMA_VERSION,
+    url,
+    client,
+    mode,
+    site,
+    facts,
+    linkTargets,
+    stats,
     findings,
-    summary: buildSummary(findings),
-    timing: {
-      total: Math.round(totalDuration * 100) / 100,
-      checks: checkTimings,
-    },
+    rejected: checked.rejected,
+    failedChecks: checked.failedChecks,
+    checksRun: checked.ran,
+    checksSkipped: checked.skipped,
+    rendered,
+    renderStats,
+    reverifyStats,
+    sanity,
+    health,
+    collapsed,
+    snapshot,
+    diff,
+    summary: summarise(findings),
+    taxonomy,
+    timing: { ...timing, checks: checked.timing },
   };
 }
-
-export { runChecks };

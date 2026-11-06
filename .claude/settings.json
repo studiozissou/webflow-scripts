@@ -76,6 +76,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/scripts/stop-gate.mjs\"",
+            "timeout": 300
+          },
+          {
+            "type": "command",
             "command": "LOGDIR=\"$(git -C \"$(dirname \"$0\")\" rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/logs\"; mkdir -p \"$LOGDIR\"; echo \"[$(date -u +%Y-%m-%dT%H:%M:%SZ)] session-end\" >> \"$LOGDIR/sessions.log\" 2>/dev/null || true"
           }
         ]

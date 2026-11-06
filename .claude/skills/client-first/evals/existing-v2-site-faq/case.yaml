@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: existing-v2-site-faq
+expected_outcome: |
+  faq.html follows the site's existing Client-First v2 structure (section_ > padding-global > container > padding-section) and uses only classes that exist in oost-site.css or are clearly new custom faq_ classes; it does not introduce v3-only utilities the CSS lacks, and the validator is run in its default v2 mode.
+context:
+  scaffold_script: place-files.sh

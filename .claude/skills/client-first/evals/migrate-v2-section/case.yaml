@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: migrate-v2-section
+expected_outcome: |
+  testimonials-v3.html drops the padding-global and padding-section layers in favour of padding on the section via Layout variables, replaces spacer divs with gap or one-class spacing, renames retired utilities, keeps heading levels and content, and the notes list the Designer steps such as linking the section padding to variables.
+context:
+  scaffold_script: place-files.sh

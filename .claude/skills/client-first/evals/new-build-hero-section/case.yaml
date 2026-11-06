@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: new-build-hero-section
+expected_outcome: |
+  hero.html is a single Client-First v3 section: section_ root with a container as first child, no padding-global/padding-section/spacer layers, button and button is-secondary, layout through a custom class with gap, all sizes in rem, plus a short list of custom classes with their styles.

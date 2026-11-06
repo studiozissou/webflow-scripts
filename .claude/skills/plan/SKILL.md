@@ -39,6 +39,8 @@ Spawn only the ticked agents, whatever the size table says. Auto: take the recom
 
 Outside the approved list, spawn nothing. Search directly instead.
 
+When the agent cap (`.claude/scripts/agent-cap.mjs`) refuses an agent, do that step inline with Grep and Read and write "<step> skipped: usage cap" in the output. A refused spec review is never reported as PASS.
+
 ## 1. Research (read-only)
 
 Spawn the agents the size allows in one message so they run concurrently. Agents 1 and 2 only locate files, so pass `model: "haiku"` on their Agent calls. Agents 3 and 4 and the approach explorers compare and judge, so they stay on Sonnet (`model: "sonnet"`). Mini does this step inline with Grep and Read.

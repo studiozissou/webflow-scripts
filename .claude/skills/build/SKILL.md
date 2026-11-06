@@ -114,6 +114,8 @@ Spawn `refactor` on the changed files: "Refactor for clarity and pattern complia
 
 Spawn one `code-reviewer` with the combined prompt in `references/review-prompts.md`, carrying the simplicity, correctness and conventions lenses. Small uses the same prompt with the simplicity and correctness lenses only. Pass no `model` on the Agent call, so the reviewer runs on Opus from its frontmatter. Apply the merge rules there: PASS, WARN, or FAIL. On FAIL fix the critical issues and re-run the reviewer; at most three cycles, then report the failure and stop (auto: continue to the verify loop and mark the build WARN).
 
+**Usage cap.** The `agent-cap` hook refuses any Agent call while 5-hour usage is at 75% or more. When it refuses a reviewer, review inline against the same lenses and write "wave 1 review skipped: usage cap" in the build summary. A refused review is never reported as PASS.
+
 ## 7. Review wave 2 — specialists from the spec
 
 Read `agents:` from the spec frontmatter. For each entry spawn that agent in parallel with: the diff, the spec, and the lens after the colon (`design-critic:copy` means the copy lens). Each returns the same PASS/WARN/FAIL format with issues scored 0–100 and only ≥80 surfaced. On FAIL fix and re-run wave 2 only; at most two cycles. No `agents:` field means no wave 2, which is the right outcome for most fixes.
@@ -133,11 +135,12 @@ Follow `references/verify-loop.md`: project-aware dev server, browser MCP checks
 ## 10. Wrap up
 
 - Present the spec's Tier 3 manual checklist plus anything found during the build that cannot be automated, or "No manual tests needed".
-- Build summary: files changed, wave 1 and wave 2 verdicts, QA result, verify-loop pass/fail per criterion, blockers.
+- Build summary: files changed, wave 1 and wave 2 verdicts, QA result, verify-loop pass/fail per criterion, blockers, and a "<step> skipped: usage cap" line for every agent the cap refused.
 - Interactive: ask "Status for <slug>?" with in-progress / blocked / ready-for-review / done. Auto: set ready-for-review, or blocked with the reason.
 
 ## Rules
 
+- When the usage cap refuses an agent, do that step inline and write "<step> skipped: usage cap" in the build summary; a refused review is never reported as PASS
 - Never write code before reading the existing files
 - Check `shared/site-utilities.js` and the orchestrator before adding a utility
 - No bare `console.log`; a settings hook flags any that slip through

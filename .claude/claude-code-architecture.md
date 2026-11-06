@@ -116,6 +116,7 @@ Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged in
 **Stop hooks:** first `.claude/scripts/stop-gate.mjs` (timeout 300 s), then the session logger, which appends `[timestamp] session-end` to `logs/sessions.log`.
 **Why the Stop gate:** rules in CLAUDE.md alone did not stop Claude ending a turn on red work, so the check is enforced in a script. On every stop it diffs the branch against `git merge-base HEAD origin/main` (not `HEAD`, because `/build` commits before stopping), fails only on lint errors that rose above that baseline, and runs the unit suites mapped from the changed paths in `.claude/scripts/stop-gate-suites.json`. It costs no tokens when green, never blocks on missing tooling (each skip goes to `.claude/logs/stop-gate.log`), and gives up with a warning after three blocked attempts per session so it cannot loop. Policy: ADR-002.
 **MCP permissions:** Webflow read operations (list, get, snapshot, styles) auto-allowed. Write operations (create, update, delete, publish, element_builder, asset) always prompt.
+**PreToolUse hook (`Agent`):** `.claude/scripts/agent-cap.mjs` refuses to spawn a subagent when `~/.claude/usage-5h` reads 75 or more and was written in the last 10 minutes, so a near-limit session does the work inline instead of burning the 5-hour budget on fresh-context agents. A missing, stale or unreadable file never blocks. Nothing in the repo writes that file, so the cap is inert until the status line does.
 
 ---
 

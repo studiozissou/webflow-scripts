@@ -41,7 +41,7 @@ Outside the approved list, spawn nothing. Search directly instead.
 
 ## 1. Research (read-only)
 
-Spawn the agents the size allows in one message so they run concurrently. Sonnet is enough for all of them. Mini does this step inline with Grep and Read.
+Spawn the agents the size allows in one message so they run concurrently. Agents 1 and 2 only locate files, so pass `model: "haiku"` on their Agent calls. Agents 3 and 4 and the approach explorers compare and judge, so they stay on Sonnet (`model: "sonnet"`). Mini does this step inline with Grep and Read.
 
 - **Agent 1 — Codebase patterns** (`Explore`): existing code similar to this feature; reusable functions in `shared/site-utilities.js`, the project orchestrator, related page modules.
 - **Agent 2 — Specs, ADRs, conventions** (`Explore`): relevant specs, ADRs and CLAUDE.md sections; constraints and decisions already made.

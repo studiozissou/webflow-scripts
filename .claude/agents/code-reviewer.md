@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Use this agent to review code changes for pattern violations, Webflow gotchas, accessibility issues, and Barba lifecycle correctness. Read-only — never modifies files. Returns a structured PASS / WARN / FAIL verdict.
-model: sonnet
+model: opus
 tools:
   - Read
   - Glob

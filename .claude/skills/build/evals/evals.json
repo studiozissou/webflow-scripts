@@ -4,13 +4,13 @@
     {
       "id": 1,
       "prompt": "/build check-finance-link --auto",
-      "expected_output": "Spec found by partial match. Test inventory printed. Spec is Medium: one code-writer executor, then refactor, then three code-reviewers in parallel from the parent context. Spec has no agents: field so no wave 2. qa-check runs. Verify loop runs against staging as deployed because Carsa has no local dev override. No AskUserQuestion calls; status set to ready-for-review.",
+      "expected_output": "Spec found by partial match. Test inventory printed. Spec is Medium: one code-writer executor, then refactor, then one code-reviewer with the simplicity, correctness and conventions lenses and no model passed, from the parent context. Spec has no agents: field so no wave 2. qa-check runs. Verify loop runs against staging as deployed because Carsa has no local dev override. No AskUserQuestion calls; status set to ready-for-review.",
       "files": []
     },
     {
       "id": 2,
       "prompt": "/build rhp-about-swipers",
-      "expected_output": "Size question asked with the spec's size first, marked (Recommended), and a one-line reason, plus a multiSelect Agents question (code-writer, refactor, code reviewers, specialist wave) and a QA question (Run recommended for Medium) in the same call; no brief questions. Only ticked agents are spawned. Verify-loop gate passes. Executor spawned with RHP CLAUDE.md and orchestrator. Wave 1 reviewers run in parent. Wave 2 spawns design-critic with the visual lens and qa in parallel because the spec lists them. Worktree server started if in a worktree, __RHP_BASE override applied, scriptsOk polled. Manual checklist and status question at the end.",
+      "expected_output": "Size question asked with the spec's size first, marked (Recommended), and a one-line reason, plus a multiSelect Agents question (code-writer, refactor, code reviewer, specialist wave) and a QA question (Run recommended for Medium) in the same call; no brief questions. Only ticked agents are spawned. Verify-loop gate passes. Executor spawned with RHP CLAUDE.md and orchestrator. Wave 1 reviewers run in parent. Wave 2 spawns design-critic with the visual lens and qa in parallel because the spec lists them. Worktree server started if in a worktree, __RHP_BASE override applied, scriptsOk polled. Manual checklist and status question at the end.",
       "files": []
     },
     {
@@ -28,7 +28,7 @@
     {
       "id": 5,
       "prompt": "/build rhp-nav-hover --auto",
-      "expected_output": "Spec has size: Small. One code-writer spawned with model \"sonnet\" on the Agent call, no refactor pass, one code-reviewer (correctness lens) instead of three, wave 2 only if agents: is set, and the QA question recommends Skip because agents: does not list qa, so qa-check does not run. Verify loop runs.",
+      "expected_output": "Spec has size: Small. One code-writer spawned with model \"sonnet\" on the Agent call, no refactor pass, one code-reviewer with the simplicity and correctness lenses and no model passed, wave 2 only if agents: is set, and the QA question recommends Skip because agents: does not list qa, so qa-check does not run. Verify loop runs.",
       "files": []
     },
     {

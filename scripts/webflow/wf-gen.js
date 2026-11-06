@@ -23,14 +23,29 @@ import { validateWfJson } from './validate-wf-json.js';
 import { injectToClipboard } from './inject-clipboard.js';
 
 /**
- * Client First utility class names that already exist in the project.
- * These are stripped from the generated JSON by default so Webflow
- * matches them to the existing project classes instead of creating duplicates.
+ * Client First utility class names that already exist in the project (v3 set plus
+ * the v2 names still found in older builds). These are stripped from the
+ * generated JSON by default so Webflow matches them to the existing project
+ * classes instead of creating duplicates.
  */
+const CF_SIZES = [
+  '0', 'xxtiny', 'xtiny', 'tiny', 'xxsmall', 'xsmall', 'small', 'medium',
+  'large', 'xlarge', 'xxlarge', 'huge', 'xhuge', 'xxhuge',
+];
+const CF_DIRECTIONS = ['top', 'bottom', 'left', 'right', 'horizontal', 'vertical'];
+const CF_SPACING = CF_SIZES.flatMap((size) => [
+  `margin-${size}`,
+  `padding-${size}`,
+  `gap-${size}`,
+  ...CF_DIRECTIONS.flatMap((dir) => [`margin-${dir}-${size}`, `padding-${dir}-${size}`]),
+]);
 const CF_UTILITY_CLASSES = new Set([
   // Structure
+  'page-wrapper', 'main-wrapper',
   'padding-global', 'container-large', 'container-medium', 'container-small',
   'padding-section-small', 'padding-section-medium', 'padding-section-large',
+  'padding-section-top-small', 'padding-section-top-medium', 'padding-section-top-large',
+  'padding-section-bottom-small', 'padding-section-bottom-medium', 'padding-section-bottom-large',
   // Headings
   'heading-style-h1', 'heading-style-h2', 'heading-style-h3',
   'heading-style-h4', 'heading-style-h5', 'heading-style-h6',
@@ -40,30 +55,49 @@ const CF_UTILITY_CLASSES = new Set([
   // Text weight
   'text-weight-light', 'text-weight-normal', 'text-weight-medium',
   'text-weight-semibold', 'text-weight-bold', 'text-weight-xbold',
-  // Text style
-  'text-style-italic', 'text-style-uppercase', 'text-style-strikethrough',
-  'text-style-underline', 'text-style-nowrap',
+  // Text style (v3 set, plus the v2 names)
+  'text-style-allcaps', 'text-style-balance', 'text-style-pretty', 'text-style-italic',
+  'text-style-link', 'text-style-muted', 'text-style-nowrap', 'text-style-quote',
+  'text-style-strikethrough', 'text-style-1line', 'text-style-2lines', 'text-style-3lines',
+  'text-style-uppercase', 'text-style-underline',
   // Text align
   'text-align-left', 'text-align-center', 'text-align-right',
   // Text color
   'text-color-primary', 'text-color-secondary', 'text-color-tertiary',
   'text-color-alternate',
+  // Inherit
+  'text-color-inherit', 'text-size-inherit', 'text-weight-inherit',
+  'text-decoration-inherit', 'border-radius-inherit',
   // Background color
   'background-color-primary', 'background-color-secondary',
   'background-color-tertiary', 'background-color-alternate',
-  // Spacers
+  // Spacing: margin-*, padding-*, gap-* in every size and direction
+  ...CF_SPACING,
+  'spacing-clean',
+  // v2 spacers, still present in older builds
   'spacer-xxsmall', 'spacer-xsmall', 'spacer-small', 'spacer-medium',
   'spacer-large', 'spacer-xlarge', 'spacer-xxlarge',
+  // Grid and display
+  'grid-autofit', 'grid-autofit-css', 'grid-autofill-css', 'grid-span-full',
+  ...CF_SIZES.flatMap((size) => [`grid-autofit-${size}`, `grid-autofill-${size}`]),
+  'display-inline', 'display-inline-flex', 'display-contents',
   // Layout
-  'max-width-full', 'max-width-large', 'max-width-medium',
+  'max-width-full', 'max-width-full-tablet', 'max-width-full-mobile-landscape',
+  'max-width-full-mobile-portrait',
+  'max-width-xxlarge', 'max-width-xlarge', 'max-width-large', 'max-width-medium',
   'max-width-small', 'max-width-xsmall', 'max-width-xxsmall',
   'align-center', 'overflow-hidden', 'overflow-auto', 'overflow-visible',
-  'hide-mobile-portrait', 'hide-mobile-landscape', 'hide-tablet', 'hide-desktop',
+  'overflow-scroll', 'overflow-clip', 'disable-select', 'text-area-vertical',
+  'hide', 'hide-mobile-portrait', 'hide-mobile-landscape', 'hide-tablet', 'hide-desktop',
   'z-index-1', 'z-index-2', 'z-index-3', 'layer',
   'pointer-events-none', 'pointer-events-auto',
+  'aspect-ratio-square', 'aspect-ratio-portrait', 'aspect-ratio-landscape',
+  'aspect-ratio-widescreen',
   'aspect-ratio-1/1', 'aspect-ratio-16/9', 'aspect-ratio-4/3', 'aspect-ratio-3/2',
+  'icon-height-small', 'icon-height-medium', 'icon-height-large',
+  'icon-1x1-small', 'icon-1x1-medium', 'icon-1x1-large',
   'icon-1rem', 'icon-small', 'icon-medium', 'icon-large',
-  'button', 'spacing-clean',
+  'button',
 ]);
 
 /**

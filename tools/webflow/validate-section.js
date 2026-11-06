@@ -1,4 +1,4 @@
-// Validates Client First section files against the site CSS, with colour schemes from the client's launch config or the CSS; runnable as a CLI.
+// Validates Client First section files against the site CSS under the v2 or v3 core structure, with colour schemes from the client's launch config or the CSS; runnable as a CLI.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +7,8 @@ const DEBUG = false;
 
 const PROJECTS_DIR = fileURLToPath(new URL('../../projects/', import.meta.url));
 const USAGE =
-  'usage: validate-section.js [--client <name> | --config <path>] <client-first.css> <section.html|dir …>\n';
+  'usage: validate-section.js [--client <name> | --config <path>] [--structure v2|v3] [--no-scheme] <client-first.css> <section.html|dir …>\n';
+const STRUCTURES = ['v2', 'v3'];
 
 const VOID_TAGS = new Set([
   'area',
@@ -25,8 +26,12 @@ const VOID_TAGS = new Set([
   'wbr',
 ]);
 const RAW_TEXT_TAGS = new Set(['script', 'style']);
-const PADDING_OK =
-  /^(padding-|spacer-|button)|(_group|_card|_item|_wrapper|_component|_field|_box)$/;
+const PADDING_OK = {
+  v2: /^(padding-|spacer-|button)|(_group|_card|_item|_wrapper|_component|_field|_box)$/,
+  v3: /^(padding-|section_|button)|(_group|_card|_item|_wrapper|_component|_field|_box)$/,
+};
+const MARGIN_OK = { v2: /^container-/, v3: /^(container-|margin-)/ };
+const V2_ONLY = /^(padding-global|padding-section-|spacer-)/;
 const CMS_OPEN = /^\s*cms:([\w-]+)\s*$/;
 const CMS_CLOSE = /^\s*\/cms:([\w-]+)\s*$/;
 
@@ -350,11 +355,24 @@ function checkScheme(root, knownSchemes, errors) {
   }
 }
 
-function checkChain(root, errors) {
+function checkChain(root, errors, structure) {
   const cls = classesOf(root);
   const exempt =
     /^section_(nav|footer)$/.test(cls[0] ?? '') ||
     cls.some((c) => c.startsWith('nav_') || c.startsWith('footer_'));
+  if (structure === 'v3') {
+    const child = elementChildren(root)[0];
+    if (
+      !child ||
+      !classesOf(child).some((c) => /^container-(small|medium|large)$/.test(c))
+    ) {
+      const found = child ? describeNode(child) : 'nothing';
+      errors.push(
+        `rule 3: expected ${describeNode(root)} › .container-small|medium|large as first child, found ${found}`,
+      );
+    }
+    return;
+  }
   const steps = [
     { label: 'padding-global', test: (c) => c === 'padding-global' },
     {
@@ -381,7 +399,7 @@ function checkChain(root, errors) {
   }
 }
 
-function checkElements(root, cssMap, errors) {
+function checkElements(root, cssMap, errors, structure) {
   const used = new Set();
   const visit = (node) => {
     if (node.type !== 'element') return;
@@ -389,6 +407,13 @@ function checkElements(root, cssMap, errors) {
       errors.push(`rule 4: style= attribute on ${describeNode(node)}`);
     const cls = classesOf(node);
     cls.forEach((c) => used.add(c));
+    if (structure === 'v3') {
+      for (const legacy of cls.filter((c) => V2_ONLY.test(c))) {
+        errors.push(
+          `rule 3: "${legacy}" on ${describeNode(node)} is a v2 class; v3 puts padding on section_ via variables and spacing on padding-[direction]-[size] or gap-[size]`,
+        );
+      }
+    }
     if (/^h[1-6]$/.test(node.tag) && !cls.some((c) => c.startsWith('heading-style-'))) {
       errors.push(`rule 9: ${describeNode(node)} needs a heading-style- class`);
     }
@@ -413,12 +438,15 @@ function checkElements(root, cssMap, errors) {
     }
     const decls = cssMap.get(name);
     if (
-      !name.startsWith('container-') &&
+      !MARGIN_OK[structure].test(name) &&
       decls.some((d) => d.property.startsWith('margin'))
     ) {
       errors.push(`rule 7: class "${name}" has a margin declaration`);
     }
-    if (!PADDING_OK.test(name) && decls.some((d) => d.property.startsWith('padding'))) {
+    if (
+      !PADDING_OK[structure].test(name) &&
+      decls.some((d) => d.property.startsWith('padding'))
+    ) {
       errors.push(`rule 7: class "${name}" has a padding declaration`);
     }
   }
@@ -455,14 +483,20 @@ export function schemesFromCss(css) {
 
 export function validateSection(html, css, options = {}) {
   const cssMap = typeof css === 'string' ? parseCssClasses(css) : css;
+  const structure = options.structure ?? 'v2';
+  if (!STRUCTURES.includes(structure)) {
+    throw new RangeError(
+      `unknown structure "${structure}" (allowed: ${STRUCTURES.join(', ')})`,
+    );
+  }
   const knownSchemes = options.schemes ?? schemesFromCss(cssMap);
   const { root: tree, errors: parseErrors } = parseHtml(html);
   const errors = [...parseErrors];
   const root = checkRoot(tree, errors);
   if (root) {
-    checkScheme(root, knownSchemes, errors);
-    checkChain(root, errors);
-    checkElements(root, cssMap, errors);
+    if (options.scheme !== false) checkScheme(root, knownSchemes, errors);
+    checkChain(root, errors, structure);
+    checkElements(root, cssMap, errors, structure);
   }
   checkCmsMarkers(tree, errors);
   DEBUG && console.log('validateSection', errors);
@@ -490,23 +524,41 @@ export function configPathFor(client) {
 }
 
 function parseArgs(argv) {
-  const args = { client: null, config: null, positional: [] };
+  const args = {
+    client: null,
+    config: null,
+    structure: null,
+    scheme: true,
+    positional: [],
+  };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--client') args.client = argv[++i] ?? null;
     else if (argv[i] === '--config') args.config = argv[++i] ?? null;
+    else if (argv[i] === '--structure') args.structure = argv[++i] ?? '';
+    else if (argv[i] === '--no-scheme') args.scheme = false;
     else args.positional.push(argv[i]);
   }
   return args;
 }
 
 export function main(argv, defaults = {}) {
-  const { client, config, positional } = parseArgs(argv);
+  const { client, config, structure, scheme, positional } = parseArgs(argv);
   const [cssPath, ...targets] = positional;
   if (!cssPath || targets.length === 0) {
     process.stderr.write(defaults.usage ?? USAGE);
     return 2;
   }
-  const options = { schemes: defaults.schemes };
+  if (structure !== null && !STRUCTURES.includes(structure)) {
+    process.stderr.write(
+      `unknown --structure "${structure}" (allowed: ${STRUCTURES.join(', ')})\n`,
+    );
+    return 2;
+  }
+  const options = {
+    schemes: defaults.schemes,
+    structure: structure ?? defaults.structure ?? 'v2',
+    scheme,
+  };
   if (client || config) {
     const path = config ? resolve(config) : configPathFor(client);
     try {

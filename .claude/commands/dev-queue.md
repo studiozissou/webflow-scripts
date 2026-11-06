@@ -146,7 +146,7 @@ See .claude/design/component-inventory.md
 Build order and complexity recorded per component.
 
 ## Spacing convention
-- Vertical rhythm: Client First spacer divs (padding-global, padding-section-*, padding-custom)
+- Vertical rhythm: Client First v3 spacing (section padding via Layout variables on `section_*`, `gap-[size]` on the parent, one-class `margin-*`/`padding-*` utilities; no `spacer-*` divs)
 - Component layout: flex or grid where Figma auto-layout maps cleanly
 - Absolute placements: nearest approximation — flag with comment for manual review
 - No custom spacing variables

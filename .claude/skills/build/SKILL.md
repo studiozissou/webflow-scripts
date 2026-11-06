@@ -55,7 +55,7 @@ Read every file the spec touches, the project orchestrator, and `shared/site-uti
 
 **Selectors** (Webflow MCP connected): `element_snapshot_tool` on the target page and confirm every selector the spec names. A missing selector is a stop, not an assumption; ask (auto: record it as a blocker and build the rest). Note confirmed selectors in the project CLAUDE.md under "## Known selectors".
 
-**Spacing**: Client First spacer divs between components, flex or grid inside them, nearest approximation for absolute placements with a `/* manual placement — verify against design */` comment, no custom spacing classes where Client First has one.
+**Spacing**: Client First v3 spacing between components (section padding via the Layout variables, `gap-[size]` on the parent, or a one-class `margin-*`/`padding-*` utility; no `spacer-*` divs), flex or grid inside them, nearest approximation for absolute placements with a `/* manual placement — verify against design */` comment, no custom spacing classes where Client First has one.
 
 ## 4. Implement in a fresh context
 
@@ -142,5 +142,5 @@ Follow `references/verify-loop.md`: project-aware dev server, browser MCP checks
 - Check `shared/site-utilities.js` and the orchestrator before adding a utility
 - No bare `console.log`; a settings hook flags any that slip through
 - Verify selectors via Webflow MCP before targeting them, when connected
-- Client First spacer divs for vertical rhythm, never margin between components
+- Client First v3 spacing for vertical rhythm (`gap-[size]`, one-class `margin-*`/`padding-*` utilities, section padding variables), never ad-hoc margin between components
 - No git writes between integration and the build commit: the reviewers and the verify loop read `git diff HEAD`, so integrated changes stay uncommitted until the build ends

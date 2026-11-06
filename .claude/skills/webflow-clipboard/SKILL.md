@@ -144,7 +144,7 @@ Pseudo-state keys: `hover`, `active`, `focus`, `focus-visible`, `visited`, `plac
 Client First integration:
 - All classes need `styles` entries — including utility classes
 - Known CSS: `container-large`: `"width: 100%; max-width: 80rem; margin-right: auto; margin-left: auto;"`
-- Custom component classes use Client First naming: lowercase-hyphenated, descriptive
+- Custom component classes use Client First v3 naming: `[folder]_[element]`, lowercase-hyphenated, general to specific (see the `client-first` skill)
 </common_patterns>
 
 <anti_patterns>

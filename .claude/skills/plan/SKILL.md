@@ -93,7 +93,7 @@ Check for test infrastructure: `tests/acceptance/` at the repo or project root, 
 
 ## 7. Verify loop self-check
 
-Re-read the spec's `## Verify Loop`. If it does not answer "how does `/build` know this feature is working?" with observable pass/fail criteria, reproduction steps, tier mapping and regression scope, rewrite it. `/build` halts on a spec without one.
+Re-read the spec's `## Verify Loop`. If it does not answer "how does `/build` know this feature is working?" with observable pass/fail criteria, reproduction steps, tier mapping and regression scope, rewrite it. `/build` halts on a spec without one. It must also name at least one check Claude can run alone (see the verify loop rules in `references/spec-format.md`), or say "manual verify" with a Tier 3 checklist. Size stays as set in step 0.
 
 ## 7.5 Spec review (Small and Medium only)
 

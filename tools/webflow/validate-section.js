@@ -437,16 +437,16 @@ function checkElements(root, cssMap, errors, structure) {
       continue;
     }
     const decls = cssMap.get(name);
-    if (
-      !MARGIN_OK[structure].test(name) &&
-      decls.some((d) => d.property.startsWith('margin'))
-    ) {
+    const hardcoded = (prefix) =>
+      decls.some(
+        (d) =>
+          d.property.startsWith(prefix) &&
+          !(structure === 'v3' && /^var\(--[\w-]+/.test(d.value)),
+      );
+    if (!MARGIN_OK[structure].test(name) && hardcoded('margin')) {
       errors.push(`rule 7: class "${name}" has a margin declaration`);
     }
-    if (
-      !PADDING_OK[structure].test(name) &&
-      decls.some((d) => d.property.startsWith('padding'))
-    ) {
+    if (!PADDING_OK[structure].test(name) && hardcoded('padding')) {
       errors.push(`rule 7: class "${name}" has a padding declaration`);
     }
   }

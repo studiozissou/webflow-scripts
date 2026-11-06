@@ -13,7 +13,9 @@ import {
   validateSection,
 } from '../../tools/webflow/validate-section.js';
 
-const CLI = fileURLToPath(new URL('../../tools/webflow/validate-section.js', import.meta.url));
+const CLI = fileURLToPath(
+  new URL('../../tools/webflow/validate-section.js', import.meta.url),
+);
 
 const CSS = `
 .section_hero { position: relative; }
@@ -41,7 +43,9 @@ describe('schemes from config', () => {
     const result = validateSection(section('accent'), CSS, { schemes: CONFIG.schemes });
     assert.equal(result.ok, false);
     assert.ok(
-      result.errors.some((e) => /rule 2: unknown scheme "scheme-accent".*light, dark/.test(e)),
+      result.errors.some((e) =>
+        /rule 2: unknown scheme "scheme-accent".*light, dark/.test(e),
+      ),
       JSON.stringify(result.errors),
     );
   });
@@ -109,14 +113,22 @@ describe('file helpers and CLI', () => {
       const bad = join(dir, 'bad.html');
       writeFileSync(good, section('dark'));
       writeFileSync(bad, section('accent'));
-      const ok = spawnSync(process.execPath, [CLI, '--config', configPath, cssPath, good], {
-        encoding: 'utf8',
-      });
+      const ok = spawnSync(
+        process.execPath,
+        [CLI, '--config', configPath, cssPath, good],
+        {
+          encoding: 'utf8',
+        },
+      );
       assert.equal(ok.status, 0, ok.stderr);
       assert.match(ok.stdout, /OK .*good\.html/);
-      const fail = spawnSync(process.execPath, [CLI, cssPath, bad, '--config', configPath], {
-        encoding: 'utf8',
-      });
+      const fail = spawnSync(
+        process.execPath,
+        [CLI, cssPath, bad, '--config', configPath],
+        {
+          encoding: 'utf8',
+        },
+      );
       assert.equal(fail.status, 1);
       assert.match(fail.stderr, /bad\.html.*unknown scheme "scheme-accent"/);
     } finally {
@@ -164,21 +176,35 @@ describe('structure v3', () => {
     const html = v3('<div class="margin-top-small"><p>x</p></div>');
     const result = validateSection(html, CSS_V3);
     assert.ok(result.errors.some((e) => /rule 3: expected .*padding-global/.test(e)));
-    assert.ok(result.errors.some((e) => /rule 7: class "margin-top-small" has a margin/.test(e)));
+    assert.ok(
+      result.errors.some((e) => /rule 7: class "margin-top-small" has a margin/.test(e)),
+    );
   });
 
   test('a padding-global layer is a rule 3 error under v3', () => {
     const html =
       '<section class="section_hero scheme-light"><div class="padding-global"><div class="container-large"><p>x</p></div></div></section>';
     const result = validateSection(html, CSS_V3, { structure: 'v3' });
-    assert.ok(result.errors.some((e) => /rule 3: expected .*container-small\|medium\|large as first child, found <div.padding-global>/.test(e)));
-    assert.ok(result.errors.some((e) => /rule 3: "padding-global" .* is a v2 class/.test(e)));
+    assert.ok(
+      result.errors.some((e) =>
+        /rule 3: expected .*container-small\|medium\|large as first child, found <div.padding-global>/.test(
+          e,
+        ),
+      ),
+    );
+    assert.ok(
+      result.errors.some((e) => /rule 3: "padding-global" .* is a v2 class/.test(e)),
+    );
   });
 
   test('padding-section-* and spacer-* anywhere are v2 classes under v3', () => {
-    const html = v3('<div class="padding-section-large"><div class="spacer-small"></div><p>x</p></div>');
+    const html = v3(
+      '<div class="padding-section-large"><div class="spacer-small"></div><p>x</p></div>',
+    );
     const result = validateSection(html, CSS_V3, { structure: 'v3' });
-    assert.ok(result.errors.some((e) => /"padding-section-large" .* is a v2 class/.test(e)));
+    assert.ok(
+      result.errors.some((e) => /"padding-section-large" .* is a v2 class/.test(e)),
+    );
     assert.ok(result.errors.some((e) => /"spacer-small" .* is a v2 class/.test(e)));
   });
 
@@ -187,21 +213,43 @@ describe('structure v3', () => {
     const result = validateSection(v3('<div class="hero_title"><p>x</p></div>'), css, {
       structure: 'v3',
     });
-    assert.deepEqual(
-      result.errors,
-      ['rule 7: class "hero_title" has a padding declaration'],
-    );
+    assert.deepEqual(result.errors, [
+      'rule 7: class "hero_title" has a padding declaration',
+    ]);
+  });
+
+  test('under v3 a custom class may space itself through a variable, not a hardcoded value', () => {
+    const css = `${CSS_V3} .hero_note { margin-top: var(--_layout---spacing--large); } .hero_fixed { margin-top: 3rem; }`;
+    const ok = validateSection(v3('<p class="hero_note">x</p>'), css, {
+      structure: 'v3',
+    });
+    assert.deepEqual(ok.errors, []);
+    const bad = validateSection(v3('<p class="hero_fixed">x</p>'), css, {
+      structure: 'v3',
+    });
+    assert.deepEqual(bad.errors, ['rule 7: class "hero_fixed" has a margin declaration']);
+    const v2 = validateSection(v3('<p class="hero_note">x</p>'), css, { scheme: false });
+    assert.ok(v2.errors.includes('rule 7: class "hero_note" has a margin declaration'));
   });
 
   test('an unknown structure throws', () => {
-    assert.throws(() => validateSection(v3('<p>x</p>'), CSS_V3, { structure: 'v4' }), RangeError);
+    assert.throws(
+      () => validateSection(v3('<p>x</p>'), CSS_V3, { structure: 'v4' }),
+      RangeError,
+    );
   });
 
   test('scheme: false skips rule 2', () => {
-    const html = '<section class="section_hero"><div class="container-large"><p>x</p></div></section>';
-    assert.deepEqual(validateSection(html, CSS_V3, { structure: 'v3', scheme: false }).errors, []);
+    const html =
+      '<section class="section_hero"><div class="container-large"><p>x</p></div></section>';
+    assert.deepEqual(
+      validateSection(html, CSS_V3, { structure: 'v3', scheme: false }).errors,
+      [],
+    );
     assert.ok(
-      validateSection(html, CSS_V3, { structure: 'v3' }).errors.some((e) => /rule 2/.test(e)),
+      validateSection(html, CSS_V3, { structure: 'v3' }).errors.some((e) =>
+        /rule 2/.test(e),
+      ),
     );
   });
 });

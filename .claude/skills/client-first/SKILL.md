@@ -1,6 +1,6 @@
 ---
 name: client-first
-description: Guides the agent through Finsweet's Client-First v3 (released 23 October 2026) for Webflow — five variable collections with responsive modes, the flat section_ core structure with padding on the section, one-class spacing, typography and layout utilities, the custom-class-plus-utility strategy, and component naming. Activates when building or reviewing Webflow sites that follow Client-First, and when migrating a v2 build.
+description: Finsweet's Client-First v3 (released 23 October 2026) for Webflow — five variable collections with breakpoint modes, the flat section_ structure with padding on the section, one-class spacing, typography and layout utilities, custom-class-plus-utility naming, and component naming — plus how to tell a v2 site from a v3 one and migrate between them. Use it whenever you write or review Webflow markup, classes or variables for a client site, push HTML through the Webflow MCP, name classes or components, plan a Variables panel setup from brand guidelines, convert spacer divs or padding-global layers, or work on a site built with Client-First or Relume, even if the user only says "build a section", "set up the variables" or "clean up the classes".
 ---
 
 <objective>
@@ -8,11 +8,18 @@ Apply Client-First v3 correctly in Webflow projects: variables first, a flat cor
 </objective>
 
 <quick_start>
-Key rules:
+First, find out which version the site runs. A v3 class on a v2 site does nothing, because the class or the variable behind it doesn't exist, and the reverse leaves dead layers. Check, in this order:
+- The project's README or `projects/<client>/.claude/client.md`, which may say.
+- The published CSS: v3 has Webflow variable names like `--_layout---` or `--_theme---` and classes such as `margin-top-small` or `gap-medium`; v2 has `spacer-*` classes and every section wrapped in `padding-global`.
+- For a new build, v3.
+
+On a v2 site, match its existing structure and classes unless the job is the migration itself, and say so in the reply. The repo validator (`tools/webflow/validate-section.js`) defaults to v2; pass `--structure v3` for a v3 site.
+
+Key rules for v3:
 1. Variables before classes. Every repeated value (colour, type size, spacing step, container width, element size) is a variable. Classes reference variables; nothing is hardcoded where a variable exists.
 2. Flat core structure. Padding lives on the section through variables. No `padding-global` or `padding-section-*` layer unless the section needs its own padding layer.
 3. One class per spacing decision: `padding-bottom-large`, `margin-top-small`, `gap-medium`. Direction and size are never two classes.
-4. HTML tags are the typography default. Add `heading-style-*` or `text-*` utilities only for a variation. Most headings carry no class.
+4. HTML tags are the typography default. Add `heading-style-*` or `text-*` utilities only for a variation, so most headings carry no class. Exception: sections checked by the repo validator, see Typography.
 5. Custom class first, utility on top. `home-header_text text-size-large`, never a new style written onto stacked utilities.
 6. Stack 1 or 2 classes freely, question 3, stop at 4. Five means create a custom class.
 7. Rem on a 16 px base for every size. Exceptions: 1px borders stay 1px, 0.875rem for 14 px text, 0.125rem for 2 px gaps.
@@ -88,6 +95,7 @@ Class strategy (https://finsweet.com/client-first/docs/classes-strategy-1 and /c
 - Folders: one level by default (`component_element`), nested only for a clear organisational win (`page_component_element`). Page name in the class only when the class is page-specific.
 
 Typography (https://finsweet.com/client-first/docs/typography-strategy):
+- Repo convention: `validate-section.js` rule 9 expects every heading to carry a `heading-style-*` class, because migrations map each heading by its computed size and the class makes that mapping visible. For any section that goes through the validator, add the class matching the heading's intended look, even when it equals the tag (`h1.heading-style-h1`). Outside the validator, Finsweet's default below applies.
 - Tag defaults carry the design. `heading-style-h[1-6]` restyles any text as that heading level without changing the tag (an SEO `h1` that looks like the `h2`). Never put a heading tag on non-heading text; use a text element and a custom class.
 - Utilities: `text-size-*`, `text-weight-*`, `text-style-*`, `text-align-*`, `text-color-*`, plus `text-size-inherit`, `text-weight-inherit`, `text-color-inherit`, `text-decoration-inherit`.
 - A custom class is right for unique text (`footer_copyright-text`), a managed group (`footer_link`), or text that departs from the default on one breakpoint.
@@ -96,12 +104,13 @@ Typography (https://finsweet.com/client-first/docs/typography-strategy):
 Spacing (https://finsweet.com/client-first/docs/spacing-strategy):
 - One scale, 14 steps, shared by margin, padding and gap: `0, xxtiny (0.25rem), xtiny (0.5), tiny (0.75), xxsmall (1), xsmall (1.25), small (1.5), medium (2), large (3), xlarge (4), xxlarge (5), huge (6), xhuge (8), xxhuge (12)`. Values live in Layout › Spacing with breakpoint modes, so spacing is responsive without element-level overrides.
 - Section padding uses its own values in Layout › Section Padding; `padding-section-small` and `padding-small` are different numbers.
-- Five strategies. Prefer the first two for lists and component internals:
-  1. Flex gap on the parent (`gap-[size]` or a Spacing variable).
-  2. CSS Grid gap on the parent.
-  3. Custom class on the element, value from a Spacing variable (recurring elements, per-breakpoint spacing, one-offs).
-  4. Spacing wrapper: a div with `margin-[direction]-[size]` or `padding-[direction]-[size]` around one child.
-  5. Spacing block: an empty div with `padding-bottom-[size]` between siblings.
+- Five strategies, in the order to reach for them. The first three add no elements; the last two add one div each, so they cost DOM weight and an extra node in the Navigator:
+  1. Flex gap on the parent (`gap-[size]` or a Spacing variable), when siblings share one spacing value.
+  2. CSS Grid gap on the parent, the same for grid layouts.
+  3. Custom class on the element, value from a Spacing variable: the odd one out in an otherwise even stack, recurring elements, per-breakpoint spacing, one-offs.
+  4. Spacing wrapper: a div with `margin-[direction]-[size]` or `padding-[direction]-[size]` around one child, when the child must stay class-free (rich text, a component instance you can't edit).
+  5. Spacing block: an empty div with `padding-bottom-[size]` between siblings, as a last resort.
+- Uneven spacing in one stack is the usual case. Put the most common value on the parent as a gap and give the exceptions a custom class with a margin from a Spacing variable. The repo validator accepts that under `--structure v3` only when the margin is a `var(--…)` value, which is also how you keep it on the global scale. A stack of empty blocks is valid but rebuilds the v2 spacer problem under a new name.
 - Keep spacing classes off text elements (`faq_title` with `margin-bottom`, not `margin-bottom-small` on the `h3`).
 - `spacing-clean` zeroes all margin and padding, useful on native Webflow components.
 
@@ -123,6 +132,7 @@ Fluid responsive (https://finsweet.com/client-first/docs/fluid-responsive): opti
 Migrating a v2 build:
 - Do it per page, on a duplicate, with the published CSS as the source of truth. The `cf-page` spec in the private repo holds the run shape; `tools/webflow/validate-section.js --structure v3` checks each rebuilt section (`padding-global`, `padding-section-*` and `spacer-*` are errors under v3).
 - Foundation first: the five collections, the type and spacing scales, `page-wrapper`/`main-wrapper`, the section-padding variables and the v3 utilities must exist before any page moves.
+- Replace spacer divs by the spacing order above: a run of equal spacers becomes a gap on the parent, the odd ones become variable-backed margins on custom classes. Only fall back to `padding-bottom-[size]` blocks where neither works, and say why in the reply.
 - Map text to the nearest `heading-style-*` / `text-size-*` by its current computed size, not by tag.
 - Old classes stay for one publish cycle, then Style Manager › Clean up.
 </reference_guides>

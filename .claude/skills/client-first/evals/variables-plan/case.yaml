@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: variables-plan
+expected_outcome: |
+  variables-plan.md uses the five v3 collections (Base, Theme, Typography, Layout, Sizes), primitives named by value and semantic variables named by purpose, Sentence case groups without repeating the group in variable names, breakpoint modes for Typography and Layout, light and dark theme modes, rem values on a 16 px base.

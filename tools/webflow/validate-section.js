@@ -24,7 +24,7 @@ const CHAIN_STEPS = {
   ],
   v3: [CONTAINER_STEP],
 };
-const NOT_V3 = /^(padding-global|padding-section-[\w-]+)$/;
+const NOT_V3 = /^(padding-global|padding-section-[\w-]+|spacer-[\w-]+)$/;
 
 const VOID_TAGS = new Set([
   'area',
@@ -435,10 +435,14 @@ function checkElements(root, cssMap, errors, structure) {
       continue;
     }
     const decls = cssMap.get(name);
-    if (!marginOk(name) && decls.some((d) => d.property.startsWith('margin'))) {
+    const hardcoded = (prefix) =>
+      decls.some(
+        (d) => d.property.startsWith(prefix) && !(v3 && name.includes('_') && /^var\(--[\w-]+/.test(d.value)),
+      );
+    if (!marginOk(name) && hardcoded('margin')) {
       errors.push(`rule 7: class "${name}" has a margin declaration`);
     }
-    if (!paddingOk(name) && decls.some((d) => d.property.startsWith('padding'))) {
+    if (!paddingOk(name) && hardcoded('padding')) {
       errors.push(`rule 7: class "${name}" has a padding declaration`);
     }
   }

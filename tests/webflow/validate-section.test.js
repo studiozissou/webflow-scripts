@@ -192,6 +192,34 @@ describe('section structure', () => {
     assert.ok(v2.errors.includes('rule 7: class "align-center" has a margin declaration'));
   });
 
+  test('v3 allows variable-backed margin and padding on a custom class, v2 does not', () => {
+    const css = `${V3_CSS}
+.hero_content { padding: var(--_layout---spacing--medium); margin-bottom: var(--_layout---spacing--small); }
+.hero_text { margin-top: var(--_layout---spacing--small); padding-top: 1rem; }`;
+    const html = v3Section(
+      '<div class="hero_content"><p class="text-size-regular">x</p></div><div class="hero_text"><p class="text-size-regular">y</p></div>',
+    );
+    const v3 = validateSection(html, css, { ...NO_SCHEME, structure: 'v3' });
+    assert.deepEqual(
+      v3.errors.filter((e) => /rule 7/.test(e)),
+      ['rule 7: class "hero_text" has a padding declaration'],
+    );
+    const v2 = validateSection(html, css, NO_SCHEME);
+    assert.ok(v2.errors.includes('rule 7: class "hero_content" has a margin declaration'));
+    assert.ok(v2.errors.includes('rule 7: class "hero_content" has a padding declaration'));
+  });
+
+  test('v3 rejects a spacer-* div as rule 3', () => {
+    const css = `${V3_CSS} .spacer-medium { padding-top: 2rem; }`;
+    const html = v3Section('<p class="text-size-regular">x</p><div class="spacer-medium"></div>');
+    const result = validateSection(html, css, { ...NO_SCHEME, structure: 'v3' });
+    assert.equal(result.ok, false);
+    assert.ok(
+      result.errors.some((e) => /rule 3: .*spacer-medium.*not Client First V3/.test(e)),
+      JSON.stringify(result.errors),
+    );
+  });
+
   test('v3 rejects a section whose first child is not a container', () => {
     const html = '<section class="section_hero"><div class="padding-global"><div class="container-large"><p class="text-size-regular">x</p></div></div></section>';
     const result = validateSection(html, V3_CSS, { ...NO_SCHEME, structure: 'v3' });

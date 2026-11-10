@@ -1,6 +1,6 @@
 ---
 name: client-first
-description: Applies Finsweet Client First V3 (23 Oct 2026) to Webflow builds and reviews. Covers the flat V3 page structure (page-wrapper > main-wrapper > section_ > container-), the five variable collections (Base, Theme, Typography, Layout, Sizes) with breakpoint modes, rem on a 16px base, typography, spacing, grid, gap and display utilities, custom class + utility class strategy, and Webflow component naming. Use this skill whenever you build, review or audit a Webflow site that follows Client First, name or rename classes, structure a section or page, choose a text-size, heading-style or text-style utility, set up or link variables, decide on margin, padding, gap or section spacing, or name a Webflow component, even if the user only says "Finsweet", "CF" or "the class naming system" and never names the skill.
+description: Applies Finsweet Client First V3 (23 Oct 2026) to Webflow builds and reviews. Covers the flat V3 page structure (page-wrapper > main-wrapper > section_ > container-), the five variable collections (Base, Theme, Typography, Layout, Sizes) with breakpoint modes, rem on a 16px base, typography, spacing, grid, gap and display utilities, custom class + utility class strategy, and Webflow component naming. Use this skill whenever you build, review or audit a Webflow site that follows Client First, name or rename classes, structure a section or page, choose a text-size, heading-style or text-style utility, set up or link variables, decide on margin, padding, gap or section spacing, or name a Webflow component, write HTML to push through the Webflow MCP, plan a Variables panel setup from brand guidelines, or convert spacer divs or `padding-global` layers, even if the user only says "Finsweet", "CF", "the class naming system", "build a section", "set up the variables" or "clean up the classes" and never names the skill.
 ---
 
 <objective>
@@ -8,6 +8,13 @@ Build and review Webflow projects the Client First V3 way: flat section structur
 </objective>
 
 <quick_start>
+First, find out which version the site runs. A V3 class on a V2 site does nothing, because the class or the variable behind it does not exist, and the reverse leaves dead layers. Check, in this order:
+- The project's README or `projects/<client>/.claude/client.md`, which may say.
+- The published CSS: V3 has Webflow variable names such as `--_layout---` or `--_theme---` and classes such as `margin-top-small` or `gap-medium`; V2 has `spacer-*` classes and every section wrapped in `padding-global`.
+- For a new build, V3.
+
+On a V2 site, match its existing structure and classes unless the job is the migration itself, and say so in the reply. The repo validator (`tools/webflow/validate-section.js`) defaults to V2; pass `--structure v3` for a V3 site.
+
 Before writing anything, read the project: existing classes, variable collections with their groups and modes, and components. Reuse what exists and create only what is missing. Starter project values are placeholders, so take design values from the design source, never from the starter.
 
 Default V3 page structure:
@@ -38,7 +45,7 @@ section_[identifier]
 
 Never stack `padding-global` or `padding-section-[size]` as combos on `section_[identifier]`.
 
-In this repo, `tools/webflow/validate-section.js --structure v3` enforces the default structure and reports `padding-global` as an error.
+In this repo, `tools/webflow/validate-section.js --structure v3` enforces the default structure and reports `padding-global`, `padding-section-*` and `spacer-*` as errors.
 </quick_start>
 
 <reference_guides>
@@ -87,7 +94,8 @@ Do not use vw or vh for type or spacing; they ignore zoom.
 
 HTML tags carry the defaults. Style `body` and `h1` to `h6` from the Typography collection first; text that follows the default gets no class. Choose the heading tag for document structure (one `h1` per page, no skipped levels) and the look with a class.
 
-- `heading-style-h1` to `heading-style-h6`: only to make a tag look like another level, such as an `h1` styled as `heading-style-h2`. It changes CSS, never the tag. Use rarely.
+- `heading-style-h1` to `heading-style-h6`: only to make a tag look like another level, such as an `h1` styled as `heading-style-h2`. It changes CSS, never the tag. Use rarely, except as below.
+- Repo convention: `validate-section.js` rule 9 expects every heading to carry a `heading-style-*` class, because migrations map each heading by its computed size and the class makes that mapping visible. For any section that goes through the validator, add the class matching the heading's intended look, even when it equals the tag (`h1.heading-style-h1`). Outside the validator, Finsweet's default above applies.
 - `text-size-`: `large`, `medium`, `regular`, `small`, `tiny`.
 - `text-weight-`: `xbold`, `bold`, `semibold`, `medium`, `normal`, `light`.
 - `text-style-`: `allcaps`, `italic`, `strikethrough`, `nowrap`, `muted`, `link`, `quote`, `balance`, `pretty`, `1line`, `2lines`, `3lines`.
@@ -129,10 +137,19 @@ Scale (desktop starter values): `0` 0, `xxtiny` 0.25, `xtiny` 0.5, `tiny` 0.75, 
 
 Section padding is its own scale (`small`, `medium`, `large` in Section Padding), so `padding-section-small` and `padding-small` are different values.
 
+Five strategies, in the order to reach for them. The first three add no elements; the last two add one div each, so they cost DOM weight and an extra node in the Navigator:
+1. Flex gap on the parent (`gap-[size]` or a Spacing variable), when siblings share one spacing value.
+2. CSS Grid gap on the parent, the same for grid layouts.
+3. Custom class on the element, value from a Spacing variable: the odd one out in an otherwise even stack, recurring elements, per-breakpoint spacing, one-offs.
+4. Spacing wrapper: a div with `margin-[direction]-[size]` or `padding-[direction]-[size]` around one child, when the child must stay class-free (rich text, a component instance you cannot edit).
+5. Spacing block: an empty div with `padding-bottom-[size]` between siblings, as a last resort.
+
+Uneven spacing in one stack is the usual case. Put the most common value on the parent as a gap and give the exceptions a custom class with a margin from a Spacing variable. The repo validator accepts that under `--structure v3` only when the value is a `var(--…)` reference, which also keeps it on the global scale. A stack of empty blocks is valid but rebuilds the V2 spacer problem under a new name.
+
 Rules:
 - No margin between components. Space siblings with a spacing utility or with gap on the parent.
-- For space between a heading, paragraph and button, use a spacing block (an empty div with one class such as `padding-bottom-medium`) or a spacing wrapper (a div with `margin-top-medium` around the button). Never put spacing classes on text elements.
-- For equal space between list or card children, use flex or grid gap on the parent (`gap-[size]` or a spacing variable).
+- Never put spacing classes on text elements (`faq_title` with a variable-backed `margin-bottom`, not `margin-bottom-small` on the `h3`).
+- When migrating V2, replace spacer divs by the order above: a run of equal spacers becomes a gap on the parent, the odd ones become variable-backed margins on custom classes. Fall back to `padding-bottom-[size]` blocks only where neither works, and say why in the reply.
 - Inner padding of cards and items goes on the custom class, linked to a spacing variable.
 - Spacers (`spacer-*`) are no longer documented or recommended in V3. Leave them alone in legacy V2 projects you are only patching; do not add new ones.
 
@@ -182,7 +199,8 @@ The component name and its wrapper class are separate: `Card / Blog Post` can wr
 - Section padding comes from `global-padding` and Section Padding variables on the section; no `padding-global` in default builds, and never as a combo on the section.
 - Sizes are in rem on a 16px base, apart from 14px type, 2px spacing and 1px borders.
 - Reused values link to semantic variables in the right collection; responsive values live in variable modes, not breakpoint styles.
-- Text follows tag defaults; `heading-style-h*` appears only where the tag and look differ.
+- The site's Client First version was checked first, and a V2 site keeps its V2 structure unless the job is the migration.
+- Text follows tag defaults; `heading-style-h*` appears only where the tag and look differ, or on every heading in a section checked by the repo validator.
 - Spacing uses V3 classes, gap or custom classes linked to variables; no `spacer-*`, no margin between components, no spacing classes on text.
 - Every utility used is in `references/v3-utilities.md` or already in the project.
 - Custom classes have an underscore, utilities do not, and no element carries more than four classes.

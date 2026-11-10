@@ -871,7 +871,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-10-27",
-      "description": "carsa-v1.3.0 refactor: helpers.js loads first on every page and exposes the seven shared helpers; every v1.2.0 module still loads once and runs from the v1.3 folder; every lead link carries the same first-touch UTMs (session record ignored); car-redirect pre-gate and VRM check, FAQ digit slug, fuel link encoding, models single meta and @graph order, dead VDP URL no Datadog warn. Gated by CARSA_V130=1; run with CARSA_V120=1 CARSA_V120_DONE=all."
+      "description": "carsa-v1.3.0 refactor: helpers.js loads first on every page and exposes the seven shared helpers; every v1.2.6 module (incl. reserve.js, blog-post.js) still loads once and runs from the v1.3 folder; every lead link carries the same first-touch UTMs (session record ignored); car-redirect pre-gate and VRM check, FAQ digit slug, fuel link encoding, models single meta and @graph order, dead VDP URL no Datadog warn, /reserve click sanitising, isolated blog tooltips. Gated by CARSA_V130=1; run with CARSA_V120=1 CARSA_V120_DONE=all CARSA_V126=1."
     },
     {
       "slug": "apply-for-2-years-free",

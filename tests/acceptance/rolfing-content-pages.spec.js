@@ -1,4 +1,4 @@
-// Acceptance tests for rolfing-content-pages: the ten /rolfing/ landing pages on staging in EN and NL, keyword conformance, page-own FAQs and related cards, wording rules, and no FAQ leak onto other pages; skipped until ROLFING_CONTENT=1.
+// Acceptance tests for rolfing-content-pages: the eight /rolfing/ landing pages (U4 and U12 folded into U14 and U1) on staging in EN and NL, keyword conformance, page-own FAQs and related cards, wording rules, and no FAQ leak onto other pages; skipped until ROLFING_CONTENT=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -14,7 +14,7 @@ const ALL_PAGES = [
     nl: 'knie-heup-enkelklachten',
     head: /knie/i,
     terms: [/kniepijn/i, /heuppijn/i, /enkelpijn/i, /gewrichtspijn/i],
-    links: ['U4', 'U5'],
+    links: ['U5'],
   },
   { id: 'U1', en: 'neck-pain', nl: 'nekklachten', head: /nek/i, terms: [/nekpijn/i] },
   {
@@ -32,26 +32,11 @@ const ALL_PAGES = [
     terms: [/complementaire zorg/i, /alternatieve geneeswijzen/i, /vergoed/i],
   },
   {
-    id: 'U12',
-    en: 'chronic-pain',
-    nl: 'chronische-pijn',
-    head: /chronische pijn/i,
-    terms: [/chronische pijn/i],
-  },
-  {
     id: 'U2',
     en: 'burnout-stress',
     nl: 'burn-out-stress',
     head: /burn-?out/i,
     terms: [/burn-?out herstel|herstel(len)? (na|van) (een )?burn-?out/i, /stress/i],
-  },
-  {
-    id: 'U4',
-    en: 'sports-injuries',
-    nl: 'sportblessures',
-    head: /sportblessure/i,
-    terms: [/sportblessure/i],
-    links: ['U14'],
   },
   {
     id: 'U5',

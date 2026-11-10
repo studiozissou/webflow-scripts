@@ -17,6 +17,13 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - Suggest `/clear` before an unrelated task; a long session re-sends its whole context every turn.
 - Run at most 3 background jobs at once; queue the rest.
 
+## Working style
+- State your assumptions. When a request has two readings, present both instead of picking one silently.
+- Say when a simpler approach exists. Add no abstraction, option or file the request did not ask for.
+- Touch only what the request needs. Mention unrelated dead code; do not delete it.
+- Turn each task into a check you can run, and run it before you stop.
+- When corrected, propose a one-line rule for CLAUDE.md or MEMORY.md so it does not recur.
+
 ## THIS REPO IS PUBLIC
 - IMPORTANT: Commit only hosted scripts, files they load, and the code, tests and tooling that build them.
   Everything else (client docs, notes, pricing, screenshots, personal skills) goes in `~/webflow-internal`

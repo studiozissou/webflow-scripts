@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Use this agent for structural decisions — module organisation, shared utility design, cross-project patterns, Barba route architecture, third-party library evaluation, and any decision that will be hard to reverse. Always writes an ADR.
-model: sonnet
+model: opus
 tools:
   - Read
   - Write

@@ -94,3 +94,4 @@ Answer in the spec when the project uses Barba.js:
 - **Reproduction steps** — page URL, user actions (scroll to X, click Y, resize to Z), wait conditions (animation duration, network load).
 - **Tier mapping** — Tier 1 tests by name, the Tier 2 registry entry, Tier 3 items with the reason each is manual.
 - **Regression scope** — what must not break: Barba transitions, other modules on the page, cross-page state (video handoff, scroll position).
+- **A check Claude runs alone**: at least one pass/fail criterion Claude can run without a person, in this order of preference: a number (bytes, axe violations, Lighthouse score), a Playwright acceptance test, a screenshot comparison, the browser-MCP pass/fail list. When none fits, write "manual verify" and give a Tier 3 checklist. This never changes the size: a hard-to-verify Medium change keeps its review agents.

@@ -38,6 +38,7 @@ Webflow MCP `get_site`. If it isn't connected, stop and ask Will to re-authorise
 4. Fill `launch.config.json` (domain, locales primary first, known placeholders, fallback paths) and the `llms.txt` lines you can; leave the rest as `TODO-`.
 5. No booking widget: delete `booking-widget.js`, its test and its `GLOBAL_MODULES` entry.
 6. Keep `VERSION = '0.1.0'`. The first `/deploy` cuts `<client>-v0.1.0`.
+7. Once `npm run test:<client>` passes on main, add the `projects/<client>/` and `tests/<client>/` prefixes for `test:<client>` to `.claude/scripts/stop-gate-suites.json` (see ADR-002).
 
 ## Step 6 — Global utilities
 

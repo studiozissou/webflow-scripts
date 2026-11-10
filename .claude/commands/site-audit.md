@@ -547,6 +547,10 @@ Present the narrative to the user for review before proceeding.
 
 ## Phase 7 — Client-facing report (gated)
 
+Whichever path runs, write the executive summary and the owner tasks 80% of the way to
+ASD-STE100 (Simplified Technical English): sentences of about 15 words, active voice, one
+instruction per sentence, one word for one thing.
+
 After internal report + narrative are written, present the report-type gate:
 
 > "Internal report and narrative generated. Which client report do you want?"

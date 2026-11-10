@@ -1,7 +1,7 @@
 // Guards the session rollup collectors (jobs, transcripts, desktop, worktrees, PRs, specs, remote) on fake fixtures, sanitize(), tolerant parsing, merge dedup by id, alias and branch with Notion task links, and the classify matrix with its precedence.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,6 +43,7 @@ function fakeHome() {
   const home = join(tmp(), 'home');
   cpSync(join(FIXTURES, 'home'), home, { recursive: true });
   const project = join(home, '.claude/projects/-home-test-webflow-scripts');
+  mkdirSync(project, { recursive: true });
   const write = (name, lines, ageMs) => {
     const file = join(project, `${name}.jsonl`);
     writeFileSync(file, `${lines.join('\n')}\n`);

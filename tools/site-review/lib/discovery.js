@@ -4,6 +4,7 @@ import { fetchPage as defaultFetchPage } from './fetch-page.js';
 import { parseRobots } from './robots.js';
 import { urlKey } from './url-key.js';
 import { DEFAULT_CRAWL_CONFIG, DEFAULT_USER_AGENT } from '../config.js';
+import { legacyDiscoverPages } from './legacy.js';
 
 function decodeXml(text) {
   return text
@@ -142,21 +143,8 @@ export async function discoverSite(rootUrl, { crawlConfig = {}, fetchPage = defa
   };
 }
 
-async function discoverPages(rootUrl, manualPages, options = {}) {
-  const root = rootUrl.replace(/\/+$/, '');
-  if (manualPages && manualPages.length > 0) {
-    return manualPages.map((page) => {
-      if (/^https?:\/\//i.test(page)) return page;
-      const path = page.startsWith('/') ? page : `/${page}`;
-      return `${root}${path}`;
-    });
-  }
-  try {
-    const site = await discoverSite(rootUrl, options);
-    return site.rows.length > 0 ? site.rows.map((row) => row.url) : [rootUrl];
-  } catch {
-    return [rootUrl];
-  }
+function discoverPages(rootUrl, manualPages) {
+  return legacyDiscoverPages(rootUrl, manualPages);
 }
 
 export { discoverPages, extractLocs, extractSitemapLocs };

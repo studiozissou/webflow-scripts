@@ -18,7 +18,7 @@ The project-level directory is a superset of root — bootstrapped by copying ro
 
 ## Agents (8 total)
 
-Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged into `design-critic` (lens argument); `perf` folded into `qa`; `pm` folded into the `/plan` skill; `convention-auditor` replaced by `/skill-doctor`. Agents are spawned by skills, not by hand: `/build` runs `code-writer`, `refactor` and three `code-reviewer`s on every build, and the spec's `agents:` frontmatter (written by `/plan`) routes the specialists as a second review wave. Models use aliases (`sonnet`, `opus`); `code-reviewer`, `qa`, `seo` and `design-critic` keep project-scoped memory.
+Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged into `design-critic` (lens argument); `perf` folded into `qa`; `pm` folded into the `/plan` skill; `convention-auditor` replaced by `/skill-doctor`. Agents are spawned by skills, not by hand: `/build` runs `code-writer`, `refactor` and one `code-reviewer` (Opus, three lenses) on every build, and the spec's `agents:` frontmatter (written by `/plan`) routes the specialists as a second review wave. Models use aliases (`sonnet`, `opus`); `code-reviewer`, `qa`, `seo` and `design-critic` keep project-scoped memory.
 
 | Agent | Purpose | Key tools |
 |-------|---------|-----------|
@@ -39,7 +39,7 @@ Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged in
 | Command | What it does |
 |---------|-------------|
 | `/plan` | Skill at `skills/plan/`. Size gate (Small skips approach exploration) → parallel research agents → pm-questioning → approach exploration (Medium/Large) → spec with `agents:` routing, verify loop and three-tier test plan → acceptance tests + registry. `--auto` (or a background job) takes recommended options and records them under Assumptions instead of asking. |
-| `/build` | Skill at `skills/build/`. Spec + verify-loop gate → test inventory → selector/spacing checks → fresh-context `code-writer` executor(s) (when the spec's Execution note names two or more file groups, each executor runs in its own git worktree and is integrated by patch into the parent tree before `refactor`) → `refactor` → wave 1: three parallel `code-reviewer`s → wave 2: the spec's `agents:` specialists → `/qa-check` → browser-MCP verify loop (project-aware dev override from the project CLAUDE.md) → manual checklist. Review runs in the parent context because subagents cannot spawn agents. |
+| `/build` | Skill at `skills/build/`. Spec + verify-loop gate → test inventory → selector/spacing checks → fresh-context `code-writer` executor(s) (when the spec's Execution note names two or more file groups, each executor runs in its own git worktree and is integrated by patch into the parent tree before `refactor`) → `refactor` → wave 1: one `code-reviewer` with the simplicity, correctness and conventions lenses → wave 2: the spec's `agents:` specialists → `/qa-check` → browser-MCP verify loop (project-aware dev override from the project CLAUDE.md) → manual checklist. Review runs in the parent context because subagents cannot spawn agents. |
 | `/debug` | Pre-flight diagnostics → isolate/hypothesise/instrument/test/fix/confirm loop → debug log. |
 | `/status` | Root: full overview (git, specs, ADRs, logs). Project: compact queue table. |
 | `/qa-check` | Checklist: no console errors, mobile, reduced-motion, Barba cleanup, CLS, keyboard access, Playwright. |
@@ -113,8 +113,10 @@ Consolidated 2026-10-14: `art-director`, `ux-researcher` and `content` merged in
 ## Settings & Hooks
 
 **PostToolUse hook:** Prettier auto-formats any `.js/.ts/.css/.json` file after Write/Edit.
-**Stop hook:** Appends `[timestamp] session-end` to `logs/sessions.log`.
+**Stop hooks:** first `.claude/scripts/stop-gate.mjs` (timeout 300 s), then the session logger, which appends `[timestamp] session-end` to `logs/sessions.log`.
+**Why the Stop gate:** rules in CLAUDE.md alone did not stop Claude ending a turn on red work, so the check is enforced in a script. On every stop it diffs the branch against `git merge-base HEAD origin/main` (not `HEAD`, because `/build` commits before stopping), fails only on lint errors that rose above that baseline, and runs the unit suites mapped from the changed paths in `.claude/scripts/stop-gate-suites.json`. It costs no tokens when green, never blocks on missing tooling (each skip goes to `.claude/logs/stop-gate.log`), and gives up with a warning after three blocked attempts per session so it cannot loop. Policy: ADR-002.
 **MCP permissions:** Webflow read operations (list, get, snapshot, styles) auto-allowed. Write operations (create, update, delete, publish, element_builder, asset) always prompt.
+**PreToolUse hook (`Agent`):** `.claude/scripts/agent-cap.mjs` refuses to spawn a subagent when `~/.claude/usage-5h` reads 75 or more and was written in the last 10 minutes, so a near-limit session does the work inline instead of burning the 5-hour budget on fresh-context agents. A missing, stale or unreadable file never blocks. Nothing in the repo writes that file, so the cap is inert until the status line does.
 
 ---
 

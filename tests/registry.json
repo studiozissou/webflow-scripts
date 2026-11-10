@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-27",
+  "lastUpdated": "2026-11-05",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -484,6 +484,16 @@
       "description": "carsa-v1.2.0: remaining inline page scripts move to loader modules that stay inert until window.__CARSA_PAGE is set; per page, modules load once and run, inline code gone (CARSA_V120_DONE comma list of entries, vdp, sweep, or all); FAQ schema complete on slow networks, near filtered error gone, VDP draw-play, 404 and car-redirect. Gated by CARSA_V120=1."
     },
     {
+      "slug": "carsa-release-v1-2-6",
+      "url": "https://www.carsa.co.uk",
+      "spec": "tests/acceptance/carsa-release-v1-2-6.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-05",
+      "description": "carsa-v1.2.6: nav and footer WhatsApp prefill, VDP #car-info sentence (generic fallback for an empty location), VDP utm-gated cold-banner Swiper, /reserve VRM finder (window.crsaFindCar) and blog tooltip run from loader modules; none left inline. Gated by CARSA_V126=1."
+    },
+    {
       "slug": "carsa-vdp-module",
       "url": "https://www.carsa.co.uk/vehicles/used/bl73dmu",
       "spec": "tests/acceptance/carsa-vdp-module.spec.js",
@@ -644,6 +654,16 @@
       "description": "Oost final food menu (Roos, 5 Oct) - NL and EN dish count, every dish priced with matching Offer microdata, NL/EN prices identical, JSON-LD valid; gated on OOST_MENU_FINAL=1."
     },
     {
+      "slug": "carsa-nov-2026-report-fixes",
+      "url": "https://www.carsa.co.uk/",
+      "spec": "tests/acceptance/carsa-nov-2026-report-fixes.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "November report fixes via Webflow MCP: tax strategy canonical, no Learn more links on promotions and car care pages, two shortened titles, distinct titles and descriptions on the two £500 promotions. Expected to fail until the spec is executed."
+    },
+    {
       "slug": "carsa-oct-2026-report-fixes",
       "url": "https://www.carsa.co.uk/",
       "spec": "tests/acceptance/carsa-oct-2026-report-fixes.spec.js",
@@ -704,6 +724,16 @@
       "description": "Studio Zissou redesign: every v1 EN/NL page has one H1, compliant title/description, canonical and OG, no dead nav links or template leftovers, FAQ microdata, Service/ProfessionalService/Article JSON-LD, UTM capture on the contact form, Dutch alternates, llms.txt and sitemap; gated on SZ_REDESIGN=1."
     },
     {
+      "slug": "sz-launch-2026",
+      "url": "https://wdmorley.webflow.io/",
+      "spec": "tests/acceptance/sz-launch-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "created": "2026-11-04",
+      "description": "Studio Zissou launch: rebuilt homepage SEO meta, canonical to studiozissou.com, JSON-LD, no placeholders or old markup, no console errors or overflow, axe, fonts, links, labelled form with attribution fields, pinned init.js, privacy/terms/404; SZ_LIVE=1 adds the wdmorley.com redirect map, defensive domains, sitemap/robots and proposal 404s."
+    },
+    {
       "slug": "sz-crosslinking",
       "url": "https://studiozissou.webflow.io/",
       "spec": "tests/acceptance/sz-crosslinking.spec.js",
@@ -754,6 +784,16 @@
       "description": "Oct 2026 Claude task batch: Carsa store and town pages link to each other, Oost sitemap pages are indexable unless intended; no console errors."
     },
     {
+      "slug": "coconut-named-authors",
+      "url": "https://getcoconut.webflow.io/authors",
+      "spec": "tests/acceptance/coconut-named-authors.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "Coconut named authors: byline in raw HTML linked to /author/{slug}, role, 375 px fit; one BlogPosting with real author url, sameAs and Organization team author; profile pages and /authors index return 200 with no placeholder authors. Expected to fail until the build ships and Coconut's author data is loaded."
+    },
+    {
       "slug": "coconut-site-overhaul",
       "url": "https://getcoconut.webflow.io/",
       "spec": "tests/acceptance/coconut-site-overhaul.spec.js",
@@ -774,6 +814,36 @@
       "description": "Rolfing /rolfing/ landing pages: single 301 from /what-is-rolfing/, one h1, branded title, description length, 3-5 FAQ items with microdata, hero alt, WebPage + BreadcrumbList JSON-LD with no medical types, no outcome claims; gated on ROLFING_LANDING=1, expected to fail until T3-T5 of rolfing-growth-oct-2026 ship."
     },
     {
+      "slug": "rolfing-template-2a",
+      "url": "https://rolfing-amsterdam.webflow.io/en/what-is-rolfing/template-test",
+      "spec": "tests/acceptance/rolfing-template-2a.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-10-28",
+      "description": "Rolfing Pages template rebuild (track 2a): explainers keep the icon hero with no empty or landing-only blocks; the template-test fixture shows photo hero (right on desktop, stacked on mobile), intro, symptoms, last updated, session + About Janco, bound testimonial instead of slider, native details FAQ with Question/Answer microdata, related cards; gated on ROLFING_TEMPLATE=1, ROLFING_FOLDER=rolfing after the rename."
+      },
+      {
+      "slug": "rolfing-content-pages",
+      "url": "https://rolfing-amsterdam.webflow.io/en/rolfing/knee-hip-ankle-pain",
+      "spec": "tests/acceptance/rolfing-content-pages.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "Eight Rolfing landing pages (U4, U12 folded in, D8) on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_PAGES=U14 limits it to the pattern page, expected to fail until the build ships."
+    },
+    {
+      "slug": "rolfing-landing-sections",
+      "url": "https://rolfing-amsterdam.webflow.io/en/what-is-rolfing/knee-hip-ankle-pain",
+      "spec": "tests/acceptance/rolfing-landing-sections.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-05",
+      "description": "Rolfing landing pages built from copied site sections: blocks 1-3 and the note each in their own section in order, rich-text content section hidden, last updated in the hero, photos with alt and booking links in blocks 1-2, one-column block without photo, no repeated adjacent background, no overflow at 375 px; explainers unchanged; gated on ROLFING_SECTIONS=1."
+    },
+    {
       "slug": "oost-hours-kerst-2026",
       "url": "https://www.oosteten.nl/afhalen",
       "spec": "tests/acceptance/oost-hours-kerst-2026.spec.js",
@@ -781,7 +851,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-10-26",
-      "description": "Oost hours 17:00-21:00 daily (Tue closed) on every hours list NL+EN incl. 404, no old 12-22/17-22 text, lunch copy gone, Christmas pre-order block #feestdagen on /afhalen (closed 24-26 Dec, order before 20 Dec, pickup 23/24 Dec 15-17, dishes, bases, wine), home and footer pointers, JSON-LD one regular entry plus closed 24-26 Dec, llms.txt lines; removal checks on OOST_KERST_REMOVED=1. Expected to fail until the Designer change ships."
+      "description": "Oost hours 17:00-21:00 daily (Tue closed) on every hours list NL+EN incl. 404, no old 12-22/17-22 text, lunch catering restored on /catering, Kerstdeal block #feestdagen on /afhalen (soto, rijsttafel, spekkoek EUR 34,50 pp, for one, vega; order by 20 Dec, pickup 23/24 Dec 15-17; order by 27 Dec, pickup 31 Dec 15-17; closed 24-26 Dec and 1 Jan), home and footer pointers, JSON-LD one regular entry plus closed 24-26, 31 Dec and 1 Jan, llms.txt lines; removal checks on OOST_KERST_REMOVED=1 from 2 Jan 2027. Expected to fail until the Designer change ships."
     },
     {
       "slug": "nem-validation-round-2",
@@ -801,7 +871,37 @@
       "source": "plan",
       "critical": false,
       "created": "2026-10-27",
-      "description": "carsa-v1.3.0 refactor: helpers.js loads first on every page and exposes the seven shared helpers; every v1.2.0 module still loads once and runs from the v1.3 folder; every lead link carries the same first-touch UTMs (session record ignored); car-redirect pre-gate and VRM check, FAQ digit slug, fuel link encoding, models single meta and @graph order, dead VDP URL no Datadog warn. Gated by CARSA_V130=1; run with CARSA_V120=1 CARSA_V120_DONE=all."
+      "description": "carsa-v1.3.0 refactor: helpers.js loads first on every page and exposes the seven shared helpers; every v1.2.6 module (incl. reserve.js, blog-post.js) still loads once and runs from the v1.3 folder; every lead link carries the same first-touch UTMs (session record ignored); car-redirect pre-gate and VRM check, FAQ digit slug, fuel link encoding, models single meta and @graph order, dead VDP URL no Datadog warn, /reserve click sanitising, isolated blog tooltips. Gated by CARSA_V130=1; run with CARSA_V120=1 CARSA_V120_DONE=all CARSA_V126=1."
+    },
+    {
+      "slug": "apply-for-2-years-free",
+      "url": "https://getcoconut.webflow.io/apply-for-2-years-free",
+      "spec": "tests/acceptance/apply-for-2-years-free.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-02",
+      "description": "Coconut noindex landing page for the 2-years-free Revolut and Zempler offer: copy, bank cards, three steps, normal banner below the steps, terms links, no trial leftovers, no mobile overflow. Apply URL checks skip until REVOLUT_APPLY_URL and ZEMPLER_APPLY_URL are set; sitemap check runs on production only."
+      },
+      {
+      "slug": "coconut-mtd-freelancers-page",
+      "url": "https://getcoconut.webflow.io/mtd-software/freelancers",
+      "spec": "tests/acceptance/coconut-mtd-freelancers-page.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut MTD for Freelancers page, duplicated from Landlords: approved copy verbatim, meta, tables, links, FAQ schema, no Landlords residue; Landlords H1 as regression control",
+      "created": "2026-11-02"
+      },
+      {
+      "slug": "cf-page-skill",
+      "url": "https://getcoconut.webflow.io/mtd-software-cf",
+      "spec": "tests/acceptance/cf-page-skill.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-04",
+      "description": "A /cf-page staging duplicate is Client First V3: noindex, page-wrapper > main.main-wrapper, every section has section_* with a container-* first child, no _25-/_26-/max-width-1248 classes outside kept components, elements <= 70% of ORIGINAL_ELEMENTS, one h1, no console errors. Skipped unless CF_PAGE_PATH is set; first pilot is Coconut /mtd-software after C2."
     }
   ]
 }

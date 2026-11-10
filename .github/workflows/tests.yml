@@ -74,6 +74,10 @@ jobs:
       - name: Entity audit
         run: npm run test:ea
 
+      # Repo tooling: link-internal, private paths, Semrush skills, the Stop gate and the agent cap.
+      - name: Internal tooling
+        run: npm run test:internal
+
       # Several NEM files are generated from a CSV and from the src modules, and the
       # pasteable Webflow component is one of them. On 2026-08-19 the committed dist had
       # drifted from src — invisible until someone pastes a stale component into the

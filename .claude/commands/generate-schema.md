@@ -32,5 +32,5 @@ Provide: client name, page type (home / about / case-study / blog-post / team / 
 - About page: `Organization` + `Person` (team members)
 - Case study / portfolio: `CreativeWork`
 - Blog post: `Article`
-- FAQ section: `FAQPage`
+- FAQ section: `FAQPage`, optional. Google retired FAQ rich results, so never promise one; `JSON.parse` it instead of using the Rich Results Test (steps 8-9)
 - Contact / location: `LocalBusiness`

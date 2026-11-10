@@ -5,6 +5,7 @@ import https from 'node:https';
 import zlib from 'node:zlib';
 import { DEFAULT_USER_AGENT } from '../config.js';
 import { sleep } from './finding.js';
+import { legacyFetchPage } from './legacy.js';
 
 const DEBUG = false;
 const MAX_REDIRECTS = 10;
@@ -274,6 +275,7 @@ function cacheKey(url, opts) {
 }
 
 async function fetchPage(url, cacheOrOpts, extra) {
+  if (cacheOrOpts instanceof Map) return legacyFetchPage(url, cacheOrOpts, extra);
   const given = normaliseArgs(cacheOrOpts, extra);
   const defined = Object.fromEntries(Object.entries(given).filter(([, value]) => value !== undefined));
   const opts = { ...DEFAULTS, ...defined };

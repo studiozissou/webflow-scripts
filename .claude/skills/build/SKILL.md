@@ -1,8 +1,8 @@
 ---
 name: build
-description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, or one per file group in its own git worktree when the spec names two or more groups, then a refactor pass, three parallel code reviewers and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
+description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, or one per file group in its own git worktree when the spec names two or more groups, then a refactor pass, one Opus code reviewer carrying three lenses and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
 argument-hint: <feature-slug> [--size mini|small|medium|large] [--auto]
-effort: high
+effort: medium
 ---
 
 Build a feature end-to-end from its spec. The spec says what to build and how to know it works; this skill supplies the agents and the order.
@@ -21,7 +21,7 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 - Read the frontmatter: `size`, `agents`, and the **Execution** note under Tasks.
 - **Setup.** `/build` asks no brief questions; the spec already answers them. Recommend the spec's `size:`, or a different size when the spec has none or the files its tasks touch point elsewhere (signals in `../plan/SKILL.md` step 0). Check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask once with `AskUserQuestion`, three questions in the same call:
   1. **Size** (single select): all four sizes, the recommended one first with "(Recommended)" and a one-line reason. Skip if `--size` was passed.
-  2. **Agents** (multiSelect), four options: "code-writer", "refactor", "code reviewers" (three for Medium and up, one for Small) and "specialist wave" (naming the spec's `agents:`). Mark those the recommended size allows "(Recommended)", each with a one-line reason tied to this spec. Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session.
+  2. **Agents** (multiSelect), four options: "code-writer", "refactor", "code reviewer" (one, with three lenses for Medium and up, two for Small) and "specialist wave" (naming the spec's `agents:`). Mark those the recommended size allows "(Recommended)", each with a one-line reason tied to this spec. Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session.
   3. **QA** (single select): "Run `/qa-check` (up to 3 qa agents)" or "Skip — the verify loop still runs". Recommend Run for Medium and Large, or when `agents:` lists `qa`; otherwise Skip. One-line reason tied to this spec.
 
   Whatever the table below says, spawn only the ticked agents; an unticked step runs in the parent (implement, self-review) or is skipped (refactor, specialist wave). Auto: take the recommendations. A size that differs from the spec goes back into its `size:`.
@@ -32,7 +32,7 @@ Size sets the recommended agents for steps 4–7:
 | Size | Implement | Refactor | Wave 1 | Wave 2 |
 |------|-----------|----------|--------|--------|
 | Mini | In the parent, no agent | Skip | Self-review with the conventions lens, no agent | Skip |
-| Small | One code-writer, `model: "sonnet"` | Skip | One code-reviewer, correctness lens | Only if `agents:` is set |
+| Small | One code-writer, `model: "sonnet"` | Skip | One code-reviewer, simplicity and correctness lenses, no `model` | Only if `agents:` is set |
 | Medium, Large | Step 4 | Step 5 | Step 6 | Step 7 |
 
 ## 2. Test inventory
@@ -55,7 +55,7 @@ Read every file the spec touches, the project orchestrator, and `shared/site-uti
 
 **Selectors** (Webflow MCP connected): `element_snapshot_tool` on the target page and confirm every selector the spec names. A missing selector is a stop, not an assumption; ask (auto: record it as a blocker and build the rest). Note confirmed selectors in the project CLAUDE.md under "## Known selectors".
 
-**Spacing**: Client First spacer divs between components, flex or grid inside them, nearest approximation for absolute placements with a `/* manual placement — verify against design */` comment, no custom spacing classes where Client First has one.
+**Spacing**: Client First v3 spacing between components (section padding via the Layout variables, `gap-[size]` on the parent, or a one-class `margin-*`/`padding-*` utility; no `spacer-*` divs), flex or grid inside them, nearest approximation for absolute placements with a `/* manual placement — verify against design */` comment, no custom spacing classes where Client First has one.
 
 ## 4. Implement in a fresh context
 
@@ -110,9 +110,11 @@ Files the Execution note lists as shared between groups are edited here in the p
 
 Spawn `refactor` on the changed files: "Refactor for clarity and pattern compliance. Do not change behaviour."
 
-## 6. Review wave 1 — code (three parallel reviewers)
+## 6. Review wave 1 — code (one reviewer, three lenses)
 
-Spawn three `code-reviewer` agents in one message with the lenses in `references/review-prompts.md` (simplicity, correctness, conventions). Merge per the rules there: PASS, WARN, or FAIL. On FAIL fix the critical issues and re-run all three; at most three cycles, then report the failure and stop (auto: continue to the verify loop and mark the build WARN).
+Spawn one `code-reviewer` with the combined prompt in `references/review-prompts.md`, carrying the simplicity, correctness and conventions lenses. Small uses the same prompt with the simplicity and correctness lenses only. Pass no `model` on the Agent call, so the reviewer runs on Opus from its frontmatter. Apply the merge rules there: PASS, WARN, or FAIL. On FAIL fix the critical issues and re-run the reviewer; at most three cycles, then report the failure and stop (auto: continue to the verify loop and mark the build WARN).
+
+**Usage cap.** The `agent-cap` hook refuses any Agent call while 5-hour usage is at 75% or more. When it refuses a reviewer, review inline against the same lenses and write "wave 1 review skipped: usage cap" in the build summary. A refused review is never reported as PASS.
 
 ## 7. Review wave 2 — specialists from the spec
 
@@ -130,17 +132,20 @@ Run `/qa-check` when the setup QA question was answered Run (auto: the recommend
 
 Follow `references/verify-loop.md`: project-aware dev server, browser MCP checks against the spec's pass/fail criteria, the fix-and-retry loop, and the bridge that turns MCP-found bugs into regression specs. Browser MCP only; CLI test suites run in `/deploy` after the CDN push, because against the CDN they would test old code.
 
+**Webflow write gate** (any build that wrote to Webflow through the MCP): on every page and component it touched, run `query_elements` with `element_filter: { attribute_name: "class" }`. Any match is a FAIL: remove the attribute (the real class is usually already applied; `set_style` it if not), re-run the query to zero, and list the fixed elements in the build summary. Then run `query_elements` with `element_filter: { type: "DOM" }` on the same pages and components: every custom element must be one the spec names (tags with no native Webflow element, such as `details` or `summary`). Any other is a FAIL; rebuild it as a native element per the `webflow-mcp` skill, or list it as a Designer blocker.
+
 ## 10. Wrap up
 
 - Present the spec's Tier 3 manual checklist plus anything found during the build that cannot be automated, or "No manual tests needed".
-- Build summary: files changed, wave 1 and wave 2 verdicts, QA result, verify-loop pass/fail per criterion, blockers.
+- Build summary: files changed, wave 1 and wave 2 verdicts, QA result, verify-loop pass/fail per criterion, blockers, and a "<step> skipped: usage cap" line for every agent the cap refused.
 - Interactive: ask "Status for <slug>?" with in-progress / blocked / ready-for-review / done. Auto: set ready-for-review, or blocked with the reason.
 
 ## Rules
 
+- When the usage cap refuses an agent, do that step inline and write "<step> skipped: usage cap" in the build summary; a refused review is never reported as PASS
 - Never write code before reading the existing files
 - Check `shared/site-utilities.js` and the orchestrator before adding a utility
 - No bare `console.log`; a settings hook flags any that slip through
 - Verify selectors via Webflow MCP before targeting them, when connected
-- Client First spacer divs for vertical rhythm, never margin between components
+- Client First v3 spacing for vertical rhythm (`gap-[size]`, one-class `margin-*`/`padding-*` utilities, section padding variables), never ad-hoc margin between components
 - No git writes between integration and the build commit: the reviewers and the verify loop read `git diff HEAD`, so integrated changes stay uncommitted until the build ends

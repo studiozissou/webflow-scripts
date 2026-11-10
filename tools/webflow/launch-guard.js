@@ -10,8 +10,12 @@ const DEBUG = false;
 const PROJECTS_DIR = fileURLToPath(new URL('../../projects/', import.meta.url));
 const WHATSAPP_HOST = /^(wa\.me|api\.whatsapp\.com)$/i;
 const RUN_TOGETHER_MIN = 30;
-const TITLE_RANGE = [50, 62];
-const DESCRIPTION_RANGE = [120, 155];
+const TITLE_RANGE = [50, 60];
+const DESCRIPTION_RANGE = [150, 160];
+const STAGING_HOST = /(^|\.)webflow\.io$/i;
+const CLASSIC_SCRIPT_TYPE = /^$|^(text|application)\/(java|ecma)script$/i;
+const WEBFLOW_ASSET_HOST = /(^|\.)(website-files|webflow)\.com$|^d3e54v103j8qbb\.cloudfront\.net$/i;
+const AI_BOTS = ['GPTBot', 'OAI-SearchBot', 'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'PerplexityBot'];
 const EMAIL = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/gi;
 const GTAG_CONFIG = /gtag\(\s*['"]config['"]/;
 const ABOVE_FOLD_CLASS = /^(nav|navbar|hero|header)([_-]|$)|^section[_-](nav|hero|header)|^w-nav$/;
@@ -76,10 +80,18 @@ function parseAttrs(tag) {
   return attrs;
 }
 
+function stripComments(html) {
+  return html.replace(/<!--[\s\S]*?-->/g, (m) => ' '.repeat(m.length));
+}
+
 function stripRawText(html) {
-  return html
-    .replace(/<!--[\s\S]*?-->/g, (m) => ' '.repeat(m.length))
-    .replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, (m) => ' '.repeat(m.length));
+  return stripComments(html).replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, (m) =>
+    ' '.repeat(m.length),
+  );
+}
+
+function tagAttrs(html) {
+  return [...html.matchAll(/<[a-zA-Z][\w-]*\b[^>]*>/g)].map((match) => parseAttrs(match[0]));
 }
 
 function findTags(html, name) {
@@ -94,7 +106,7 @@ function findTags(html, name) {
 
 function scriptTags(html) {
   const re = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
-  const source = html.replace(/<!--[\s\S]*?-->/g, (m) => ' '.repeat(m.length));
+  const source = stripComments(html);
   const scripts = [];
   let match;
   while ((match = re.exec(source)) !== null) {
@@ -202,6 +214,9 @@ export function normalizeConfig(raw = {}) {
     listItemClasses: raw.listItemClasses ?? [],
     socialHosts: raw.socialHosts ?? DEFAULT_SOCIAL_HOSTS,
     blockWhatsApp: raw.blockWhatsApp === true,
+    stagingUrl: raw.stagingUrl?.trim() || null,
+    redirects: raw.redirects ?? [],
+    apexDefault: raw.apexDefault === true,
   };
 }
 
@@ -418,11 +433,7 @@ export function checkEmailDomain(html, pageUrl, domains) {
 
 export function checkLabels(html, pageUrl) {
   const clean = stripRawText(html);
-  const ids = new Set();
-  for (const match of clean.matchAll(/<[a-zA-Z][\w-]*\b[^>]*>/g)) {
-    const { id } = parseAttrs(match[0]);
-    if (id) ids.add(id);
-  }
+  const ids = new Set(tagAttrs(clean).map(({ id }) => id).filter(Boolean));
   const seen = new Set();
   const findings = [];
   for (const { attrs } of findTags(clean, 'label')) {
@@ -454,7 +465,7 @@ export function checkAllowLocal(html, pageUrl, attr = 'data-allow-local') {
 }
 
 export function checkJsonLdHost(html, pageUrl) {
-  if (/(^|\.)webflow\.io$/i.test(new URL(pageUrl).hostname)) return [];
+  if (STAGING_HOST.test(new URL(pageUrl).hostname)) return [];
   const findings = [];
   for (const { attrs, body } of scriptTags(html)) {
     if ((attrs.type ?? '').trim().toLowerCase() !== 'application/ld+json') continue;
@@ -547,6 +558,183 @@ export function checkLazyAboveFold(html, pageUrl) {
   return findings;
 }
 
+function primarySubtag(code) {
+  return String(code).trim().toLowerCase().split(/[-_]/)[0];
+}
+
+export function checkHtmlLang(html, pageUrl, locales = []) {
+  const lang = (findTags(stripRawText(html), 'html')[0]?.attrs.lang ?? '').trim();
+  if (!lang) return [finding('html-lang', pageUrl, 'no lang attribute on <html>')];
+  const locale = localeOf(new URL(pageUrl).pathname, locales);
+  return locale && primarySubtag(lang) !== primarySubtag(locale.code)
+    ? [finding('html-lang', pageUrl, `<html lang="${lang}"> on a ${locale.code} page`)]
+    : [];
+}
+
+function linksWithRel(html, token) {
+  return findTags(stripRawText(html), 'link').filter(
+    ({ attrs }) =>
+      (attrs.rel ?? '').toLowerCase().split(/\s+/).includes(token) && (attrs.href ?? '').trim(),
+  );
+}
+
+export function checkIcons(html, pageUrl) {
+  return [
+    ['icon', 'no favicon link (rel="icon")'],
+    ['apple-touch-icon', 'no webclip link (rel="apple-touch-icon")'],
+  ]
+    .filter(([token]) => !linksWithRel(html, token).length)
+    .map(([, detail]) => finding('icons', pageUrl, detail, 'warning'));
+}
+
+function isEmptyLinkException(className) {
+  return (
+    className === 'w-lightbox' ||
+    className === 'w-dropdown-toggle' ||
+    className.startsWith('w-pagination')
+  );
+}
+
+function isScriptWired(attrs) {
+  return (
+    Object.keys(attrs).some((name) => /^(data|fs)-/.test(name)) ||
+    (attrs.type ?? '').trim().toLowerCase() === 'button' ||
+    (attrs.role ?? '').trim().toLowerCase() === 'button'
+  );
+}
+
+export function checkEmptyLink(html, pageUrl) {
+  const details = anchorHrefs(html)
+    .filter(
+      ({ attrs }) =>
+        ['', '#'].includes(attrs.href.trim()) &&
+        !classesOf(attrs).some(isEmptyLinkException) &&
+        !isScriptWired(attrs),
+    )
+    .map(({ attrs }) => `link with href="${attrs.href.trim()}", class "${attrs.class ?? ''}"`);
+  return [...new Set(details)].map((detail) => finding('empty-link', pageUrl, detail, 'warning'));
+}
+
+export function checkDuplicateIds(html, pageUrl) {
+  const ids = tagAttrs(stripRawText(html)).map(({ id }) => id).filter(Boolean);
+  const repeated = ids.filter((id, index) => ids.indexOf(id) !== index);
+  return [...new Set(repeated)].map((id) =>
+    finding('duplicate-ids', pageUrl, `id "${id}" is used more than once`, 'warning'),
+  );
+}
+
+export function checkH1Count(html, pageUrl) {
+  const count = findTags(stripRawText(html), 'h1').length;
+  return count === 1
+    ? []
+    : [finding('h1-count', pageUrl, `${count} h1 elements (expected exactly 1)`, 'warning')];
+}
+
+export function checkCanonical(html, pageUrl, domain = null) {
+  const [link] = linksWithRel(html, 'canonical');
+  if (!link) return [finding('canonical', pageUrl, 'no canonical link', 'warning')];
+  const href = link.attrs.href.trim();
+  const page = new URL(pageUrl);
+  let target;
+  try {
+    target = new URL(href, page);
+  } catch {
+    return [finding('canonical', pageUrl, `canonical is not a valid URL: ${href}`, 'warning')];
+  }
+  if (target.hostname === page.hostname) return [];
+  if (
+    domain &&
+    STAGING_HOST.test(page.hostname) &&
+    bareDomain(target.hostname) === bareDomain(domain)
+  )
+    return [];
+  return [finding('canonical', pageUrl, `canonical points at another host: ${href}`, 'warning')];
+}
+
+export function checkBlockingScript(html, pageUrl) {
+  const [head] = findElements(stripRawText(html), (name) => name === 'head');
+  if (!head) return [];
+  const sources = scriptTags(html.slice(head.innerStart, head.innerEnd))
+    .filter(
+      ({ attrs }) =>
+        (attrs.src ?? '').trim() &&
+        !('async' in attrs) &&
+        !('defer' in attrs) &&
+        CLASSIC_SCRIPT_TYPE.test((attrs.type ?? '').trim()),
+    )
+    .map(({ attrs }) => attrs.src.trim());
+  return [...new Set(sources)].map((src) =>
+    finding('blocking-script', pageUrl, `head script without async or defer: ${src}`, 'warning'),
+  );
+}
+
+function hasAccessibleName(attrs, content) {
+  const filled = (value) => Boolean(value?.trim());
+  return (
+    filled(attrs['aria-label']) ||
+    filled(attrs['aria-labelledby']) ||
+    filled(attrs.title) ||
+    textRuns(content).some(Boolean) ||
+    tagAttrs(content).some((inner) => filled(inner['aria-label'])) ||
+    findTags(content, 'img').some((img) => filled(img.attrs.alt))
+  );
+}
+
+export function checkLinkName(html, pageUrl) {
+  const clean = stripRawText(html);
+  const contents = new Map(
+    findElements(clean, (name) => name === 'a').map((el) => [
+      el.start,
+      clean.slice(el.innerStart, el.innerEnd),
+    ]),
+  );
+  const seen = new Set();
+  const findings = [];
+  for (const { index, attrs } of anchorHrefs(html)) {
+    const href = attrs.href.trim();
+    const content = contents.get(index);
+    if (content === undefined || seen.has(href) || hasAccessibleName(attrs, content)) continue;
+    seen.add(href);
+    findings.push(finding('link-name', pageUrl, `link with no accessible name: ${href}`, 'warning'));
+  }
+  return findings;
+}
+
+function webflowStylesheets(html, pageUrl) {
+  const sheets = [];
+  for (const { attrs } of linksWithRel(html, 'stylesheet')) {
+    try {
+      const url = new URL(attrs.href.trim(), pageUrl);
+      if (WEBFLOW_ASSET_HOST.test(url.hostname))
+        sheets.push({ href: url.href, file: url.pathname.split('/').pop().toLowerCase() });
+    } catch {
+      DEBUG && console.log(`invalid stylesheet URL ${attrs.href}`);
+    }
+  }
+  return sheets;
+}
+
+export function checkMinify(html, pageUrl) {
+  return webflowStylesheets(html, pageUrl)
+    .filter(({ file }) => !file.endsWith('.min.css'))
+    .map(({ href }) => finding('minify', pageUrl, `stylesheet is not minified: ${href}`, 'warning'));
+}
+
+export function checkFontFormat(html, pageUrl) {
+  const families = [];
+  for (const [, css] of stripComments(html).matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) {
+    const blocks = css.replace(/\/\*[\s\S]*?\*\//g, ' ').match(/@font-face\s*\{[^}]*\}/gi) ?? [];
+    for (const block of blocks) {
+      if (!/url\(/i.test(block) || /woff2/i.test(block)) continue;
+      const family = /font-family\s*:\s*['"]?([^;'"}]+)/i.exec(block);
+      families.push(family ? family[1].trim() : 'unnamed');
+    }
+  }
+  return [...new Set(families)].map((family) =>
+    finding('font-format', pageUrl, `@font-face "${family}" has no woff2 source`, 'warning'),
+  );
+}
+
 export function auditPage(html, url, rawConfig = {}, strict = false) {
   const config = normalizeConfig(rawConfig);
   return [
@@ -563,7 +751,192 @@ export function auditPage(html, url, rawConfig = {}, strict = false) {
     ...checkUngatedAnalytics(html, url),
     ...checkMetaLengths(html, url),
     ...checkLazyAboveFold(html, url),
+    ...checkHtmlLang(html, url, config.locales),
+    ...checkIcons(html, url),
+    ...checkEmptyLink(html, url),
+    ...checkDuplicateIds(html, url),
+    ...checkH1Count(html, url),
+    ...checkCanonical(html, url, config.domain),
+    ...checkBlockingScript(html, url),
+    ...checkLinkName(html, url),
+    ...checkMinify(html, url),
+    ...checkFontFormat(html, url),
   ];
+}
+
+function robotsRules(text, agent) {
+  const groups = [];
+  let current = null;
+  for (const line of text.split(/\r?\n/)) {
+    const match = /^\s*([a-z-]+)\s*:\s*(.*?)\s*$/i.exec(line.split('#')[0]);
+    if (!match) continue;
+    const field = match[1].toLowerCase();
+    if (field === 'user-agent') {
+      if (!current || current.rules.length) {
+        current = { agents: [], rules: [] };
+        groups.push(current);
+      }
+      current.agents.push(match[2].toLowerCase());
+    } else if (current && (field === 'allow' || field === 'disallow')) {
+      current.rules.push({ field, value: match[2] });
+    }
+  }
+  const forAgent = (name) => groups.filter((group) => group.agents.includes(name));
+  const own = forAgent(agent.toLowerCase());
+  return (own.length ? own : forAgent('*')).flatMap((group) => group.rules);
+}
+
+function isRobotsBlocked(text, agent) {
+  const rules = robotsRules(text, agent).filter((rule) => rule.value === '/');
+  return (
+    rules.some((rule) => rule.field === 'disallow') &&
+    !rules.some((rule) => rule.field === 'allow')
+  );
+}
+
+function fileProblem(page) {
+  return page.error ?? (page.statusCode === 200 ? null : `HTTP ${page.statusCode}`);
+}
+
+function fileFindings(check, page) {
+  const problem = fileProblem(page);
+  return problem
+    ? [finding(check, page.url, `${new URL(page.url).pathname} not available: ${problem}`, 'warning')]
+    : [];
+}
+
+async function auditHttps(base, get) {
+  const page = await get(`http://${base.host}/`);
+  if (page.error) return [finding('https-redirect', page.url, `http fetch failed: ${page.error}`)];
+  return new URL(page.finalUrl).protocol === 'https:'
+    ? []
+    : [finding('https-redirect', page.url, `http ends on ${page.finalUrl}, not https`)];
+}
+
+async function auditDefaultDomain(base, config, get) {
+  const domain = config.domain ?? bareDomain(base.hostname);
+  const pages = await Promise.all([get(`https://${domain}/`), get(`https://www.${domain}/`)]);
+  const failed = pages.find((page) => page.error);
+  if (failed)
+    return [finding('default-domain', failed.url, `fetch failed, so hosts can't converge: ${failed.error}`)];
+  const [apexHost, wwwHost] = pages.map((page) => new URL(page.finalUrl).hostname);
+  if (apexHost !== wwwHost)
+    return [
+      finding('default-domain', base.href, `${domain} ends on ${apexHost} but www.${domain} ends on ${wwwHost}`),
+    ];
+  return apexHost === domain && !config.apexDefault
+    ? [
+        finding(
+          'default-domain',
+          base.href,
+          `both hosts end on the apex ${domain}; use www, or set apexDefault in the config`,
+          'warning',
+        ),
+      ]
+    : [];
+}
+
+async function auditFrameHeaders(base, get) {
+  const page = await get(base.href);
+  if (page.error)
+    return [finding('frame-headers', page.url, `fetch failed: ${page.error}`, 'warning')];
+  const headers = page.headers;
+  return headers['x-frame-options'] || /frame-ancestors/i.test(headers['content-security-policy'] ?? '')
+    ? []
+    : [finding('frame-headers', page.url, 'no x-frame-options or frame-ancestors header', 'warning')];
+}
+
+function auditRobots(robots, text) {
+  const missing = fileFindings('robots', robots);
+  if (missing.length) return missing;
+  return isRobotsBlocked(text, '*')
+    ? [finding('robots', robots.url, 'robots.txt disallows / for all crawlers')]
+    : [];
+}
+
+function auditRobotsAi(robots, text) {
+  return AI_BOTS.filter((bot) => isRobotsBlocked(text, bot)).map((bot) =>
+    finding('robots-ai', robots.url, `robots.txt blocks ${bot} from /`, 'warning'),
+  );
+}
+
+async function auditSitemap(robots, text, get) {
+  const findings = fileFindings('sitemap', await get('/sitemap.xml'));
+  if (!/^\s*sitemap:\s*\S*\/sitemap\.xml\s*$/im.test(text))
+    findings.push(finding('sitemap', robots.url, 'robots.txt has no Sitemap: line naming /sitemap.xml', 'warning'));
+  return findings;
+}
+
+async function auditStagingIndex(config, get) {
+  if (!config.stagingUrl) return [];
+  const page = await get('/robots.txt', config.stagingUrl);
+  const problem = page.error ?? (page.statusCode >= 500 ? `HTTP ${page.statusCode}` : null);
+  if (problem)
+    return [finding('staging-index', page.url, `staging robots.txt not read: ${problem}`, 'warning')];
+  return isRobotsBlocked(page.statusCode === 200 ? page.html : '', '*')
+    ? []
+    : [finding('staging-index', page.url, 'staging robots.txt allows crawling; turn off subdomain indexing')];
+}
+
+function redirectEnd(url) {
+  return `${url.origin}${normalizePath(url.pathname)}${url.search}`;
+}
+
+async function auditRedirect(base, get, { from, to }) {
+  const page = await get(from);
+  try {
+    if (page.error) throw new Error(page.error);
+    return redirectEnd(new URL(page.finalUrl)) === redirectEnd(new URL(to, base))
+      ? []
+      : [finding('redirects', page.url, `${from} ends on ${page.finalUrl}, not ${to}`)];
+  } catch (err) {
+    return [finding('redirects', page.url, `${from} to ${to} not verified: ${err.message}`)];
+  }
+}
+
+function safeGetter(fetch, base) {
+  return async (path, from = base) => {
+    let url = String(path);
+    try {
+      url = new URL(path, from).href;
+      return { html: '', headers: {}, finalUrl: url, ...(await fetch(url)), url };
+    } catch (err) {
+      return { url, error: err.message };
+    }
+  };
+}
+
+export async function auditSite({
+  baseUrl,
+  config: rawConfig = {},
+  fetch = (url) => fetchPage(url, new Map()),
+}) {
+  try {
+    const config = normalizeConfig(rawConfig);
+    const base = new URL(baseUrl);
+    const get = safeGetter(fetch, base);
+    const robots = await get('/robots.txt');
+    const text = fileProblem(robots) ? '' : robots.html;
+    const customDomainChecks = STAGING_HOST.test(base.hostname)
+      ? []
+      : [
+          auditHttps(base, get),
+          auditDefaultDomain(base, config, get),
+          auditRobots(robots, text),
+          auditRobotsAi(robots, text),
+        ];
+    const groups = await Promise.all([
+      ...customDomainChecks,
+      auditFrameHeaders(base, get),
+      auditSitemap(robots, text, get),
+      get('/llms.txt').then((page) => fileFindings('llms', page)),
+      auditStagingIndex(config, get),
+      ...config.redirects.map((entry) => auditRedirect(base, get, entry)),
+    ]);
+    return groups.flat();
+  } catch (err) {
+    return [finding('site-audit', String(baseUrl), `site checks did not finish: ${err.message}`, 'warning')];
+  }
 }
 
 async function fetchOnce(fetch, url) {
@@ -633,6 +1006,7 @@ export async function run({
   fetch = (url) => fetchPage(url, new Map()),
   checks = (html, url, { config, strict: isStrict }) => auditPage(html, url, config, isStrict),
   locale = null,
+  siteAudit = null,
 }) {
   const config = normalizeConfig(rawConfig);
   if (locale && !config.locales.some((l) => l.code === locale)) {
@@ -656,6 +1030,7 @@ export async function run({
     urls.map((url) => auditUrl({ url, load, checks, config, strict, baseUrl })),
   );
   const findings = results.flatMap((result) => result.findings ?? []);
+  if (siteAudit) findings.push(...(await siteAudit({ baseUrl, config, fetch })));
   const errors = [];
   for (const { error } of results) {
     if (error && !errors.some((seen) => seen.url === error.url)) errors.push(error);
@@ -718,6 +1093,7 @@ export async function main(argv) {
     config,
     strict: args.strict,
     locale: args.locale,
+    siteAudit: auditSite,
   });
   printReport(result);
   return result.exitCode;

@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Use this agent to review code changes for pattern violations, Webflow gotchas, accessibility issues, and Barba lifecycle correctness. Read-only — never modifies files. Returns a structured PASS / WARN / FAIL verdict.
-model: sonnet
+model: opus
 tools:
   - Read
   - Glob
@@ -60,10 +60,11 @@ You are a senior code reviewer for Webflow creative builds with custom JavaScrip
   on assumption alone
 
 ### Spacing compliance
-- [ ] No `margin-top` or `margin-bottom` used for vertical rhythm between components —
-  Client First spacer divs only
+- [ ] No ad-hoc `margin-top` or `margin-bottom` for vertical rhythm between components —
+  Client First v3 spacing only (section padding via variables, `gap-[size]`, or one-class
+  `margin-*`/`padding-*` utilities); no `spacer-*` divs
 - [ ] Absolute placements have a `/* manual placement — verify against design */` comment
-- [ ] No custom spacing variables or classes created if a Client First spacer covers it
+- [ ] No custom spacing variables or classes created if a Client First spacing utility covers it
 
 ### Performance
 - [ ] No layout thrashing (reads and writes batched, or use `requestAnimationFrame`)

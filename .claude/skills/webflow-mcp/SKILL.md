@@ -103,6 +103,30 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
 - Passing CSS for a class that already exists creates a duplicate `<name>-1` class. Send classes by name only; style existing classes separately.
 - `var()` inside a gradient is frozen to its current value. Set gradients that use variables in the Designer.
 - An empty boolean `open` attribute is dropped. Write `open="open"`.
+- Tags with no native Webflow element (`<details>`, `<summary>`, anything that comes in
+  as type `DOM`) get **every** HTML attribute copied into Settings › Attributes,
+  `class` included, on top of the real class (Rolfing FAQ `faq_item`/`faq_summary`,
+  28 Oct 2026). Native tags (div, h3, a) don't. The read-back shows it as
+  `"attributes":{"class":…}` next to `styleNames`, so check it. After every insert, run
+  `query_elements` with `element_filter: { attribute_name: "class" }`; any match is a
+  fail. Fix: `remove_attribute` `class` (add the class with `set_style` first if
+  `styleNames` is empty), then re-run the query to zero.
+- **Native first.** Raw HTML through `data_whtml_builder` only for tags Webflow has no
+  element for (`details`, `summary`, `dialog`), one insert per such element. Everything
+  else (div, section, headings, links, lists) goes in as plain native markup in its own
+  insert with no attributes, then gets attributes with `set_attributes`. A `div` carrying
+  attributes in the same paste can come in as a custom `DOM` element (Rolfing FAQ answer
+  wrapper, Oct 2026). Every custom element must be named in the spec.
+- `set_attributes` and `set_settings › attributes` on a freshly inserted element inside a
+  collection list item fail with `MPS rejected update … [Conflict] … component map` (5 Nov
+  2026, three tries). Add the attributes before moving the element into the list, or hand
+  it to Will in the Designer; don't leave a half-swapped element.
+- `query_elements` reads the page you pass as `pageId`, not the Designer's open page. Its
+  `tag` filter only matches Block/DOM elements; filter headings by `type: "Heading"`.
+- Collection list `source` can't be set through `set_settings` (returns success, writes
+  nothing), and a list sourced from a multi-reference field still reads back as the plain
+  collection ID with its old filters. Verify a list source on the published page (item
+  count), not through `get_settings`.
 
 **Links**
 - Use native link settings (Link → Page, anchors Page → Section). Never a custom `href` attribute or a URL-typed `/path`: only Page links are localized, so URL links on a secondary locale point back at the primary.

@@ -19,7 +19,9 @@
     { match: /^\/used-cars\/fuel\/[^/]+\/?$/, modules: ['fuel-template.js'] },
     { match: /^\/used-cars\/promotions\/[^/]+\/?$/, modules: ['promotions-template.js'] },
     { match: /^\/used-cars\/models\/?$/, modules: ['all-models.js'] },
-    { match: /^\/blog\/?$/, modules: ['blog.js'] }
+    { match: /^\/blog\/?$/, modules: ['blog.js'] },
+    { match: /^\/blog\/[^/]+\/?$/, modules: ['blog-post.js'] },
+    { match: /^\/reserve\/?$/, modules: ['reserve.js'] }
   ];
   var DEP_POLL_MS = 50;
   var DEP_TIMEOUT_MS = 3000;

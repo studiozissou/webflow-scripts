@@ -1,4 +1,4 @@
-// Carsa vehicle detail page behaviour moved out of the Webflow template body: UTM links, finance calculator and config, APR painter, valuation and search-similar links, form UTMs, equal-height cards, schema status, SVG draw-line and similar-car links, reading CMS values from window.__CARSA_VDP.
+// Carsa vehicle detail page behaviour moved out of the Webflow template body: footer WhatsApp prefill, #car-info store sentence, cold-banner carousel, UTM links, finance calculator and config, APR painter, valuation and search-similar links, form UTMs, equal-height cards, schema status, SVG draw-line and similar-car links, reading CMS values from window.__CARSA_VDP.
 (function ($) {
   var H = window.__CARSA;
   if (!H) {
@@ -6,7 +6,7 @@
     return;
   }
   var DEBUG = false;
-  var KEYS = ['price', 'registrationDate', 'odometer', 'vrm', 'financeType', 'depositContribution', 'locationName', 'isStorageLocation', 'makeName', 'modelName', 'status'];
+  var KEYS = ['price', 'registrationDate', 'odometer', 'vrm', 'financeType', 'depositContribution', 'locationName', 'isStorageLocation', 'makeName', 'modelName', 'status', 'financeTerm'];
   var config = window.__CARSA_VDP;
   if (!config) {
     DEBUG && console.log('vdp.js: window.__CARSA_VDP missing');
@@ -15,6 +15,132 @@
   }
   var VDP = {};
   for (var k = 0; k < KEYS.length; k++) VDP[KEYS[k]] = config[KEYS[k]] == null ? '' : String(config[KEYS[k]]);
+
+  (function () {
+    H.onReady(function () {
+      var wa = document.getElementById('footer_open-whatsapp');
+      if (!wa) return;
+      var el = document.querySelector('[data-button="booking-options"]');
+      var vrm = VDP.vrm.trim();
+      if (el) {
+        var href = el.getAttribute('href') || '';
+        var parts = href.split('?');
+        if (parts[1]) {
+          vrm = new URLSearchParams(parts[1]).get('vrm') || vrm;
+        }
+      }
+      var msg = vrm
+        ? 'Hi, please tell me more about ' + vrm.toUpperCase()
+        : 'Hi, I have a question about a car on your website';
+      wa.href = 'https://wa.me/442046322989?text=' + encodeURIComponent(msg);
+    });
+  })();
+
+  (function () {
+    H.onReady(function () {
+      const container = document.getElementById('car-info');
+      if (!container) return;
+      const carLocation = VDP.locationName.trim();
+      const firstSentence = carLocation === 'Storage'
+        ? "This car is fully inspected and in our storage facility."
+        : carLocation === ''
+          ? "This car is fully inspected and ready to view."
+          : `This car's currently in our ${carLocation} store.`;
+      container.textContent = `${firstSentence} We can move the vehicle to any of our 10 stores nationwide. Pay a refundable £39 reservation fee, then choose your store and test-drive time. After you've test-driven, we'll refund your fee or deduct it from the purchase if you buy.`;
+    });
+  })();
+
+  (function () {
+    if (window.__CARSA_COLD_BANNER) return;
+    window.__CARSA_COLD_BANNER = true;
+
+    const loadCSS = (href) => {
+      if ([...document.styleSheets].some(s => s.href === href)) return Promise.resolve();
+      return new Promise((r, rej) => {
+        const l = document.createElement("link");
+        l.rel = "stylesheet";
+        l.href = href;
+        l.onload = r;
+        l.onerror = rej;
+        document.head.appendChild(l);
+      });
+    };
+
+    const loadJS = (src) => {
+      if (window.Swiper) return Promise.resolve();
+      return new Promise((res, rej) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.async = true;
+        s.onload = res;
+        s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    };
+
+    H.onReady(function () {
+      const banner = document.querySelector(".section_vdp-cold-banner");
+      const usp = document.querySelector('section.section_usp-carousel');
+      const count = document.querySelectorAll('[data-count="make-model"]').length;
+
+      if (count < 3) {
+        if (banner) banner.style.display = "none";
+        return;
+      }
+
+      const utm = new URLSearchParams(location.search).get("utm_source")?.toLowerCase() || "";
+
+      const validSources = [
+        "autotrader.co.uk",
+        "google_vehicle_ads",
+        "chat",
+        "google",
+        "ebaymotorsgroup",
+        "theaa.com",
+        "carwow.co.uk",
+        "cargurus.co.uk"
+      ];
+
+      const isMatch = validSources.includes(utm);
+
+      if (banner) banner.style.display = "none";
+
+      if (!isMatch || !banner) return;
+
+      if (usp) usp.style.display = "none";
+
+      if (usp && usp.parentNode) usp.parentNode.insertBefore(banner, usp.nextSibling);
+
+      banner.style.display = "flex";
+
+      Promise.all([
+        loadCSS("https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"),
+        loadJS("https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js")
+      ]).then(() => {
+        new window.Swiper("#cold-banner-carousel", {
+          slidesPerView: "auto",
+          centeredSlides: true,
+          grabCursor: true,
+          slideToClickedSlide: true,
+          loop: true,
+          loopAdditionalSlides: 0,
+          speed: 250,
+          autoplay: { enabled: false, delay: 1100, pauseOnMouseEnter: true },
+          wrapperClass: "vdp-cold-banner_list",
+          slideClass: "vdp-cold-banner_item",
+          observer: true,
+          observeParents: true,
+          touchRatio: 1,
+          freeMode: { enabled: false, sticky: true },
+          lazy: { enabled: true },
+          navigation: { nextEl: "#cold-banner-right", prevEl: "#cold-banner-left" },
+          breakpoints: { 992: { centeredSlides: false, speed: 350, autoplay: { enabled: true, delay: 1100 } } }
+        });
+      }).catch(function () {
+        if (window.DD_LOGS) window.DD_LOGS.logger.error('vdp.js: cold banner Swiper failed to load or start');
+      });
+    });
+  })();
 
   (function () {
     H.onLoad(function(){
@@ -216,7 +342,10 @@
           if (VDP.financeType === "HP") {
             defaultTerm = document.getElementById("60");
           } else {
-            defaultTerm = document.getElementById(String(cfg.defaultTerm));
+            var storedTerm = document.getElementById(String(parseInt(VDP.financeTerm, 10)));
+            defaultTerm = (storedTerm && storedTerm.type === 'radio' && storedTerm.getAttribute('data-name') === 'finance-term')
+              ? storedTerm
+              : document.getElementById(String(cfg.defaultTerm));
           }
           FIN.setRadio(defaultTerm);
 
@@ -665,6 +794,7 @@
 
         const startMode = (wrapper.getAttribute('data-svg-start') || 'auto').toLowerCase();
         const totalDur  = Math.max(0.001, parseFloat(wrapper.getAttribute('data-svg-duration')) || 2);
+        const manual = !!wrapper.closest('.details_radio-field');
 
         const svgs = Array.from(wrapper.querySelectorAll('svg'));
         if (!svgs.length) return;
@@ -699,6 +829,8 @@
 
           const driver = gsap.to(tl, { progress: 1, duration: totalDur, ease: "power1.inOut", paused: true });
           svg.__svgDrawPlay = () => driver.pause(0).play();
+          svg.__svgDrawReset = () => driver.pause(0);
+          if (manual) return;
 
           const playNow = () => gsap.delayedCall(0.2, () => driver.play());
           const playAfterFirstScroll = () => {
@@ -866,8 +998,19 @@
       }
 
       function playSquiggle($label) {
-        const svg = $label.find('[data-svg="draw-line"] svg')[0];
-        if (svg && svg.__svgDrawPlay) svg.__svgDrawPlay();
+        const wrap = $label.find('[data-svg="draw-line"]')[0];
+        const svg = wrap && wrap.querySelector('svg');
+        if (!svg || !svg.__svgDrawPlay) return;
+        $(wrap).css({ transition: 'none', opacity: 1 });
+        svg.__svgDrawPlay();
+      }
+
+      function resetSquiggle($label) {
+        const wrap = $label.find('[data-svg="draw-line"]')[0];
+        const svg = wrap && wrap.querySelector('svg');
+        if (!svg || !svg.__svgDrawReset) return;
+        $(wrap).css({ transition: 'opacity 200ms ease', opacity: 0 });
+        setTimeout(() => { if (wrap.style.opacity === '0') svg.__svgDrawReset(); }, 200);
       }
 
       $('input[type="radio"][name="Book"]').on('change', function () {
@@ -878,11 +1021,11 @@
         }).get();
 
         updateCTAs(option);
-        playSquiggle($(this).closest('.details_radio-field'));
 
         $allLabels.forEach(label => {
           const $label = $(label);
           const isSelected = $label.find('input[type="radio"]').prop('checked');
+          isSelected ? playSquiggle($label) : resetSquiggle($label);
           isSelected ? showContent($label, true) : hideContent($label);
           $label.toggleClass('is-list-active', isSelected);
         });
@@ -900,6 +1043,7 @@
       $('input[type="radio"][name="Book"]').each(function () {
         const $label = $(this).closest('.details_radio-field');
         $label.toggleClass('is-list-active', this.checked);
+        this.checked ? playSquiggle($label) : $label.find('[data-svg="draw-line"]').css({ transition: 'none', opacity: 0 });
         if (!this.checked) $label.find('.details_radio_content').css({ display: 'none' });
       });
 

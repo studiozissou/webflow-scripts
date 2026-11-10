@@ -1,4 +1,4 @@
-// Acceptance tests for carsa-v1.3.0: one helpers.js loads first on every page, every v1.2.0 module still runs from the v1.3 folder, every lead link carries the same first-touch attribution, and the review fixes (car-redirect pre-gate and VRM check, FAQ digit slug, fuel encoding, models meta and @graph order, VDP 404 warn) hold.
+// Acceptance tests for carsa-v1.3.0: one helpers.js loads first on every page, every v1.2.6 module still runs from the v1.3 folder, every lead link carries the same first-touch attribution, and the review fixes (car-redirect pre-gate and VRM check, FAQ digit slug, fuel encoding, models meta and @graph order, VDP 404 warn, /reserve click sanitising, isolated blog tooltips) hold.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -24,6 +24,8 @@ const ENTRIES = [
   { entry: '/used-cars/promotions/', modules: ['promotions-template.js', 'animations.js'] },
   { entry: '/used-cars/models', modules: ['all-models.js', 'animations.js'] },
   { entry: '/blog', modules: ['blog.js', 'animations.js'] },
+  { entry: '/blog/', modules: ['blog-post.js'] },
+  { entry: '/reserve', modules: ['reserve.js'] },
 ];
 
 const LEAD_LINK_SELECTORS = [
@@ -93,7 +95,7 @@ test.describe('carsa-release-v1-3-0', () => {
       for (const name of modules) expect(await page.locator(moduleSel(name)).count(), name).toBe(1);
     });
 
-    test(`v130-ran-unchanged on ${entry}: the same v1.2.0 modules still report that they ran`, async ({ page, request }) => {
+    test(`v130-ran-unchanged on ${entry}: the same v1.2.6 modules still report that they ran`, async ({ page, request }) => {
       await loadPage(page, await resolve(request, entry));
       const ran = await page.evaluate(() => window.__CARSA_RAN || []);
       expect(ran).toEqual(expect.arrayContaining(modules));
@@ -208,6 +210,30 @@ test.describe('carsa-release-v1-3-0', () => {
       return { faqAlive, graphRefs };
     });
     if (!state.faqAlive) expect(state.graphRefs).toBe(0);
+  });
+
+  test('reserve-sanitised-on-click: a value set without an input event is cleaned before the VDP opens', async ({ page, context }) => {
+    await loadPage(page, '/reserve');
+    await context.route('**/vehicles/used/ab12cde', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<html></html>' }));
+    await page.locator('#crw-vrm-input').evaluate((el) => { el.value = 'ab/12 ?c-de'; });
+    const popup = page.waitForEvent('popup');
+    await page.locator('.crw-btn').click();
+    expect((await popup).url()).toBe('https://www.carsa.co.uk/vehicles/used/ab12cde');
+  });
+
+  test('blog-tooltip-isolated: a malformed tooltip does not stop the others being set up', async ({ page, request }) => {
+    const path = await resolve(request, '/blog/');
+    await page.addInitScript(() => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const broken = document.createElement('div');
+        broken.innerHTML = '<div class="tooltip1_element-wrapper"></div>';
+        document.body.prepend(broken);
+      });
+    });
+    await loadPage(page, path);
+    const state = await page.$$eval('.tooltip1_element-wrapper', (els) => els.slice(1).map((el) => el.dataset.relumeTooltipSetup || ''));
+    test.skip(!state.length, 'post has no tooltip');
+    expect(state.every((v) => v === '1')).toBe(true);
   });
 
   test('vdp-404-no-warn: a dead vehicle URL redirects to /used-cars without loading vdp.js or warning', async ({ page }) => {

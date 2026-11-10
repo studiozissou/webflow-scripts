@@ -21,7 +21,7 @@ Open the Google Rich Results Test in Chrome, run validation against a live URL, 
 navigate_page → https://search.google.com/test/rich-results?url=<URL-encoded-page-URL>
 ```
 
-URL-encode the full page URL (e.g. `https%3A%2F%2Fwww.carsa.co.uk%2F`).
+URL-encode the full page URL (e.g. `https%3A%2F%2Fwww.example.com%2F`).
 
 ### 2. Wait for results
 
@@ -109,6 +109,7 @@ When the test passes with no errors:
 
 ## Gotchas
 
+- **Never test FAQ here.** Google retired FAQ rich results on 7 May 2026 (secondary sources). `JSON.parse` `FAQPage` JSON-LD instead, skip this test on a page whose only JSON-LD is `FAQPage`, and ignore any FAQ line in the results of a page tested for other types.
 - **CMS template schema fails silently.** A malformed Webflow binding token renders as an
   empty string rather than erroring, so the Rich Results Test can report a clean pass on a
   template whose fields are all blank. Always test a **real published CMS item URL**, not

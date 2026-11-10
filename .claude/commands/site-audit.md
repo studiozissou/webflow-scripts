@@ -58,7 +58,8 @@ Write to `client.md`. Confirm before proceeding.
    - Locale configuration
    - Any typos noted during collection/page scan (record in `typoNote` field)
    - Whether taxonomy-only collections have unnecessary template pages (`needsTemplatePage` field)
-3. Confirm both URLs with user before proceeding
+3. Read every `MCP` row of `.claude/skills/webflow-launch/references/launch-audit-checklist.md`, following its **MCP reads** section. With the fallbacks below, these rows are **Not run**.
+4. Confirm both URLs with user before proceeding
 
 ### Fallback: Chrome DevTools MCP
 
@@ -106,6 +107,13 @@ If present, or if the user provides one:
    with `--semrush-counts` and log each disagreement from the report's Parity section as a gap
    to investigate, naming which side is wrong once checked.
 
+### SEMRush MCP (when no CSV was supplied)
+
+Follow the checklist's **SEMrush evidence** section, within the unit budget in `.claude/agents/seo.md`.
+Treat the data like a CSV: steps 3-5 above apply. It adds evidence and never replaces a Guard or
+MCP check, so those still run and appear in the report. No project, no data or no units → record
+**Not run** and carry on. Report any `no_api_units`, and don't create a project without asking.
+
 ### Asset CSV (optional)
 
 Ask: "Do you have the asset bandwidth CSV from Webflow Settings → Hosting → Usage? (optional — enables the Asset Optimisation section)."
@@ -148,6 +156,21 @@ Custom code embeds are not exposed by Webflow MCP. Fallback chain:
    (head + body) + any per-page custom code on key pages.
 
 Record the code inventory for Stream C.
+
+### Checklist and launch-guard (before parallelisation)
+
+Streams A and B run from `.claude/skills/webflow-launch/references/launch-audit-checklist.md`, the source for its items. Stream B takes the SEO and AEO rows; Stream A takes every other row.
+
+Run launch-guard once and pass its output to both streams:
+
+```bash
+node tools/webflow/launch-guard.js <live-url> --client <client>
+```
+
+If the client has no `launch.config.json`, write a minimal one (`domain`, `locales`) to `audits/launch-guard.config.json` and pass `--config <path>` instead. Findings are audit findings, not launch blockers. Exit 2 → the `Guard` rows are **Not run**.
+
+- Rows this audit can't reach, including those needing Designer access, are **Not run**, never a pass. Each stream lists them by item number in a `Not run` section, and the report carries them over.
+- `H` rows are maintainability findings.
 
 ### Parallelisation gate
 
@@ -273,7 +296,7 @@ For ALL checks involving `<head>` metadata or heading tag counts, you MUST use P
 
 WebFetch is acceptable ONLY for reading body content (e.g. checking text quality, link hrefs).
 
-**SEMRush priority rule:** If a SEMRush site-audit CSV was parsed in Phase 2, use it as the
+**SEMRush priority rule:** If SEMRush site-audit data was read in Phase 2 (CSV or MCP), use it as the
 primary source of truth for heading counts, meta descriptions, structured data errors, and
 other technical SEO checks. Only flag issues that SEMRush confirms OR that Chrome DevTools
 verifies via `evaluate_script`. Do NOT report WebFetch-only findings for these checks — they
@@ -283,32 +306,28 @@ SEMRush.
 
 | Check | What to look for |
 |---|---|
-| Meta titles | Present and unique on all pages |
-| Meta descriptions | Present on all pages |
+| Meta titles | Present and unique on all pages; aim for 50-60 characters (warning only) |
+| Meta descriptions | Present on all pages; aim for 150-160 characters (warning only) |
 | OG title + image | Set on key pages |
 | Canonical tags | Present, no duplicates |
 | H1 tags | Exactly one per page (watch for third-party widgets injecting extra H1s) |
 | Heading hierarchy | No jumps (H2→H4) |
 | Schema.org JSON-LD | Present on homepage, type check (Organization vs Product default) |
 | JSON-LD coverage | Count pages with/without across site |
-| Schema gaps | Flag missing: Article, Person, JobPosting, BreadcrumbList, Organization. For `FAQPage`, see the eligibility rule below |
+| Schema gaps | Flag missing: Article, Person, JobPosting, BreadcrumbList, Organization. For `FAQPage`, see the rule below |
 | Sitemap completeness | All published pages included |
 | `llms.txt` | Present at root — recommend if absent |
 | Hreflang | Present if multi-locale, check for conflicts |
 | Broken external links | Flag pages with broken outbound links |
 | Crosslink opportunities | Body copy that mentions another page's topic without linking to it (see below) |
 
-**FAQPage eligibility rule.** Since August 2023, Google shows FAQ rich results only for
-authoritative government and health sites. For every other site — SaaS, ecommerce, agency,
-professional services — adding `FAQPage` markup will **not** produce expandable Q&As in search
-results, and a task justified that way is a false promise. This has reached a client in a past
-audit.
+**FAQPage rule.** Google retired FAQ rich results on 7 May 2026 for all sites (secondary sources;
+Google's page couldn't be read). Never promise one: a task justified that way is a false promise,
+and this has reached a client in a past audit.
 
-`FAQPage` markup is still worth recommending on a commercial site, but only on its real merits:
-AI-citation extraction and page-type signal. So flag a missing `FAQPage` when the site is a
-government or health domain, **or** when the justification is limited to those two grounds. Never
-write "so Google can display them as expandable Q&As in search results" for a commercial site. If
-the whole value of the task rests on rich results, drop the task.
+`FAQPage` is optional, in JSON-LD, and a missing one is not a defect. Its value is AI extraction
+and page-type signal, so recommend it only on those grounds. If the whole value of the task rests
+on rich results, drop the task.
 
 **Crosslink scan.** Run it as `/sme-audit` Phase 2 step 8 describes: phrase map per page, body copy only, repeated blocks and existing links skipped, a 20-row spot-check before reporting. Save `research/crosslink-opportunities-YYYY-MM-DD.csv` and summarise totals by page type in `audits/seo.md`. In the report, each page-type group becomes a P-band task (`SEO`), plus one task to re-run the scan after new pages go live. Phrases with no page to link to are content gaps.
 
@@ -346,7 +365,7 @@ top traffic pages (if analytics available) or the 2-3 most linked pages.
 
 | Check | What to look for |
 |---|---|
-| Schema (A1-A4) | JSON-LD present, FAQPage on Q&A content, HowTo on tutorials |
+| Schema (A1-A4) | JSON-LD present, FAQPage optional on Q&A content (missing is not a defect), HowTo on tutorials |
 | Answer structure (B5-B10) | Answer-first lead, question H2s, paragraph and section length, list intros, active voice |
 | Freshness (C11-C13) | Visible "last updated" timestamp, recent update, no time-sensitive hedge words |
 | Authority (D14-D17) | Original data/stats, author/entity signals, external citations, cite-magnet archetype |
@@ -477,7 +496,7 @@ Known-stale claims to check for explicitly before shipping any report:
 
 | Claim | Status |
 |---|---|
-| FAQ schema → expandable Q&As in Google results | **False** for non-gov/health since Aug 2023 |
+| FAQ schema → expandable Q&As in Google results | **False** — retired for all sites on 7 May 2026 (secondary sources) |
 | HowTo schema → rich results | **False** — removed from Google results in 2023 |
 | Consent Mode absent because tags fire pre-consent | **False** — that is correct denied-mode behaviour |
 | `llms.txt` required for AI citation | **False** — no engine requires it (see `ai-search-aeo` mythbusting) |
@@ -531,6 +550,10 @@ Present the narrative to the user for review before proceeding.
 ---
 
 ## Phase 7 — Client-facing report (gated)
+
+Whichever path runs, write the executive summary and the owner tasks 80% of the way to
+ASD-STE100 (Simplified Technical English): sentences of about 15 words, active voice, one
+instruction per sentence, one word for one thing.
 
 After internal report + narrative are written, present the report-type gate:
 
@@ -668,9 +691,11 @@ If yes:
 25. Lighthouse audits cover all static pages, sample 5 per CMS collection, and fall back to nav-linked pages when >20 unique pages
 26. Consent Mode verdict comes from `google_tag_data.ics` / `gtag('consent','default',…)` read in a clean browser context — never inferred from script load order. `NEEDS VERIFY` when no browser is available
 27. Non-Google trackers (Meta, TikTok, Hotjar, Intercom, LinkedIn, Zoho) are checked for pre-consent cookies and reported as a finding separate from Consent Mode
-28. No `FAQPage` task is justified on rich-results grounds for a non-gov/health site — but FAQPage recommended on AI-extraction / page-type-signal grounds is correct and should not be stripped
+28. No `FAQPage` task is justified on rich-results grounds and a missing `FAQPage` isn't reported as a defect — but FAQPage recommended on AI-extraction / page-type-signal grounds is correct and should not be stripped
 29. Every platform claim in a justification carries `[source, YYYY]`, is rewritten to rest on a site claim, is marked `NEEDS VERIFY`, or the task is dropped
 30. The client-facing report asserts nothing the internal report did not establish; humanizer has not strengthened any hedged claim
 31. Layer B ran through the `competitor-gap` skill, and module 4 was skipped when Layer D ran
 32. Layer D wrote `audits/backlinks-YYYY-MM-DD.md`, row lists stayed at 20 or under, and no disavow file was produced without sign-off
 33. Stream B wrote `research/crosslink-opportunities-YYYY-MM-DD.csv` after a 20-row spot-check, and each page-type group of crosslink opportunities is a P-band task
+34. Streams A and B ran from the launch checklist with launch-guard; unreached rows are listed as **Not run**, never as a pass, and `H` rows are maintainability findings
+35. SEMRush evidence came from the CSV or, when none was supplied, the MCP; missing evidence is recorded as **Not run**

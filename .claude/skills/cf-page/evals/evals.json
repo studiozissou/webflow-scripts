@@ -1,0 +1,57 @@
+{
+  "skill_name": "cf-page",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/cf-page coconut mtd-software --plan-only",
+      "expected_output": "A read-only Client First V3 plan for Coconut /mtd-software: the section map with one row per main-wrapper child (13 rows), page totals that match page-metrics.js on the saved element tree, a projected element count against the default 30% target, and no Designer writes.",
+      "files": [],
+      "expectations": [
+        "The section map has exactly 13 rows, one per main-wrapper child, in page order",
+        "The totals read 832 elements, max depth 17 and 141 distinct classes, matching page-metrics.js output on the saved tree",
+        "The CF ratio is reported as 31 of 141 classes (about 22%)",
+        "The row for '25 Features Section hide' has action drop",
+        "All four component instances are marked keep: Breadcrumbs Section as a row, Top Nav Bar and Footer outside main-wrapper, and 26 Price Table kept in place inside 25 Plans Section 2",
+        "Each rebuild row names a proposed Relume category or existing component and proposed Client First classes",
+        "The default target of 582 elements or fewer (70% of 832) is stated with the projected count",
+        "No write tool was called: data_whtml_builder, create_page, publish_site, data_style_tool and delete_element/remove_element are absent from the transcript",
+        "Webflow calls go to the webflow-2 slot",
+        "webflow_guide_tool is never called"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Give me the Client First section map for Coconut's /mtd-software page, no changes",
+      "expected_output": "The skill triggers in plan-only mode from a natural-language request, resolves /mtd-software (not mtd-software-2, the archive draft or child pages) and prints the same section map and totals as eval 1 without writing anything.",
+      "files": [],
+      "expectations": [
+        "The skill runs in plan-only mode without the --plan-only flag being typed",
+        "The page resolved is /mtd-software with page ID 686d341bc775236fb65fcfe7, not mtd-software-2 or an archive draft",
+        "The section map has exactly 13 rows",
+        "The totals read 832 elements, max depth 17 and 141 distinct classes, matching page-metrics.js",
+        "The row for '25 Features Section hide' has action drop",
+        "All four component instances (Top Nav Bar, Footer, Breadcrumbs Section, 26 Price Table) are marked keep",
+        "No write tool was called: data_whtml_builder, create_page, publish_site, data_style_tool and delete_element/remove_element are absent from the transcript",
+        "Webflow calls go to the webflow-2 slot",
+        "webflow_guide_tool is never called"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "How many elements could we save rebuilding getcoconut.com/mtd-software in Client First V3? Plan only.",
+      "expected_output": "A plan-only run that answers with the baseline (832 elements), the projected element count from the drafted sections, the saving against the 30% default target, and the section map that supports the number, with no writes.",
+      "files": [],
+      "expectations": [
+        "The answer leads with the baseline of 832 elements and a projected count, and states the saving as a number and a percentage",
+        "The projection is compared with the default target of 582 elements (30% fewer)",
+        "The section map has exactly 13 rows",
+        "The totals read 832 elements, max depth 17 and 141 distinct classes, matching page-metrics.js",
+        "The row for '25 Features Section hide' has action drop and its 73 elements count toward the saving",
+        "All four component instances (Top Nav Bar, Footer, Breadcrumbs Section, 26 Price Table) are marked keep",
+        "No write tool was called: data_whtml_builder, create_page, publish_site, data_style_tool and delete_element/remove_element are absent from the transcript",
+        "Webflow calls go to the webflow-2 slot",
+        "webflow_guide_tool is never called"
+      ]
+    }
+  ]
+}

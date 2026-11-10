@@ -1,0 +1,24 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://www.getcoconut.com/authors#collectionpage",
+      "url": "https://www.getcoconut.com/authors",
+      "name": "Our authors",
+      "description": "Meet the tax and accounting people who write Coconut's Knowledge Hub guides for sole traders, freelancers and landlords.",
+      "inLanguage": "en-GB",
+      "isPartOf": { "@id": "https://www.getcoconut.com/#website" },
+      "publisher": { "@id": "https://www.getcoconut.com/#organization" },
+      "breadcrumb": { "@id": "https://www.getcoconut.com/authors#breadcrumb" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.getcoconut.com/authors#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.getcoconut.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Authors", "item": "https://www.getcoconut.com/authors" }
+      ]
+    }
+  ]
+}

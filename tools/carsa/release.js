@@ -9,7 +9,7 @@ export const RELEASE_FILES = [
   'init.js', 'helpers.js', 'global.js', 'check-finance.js', 'vdp.js', 'battery-animation.js', 'at-price-total.js',
   'animations.js', 'valuation-links.js', 'equal-height.js', 'faq-schema.js',
   'near.js', 'finance-calculator.js', 'get-started.js', 'faq.js', 'models-template.js', 'fuel-template.js',
-  'promotions-template.js', 'all-models.js', 'blog.js', 'car-redirect.js',
+  'promotions-template.js', 'all-models.js', 'blog.js', 'car-redirect.js', 'reserve.js', 'blog-post.js',
 ];
 
 const VERSION_RE = /^v\d+\.\d+\.\d+$/;
@@ -23,9 +23,35 @@ export function gitReader(tag, file) {
   return execFileSync('git', ['show', `${tag}:projects/carsa/${file}`], { cwd: REPO_ROOT, encoding: 'utf8' });
 }
 
-export function buildRelease({ version, carsaRepo, readFromTag = gitReader }) {
+export function compareVersions(a, b) {
+  const pa = a.slice(1).split('.').map(Number);
+  const pb = b.slice(1).split('.').map(Number);
+  for (let i = 0; i < 3; i++) if (pa[i] !== pb[i]) return pa[i] - pb[i];
+  return 0;
+}
+
+export function gitRemoteReleases(carsaRepo) {
+  execFileSync('git', ['fetch', '-q', 'origin', 'main'], { cwd: carsaRepo });
+  return execFileSync('git', ['ls-tree', '--name-only', 'origin/main', 'webflow/releases/'], { cwd: carsaRepo, encoding: 'utf8' })
+    .split('\n').map((line) => line.split('/').pop());
+}
+
+function assertAboveMain(version, carsaRepo, remoteReleases) {
+  let onMain;
+  try {
+    onMain = remoteReleases(carsaRepo).filter((name) => VERSION_RE.test(name));
+  } catch (err) {
+    throw new Error(`Could not read releases on carsa-website-support main: ${err.message}`);
+  }
+  if (onMain.includes(version)) throw new Error(`${version} is already on carsa-website-support main; bump the version`);
+  const highest = onMain.sort(compareVersions).pop();
+  if (highest && compareVersions(version, highest) < 0) throw new Error(`carsa-website-support main is already at ${highest}; ${version} must be above it, and the tag must include its changes`);
+}
+
+export function buildRelease({ version, carsaRepo, readFromTag = gitReader, remoteReleases = gitRemoteReleases }) {
   if (!VERSION_RE.test(version || '')) throw new Error(`Invalid version "${version}": use vMAJOR.MINOR.PATCH`);
   if (!existsSync(join(carsaRepo, 'sst.config.ts'))) throw new Error(`carsa-website-support checkout not found at ${carsaRepo}`);
+  assertAboveMain(version, carsaRepo, remoteReleases);
 
   const dir = join(carsaRepo, 'webflow', 'releases', version);
   if (existsSync(dir)) throw new Error(`${dir} already exists; releases are immutable, bump the version`);

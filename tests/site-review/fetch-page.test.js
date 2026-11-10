@@ -73,7 +73,7 @@ describe('fetchPage legacy call form', () => {
   });
 
   it('returns correct shape for a successful fetch', async () => {
-    const result = await fetchPage(`${baseUrl}/ok`, new Map());
+    const result = await fetchPage(`${baseUrl}/ok`, { cache: new Map() });
     assert.equal(typeof result.html, 'string');
     assert.ok(result.html.includes('Hello'));
     assert.equal(result.body, result.html);
@@ -89,7 +89,7 @@ describe('fetchPage legacy call form', () => {
   });
 
   it('records a single redirect in the chain with its status', async () => {
-    const result = await fetchPage(`${baseUrl}/redirect-start`, new Map());
+    const result = await fetchPage(`${baseUrl}/redirect-start`, { cache: new Map() });
     assert.equal(result.statusCode, 200);
     assert.ok(result.html.includes('Redirected'));
     assert.deepEqual(result.redirectChain, [{ url: `${baseUrl}/redirect-start`, status: 301 }]);
@@ -97,7 +97,7 @@ describe('fetchPage legacy call form', () => {
   });
 
   it('records a double redirect chain in order', async () => {
-    const result = await fetchPage(`${baseUrl}/double-redirect`, new Map());
+    const result = await fetchPage(`${baseUrl}/double-redirect`, { cache: new Map() });
     assert.equal(result.statusCode, 200);
     assert.deepEqual(result.redirectChain, [
       { url: `${baseUrl}/double-redirect`, status: 302 },
@@ -113,26 +113,24 @@ describe('fetchPage legacy call form', () => {
 
   it('returns cached result on second call (same object reference)', async () => {
     const cache = new Map();
-    const first = await fetchPage(`${baseUrl}/ok`, cache);
-    const second = await fetchPage(`${baseUrl}/ok`, cache);
+    const first = await fetchPage(`${baseUrl}/ok`, { cache });
+    const second = await fetchPage(`${baseUrl}/ok`, { cache });
     assert.equal(first, second, 'cache should return the exact same object');
-    const third = await fetchPage(`${baseUrl}/ok`, { cache });
-    assert.equal(first, third);
   });
 
   it('captures non-200 status codes; a 5xx on both attempts stays ok with the status', async () => {
-    const r404 = await fetchPage(`${baseUrl}/not-found`, new Map());
+    const r404 = await fetchPage(`${baseUrl}/not-found`, { cache: new Map() });
     assert.equal(r404.statusCode, 404);
     assert.equal(r404.attempts, 1);
     assert.ok(r404.html.includes('Not Found'));
-    const r500 = await fetchPage(`${baseUrl}/server-error`, new Map(), { retryDelayMs: 10 });
+    const r500 = await fetchPage(`${baseUrl}/server-error`, { cache: new Map(), retryDelayMs: 10 });
     assert.equal(r500.statusCode, 500);
     assert.equal(r500.attempts, 2);
     assert.equal(r500.fetchState, 'ok');
   });
 
   it('returns a timeout fetch state instead of throwing', async () => {
-    const result = await fetchPage(`${baseUrl}/hang`, new Map(), { timeoutMs: 200, retryDelayMs: 10 });
+    const result = await fetchPage(`${baseUrl}/hang`, { cache: new Map(), timeoutMs: 200, retryDelayMs: 10 });
     assert.equal(result.fetchState, 'timeout');
     assert.equal(result.errorCode, 'ETIMEDOUT');
     assert.equal(result.status, 0);
@@ -158,7 +156,7 @@ describe('fetchPage legacy call form', () => {
   });
 
   it('headers are a plain object, not a Headers instance', async () => {
-    const result = await fetchPage(`${baseUrl}/ok`, new Map());
+    const result = await fetchPage(`${baseUrl}/ok`, { cache: new Map() });
     assert.equal(Object.getPrototypeOf(result.headers), Object.prototype);
   });
 });
@@ -279,5 +277,37 @@ describe('fetchPage retry floor and Retry-After cap', () => {
     } finally {
       await new Promise((resolve) => server.close(resolve));
     }
+  });
+});
+
+describe('fetchPage legacy call form', () => {
+  let server;
+  let base;
+  before(async () => {
+    ({ server, baseUrl: base } = await createTestServer((req, res) => {
+      if (req.url === '/old') {
+        res.writeHead(301, { location: '/new' });
+        return res.end();
+      }
+      if (req.url === '/robots.txt') {
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        return res.end('User-agent: *\nDisallow: /private\n');
+      }
+      res.writeHead(200, { 'content-type': 'text/html' });
+      return res.end('<html>new</html>');
+    }));
+  });
+  after(() => closeServer(server));
+
+  it('fetchPage(url, cacheMap) keeps the pre-2.0 shape: string redirect chain, finalUrl, body for any content type', async () => {
+    const cache = new Map();
+    const moved = await fetchPage(`${base}/old`, cache);
+    assert.deepEqual(moved.redirectChain, [`${base}/old`]);
+    assert.equal(moved.finalUrl, `${base}/new`);
+    assert.equal(moved.statusCode, 200);
+    assert.equal(moved.html, '<html>new</html>');
+    const robots = await fetchPage(`${base}/robots.txt`, cache);
+    assert.match(robots.html, /Disallow: \/private/);
+    assert.equal(await fetchPage(`${base}/old`, cache), moved);
   });
 });

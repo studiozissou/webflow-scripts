@@ -1,7 +1,7 @@
 // Site-review constants, thresholds and defaults, with .env loaded at import time.
 
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const SEVERITIES = Object.freeze(['error', 'warning', 'notice']);
 

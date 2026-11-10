@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { homedir } from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '.env') });
@@ -20,3 +21,7 @@ export const DROP_DAY = 5; // Friday
 export const DROP_HOUR = 8; // 8am UTC
 
 export const SCAN_MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
+
+export const VINTED_DOMAIN = 'www.vinted.nl';
+export const VINTED_MAX_FETCHES = 30;
+export const VINTED_STATE_DIR = join(homedir(), 'Library', 'Application Support', 'zissou-archive');

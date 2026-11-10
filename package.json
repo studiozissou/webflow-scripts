@@ -5,13 +5,14 @@
   "type": "module",
   "description": "Monorepo of custom JS/CSS for Webflow production sites",
   "scripts": {
-    "wf-gen": "node scripts/webflow/wf-gen.js",
     "test:wf": "node --test 'tests/webflow/*.test.js'",
     "test:sr": "node --test 'tests/site-review/**/*.test.js'",
+    "test:site-archive": "node --test 'tests/site-archive/*.test.js'",
     "test:sz": "playwright test --config=tests/acceptance/playwright.config.js",
     "test:sz:smoke": "playwright test --config=tests/acceptance/playwright.config.js smoke",
     "test:sz:a11y": "playwright test --config=tests/acceptance/playwright.config.js a11y",
     "test:sz:acceptance": "playwright test --config=tests/acceptance/playwright.config.js acceptance",
+    "test:studio-zissou": "node --test 'tests/studio-zissou/*.test.js'",
     "test:report": "playwright show-report",
     "site-review": "node tools/site-review/index.js",
     "entity-audit": "node tools/entity-audit/index.js",
@@ -22,6 +23,7 @@
     "oost:locale-guard": "node tools/oost/locale-guard.js",
     "test:rolfing-amsterdam": "node --test 'tests/rolfing-amsterdam/*.test.js'",
     "rolfing-amsterdam:launch-guard": "node tools/webflow/launch-guard.js --client rolfing-amsterdam",
+    "test:cf-page": "node --test 'tests/cf-page/*.test.js'",
     "test:sme-audit": "node --test 'tests/sme-audit/*.test.js'",
     "test:site-audit": "node --test 'tests/site-audit/*.test.js'",
     "test:shared": "node --test 'tests/shared/*.test.js'",
@@ -33,9 +35,11 @@
     "test:jayshetty": "node --test 'tests/jayshetty/*.test.js'",
     "test:internal": "node --test 'tests/internal/*.test.js'",
     "test:tsc": "node --test 'tests/tsc/*.test.js'",
+    "test:gbp": "node --test 'tests/gbp/*.test.js'",
     "build:nem": "node tools/nem/build-conclusion-texts.js && node tools/nem/build-component.js && npm run typecheck:nem",
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",
     "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'",
+    "test:za:vinted": "node --test 'tests/zissou-archive/vinted-*.test.js'",
     "typecheck:nem": "tsc -p projects/nem-life/dist/tsconfig.json",
     "check:nem-drift": "node tools/nem/check-workflow-drift.js",
     "format": "prettier --write",
@@ -44,7 +48,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "@google/genai": "^2.7.0"
+    "@google/genai": "^2.7.0",
+    "@modelcontextprotocol/sdk": "1.32.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",

@@ -8,6 +8,9 @@
 #
 # A real folder is replaced by a link only after every file in it exists unchanged in the
 # private checkout. New files are copied across first; conflicting files stop that path.
+# Every private command, and every path listed in the private .claude/link-paths, is linked too.
+# A path not already in .gitignore is ignored through the checkout's local .git/info/exclude, so
+# its name never lands in a committed file. A path tracked in this repo is never replaced.
 
 set -uo pipefail
 
@@ -34,6 +37,10 @@ internal_paths() {
     for d in "$INTERNAL"/projects/*/.claude "$root"/projects/*/.claude; do
       [ -e "$d" ] && echo "projects/$(basename "$(dirname "$d")")/.claude"
     done
+    for d in "$INTERNAL"/.claude/commands/*.md; do
+      [ -e "$d" ] && echo ".claude/commands/$(basename "$d")"
+    done
+    [ -f "$INTERNAL/.claude/link-paths" ] && grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$INTERNAL/.claude/link-paths"
   } | sort -u
 }
 
@@ -77,6 +84,14 @@ same_content() {
   fi
 }
 
+exclude_locally() {
+  local root=$1 p=$2 exclude
+  git -C "$root" check-ignore -q -- "$p" && return 0
+  exclude="$(git -C "$root" rev-parse --path-format=absolute --git-common-dir)/info/exclude"
+  mkdir -p "$(dirname "$exclude")"
+  echo "/$p" >> "$exclude"
+}
+
 link_all() {
   local root p src dst linked=0 status=0
   root=$(repo_root .) || { echo "link-internal: not a git checkout" >&2; return 1; }
@@ -88,6 +103,12 @@ link_all() {
   while read -r p; do
     src="$INTERNAL/$p"
     dst="$root/$p"
+
+    if [ -n "$(git -C "$root" ls-files -- "$p")" ]; then
+      echo "link-internal: $p is tracked in this repo; private copy not linked"
+      continue
+    fi
+    exclude_locally "$root" "$p"
 
     if [ -L "$dst" ]; then
       [ "$(readlink "$dst")" = "$src" ] && continue

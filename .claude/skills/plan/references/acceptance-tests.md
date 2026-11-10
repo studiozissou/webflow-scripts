@@ -4,7 +4,7 @@ Generate a test for every testable behaviour in the spec. The spec is the human-
 
 ## Template
 
-Read the project-local template at `tests/templates/acceptance-test.spec.js` (relative to the project root) first. It carries project helpers such as `waitForRHP`, the CJS/ESM format and a pre-imported axe-core. If it does not exist, use the generic template at `.claude/templates/acceptance-test.spec.js`. Both show the available patterns: element visibility, CSS class checks, CMS filtering, console errors, reduced motion, Barba transitions, responsive, axe-core.
+Read the project-local template at `tests/templates/acceptance-test.spec.js` (relative to the project root) first. It carries project helpers such as `waitForRHP`, the CJS/ESM format and a pre-imported axe-core. If it does not exist, use the generic template at `.claude/templates/acceptance-test.spec.js`. Both show the available patterns: element visibility, CSS class checks, CMS filtering, console errors, reduced motion, responsive, axe-core.
 
 ## Each test specifies
 

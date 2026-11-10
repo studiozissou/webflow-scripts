@@ -36,9 +36,6 @@ Chosen approach and why (Medium and Large only).
 ## Technical notes
 Reusable code (file:function), confirmed selectors, constraints from ADRs and CLAUDE.md, dependencies, gotchas.
 
-## Barba Impact
-Answers to the five questions below, or "N/A — no Barba transitions".
-
 ## Tasks
 - [ ] Task 1 (agent: code-writer)
 - [ ] Task 2 (agent: qa)
@@ -72,19 +69,9 @@ Agent name, optionally with a lens after a colon. Valid: `design-critic:ux`, `de
 
 `sequential` means one executor. Two or more file groups mean `/build` runs one `code-writer` per group in its own git worktree and integrates each by patch, so the groups must be disjoint. The note must name any file both groups need, such as the orchestrator or a shared stylesheet. The parent edits those shared files after integration, so no executor touches them.
 
-## Barba transition impact
-
-Answer in the spec when the project uses Barba.js:
-
-1. **Init/Destroy lifecycle** — Does the feature add DOM elements, listeners, GSAP timelines or ScrollTriggers? Then it needs `init(container)` and `destroy()`, called from orchestrator.js on `barba.hooks.enter` / `barba.hooks.leave`.
-2. **State survival** — Anything persisting across a transition (video position, scroll offset, selection)? Define where it is stored and how it is restored.
-3. **Transition interference** — Could the feature's animations or DOM mutations conflict with the leave/enter transition? Check z-index, opacity tweens, elements outside `[data-barba="container"]`.
-4. **Re-entry correctness** — home → about → home re-initialises cleanly: no stale listeners, no doubled nodes.
-5. **Namespace scoping** — Which namespaces does it run on, and confirmed not to init elsewhere.
-
 ## Test plan tiers
 
-- **Tier 1 — Auto: Playwright local.** `tests/acceptance/<slug>.spec.js`: DOM presence, console errors, CSS states, scroll triggers, Barba navigation. Runs during `/build` and `/debug` via browser MCP, no deploy needed.
+- **Tier 1 — Auto: Playwright local.** `tests/acceptance/<slug>.spec.js`: DOM presence, console errors, CSS states, scroll triggers. Runs during `/build` and `/debug` via browser MCP, no deploy needed.
 - **Tier 2 — Auto: CDN regression.** The same spec registered in `tests/registry.json`, run by `/deploy` after the CDN push.
 - **Tier 3 — Manual.** What cannot be automated and why: real input (drag, multi-touch, audio), cross-browser (Playwright is Chromium only), device-specific (iOS autoplay, Safari bounce), subjective polish (easing feel). Write "No manual tests needed" when that is true.
 
@@ -93,5 +80,5 @@ Answer in the spec when the project uses Barba.js:
 - **Pass/fail criteria** — observable conditions: DOM state (element visible, class present, attribute value), console state (no errors, expected output), visual state (scroll position, animation end state, responsive layout).
 - **Reproduction steps** — page URL, user actions (scroll to X, click Y, resize to Z), wait conditions (animation duration, network load).
 - **Tier mapping** — Tier 1 tests by name, the Tier 2 registry entry, Tier 3 items with the reason each is manual.
-- **Regression scope** — what must not break: Barba transitions, other modules on the page, cross-page state (video handoff, scroll position).
+- **Regression scope** — what must not break: other modules on the page, cross-page state (video handoff, scroll position).
 - **A check Claude runs alone**: at least one pass/fail criterion Claude can run without a person, in this order of preference: a number (bytes, axe violations, Lighthouse score), a Playwright acceptance test, a screenshot comparison, the browser-MCP pass/fail list. When none fits, write "manual verify" and give a Tier 3 checklist. This never changes the size: a hard-to-verify Medium change keeps its review agents.

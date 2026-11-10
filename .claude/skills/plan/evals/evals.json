@@ -10,13 +10,13 @@
     {
       "id": 2,
       "prompt": "/plan add a sticky FAQ accordion with JSON-LD FAQPage markup to the Carsa service pages",
-      "expected_output": "A Brief AskUserQuestion call comes first with only the open pm-questioning questions (up to four), then a separate Setup call. AskUserQuestion offers Mini/Small/Medium/Large with Medium marked (Recommended) and a one-line reason, plus a multiSelect Agents question in the same call with agents 1–2 and the spec reviewer marked (Recommended), each with a reason. Only ticked agents are spawned. After Medium is picked: at most two research agents plus MCP DOM agents only because the feature touches DOM, no approach-explorer agents (approaches compared inline), pm-questioning asked. Spec has size: Medium and agents: [design-critic:ux, seo, schema]. Barba Impact says N/A for Carsa. Test plan has all three tiers. Before approval one read-only Plan agent with model \"opus\" reviews the spec; a FAIL fixes the spec once.",
+      "expected_output": "A Brief AskUserQuestion call comes first with only the open pm-questioning questions (up to four), then a separate Setup call. AskUserQuestion offers Mini/Small/Medium/Large with Medium marked (Recommended) and a one-line reason, plus a multiSelect Agents question in the same call with agents 1–2 and the spec reviewer marked (Recommended), each with a reason. Only ticked agents are spawned. After Medium is picked: at most two research agents plus MCP DOM agents only because the feature touches DOM, no approach-explorer agents (approaches compared inline), pm-questioning asked. Spec has size: Medium and agents: [design-critic:ux, seo, schema]. Test plan has all three tiers. Before approval one read-only Plan agent with model \"opus\" reviews the spec; a FAIL fixes the spec once.",
       "files": []
     },
     {
       "id": 3,
       "prompt": "how should we approach adding a second Lenis-driven case study scroll wrapper on RHP without breaking the dial?",
-      "expected_output": "Skill triggers without the slash command. Recommends Large and asks; after confirmation architect consulted, no step 7.5 spec reviewer, approach explorers spawned, ADR flagged, Barba Impact answered in full, agents: includes design-critic:visual and qa.",
+      "expected_output": "Skill triggers without the slash command. Recommends Large and asks; after confirmation architect consulted, no step 7.5 spec reviewer, approach explorers spawned, ADR flagged, agents: includes design-critic:visual and qa.",
       "files": []
     },
     {

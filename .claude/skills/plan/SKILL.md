@@ -68,7 +68,7 @@ Formulate three genuinely different approaches and fill the comparison table in 
 
 Record the chosen story, with its cards, beats and hook, under Approach. Skip this silently when the skill is not linked.
 
-Write `.claude/specs/<feature-slug>.md` using `references/spec-format.md`. It defines the frontmatter, the required sections (including Barba impact and the verify loop) and the three-tier test plan. Incorporate the research: reusable code, confirmed selectors, existing patterns. Large features: spawn the `architect` agent for the structural decision and flag any ADR needed before work begins.
+Write `.claude/specs/<feature-slug>.md` using `references/spec-format.md`. It defines the frontmatter, the required sections (including the verify loop) and the three-tier test plan. Incorporate the research: reusable code, confirmed selectors, existing patterns. Large features: spawn the `architect` agent for the structural decision and flag any ADR needed before work begins.
 
 ## 4. Route review agents
 

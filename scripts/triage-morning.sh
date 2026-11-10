@@ -11,7 +11,11 @@
 # .claude/triage/allowed-tools.txt (private), and touching .claude/triage/triage.off stops
 # every run.
 #
-# Scheduled by scripts/triage-morning.plist. Run by hand to test:
+# Before /triage it writes the session snapshot (.claude/triage/world/<date>.json) with
+# `node tools/triage/cli.js snapshot collect`: plain Node, no model, read-only outside that
+# file. A failed collect is a warning; the digest still runs.
+#
+# Scheduled by scripts/triage-morning.plist (Mon-Fri 08:00). Run by hand to test:
 #   bash scripts/triage-morning.sh
 #   TRIAGE_ARGS="--no-delete" bash scripts/triage-morning.sh
 
@@ -47,8 +51,13 @@ triage_notion_token
 
 mkdir -p "$REPORT_DIR"
 
+# The snapshot's JSON summary goes to the launchd log with stderr, not into the report.
+if ! node tools/triage/cli.js snapshot collect >&2; then
+  echo "WARNING: snapshot collect failed; /triage runs without a fresh session snapshot" >&2
+fi
+
 # --allowedTools is what makes an unattended run possible: nobody is there to answer a
-# permission prompt at 08:30, so any tool not on the list is denied instead of asked.
+# permission prompt at 08:00, so any tool not on the list is denied instead of asked.
 #
 # stderr goes to the launchd log, not into the report. The report is something the user
 # actually reads over coffee, and a stray warning spliced into the middle of a table is

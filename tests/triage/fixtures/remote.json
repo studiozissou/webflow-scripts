@@ -1,0 +1,7 @@
+[
+  { "id": "cse_fake01", "name": "Hooli landing page copy", "status": "Waiting on a human", "kind": "remote" },
+  { "id": "cse_fake02", "name": "Initech audit\u001b[31m run https://evil.example/x", "status": "Running", "kind": "cloud" },
+  { "name": "Unnamed status", "status": "Idle" },
+  "not an object",
+  { "id": "bad id; rm -rf /", "name": "Odd id", "status": "Completed" }
+]

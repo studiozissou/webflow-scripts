@@ -1,4 +1,4 @@
-// Lints a Slack mrkdwn digest against the spec STE rules (sentence length and average, banned filler, em/en dashes, emoji, numbers as digits, 40-line cap, "(N)" header counts equal the item lines beneath), treating lines that open with *bold* as section headers excluded from sentence stats; "one sentence per line", "active voice verbs first" and "term defined on first use" are not checked because the spec's own example puts several sentences on one line and the other two need judgement.
+// Lints a Slack mrkdwn digest against the spec STE rules (sentence length and average, banned filler, em/en dashes, emoji, numbers as digits, 40-line cap, "(N)" header counts equal the item lines beneath), treating lines that open with *bold* as section headers excluded from sentence stats; ratio = sentences that break no per-sentence rule (length, banned word, dash, emoji, spelled number) over max(1, sentences), where document-level rules (line count, average, section counts) do not count; "one sentence per line", "active voice verbs first" and "term defined on first use" are not checked because the spec's own example puts several sentences on one line and the other two need judgement.
 
 export const DEFAULT_LINT_RULES = {
   maxSentenceWords: 20,
@@ -32,6 +32,9 @@ function sentencesOf(line) {
 
 const wordCount = (sentence) => sentence.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 
+// Lowest ratio a bulletin may post with (spec D14).
+export const MIN_RATIO = 0.8;
+
 export function lint(text = '', rules = {}) {
   const r = { ...DEFAULT_LINT_RULES, ...rules };
   const warnings = [];
@@ -41,6 +44,14 @@ export function lint(text = '', rules = {}) {
   const numbers = r.spelledNumbers.map((w) => [w, wordRe(w)]);
   let totalWords = 0;
   let totalSentences = 0;
+  let ratioTotal = 0;
+  let ratioPassing = 0;
+  const breaksRule = (s) =>
+    banned.some(([, re]) => re.test(s)) ||
+    (r.checkNumbers && numbers.some(([, re]) => re.test(s))) ||
+    DASH.test(s) ||
+    EMOJI.test(s) ||
+    SHORTCODE.test(s);
 
   if (lines.filter((l) => l.trim()).length > r.maxLines) {
     warn('line-count', lines.length, `digest has more than ${r.maxLines} lines`);
@@ -69,6 +80,11 @@ export function lint(text = '', rules = {}) {
     }
     for (const sentence of sentencesOf(line)) {
       const words = wordCount(sentence);
+      const fails = breaksRule(sentence) || words > r.maxSentenceWords;
+      if (words || fails) {
+        ratioTotal++;
+        if (!fails) ratioPassing++;
+      }
       if (!words) continue;
       totalWords += words;
       totalSentences++;
@@ -80,5 +96,6 @@ export function lint(text = '', rules = {}) {
     warn('average-length', 0, `average ${(totalWords / totalSentences).toFixed(1)} words per sentence; limit ${r.maxAvgWords}`);
   }
   warnings.sort((a, b) => (a.line || Infinity) - (b.line || Infinity));
-  return { ok: warnings.length === 0, warnings };
+  const ratio = ratioPassing / Math.max(1, ratioTotal);
+  return { ok: warnings.length === 0, warnings, ratio };
 }

@@ -46,6 +46,7 @@ describe('health', () => {
     assert.equal(before.warningPages, 0);
     assert.equal(before.sharedIssues.length, 2);
     assert.equal(before.sharedDamage, Math.round(1.5 * (1 + Math.log2(30)) * 1000) / 1000);
+    assert.equal(before.cappedPages, 0);
     assert.equal(before.score, 70);
     const after = computeHealth({ facts, findings: facts.map((_, i) => description(i)) });
     assert.equal(after.score, 90);
@@ -60,6 +61,23 @@ describe('health', () => {
     assert.equal(health.errorPages, 0);
     assert.equal(health.sharedIssues[0].pages, 3);
     assert.equal(health.score, Math.round(100 * (1 - (0.5 + (1 + Math.log2(3))) / 10)));
+  });
+
+  it('health: shared issues never make a page cost more than its worst fail (Rolfing science pages)', () => {
+    const facts = Array.from({ length: 31 }, (_, i) => fact(`/p${i}`));
+    const dead = Array.from({ length: 9 }, (_, t) => [0, 1].map((i) => ({
+      ...fail(`/p${i}`, 0.5, { taxonomyId: 'broken-external-link' }), targetKey: `https://gone.org/${t}`, target: `https://gone.org/${t}`,
+    }))).flat();
+    const health = computeHealth({ facts, findings: dead });
+    assert.equal(health.sharedIssues.length, 9);
+    assert.equal(health.sharedPenaltyTotal, 9);
+    assert.equal(health.cappedPages, 2);
+    assert.equal(health.sharedDamage, 1);
+    assert.equal(health.score, Math.round(100 * (1 - 1 / 31)));
+
+    const withError = computeHealth({ facts, findings: [...dead, fail('/p0', 1, { taxonomyId: 'title-missing', evidence: { snippet: '<title></title>' } })] });
+    assert.equal(withError.errorPages, 1);
+    assert.equal(withError.sharedDamage, 0.5);
   });
 
   it('is null without fetched pages and clipped to 0..100', () => {

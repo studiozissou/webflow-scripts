@@ -79,10 +79,13 @@ score = round(100 × (1 − (E + 0.5 × W + S) / P)), clipped to 0..100
 P = pages fetched and parsed
 E = pages whose highest single-page weight is 1.0
 W = pages whose highest single-page weight is 0.5
-S = Σ over shared issues of weight × (1 + log2 n), n = pages the issue reaches
+S = Σ over shared issues of weight × (1 + log2 n), n = pages the issue reaches,
+    spread evenly over those n pages, with each page capped at its worst fail
 ```
 
-A shared issue counts once, because it has one cause and one fix. It still weighs more than a single-page problem: on 2 pages it costs 2 pages, on 30 pages about 5.9, and each doubling of reach adds one more. So a template-wide error on Carsa's 5,600 vehicle pages costs about 13.5 pages, and the score points at it without sinking to zero. The counts, the diff and the parity table are never collapsed; only the score and the report use the grouping.
+A shared issue counts once, because it has one cause and one fix. It still weighs more than a single-page problem: on 2 pages it costs 2 pages, on 30 pages about 5.9, and each doubling of reach adds one more. So a template-wide error on Carsa's 5,600 vehicle pages costs about 13.5 pages, and the score points at it without sinking to zero.
+
+The cap stops many small shared issues from piling onto one page. A page never costs more than its worst fail would cost on its own: 1 for an error, 0.5 for a warning. Rolfing's two science pages (Dutch and English) carry nine dead reference links, each a shared issue on two pages with a penalty of 1. Uncapped they would cost 9 pages of 31; capped, each page costs its 0.5, so 1 in total. The cap only binds on pages like these; for issues spread thinly over many pages the share per page is small and the sum is unchanged. The counts, the diff and the parity table are never collapsed; only the score and the report use the grouping.
 
 ### Worked example: Rolfing Amsterdam, SEMrush crawl of 19 Oct 2026
 

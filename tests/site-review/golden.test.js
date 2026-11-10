@@ -188,7 +188,9 @@ describe('golden: full pipeline', () => {
     const { score, pages, errorPages, warningPages, sharedDamage, sharedIssues } = run.report.health;
     assert.equal(score, FORMULA(pages, errorPages, warningPages, sharedDamage));
     const summed = sharedIssues.reduce((sum, issue) => sum + issue.weight * (1 + Math.log2(issue.pages)), 0);
-    assert.ok(Math.abs(summed - sharedDamage) < 0.01);
+    assert.ok(Math.abs(summed - run.report.health.sharedPenaltyTotal) < 0.01);
+    assert.ok(sharedDamage <= run.report.health.sharedPenaltyTotal + 0.001);
+    if (run.report.health.cappedPages === 0) assert.ok(Math.abs(summed - sharedDamage) < 0.01);
     const okPages = run.facts.filter((f) => f.fetchState === 'ok').length;
     assert.equal(pages, okPages);
     const { singles } = collapseFindings({ findings: run.report.findings, facts: run.facts });

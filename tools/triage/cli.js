@@ -1,4 +1,4 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs and snapshot subcommand refuses inside a build job.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot and learnings subcommand refuses inside a build job.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,7 @@ import { parseReplies } from './lib/approvals.js';
 import { lint, MIN_RATIO } from './lib/ste-lint.js';
 import { start, collect, list, DEFAULT_JOBS_DIR, DEFAULT_KILL_SWITCH, DEFAULT_SCRIPT, DEFAULT_CAP } from './lib/jobs.js';
 import { run as runSnapshot } from './lib/snapshot-cli.js';
+import { run as runLearnings } from './lib/learnings-cli.js';
 import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './lib/cli-io.js';
 
 const USAGE = `usage: cli.js <command> [options]
@@ -24,10 +25,15 @@ const USAGE = `usage: cli.js <command> [options]
   snapshot collect [--tasks <tasks.json>] [--now <iso>]   writes .claude/triage/world/<date>.json
   snapshot add-remote [--in <remote.json>] | --unavailable   [{ id?, name, status, kind? }] from the session list
   snapshot rollup [--in <snapshot.json>] [--now <iso>]    counts, headline and thread reply 1
-common: --config <config.json>
+  learnings extract                                   inbox -> learnings/excerpts-<date>.json; noModel when empty
+  learnings add --skill <name> --text <line>          one dated line in ~/.claude/context/learnings.md; 10 a day
+  learnings comment --task <pageId> (--text <t> | --text-file <tmp/file>)
+                                                      one "Learnings:" comment per excerpted task per day
+  learnings digest --in <tmp/draft.md>                validated draft -> learnings/digest-<date>.md
+common: --config <config.json>; learnings takes no --now (clock only)
 `;
 
-const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks'];
+const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks', 'skill', 'text', 'text-file'];
 
 // Test-only overrides. The unattended allowlist rule Bash(node tools/triage/cli.js *) cannot
 // match a command with a leading env assignment, so a scheduled run cannot set these.
@@ -171,21 +177,29 @@ function runJobs(args) {
   return result.started ? 0 : 1;
 }
 
-const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot };
+const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings };
 
+function fail(err) {
+  if (err instanceof UsageError) process.stderr.write(`${err.message}\n${USAGE}`);
+  else process.stderr.write(`ERROR ${err.message}\n`);
+  return 2;
+}
+
+// An exit code, or a promise of one for commands that call the network (learnings comment).
 export function main(argv) {
   try {
     const args = parseArgs(argv);
     const command = COMMANDS[args.positional[0]];
     if (!command) throw new UsageError(args.positional[0] ? `unknown command: ${args.positional[0]}` : 'no command');
-    return command(args, loadConfig(args));
+    const code = command(args, loadConfig(args));
+    return code instanceof Promise ? code.catch(fail) : code;
   } catch (err) {
-    if (err instanceof UsageError) process.stderr.write(`${err.message}\n${USAGE}`);
-    else process.stderr.write(`ERROR ${err.message}\n`);
-    return 2;
+    return fail(err);
   }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exitCode = main(process.argv.slice(2));
+  Promise.resolve(main(process.argv.slice(2))).then((code) => {
+    process.exitCode = code;
+  });
 }

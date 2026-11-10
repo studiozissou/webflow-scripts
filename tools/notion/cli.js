@@ -1,22 +1,23 @@
 // CLI over the Notion Tasks Tracker client: list open tasks as JSON and set Priority, Status or a comment on one page; token from NOTION_TOKEN or the Keychain; refuses with exit 2 inside a build job (TRIAGE_BUILD_JOB set) before any token lookup.
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs as parseNodeArgs } from 'node:util';
 import {
-  createNotionClient,
+  notionClientFromEnv,
   queryOpenTasks,
   updatePriority,
   updateStatus,
   addComment,
 } from './client.js';
 
+// Re-exported for callers and tests that resolve the token through the CLI module.
+export { resolveToken } from './client.js';
+
 const DEBUG = false;
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const DEFAULT_CONFIG = resolve(REPO_ROOT, '.claude/triage/config.json');
-const KEYCHAIN_ARGS = ['find-generic-password', '-s', 'mcp', '-a', 'notion-triage', '-w'];
 
 const USAGE = [
   'usage: node tools/notion/cli.js <command> [options]',
@@ -60,19 +61,6 @@ export function parseArgs(argv) {
   return args;
 }
 
-export function resolveToken({ env = process.env, exec = execFileSync } = {}) {
-  if (env.NOTION_TOKEN) return env.NOTION_TOKEN;
-  let raw;
-  try {
-    raw = exec('security', KEYCHAIN_ARGS, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-  } catch {
-    throw new Error('Notion token not found: set NOTION_TOKEN or add Keychain item -s mcp -a notion-triage');
-  }
-  const token = String(raw ?? '').trim();
-  if (!token) throw new Error('Notion token from Keychain item mcp/notion-triage is empty');
-  return token;
-}
-
 export function resolveDatabaseId(args, read = (p) => readFileSync(p, 'utf8')) {
   if (args.db) return args.db;
   const path = args.config ?? DEFAULT_CONFIG;
@@ -83,7 +71,7 @@ export function resolveDatabaseId(args, read = (p) => readFileSync(p, 'utf8')) {
 
 async function run(args) {
   const databaseId = args.command === 'tasks' ? resolveDatabaseId(args) : null;
-  const client = await createNotionClient({ token: resolveToken() });
+  const client = await notionClientFromEnv();
   switch (args.command) {
     case 'tasks':
       return queryOpenTasks(client, databaseId);

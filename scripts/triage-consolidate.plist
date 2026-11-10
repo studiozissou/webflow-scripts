@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Learnings consolidation. Runs scripts/triage-consolidate.sh at 18:00 local time, Monday to
+  Friday. If the Mac is asleep at that moment, launchd runs the job on wake. Sessions that
+  end after 18:00 or at the weekend are picked up by the next run (up to 4 days back).
+
+  What an unattended run may write: at most one "Learnings:" comment per Notion task that
+  had a correction today, dated lines in ~/.claude/context/learnings.md, and
+  .claude/triage/learnings/digest-<date>.md for the next morning digest. It sends no
+  message, posts nothing to Slack and never writes Description, Notes, Priority or Status.
+  With no corrections today it writes the digest without running claude. Tools are limited
+  to .claude/triage/consolidate-allowed-tools.txt. To pause it without uninstalling:
+    touch .claude/triage/triage.off
+
+  NOT INSTALLED BY DEFAULT. Install only after a manual dry run looks right:
+    TRIAGE_ARGS="--dry-run" bash scripts/triage-consolidate.sh
+
+  Install:
+    cp scripts/triage-consolidate.plist ~/Library/LaunchAgents/io.teamzissou.triage-consolidate.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.triage-consolidate.plist
+
+  Run it once, right now:
+    launchctl start io.teamzissou.triage-consolidate
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.triage-consolidate.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.triage-consolidate.plist
+
+  Each run's report lands in .claude/triage/reports/{date}-consolidate.md.
+  Run output and errors are appended to ~/Library/Logs/triage-consolidate.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.triage-consolidate</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/triage-consolidate.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>TRIAGE_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+        <key>TRIAGE_ARGS</key>
+        <string></string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Weekday</key>
+            <integer>1</integer>
+            <key>Hour</key>
+            <integer>18</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>2</integer>
+            <key>Hour</key>
+            <integer>18</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>3</integer>
+            <key>Hour</key>
+            <integer>18</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>4</integer>
+            <key>Hour</key>
+            <integer>18</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>5</integer>
+            <key>Hour</key>
+            <integer>18</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-consolidate.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-consolidate.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

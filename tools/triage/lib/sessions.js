@@ -1,10 +1,11 @@
 // Read-only session rollup for triage: one collector per source (local jobs + triage build jobs, transcript tails, Desktop Code sessions, git worktrees, gh PRs, spec frontmatter, and remote/cloud sessions handed in by the model), each returning { status: ok|unavailable|error, items, error? } and never throwing on unknown or missing fields; sanitize() for untrusted text; merge() that joins records by session id, short id, branch and spec slug and links Notion tasks; and classify() into the five rollup classes with precedence waiting > inFlight > built > planned > stale (a failed build job from the last 7 days waits on the user; only a passed one counts as built). Branch and slug matches are scoped by repo; a spec joins the most recent matching group.
 import { execFileSync } from 'node:child_process';
-import { closeSync, existsSync, fstatSync, lstatSync, openSync, readdirSync, readFileSync, readSync, statSync } from 'node:fs';
+import { closeSync, existsSync, fstatSync, lstatSync, openSync, readdirSync, readSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { DEFAULT_JOBS_DIR, REPO_ROOT, list as listTriageJobs } from './jobs.js';
 import { workingDaysBetween } from './workdays.js';
+import { readJsonFile } from './cli-io.js';
 
 export const CLASSES = ['waiting', 'inFlight', 'built', 'planned', 'stale'];
 export const TRANSCRIPT_MAX_AGE_DAYS = 14;
@@ -22,9 +23,9 @@ const WORKING = /^(running|working|busy|active|in progress)$/i;
 const CONTROL = /[\p{Cc}\p{Cf}]/gu;
 const URL_RE = /\b(?:https?:\/\/|www\.)\S+/gi;
 
-export function sanitize(text) {
+export function sanitize(text, { max = MAX_TEXT } = {}) {
   if (typeof text !== 'string' && typeof text !== 'number') return '';
-  return String(text).replace(/\s/g, ' ').replace(CONTROL, '').replace(URL_RE, ' ').replace(/\s+/g, ' ').trim().slice(0, MAX_TEXT).trimEnd();
+  return String(text).replace(/\s/g, ' ').replace(CONTROL, '').replace(URL_RE, ' ').replace(/\s+/g, ' ').trim().slice(0, max).trimEnd();
 }
 
 const str = (v) => (typeof v === 'string' && v.trim() ? v : null);
@@ -40,14 +41,6 @@ function iso(value) {
 
 const latest = (...values) => values.map(iso).filter(Boolean).sort().at(-1) ?? null;
 
-function readJson(path) {
-  try {
-    return JSON.parse(readFileSync(path, 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
 function readTail(path, bytes) {
   const fd = openSync(path, 'r');
   try {
@@ -62,7 +55,8 @@ function readTail(path, bytes) {
   }
 }
 
-function jsonLines(text) {
+// Objects and arrays from JSONL text; partial or foreign lines are skipped.
+export function jsonLines(text) {
   const out = [];
   for (const line of text.split('\n')) {
     if (!line.trim()) continue;
@@ -134,7 +128,7 @@ function normState(value) {
 }
 
 function localJob(jobsDir, dir, repos) {
-  const state = readJson(join(jobsDir, dir, 'state.json'));
+  const state = readJsonFile(join(jobsDir, dir, 'state.json'));
   if (!state || typeof state !== 'object') return null;
   let timelineAt = null;
   try {
@@ -280,7 +274,7 @@ function findFiles(dir, re, depth = 4) {
 }
 
 function desktopItem(path, repos) {
-  const d = readJson(path);
+  const d = readJsonFile(path);
   if (!d || typeof d !== 'object' || d.isArchived === true) return null;
   const summary = d.postTurnSummary && typeof d.postTurnSummary === 'object' ? d.postTurnSummary : {};
   const category = sanitize(summary.status_category).toLowerCase();

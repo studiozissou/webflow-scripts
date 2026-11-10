@@ -1,4 +1,4 @@
-// Shared I/O for the triage CLI and its command modules (snapshot-cli.js): UsageError (exit 2 with usage), JSON in from --in or stdin, JSON out on stdout, --now parsing, and the refusal every job-starting or world-writing command gives inside a build job. Kept apart from cli.js so command modules do not import cli.js back.
+// Shared I/O for the triage CLI and its command modules (snapshot-cli.js): UsageError (exit 2 with usage), JSON in from --in, stdin or a state file (readJsonFile), JSON out on stdout, --now parsing, and the refusal every job-starting or world-writing command gives inside a build job. Kept apart from cli.js so command modules do not import cli.js back.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -13,6 +13,15 @@ export function readJson(text, label) {
     return JSON.parse(text);
   } catch (err) {
     throw new UsageError(`${label} is not valid JSON: ${err.message}`);
+  }
+}
+
+// Parsed JSON file, or null when it is missing or not JSON (state files that may not exist yet).
+export function readJsonFile(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
   }
 }
 

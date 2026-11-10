@@ -12,8 +12,9 @@ const SCRIPTS = join(ROOT, 'scripts');
 const MORNING = join(SCRIPTS, 'triage-morning.sh');
 const APPROVE = join(SCRIPTS, 'triage-approve.sh');
 const JOB = join(SCRIPTS, 'triage-job.sh');
+const CONSOLIDATE = join(SCRIPTS, 'triage-consolidate.sh');
 const COMMON = join(SCRIPTS, 'lib', 'triage-common.sh');
-const ALL = [MORNING, APPROVE, JOB];
+const ALL = [MORNING, APPROVE, JOB, CONSOLIDATE];
 
 const dirs = [];
 after(() => {
@@ -172,7 +173,7 @@ test('triage-common.sh load_allowlist fills the array and exits 1 on a missing o
 test('triage-common.sh owns the claude lookup and the Notion token export; runners do not repeat them', () => {
   const code = codeLines(COMMON).join('\n');
   for (const fn of ['load_allowlist', 'triage_claude_bin', 'triage_notion_token']) assert.match(code, new RegExp(`^${fn}\\(\\)`, 'm'));
-  for (const f of [MORNING, APPROVE]) {
+  for (const f of [MORNING, APPROVE, CONSOLIDATE]) {
     const body = codeLines(f).join('\n');
     assert.doesNotMatch(body, /security find-generic-password/);
     assert.doesNotMatch(body, /type -P claude/);
@@ -482,3 +483,112 @@ for (const [stage, calls] of [['setup', 0], ['plan', 1], ['build', 2]]) {
     assert.equal(existsSync(join(fx.jobDir, 'test-output.txt')), false);
   });
 }
+
+// ---------- P2 learnings: job pointer and the 18:00 consolidate runner ----------
+
+const inboxOf = (dir) => {
+  const f = join(dir, 'learnings', 'inbox.jsonl');
+  return existsSync(f) ? read(f).trim().split('\n').map((l) => JSON.parse(l)) : [];
+};
+
+test('job script appends one learnings pointer with the task page, slug, worktree and status', () => {
+  const fake = fakeClaude();
+  const fx = jobRepo();
+  writeMeta(fx.jobDir);
+  const r = runJob(fx, fake);
+  assert.equal(r.status, 0, read(join(fx.jobDir, 'job.log')));
+  const rows = inboxOf(join(fx.repo, '.claude', 'triage'));
+  assert.equal(rows.length, 1);
+  const { endedAt, ...rest } = rows[0];
+  assert.match(endedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  assert.equal(realpathSync(rest.cwd), realpathSync(join(fx.repo, '.claude', 'worktrees', 'job-faq-schema')));
+  assert.deepEqual({ ...rest, cwd: undefined }, { kind: 'job', taskPageId: 'page123', slug: 'faq-schema', cwd: undefined, jobDir: fx.jobDir, status: 'passed' });
+});
+
+test('job script writes no learnings pointer under triage.off and a failed job still records one', () => {
+  const fake = fakeClaude();
+  const off = jobRepo({ off: true });
+  writeMeta(off.jobDir);
+  runJob(off, fake);
+  assert.deepEqual(inboxOf(join(off.repo, '.claude', 'triage')), []);
+  const failed = jobRepo();
+  writeMeta(failed.jobDir);
+  runJob(failed, fake, undefined, { FAKE_NOCOMMIT: '1' });
+  const rows = inboxOf(join(failed.repo, '.claude', 'triage'));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].status, 'failed');
+  assert.equal(result(failed.jobDir).status, 'failed');
+});
+
+function consolidateRepo({ off = false, allowlist = true, extract = { sessions: 1, candidates: 2, tasks: 1, path: '/x' }, code = 0 } = {}) {
+  const { repo, internal } = triageRepo({ off, allowlist: false });
+  if (allowlist) writeFileSync(join(internal, 'consolidate-allowed-tools.txt'), '# consolidate tools\nRead\nBash(node tools/triage/cli.js learnings *)\n');
+  mkdirSync(join(repo, 'tools', 'triage'), { recursive: true });
+  writeFileSync(join(repo, 'tools', 'triage', 'cli.js'), `require('fs').appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ cli: process.argv.slice(2), cwd: process.cwd() }) + '\\n');\nprocess.stdout.write(${JSON.stringify(JSON.stringify(extract, null, 2))} + '\\n');\nprocess.exit(${code});\n`);
+  return { repo, internal };
+}
+
+const consolidate = (fx, fake, extra = {}) => spawnSync('bash', [CONSOLIDATE], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: fx.repo, INTERNAL_TRIAGE: fx.internal, ...extra }) });
+
+test('consolidate runner exits 0 without work when triage.off exists', () => {
+  const fake = fakeClaude();
+  const fx = consolidateRepo({ off: true });
+  const r = consolidate(fx, fake);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stderr, /triage\.off/);
+  assert.deepEqual(fake.calls(), []);
+});
+
+test('consolidate runner fails closed without consolidate-allowed-tools.txt', () => {
+  const fake = fakeClaude();
+  const fx = consolidateRepo({ allowlist: false });
+  const r = consolidate(fx, fake);
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /consolidate-allowed-tools\.txt/);
+  assert.deepEqual(fake.calls(), []);
+});
+
+test('consolidate runner runs learnings extract, then /triage consolidate with --add-dir and its allowlist', () => {
+  const fake = fakeClaude();
+  const fx = consolidateRepo();
+  const r = consolidate(fx, fake, { TRIAGE_ARGS: '--dry-run' });
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  const [extract, call] = fake.calls();
+  assert.deepEqual(extract.cli, ['learnings', 'extract']);
+  assert.equal(realpathSync(extract.cwd), realpathSync(fx.repo));
+  assert.deepEqual(call.args, ['-p', '/triage consolidate --dry-run', '--add-dir', realpathSync(fx.internal), '--allowedTools', 'Read', 'Bash(node tools/triage/cli.js learnings *)']);
+  assert.equal(call.notion, 'test-token');
+  const reports = readdirSync(join(fx.internal, 'reports'));
+  assert.deepEqual(reports.map((f) => /^\d{4}-\d{2}-\d{2}-consolidate\.md$/.test(f)), [true]);
+});
+
+test('consolidate runner skips claude when extract reports noModel', () => {
+  const fake = fakeClaude();
+  const fx = consolidateRepo({ extract: { sessions: 0, candidates: 0, tasks: 0, path: '/x', noModel: true } });
+  const r = consolidate(fx, fake);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /no learnings today; digest written/);
+  assert.deepEqual(fake.calls().filter((c) => c.args), []);
+});
+
+test('consolidate runner exits non-zero without claude when learnings extract fails', () => {
+  const fake = fakeClaude();
+  const fx = consolidateRepo({ code: 2 });
+  const r = consolidate(fx, fake);
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr + r.stdout, /learnings extract failed/);
+  assert.deepEqual(fake.calls().filter((c) => c.args), []);
+});
+
+test('consolidate plist runs triage-consolidate.sh Mon-Fri at 18:00 with the morning env block', () => {
+  const lintOut = spawnSync('plutil', ['-lint', join(SCRIPTS, 'triage-consolidate.plist')], { encoding: 'utf8' });
+  assert.equal(lintOut.status, 0, lintOut.stdout);
+  const p = plist('triage-consolidate.plist');
+  assert.equal(p.Label, 'io.teamzissou.triage-consolidate');
+  assert.match(p.ProgramArguments.at(-1), /scripts\/triage-consolidate\.sh$/);
+  assert.deepEqual(Object.keys(p.EnvironmentVariables).sort(), Object.keys(plist('triage-morning.plist').EnvironmentVariables).sort());
+  assert.deepEqual(slotsOf(p), MON_FRI.map((d) => `${d}-18:0`));
+  assert.match(p.StandardOutPath, /triage-consolidate\.log$/);
+  assert.equal(p.RunAtLoad, false);
+  assert.match(read(join(SCRIPTS, 'triage-consolidate.plist')), /at 18:00 local time, Monday to\s+Friday/);
+});

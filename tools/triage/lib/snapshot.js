@@ -1,6 +1,6 @@
-// Daily world snapshot for triage: world/<Amsterdam date>.json built from the sessions.js collectors, written atomically (temp file + rename) under a lock claimed with jobs.js claim/release (a lock older than 2 minutes counts as abandoned), read back by date, flagged stale after 3 hours, and updated by addRemote() with the cloud and Remote Control sessions the model lists in-run. A re-collect on the same day keeps the remote sessions and tasks it already had.
+// Daily world snapshot for triage: world/<Amsterdam date>.json built from the sessions.js collectors, written atomically by writeAtomic() (temp file + rename, also used by learnings-cli.js) under a lock claimed with jobs.js claim/release (a lock older than 2 minutes counts as abandoned), read back by date, flagged stale after 3 hours, and updated by addRemote() with the cloud and Remote Control sessions the model lists in-run. A re-collect on the same day keeps the remote sessions and tasks it already had.
 import { readFileSync, renameSync, writeFileSync, mkdirSync, rmSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { REPO_ROOT, claim, release } from './jobs.js';
 import { amsterdamDate } from './workdays.js';
 import { collectAll, defaultRoots, merge, remoteItems } from './sessions.js';
@@ -23,19 +23,24 @@ export function readSnapshot(dir, now = new Date()) {
   }
 }
 
-// Atomic: readers see the old file or the new one, never half of one.
-export function writeSnapshot(dir, snapshot) {
+// Atomic: readers see the old file or the new one, never half of one. The temp file sits
+// next to the target so the rename stays on one filesystem.
+export function writeAtomic(path, text) {
+  const dir = dirname(path);
   mkdirSync(dir, { recursive: true });
-  const path = snapshotPath(dir, snapshot.generatedAt ?? new Date());
   const temp = join(dir, `.${process.pid}.${Date.now()}.tmp`);
   try {
-    writeFileSync(temp, `${JSON.stringify(snapshot, null, 2)}\n`);
+    writeFileSync(temp, text);
     renameSync(temp, path);
   } catch (err) {
     rmSync(temp, { force: true });
     throw err;
   }
   return path;
+}
+
+export function writeSnapshot(dir, snapshot) {
+  return writeAtomic(snapshotPath(dir, snapshot.generatedAt ?? new Date()), `${JSON.stringify(snapshot, null, 2)}\n`);
 }
 
 // Age of a held lock from its meta.json, or from the lock dir itself while meta.json is not written yet.

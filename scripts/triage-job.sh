@@ -13,6 +13,7 @@
 # <jobDir>/job.log. Tools are limited to .claude/triage/job-allowed-tools.txt and
 # .claude/triage/job-disallowed-tools.txt (private); the run refuses without both, or
 # when the disallowed list does not block git push. .claude/triage/triage.off stops it.
+# Every exit after setup also appends a job pointer to .claude/triage/learnings/inbox.jsonl.
 
 set -euo pipefail
 
@@ -62,6 +63,19 @@ write_result() {
   mv -f "$tmp" "$JOB_DIR/result.json"
 }
 
+# Point the 18:00 learnings run at this job: its claude sessions ran in $WT, so the consolidate
+# step joins them to the task on that cwd. Skipped before triage-common.sh is loaded, under
+# triage.off, or without node; never fails the job.
+learnings_pointer() {
+  declare -F triage_learnings_pointer >/dev/null && [ -n "${INTERNAL_TRIAGE:-}" ] || return 0
+  local line
+  line=$(P_PAGE="$PAGE_ID" P_SLUG="$SLUG" P_CWD="${WT:-}" P_JOB="$JOB_DIR" P_STATUS="$STATUS" node -e '
+    const e = process.env;
+    process.stdout.write(JSON.stringify({ kind: "job", taskPageId: e.P_PAGE, slug: e.P_SLUG, cwd: e.P_CWD, jobDir: e.P_JOB, status: e.P_STATUS, endedAt: new Date().toISOString().replace(/\.\d{3}Z$/, "Z") }));
+  ' 2>/dev/null) || return 0
+  triage_learnings_pointer "$INTERNAL_TRIAGE/learnings" "$INTERNAL_TRIAGE/triage.off" "$line"
+}
+
 finish() {
   local rc=$?
   set +e
@@ -70,6 +84,7 @@ finish() {
     [ -n "$SUMMARY" ] || SUMMARY="${TRIAGE_ERROR:-Failed during $STAGE (exit $rc); see job.log}"
   fi
   write_result
+  learnings_pointer || true
   echo "=== triage-job $SLUG $STATUS $(date '+%Y-%m-%d %H:%M:%S'): $SUMMARY ==="
   [ "$STATUS" = passed ] && exit 0
   exit 1

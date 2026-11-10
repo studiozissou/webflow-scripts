@@ -1,8 +1,9 @@
 // File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, slug, threadTs, label, task, brief, startedAt, pid, pidStart}, result.json written by the job script, a reported marker, a live cap checked with process.kill(pid, 0) plus the process start time (a dead or reused pid without result.json counts as finished-failed), a kill switch, and a detached /bin/bash spawn of the job script with args [slug, pageId, threadTs, jobDir] with no tokens and TRIAGE_BUILD_JOB=1 in its env.
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readJsonFile } from './cli-io.js';
 
 const DEBUG = false;
 
@@ -20,14 +21,6 @@ const LABEL = /^[A-Z]?\d{1,3}$/;
 function check(value, re, name) {
   if (typeof value !== 'string' || !re.test(value)) throw new Error(`invalid ${name}: ${value}`);
   return value;
-}
-
-function readJson(path) {
-  try {
-    return JSON.parse(readFileSync(path, 'utf8'));
-  } catch {
-    return null;
-  }
 }
 
 function writeMeta(jobDir, meta) {
@@ -71,7 +64,7 @@ function jobIds(dir) {
 
 function stateOf(dir, pageId) {
   const jobDir = join(dir, pageId);
-  const meta = readJson(join(jobDir, 'meta.json')) ?? { pageId };
+  const meta = readJsonFile(join(jobDir, 'meta.json')) ?? { pageId };
   const hasResult = () => existsSync(join(jobDir, 'result.json'));
   let alive = false;
   let died = false;
@@ -93,7 +86,7 @@ function stateOf(dir, pageId) {
 function resultOf(state) {
   if (state.died) return { ...DIED };
   return (
-    readJson(join(state.jobDir, 'result.json')) ?? {
+    readJsonFile(join(state.jobDir, 'result.json')) ?? {
       status: 'failed',
       branch: null,
       tests: null,
@@ -208,7 +201,7 @@ export function start({
     return { started: false, reason: 'spawn-failed' };
   }
   child.unref();
-  const meta = readJson(join(jobDir, 'meta.json'));
+  const meta = readJsonFile(join(jobDir, 'meta.json'));
   writeMeta(jobDir, { ...meta, pid: child.pid, pidStart: processStart(child.pid) });
   return { started: true, pageId, jobDir, pid: child.pid };
 }

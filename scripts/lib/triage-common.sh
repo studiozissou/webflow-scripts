@@ -1,7 +1,8 @@
 #!/bin/bash
-# Shared setup for the triage runners (triage-morning.sh, triage-approve.sh, triage-job.sh):
-# the allowlist loader, the launchd environment, the claude lookup, the Notion token export
-# and the triage.off kill switch. Sourced, never run; each runner resolves it from its own
+# Shared setup for the triage runners (triage-morning.sh, triage-approve.sh, triage-job.sh,
+# triage-consolidate.sh) and the learnings-pointer.sh SessionEnd hook: the allowlist loader,
+# the launchd environment, the claude lookup, the Notion token export, the triage.off kill
+# switch and the learnings inbox append. Sourced, never run; each runner resolves it from its own
 # directory. A helper that cannot continue sets TRIAGE_ERROR, prints it and exits 1.
 
 # Print each non-blank, non-comment line of a list file, trimmed. Prints nothing when the
@@ -83,4 +84,16 @@ triage_real_dir() {
 # True when the kill switch $INTERNAL_TRIAGE/triage.off exists.
 triage_off() {
   [ -e "$INTERNAL_TRIAGE/triage.off" ]
+}
+
+# Append one JSON line $3 to $1/inbox.jsonl, unless the kill switch file $2 exists, the line is
+# empty or not one line, or the triage dir that holds $1 is missing (no private repo on this
+# machine: create nothing). Never fails the caller: a session end or a job must not break on it.
+# One printf >> per line, which is atomic for lines this small.
+triage_learnings_pointer() {
+  local dir=$1 off=$2 line=$3
+  [ -n "$line" ] && [[ "$line" != *$'\n'* ]] || return 0
+  [ ! -e "$off" ] && [ -d "$(dirname "$dir")" ] || return 0
+  mkdir -p "$dir" 2>/dev/null && printf '%s\n' "$line" >> "$dir/inbox.jsonl" 2>/dev/null
+  return 0
 }

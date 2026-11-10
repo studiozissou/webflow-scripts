@@ -1,4 +1,5 @@
-// Thin Notion REST client for the Tasks Tracker: open-task query with pagination, a pure page mapper, and Priority/Status/comment writes.
+// Thin Notion REST client for the Tasks Tracker: token from NOTION_TOKEN or the Keychain (resolveToken, notionClientFromEnv), open-task query with pagination, a pure page mapper, and Priority/Status/comment writes.
+import { execFileSync } from 'node:child_process';
 
 const PRIORITIES = ['P0', 'P1', 'P2', 'P3'];
 
@@ -14,6 +15,26 @@ const PROPS = {
   hours: 'Hours Estimate',
   clients: 'Clients',
 };
+
+const KEYCHAIN_ARGS = ['find-generic-password', '-s', 'mcp', '-a', 'notion-triage', '-w'];
+
+export function resolveToken({ env = process.env, exec = execFileSync } = {}) {
+  if (env.NOTION_TOKEN) return env.NOTION_TOKEN;
+  let raw;
+  try {
+    raw = exec('security', KEYCHAIN_ARGS, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  } catch {
+    throw new Error('Notion token not found: set NOTION_TOKEN or add Keychain item -s mcp -a notion-triage');
+  }
+  const token = String(raw ?? '').trim();
+  if (!token) throw new Error('Notion token from Keychain item mcp/notion-triage is empty');
+  return token;
+}
+
+// The one way to get an authenticated client (tools/notion/cli.js and triage learnings comments).
+export async function notionClientFromEnv(options) {
+  return createNotionClient({ token: resolveToken(options) });
+}
 
 export async function createNotionClient({ token } = {}) {
   if (!token) throw new Error('createNotionClient: token is required');

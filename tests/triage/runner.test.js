@@ -2,7 +2,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync, copyFileSync, chmodSync, readdirSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync, copyFileSync, chmodSync, readdirSync, realpathSync } from 'node:fs';
 import { tmpdir, devNull } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -267,7 +267,9 @@ test('morning runner passes each allowlist line as its own argv entry and writes
   const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal, TRIAGE_ARGS: '--dry-run' }) });
   assert.equal(r.status, 0, r.stderr + r.stdout);
   const [call] = fake.calls();
-  assert.deepEqual(call.args, ['-p', '/triage --dry-run', '--allowedTools', 'Read', 'Bash(node tools/triage/cli.js *)', 'mcp__slack__slack_send_message']);
+  // --add-dir names the real (symlink-resolved) triage folder, so state.json, tmp/ and
+  // reports/ are writable; the Edit rules in the allowlist still scope what can change.
+  assert.deepEqual(call.args, ['-p', '/triage --dry-run', '--add-dir', realpathSync(internal), '--allowedTools', 'Read', 'Bash(node tools/triage/cli.js *)', 'mcp__slack__slack_send_message']);
   assert.equal(call.notion, 'test-token');
   const reports = readdirSync(join(internal, 'reports'));
   assert.equal(reports.length, 1);
@@ -281,7 +283,7 @@ test('approve runner runs /triage approve and writes a timestamped approve repor
   const r = spawnSync('bash', [APPROVE], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal, TRIAGE_ARGS: '--dry-run' }) });
   assert.equal(r.status, 0, r.stderr + r.stdout);
   const [call] = fake.calls();
-  assert.deepEqual(call.args.slice(0, 3), ['-p', '/triage approve --dry-run', '--allowedTools']);
+  assert.deepEqual(call.args.slice(0, 5), ['-p', '/triage approve --dry-run', '--add-dir', realpathSync(internal), '--allowedTools']);
   const reports = readdirSync(join(internal, 'reports'));
   assert.equal(reports.length, 1);
   assert.match(reports[0], /^\d{4}-\d{2}-\d{2}-approve-\d{4}\.md$/);

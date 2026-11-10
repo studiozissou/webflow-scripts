@@ -32,6 +32,7 @@ if triage_off; then
 fi
 
 load_allowlist ALLOWED "$INTERNAL_TRIAGE/allowed-tools.txt"
+triage_real_dir
 
 cd "$REPO" || { echo "FATAL: cannot cd to $REPO"; exit 1; }
 
@@ -45,6 +46,7 @@ triage_notion_token
 mkdir -p "$REPORT_DIR"
 
 "$CLAUDE_BIN" -p "/triage approve${ARGS:+ $ARGS}" \
+  --add-dir "$TRIAGE_REAL_DIR" \
   --allowedTools "${ALLOWED[@]}" \
   > "$REPORT"
 status=$?

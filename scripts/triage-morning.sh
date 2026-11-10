@@ -34,6 +34,7 @@ if triage_off; then
 fi
 
 load_allowlist ALLOWED "$INTERNAL_TRIAGE/allowed-tools.txt"
+triage_real_dir
 
 cd "$REPO" || { echo "FATAL: cannot cd to $REPO"; exit 1; }
 
@@ -53,6 +54,7 @@ mkdir -p "$REPORT_DIR"
 # actually reads over coffee, and a stray warning spliced into the middle of a table is
 # enough to make it look broken.
 "$CLAUDE_BIN" -p "/triage${ARGS:+ $ARGS}" \
+  --add-dir "$TRIAGE_REAL_DIR" \
   --allowedTools "${ALLOWED[@]}" \
   > "$REPORT"
 status=$?

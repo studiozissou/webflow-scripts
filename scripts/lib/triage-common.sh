@@ -68,6 +68,18 @@ triage_notion_token() {
   fi
 }
 
+# Set TRIAGE_REAL_DIR to $INTERNAL_TRIAGE with symlinks resolved. .claude/triage is a symlink
+# into the private repo, outside the working directory, so a headless run refuses every write
+# there unless the runner passes this folder with --add-dir. The Edit rules in the allowlist
+# still limit writes to state.json, tmp/ and reports/.
+triage_real_dir() {
+  TRIAGE_REAL_DIR=$(cd "$INTERNAL_TRIAGE" 2>/dev/null && pwd -P) || {
+    TRIAGE_ERROR="cannot resolve $INTERNAL_TRIAGE"
+    echo "FATAL: $TRIAGE_ERROR" >&2
+    exit 1
+  }
+}
+
 # True when the kill switch $INTERNAL_TRIAGE/triage.off exists.
 triage_off() {
   [ -e "$INTERNAL_TRIAGE/triage.off" ]

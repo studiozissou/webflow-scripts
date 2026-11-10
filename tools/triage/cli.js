@@ -1,28 +1,36 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), the approvals user ID only from --config, and `jobs start` refuses inside a build job.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs as parseNodeArgs } from 'node:util';
 import { bucketTasks } from './lib/buckets.js';
-import { rankAutomatable } from './lib/rank.js';
+import { rankAutomatable, DEFAULT_MAX_BUILD_ITEMS } from './lib/rank.js';
 import { parseReplies } from './lib/approvals.js';
 import { lint } from './lib/ste-lint.js';
 import { start, collect, list, DEFAULT_JOBS_DIR, DEFAULT_KILL_SWITCH, DEFAULT_SCRIPT, DEFAULT_CAP } from './lib/jobs.js';
 
 const USAGE = `usage: cli.js <command> [options]
-  buckets [--now <iso>] [--in <tasks.json>]          tasks array or {tasks, threads}
-  rank [--in <tasks.json>] [--max <n>] [--jobs-dir <dir>]
-  approvals --digest <state.json> --replies <replies.json> [--user <id>]
+  buckets [--now <iso>] [--in <tasks.json>] [--threads <threads.json>]
+                                                      tasks array or {tasks, threads}; threads array
+  rank [--in <tasks.json>] [--max <n>]
+  approvals --digest <state.json> --replies <replies.json>   user ID from config.slack.digest.userId
   lint [--in <digest.md>]                             exit 1 on warnings
-  jobs start --page <id> --slug <slug> --thread <ts> [--task <name>] [--brief <text>]
+  jobs start --page <id> --slug <slug> --thread <ts> [--label <B1>] [--task <name>] [--brief <text>]
+                                                      exit 1 when refused (builds-off, kill-switch, cap, claimed)
   jobs collect | jobs list
-common: --config <config.json>  jobs: --jobs-dir <dir> --script <path> --kill-switch <path> --cap <n>
+common: --config <config.json>
 `;
 
-const VALUE_FLAGS = [
-  'now', 'in', 'config', 'digest', 'replies', 'user', 'max', 'page', 'slug', 'thread',
-  'task', 'brief', 'jobs-dir', 'script', 'kill-switch', 'cap',
-];
+const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief'];
+
+// Test-only overrides. The unattended allowlist rule Bash(node tools/triage/cli.js *) cannot
+// match a command with a leading env assignment, so a scheduled run cannot set these.
+const TEST_ENV = {
+  jobsDir: 'TRIAGE_TEST_JOBS_DIR',
+  script: 'TRIAGE_TEST_SCRIPT',
+  killSwitch: 'TRIAGE_TEST_KILL_SWITCH',
+  cap: 'TRIAGE_TEST_CAP',
+};
 const OPTIONS = Object.fromEntries(VALUE_FLAGS.map((name) => [name, { type: 'string' }]));
 
 class UsageError extends Error {}
@@ -69,37 +77,48 @@ function out(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
-function jobPaths(args) {
+function jobPaths(env = process.env) {
   return {
-    jobsDir: resolve(args['jobs-dir'] ?? DEFAULT_JOBS_DIR),
-    script: resolve(args.script ?? DEFAULT_SCRIPT),
-    killSwitch: resolve(args['kill-switch'] ?? DEFAULT_KILL_SWITCH),
-    cap: intFlag(args.cap, 'cap', DEFAULT_CAP),
+    jobsDir: resolve(env[TEST_ENV.jobsDir] || DEFAULT_JOBS_DIR),
+    script: resolve(env[TEST_ENV.script] || DEFAULT_SCRIPT),
+    killSwitch: resolve(env[TEST_ENV.killSwitch] || DEFAULT_KILL_SWITCH),
+    cap: intFlag(env[TEST_ENV.cap] || undefined, TEST_ENV.cap, DEFAULT_CAP),
   };
+}
+
+function readThreads(path) {
+  if (!path) return [];
+  let text;
+  try {
+    text = readFileSync(resolve(path), 'utf8');
+  } catch (err) {
+    throw new UsageError(`--threads cannot be read: ${err.message}`);
+  }
+  const threads = readJson(text, path);
+  if (!Array.isArray(threads)) throw new UsageError('--threads must be a JSON array of threads');
+  return threads;
 }
 
 function runBuckets(args, config) {
   const now = args.now ?? new Date().toISOString();
   if (Number.isNaN(Date.parse(now))) throw new UsageError(`--now is not a valid date: ${now}`);
   const { tasks, threads } = tasksAndThreads(readJson(readInput(args), 'input'));
-  out(bucketTasks(tasks, threads, now, config.digest?.rules ?? {}));
+  out(bucketTasks(tasks, [...threads, ...readThreads(args.threads)], now, config.digest?.rules ?? {}));
   return 0;
 }
 
 function runRank(args, config) {
-  const input = readJson(readInput(args), 'input');
-  const { tasks } = tasksAndThreads(input);
-  const { jobsDir } = jobPaths(args);
-  const claimed = [...list(jobsDir).map((j) => j.pageId), ...(input?.claimed ?? [])];
-  const max = intFlag(args.max, 'max', config.digest?.maxBuildItems ?? 5);
+  const { tasks } = tasksAndThreads(readJson(readInput(args), 'input'));
+  const claimed = list(jobPaths().jobsDir).map((j) => j.pageId);
+  const max = intFlag(args.max, 'max', config.digest?.maxBuildItems ?? DEFAULT_MAX_BUILD_ITEMS);
   out(rankAutomatable(tasks, config.digest?.doerMap, claimed, { max }));
   return 0;
 }
 
 function runApprovals(args, config) {
   if (!args.digest || !args.replies) throw new UsageError('approvals needs --digest and --replies');
-  const userId = args.user ?? config.slack?.digest?.userId;
-  if (!userId) throw new UsageError('approvals needs --user or config.slack.digest.userId');
+  const userId = config.slack?.digest?.userId;
+  if (!userId) throw new UsageError('approvals needs --config with slack.digest.userId');
   const state = readJson(readFileSync(resolve(args.digest), 'utf8'), args.digest);
   const replies = readJson(readFileSync(resolve(args.replies), 'utf8'), args.replies);
   const digest = state?.digest ?? state;
@@ -114,9 +133,9 @@ function runLint(args, config) {
   return result.ok ? 0 : 1;
 }
 
-function runJobs(args) {
+function runJobs(args, config) {
   const [, sub] = args.positional;
-  const paths = jobPaths(args);
+  const paths = jobPaths();
   if (sub === 'list') {
     out(list(paths.jobsDir));
     return 0;
@@ -126,12 +145,21 @@ function runJobs(args) {
     return 0;
   }
   if (sub !== 'start') throw new UsageError(`unknown jobs subcommand: ${sub ?? '(none)'}`);
+  if (process.env.TRIAGE_BUILD_JOB) {
+    process.stderr.write('jobs start: not available inside a build job\n');
+    return 2;
+  }
   if (!args.page || !args.slug || !args.thread) throw new UsageError('jobs start needs --page, --slug and --thread');
+  if (config.digest?.buildsEnabled !== true) {
+    out({ started: false, reason: 'builds-off' });
+    return 1;
+  }
   const result = start({
     ...paths,
     pageId: args.page,
     slug: args.slug,
     threadTs: args.thread,
+    label: args.label ?? null,
     task: args.task ?? '',
     brief: args.brief ?? '',
   });

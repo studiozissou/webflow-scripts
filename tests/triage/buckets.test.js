@@ -6,7 +6,7 @@ import { bucketTasks, DEFAULT_RULES } from '../../tools/triage/lib/buckets.js';
 
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/tasks.json', import.meta.url), 'utf8'));
 const NOW = '2026-11-11T07:00:00Z';
-const RULES = { blockedNamePattern: '\\bWill\\b' };
+const RULES = { blockedNamePattern: '\\bPat\\b' };
 
 const ids = (items) => items.map((i) => i.id);
 const reasonOf = (items, id) => items.find((i) => i.id === id)?.reason;
@@ -48,13 +48,13 @@ test('P1 with no due date lands in THIS WEEK', () => {
   assert.equal(reasonOf(r.week, 't-p1-nodue'), 'p1');
 });
 
-test('overdue and blocked-on-Will tasks land in NOW', () => {
+test('overdue and blocked-on-owner tasks land in NOW', () => {
   const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   assert.equal(reasonOf(r.now, 't-overdue'), 'overdue');
-  assert.equal(reasonOf(r.now, 't-blocked'), 'blocked-on-will');
+  assert.equal(reasonOf(r.now, 't-blocked'), 'blocked-on-owner');
 });
 
-test('a blocked reason naming Will on an External task is not blocked on Will', () => {
+test('a blocked reason naming the owner on an External task is not blocked on the owner', () => {
   const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   const all = [...r.now, ...r.today, ...r.week];
   assert.equal(all.some((i) => i.id === 't-blocked-external'), false);
@@ -91,9 +91,9 @@ test('Christmas holidays do not count towards reply age', () => {
   assert.equal(bucketTasks([], threads, '2026-12-29T08:00:00Z', RULES).now.length, 1);
 });
 
-test('direct question threads are blocked on Will', () => {
+test('direct question threads are blocked on the owner', () => {
   const r = bucketTasks([], fixture.threads, NOW, RULES);
-  assert.equal(reasonOf(r.now, 'th-question'), 'blocked-on-will');
+  assert.equal(reasonOf(r.now, 'th-question'), 'blocked-on-owner');
 });
 
 test('proposals are Priority-only with before and after', () => {
@@ -105,7 +105,7 @@ test('proposals are Priority-only with before and after', () => {
       ['t-due-today', 'P2', 'P0', 'due-soon'],
       ['t-due-tomorrow', 'P1', 'P0', 'due-soon'],
       ['t-weekend', 'P2', 'P0', 'due-soon'],
-      ['t-blocked', 'P1', 'P0', 'blocked-on-will'],
+      ['t-blocked', 'P1', 'P0', 'blocked-on-owner'],
       ['t-p3-week', 'P3', 'P1', 'due-week'],
     ],
   );

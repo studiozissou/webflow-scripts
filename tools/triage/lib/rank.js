@@ -12,8 +12,10 @@ export const DEFAULT_DOER_MAP = [
   { pattern: '\\bcode\\b|\\bbuild\\b|\\bimplement\\b|\\bfix\\b|\\brefactor\\b', command: '/build' },
 ];
 
+export const DEFAULT_MAX_BUILD_ITEMS = 5;
+
 export const DEFAULT_RANK_OPTIONS = {
-  max: 5,
+  max: DEFAULT_MAX_BUILD_ITEMS,
   doer: 'Claude',
   excludeStatuses: ['Done', 'Cancelled', 'Waiting', 'Blocked', 'In Testing'],
 };

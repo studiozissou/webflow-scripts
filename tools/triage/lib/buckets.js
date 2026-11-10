@@ -14,7 +14,7 @@ export const DEFAULT_RULES = {
   excludeStatuses: ['Done', 'Cancelled'],
 };
 
-const NOW_ORDER = ['new-business', 'blocked-on-will', 'overdue', 'reply-age'];
+const NOW_ORDER = ['new-business', 'blocked-on-owner', 'overdue', 'reply-age'];
 const TODAY_ORDER = ['due-today', 'due-tomorrow', 'p0'];
 const WEEK_ORDER = ['due-week', 'p1'];
 
@@ -39,7 +39,7 @@ function compareItems(order) {
 const isQuick = (task, rules) =>
   (task.tags ?? []).some((t) => String(t).toLowerCase() === rules.quickTag.toLowerCase());
 
-function isBlockedOnWill(task, rules) {
+function isBlockedOnOwner(task, rules) {
   if (!rules.blockedDoers.includes(task.doer) || !task.blockedReason) return false;
   return new RegExp(rules.blockedNamePattern).test(task.blockedReason);
 }
@@ -62,7 +62,7 @@ const isOverdue = (task, today) => Boolean(task.due) && amsterdamDate(task.due) 
 
 function classifyTask(task, today, rules) {
   const dueIn = task.due ? calendarDaysBetween(today, task.due) : null;
-  if (isBlockedOnWill(task, rules)) return ['now', 'blocked-on-will'];
+  if (isBlockedOnOwner(task, rules)) return ['now', 'blocked-on-owner'];
   if (isOverdue(task, today)) return ['now', 'overdue'];
   if (dueIn === 0) return ['today', 'due-today'];
   if (dueIn !== null && dueIn <= rules.todayDueDays) return ['today', 'due-tomorrow'];
@@ -80,7 +80,7 @@ function proposalFor(task, today, rules) {
     if (isOverdue(task, today)) return make('P0', 'overdue');
     if (workingDaysBetween(today, task.due) <= rules.proposalP0WorkingDays) return make('P0', 'due-soon');
   }
-  if (from !== 'P0' && isBlockedOnWill(task, rules)) return make('P0', 'blocked-on-will');
+  if (from !== 'P0' && isBlockedOnOwner(task, rules)) return make('P0', 'blocked-on-owner');
   if (task.due && (from === 'P2' || from === 'P3') && calendarDaysBetween(today, task.due) <= rules.proposalP1Days) {
     return make('P1', 'due-week');
   }
@@ -91,7 +91,7 @@ function threadItem(thread, today, rules) {
   const age = workingDaysBetween(thread.lastMessageAt, today);
   let reason = null;
   if (thread.newBusiness) reason = 'new-business';
-  else if (thread.directQuestion) reason = 'blocked-on-will';
+  else if (thread.directQuestion) reason = 'blocked-on-owner';
   else if (age > rules.replyAgeWorkingDays) reason = 'reply-age';
   if (!reason) return null;
   return {

@@ -1,4 +1,4 @@
-// CLI over the Notion Tasks Tracker client: list open tasks as JSON and set Priority, Status or a comment on one page; token from NOTION_TOKEN or the Keychain.
+// CLI over the Notion Tasks Tracker client: list open tasks as JSON and set Priority, Status or a comment on one page; token from NOTION_TOKEN or the Keychain; refuses with exit 2 inside a build job (TRIAGE_BUILD_JOB set) before any token lookup.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -100,7 +100,11 @@ async function run(args) {
   }
 }
 
-export async function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2), env = process.env) {
+  if (env.TRIAGE_BUILD_JOB) {
+    process.stderr.write('notion cli: not available inside a build job\n');
+    return 2;
+  }
   let args;
   try {
     args = parseArgs(argv);

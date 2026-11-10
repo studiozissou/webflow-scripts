@@ -47,7 +47,7 @@ const FAKE_CLAUDE = `#!/usr/bin/env node
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const args = process.argv.slice(2);
-fs.appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ args, cwd: process.cwd(), jobDir: process.env.CLAUDE_JOB_DIR || null, notion: process.env.NOTION_TOKEN || null }) + '\\n');
+fs.appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ args, cwd: process.cwd(), jobDir: process.env.CLAUDE_JOB_DIR || null, notion: process.env.NOTION_TOKEN || null, buildJob: process.env.TRIAGE_BUILD_JOB || null }) + '\\n');
 const prompt = args[1] || '';
 const slug = process.env.FAKE_SLUG;
 if (process.env.FAKE_OFF_ON && prompt.startsWith('/' + process.env.FAKE_OFF_ON)) fs.writeFileSync(process.env.FAKE_OFF_FILE, '');
@@ -150,6 +150,52 @@ test('triage-common.sh parses with bash -n and its triage_off helper checks the 
   const code = codeLines(COMMON).join('\n');
   assert.match(code, /triage_off\(\)\s*\{[^}]*\[\s+-e\s+"\$INTERNAL_TRIAGE\/triage\.off"\s+\]/);
   assert.doesNotMatch(read(COMMON), /dangerously-skip-permissions/);
+});
+
+test('triage-common.sh load_allowlist fills the array and exits 1 on a missing or empty file', () => {
+  const dir = tmp('triage-common-');
+  const list = join(dir, 'list.txt');
+  writeFileSync(list, '# c\nRead\n\n  Bash(node tools/triage/cli.js *)  \n');
+  const sh = (file) => spawnSync('bash', ['-c', `source "${COMMON}"; load_allowlist ALLOWED "${file}"; printf '%s\\n' "\${ALLOWED[@]}"`], { encoding: 'utf8' });
+  const ok = sh(list);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(ok.stdout, 'Read\nBash(node tools/triage/cli.js *)\n');
+  writeFileSync(join(dir, 'empty.txt'), '# only comments\n\n');
+  for (const f of [join(dir, 'empty.txt'), join(dir, 'missing.txt')]) {
+    const r = sh(f);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /missing or lists no tools/);
+    assert.equal(r.stdout, '');
+  }
+});
+
+test('triage-common.sh owns the claude lookup and the Notion token export; runners do not repeat them', () => {
+  const code = codeLines(COMMON).join('\n');
+  for (const fn of ['load_allowlist', 'triage_claude_bin', 'triage_notion_token']) assert.match(code, new RegExp(`^${fn}\\(\\)`, 'm'));
+  for (const f of [MORNING, APPROVE]) {
+    const body = codeLines(f).join('\n');
+    assert.doesNotMatch(body, /security find-generic-password/);
+    assert.doesNotMatch(body, /type -P claude/);
+    assert.doesNotMatch(body, /read_list/);
+  }
+  assert.doesNotMatch(codeLines(JOB).join('\n'), /type -P claude|read_list/);
+});
+
+test('triage_notion_token exports the Keychain token only when NOTION_TOKEN is unset', () => {
+  const bin = tmp('triage-sec-');
+  writeFileSync(join(bin, 'security'), '#!/bin/sh\necho kc-token\n');
+  chmodSync(join(bin, 'security'), 0o755);
+  const sh = (env) => spawnSync('bash', ['-c', `source "${COMMON}"; triage_notion_token; printf '%s' "\${NOTION_TOKEN:-}"`], { encoding: 'utf8', env: { PATH: `${bin}:/usr/bin:/bin`, ...env } });
+  assert.equal(sh({}).stdout, 'kc-token');
+  assert.equal(sh({ NOTION_TOKEN: 'env-token' }).stdout, 'env-token');
+});
+
+test('the morning and approve headers state what an unattended run may send and start', () => {
+  const header = (f) => read(f).split('\n').filter((l) => l.startsWith('#')).map((l) => l.replace(/^#\s?/, '')).join(' ').replace(/\s+/g, ' ');
+  assert.match(header(MORNING), /An unattended run posts one digest to the digest Slack channel, posts replies in that digest thread \(acknowledgements and job results\), and creates Gmail drafts; it sends no email and replies to no one else\./);
+  assert.match(header(MORNING), /It also starts at most 3 background builds for tasks the owner approved with `go`, once builds are enabled\./);
+  assert.match(header(APPROVE), /An unattended run posts replies in the digest thread only \(acknowledgements and job results\); it posts no new digest, sends no email and replies to no one else\./);
+  assert.match(header(APPROVE), /It starts at most 3 background builds for tasks the owner approved with `go`, once builds are enabled/);
 });
 
 test('morning and approve runners read allowed-tools.txt and pass it as --allowedTools', () => {
@@ -315,6 +361,7 @@ test('job script plans, builds and tests on job/<slug> without pushing', () => {
   for (const c of calls) {
     assert.deepEqual(c.args.slice(2), ['--allowedTools', 'Read', 'Edit', 'Bash(git commit*)', 'Bash(npm *)', '--disallowedTools', 'Bash(git push*)', 'mcp__Webflow__*', 'mcp__slack__*']);
     assert.equal(c.jobDir, fx.jobDir);
+    assert.equal(c.buildJob, '1');
     assert.match(c.cwd, /\.claude\/worktrees\/job-faq-schema$/);
   }
   assert.deepEqual(result(fx.jobDir), {
@@ -322,7 +369,8 @@ test('job script plans, builds and tests on job/<slug> without pushing', () => {
     branch: 'job/faq-schema',
     tests: { passed: 3, total: 3 },
     summary: result(fx.jobDir).summary,
-    specPath: '.claude/specs/faq-schema.md'
+    specPath: '.claude/specs/faq-schema.md',
+    browserChecks: 'not run'
   });
   assert.match(result(fx.jobDir).summary, /test:acme/);
   assert.equal(git(fx.remote, 'branch', '--list', 'job/*').trim(), '');

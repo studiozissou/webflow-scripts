@@ -56,7 +56,7 @@ export function mapTaskPage(page) {
 
 export async function queryOpenTasks(client, databaseId, { excludeStatuses = ['Done', 'Cancelled'] } = {}) {
   const filter = {
-    and: excludeStatuses.map((name) => ({ property: 'Status', status: { does_not_equal: name } })),
+    and: excludeStatuses.map((name) => ({ property: PROPS.status, status: { does_not_equal: name } })),
   };
   const tasks = [];
   let cursor;
@@ -78,12 +78,12 @@ export async function queryOpenTasks(client, databaseId, { excludeStatuses = ['D
 
 export async function updatePriority(client, pageId, value) {
   if (!PRIORITIES.includes(value)) throw new Error(`Priority must be one of ${PRIORITIES.join(', ')}`);
-  return client.pages.update({ page_id: pageId, properties: { Priority: { select: { name: value } } } });
+  return client.pages.update({ page_id: pageId, properties: { [PROPS.priority]: { select: { name: value } } } });
 }
 
 export async function updateStatus(client, pageId, value) {
   if (!value) throw new Error('Status value is required');
-  return client.pages.update({ page_id: pageId, properties: { Status: { status: { name: value } } } });
+  return client.pages.update({ page_id: pageId, properties: { [PROPS.status]: { status: { name: value } } } });
 }
 
 export async function addComment(client, pageId, text) {

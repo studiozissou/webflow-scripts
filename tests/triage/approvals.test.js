@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseReplies, compareTs } from '../../tools/triage/lib/approvals.js';
 
-const USER = 'U0WILL';
+const USER = 'U0OWNER';
 const DIGEST = {
   ts: '1762844400.000100',
   channelId: 'C0TEST',
@@ -156,4 +156,10 @@ test('compareTs orders Slack timestamps exactly', () => {
   assert.ok(compareTs('1762844400.1', '1762844400.000100') > 0);
   assert.equal(compareTs('1762844400.000100', '1762844400.000100'), 0);
   assert.ok(compareTs('999.9', '1000.0') < 0);
+});
+
+test('processedTs comes back de-duplicated, keeping first-seen order', () => {
+  const state = { ...DIGEST, processedTs: ['1762844500.000001', '1762844500.000001', '1762844450.000001'] };
+  const r = parseReplies(state, [reply('1762844600.000001', 'go 1'), reply('1762844600.000001', 'go 1')], { userId: USER });
+  assert.deepEqual(r.processedTs, ['1762844500.000001', '1762844450.000001', '1762844600.000001']);
 });

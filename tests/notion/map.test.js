@@ -1,7 +1,11 @@
-// Covers the Notion task mapper, open-task pagination and filter, CLI arg parsing, and token resolution without touching the network or the Keychain.
+// Covers the Notion task mapper, open-task pagination and filter, CLI arg parsing, and token resolution without touching the network or the Keychain, and the CLI refusal inside a build job.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { mapTaskPage, queryOpenTasks, updatePriority, updateStatus, addComment } from '../../tools/notion/client.js';
 import { parseArgs, resolveToken, resolveDatabaseId } from '../../tools/notion/cli.js';
 
@@ -16,7 +20,7 @@ test('mapTaskPage maps a full Tasks Tracker page', () => {
     due: '2026-11-12',
     doer: 'User + Claude',
     tags: ['Quick', 'Email'],
-    blockedReason: 'waiting on Will to confirm scope',
+    blockedReason: 'waiting on Pat to confirm scope',
     hours: 0.25,
     clients: ['00000000-0000-0000-0000-000000000003'],
     url: 'https://www.notion.so/Reply-to-Alex-about-Phase-B-pricing-00000000000000000000000000000001',
@@ -186,4 +190,24 @@ test('resolveDatabaseId prefers --db, else config notion.databaseId', () => {
   const read = (p) => { assert.equal(p, '/cfg.json'); return JSON.stringify({ notion: { databaseId: 'from-config' } }); };
   assert.equal(resolveDatabaseId({ config: '/cfg.json' }, read), 'from-config');
   assert.throws(() => resolveDatabaseId({ config: '/cfg.json' }, () => '{}'), /databaseId/);
+});
+
+test('the CLI refuses inside a build job before resolving any token', () => {
+  const bin = mkdtempSync(join(tmpdir(), 'notion-cli-'));
+  try {
+    const marker = join(bin, 'called');
+    writeFileSync(join(bin, 'security'), `#!/bin/sh\n: > "${marker}"\necho fake-token\n`);
+    chmodSync(join(bin, 'security'), 0o755);
+    const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'NOTION_TOKEN'));
+    const cli = fileURLToPath(new URL('../../tools/notion/cli.js', import.meta.url));
+    for (const args of [['set-priority', '--page', 'p', '--value', 'P1'], ['tasks', '--open', '--db', 'x'], []]) {
+      const r = spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8', env: { ...env, PATH: `${bin}:${env.PATH}`, TRIAGE_BUILD_JOB: '1' } });
+      assert.equal(r.status, 2, r.stderr);
+      assert.match(r.stderr, /not available inside a build job/);
+      assert.equal(r.stdout, '');
+    }
+    assert.equal(existsSync(marker), false);
+  } finally {
+    rmSync(bin, { recursive: true, force: true });
+  }
 });

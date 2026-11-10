@@ -1,48 +1,22 @@
 {
+  "_comment": "Copy to .claude/triage/config.json and fill in. Only keys you must set are listed; any omitted key (digest.rules thresholds, digest.lint, digest.doerMap, digest.maxBuildItems) uses the code defaults in tools/triage/lib. buildsEnabled must be true before jobs start runs a build.",
   "slack": {
     "channels": ["C0000000001"],
     "dms": ["D0000000001"],
-    "manualCheck": [],
-    "lookbackHours": 24,
     "digest": { "channelId": "C0000000000", "userId": "U0000000000" }
   },
   "gmail": {
-    "queries": ["in:inbox newer_than:1d"],
-    "userAddresses": ["you@example.com", "you@studio.example"],
+    "userAddresses": ["you@example.com"],
     "automatedSenders": ["billing@vendor.example"],
     "knownContacts": ["client.example"]
   },
   "notion": {
     "databaseId": "00000000-0000-0000-0000-000000000000",
-    "dataSourceId": "00000000-0000-0000-0000-000000000001",
-    "clientsDbDataSourceId": "00000000-0000-0000-0000-000000000002",
-    "maxPagesPerRun": 10
+    "dataSourceId": "00000000-0000-0000-0000-000000000001"
   },
   "digest": {
     "buildsEnabled": false,
-    "maxBuildItems": 5,
-    "newBusinessTerms": ["website", "site", "quote", "proposal", "redesign"],
-    "rules": {
-      "replyAgeWorkingDays": 2,
-      "todayDueDays": 1,
-      "weekDueDays": 7,
-      "proposalP0WorkingDays": 2,
-      "proposalP1Days": 7,
-      "quickTag": "Quick",
-      "blockedNamePattern": "\\bYourName\\b",
-      "blockedDoers": ["User", "User + Claude"],
-      "excludeStatuses": ["Done", "Cancelled"]
-    },
-    "lint": {
-      "maxSentenceWords": 20,
-      "maxAvgWords": 15,
-      "maxLines": 40,
-      "bannedWords": ["just", "really", "very", "basically", "note that", "please note", "kindly"],
-      "checkNumbers": true
-    },
-    "doerMap": [
-      { "pattern": "\\bschema\\b|json-?ld", "command": "/generate-schema" },
-      { "pattern": "\\baudit\\b", "command": "/site-audit" }
-    ]
+    "newBusinessTerms": ["website", "quote", "proposal", "redesign"],
+    "rules": { "blockedNamePattern": "\\bYourName\\b" }
   }
 }

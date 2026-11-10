@@ -1,11 +1,13 @@
 #!/bin/bash
 # Run /triage headlessly on weekday mornings and save the report for the user to read.
 #
-# An unattended run posts one digest to the digest Slack channel, posts job result
-# replies in that digest thread, and creates Gmail drafts; it sends no email and replies
-# to no one else. It changes Notion only through tools/notion/cli.js: Priority after an
-# `ok changes` reply, and Status plus a comment on tasks Will approved with `go`. It also
-# moves newsletters to Gmail's trash, recoverable for 30 days. Tools are limited to
+# An unattended run posts one digest to the digest Slack channel, posts replies in that
+# digest thread (acknowledgements and job results), and creates Gmail drafts; it sends no
+# email and replies to no one else.
+# It also starts at most 3 background builds for tasks the owner approved with `go`, once builds are enabled.
+# It changes Notion only through tools/notion/cli.js: Priority after an `ok changes` reply,
+# and Status plus a comment on tasks the owner approved with `go`. It also moves newsletters to
+# Gmail's trash, recoverable for 30 days. Tools are limited to
 # .claude/triage/allowed-tools.txt (private), and touching .claude/triage/triage.off stops
 # every run.
 #
@@ -31,40 +33,16 @@ if triage_off; then
   exit 0
 fi
 
-# No allowlist means no run: nobody is there to answer a permission prompt, and running
-# without a tool gate is not an option.
-ALLOWLIST="$INTERNAL_TRIAGE/allowed-tools.txt"
-ALLOWED=()
-while IFS= read -r t; do ALLOWED+=("$t"); done < <(read_list "$ALLOWLIST")
-if [ ${#ALLOWED[@]} -eq 0 ]; then
-  echo "FATAL: $ALLOWLIST is missing or lists no tools; refusing to run without a tool allowlist" >&2
-  exit 1
-fi
+load_allowlist ALLOWED "$INTERNAL_TRIAGE/allowed-tools.txt"
 
 cd "$REPO" || { echo "FATAL: cannot cd to $REPO"; exit 1; }
 
 echo "=== triage-morning $(date '+%Y-%m-%d %H:%M:%S') ==="
 
 triage_env
-
-# type -P searches PATH only, ignoring the shell function that wraps claude in the user's
-# interactive profile — launchd will not have it, but a manual test run would.
-CLAUDE_BIN="${CLAUDE_BIN:-$(type -P claude 2>/dev/null)}"
-if [ -z "$CLAUDE_BIN" ]; then
-  echo "FATAL: 'claude' not found on PATH. Add its directory to triage_env in scripts/lib/triage-common.sh,"
-  echo "       or set it in the plist's EnvironmentVariables."
-  exit 1
-fi
-
-# tools/notion/cli.js reads open tasks over REST with this token.
-if [ -z "${NOTION_TOKEN:-}" ]; then
-  if token=$(security find-generic-password -s mcp -a notion-triage -w 2>/dev/null) && [ -n "$token" ]; then
-    export NOTION_TOKEN="$token"
-  else
-    echo "WARNING: Keychain item mcp/notion-triage not found; open tasks will not load" >&2
-  fi
-  unset token
-fi
+triage_claude_bin
+# tools/notion/cli.js reads and writes tasks over REST with this token.
+triage_notion_token
 
 mkdir -p "$REPORT_DIR"
 

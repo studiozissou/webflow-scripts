@@ -2,10 +2,10 @@
 # Run /triage approve headlessly at midday and late afternoon to act on replies in the morning digest thread.
 #
 # An unattended run posts replies in the digest thread only (acknowledgements and job
-# results); it posts no new digest, sends no email and replies to no one else. It starts
-# at most 3 background builds for tasks Will approved (scripts/triage-job.sh, which never
-# pushes or deploys). It changes Notion only through tools/notion/cli.js: Priority after an
-# `ok changes` reply, and Status plus a comment on tasks Will approved with `go`. Tools are
+# results); it posts no new digest, sends no email and replies to no one else.
+# It starts at most 3 background builds for tasks the owner approved with `go`, once builds are
+# enabled (scripts/triage-job.sh, which never pushes or deploys). It changes Notion only through tools/notion/cli.js: Priority after an
+# `ok changes` reply, and Status plus a comment on tasks the owner approved with `go`. Tools are
 # limited to .claude/triage/allowed-tools.txt (private), and touching
 # .claude/triage/triage.off stops every run.
 #
@@ -31,35 +31,16 @@ if triage_off; then
   exit 0
 fi
 
-ALLOWLIST="$INTERNAL_TRIAGE/allowed-tools.txt"
-ALLOWED=()
-while IFS= read -r t; do ALLOWED+=("$t"); done < <(read_list "$ALLOWLIST")
-if [ ${#ALLOWED[@]} -eq 0 ]; then
-  echo "FATAL: $ALLOWLIST is missing or lists no tools; refusing to run without a tool allowlist" >&2
-  exit 1
-fi
+load_allowlist ALLOWED "$INTERNAL_TRIAGE/allowed-tools.txt"
 
 cd "$REPO" || { echo "FATAL: cannot cd to $REPO"; exit 1; }
 
 echo "=== triage-approve $(date '+%Y-%m-%d %H:%M:%S') ==="
 
 triage_env
-
-CLAUDE_BIN="${CLAUDE_BIN:-$(type -P claude 2>/dev/null)}"
-if [ -z "$CLAUDE_BIN" ]; then
-  echo "FATAL: 'claude' not found on PATH. Add its directory to triage_env in scripts/lib/triage-common.sh,"
-  echo "       or set it in the plist's EnvironmentVariables."
-  exit 1
-fi
-
-if [ -z "${NOTION_TOKEN:-}" ]; then
-  if token=$(security find-generic-password -s mcp -a notion-triage -w 2>/dev/null) && [ -n "$token" ]; then
-    export NOTION_TOKEN="$token"
-  else
-    echo "WARNING: Keychain item mcp/notion-triage not found; Notion task reads will fail" >&2
-  fi
-  unset token
-fi
+triage_claude_bin
+# tools/notion/cli.js reads and writes tasks over REST with this token.
+triage_notion_token
 
 mkdir -p "$REPORT_DIR"
 

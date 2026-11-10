@@ -1,4 +1,4 @@
-// File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, slug, threadTs, task, brief, startedAt, pid, pidStart}, result.json written by the job script, a reported marker, a live cap checked with process.kill(pid, 0) plus the process start time (a dead or reused pid without result.json counts as finished-failed), a kill switch, and a detached /bin/bash spawn of the job script with args [slug, pageId, threadTs, jobDir] and no tokens in its env.
+// File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, slug, threadTs, label, task, brief, startedAt, pid, pidStart}, result.json written by the job script, a reported marker, a live cap checked with process.kill(pid, 0) plus the process start time (a dead or reused pid without result.json counts as finished-failed), a kill switch, and a detached /bin/bash spawn of the job script with args [slug, pageId, threadTs, jobDir] with no tokens and TRIAGE_BUILD_JOB=1 in its env.
 import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -15,6 +15,7 @@ export const DEFAULT_CAP = 3;
 const PAGE_ID = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const THREAD_TS = /^\d+\.\d+$/;
+const LABEL = /^[A-Z]?\d{1,3}$/;
 
 function check(value, re, name) {
   if (typeof value !== 'string' || !re.test(value)) throw new Error(`invalid ${name}: ${value}`);
@@ -34,7 +35,7 @@ function writeMeta(jobDir, meta) {
 }
 
 const DIED = { status: 'failed', branch: null, tests: { passed: 0, total: 0 }, summary: 'job died without result', specPath: null };
-const SECRET_ENV = (name) => name === 'NOTION_TOKEN' || name.endsWith('_TOKEN') || name.startsWith('SLACK_');
+const SECRET_ENV = (name) => name.endsWith('_TOKEN') || name.startsWith('SLACK_');
 
 function processStart(pid) {
   try {
@@ -155,7 +156,7 @@ export function collect(dir) {
 
 function childEnv(jobDir) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !SECRET_ENV(name)));
-  return { ...env, CLAUDE_JOB_DIR: jobDir };
+  return { ...env, CLAUDE_JOB_DIR: jobDir, TRIAGE_BUILD_JOB: '1' };
 }
 
 export function start({
@@ -165,6 +166,7 @@ export function start({
   threadTs,
   task = '',
   brief = '',
+  label = null,
   script = DEFAULT_SCRIPT,
   killSwitch = DEFAULT_KILL_SWITCH,
   cap = DEFAULT_CAP,
@@ -172,9 +174,10 @@ export function start({
   check(pageId, PAGE_ID, 'pageId');
   check(slug, SLUG, 'slug');
   check(threadTs, THREAD_TS, 'threadTs');
+  if (label != null) check(label, LABEL, 'label');
   if (killSwitch && existsSync(killSwitch)) return { started: false, reason: 'kill-switch' };
   if (liveCount(jobsDir) >= cap) return { started: false, reason: 'cap' };
-  const claimed = claim(jobsDir, pageId, { slug, threadTs, task, brief, startedAt: new Date().toISOString() });
+  const claimed = claim(jobsDir, pageId, { slug, threadTs, label, task, brief, startedAt: new Date().toISOString() });
   if (!claimed.ok) return { started: false, reason: claimed.reason };
   const { jobDir } = claimed;
   if (occupiedCount(jobsDir) > cap) {

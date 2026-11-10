@@ -3,14 +3,21 @@
 #
 # Started detached by tools/triage/lib/jobs.js:
 #   scripts/triage-job.sh <slug> <pageId> <threadTs> <jobDir>
-# <jobDir> holds meta.json {pageId, slug, threadTs, task, brief, startedAt, pid}. Every
-# exit writes <jobDir>/result.json {status, branch, tests: {passed, total}, summary,
-# specPath}; the exit code is 0 only when status is "passed". Output goes to
+# <jobDir> holds meta.json {pageId, slug, threadTs, label, task, brief, startedAt, pid}.
+# Every exit writes <jobDir>/result.json {status, branch, tests: {passed, total}, summary,
+# specPath, browserChecks}. browserChecks is always "not run": an unattended job does not
+# run the /build browser verify loop, so that check is left to whoever reviews the branch.
+# It exports TRIAGE_BUILD_JOB=1, so tools/notion/cli.js and `jobs start` refuse inside the
+# job (defence in depth, not a boundary; see ADR-002). The exit code is 0 only when status
+# is "passed". Output goes to
 # <jobDir>/job.log. Tools are limited to .claude/triage/job-allowed-tools.txt and
 # .claude/triage/job-disallowed-tools.txt (private); the run refuses without both, or
 # when the disallowed list does not block git push. .claude/triage/triage.off stops it.
 
 set -euo pipefail
+
+# Set before anything else runs, so every child of the job sees it.
+export TRIAGE_BUILD_JOB=1
 
 SLUG="${1:-}"
 PAGE_ID="${2:-}"
@@ -42,13 +49,14 @@ write_result() {
         branch: e.R_BRANCH || null,
         tests: { passed: Number(e.R_PASSED) || 0, total: Number(e.R_TOTAL) || 0 },
         summary: e.R_SUMMARY,
-        specPath: e.R_SPEC || null
+        specPath: e.R_SPEC || null,
+        browserChecks: "not run"
       };
       require("fs").writeFileSync(e.R_FILE, JSON.stringify(out, null, 2) + "\n");
     '; then
     :
   else
-    printf '{"status":"failed","branch":null,"tests":{"passed":0,"total":0},"summary":"node unavailable; see job.log","specPath":null}\n' > "$tmp"
+    printf '{"status":"failed","branch":null,"tests":{"passed":0,"total":0},"summary":"node unavailable; see job.log","specPath":null,"browserChecks":"not run"}\n' > "$tmp"
     STATUS=failed
   fi
   mv -f "$tmp" "$JOB_DIR/result.json"
@@ -59,7 +67,7 @@ finish() {
   set +e
   if [ "$rc" -ne 0 ] || [ "$STATUS" != passed ]; then
     STATUS=failed
-    [ -n "$SUMMARY" ] || SUMMARY="Failed during $STAGE (exit $rc); see job.log"
+    [ -n "$SUMMARY" ] || SUMMARY="${TRIAGE_ERROR:-Failed during $STAGE (exit $rc); see job.log}"
   fi
   write_result
   echo "=== triage-job $SLUG $STATUS $(date '+%Y-%m-%d %H:%M:%S'): $SUMMARY ==="
@@ -100,12 +108,8 @@ stop_if_off() {
   if triage_off; then fail "triage.off appeared before $1; job stopped"; fi
 }
 
-ALLOWED=()
-DISALLOWED=()
-while IFS= read -r t; do ALLOWED+=("$t"); done < <(read_list "$INTERNAL_TRIAGE/job-allowed-tools.txt")
-while IFS= read -r t; do DISALLOWED+=("$t"); done < <(read_list "$INTERNAL_TRIAGE/job-disallowed-tools.txt")
-[ ${#ALLOWED[@]} -gt 0 ] || fail "$INTERNAL_TRIAGE/job-allowed-tools.txt is missing or lists no tools; refusing to run"
-[ ${#DISALLOWED[@]} -gt 0 ] || fail "$INTERNAL_TRIAGE/job-disallowed-tools.txt is missing or lists no tools; refusing to run"
+load_allowlist ALLOWED "$INTERNAL_TRIAGE/job-allowed-tools.txt"
+load_allowlist DISALLOWED "$INTERNAL_TRIAGE/job-disallowed-tools.txt"
 printf '%s\n' "${DISALLOWED[@]}" | grep -q '^Bash(git push' || fail "job-disallowed-tools.txt does not block Bash(git push*); refusing to run"
 
 STAGE=meta
@@ -126,8 +130,7 @@ TASK=$(meta_field task)
 BRIEF=$(meta_field brief)
 [ -n "$TASK" ] || fail "meta.json has no task"
 
-CLAUDE_BIN="${CLAUDE_BIN:-$(type -P claude 2>/dev/null || true)}"
-[ -n "$CLAUDE_BIN" ] || fail "claude not found on PATH"
+triage_claude_bin
 
 STAGE=worktree
 cd "$REPO_ROOT"

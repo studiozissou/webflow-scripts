@@ -52,7 +52,7 @@ function fromUtcMs(ms) {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-export function addCalendarDays(input, n) {
+function addCalendarDays(input, n) {
   return fromUtcMs(toUtcMs(amsterdamDate(input)) + n * DAY_MS);
 }
 

@@ -66,6 +66,7 @@ function opts(root, over = {}) {
     threadTs: '1762844400.000100',
     task: 'Add FAQ schema',
     brief: 'Add FAQ JSON-LD to the Contoso homepage.',
+    label: 'B1',
     script: script(root, 'job.sh', WRITES_RESULT),
     killSwitch: join(root, 'triage.off'),
     ...over,
@@ -157,8 +158,9 @@ test('start spawns the script with slug, pageId, threadTs, jobDir and records me
   assert.equal(r.pageId, 'page-1');
   assert.equal(typeof r.pid, 'number');
   const meta = JSON.parse(readFileSync(join(r.jobDir, 'meta.json'), 'utf8'));
-  assert.deepEqual(Object.keys(meta).sort(), ['brief', 'pageId', 'pid', 'pidStart', 'slug', 'startedAt', 'task', 'threadTs']);
+  assert.deepEqual(Object.keys(meta).sort(), ['brief', 'label', 'pageId', 'pid', 'pidStart', 'slug', 'startedAt', 'task', 'threadTs']);
   assert.equal(meta.pid, r.pid);
+  assert.equal(meta.label, 'B1');
   assert.equal(meta.task, 'Add FAQ schema');
   assert.ok(!Number.isNaN(Date.parse(meta.startedAt)));
   assert.ok(await waitFor(() => existsSync(join(r.jobDir, 'result.json'))));
@@ -314,4 +316,13 @@ test('the job env carries no tokens or Slack variables', async () => {
   assert.doesNotMatch(env, /secret|^SLACK_|_TOKEN=/m);
   assert.match(env, /^KEEP_ME=ok$/m);
   assert.match(env, /^CLAUDE_JOB_DIR=/m);
+  assert.match(env, /^TRIAGE_BUILD_JOB=1$/m);
+});
+
+test('start validates the label and defaults it to null', () => {
+  const root = tmp();
+  assert.throws(() => start(opts(root, { label: 'B1; rm -rf' })), /invalid label/);
+  const r = start(opts(root, { label: undefined }));
+  assert.equal(r.started, true);
+  assert.equal(JSON.parse(readFileSync(join(r.jobDir, 'meta.json'), 'utf8')).label, null);
 });

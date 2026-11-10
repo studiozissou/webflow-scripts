@@ -49,7 +49,7 @@
       "id": "br",
       "type": "rich_text",
       "rich_text": [
-        { "type": "text", "text": { "content": "waiting on Will to confirm scope", "link": null }, "plain_text": "waiting on Will to confirm scope", "href": null }
+        { "type": "text", "text": { "content": "waiting on Pat to confirm scope", "link": null }, "plain_text": "waiting on Pat to confirm scope", "href": null }
       ]
     },
     "Hours Estimate": { "id": "hrs", "type": "number", "number": 0.25 },

@@ -1,4 +1,4 @@
-// Turns Slack thread replies into approved and skipped build items, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes, never a reply ts twice; a reply with any unknown token is rejected whole and reported, never guessed.
+// Turns Slack thread replies into approved and skipped build items, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes, never a reply ts twice (processedTs comes back de-duplicated); a reply with any unknown token is rejected whole and reported, never guessed.
 
 const COMMAND = /^(go|skip|ok\s+changes)\b(.*)$/is;
 const OK_CHANGES_TAIL = /^\s*[.!]?$/;
@@ -91,6 +91,6 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
     skipped: pick('skip'),
     applyProposals,
     unknown,
-    processedTs: [...(digestState.processedTs ?? []), ...processed],
+    processedTs: [...new Set([...(digestState.processedTs ?? []), ...processed])],
   };
 }

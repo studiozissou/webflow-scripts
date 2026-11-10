@@ -20,6 +20,8 @@ npm run site-review -- --url https://example.com --skip code-review
 
 `<internal>` is `$WEBFLOW_INTERNAL`, else `~/webflow-internal`; a `--client` run fails when neither exists, so client data never lands in this public repo. `--mode` defaults to `audit` with `--client` and `quick` without. Run `node tools/site-review/index.js --help` for every flag.
 
+Run snapshots from a normal network. Behind an HTTPS-only proxy (a cloud sandbox), Node's fetch needs `NODE_USE_ENV_PROXY=1`, and plain `http://` targets and the no-keep-alive re-verify fetch still fail, which records false broken links; such a run is fine for smoke tests but not for a snapshot.
+
 Outputs: `facts.ndjson` (one fact record per fetched page), `findings.json` (every uncollapsed finding with evidence, plus coverage, health, sanity, diff and parity), `report.md`, and `snapshot.json` (counts and finding IDs for next month's diff). Exit code 0 is a completed run, 2 an aborted one (bot wall, no pages, too slow), 1 an error.
 
 ## The evidence rule

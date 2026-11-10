@@ -85,6 +85,7 @@ describe('reverify', () => {
     assert.equal(reproduces(temp, result(200, { redirectChain: [{ url: 'https://example.com/r', status: 302 }] })), true);
     assert.equal(reproduces(temp, result(200, { redirectChain: [{ url: 'https://example.com/r', status: 301 }] })), false);
     assert.equal(reproduces(temp, result(200)), false);
+    assert.equal(reproduces(temp, result(0, { errorCode: 'ENOTFOUND', fetchState: 'fetch_failed' })), null);
 
     const canon = finding('canonical-to-non-200', { target: 'https://example.com/c', status: 301 });
     assert.equal(reproduces(canon, result(200, { redirectChain: [{ url: 'https://example.com/c', status: 301 }] })), true);

@@ -32,6 +32,7 @@ export function reproduces(finding, result) {
   if (NON_200_IDS.has(finding.taxonomyId)) return firstStatus !== 200;
   const recorded = finding.evidence?.status;
   const firstHop = recordedFirstHop(finding.evidence);
+  if (notFound && (firstHop != null || REDIRECT_IDS.has(finding.taxonomyId))) return null;
   if (firstHop != null) return result.redirectChain?.[0]?.status === firstHop;
   if (REDIRECT_IDS.has(finding.taxonomyId)) return (result.redirectChain?.length ?? 0) > 0 || Boolean(result.redirectLoop);
   if ((Number.isInteger(recorded) && recorded >= 400) || !recorded) return status >= 400 || notFound;

@@ -4,7 +4,8 @@
 # An unattended run posts replies in the digest thread only (acknowledgements and job
 # results); it posts no new digest, sends no email and replies to no one else. It starts
 # at most 3 background builds for tasks Will approved (scripts/triage-job.sh, which never
-# pushes or deploys) and applies Notion changes he approved with `ok changes`. Tools are
+# pushes or deploys). It changes Notion only through tools/notion/cli.js: Priority after an
+# `ok changes` reply, and Status plus a comment on tasks Will approved with `go`. Tools are
 # limited to .claude/triage/allowed-tools.txt (private), and touching
 # .claude/triage/triage.off stops every run.
 #
@@ -21,20 +22,18 @@ REPORT_DIR="$INTERNAL_TRIAGE/reports"
 STAMP=$(date '+%Y-%m-%d')
 REPORT="$REPORT_DIR/$STAMP-approve-$(date '+%H%M').md"
 
-if [ -e "$INTERNAL_TRIAGE/triage.off" ]; then
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+# shellcheck source=lib/triage-common.sh
+source "$SCRIPT_DIR/lib/triage-common.sh" || { echo "FATAL: cannot load $SCRIPT_DIR/lib/triage-common.sh" >&2; exit 1; }
+
+if triage_off; then
   echo "triage-approve: $INTERNAL_TRIAGE/triage.off exists; not running" >&2
   exit 0
 fi
 
 ALLOWLIST="$INTERNAL_TRIAGE/allowed-tools.txt"
 ALLOWED=()
-if [ -f "$ALLOWLIST" ]; then
-  while IFS= read -r line || [ -n "$line" ]; do
-    line="${line#"${line%%[![:space:]]*}"}"
-    line="${line%"${line##*[![:space:]]}"}"
-    [ -z "$line" ] || [ "${line:0:1}" = "#" ] || ALLOWED+=("$line")
-  done < "$ALLOWLIST"
-fi
+while IFS= read -r t; do ALLOWED+=("$t"); done < <(read_list "$ALLOWLIST")
 if [ ${#ALLOWED[@]} -eq 0 ]; then
   echo "FATAL: $ALLOWLIST is missing or lists no tools; refusing to run without a tool allowlist" >&2
   exit 1
@@ -44,16 +43,14 @@ cd "$REPO" || { echo "FATAL: cannot cd to $REPO"; exit 1; }
 
 echo "=== triage-approve $(date '+%Y-%m-%d %H:%M:%S') ==="
 
-export PATH="$HOME/.claude/local:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+triage_env
 
 CLAUDE_BIN="${CLAUDE_BIN:-$(type -P claude 2>/dev/null)}"
 if [ -z "$CLAUDE_BIN" ]; then
-  echo "FATAL: 'claude' not found on PATH. Add its directory to the PATH line above,"
+  echo "FATAL: 'claude' not found on PATH. Add its directory to triage_env in scripts/lib/triage-common.sh,"
   echo "       or set it in the plist's EnvironmentVariables."
   exit 1
 fi
-
-unset ANTHROPIC_API_KEY
 
 if [ -z "${NOTION_TOKEN:-}" ]; then
   if token=$(security find-generic-password -s mcp -a notion-triage -w 2>/dev/null) && [ -n "$token" ]; then

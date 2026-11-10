@@ -1,6 +1,6 @@
-// File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, slug, threadTs, task, brief, startedAt, pid}, result.json written by the job script, a reported marker, a live cap checked with process.kill(pid, 0), a kill switch, and a detached spawn of the job script with args [slug, pageId, threadTs, jobDir].
-import { spawn } from 'node:child_process';
-import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+// File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, slug, threadTs, task, brief, startedAt, pid, pidStart}, result.json written by the job script, a reported marker, a live cap checked with process.kill(pid, 0) plus the process start time (a dead or reused pid without result.json counts as finished-failed), a kill switch, and a detached /bin/bash spawn of the job script with args [slug, pageId, threadTs, jobDir] and no tokens in its env.
+import { execFileSync, spawn } from 'node:child_process';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -33,14 +33,31 @@ function writeMeta(jobDir, meta) {
   writeFileSync(join(jobDir, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`);
 }
 
-function isAlive(pid) {
+const DIED = { status: 'failed', branch: null, tests: { passed: 0, total: 0 }, summary: 'job died without result', specPath: null };
+const SECRET_ENV = (name) => name === 'NOTION_TOKEN' || name.endsWith('_TOKEN') || name.startsWith('SLACK_');
+
+function processStart(pid) {
+  try {
+    const out = execFileSync('ps', ['-o', 'lstart=', '-p', String(pid)], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      env: { ...process.env, LC_ALL: 'C' },
+    });
+    return out.trim().replace(/\s+/g, ' ') || null;
+  } catch {
+    return null;
+  }
+}
+
+function isAlive(meta) {
+  const { pid, pidStart } = meta;
   if (!Number.isInteger(pid) || pid <= 0) return false;
   try {
     process.kill(pid, 0);
-    return true;
   } catch (err) {
-    return err.code === 'EPERM';
+    if (err.code !== 'EPERM') return false;
   }
+  return !pidStart || processStart(pid) === pidStart;
 }
 
 function jobIds(dir) {
@@ -54,15 +71,43 @@ function jobIds(dir) {
 function stateOf(dir, pageId) {
   const jobDir = join(dir, pageId);
   const meta = readJson(join(jobDir, 'meta.json')) ?? { pageId };
-  const finished = existsSync(join(jobDir, 'result.json'));
+  const hasResult = () => existsSync(join(jobDir, 'result.json'));
+  let alive = false;
+  let died = false;
+  if (!hasResult() && meta.pid != null) {
+    alive = isAlive(meta);
+    died = !alive && !hasResult();
+  }
   return {
     pageId,
     jobDir,
     meta,
-    alive: !finished && isAlive(meta.pid),
-    finished,
+    alive,
+    finished: died || hasResult(),
+    died,
     reported: existsSync(join(jobDir, 'reported')),
   };
+}
+
+function resultOf(state) {
+  if (state.died) return { ...DIED };
+  return (
+    readJson(join(state.jobDir, 'result.json')) ?? {
+      status: 'failed',
+      branch: null,
+      tests: null,
+      summary: 'result.json unreadable',
+      specPath: null,
+    }
+  );
+}
+
+// Claimed and unfinished, including claims whose pid is not written yet.
+function occupiedCount(dir) {
+  return jobIds(dir).filter((id) => {
+    const state = stateOf(dir, id);
+    return !state.finished && (state.alive || state.meta.pid == null);
+  }).length;
 }
 
 export function claim(dir, pageId, meta = {}) {
@@ -85,8 +130,8 @@ export function liveCount(dir) {
 
 export function list(dir) {
   return jobIds(dir).map((id) => {
-    const state = stateOf(dir, id);
-    if (state.finished) state.result = readJson(join(state.jobDir, 'result.json'));
+    const { died, ...state } = stateOf(dir, id);
+    if (state.finished) state.result = resultOf({ ...state, died });
     return state;
   });
 }
@@ -101,26 +146,16 @@ export function collect(dir) {
   for (const id of jobIds(dir)) {
     const state = stateOf(dir, id);
     if (!state.finished || state.reported) continue;
-    const result = readJson(join(state.jobDir, 'result.json')) ?? {
-      status: 'failed',
-      branch: null,
-      tests: null,
-      summary: 'result.json unreadable',
-      specPath: null,
-    };
+    const result = resultOf(state);
     writeFileSync(join(state.jobDir, 'reported'), `${new Date().toISOString()}\n`);
     out.push({ pageId: id, jobDir: state.jobDir, meta: state.meta, result });
   }
   return out;
 }
 
-function isExecutable(path) {
-  try {
-    accessSync(path, constants.X_OK);
-    return true;
-  } catch {
-    return false;
-  }
+function childEnv(jobDir) {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !SECRET_ENV(name)));
+  return { ...env, CLAUDE_JOB_DIR: jobDir };
 }
 
 export function start({
@@ -142,20 +177,22 @@ export function start({
   const claimed = claim(jobsDir, pageId, { slug, threadTs, task, brief, startedAt: new Date().toISOString() });
   if (!claimed.ok) return { started: false, reason: claimed.reason };
   const { jobDir } = claimed;
+  if (occupiedCount(jobsDir) > cap) {
+    release(jobsDir, pageId);
+    return { started: false, reason: 'cap' };
+  }
   const scriptPath = resolve(script);
   if (!existsSync(scriptPath)) {
     release(jobsDir, pageId);
     return { started: false, reason: 'script-missing' };
   }
-  const args = [slug, pageId, threadTs, jobDir];
-  const [cmd, argv] = isExecutable(scriptPath) ? [scriptPath, args] : ['/bin/bash', [scriptPath, ...args]];
   let child;
   try {
-    child = spawn(cmd, argv, {
+    child = spawn('/bin/bash', [scriptPath, slug, pageId, threadTs, jobDir], {
       cwd: REPO_ROOT,
       detached: true,
       stdio: 'ignore',
-      env: { ...process.env, CLAUDE_JOB_DIR: jobDir },
+      env: childEnv(jobDir),
     });
   } catch (err) {
     DEBUG && console.log(`spawn failed: ${err.message}`);
@@ -169,6 +206,6 @@ export function start({
   }
   child.unref();
   const meta = readJson(join(jobDir, 'meta.json'));
-  writeMeta(jobDir, { ...meta, pid: child.pid });
+  writeMeta(jobDir, { ...meta, pid: child.pid, pidStart: processStart(child.pid) });
   return { started: true, pageId, jobDir, pid: child.pid };
 }

@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs as parseNodeArgs } from 'node:util';
 import { bucketTasks } from './lib/buckets.js';
 import { rankAutomatable } from './lib/rank.js';
 import { parseReplies } from './lib/approvals.js';
@@ -18,28 +19,21 @@ const USAGE = `usage: cli.js <command> [options]
 common: --config <config.json>  jobs: --jobs-dir <dir> --script <path> --kill-switch <path> --cap <n>
 `;
 
-const VALUE_FLAGS = new Set([
+const VALUE_FLAGS = [
   'now', 'in', 'config', 'digest', 'replies', 'user', 'max', 'page', 'slug', 'thread',
   'task', 'brief', 'jobs-dir', 'script', 'kill-switch', 'cap',
-]);
+];
+const OPTIONS = Object.fromEntries(VALUE_FLAGS.map((name) => [name, { type: 'string' }]));
 
 class UsageError extends Error {}
 
 export function parseArgs(argv) {
-  const args = { positional: [] };
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg.startsWith('--')) {
-      const name = arg.slice(2);
-      if (!VALUE_FLAGS.has(name)) throw new UsageError(`unknown flag ${arg}`);
-      const value = argv[++i];
-      if (value === undefined) throw new UsageError(`${arg} needs a value`);
-      args[name] = value;
-    } else {
-      args.positional.push(arg);
-    }
+  try {
+    const { values, positionals } = parseNodeArgs({ args: argv, options: OPTIONS, strict: true, allowPositionals: true });
+    return { positional: positionals, ...values };
+  } catch (err) {
+    throw new UsageError(err.message);
   }
-  return args;
 }
 
 function readInput(args) {
@@ -110,11 +104,7 @@ function runApprovals(args, config) {
   const replies = readJson(readFileSync(resolve(args.replies), 'utf8'), args.replies);
   const digest = state?.digest ?? state;
   const messages = Array.isArray(replies) ? replies : (replies?.messages ?? []);
-  try {
-    out(parseReplies(digest, messages, { userId }));
-  } catch (err) {
-    throw new UsageError(err.message);
-  }
+  out(parseReplies(digest, messages, { userId }));
   return 0;
 }
 
@@ -137,19 +127,14 @@ function runJobs(args) {
   }
   if (sub !== 'start') throw new UsageError(`unknown jobs subcommand: ${sub ?? '(none)'}`);
   if (!args.page || !args.slug || !args.thread) throw new UsageError('jobs start needs --page, --slug and --thread');
-  let result;
-  try {
-    result = start({
-      ...paths,
-      pageId: args.page,
-      slug: args.slug,
-      threadTs: args.thread,
-      task: args.task ?? '',
-      brief: args.brief ?? '',
-    });
-  } catch (err) {
-    throw new UsageError(err.message);
-  }
+  const result = start({
+    ...paths,
+    pageId: args.page,
+    slug: args.slug,
+    threadTs: args.thread,
+    task: args.task ?? '',
+    brief: args.brief ?? '',
+  });
   out(result);
   return result.started ? 0 : 1;
 }

@@ -12,8 +12,8 @@ function task(over) {
 
 test('only Doer = Claude tasks are offered', () => {
   const tasks = [
-    task({ id: 'a', doer: 'Claude', name: 'Generate JSON-LD schema for Oost' }),
-    task({ id: 'b', doer: 'User + Claude', name: 'Generate JSON-LD schema for Carsa' }),
+    task({ id: 'a', doer: 'Claude', name: 'Generate JSON-LD schema for Globex' }),
+    task({ id: 'b', doer: 'User + Claude', name: 'Generate JSON-LD schema for Acme' }),
     task({ id: 'c', doer: 'User', name: 'Run a site audit' }),
   ];
   assert.deepEqual(rankAutomatable(tasks).map((i) => i.pageId), ['a']);
@@ -21,8 +21,8 @@ test('only Doer = Claude tasks are offered', () => {
 
 test('tasks map to a command and unmapped tasks are dropped', () => {
   const tasks = [
-    task({ id: 'schema', name: 'Add FAQ schema to Rolfing Amsterdam' }),
-    task({ id: 'audit', name: 'Run a site audit for Carsa' }),
+    task({ id: 'schema', name: 'Add FAQ schema to Contoso' }),
+    task({ id: 'audit', name: 'Run a site audit for Acme' }),
     task({ id: 'spec', name: 'Write a spec for the booking flow' }),
     task({ id: 'none', name: 'Phone the accountant' }),
   ];

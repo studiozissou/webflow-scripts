@@ -3,9 +3,11 @@
 #
 # An unattended run posts one digest to the digest Slack channel, posts job result
 # replies in that digest thread, and creates Gmail drafts; it sends no email and replies
-# to no one else. It also files tasks in Notion and moves newsletters to Gmail's trash,
-# recoverable for 30 days. Tools are limited to .claude/triage/allowed-tools.txt (private),
-# and touching .claude/triage/triage.off stops every run.
+# to no one else. It changes Notion only through tools/notion/cli.js: Priority after an
+# `ok changes` reply, and Status plus a comment on tasks Will approved with `go`. It also
+# moves newsletters to Gmail's trash, recoverable for 30 days. Tools are limited to
+# .claude/triage/allowed-tools.txt (private), and touching .claude/triage/triage.off stops
+# every run.
 #
 # Scheduled by scripts/triage-morning.plist. Run by hand to test:
 #   bash scripts/triage-morning.sh
@@ -20,7 +22,11 @@ REPORT_DIR="$INTERNAL_TRIAGE/reports"
 STAMP=$(date '+%Y-%m-%d')
 REPORT="$REPORT_DIR/$STAMP.md"
 
-if [ -e "$INTERNAL_TRIAGE/triage.off" ]; then
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+# shellcheck source=lib/triage-common.sh
+source "$SCRIPT_DIR/lib/triage-common.sh" || { echo "FATAL: cannot load $SCRIPT_DIR/lib/triage-common.sh" >&2; exit 1; }
+
+if triage_off; then
   echo "triage-morning: $INTERNAL_TRIAGE/triage.off exists; not running" >&2
   exit 0
 fi
@@ -29,13 +35,7 @@ fi
 # without a tool gate is not an option.
 ALLOWLIST="$INTERNAL_TRIAGE/allowed-tools.txt"
 ALLOWED=()
-if [ -f "$ALLOWLIST" ]; then
-  while IFS= read -r line || [ -n "$line" ]; do
-    line="${line#"${line%%[![:space:]]*}"}"
-    line="${line%"${line##*[![:space:]]}"}"
-    [ -z "$line" ] || [ "${line:0:1}" = "#" ] || ALLOWED+=("$line")
-  done < "$ALLOWLIST"
-fi
+while IFS= read -r t; do ALLOWED+=("$t"); done < <(read_list "$ALLOWLIST")
 if [ ${#ALLOWED[@]} -eq 0 ]; then
   echo "FATAL: $ALLOWLIST is missing or lists no tools; refusing to run without a tool allowlist" >&2
   exit 1
@@ -45,23 +45,16 @@ cd "$REPO" || { echo "FATAL: cannot cd to $REPO"; exit 1; }
 
 echo "=== triage-morning $(date '+%Y-%m-%d %H:%M:%S') ==="
 
-# launchd starts with a minimal PATH, and Claude Code is commonly installed to any of
-# these. Resolve it rather than hardcoding, so a reinstall elsewhere does not break the
-# schedule silently.
-export PATH="$HOME/.claude/local:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+triage_env
 
 # type -P searches PATH only, ignoring the shell function that wraps claude in the user's
 # interactive profile — launchd will not have it, but a manual test run would.
 CLAUDE_BIN="${CLAUDE_BIN:-$(type -P claude 2>/dev/null)}"
 if [ -z "$CLAUDE_BIN" ]; then
-  echo "FATAL: 'claude' not found on PATH. Add its directory to the PATH line above,"
+  echo "FATAL: 'claude' not found on PATH. Add its directory to triage_env in scripts/lib/triage-common.sh,"
   echo "       or set it in the plist's EnvironmentVariables."
   exit 1
 fi
-
-# The interactive shell wrapper unsets this so Claude Code uses the OAuth login rather
-# than API-key billing. Match that here, so a scheduled run bills the same way.
-unset ANTHROPIC_API_KEY
 
 # tools/notion/cli.js reads open tasks over REST with this token.
 if [ -z "${NOTION_TOKEN:-}" ]; then

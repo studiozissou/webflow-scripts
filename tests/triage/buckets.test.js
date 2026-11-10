@@ -6,6 +6,7 @@ import { bucketTasks, DEFAULT_RULES } from '../../tools/triage/lib/buckets.js';
 
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/tasks.json', import.meta.url), 'utf8'));
 const NOW = '2026-11-11T07:00:00Z';
+const RULES = { blockedNamePattern: '\\bWill\\b' };
 
 const ids = (items) => items.map((i) => i.id);
 const reasonOf = (items, id) => items.find((i) => i.id === id)?.reason;
@@ -18,49 +19,49 @@ function task(over) {
 }
 
 test('D4 matrix on the shared fixture', () => {
-  const r = bucketTasks(fixture.tasks, fixture.threads, NOW);
+  const r = bucketTasks(fixture.tasks, fixture.threads, NOW, RULES);
   assert.deepEqual(ids(r.now), ['th-newbiz', 't-blocked', 'th-question', 't-overdue', 'th-old']);
   assert.deepEqual(ids(r.today), ['t-quick-due-today', 't-due-today', 't-due-tomorrow', 't-p0']);
   assert.deepEqual(ids(r.week), ['t-weekend', 't-p3-week', 't-p1-nodue']);
 });
 
 test('due today and due tomorrow land in TODAY', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   assert.equal(reasonOf(r.today, 't-due-today'), 'due-today');
   assert.equal(reasonOf(r.today, 't-due-tomorrow'), 'due-tomorrow');
 });
 
 test('P0 with the Quick tag is excluded from TODAY and omitted', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   const all = [...r.now, ...r.today, ...r.week];
   assert.equal(all.some((i) => i.id === 't-p0-quick'), false);
   assert.equal(reasonOf(r.today, 't-p0'), 'p0');
 });
 
 test('Quick tag does not hide a task that is due today', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   assert.equal(reasonOf(r.today, 't-quick-due-today'), 'due-today');
 });
 
 test('P1 with no due date lands in THIS WEEK', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   assert.equal(reasonOf(r.week, 't-p1-nodue'), 'p1');
 });
 
 test('overdue and blocked-on-Will tasks land in NOW', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   assert.equal(reasonOf(r.now, 't-overdue'), 'overdue');
   assert.equal(reasonOf(r.now, 't-blocked'), 'blocked-on-will');
 });
 
 test('a blocked reason naming Will on an External task is not blocked on Will', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   const all = [...r.now, ...r.today, ...r.week];
   assert.equal(all.some((i) => i.id === 't-blocked-external'), false);
 });
 
 test('P2 due in 10 days and Done tasks are omitted', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   const all = ids([...r.now, ...r.today, ...r.week]);
   assert.equal(all.includes('t-p2-10days'), false);
   assert.equal(all.includes('t-done'), false);
@@ -68,14 +69,14 @@ test('P2 due in 10 days and Done tasks are omitted', () => {
 });
 
 test('new business threads come first in NOW', () => {
-  const r = bucketTasks(fixture.tasks, fixture.threads, NOW);
+  const r = bucketTasks(fixture.tasks, fixture.threads, NOW, RULES);
   assert.equal(r.now[0].id, 'th-newbiz');
   assert.equal(r.now[0].reason, 'new-business');
   assert.equal(r.now[0].kind, 'thread');
 });
 
 test('a reply older than 2 working days is NOW; the weekend does not count', () => {
-  const r = bucketTasks([], fixture.threads, NOW);
+  const r = bucketTasks([], fixture.threads, NOW, RULES);
   const old = r.now.find((i) => i.id === 'th-old');
   assert.equal(old.reason, 'reply-age');
   assert.equal(old.ageWorkingDays, 3);
@@ -86,17 +87,17 @@ test('Christmas holidays do not count towards reply age', () => {
   const threads = [
     { threadId: 'xmas', from: 'A <a@x.example>', subject: 'S', lastMessageAt: '2026-12-23T10:00:00Z', newBusiness: false, directQuestion: false },
   ];
-  assert.equal(bucketTasks([], threads, '2026-12-28T08:00:00Z').now.length, 0);
-  assert.equal(bucketTasks([], threads, '2026-12-29T08:00:00Z').now.length, 1);
+  assert.equal(bucketTasks([], threads, '2026-12-28T08:00:00Z', RULES).now.length, 0);
+  assert.equal(bucketTasks([], threads, '2026-12-29T08:00:00Z', RULES).now.length, 1);
 });
 
 test('direct question threads are blocked on Will', () => {
-  const r = bucketTasks([], fixture.threads, NOW);
+  const r = bucketTasks([], fixture.threads, NOW, RULES);
   assert.equal(reasonOf(r.now, 'th-question'), 'blocked-on-will');
 });
 
 test('proposals are Priority-only with before and after', () => {
-  const r = bucketTasks(fixture.tasks, fixture.threads, NOW);
+  const r = bucketTasks(fixture.tasks, fixture.threads, NOW, RULES);
   assert.deepEqual(
     r.proposals.map((p) => [p.pageId, p.from, p.to, p.reason]),
     [
@@ -114,7 +115,7 @@ test('proposals are Priority-only with before and after', () => {
 });
 
 test('Quick-tagged tasks never get proposals', () => {
-  const r = bucketTasks(fixture.tasks, [], NOW);
+  const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   assert.equal(r.proposals.some((p) => p.pageId.includes('quick')), false);
 });
 
@@ -123,25 +124,32 @@ test('due within 2 working days over a weekend proposes P0, 3 working days does 
     task({ id: 'mon', priority: 'P2', due: '2026-11-16' }),
     task({ id: 'tue', priority: 'P2', due: '2026-11-17' }),
   ];
-  const r = bucketTasks(tasks, [], '2026-11-12T08:00:00Z');
+  const r = bucketTasks(tasks, [], '2026-11-12T08:00:00Z', RULES);
   assert.deepEqual(r.proposals.map((p) => [p.pageId, p.to]), [['mon', 'P0'], ['tue', 'P1']]);
 });
 
 test('due over Christmas counts working days for the P0 proposal', () => {
   const tasks = [task({ id: 'x', priority: 'P3', due: '2026-12-28' })];
-  assert.equal(bucketTasks(tasks, [], '2026-12-23T08:00:00Z').proposals[0].to, 'P0');
-  assert.equal(bucketTasks(tasks, [], '2026-12-22T08:00:00Z').proposals[0].to, 'P1');
+  assert.equal(bucketTasks(tasks, [], '2026-12-23T08:00:00Z', RULES).proposals[0].to, 'P0');
+  assert.equal(bucketTasks(tasks, [], '2026-12-22T08:00:00Z', RULES).proposals[0].to, 'P1');
 });
 
 test('rules override the D4 defaults', () => {
   assert.equal(DEFAULT_RULES.replyAgeWorkingDays, 2);
   const threads = [{ threadId: 'w', from: 'A', subject: 'S', lastMessageAt: '2026-11-09T08:00:00Z' }];
-  assert.equal(bucketTasks([], threads, NOW, { replyAgeWorkingDays: 1 }).now.length, 1);
+  assert.equal(bucketTasks([], threads, NOW, { ...RULES, replyAgeWorkingDays: 1 }).now.length, 1);
   const tasks = [task({ id: 'p2', priority: 'P2', due: '2026-11-21' })];
-  assert.equal(bucketTasks(tasks, [], NOW, { weekDueDays: 10 }).week.length, 1);
+  assert.equal(bucketTasks(tasks, [], NOW, { ...RULES, weekDueDays: 10 }).week.length, 1);
 });
 
 test('the morning run in Amsterdam uses the local date, not UTC', () => {
   const tasks = [task({ id: 'd', priority: 'P3', due: '2026-11-12' })];
-  assert.equal(bucketTasks(tasks, [], '2026-11-11T23:30:00Z').today[0].reason, 'due-today');
+  assert.equal(bucketTasks(tasks, [], '2026-11-11T23:30:00Z', RULES).today[0].reason, 'due-today');
+});
+
+test('a task due Friday is overdue on Saturday in both NOW and the proposal', () => {
+  const tasks = [task({ id: 'fri', priority: 'P2', due: '2026-11-13' })];
+  const r = bucketTasks(tasks, [], '2026-11-14T08:00:00Z', RULES);
+  assert.equal(reasonOf(r.now, 'fri'), 'overdue');
+  assert.deepEqual(r.proposals.map((p) => [p.pageId, p.to, p.reason]), [['fri', 'P0', 'overdue']]);
 });

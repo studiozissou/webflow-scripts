@@ -51,9 +51,48 @@ test('skip marks items skipped and a later reply wins', () => {
 });
 
 test('ok changes sets applyProposals', () => {
-  const r = parseReplies(DIGEST, [reply('1762844500.000001', 'ok changes thanks')], { userId: USER });
-  assert.equal(r.applyProposals, true);
-  assert.deepEqual(r.approved, []);
+  for (const text of ['ok changes', 'OK Changes.', 'ok changes!', 'ok  changes ']) {
+    const r = parseReplies(DIGEST, [reply('1762844500.000001', text)], { userId: USER });
+    assert.equal(r.applyProposals, true, text);
+    assert.deepEqual(r.approved, []);
+    assert.deepEqual(r.unknown, []);
+  }
+});
+
+test('ok changes with anything after it is rejected and recorded', () => {
+  for (const text of ['ok changes thanks', 'ok changes but not C2']) {
+    const r = parseReplies(DIGEST, [reply('1762844500.000001', text)], { userId: USER });
+    assert.equal(r.applyProposals, false, text);
+    assert.equal(r.unknown.length, 1, text);
+    assert.equal(r.unknown[0].ts, '1762844500.000001');
+    assert.deepEqual(r.processedTs, ['1762844500.000001']);
+  }
+});
+
+test('a reply with any unknown token is rejected whole: no decisions, recorded as processed', () => {
+  for (const text of ['go all except 2', 'go 1 3 but not 2', 'go 1 9', 'skip all 2', 'go 1 all']) {
+    const r = parseReplies(DIGEST, [reply('1762844500.000001', text)], { userId: USER });
+    assert.deepEqual(r.approved, [], text);
+    assert.deepEqual(r.skipped, [], text);
+    assert.ok(r.unknown.length > 0, text);
+    assert.ok(r.unknown.every((u) => u.ts === '1762844500.000001'), text);
+    assert.deepEqual(r.processedTs, ['1762844500.000001'], text);
+  }
+});
+
+test('a rejected reply does not undo an earlier valid one', () => {
+  const r = parseReplies(
+    DIGEST,
+    [reply('1762844500.000001', 'go 1'), reply('1762844600.000001', 'skip 1 but not 2')],
+    { userId: USER },
+  );
+  assert.deepEqual(r.approved, [{ n: 'B1', pageId: 'p-b1' }]);
+  assert.deepEqual(r.skipped, []);
+});
+
+test('skip all is valid as the entire argument', () => {
+  const r = parseReplies(DIGEST, [reply('1762844500.000001', 'skip all')], { userId: USER });
+  assert.deepEqual(r.skipped.map((s) => s.n), ['B1', 'B2', 'B3']);
 });
 
 test('replies from another user are ignored', () => {

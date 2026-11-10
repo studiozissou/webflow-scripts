@@ -1,5 +1,6 @@
 // Sorts open tasks and unanswered human threads into NOW, TODAY and THIS WEEK per spec D4 and derives Priority-only proposals, with thresholds overridable from config.digest.rules.
 import { amsterdamDate, calendarDaysBetween, workingDaysBetween } from './workdays.js';
+import { compareNullable, priorityRank } from './compare.js';
 
 export const DEFAULT_RULES = {
   replyAgeWorkingDays: 2,
@@ -8,24 +9,14 @@ export const DEFAULT_RULES = {
   proposalP0WorkingDays: 2,
   proposalP1Days: 7,
   quickTag: 'Quick',
-  blockedNamePattern: '\\bWill\\b',
+  blockedNamePattern: '\\bYourName\\b',
   blockedDoers: ['User', 'User + Claude'],
   excludeStatuses: ['Done', 'Cancelled'],
 };
 
-const PRIORITY_RANK = { P0: 0, P1: 1, P2: 2, P3: 3 };
 const NOW_ORDER = ['new-business', 'blocked-on-will', 'overdue', 'reply-age'];
 const TODAY_ORDER = ['due-today', 'due-tomorrow', 'p0'];
 const WEEK_ORDER = ['due-week', 'p1'];
-
-const priorityRank = (p) => PRIORITY_RANK[p] ?? 4;
-
-function compareNullable(a, b) {
-  if (a === b) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return a < b ? -1 : 1;
-}
 
 function compareTasks(a, b) {
   return (
@@ -67,10 +58,12 @@ function taskItem(task, reason) {
   };
 }
 
+const isOverdue = (task, today) => Boolean(task.due) && amsterdamDate(task.due) < today;
+
 function classifyTask(task, today, rules) {
   const dueIn = task.due ? calendarDaysBetween(today, task.due) : null;
   if (isBlockedOnWill(task, rules)) return ['now', 'blocked-on-will'];
-  if (dueIn !== null && dueIn < 0) return ['now', 'overdue'];
+  if (isOverdue(task, today)) return ['now', 'overdue'];
   if (dueIn === 0) return ['today', 'due-today'];
   if (dueIn !== null && dueIn <= rules.todayDueDays) return ['today', 'due-tomorrow'];
   if (task.priority === 'P0' && !isQuick(task, rules)) return ['today', 'p0'];
@@ -84,9 +77,8 @@ function proposalFor(task, today, rules) {
   const from = task.priority ?? null;
   const make = (to, reason) => ({ pageId: task.id, name: task.name, from, to, reason, due: task.due ?? null });
   if (task.due && from !== 'P0') {
-    const working = workingDaysBetween(today, task.due);
-    if (working < 0) return make('P0', 'overdue');
-    if (working <= rules.proposalP0WorkingDays) return make('P0', 'due-soon');
+    if (isOverdue(task, today)) return make('P0', 'overdue');
+    if (workingDaysBetween(today, task.due) <= rules.proposalP0WorkingDays) return make('P0', 'due-soon');
   }
   if (from !== 'P0' && isBlockedOnWill(task, rules)) return make('P0', 'blocked-on-will');
   if (task.due && (from === 'P2' || from === 'P3') && calendarDaysBetween(today, task.due) <= rules.proposalP1Days) {

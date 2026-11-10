@@ -79,7 +79,7 @@ export function addWorkingDays(input, n) {
 export function workingDaysBetween(a, b) {
   const from = amsterdamDate(a);
   const to = amsterdamDate(b);
-  if (to < from) return -workingDaysBetween(to, from);
+  if (to < from) return -workingDaysBetween(to, from) || 0;
   let count = 0;
   for (let day = addCalendarDays(from, 1); day <= to; day = addCalendarDays(day, 1)) {
     if (isWorkingDay(day)) count++;

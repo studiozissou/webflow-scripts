@@ -84,22 +84,20 @@ echo "=== triage-job $(date '+%Y-%m-%d %H:%M:%S') slug=$SLUG page=$PAGE_ID ==="
 [[ "$THREAD_TS" =~ ^[0-9]+\.[0-9]+$ ]] || fail "invalid threadTs"
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+# shellcheck source=lib/triage-common.sh
+source "$SCRIPT_DIR/lib/triage-common.sh" || fail "cannot load $SCRIPT_DIR/lib/triage-common.sh"
+triage_env
 if [ -z "${REPO_ROOT:-}" ]; then
   common=$(git -C "$SCRIPT_DIR" rev-parse --path-format=absolute --git-common-dir) || fail "scripts/ is not inside a git checkout"
   REPO_ROOT=$(dirname "$common")
 fi
 INTERNAL_TRIAGE="${INTERNAL_TRIAGE:-$REPO_ROOT/.claude/triage}"
 
-[ ! -e "$INTERNAL_TRIAGE/triage.off" ] || fail "$INTERNAL_TRIAGE/triage.off exists; job not started"
+if triage_off; then fail "$INTERNAL_TRIAGE/triage.off exists; job not started"; fi
 
-read_list() {
-  local file=$1 line
-  [ -f "$file" ] || return 0
-  while IFS= read -r line || [ -n "$line" ]; do
-    line="${line#"${line%%[![:space:]]*}"}"
-    line="${line%"${line##*[![:space:]]}"}"
-    [ -z "$line" ] || [ "${line:0:1}" = "#" ] || printf '%s\n' "$line"
-  done < "$file"
+# Re-checked before each stage, so touching triage.off stops a running job at the next step.
+stop_if_off() {
+  if triage_off; then fail "triage.off appeared before $1; job stopped"; fi
 }
 
 ALLOWED=()
@@ -113,7 +111,6 @@ printf '%s\n' "${DISALLOWED[@]}" | grep -q '^Bash(git push' || fail "job-disallo
 STAGE=meta
 META="$JOB_DIR/meta.json"
 [ -f "$META" ] || fail "meta.json missing in $JOB_DIR"
-export PATH="$HOME/.claude/local:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 command -v node >/dev/null 2>&1 || fail "node not found on PATH"
 
 meta_field() {
@@ -154,16 +151,17 @@ fi
 
 cd "$WT"
 export CLAUDE_JOB_DIR="$JOB_DIR"
-unset ANTHROPIC_API_KEY
 
 PLAN_PROMPT="/plan --auto $TASK${BRIEF:+ — $BRIEF} (write the spec as .claude/specs/$SLUG.md; spec slug: $SLUG)"
 
 STAGE=plan
+stop_if_off /plan
 "$CLAUDE_BIN" -p "$PLAN_PROMPT" --allowedTools "${ALLOWED[@]}" --disallowedTools "${DISALLOWED[@]}" || fail "/plan --auto exited non-zero"
 [ -f "$WT/.claude/specs/$SLUG.md" ] || fail "/plan wrote no spec at .claude/specs/$SLUG.md"
 SPEC_PATH=".claude/specs/$SLUG.md"
 
 STAGE=build
+stop_if_off /build
 "$CLAUDE_BIN" -p "/build --auto $SLUG" --allowedTools "${ALLOWED[@]}" --disallowedTools "${DISALLOWED[@]}" || fail "/build --auto exited non-zero"
 commits=$(git rev-list --count "origin/main..HEAD")
 [ "$commits" -gt 0 ] || fail "/build left no commits on $BRANCH"
@@ -176,6 +174,7 @@ if [[ "$CLIENT" =~ ^[a-z0-9-]+$ ]] && PKG="$WT/package.json" S="test:$CLIENT" no
 fi
 
 TEST_OUT="$JOB_DIR/test-output.txt"
+stop_if_off tests
 set +e
 npm run --silent "$TEST_SCRIPT" 2>&1 | tee "$TEST_OUT"
 test_rc=${PIPESTATUS[0]}

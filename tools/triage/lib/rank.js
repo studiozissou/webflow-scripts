@@ -1,4 +1,5 @@
 // Picks the open Doer = Claude tasks that map to a command and are not already claimed, ranked by Priority, Due, then Hours Estimate ascending, labelled B1..Bn for the CLAUDE CAN BUILD section.
+import { compareNullable, priorityRank } from './compare.js';
 
 export const DEFAULT_DOER_MAP = [
   { pattern: '\\bschema\\b|json-?ld', command: '/generate-schema' },
@@ -8,7 +9,6 @@ export const DEFAULT_DOER_MAP = [
   { pattern: '\\bestimate\\b', command: '/estimate' },
   { pattern: '\\bcopy\\b.*\\breview\\b|\\breview\\b.*\\b(copy|content)\\b', command: '/copy-review' },
   { pattern: '\\bqa\\b', command: '/qa-check' },
-  { pattern: '\\bvinted\\b', command: '/zissou-scan' },
   { pattern: '\\bcode\\b|\\bbuild\\b|\\bimplement\\b|\\bfix\\b|\\brefactor\\b', command: '/build' },
 ];
 
@@ -17,15 +17,6 @@ export const DEFAULT_RANK_OPTIONS = {
   doer: 'Claude',
   excludeStatuses: ['Done', 'Cancelled', 'Waiting', 'Blocked', 'In Testing'],
 };
-
-const PRIORITY_RANK = { P0: 0, P1: 1, P2: 2, P3: 3 };
-
-function compareNullable(a, b) {
-  if (a === b) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return a < b ? -1 : 1;
-}
 
 function commandFor(task, doerMap) {
   const haystack = [task.name, ...(task.tags ?? [])].join(' ');
@@ -41,7 +32,7 @@ export function rankAutomatable(tasks = [], doerMap = DEFAULT_DOER_MAP, claimed 
     .filter((x) => x.command)
     .sort(
       (a, b) =>
-        (PRIORITY_RANK[a.task.priority] ?? 4) - (PRIORITY_RANK[b.task.priority] ?? 4) ||
+        priorityRank(a.task.priority) - priorityRank(b.task.priority) ||
         compareNullable(a.task.due, b.task.due) ||
         compareNullable(a.task.hours, b.task.hours) ||
         String(a.task.name).localeCompare(String(b.task.name)),

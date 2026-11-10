@@ -31,34 +31,40 @@ const url = (id) => `https://www.notion.so/${id}`;
 const BUCKETS_SNAPSHOT = {
   now: [
     { kind: 'thread', id: 'th-newbiz', name: 'Nieuwe website', from: 'Bakkerij De Pijp <info@bakkerijdepijp.example>', reason: 'new-business', lastMessageAt: '2026-11-10T16:00:00Z', ageWorkingDays: 1 },
-    { kind: 'task', id: 't-blocked', name: 'Approve the Rolfing homepage design', reason: 'blocked-on-will', priority: 'P1', due: null, doer: 'User', clients: ['Rolfing Amsterdam'], url: url('t-blocked') },
-    { kind: 'thread', id: 'th-question', name: 'Which menu PDF is current?', from: 'Sam <sam@oost.example>', reason: 'blocked-on-will', lastMessageAt: '2026-11-10T09:00:00Z', ageWorkingDays: 1 },
-    { kind: 'task', id: 't-overdue', name: 'Confirm calendar IDs with Tomek', reason: 'overdue', priority: 'P2', due: '2026-11-09', doer: 'User', clients: [], url: url('t-overdue') },
-    { kind: 'thread', id: 'th-old', name: 'Phase B quote', from: 'Anna <anna@carsa.example>', reason: 'reply-age', lastMessageAt: '2026-11-06T09:00:00Z', ageWorkingDays: 3 },
+    { kind: 'task', id: 't-blocked', name: 'Approve the Contoso homepage design', reason: 'blocked-on-will', priority: 'P1', due: null, doer: 'User', clients: ['Contoso'], url: url('t-blocked') },
+    { kind: 'thread', id: 'th-question', name: 'Which menu PDF is current?', from: 'Sam <sam@globex.example>', reason: 'blocked-on-will', lastMessageAt: '2026-11-10T09:00:00Z', ageWorkingDays: 1 },
+    { kind: 'task', id: 't-overdue', name: 'Confirm calendar IDs with Robin', reason: 'overdue', priority: 'P2', due: '2026-11-09', doer: 'User', clients: [], url: url('t-overdue') },
+    { kind: 'thread', id: 'th-old', name: 'Phase B quote', from: 'Dana <dana@acme.example>', reason: 'reply-age', lastMessageAt: '2026-11-06T09:00:00Z', ageWorkingDays: 3 },
   ],
   today: [
-    { kind: 'task', id: 't-quick-due-today', name: 'Accept the Anna calendar invite', reason: 'due-today', priority: 'P1', due: '2026-11-11', doer: 'User', clients: [], url: url('t-quick-due-today') },
-    { kind: 'task', id: 't-due-today', name: 'Fix the Oost menu PDF link', reason: 'due-today', priority: 'P2', due: '2026-11-11', doer: 'User', clients: ['Oost'], url: url('t-due-today') },
-    { kind: 'task', id: 't-due-tomorrow', name: 'Send the Carsa invoice', reason: 'due-tomorrow', priority: 'P1', due: '2026-11-12', doer: 'User', clients: ['Carsa'], url: url('t-due-tomorrow') },
-    { kind: 'task', id: 't-p0', name: 'Ship the RHP hotfix', reason: 'p0', priority: 'P0', due: null, doer: 'User + Claude', clients: ['RHP'], url: url('t-p0') },
+    { kind: 'task', id: 't-quick-due-today', name: 'Accept the Dana calendar invite', reason: 'due-today', priority: 'P1', due: '2026-11-11', doer: 'User', clients: [], url: url('t-quick-due-today') },
+    { kind: 'task', id: 't-due-today', name: 'Fix the Globex menu PDF link', reason: 'due-today', priority: 'P2', due: '2026-11-11', doer: 'User', clients: ['Globex'], url: url('t-due-today') },
+    { kind: 'task', id: 't-due-tomorrow', name: 'Send the Acme invoice', reason: 'due-tomorrow', priority: 'P1', due: '2026-11-12', doer: 'User', clients: ['Acme'], url: url('t-due-tomorrow') },
+    { kind: 'task', id: 't-p0', name: 'Ship the Initech hotfix', reason: 'p0', priority: 'P0', due: null, doer: 'User + Claude', clients: ['Initech'], url: url('t-p0') },
   ],
   week: [
-    { kind: 'task', id: 't-weekend', name: 'Add FAQ schema to Rolfing Amsterdam', reason: 'due-week', priority: 'P2', due: '2026-11-13', doer: 'Claude', clients: ['Rolfing Amsterdam'], url: url('t-weekend') },
-    { kind: 'task', id: 't-p3-week', name: 'Update the Jay Shetty footer', reason: 'due-week', priority: 'P3', due: '2026-11-16', doer: 'User', clients: [], url: url('t-p3-week') },
-    { kind: 'task', id: 't-p1-nodue', name: 'Draft the NEM Life case study', reason: 'p1', priority: 'P1', due: null, doer: 'User', clients: ['NEM Life'], url: url('t-p1-nodue') },
+    { kind: 'task', id: 't-weekend', name: 'Add FAQ schema to Contoso', reason: 'due-week', priority: 'P2', due: '2026-11-13', doer: 'Claude', clients: ['Contoso'], url: url('t-weekend') },
+    { kind: 'task', id: 't-p3-week', name: 'Update the Hooli footer', reason: 'due-week', priority: 'P3', due: '2026-11-16', doer: 'User', clients: [], url: url('t-p3-week') },
+    { kind: 'task', id: 't-p1-nodue', name: 'Draft the Umbrella case study', reason: 'p1', priority: 'P1', due: null, doer: 'User', clients: ['Umbrella'], url: url('t-p1-nodue') },
   ],
   proposals: [
-    { pageId: 't-overdue', name: 'Confirm calendar IDs with Tomek', from: 'P2', to: 'P0', reason: 'overdue', due: '2026-11-09' },
-    { pageId: 't-due-today', name: 'Fix the Oost menu PDF link', from: 'P2', to: 'P0', reason: 'due-soon', due: '2026-11-11' },
-    { pageId: 't-due-tomorrow', name: 'Send the Carsa invoice', from: 'P1', to: 'P0', reason: 'due-soon', due: '2026-11-12' },
-    { pageId: 't-weekend', name: 'Add FAQ schema to Rolfing Amsterdam', from: 'P2', to: 'P0', reason: 'due-soon', due: '2026-11-13' },
-    { pageId: 't-blocked', name: 'Approve the Rolfing homepage design', from: 'P1', to: 'P0', reason: 'blocked-on-will', due: null },
-    { pageId: 't-p3-week', name: 'Update the Jay Shetty footer', from: 'P3', to: 'P1', reason: 'due-week', due: '2026-11-16' },
+    { pageId: 't-overdue', name: 'Confirm calendar IDs with Robin', from: 'P2', to: 'P0', reason: 'overdue', due: '2026-11-09' },
+    { pageId: 't-due-today', name: 'Fix the Globex menu PDF link', from: 'P2', to: 'P0', reason: 'due-soon', due: '2026-11-11' },
+    { pageId: 't-due-tomorrow', name: 'Send the Acme invoice', from: 'P1', to: 'P0', reason: 'due-soon', due: '2026-11-12' },
+    { pageId: 't-weekend', name: 'Add FAQ schema to Contoso', from: 'P2', to: 'P0', reason: 'due-soon', due: '2026-11-13' },
+    { pageId: 't-blocked', name: 'Approve the Contoso homepage design', from: 'P1', to: 'P0', reason: 'blocked-on-will', due: null },
+    { pageId: 't-p3-week', name: 'Update the Hooli footer', from: 'P3', to: 'P1', reason: 'due-week', due: '2026-11-16' },
   ],
 };
 
+function rulesConfig(rules = {}) {
+  const config = join(tmp(), 'config.json');
+  writeFileSync(config, JSON.stringify({ digest: { rules: { blockedNamePattern: '\\bWill\\b', ...rules } } }));
+  return config;
+}
+
 test('buckets --now --in matches the snapshot', () => {
-  const r = run(['buckets', '--now', '2026-11-11T07:00:00Z', '--in', FIXTURE]);
+  const r = run(['buckets', '--now', '2026-11-11T07:00:00Z', '--in', FIXTURE, '--config', rulesConfig()]);
   assert.equal(r.code, 0, r.err);
   assert.deepEqual(r.json(), BUCKETS_SNAPSHOT);
 });
@@ -72,15 +78,16 @@ test('buckets reads a bare task array from stdin', () => {
 });
 
 test('buckets applies config.digest.rules', () => {
-  const dir = tmp();
-  const config = join(dir, 'config.json');
-  writeFileSync(config, JSON.stringify({ digest: { rules: { weekDueDays: 10 } } }));
-  const r = run(['buckets', '--now', '2026-11-11T07:00:00Z', '--in', FIXTURE, '--config', config]);
+  const r = run(['buckets', '--now', '2026-11-11T07:00:00Z', '--in', FIXTURE, '--config', rulesConfig({ weekDueDays: 10 })]);
   assert.ok(r.json().week.some((i) => i.id === 't-p2-10days'));
 });
 
-test('bad JSON, a bad --now and an unknown command exit 2', () => {
+test('bad JSON, a bad --now, an unknown flag and an unknown command exit 2', () => {
   assert.equal(run(['buckets'], '{nope').code, 2);
+  const flag = run(['buckets', '--bogus', 'x']);
+  assert.equal(flag.code, 2);
+  assert.match(flag.err, /--bogus[\s\S]*usage:/);
+  assert.match(run(['buckets', '--now']).err, /--now[\s\S]*usage:/);
   assert.equal(run(['buckets', '--now', 'yesterday', '--in', FIXTURE]).code, 2);
   assert.equal(run(['frobnicate']).code, 2);
   assert.equal(run([]).code, 2);
@@ -112,7 +119,7 @@ test('approvals resolves replies and needs a user ID', () => {
 });
 
 test('lint exits 0 on clean text and 1 with JSON warnings', () => {
-  const ok = run(['lint'], '*NOW (1)*\n1. Reply to Anna.\n');
+  const ok = run(['lint'], '*NOW (1)*\n1. Reply to Dana.\n');
   assert.equal(ok.code, 0);
   assert.deepEqual(ok.json(), { ok: true, warnings: [] });
   const bad = run(['lint'], 'Just reply — now.\n');

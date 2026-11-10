@@ -1,10 +1,11 @@
 // Guards the triage job registry: atomic claim, cap of 3 with stale PIDs, kill switch, detached spawn, collect and release, in temp dirs with fake job scripts.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { claim, liveCount, start, collect, list, release } from '../../tools/triage/lib/jobs.js';
 
 const dirs = [];
@@ -36,6 +37,9 @@ const WRITES_RESULT = [
 ].join('\n');
 
 const deadPid = () => spawnSync('true').pid;
+const JOBS_JS = fileURLToPath(new URL('../../tools/triage/lib/jobs.js', import.meta.url));
+const startTime = (pid) =>
+  execFileSync('ps', ['-o', 'lstart=', '-p', String(pid)], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C' } }).trim().replace(/\s+/g, ' ');
 
 async function waitFor(fn, ms = 5000) {
   const end = Date.now() + ms;
@@ -61,7 +65,7 @@ function opts(root, over = {}) {
     slug: 'faq-schema',
     threadTs: '1762844400.000100',
     task: 'Add FAQ schema',
-    brief: 'Add FAQ JSON-LD to the Rolfing homepage.',
+    brief: 'Add FAQ JSON-LD to the Contoso homepage.',
     script: script(root, 'job.sh', WRITES_RESULT),
     killSwitch: join(root, 'triage.off'),
     ...over,
@@ -153,7 +157,7 @@ test('start spawns the script with slug, pageId, threadTs, jobDir and records me
   assert.equal(r.pageId, 'page-1');
   assert.equal(typeof r.pid, 'number');
   const meta = JSON.parse(readFileSync(join(r.jobDir, 'meta.json'), 'utf8'));
-  assert.deepEqual(Object.keys(meta).sort(), ['brief', 'pageId', 'pid', 'slug', 'startedAt', 'task', 'threadTs']);
+  assert.deepEqual(Object.keys(meta).sort(), ['brief', 'pageId', 'pid', 'pidStart', 'slug', 'startedAt', 'task', 'threadTs']);
   assert.equal(meta.pid, r.pid);
   assert.equal(meta.task, 'Add FAQ schema');
   assert.ok(!Number.isNaN(Date.parse(meta.startedAt)));
@@ -222,4 +226,92 @@ test('list shows every job with its state and release removes the claim', () => 
   release(jobs, 'done');
   assert.deepEqual(list(jobs).map((j) => j.pageId), ['alive']);
   assert.deepEqual(list(join(jobs, 'none')), []);
+});
+
+test('claims without a pid and without a result count towards the cap', () => {
+  const root = tmp();
+  const o = opts(root);
+  for (const id of ['a', 'b', 'c']) fakeJob(o.jobsDir, id, { pid: null });
+  assert.deepEqual(start(o), { started: false, reason: 'cap' });
+  assert.equal(existsSync(join(o.jobsDir, 'page-1')), false);
+});
+
+test('concurrent starts never exceed the cap', async () => {
+  const root = tmp();
+  const jobsDir = join(root, 'jobs');
+  fakeJob(jobsDir, 'a', { pid: process.pid });
+  fakeJob(jobsDir, 'b', { pid: process.pid });
+  const sleeper = script(root, 'sleep.sh', 'exec sleep 30');
+  const code = `
+    import(process.argv[1]).then(({ start }) => {
+      const r = start({ jobsDir: process.argv[2], pageId: process.argv[3], slug: 's', threadTs: '1.000001',
+        script: process.argv[4], killSwitch: process.argv[5] });
+      process.stdout.write(JSON.stringify(r));
+    });`;
+  const runs = ['p1', 'p2', 'p3', 'p4', 'p5'].map(
+    (id) =>
+      new Promise((done) => {
+        const child = spawn(process.execPath, ['-e', code, JOBS_JS, jobsDir, id, sleeper, join(root, 'off')]);
+        let out = '';
+        child.stdout.on('data', (d) => (out += d));
+        child.on('close', () => done(JSON.parse(out)));
+      }),
+  );
+  const results = await Promise.all(runs);
+  for (const r of results) if (r.started) pids.push(r.pid);
+  assert.ok(results.filter((r) => r.started).length <= 1, JSON.stringify(results));
+  assert.ok(results.filter((r) => !r.started).every((r) => r.reason === 'cap'), JSON.stringify(results));
+  assert.ok(liveCount(jobsDir) <= 3);
+});
+
+test('a dead pid without result.json is finished-failed and collected with a synthesised result', () => {
+  const jobs = join(tmp(), 'jobs');
+  fakeJob(jobs, 'died', { pid: deadPid(), slug: 'd' });
+  const [state] = list(jobs);
+  assert.equal(state.alive, false);
+  assert.equal(state.finished, true);
+  const done = collect(jobs);
+  assert.equal(done.length, 1);
+  assert.deepEqual(done[0].result, {
+    status: 'failed', branch: null, tests: { passed: 0, total: 0 }, summary: 'job died without result', specPath: null,
+  });
+  assert.deepEqual(collect(jobs), []);
+});
+
+test('a reused pid with a different start time is dead', () => {
+  const jobs = join(tmp(), 'jobs');
+  fakeJob(jobs, 'reused', { pid: process.pid, pidStart: 'Mon Jan 1 00:00:00 2001' });
+  fakeJob(jobs, 'same', { pid: process.pid, pidStart: startTime(process.pid) });
+  assert.deepEqual(list(jobs).map((j) => [j.pageId, j.alive, j.finished]), [['reused', false, true], ['same', true, false]]);
+  assert.equal(liveCount(jobs), 1);
+  assert.deepEqual(collect(jobs).map((j) => [j.pageId, j.result.summary]), [['reused', 'job died without result']]);
+});
+
+test('start records the process start time in meta', () => {
+  const root = tmp();
+  const r = start(opts(root, { script: script(root, 'sleep.sh', 'exec sleep 30') }));
+  pids.push(r.pid);
+  const meta = JSON.parse(readFileSync(join(r.jobDir, 'meta.json'), 'utf8'));
+  assert.equal(meta.pidStart, startTime(r.pid));
+  assert.equal(liveCount(join(root, 'jobs')), 1);
+});
+
+test('the job env carries no tokens or Slack variables', async () => {
+  const root = tmp();
+  const saved = { ...process.env };
+  Object.assign(process.env, { NOTION_TOKEN: 'n-secret', GH_TOKEN: 'g-secret', SLACK_BOT: 'x', SLACK_USER_TOKEN: 'y', KEEP_ME: 'ok' });
+  let r;
+  try {
+    r = start(opts(root, { script: script(root, 'env.sh', 'env > "$4/env.txt"; echo "{}" > "$4/result.json"') }));
+  } finally {
+    for (const k of ['NOTION_TOKEN', 'GH_TOKEN', 'SLACK_BOT', 'SLACK_USER_TOKEN', 'KEEP_ME']) {
+      if (k in saved) process.env[k] = saved[k];
+      else delete process.env[k];
+    }
+  }
+  assert.ok(await waitFor(() => existsSync(join(r.jobDir, 'result.json'))));
+  const env = readFileSync(join(r.jobDir, 'env.txt'), 'utf8');
+  assert.doesNotMatch(env, /secret|^SLACK_|_TOKEN=/m);
+  assert.match(env, /^KEEP_ME=ok$/m);
+  assert.match(env, /^CLAUDE_JOB_DIR=/m);
 });

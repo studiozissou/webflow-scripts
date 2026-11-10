@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs as parseNodeArgs } from 'node:util';
 import {
   createNotionClient,
   queryOpenTasks,
@@ -31,25 +32,28 @@ const COMMANDS = {
   'set-status': { required: ['page', 'value'] },
   comment: { required: ['page', 'text'] },
 };
-const VALUE_FLAGS = new Set(['db', 'config', 'page', 'value', 'text']);
-const BOOL_FLAGS = new Set(['open']);
+const OPTIONS = {
+  open: { type: 'boolean' },
+  db: { type: 'string' },
+  config: { type: 'string' },
+  page: { type: 'string' },
+  value: { type: 'string' },
+  text: { type: 'string' },
+};
 
 export class UsageError extends Error {}
 
 export function parseArgs(argv) {
   const [command, ...rest] = argv;
   if (!command || !COMMANDS[command]) throw new UsageError(USAGE);
-  const args = { command };
-  for (let i = 0; i < rest.length; i++) {
-    const flag = rest[i].replace(/^--/, '');
-    if (!rest[i].startsWith('--')) throw new UsageError(`unknown argument ${rest[i]}\n${USAGE}`);
-    if (BOOL_FLAGS.has(flag)) args[flag] = true;
-    else if (VALUE_FLAGS.has(flag)) {
-      const value = rest[++i];
-      if (value === undefined || value.startsWith('--')) throw new UsageError(`--${flag} needs a value`);
-      args[flag] = value;
-    } else throw new UsageError(`unknown flag --${flag}\n${USAGE}`);
+  let parsed;
+  try {
+    parsed = parseNodeArgs({ args: rest, options: OPTIONS, strict: true, allowPositionals: true });
+  } catch (err) {
+    throw new UsageError(`${err.message}\n${USAGE}`);
   }
+  if (parsed.positionals.length > 0) throw new UsageError(`unknown argument ${parsed.positionals[0]}\n${USAGE}`);
+  const args = { command, ...parsed.values };
   for (const req of COMMANDS[command].required) {
     if (args[req] === undefined) throw new UsageError(`${command} requires --${req}\n${USAGE}`);
   }

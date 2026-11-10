@@ -12,6 +12,7 @@ const SCRIPTS = join(ROOT, 'scripts');
 const MORNING = join(SCRIPTS, 'triage-morning.sh');
 const APPROVE = join(SCRIPTS, 'triage-approve.sh');
 const JOB = join(SCRIPTS, 'triage-job.sh');
+const COMMON = join(SCRIPTS, 'lib', 'triage-common.sh');
 const ALL = [MORNING, APPROVE, JOB];
 
 const dirs = [];
@@ -49,6 +50,7 @@ const args = process.argv.slice(2);
 fs.appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ args, cwd: process.cwd(), jobDir: process.env.CLAUDE_JOB_DIR || null, notion: process.env.NOTION_TOKEN || null }) + '\\n');
 const prompt = args[1] || '';
 const slug = process.env.FAKE_SLUG;
+if (process.env.FAKE_OFF_ON && prompt.startsWith('/' + process.env.FAKE_OFF_ON)) fs.writeFileSync(process.env.FAKE_OFF_FILE, '');
 if (prompt.startsWith('/plan') && slug) {
   fs.mkdirSync('.claude/specs', { recursive: true });
   fs.writeFileSync('.claude/specs/' + slug + '.md', '---\\nslug: ' + slug + '\\nclient: ' + (process.env.FAKE_CLIENT || 'acme') + '\\n---\\n# Spec\\n');
@@ -90,11 +92,14 @@ function jobRepo({ off = false, allowed = ALLOWED_JOB, disallowed = DISALLOWED_J
   const base = tmp('triage-job-');
   const remote = join(base, 'remote.git');
   const repo = join(base, 'repo');
-  mkdirSync(join(repo, 'scripts'), { recursive: true });
+  mkdirSync(join(repo, 'scripts', 'lib'), { recursive: true });
   git(base, 'init', '-q', '--bare', '-b', 'main', remote);
   git(repo, 'init', '-q', '-b', 'main');
   copyFileSync(JOB, join(repo, 'scripts', 'triage-job.sh'));
   chmodSync(join(repo, 'scripts', 'triage-job.sh'), 0o755);
+  if (existsSync(COMMON)) copyFileSync(COMMON, join(repo, 'scripts', 'lib', 'triage-common.sh'));
+  writeFileSync(join(repo, 'scripts', 'link-internal.sh'), '#!/bin/bash\n[ "${FAKE_OFF_ON:-}" = setup ] && : > "$FAKE_OFF_FILE"\nexit 0\n');
+  chmodSync(join(repo, 'scripts', 'link-internal.sh'), 0o755);
   writeFileSync(join(repo, 'package.json'), JSON.stringify({ name: 'fixture', private: true, scripts }, null, 2));
   writeFileSync(join(repo, '.gitignore'), '.claude/\n');
   git(repo, 'add', '-A');
@@ -132,10 +137,20 @@ for (const f of ALL) {
     assert.doesNotMatch(read(f), /dangerously-skip-permissions/);
   });
 
-  test(`${f.split('/').pop()} checks the triage.off kill switch`, () => {
-    assert.ok(codeLines(f).some((l) => /\[\s+(!\s+)?-e\s+"\$INTERNAL_TRIAGE\/triage\.off"\s+\]/.test(l)));
+  test(`${f.split('/').pop()} sources triage-common.sh and checks the triage.off kill switch`, () => {
+    const lines = codeLines(f);
+    assert.ok(lines.some((l) => /^\s*(source|\.)\s+"\$SCRIPT_DIR\/lib\/triage-common\.sh"/.test(l)));
+    assert.ok(lines.some((l) => /\btriage_off\b/.test(l) && !/^\s*triage_off\s*\(\)/.test(l)));
   });
 }
+
+test('triage-common.sh parses with bash -n and its triage_off helper checks the triage.off file', () => {
+  const r = spawnSync('bash', ['-n', COMMON], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const code = codeLines(COMMON).join('\n');
+  assert.match(code, /triage_off\(\)\s*\{[^}]*\[\s+-e\s+"\$INTERNAL_TRIAGE\/triage\.off"\s+\]/);
+  assert.doesNotMatch(read(COMMON), /dangerously-skip-permissions/);
+});
 
 test('morning and approve runners read allowed-tools.txt and pass it as --allowedTools', () => {
   for (const f of [MORNING, APPROVE]) {
@@ -354,3 +369,19 @@ test('job script fails when the build leaves no commits on the branch', () => {
   assert.equal(result(fx.jobDir).status, 'failed');
   assert.match(result(fx.jobDir).summary, /commit/);
 });
+
+for (const [stage, calls] of [['setup', 0], ['plan', 1], ['build', 2]]) {
+  test(`job script stops when triage.off appears during ${stage}`, () => {
+    const fake = fakeClaude();
+    const fx = jobRepo();
+    writeMeta(fx.jobDir);
+    const off = join(fx.repo, '.claude', 'triage', 'triage.off');
+    const r = runJob(fx, fake, undefined, { FAKE_OFF_ON: stage, FAKE_OFF_FILE: off });
+    assert.notEqual(r.status, 0);
+    assert.equal(fake.calls().length, calls);
+    const res = result(fx.jobDir);
+    assert.equal(res.status, 'failed');
+    assert.match(res.summary, /triage\.off appeared/);
+    assert.equal(existsSync(join(fx.jobDir, 'test-output.txt')), false);
+  });
+}

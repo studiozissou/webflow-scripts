@@ -2,17 +2,17 @@
 
 const PRIORITIES = ['P0', 'P1', 'P2', 'P3'];
 
-// Exact Notion property names per the triage skill's notion_schema; fallbacks cover renamed columns.
+// Exact Notion property names per the triage skill's notion_schema; the title is also found by type if renamed.
 const PROPS = {
-  name: ['Task name', 'Name'],
-  status: ['Status'],
-  priority: ['Priority'],
-  due: ['Due date', 'Due'],
-  doer: ['Doer'],
-  tags: ['Tags'],
-  blockedReason: ['Blocked Reason'],
-  hours: ['Hours Estimate'],
-  clients: ['Clients'],
+  name: 'Task name',
+  status: 'Status',
+  priority: 'Priority',
+  due: 'Due date',
+  doer: 'Doer',
+  tags: 'Tags',
+  blockedReason: 'Blocked Reason',
+  hours: 'Hours Estimate',
+  clients: 'Clients',
 };
 
 export async function createNotionClient({ token } = {}) {
@@ -21,19 +21,12 @@ export async function createNotionClient({ token } = {}) {
   return new Client({ auth: token });
 }
 
-function pick(properties, names) {
-  for (const name of names) if (properties[name]) return properties[name];
-  return undefined;
-}
-
 function plain(richText) {
   return Array.isArray(richText) ? richText.map((t) => t?.plain_text ?? t?.text?.content ?? '').join('') : '';
 }
 
 function optionName(prop) {
-  if (!prop) return null;
-  const value = prop[prop.type] ?? prop.status ?? prop.select;
-  return value?.name ?? null;
+  return prop?.[prop.type]?.name ?? null;
 }
 
 function textValue(prop) {
@@ -44,21 +37,17 @@ function textValue(prop) {
 
 export function mapTaskPage(page) {
   const properties = page?.properties ?? {};
-  const titleProp =
-    pick(properties, PROPS.name) ?? Object.values(properties).find((p) => p?.type === 'title');
-  const due = pick(properties, PROPS.due);
-  const tags = pick(properties, PROPS.tags);
-  const hours = pick(properties, PROPS.hours);
-  const clients = pick(properties, PROPS.clients);
+  const titleProp = properties[PROPS.name] ?? Object.values(properties).find((p) => p?.type === 'title');
+  const { [PROPS.due]: due, [PROPS.tags]: tags, [PROPS.hours]: hours, [PROPS.clients]: clients } = properties;
   return {
     id: page?.id ?? null,
     name: plain(titleProp?.title).trim(),
-    status: optionName(pick(properties, PROPS.status)),
-    priority: optionName(pick(properties, PROPS.priority)),
+    status: optionName(properties[PROPS.status]),
+    priority: optionName(properties[PROPS.priority]),
     due: due?.date?.start ?? null,
-    doer: optionName(pick(properties, PROPS.doer)),
+    doer: optionName(properties[PROPS.doer]),
     tags: Array.isArray(tags?.multi_select) ? tags.multi_select.map((t) => t.name).filter(Boolean) : [],
-    blockedReason: textValue(pick(properties, PROPS.blockedReason)),
+    blockedReason: textValue(properties[PROPS.blockedReason]),
     hours: typeof hours?.number === 'number' ? hours.number : null,
     clients: Array.isArray(clients?.relation) ? clients.relation.map((r) => r.id).filter(Boolean) : [],
     url: page?.url ?? null,

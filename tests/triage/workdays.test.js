@@ -66,3 +66,8 @@ test('ISO instants resolve to the Europe/Amsterdam calendar day', () => {
 test('invalid dates throw', () => {
   assert.throws(() => isWorkingDay('not a date'), /invalid date/);
 });
+
+test('workingDaysBetween never returns -0', () => {
+  assert.ok(Object.is(workingDaysBetween('2026-11-14', '2026-11-13'), 0));
+  assert.ok(Object.is(workingDaysBetween('2026-11-15', '2026-11-14'), 0));
+});

@@ -1,6 +1,7 @@
-// Turns Slack thread replies into approved and skipped build items, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes, never a reply ts twice, unknown indices reported and never guessed.
+// Turns Slack thread replies into approved and skipped build items, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes, never a reply ts twice; a reply with any unknown token is rejected whole and reported, never guessed.
 
-const COMMAND = /^(go|skip|ok changes)\b(.*)$/is;
+const COMMAND = /^(go|skip|ok\s+changes)\b(.*)$/is;
+const OK_CHANGES_TAIL = /^\s*[.!]?$/;
 
 export function compareTs(a, b) {
   const [as, af = ''] = String(a).split('.');
@@ -51,7 +52,8 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
     seen.add(reply.ts);
     const verb = match[1].toLowerCase().replace(/\s+/g, ' ');
     if (verb === 'ok changes') {
-      applyProposals = true;
+      if (OK_CHANGES_TAIL.test(match[2])) applyProposals = true;
+      else unknown.push({ ts: reply.ts, token: match[2].trim(), reason: 'ok changes takes no arguments' });
       continue;
     }
     const tokens = match[2].split(/[\s,]+/).filter(Boolean).map((t) => t.toUpperCase());
@@ -59,21 +61,24 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
       unknown.push({ ts: reply.ts, token: '', reason: 'no items given' });
       continue;
     }
+    if (tokens.length === 1 && tokens[0] === 'ALL') {
+      for (const item of builds) decisions.set(item.label, { verb, item });
+      continue;
+    }
     const targets = [];
+    const problems = [];
     for (const token of tokens) {
-      if (token === 'ALL') {
-        targets.push(...builds);
-        continue;
-      }
       const item = resolve(token, builds);
       if (item) targets.push(item);
-      else if (items.some((i) => i.label === token)) unknown.push({ ts: reply.ts, token, reason: 'not a build item' });
-      else unknown.push({ ts: reply.ts, token, reason: 'no such item' });
+      else if (token === 'ALL') problems.push({ ts: reply.ts, token, reason: 'all must be the only item' });
+      else if (items.some((i) => i.label === token)) problems.push({ ts: reply.ts, token, reason: 'not a build item' });
+      else problems.push({ ts: reply.ts, token, reason: 'no such item' });
     }
-    for (const item of targets) {
-      decisions.delete(item.label);
-      decisions.set(item.label, { verb, item });
+    if (problems.length > 0) {
+      unknown.push(...problems);
+      continue;
     }
+    for (const item of targets) decisions.set(item.label, { verb, item });
   }
 
   const pick = (verb) =>

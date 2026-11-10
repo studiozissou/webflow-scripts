@@ -9,7 +9,7 @@ const page = JSON.parse(readFileSync(new URL('./fixtures/page.json', import.meta
 
 test('mapTaskPage maps a full Tasks Tracker page', () => {
   assert.deepEqual(mapTaskPage(page), {
-    id: '2a1e1848-bb51-8011-a2b3-c4d5e6f70809',
+    id: '00000000-0000-0000-0000-000000000001',
     name: 'Reply to Alex about Phase B pricing',
     status: 'In progress',
     priority: 'P1',
@@ -18,8 +18,8 @@ test('mapTaskPage maps a full Tasks Tracker page', () => {
     tags: ['Quick', 'Email'],
     blockedReason: 'waiting on Will to confirm scope',
     hours: 0.25,
-    clients: ['229e1848-bb51-80aa-0000-000000000001'],
-    url: 'https://www.notion.so/Reply-to-Alex-about-Phase-B-pricing-2a1e1848bb518011a2b3c4d5e6f70809',
+    clients: ['00000000-0000-0000-0000-000000000003'],
+    url: 'https://www.notion.so/Reply-to-Alex-about-Phase-B-pricing-00000000000000000000000000000001',
   });
 });
 
@@ -62,7 +62,7 @@ test('mapTaskPage reads Status stored as a select and finds the title by type', 
       Name: { type: 'title', title: [{ plain_text: 'Other title' }] },
       Status: { type: 'select', select: { name: 'Waiting' } },
       Priority: { type: 'status', status: { name: 'P0' } },
-      Due: { type: 'date', date: { start: '2026-11-11T09:00:00.000+00:00' } },
+      'Due date': { type: 'date', date: { start: '2026-11-11T09:00:00.000+00:00' } },
     },
   });
   assert.equal(t.name, 'Other title');

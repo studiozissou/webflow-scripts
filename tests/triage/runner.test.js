@@ -269,6 +269,54 @@ test('morning runner runs snapshot collect in the repo before claude', () => {
   assert.equal(second.args[0], '-p');
 });
 
+const FAKE_NOTION_CLI = `const args = process.argv.slice(2);
+require('fs').appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ notion: args, token: process.env.NOTION_TOKEN || null }) + '\\n');
+if (process.env.FAKE_NOTION_FAIL === args[0]) { process.stdout.write('[{"partial":'); process.exit(2); }
+process.stdout.write(JSON.stringify(args[0] === 'goals' ? [{ id: 'g1', name: 'Fake goal' }] : [{ id: 't1', name: 'Fake task' }]));
+`;
+
+function withNotionCli(repo) {
+  mkdirSync(join(repo, 'tools', 'notion'), { recursive: true });
+  writeFileSync(join(repo, 'tools', 'notion', 'cli.js'), FAKE_NOTION_CLI);
+}
+
+test('morning runner writes Notion tasks and goals into the world dir and passes them to snapshot collect', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 0);
+  withNotionCli(repo);
+  const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal }) });
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  const calls = fake.calls();
+  assert.deepEqual(calls.slice(0, 2).map((c) => c.notion), [['tasks', '--open'], ['goals']]);
+  assert.ok(calls.slice(0, 2).every((c) => c.token === 'test-token'), 'token exported before the Notion reads');
+  const world = join(internal, 'world');
+  const files = readdirSync(world).sort();
+  assert.equal(files.length, 2);
+  const [goals, tasks] = files;
+  assert.match(goals, /^goals-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.match(tasks, /^tasks-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.deepEqual(JSON.parse(read(join(world, goals))), [{ id: 'g1', name: 'Fake goal' }]);
+  assert.deepEqual(calls[2].snapshot, ['snapshot', 'collect', '--tasks', join(world, tasks), '--goals', join(world, goals)]);
+  assert.equal(calls[3].args[0], '-p');
+});
+
+test('a failed Notion read is a warning: no partial file, that flag is left out, and claude still runs', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 0);
+  withNotionCli(repo);
+  const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal, FAKE_NOTION_FAIL: 'goals' }) });
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.match(r.stderr, /WARNING: notion goals failed/);
+  const world = join(internal, 'world');
+  assert.deepEqual(readdirSync(world).filter((f) => !f.startsWith('tasks-')), []);
+  const collect = fake.calls().find((c) => c.snapshot);
+  assert.deepEqual(collect.snapshot.slice(0, 3), ['snapshot', 'collect', '--tasks']);
+  assert.equal(collect.snapshot.includes('--goals'), false);
+  assert.equal(fake.calls().filter((c) => c.args).length, 1);
+});
+
 test('morning runner treats a failed snapshot collect as a warning and still runs claude', () => {
   const fake = fakeClaude();
   const { repo, internal } = triageRepo();

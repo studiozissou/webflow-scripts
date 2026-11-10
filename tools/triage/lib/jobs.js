@@ -13,7 +13,7 @@ export const DEFAULT_KILL_SWITCH = join(REPO_ROOT, '.claude/triage/triage.off');
 export const DEFAULT_SCRIPT = join(REPO_ROOT, 'scripts/triage-job.sh');
 export const DEFAULT_CAP = 3;
 
-const PAGE_ID = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
+export const PAGE_ID = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const THREAD_TS = /^\d+\.\d+$/;
 const LABEL = /^[A-Z]?\d{1,3}$/;

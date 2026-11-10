@@ -1,4 +1,4 @@
-// Shared I/O for the triage CLI and its command modules (snapshot-cli.js): UsageError (exit 2 with usage), JSON in from --in, stdin or a state file (readJsonFile), JSON out on stdout, --now parsing, and the refusal every job-starting or world-writing command gives inside a build job. Kept apart from cli.js so command modules do not import cli.js back.
+// Shared I/O for the triage CLI and its command modules (snapshot-cli.js, learnings-cli.js, goals-cli.js): UsageError (exit 2 with usage), JSON in from --in, stdin or a state file (readJsonFile), JSON out on stdout, --now parsing, the clock for commands that refuse --now (TRIAGE_TEST_NOW in tests), and the refusal every job-starting or world-writing command gives inside a build job. Kept apart from cli.js so command modules do not import cli.js back.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -33,6 +33,17 @@ export function out(value) {
 export function parseNow(args) {
   const now = args.now ?? new Date().toISOString();
   if (Number.isNaN(Date.parse(now))) throw new UsageError(`--now is not a valid date: ${now}`);
+  return now;
+}
+
+export const TEST_NOW_ENV = 'TRIAGE_TEST_NOW';
+
+// For commands whose day picks a ledger, cap or state entry: the clock, never a flag. Tests set
+// TRIAGE_TEST_NOW, which the unattended allowlist rule cannot (it matches no leading env assignment).
+export function clock(args, command, env = process.env) {
+  if (args.now !== undefined) throw new UsageError(`${command} takes no --now: the day comes from the clock`);
+  const now = env[TEST_NOW_ENV] || new Date().toISOString();
+  if (Number.isNaN(Date.parse(now))) throw new UsageError(`${TEST_NOW_ENV} is not a valid date: ${now}`);
   return now;
 }
 

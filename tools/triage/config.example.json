@@ -14,6 +14,9 @@
     "databaseId": "00000000-0000-0000-0000-000000000000",
     "dataSourceId": "00000000-0000-0000-0000-000000000001"
   },
+  "goals": {
+    "databaseId": "00000000-0000-0000-0000-000000000002"
+  },
   "digest": {
     "buildsEnabled": false,
     "newBusinessTerms": ["website", "quote", "proposal", "redesign"],

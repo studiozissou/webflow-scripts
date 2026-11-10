@@ -1,4 +1,4 @@
-// Daily world snapshot for triage: world/<Amsterdam date>.json built from the sessions.js collectors, written atomically by writeAtomic() (temp file + rename, also used by learnings-cli.js) under a lock claimed with jobs.js claim/release (a lock older than 2 minutes counts as abandoned), read back by date, flagged stale after 3 hours, and updated by addRemote() with the cloud and Remote Control sessions the model lists in-run. A re-collect on the same day keeps the remote sessions and tasks it already had.
+// Daily world snapshot for triage: world/<Amsterdam date>.json built from the sessions.js collectors, written atomically by writeAtomic() (temp file + rename, also used by learnings-cli.js) under a lock claimed with jobs.js claim/release (a lock older than 2 minutes counts as abandoned), read back by date, flagged stale after 3 hours, and updated by addRemote() with the cloud and Remote Control sessions the model lists in-run. A re-collect on the same day keeps the remote sessions, tasks and goals it already had unless new ones are given.
 import { readFileSync, renameSync, writeFileSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { REPO_ROOT, claim, release } from './jobs.js';
@@ -109,10 +109,10 @@ export function addRemote(snapshot, list) {
   };
 }
 
-export function collectSnapshot({ dir = DEFAULT_WORLD_DIR, now = new Date(), tasks, ...options } = {}) {
+export function collectSnapshot({ dir = DEFAULT_WORLD_DIR, now = new Date(), tasks, goals, ...options } = {}) {
   const locked = withLock(dir, () => {
     const previous = readSnapshot(dir, now);
-    const next = buildSnapshot({ now, tasks: tasks ?? previous?.tasks ?? [], goals: previous?.goals ?? [], ...options });
+    const next = buildSnapshot({ now, tasks: tasks ?? previous?.tasks ?? [], goals: goals ?? previous?.goals ?? [], ...options });
     const remote = (previous?.sessions ?? []).filter((s) => REMOTE_KINDS.has(s.kind));
     if (previous?.sources?.remote === 'ok') {
       next.sessions = [...next.sessions, ...remote];

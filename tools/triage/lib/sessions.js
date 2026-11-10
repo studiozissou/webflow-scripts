@@ -4,7 +4,7 @@ import { closeSync, existsSync, fstatSync, lstatSync, openSync, readdirSync, rea
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { DEFAULT_JOBS_DIR, REPO_ROOT, list as listTriageJobs } from './jobs.js';
-import { workingDaysBetween } from './workdays.js';
+import { DAY_MS, workingDaysBetween } from './workdays.js';
 import { readJsonFile } from './cli-io.js';
 
 export const CLASSES = ['waiting', 'inFlight', 'built', 'planned', 'stale'];
@@ -15,7 +15,6 @@ export const BUILT_RESULT_DAYS = 7;
 export const STALE_WORKING_DAYS = 7;
 const EXEC_TIMEOUT_MS = 10_000;
 const MAX_TEXT = 120;
-const DAY_MS = 86_400_000;
 const BASE_BRANCHES = new Set(['main', 'master', 'HEAD']);
 const WAITING = /waiting (on|for) (a )?(human|you|user|input)|needs? (your )?(input|answer|reply)|awaiting/i;
 const WORKING = /^(running|working|busy|active|in progress)$/i;

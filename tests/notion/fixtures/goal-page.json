@@ -1,0 +1,28 @@
+{
+  "object": "page",
+  "id": "00000000-0000-0000-0000-0000000000a1",
+  "created_time": "2026-10-01T08:00:00.000Z",
+  "archived": false,
+  "in_trash": false,
+  "parent": { "type": "database_id", "database_id": "00000000-0000-0000-0000-0000000000a0" },
+  "url": "https://www.notion.so/Acme-retainer-health-000000000000000000000000000000a1",
+  "properties": {
+    "Goal": {
+      "id": "title",
+      "type": "title",
+      "title": [
+        { "type": "text", "text": { "content": "Acme retainer ", "link": null }, "plain_text": "Acme retainer " },
+        { "type": "text", "text": { "content": "health", "link": null }, "plain_text": "health" }
+      ]
+    },
+    "Status": { "id": "st", "type": "status", "status": { "id": "s2", "name": "Active", "color": "blue" } },
+    "Horizon": { "id": "hz", "type": "select", "select": { "id": "h2", "name": "Quarter", "color": "green" } },
+    "Clients": { "id": "cl", "type": "relation", "relation": [{ "id": "00000000-0000-0000-0000-000000000003" }], "has_more": false },
+    "Tasks": { "id": "tk", "type": "relation", "relation": [{ "id": "00000000-0000-0000-0000-000000000001" }, { "id": "00000000-0000-0000-0000-000000000004" }], "has_more": false },
+    "Measure": { "id": "ms", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "No P0 bugs open for 2 weeks" }, "plain_text": "No P0 bugs open for 2 weeks" }] },
+    "Target date": { "id": "td", "type": "date", "date": { "start": "2026-12-31", "end": null, "time_zone": null } },
+    "Why": { "id": "wy", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "Keeps the retainer renewing" }, "plain_text": "Keeps the retainer renewing" }] },
+    "Last reviewed": { "id": "lr", "type": "date", "date": { "start": "2026-10-29", "end": null, "time_zone": null } },
+    "Progress": { "id": "pg", "type": "rollup", "rollup": { "type": "number", "number": 0.5, "function": "percent_per_group" } }
+  }
+}

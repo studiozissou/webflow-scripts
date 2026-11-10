@@ -1,4 +1,4 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot and learnings subcommand refuses inside a build job.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings and goals subcommand refuses inside a build job.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +10,7 @@ import { lint, MIN_RATIO } from './lib/ste-lint.js';
 import { start, collect, list, DEFAULT_JOBS_DIR, DEFAULT_KILL_SWITCH, DEFAULT_SCRIPT, DEFAULT_CAP } from './lib/jobs.js';
 import { run as runSnapshot } from './lib/snapshot-cli.js';
 import { run as runLearnings } from './lib/learnings-cli.js';
+import { run as runGoals } from './lib/goals-cli.js';
 import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './lib/cli-io.js';
 
 const USAGE = `usage: cli.js <command> [options]
@@ -22,7 +23,8 @@ const USAGE = `usage: cli.js <command> [options]
   jobs start --page <id> --slug <slug> --thread <ts> [--label <B1>] [--task <name>] [--brief <text>]
                                                       exit 1 when refused (builds-off, kill-switch, cap, claimed)
   jobs collect | jobs list
-  snapshot collect [--tasks <tasks.json>] [--now <iso>]   writes .claude/triage/world/<date>.json
+  snapshot collect [--tasks <tasks.json>] [--goals <goals.json>] [--now <iso>]
+                                                      writes .claude/triage/world/<date>.json
   snapshot add-remote [--in <remote.json>] | --unavailable   [{ id?, name, status, kind? }] from the session list
   snapshot rollup [--in <snapshot.json>] [--now <iso>]    counts, headline and thread reply 1
   learnings extract                                   inbox -> learnings/excerpts-<date>.json; noModel when empty
@@ -30,10 +32,13 @@ const USAGE = `usage: cli.js <command> [options]
   learnings comment --task <pageId> (--text <t> | --text-file <tmp/file>)
                                                       one "Learnings:" comment per excerpted task per day
   learnings digest --in <tmp/draft.md>                validated draft -> learnings/digest-<date>.md
-common: --config <config.json>; learnings takes no --now (clock only)
+  goals health [--in <snapshot.json>]                 goal health, tasks with no goal, Monday GOALS block
+  goals questions [--in <snapshot.json>]              up to 3 goal-fit Q items (D18); keeps from goals-state.json
+  goals keep --task <pageId>                          30-day keep; only a goal-fit item in today's digest
+common: --config <config.json>; learnings and goals take no --now (clock only)
 `;
 
-const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks', 'skill', 'text', 'text-file'];
+const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks', 'goals', 'skill', 'text', 'text-file'];
 
 // Test-only overrides. The unattended allowlist rule Bash(node tools/triage/cli.js *) cannot
 // match a command with a leading env assignment, so a scheduled run cannot set these.
@@ -177,7 +182,7 @@ function runJobs(args) {
   return result.started ? 0 : 1;
 }
 
-const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings };
+const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals };
 
 function fail(err) {
   if (err instanceof UsageError) process.stderr.write(`${err.message}\n${USAGE}`);

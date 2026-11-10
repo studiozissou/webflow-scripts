@@ -23,6 +23,8 @@ test('mapTaskPage maps a full Tasks Tracker page', () => {
     blockedReason: 'waiting on Pat to confirm scope',
     hours: 0.25,
     clients: ['00000000-0000-0000-0000-000000000003'],
+    goalIds: [],
+    createdTime: '2026-11-03T08:30:00.000Z',
     url: 'https://www.notion.so/Reply-to-Alex-about-Phase-B-pricing-00000000000000000000000000000001',
   });
 });
@@ -45,7 +47,7 @@ test('mapTaskPage returns nulls and empty arrays for empty properties', () => {
   };
   assert.deepEqual(mapTaskPage(empty), {
     id: 'x', name: '', status: null, priority: null, due: null, doer: null,
-    tags: [], blockedReason: null, hours: null, clients: [], url: 'u',
+    tags: [], blockedReason: null, hours: null, clients: [], goalIds: [], createdTime: null, url: 'u',
   });
 });
 

@@ -1,4 +1,4 @@
-// Guards approval parsing: go/skip/ok changes, author, thread and ts checks, idempotency and unknown indices.
+// Guards approval parsing: go/skip/ok changes on B items, link/keep/drop on goal-fit Q items (decided once, drop approved only by a later ok changes), author, thread and ts checks, idempotency and unknown indices.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseReplies, compareTs } from '../../tools/triage/lib/approvals.js';
@@ -162,4 +162,164 @@ test('processedTs comes back de-duplicated, keeping first-seen order', () => {
   const state = { ...DIGEST, processedTs: ['1762844500.000001', '1762844500.000001', '1762844450.000001'] };
   const r = parseReplies(state, [reply('1762844600.000001', 'go 1'), reply('1762844600.000001', 'go 1')], { userId: USER });
   assert.deepEqual(r.processedTs, ['1762844500.000001', '1762844450.000001', '1762844600.000001']);
+});
+
+// ---------- goal-fit Q items (D18) ----------
+
+const Q_DIGEST = {
+  ...DIGEST,
+  items: [
+    ...DIGEST.items,
+    { n: 'S1', kind: 'session', id: 'sess-1' },
+    { n: 'Q1', kind: 'goal-fit', taskId: 't-q1', goalId: 'g-1' },
+    { n: 'Q2', kind: 'goal-fit', taskId: 't-q2', goalId: 'g-2' },
+    { label: 'Q3', kind: 'goal-fit', taskId: 't-q3', goalId: null },
+  ],
+};
+const parse = (replies, state = Q_DIGEST) => parseReplies(state, replies, { userId: USER });
+const NO_FIT = { link: [], keep: [], drop: [] };
+const DROP_TS = '1762844500.000001';
+const pendingQ1 = { Q1: { verb: 'drop', taskId: 't-q1', ts: DROP_TS, status: 'pending' } };
+const pending = (r) => Object.keys(r.goalFitState).filter((l) => r.goalFitState[l].status === 'pending');
+
+test('link, keep and drop act on goal-fit items, case-insensitive, and keep build parsing as it was', () => {
+  const r = parse([reply('1762844500.000001', 'Link q1'), reply('1762844500.000002', 'KEEP Q2, Q3'), reply('1762844500.000003', 'go 1')]);
+  assert.deepEqual(r.goalFit, {
+    link: [{ label: 'Q1', taskId: 't-q1', goalId: 'g-1' }],
+    keep: [{ label: 'Q2', taskId: 't-q2' }, { label: 'Q3', taskId: 't-q3' }],
+    drop: [],
+  });
+  assert.deepEqual(r.approved, [{ n: 'B1', pageId: 'p-b1' }]);
+  assert.deepEqual(r.approvedDrops, []);
+  assert.deepEqual(r.unknown, []);
+  assert.deepEqual(r.goalFitState, {
+    Q1: { verb: 'link', taskId: 't-q1', ts: '1762844500.000001', status: 'done' },
+    Q2: { verb: 'keep', taskId: 't-q2', ts: '1762844500.000002', status: 'done' },
+    Q3: { verb: 'keep', taskId: 't-q3', ts: '1762844500.000002', status: 'done' },
+  });
+});
+
+test('a digest with no Q items returns empty goal-fit results', () => {
+  const r = parse([reply('1762844500.000001', 'go all')], DIGEST);
+  assert.deepEqual(r.goalFit, NO_FIT);
+  assert.deepEqual(r.approvedDrops, []);
+  assert.deepEqual(r.goalFitState, {});
+});
+
+test('link, keep and drop not followed by a Q label are chatter: ignored and not recorded', () => {
+  for (const text of ['keep going', 'drop me a note', 'link to the doc?', 'keep', 'drop 1', 'keep all', 'Link: Q1']) {
+    const r = parse([reply('1762844500.000001', text)]);
+    assert.deepEqual(r.goalFit, NO_FIT, text);
+    assert.deepEqual(r.unknown, [], text);
+    assert.deepEqual(r.processedTs, [], text);
+    assert.deepEqual(r.goalFitState, {}, text);
+  }
+});
+
+test('a goal-fit reply with any bad token after a Q label is rejected whole', () => {
+  const cases = [
+    ['link Q1 Q9', 'no such item'],
+    ['link Q1 B1', 'not a goal-fit item'],
+    ['keep Q1 S1', 'not a goal-fit item'],
+    ['drop Q1 1', 'not a goal-fit item'],
+    ['link Q3', 'no goal proposed'],
+    ['keep Q1 all', 'all is not allowed here'],
+    ['drop Q9', 'no such item'],
+    ['link Q1 foo', 'no such item'],
+  ];
+  for (const [text, reason] of cases) {
+    const r = parse([reply('1762844500.000001', text)]);
+    assert.deepEqual(r.goalFit, NO_FIT, text);
+    assert.deepEqual(r.goalFitState, {}, text);
+    assert.ok(r.unknown.some((u) => u.reason === reason), `${text}: ${JSON.stringify(r.unknown)}`);
+    assert.deepEqual(r.processedTs, ['1762844500.000001'], text);
+  }
+});
+
+test('go and skip on a Q item are invalid, and go S1 stays invalid', () => {
+  for (const text of ['go Q1', 'skip Q2', 'go S1', 'go 1 Q1']) {
+    const r = parse([reply('1762844500.000001', text)]);
+    assert.deepEqual(r.approved, [], text);
+    assert.deepEqual(r.skipped, [], text);
+    assert.deepEqual(r.goalFit, NO_FIT, text);
+    assert.ok(r.unknown.some((u) => u.reason === 'not a build item'), text);
+  }
+});
+
+test('goal-fit replies from another user, another thread or before the digest are ignored', () => {
+  const r = parse([
+    reply('1762844500.000001', 'link Q1', { user: 'U0OTHER' }),
+    reply('1762844500.000002', 'keep Q2', { thread_ts: '1762000000.000001' }),
+    reply('1762844399.000001', 'drop Q1'),
+  ]);
+  assert.deepEqual(r.goalFit, NO_FIT);
+  assert.deepEqual(r.processedTs, []);
+});
+
+test('each Q item is decided once: a later reply naming a decided item is rejected whole, also across runs', () => {
+  const r = parse([reply('1762844500.000001', 'keep Q1'), reply('1762844600.000001', 'link Q1 Q2')]);
+  assert.deepEqual(r.goalFit, { link: [], keep: [{ label: 'Q1', taskId: 't-q1' }], drop: [] });
+  assert.deepEqual(r.unknown.map((u) => [u.token, u.reason]), [['Q1', 'already decided']]);
+  const saved = { Q1: { verb: 'keep', taskId: 't-q1', ts: '1762844500.000001', status: 'done' } };
+  const again = parse([reply('1762844700.000001', 'link Q1'), reply('1762844700.000002', 'link Q2 q2')], { ...Q_DIGEST, goalFitState: saved });
+  assert.deepEqual(again.goalFit.link, [{ label: 'Q2', taskId: 't-q2', goalId: 'g-2' }]);
+  assert.deepEqual(Object.keys(again.goalFitState), ['Q1', 'Q2']);
+  assert.deepEqual(again.goalFitState.Q1, saved.Q1);
+  const replay = parse([reply('1762844500.000001', 'link Q1')], { ...Q_DIGEST, processedTs: ['1762844500.000001'] });
+  assert.deepEqual(replay.goalFit, NO_FIT);
+});
+
+test('drop only proposes: without a later ok changes it writes nothing and stays pending', () => {
+  const r = parse([reply(DROP_TS, 'drop Q1')]);
+  assert.deepEqual(r.goalFit.drop, [{ label: 'Q1', taskId: 't-q1' }]);
+  assert.deepEqual(r.approvedDrops, []);
+  assert.deepEqual(r.approved, []);
+  assert.deepEqual(r.goalFitState, pendingQ1);
+});
+
+test('ok changes before the drop does not approve it', () => {
+  const r = parse([reply('1762844400.500000', 'ok changes'), reply(DROP_TS, 'drop Q1')]);
+  assert.equal(r.applyProposals, true);
+  assert.deepEqual(r.approvedDrops, []);
+  assert.deepEqual(pending(r), ['Q1']);
+});
+
+test('drop then a later ok changes approves it, once', () => {
+  const r = parse([reply('1762844600.000001', 'ok changes'), reply(DROP_TS, 'drop Q1 Q2')]);
+  assert.deepEqual(r.approvedDrops, [{ label: 'Q1', taskId: 't-q1' }, { label: 'Q2', taskId: 't-q2' }]);
+  assert.deepEqual(pending(r), []);
+  assert.equal(r.goalFitState.Q1.status, 'approved');
+  assert.deepEqual(r.goalFit.drop.map((d) => d.label), ['Q1', 'Q2']);
+  const next = parse([reply('1762844900.000001', 'ok changes')], { ...Q_DIGEST, goalFitState: r.goalFitState });
+  assert.deepEqual(next.approvedDrops, [], 'an approved drop is not approved again');
+});
+
+test('a pending drop from an earlier run is approved by a later ok changes, never by a replayed or earlier one', () => {
+  const state = { ...Q_DIGEST, goalFitState: pendingQ1, processedTs: [DROP_TS] };
+  const later = parse([reply('1762844900.000001', 'ok changes')], state);
+  assert.deepEqual(later.approvedDrops, [{ label: 'Q1', taskId: 't-q1' }]);
+  assert.deepEqual(later.goalFitState.Q1.status, 'approved');
+  assert.deepEqual(later.goalFit, NO_FIT, 'goalFit lists only decisions from this call');
+  const earlier = parse([reply('1762844450.000001', 'ok changes')], state);
+  assert.deepEqual(earlier.approvedDrops, []);
+  assert.deepEqual(earlier.goalFitState, pendingQ1);
+  assert.deepEqual(parse([], state).goalFitState, pendingQ1);
+});
+
+test('saved state for items not in this digest, or with another task, is discarded, never approved', () => {
+  const state = { ...Q_DIGEST, goalFitState: { Q7: { ...pendingQ1.Q1, taskId: 't-forged' }, Q1: { ...pendingQ1.Q1, taskId: 't-forged' } } };
+  const r = parse([reply('1762844900.000001', 'ok changes')], state);
+  assert.deepEqual(r.approvedDrops, []);
+  assert.deepEqual(r.goalFitState, {});
+});
+
+test('ok changes with trailing text approves no drop', () => {
+  const r = parse([reply(DROP_TS, 'drop Q1'), reply('1762844600.000001', 'ok changes except Q1')]);
+  assert.deepEqual(r.approvedDrops, []);
+  assert.deepEqual(pending(r), ['Q1']);
+});
+
+test('only a saved drop can be approved: a pending entry with another verb never is', () => {
+  const state = { ...Q_DIGEST, goalFitState: { Q1: { ...pendingQ1.Q1, verb: 'keep' } } };
+  assert.deepEqual(parse([reply('1762844900.000001', 'ok changes')], state).approvedDrops, []);
 });

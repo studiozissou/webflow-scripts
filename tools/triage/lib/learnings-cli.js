@@ -3,11 +3,11 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync } fro
 import { homedir } from 'node:os';
 import { dirname, join, resolve, sep } from 'node:path';
 import { addComment, notionClientFromEnv } from '../../notion/client.js';
-import { UsageError, out, readJsonFile, refuseInBuildJob } from './cli-io.js';
-import { REPO_ROOT, claim, release } from './jobs.js';
-import { allowLearningsComment, amsterdamDayStart, appendLearning, buildExcerpts, readJsonl, readTranscriptFile, selectPointers, toMs, validateDigest } from './learnings.js';
+import { UsageError, clock, out, readJsonFile, refuseInBuildJob } from './cli-io.js';
+import { PAGE_ID, REPO_ROOT, claim, release } from './jobs.js';
+import { allowLearningsComment, amsterdamDayStart, appendLearning, buildExcerpts, readJsonl, readTranscriptFile, selectPointers, validateDigest } from './learnings.js';
 import { writeAtomic } from './snapshot.js';
-import { amsterdamDate } from './workdays.js';
+import { DAY_MS, amsterdamDate, toMs } from './workdays.js';
 
 export const DEFAULT_LEARNINGS_DIR = join(REPO_ROOT, '.claude/triage/learnings');
 export const DEFAULT_LEARNINGS_FILE = join(homedir(), '.claude/context/learnings.md');
@@ -16,10 +16,8 @@ export const DEFAULT_TMP_DIR = join(REPO_ROOT, '.claude/triage/tmp');
 export const MAX_ADDS_PER_DAY = 10;
 export const LOOKBACK_DAYS = 4;
 export const INBOX_KEEP_DAYS = 30;
-const DAY_MS = 86_400_000;
-const PAGE_ID = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
 
-const TEST_ENV = { dir: 'TRIAGE_TEST_LEARNINGS_DIR', file: 'TRIAGE_TEST_LEARNINGS_FILE', ledger: 'TRIAGE_TEST_COMMENTS_LEDGER', tmp: 'TRIAGE_TEST_TMP_DIR', now: 'TRIAGE_TEST_NOW' };
+const TEST_ENV = { dir: 'TRIAGE_TEST_LEARNINGS_DIR', file: 'TRIAGE_TEST_LEARNINGS_FILE', ledger: 'TRIAGE_TEST_COMMENTS_LEDGER', tmp: 'TRIAGE_TEST_TMP_DIR' };
 
 function paths(env = process.env) {
   return {
@@ -32,14 +30,6 @@ function paths(env = process.env) {
 
 const iso = (value) => new Date(value).toISOString();
 const json = (value) => `${JSON.stringify(value, null, 2)}\n`;
-
-// The day picks the ledger, cap and excerpts, so it comes from the clock, never a flag; tests
-// set TRIAGE_TEST_NOW, which the unattended allowlist cannot.
-function clock(env = process.env) {
-  const now = env[TEST_ENV.now] || new Date().toISOString();
-  if (!Number.isFinite(toMs(now))) throw new UsageError(`${TEST_ENV.now} is not a valid date: ${now}`);
-  return now;
-}
 
 function appendJsonl(path, row) {
   mkdirSync(dirname(path), { recursive: true });
@@ -167,6 +157,6 @@ export function run(args, config, deps = {}) {
   const [, sub] = args.positional;
   const command = SUBCOMMANDS[sub];
   if (!command) throw new UsageError(`unknown learnings subcommand: ${sub ?? '(none)'}`);
-  if (args.now !== undefined) throw new UsageError('learnings takes no --now: the day comes from the clock');
-  return command(args, clock(), paths(), deps);
+  // The day picks the ledger, cap and excerpts, so it comes from the clock, never a flag.
+  return command(args, clock(args, 'learnings'), paths(), deps);
 }

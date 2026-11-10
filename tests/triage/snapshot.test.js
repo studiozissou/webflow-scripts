@@ -117,6 +117,18 @@ test('collectSnapshot writes today\'s file, keeps same-day remote sessions and t
   assert.deepEqual(held.value, { ok: false, reason: 'locked' });
 });
 
+test('collectSnapshot stores given goals and keeps the same-day goals when none are given', () => {
+  const dir = join(tmp(), 'world');
+  const goals = [{ id: 'g1', name: 'Acme retainer health', status: 'Active' }];
+  collectSnapshot({ dir, now: MONDAY, roots: {}, collectors: NO_SOURCES, tasks: [{ id: 't1' }], goals });
+  assert.deepEqual(readSnapshot(dir, MONDAY).goals, goals);
+  collectSnapshot({ dir, now: '2026-11-16T08:00:00Z', roots: {}, collectors: NO_SOURCES });
+  assert.deepEqual(readSnapshot(dir, MONDAY).goals, goals);
+  collectSnapshot({ dir, now: '2026-11-16T09:00:00Z', roots: {}, collectors: NO_SOURCES, goals: [] });
+  assert.deepEqual(readSnapshot(dir, MONDAY).goals, []);
+  assert.deepEqual(readSnapshot(dir, MONDAY).tasks.map((t) => t.id), ['t1']);
+});
+
 // A busy morning: more than 5 items in some classes, untrusted titles with dashes and emoji.
 function busySnapshot(extra = {}) {
   const sessions = [

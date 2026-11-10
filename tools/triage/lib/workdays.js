@@ -1,4 +1,4 @@
-// Working-day maths for triage on Europe/Amsterdam calendar days (YYYY-MM-DD strings pass through, Date objects and ISO instants resolve to their Amsterdam day), Mon-Fri minus the NL public holidays 2026-2027; years outside the table skip weekends only.
+// Working-day maths for triage on Europe/Amsterdam calendar days (YYYY-MM-DD strings pass through, Date objects and ISO instants resolve to their Amsterdam day), Mon-Fri minus the NL public holidays 2026-2027; years outside the table skip weekends only. Also the shared DAY_MS and toMs() time helpers.
 
 export const NL_HOLIDAYS = new Map([
   ['2026-01-01', 'Nieuwjaarsdag'],
@@ -32,7 +32,10 @@ const AMSTERDAM = new Intl.DateTimeFormat('en-CA', {
   month: '2-digit',
   day: '2-digit',
 });
-const DAY_MS = 86_400_000;
+export const DAY_MS = 86_400_000;
+
+// Epoch milliseconds of a date, ISO string or epoch number; NaN when missing or invalid.
+export const toMs = (value) => new Date(value ?? NaN).getTime();
 
 export function amsterdamDate(input) {
   if (typeof input === 'string' && DATE_ONLY.test(input)) {

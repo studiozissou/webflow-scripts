@@ -3,7 +3,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { basename } from 'node:path';
 import { UsageError } from './cli-io.js';
 import { jsonLines, sanitize } from './sessions.js';
-import { amsterdamDate } from './workdays.js';
+import { amsterdamDate, toMs } from './workdays.js';
 
 export const MAX_CANDIDATES = 6;
 export const MAX_EXCERPT_BYTES = 64 * 1024;
@@ -73,7 +73,7 @@ export function amsterdamDayStart(input) {
 }
 
 // Epoch ms for an ISO string or Date; NaN for anything else (including null).
-export const toMs = (value) => new Date(value ?? NaN).getTime();
+export { toMs };
 
 // Session pointers that ended in (since, now], last one per sessionId, with taskPageId/slug from
 // any job pointer on the same cwd (the job worktree). All job pointers join, not just the window.

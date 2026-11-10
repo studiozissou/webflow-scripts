@@ -338,6 +338,24 @@ test('snapshot collect writes world/<date>.json and prints path, sources and cou
   assert.ok(snap.sessions.some((s) => s.needsUser && s.kind === 'job'));
 });
 
+test('snapshot collect --goals stores goals from an array or {goals}; a bad file exits 2 and writes nothing', () => {
+  const { dir, world, env } = snapshotEnv();
+  const goals = join(dir, 'goals.json');
+  writeFileSync(goals, JSON.stringify([{ id: 'g1', name: 'Acme retainer health', status: 'Active' }]));
+  const r = run(['snapshot', 'collect', '--goals', goals], '', env);
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(JSON.parse(readFileSync(r.json().path, 'utf8')).goals.map((g) => g.id), ['g1']);
+  writeFileSync(goals, JSON.stringify({ goals: [{ id: 'g2' }] }));
+  const wrapped = run(['snapshot', 'collect', '--goals', goals], '', env);
+  assert.deepEqual(JSON.parse(readFileSync(wrapped.json().path, 'utf8')).goals.map((g) => g.id), ['g2']);
+  const bad = join(dir, 'bad.json');
+  writeFileSync(bad, '{"a":1}');
+  const fresh = snapshotEnv();
+  assert.equal(run(['snapshot', 'collect', '--goals', bad], '', fresh.env).code, 2);
+  assert.equal(existsSync(fresh.world), false);
+  assert.ok(existsSync(world));
+});
+
 test('snapshot add-remote merges remote sessions, --unavailable records the fallback, and bad input exits 2', () => {
   const { env } = snapshotEnv();
   assert.equal(run(['snapshot', 'add-remote', '--in', 'tests/triage/fixtures/remote.json'], '', env).code, 2, 'no snapshot yet');

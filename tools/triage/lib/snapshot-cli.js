@@ -1,4 +1,4 @@
-// `cli.js snapshot collect|add-remote|rollup`: collect runs the session collectors into today's world/<date>.json (a failing source is recorded, never fatal), add-remote merges the cloud and Remote Control sessions the model listed in-run (or records them as unavailable), and rollup prints counts, the digest headline and thread reply 1. Every subcommand refuses inside a build job. The world dir and the home the collectors read come only from code defaults; tests override them with TRIAGE_TEST_WORLD_DIR, TRIAGE_TEST_HOME and TRIAGE_TEST_JOBS_DIR, never a flag.
+// `cli.js snapshot collect|add-remote|rollup`: collect runs the session collectors into today's world/<date>.json with the Notion tasks and goals given by --tasks and --goals (a failing source is recorded, never fatal), add-remote merges the cloud and Remote Control sessions the model listed in-run (or records them as unavailable), and rollup prints counts, the digest headline and thread reply 1. Every subcommand refuses inside a build job. The world dir and the home the collectors read come only from code defaults; tests override them with TRIAGE_TEST_WORLD_DIR, TRIAGE_TEST_HOME and TRIAGE_TEST_JOBS_DIR, never a flag.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './cli-io.js';
@@ -19,16 +19,17 @@ function paths(env = process.env) {
 
 const noSnapshot = (worldDir, now) => new UsageError(`no snapshot at ${snapshotPath(worldDir, now)}; run snapshot collect first`);
 
-function readTasks(path) {
+// A JSON array of rows, or { <key>: [...] }; undefined when the flag is absent.
+function readRows(path, key) {
   if (!path) return undefined;
   const value = readJson(readFileSync(resolve(path), 'utf8'), path);
-  const tasks = Array.isArray(value) ? value : value?.tasks;
-  if (!Array.isArray(tasks)) throw new UsageError('--tasks must be a JSON array of tasks or {tasks}');
-  return tasks;
+  const rows = Array.isArray(value) ? value : value?.[key];
+  if (!Array.isArray(rows)) throw new UsageError(`--${key} must be a JSON array of ${key} or {${key}}`);
+  return rows;
 }
 
 function runCollect(args, now, { worldDir, roots }) {
-  const result = collectSnapshot({ dir: worldDir, now, roots, tasks: readTasks(args.tasks) });
+  const result = collectSnapshot({ dir: worldDir, now, roots, tasks: readRows(args.tasks, 'tasks'), goals: readRows(args.goals, 'goals') });
   if (!result.ok) {
     out({ written: false, reason: result.reason });
     return 1;

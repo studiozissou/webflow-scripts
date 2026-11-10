@@ -11,9 +11,11 @@
 # .claude/triage/allowed-tools.txt (private), and touching .claude/triage/triage.off stops
 # every run.
 #
-# Before /triage it writes the session snapshot (.claude/triage/world/<date>.json) with
-# `node tools/triage/cli.js snapshot collect`: plain Node, no model, read-only outside that
-# file. A failed collect is a warning; the digest still runs.
+# Before /triage it reads the open Notion tasks and the goals into .claude/triage/world/
+# (tasks-<date>.json, goals-<date>.json) with tools/notion/cli.js, then writes the session
+# snapshot (.claude/triage/world/<date>.json) with `node tools/triage/cli.js snapshot collect`:
+# plain Node, no model, read-only outside those files. A failed read or collect is a warning;
+# the digest still runs.
 #
 # Scheduled by scripts/triage-morning.plist (Mon-Fri 08:00). Run by hand to test:
 #   bash scripts/triage-morning.sh
@@ -51,8 +53,28 @@ triage_notion_token
 
 mkdir -p "$REPORT_DIR"
 
+WORLD_DIR="$INTERNAL_TRIAGE/world"
+SNAPSHOT_ARGS=()
+
+# Write `node tools/notion/cli.js <$3...>` to $2 through a temp file and add `$1 $2` to
+# SNAPSHOT_ARGS. A failure leaves no partial file and drops the flag, so the snapshot keeps
+# what it already had today. Needs NOTION_TOKEN, exported above.
+notion_rows() {
+  local flag=$1 file=$2 command=$3
+  shift 2
+  if mkdir -p "$WORLD_DIR" && node tools/notion/cli.js "$@" > "$file.tmp" && mv "$file.tmp" "$file"; then
+    SNAPSHOT_ARGS+=("$flag" "$file")
+  else
+    rm -f "$file.tmp"
+    echo "WARNING: notion $command failed; snapshot collect runs without $flag" >&2
+  fi
+}
+
+notion_rows --tasks "$WORLD_DIR/tasks-$STAMP.json" tasks --open
+notion_rows --goals "$WORLD_DIR/goals-$STAMP.json" goals
+
 # The snapshot's JSON summary goes to the launchd log with stderr, not into the report.
-if ! node tools/triage/cli.js snapshot collect >&2; then
+if ! node tools/triage/cli.js snapshot collect ${SNAPSHOT_ARGS[@]+"${SNAPSHOT_ARGS[@]}"} >&2; then
   echo "WARNING: snapshot collect failed; /triage runs without a fresh session snapshot" >&2
 fi
 

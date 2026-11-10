@@ -13,7 +13,7 @@ const LABELS = { waiting: 'Waiting on you', inFlight: 'In flight', built: 'Built
 const KIND = { job: 'Job', desktop: 'Desktop session', cli: 'Session', cloud: 'Cloud session', remote: 'Remote session', worktree: 'Branch', pr: 'PR', spec: 'Spec', plan: 'Plan' };
 
 // Untrusted text in a bulletin: no dashes, emoji, shortcodes, Slack markup or mentions; few words.
-function plain(text, maxWords) {
+export function plain(text, maxWords) {
   const words = String(text ?? '')
     .replace(/[‒–—―]/g, '-')
     .replace(/(?![©®™])\p{Extended_Pictographic}|️/gu, '')
@@ -24,7 +24,7 @@ function plain(text, maxWords) {
   return words.slice(0, maxWords).join(' ').replace(/[\s,;:-]+$/, '');
 }
 
-const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+export const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 function ago(lastActivity, nowMs) {
   const minutes = Math.max(1, Math.round((nowMs - Date.parse(lastActivity)) / 60_000));

@@ -1,4 +1,4 @@
-// CLI over the Notion Tasks Tracker client: list open tasks as JSON and set Priority, Status or a comment on one page; token from NOTION_TOKEN or the Keychain; refuses with exit 2 inside a build job (TRIAGE_BUILD_JOB set) before any token lookup.
+// CLI over the Notion Tasks Tracker and Goals clients: list open tasks or non-Dropped goals as JSON, set Priority, Status or a comment on one page, and append one goal to a task's Goal relation (link-goal, Notion ids only); token from NOTION_TOKEN or the Keychain; refuses with exit 2 inside a build job (TRIAGE_BUILD_JOB set) before any token lookup.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,6 +6,8 @@ import { parseArgs as parseNodeArgs } from 'node:util';
 import {
   notionClientFromEnv,
   queryOpenTasks,
+  queryGoals,
+  linkGoal,
   updatePriority,
   updateStatus,
   addComment,
@@ -25,13 +27,20 @@ const USAGE = [
   '  set-priority --page <id> --value P0|P1|P2|P3',
   '  set-status --page <id> --value <status>',
   '  comment --page <id> --text <text>',
+  '  goals [--db <id>] [--config <path>]          goals that are not Dropped',
+  '  link-goal --page <taskId> --goal <goalId>    appends to the task Goal relation',
 ].join('\n');
+
+// A Notion page id: 32 hex digits, with or without the UUID dashes.
+const NOTION_ID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
 
 const COMMANDS = {
   tasks: { required: ['open'] },
   'set-priority': { required: ['page', 'value'] },
   'set-status': { required: ['page', 'value'] },
   comment: { required: ['page', 'text'] },
+  goals: { required: [], allowed: ['db', 'config'] },
+  'link-goal': { required: ['page', 'goal'], allowed: [], ids: ['page', 'goal'] },
 };
 const OPTIONS = {
   open: { type: 'boolean' },
@@ -40,6 +49,7 @@ const OPTIONS = {
   page: { type: 'string' },
   value: { type: 'string' },
   text: { type: 'string' },
+  goal: { type: 'string' },
 };
 
 export class UsageError extends Error {}
@@ -55,26 +65,52 @@ export function parseArgs(argv) {
   }
   if (parsed.positionals.length > 0) throw new UsageError(`unknown argument ${parsed.positionals[0]}\n${USAGE}`);
   const args = { command, ...parsed.values };
-  for (const req of COMMANDS[command].required) {
+  const spec = COMMANDS[command];
+  for (const req of spec.required) {
     if (args[req] === undefined) throw new UsageError(`${command} requires --${req}\n${USAGE}`);
+  }
+  if (spec.allowed) {
+    const extra = Object.keys(parsed.values).find((k) => !spec.required.includes(k) && !spec.allowed.includes(k));
+    if (extra) throw new UsageError(`--${extra} is not allowed with ${command}\n${USAGE}`);
+  }
+  for (const key of spec.ids ?? []) {
+    if (!NOTION_ID.test(args[key])) throw new UsageError(`--${key} must be a Notion id\n${USAGE}`);
   }
   return args;
 }
 
-export function resolveDatabaseId(args, read = (p) => readFileSync(p, 'utf8')) {
+function configDatabaseId(args, read, section) {
   if (args.db) return args.db;
   const path = args.config ?? DEFAULT_CONFIG;
-  const id = JSON.parse(read(path))?.notion?.databaseId;
-  if (!id) throw new Error(`no notion.databaseId in ${path}; pass --db <id>`);
+  const id = JSON.parse(read(path))?.[section]?.databaseId;
+  if (!id) throw new Error(`no ${section}.databaseId in ${path}; pass --db <id>`);
   return id;
 }
 
+const readText = (p) => readFileSync(p, 'utf8');
+
+export function resolveDatabaseId(args, read = readText) {
+  return configDatabaseId(args, read, 'notion');
+}
+
+export function resolveGoalsDatabaseId(args, read = readText) {
+  return configDatabaseId(args, read, 'goals');
+}
+
+const DATABASE_ID = { tasks: resolveDatabaseId, goals: resolveGoalsDatabaseId };
+
 async function run(args) {
-  const databaseId = args.command === 'tasks' ? resolveDatabaseId(args) : null;
+  const databaseId = DATABASE_ID[args.command]?.(args) ?? null;
   const client = await notionClientFromEnv();
   switch (args.command) {
     case 'tasks':
       return queryOpenTasks(client, databaseId);
+    case 'goals':
+      return queryGoals(client, databaseId, { excludeStatuses: ['Dropped'] });
+    case 'link-goal': {
+      const { linked } = await linkGoal(client, args.page, args.goal);
+      return { ok: true, page: args.page, goal: args.goal, linked };
+    }
     case 'set-priority':
       await updatePriority(client, args.page, args.value);
       return { ok: true, page: args.page, priority: args.value };

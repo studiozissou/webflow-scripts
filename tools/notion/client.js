@@ -1,4 +1,4 @@
-// Thin Notion REST client for the Tasks Tracker: token from NOTION_TOKEN or the Keychain (resolveToken, notionClientFromEnv), open-task query with pagination, a pure page mapper, and Priority/Status/comment writes.
+// Thin Notion REST client for the Tasks Tracker and the Goals DB: token from NOTION_TOKEN or the Keychain (resolveToken, notionClientFromEnv), paginated open-task and goal queries, pure task and goal page mappers, Priority/Status/comment writes, and linkGoal, which only ever appends to a task's Goal relation.
 import { execFileSync } from 'node:child_process';
 
 const PRIORITIES = ['P0', 'P1', 'P2', 'P3'];
@@ -14,6 +14,21 @@ const PROPS = {
   blockedReason: 'Blocked Reason',
   hours: 'Hours Estimate',
   clients: 'Clients',
+  goal: 'Goal',
+};
+
+// Exact Notion property names in the Goals DB; the title is also found by type if renamed.
+const GOAL_PROPS = {
+  name: 'Goal',
+  status: 'Status',
+  horizon: 'Horizon',
+  clients: 'Clients',
+  tasks: 'Tasks',
+  measure: 'Measure',
+  targetDate: 'Target date',
+  why: 'Why',
+  lastReviewed: 'Last reviewed',
+  progress: 'Progress',
 };
 
 const KEYCHAIN_ARGS = ['find-generic-password', '-s', 'mcp', '-a', 'notion-triage', '-w'];
@@ -56,45 +71,89 @@ function textValue(prop) {
   return text || null;
 }
 
+function titleOf(properties, name) {
+  const prop = properties[name] ?? Object.values(properties).find((p) => p?.type === 'title');
+  return plain(prop?.title).trim();
+}
+
+const relationIds = (prop) => (Array.isArray(prop?.relation) ? prop.relation.map((r) => r.id).filter(Boolean) : []);
+const dateStart = (prop) => prop?.date?.start ?? null;
+
+// A rollup's number (Progress is a percent as 0..1), else the property's own number, else null.
+function numberValue(prop) {
+  const value = prop?.type === 'rollup' ? prop.rollup?.number : prop?.number;
+  return typeof value === 'number' ? value : null;
+}
+
 export function mapTaskPage(page) {
   const properties = page?.properties ?? {};
-  const titleProp = properties[PROPS.name] ?? Object.values(properties).find((p) => p?.type === 'title');
   const { [PROPS.due]: due, [PROPS.tags]: tags, [PROPS.hours]: hours, [PROPS.clients]: clients } = properties;
   return {
     id: page?.id ?? null,
-    name: plain(titleProp?.title).trim(),
+    name: titleOf(properties, PROPS.name),
     status: optionName(properties[PROPS.status]),
     priority: optionName(properties[PROPS.priority]),
-    due: due?.date?.start ?? null,
+    due: dateStart(due),
     doer: optionName(properties[PROPS.doer]),
     tags: Array.isArray(tags?.multi_select) ? tags.multi_select.map((t) => t.name).filter(Boolean) : [],
     blockedReason: textValue(properties[PROPS.blockedReason]),
     hours: typeof hours?.number === 'number' ? hours.number : null,
-    clients: Array.isArray(clients?.relation) ? clients.relation.map((r) => r.id).filter(Boolean) : [],
+    clients: relationIds(clients),
+    goalIds: relationIds(properties[PROPS.goal]),
+    createdTime: page?.created_time ?? null,
     url: page?.url ?? null,
   };
 }
 
-export async function queryOpenTasks(client, databaseId, { excludeStatuses = ['Done', 'Cancelled'] } = {}) {
-  const filter = {
-    and: excludeStatuses.map((name) => ({ property: PROPS.status, status: { does_not_equal: name } })),
+export function mapGoalPage(page) {
+  const properties = page?.properties ?? {};
+  const prop = (key) => properties[GOAL_PROPS[key]];
+  return {
+    id: page?.id ?? null,
+    url: page?.url ?? null,
+    name: titleOf(properties, GOAL_PROPS.name),
+    status: optionName(prop('status')),
+    horizon: optionName(prop('horizon')),
+    clientIds: relationIds(prop('clients')),
+    taskIds: relationIds(prop('tasks')),
+    measure: textValue(prop('measure')),
+    targetDate: dateStart(prop('targetDate')),
+    why: textValue(prop('why')),
+    lastReviewed: dateStart(prop('lastReviewed')),
+    progress: numberValue(prop('progress')),
   };
-  const tasks = [];
+}
+
+function statusFilter(excludeStatuses) {
+  if (excludeStatuses.length === 0) return undefined;
+  return { and: excludeStatuses.map((name) => ({ property: PROPS.status, status: { does_not_equal: name } })) };
+}
+
+async function queryAll(client, databaseId, filter, map) {
+  const rows = [];
   let cursor;
   do {
     const response = await client.databases.query({
       database_id: databaseId,
-      filter,
+      ...(filter ? { filter } : {}),
       page_size: 100,
       ...(cursor ? { start_cursor: cursor } : {}),
     });
     for (const page of response.results ?? []) {
       if (page.archived || page.in_trash) continue;
-      tasks.push(mapTaskPage(page));
+      rows.push(map(page));
     }
     cursor = response.has_more ? response.next_cursor : undefined;
   } while (cursor);
-  return tasks;
+  return rows;
+}
+
+export async function queryOpenTasks(client, databaseId, { excludeStatuses = ['Done', 'Cancelled'] } = {}) {
+  return queryAll(client, databaseId, statusFilter(excludeStatuses), mapTaskPage);
+}
+
+export async function queryGoals(client, databaseId, { excludeStatuses = [] } = {}) {
+  return queryAll(client, databaseId, statusFilter(excludeStatuses), mapGoalPage);
 }
 
 export async function updatePriority(client, pageId, value) {
@@ -113,4 +172,34 @@ export async function addComment(client, pageId, text) {
     parent: { page_id: pageId },
     rich_text: [{ type: 'text', text: { content: text } }],
   });
+}
+
+// The page object lists at most 25 relation ids; a longer relation is read in full through the
+// property endpoint, so the write-back never drops a link.
+async function relationOf(client, pageId, prop) {
+  if (!prop.has_more) return relationIds(prop);
+  const ids = [];
+  let cursor;
+  do {
+    const res = await client.pages.properties.retrieve({ page_id: pageId, property_id: prop.id, ...(cursor ? { start_cursor: cursor } : {}) });
+    for (const item of res.results ?? []) if (item?.relation?.id) ids.push(item.relation.id);
+    cursor = res.has_more ? res.next_cursor : undefined;
+  } while (cursor);
+  return ids;
+}
+
+// A Notion id without dashes, lower case, so dashed and bare forms compare equal.
+export const bareId = (id) => String(id ?? '').replace(/-/g, '').toLowerCase();
+
+// Appends goalId to the task's Goal relation (no-op when present). Writes only that property.
+export async function linkGoal(client, taskPageId, goalId) {
+  if (!goalId) throw new Error('goalId is required');
+  const task = await client.pages.retrieve({ page_id: taskPageId });
+  const prop = task?.properties?.[PROPS.goal];
+  if (prop?.type !== 'relation') throw new Error(`task ${taskPageId} has no ${PROPS.goal} relation`);
+  const current = await relationOf(client, taskPageId, prop);
+  if (current.some((id) => bareId(id) === bareId(goalId))) return { linked: false, goalIds: current };
+  const goalIds = [...current, goalId];
+  await client.pages.update({ page_id: taskPageId, properties: { [PROPS.goal]: { relation: goalIds.map((id) => ({ id })) } } });
+  return { linked: true, goalIds };
 }

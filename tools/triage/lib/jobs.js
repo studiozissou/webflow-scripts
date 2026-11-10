@@ -1,0 +1,174 @@
+// File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, slug, threadTs, task, brief, startedAt, pid}, result.json written by the job script, a reported marker, a live cap checked with process.kill(pid, 0), a kill switch, and a detached spawn of the job script with args [slug, pageId, threadTs, jobDir].
+import { spawn } from 'node:child_process';
+import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const DEBUG = false;
+
+export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+export const DEFAULT_JOBS_DIR = join(REPO_ROOT, '.claude/triage/jobs');
+export const DEFAULT_KILL_SWITCH = join(REPO_ROOT, '.claude/triage/triage.off');
+export const DEFAULT_SCRIPT = join(REPO_ROOT, 'scripts/triage-job.sh');
+export const DEFAULT_CAP = 3;
+
+const PAGE_ID = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
+const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
+const THREAD_TS = /^\d+\.\d+$/;
+
+function check(value, re, name) {
+  if (typeof value !== 'string' || !re.test(value)) throw new Error(`invalid ${name}: ${value}`);
+  return value;
+}
+
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function writeMeta(jobDir, meta) {
+  writeFileSync(join(jobDir, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`);
+}
+
+function isAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code === 'EPERM';
+  }
+}
+
+function jobIds(dir) {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && PAGE_ID.test(e.name))
+    .map((e) => e.name)
+    .sort();
+}
+
+function stateOf(dir, pageId) {
+  const jobDir = join(dir, pageId);
+  const meta = readJson(join(jobDir, 'meta.json')) ?? { pageId };
+  const finished = existsSync(join(jobDir, 'result.json'));
+  return {
+    pageId,
+    jobDir,
+    meta,
+    alive: !finished && isAlive(meta.pid),
+    finished,
+    reported: existsSync(join(jobDir, 'reported')),
+  };
+}
+
+export function claim(dir, pageId, meta = {}) {
+  check(pageId, PAGE_ID, 'pageId');
+  mkdirSync(dir, { recursive: true });
+  const jobDir = join(dir, pageId);
+  try {
+    mkdirSync(jobDir);
+  } catch (err) {
+    if (err.code === 'EEXIST') return { ok: false, reason: 'claimed' };
+    throw err;
+  }
+  writeMeta(jobDir, { ...meta, pageId, pid: null });
+  return { ok: true, jobDir };
+}
+
+export function liveCount(dir) {
+  return jobIds(dir).filter((id) => stateOf(dir, id).alive).length;
+}
+
+export function list(dir) {
+  return jobIds(dir).map((id) => {
+    const state = stateOf(dir, id);
+    if (state.finished) state.result = readJson(join(state.jobDir, 'result.json'));
+    return state;
+  });
+}
+
+export function release(dir, pageId) {
+  check(pageId, PAGE_ID, 'pageId');
+  rmSync(join(dir, pageId), { recursive: true, force: true });
+}
+
+export function collect(dir) {
+  const out = [];
+  for (const id of jobIds(dir)) {
+    const state = stateOf(dir, id);
+    if (!state.finished || state.reported) continue;
+    const result = readJson(join(state.jobDir, 'result.json')) ?? {
+      status: 'failed',
+      branch: null,
+      tests: null,
+      summary: 'result.json unreadable',
+      specPath: null,
+    };
+    writeFileSync(join(state.jobDir, 'reported'), `${new Date().toISOString()}\n`);
+    out.push({ pageId: id, jobDir: state.jobDir, meta: state.meta, result });
+  }
+  return out;
+}
+
+function isExecutable(path) {
+  try {
+    accessSync(path, constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function start({
+  jobsDir = DEFAULT_JOBS_DIR,
+  pageId,
+  slug,
+  threadTs,
+  task = '',
+  brief = '',
+  script = DEFAULT_SCRIPT,
+  killSwitch = DEFAULT_KILL_SWITCH,
+  cap = DEFAULT_CAP,
+} = {}) {
+  check(pageId, PAGE_ID, 'pageId');
+  check(slug, SLUG, 'slug');
+  check(threadTs, THREAD_TS, 'threadTs');
+  if (killSwitch && existsSync(killSwitch)) return { started: false, reason: 'kill-switch' };
+  if (liveCount(jobsDir) >= cap) return { started: false, reason: 'cap' };
+  const claimed = claim(jobsDir, pageId, { slug, threadTs, task, brief, startedAt: new Date().toISOString() });
+  if (!claimed.ok) return { started: false, reason: claimed.reason };
+  const { jobDir } = claimed;
+  const scriptPath = resolve(script);
+  if (!existsSync(scriptPath)) {
+    release(jobsDir, pageId);
+    return { started: false, reason: 'script-missing' };
+  }
+  const args = [slug, pageId, threadTs, jobDir];
+  const [cmd, argv] = isExecutable(scriptPath) ? [scriptPath, args] : ['/bin/bash', [scriptPath, ...args]];
+  let child;
+  try {
+    child = spawn(cmd, argv, {
+      cwd: REPO_ROOT,
+      detached: true,
+      stdio: 'ignore',
+      env: { ...process.env, CLAUDE_JOB_DIR: jobDir },
+    });
+  } catch (err) {
+    DEBUG && console.log(`spawn failed: ${err.message}`);
+    release(jobsDir, pageId);
+    return { started: false, reason: 'spawn-failed' };
+  }
+  child.on('error', (err) => DEBUG && console.log(`job ${pageId} error: ${err.message}`));
+  if (!child.pid) {
+    release(jobsDir, pageId);
+    return { started: false, reason: 'spawn-failed' };
+  }
+  child.unref();
+  const meta = readJson(join(jobDir, 'meta.json'));
+  writeMeta(jobDir, { ...meta, pid: child.pid });
+  return { started: true, pageId, jobDir, pid: child.pid };
+}

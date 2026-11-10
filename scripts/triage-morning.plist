@@ -3,6 +3,12 @@
   Morning triage. Runs scripts/triage-morning.sh at 08:30 local time, Monday to
   Thursday. If the Mac is asleep at that moment, launchd runs the job on wake.
 
+  What an unattended run may send: it posts one digest to the digest Slack channel,
+  posts job result replies in that digest thread, and creates Gmail drafts; it sends
+  no email and replies to no one else. Tools are limited to
+  .claude/triage/allowed-tools.txt. To pause it without uninstalling:
+    touch .claude/triage/triage.off
+
   NOT INSTALLED BY DEFAULT. Installing is the deliberate step that turns the
   automation on; until then this file is inert and nothing is scheduled.
 

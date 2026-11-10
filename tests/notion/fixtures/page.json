@@ -1,0 +1,64 @@
+{
+  "object": "page",
+  "id": "2a1e1848-bb51-8011-a2b3-c4d5e6f70809",
+  "created_time": "2026-11-03T08:30:00.000Z",
+  "last_edited_time": "2026-11-09T14:12:00.000Z",
+  "archived": false,
+  "in_trash": false,
+  "parent": { "type": "database_id", "database_id": "226e1848-bb51-80ab-8c0e-e431e66548d4" },
+  "url": "https://www.notion.so/Reply-to-Alex-about-Phase-B-pricing-2a1e1848bb518011a2b3c4d5e6f70809",
+  "public_url": null,
+  "properties": {
+    "Task name": {
+      "id": "title",
+      "type": "title",
+      "title": [
+        { "type": "text", "text": { "content": "Reply to Alex ", "link": null }, "plain_text": "Reply to Alex ", "href": null },
+        { "type": "text", "text": { "content": "about Phase B pricing", "link": null }, "plain_text": "about Phase B pricing", "href": null }
+      ]
+    },
+    "Status": {
+      "id": "abcd",
+      "type": "status",
+      "status": { "id": "s1", "name": "In progress", "color": "blue" }
+    },
+    "Priority": {
+      "id": "prio",
+      "type": "select",
+      "select": { "id": "p1", "name": "P1", "color": "orange" }
+    },
+    "Due date": {
+      "id": "due",
+      "type": "date",
+      "date": { "start": "2026-11-12", "end": null, "time_zone": null }
+    },
+    "Doer": {
+      "id": "doer",
+      "type": "select",
+      "select": { "id": "d1", "name": "User + Claude", "color": "purple" }
+    },
+    "Tags": {
+      "id": "tags",
+      "type": "multi_select",
+      "multi_select": [
+        { "id": "t1", "name": "Quick", "color": "green" },
+        { "id": "t2", "name": "Email", "color": "gray" }
+      ]
+    },
+    "Blocked Reason": {
+      "id": "br",
+      "type": "rich_text",
+      "rich_text": [
+        { "type": "text", "text": { "content": "waiting on Will to confirm scope", "link": null }, "plain_text": "waiting on Will to confirm scope", "href": null }
+      ]
+    },
+    "Hours Estimate": { "id": "hrs", "type": "number", "number": 0.25 },
+    "Clients": {
+      "id": "cl",
+      "type": "relation",
+      "relation": [{ "id": "229e1848-bb51-80aa-0000-000000000001" }],
+      "has_more": false
+    },
+    "Source": { "id": "src", "type": "select", "select": { "id": "g", "name": "Gmail", "color": "red" } }
+  }
+}

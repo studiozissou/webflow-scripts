@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Approval pickup. Runs scripts/triage-approve.sh at 13:00 and 17:00 local time,
+  Monday to Thursday. If the Mac is asleep at that moment, launchd runs the job on
+  wake. The 08:30 morning run also picks up approvals, so this covers the rest of the day.
+
+  What an unattended run may send: it posts replies in the digest thread only
+  (acknowledgements and job results); it posts no new digest, sends no email and
+  replies to no one else. It starts at most 3 background builds, which never push or
+  deploy. Tools are limited to .claude/triage/allowed-tools.txt. To pause it without
+  uninstalling:
+    touch .claude/triage/triage.off
+
+  NOT INSTALLED BY DEFAULT. Install only after a manual dry run looks right:
+    TRIAGE_ARGS="--dry-run" bash scripts/triage-approve.sh
+
+  Install:
+    cp scripts/triage-approve.plist ~/Library/LaunchAgents/io.teamzissou.triage-approve.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.triage-approve.plist
+
+  Run it once, right now:
+    launchctl start io.teamzissou.triage-approve
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.triage-approve.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.triage-approve.plist
+
+  Each run's report lands in .claude/triage/reports/{date}-approve-{HHMM}.md.
+  Run output and errors are appended to ~/Library/Logs/triage-approve.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.triage-approve</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/triage-approve.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>TRIAGE_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+        <key>TRIAGE_ARGS</key>
+        <string></string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Weekday</key>
+            <integer>1</integer>
+            <key>Hour</key>
+            <integer>13</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>1</integer>
+            <key>Hour</key>
+            <integer>17</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>2</integer>
+            <key>Hour</key>
+            <integer>13</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>2</integer>
+            <key>Hour</key>
+            <integer>17</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>3</integer>
+            <key>Hour</key>
+            <integer>13</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>3</integer>
+            <key>Hour</key>
+            <integer>17</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>4</integer>
+            <key>Hour</key>
+            <integer>13</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>4</integer>
+            <key>Hour</key>
+            <integer>17</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-approve.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-approve.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

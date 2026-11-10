@@ -29,6 +29,9 @@
     "test:shared": "node --test 'tests/shared/*.test.js'",
     "test:template": "node --test 'tests/_template/*.test.js'",
     "test:release": "node --test 'tests/release/*.test.js'",
+    "test:triage": "node --test 'tests/triage/*.test.js'",
+    "test:notion": "node --test 'tests/notion/*.test.js'",
+    "triage": "node tools/triage/cli.js",
     "launch-guard": "node tools/webflow/launch-guard.js",
     "preflight": "node tools/release/preflight.js",
     "test:carsa": "node --test 'tests/carsa/*.test.js' 'projects/carsa/tests/*.test.js'",
@@ -49,7 +52,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/genai": "^2.7.0",
-    "@modelcontextprotocol/sdk": "1.32.2"
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@notionhq/client": "^2.2.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",

@@ -17,7 +17,14 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 
 ## 1. Find the spec and gate it
 
-- Try `.claude/specs/<slug>.md`, then glob `.claude/specs/*<slug>*.md`. One partial match: use it. Several: list them and ask (auto: take the most recently modified). None: ask for a description (auto: stop, nothing to build).
+- Try `.claude/specs/<slug>.md`, then glob `.claude/specs/*<slug>*.md`. One partial match: use it. Several: list them and ask (auto: take the most recently modified). None: search the private repo's other branches before giving up, because `.claude/specs` only shows the branch `~/webflow-internal` has checked out:
+  ```bash
+  WI="${WEBFLOW_INTERNAL:-$HOME/webflow-internal}"
+  git -C "$WI" fetch -q origin
+  C=$(git -C "$WI" log --all -1 --format=%H -- '.claude/specs/*<slug>*.md' 'projects/*/.claude/specs/*<slug>*.md')
+  [ -n "$C" ] && git -C "$WI" branch -r --contains "$C"
+  ```
+  Found on a branch: stop and name the branch and the command that brings it in (`git -C ~/webflow-internal merge --ff-only origin/<branch>`, or a plain merge when main has moved on). Auto: record it as the blocker. Not found anywhere: ask for a description (auto: stop, nothing to build).
 - Read the frontmatter: `size`, `agents`, and the **Execution** note under Tasks.
 - **Setup.** `/build` asks no brief questions; the spec already answers them. Recommend the spec's `size:`, or a different size when the spec has none or the files its tasks touch point elsewhere (signals in `../plan/SKILL.md` step 0). Check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask once with `AskUserQuestion`, three questions in the same call:
   1. **Size** (single select): all four sizes, the recommended one first with "(Recommended)" and a one-line reason. Skip if `--size` was passed.

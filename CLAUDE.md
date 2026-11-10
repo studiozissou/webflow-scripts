@@ -21,6 +21,9 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
 - IMPORTANT: Commit only hosted scripts, files they load, and the code, tests and tooling that build them.
   Everything else (client docs, notes, pricing, screenshots, personal skills) goes in `~/webflow-internal`
   (private), linked in by `scripts/link-internal.sh`. Commit it there.
+- A cloud session that writes private docs: when the work is done, merge its `webflow-internal` branch
+  into `main` and push. `link-internal.sh` only shows what `~/webflow-internal` has checked out, so a
+  spec left on a `claude/*` branch is invisible to `/build` on the Mac. Code here still goes through a PR.
 - Client files: `projects/{client}/.claude/{specs,research,slack,audits,reports,proposals}/`, never top-level `.claude/`.
 - Pin live script tags to a git tag, never a commit ID.
 - Financial admin goes in `~/Documents/Studio Zissou/`, never in either repo.

@@ -1,4 +1,4 @@
-// Unit tests for the Oost llms.txt: correct email domain, the restaurant name line, the spekkoek order line, the current phone number and the 17:00–21:00 hours line.
+// Unit tests for the Oost llms.txt: correct email domain, the restaurant name line, the spekkoek order line, the current phone number, the 17:00–21:00 hours line, the Christmas and New Year 2026 line and the restored lunch lines.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -54,8 +54,22 @@ test('gives the new hours: 17:00–21:00 every day except Tuesday', () => {
   assert.doesNotMatch(SOURCE, /12:00|22:00/);
 });
 
-test('no longer offers lunch or lunchboxes', () => {
-  assert.doesNotMatch(SOURCE, /lunch/i);
-  assert.doesNotMatch(SOURCE, /11:30/);
-  assert.match(SOURCE, /company parties/);
+test('gives the Christmas and New Year 2026 line after the hours', () => {
+  assert.match(
+    SOURCE,
+    /^- Hours: .*\n- Christmas and New Year 2026: Christmas deal of soto, rijsttafel and spekkoek, €34\.50 per person, orderable for one, vegetarian version at the same price\./m,
+  );
+  assert.match(SOURCE, /up to 20 Dec and collect on 23 or 24 Dec, 15:00–17:00/);
+  assert.match(SOURCE, /up to 27 Dec and collect on 31 Dec, 15:00–17:00/);
+  assert.match(SOURCE, /closed 24, 25 and 26 Dec, 31 Dec and 1 Jan \(24 and 31 Dec: pre-order pickup only\)/);
+});
+
+test('offers lunch catering again', () => {
+  assert.match(SOURCE, /^- \[Catering\]\(https:\/\/www\.oosteten\.nl\/catering\): buffet, lunchboxes, borrel snacks/m);
+  assert.match(SOURCE, /^- For 10\+ people in Haarlem and surroundings: birthdays, borrels, weddings, office lunches$/m);
+  assert.match(
+    SOURCE,
+    /^- Lunchbox: nasi campur per person with four dishes, rice, egg, kroepoek and sambal, from €17\.50 pp; available from 11:30$/m,
+  );
+  assert.doesNotMatch(SOURCE, /11:30 AM/);
 });

@@ -16,7 +16,7 @@ Vocabulary: a **fact record** is everything collected about one fetched page; a 
 | sanity | `lib/sanity.js` | G2 | facts, findings, site files, previous snapshot | `SanityResult` |
 | score | `lib/health.js` | G2 | facts, findings | `Health` |
 | snapshot and diff | `lib/snapshot.js` | G2 | everything above | `snapshot.json`, `Diff` |
-| collapse | `lib/collapse.js` | G2 | findings, facts | `Collapsed` (report only) |
+| collapse | `lib/collapse.js` | G2 | findings, facts | `Collapsed` (report and health score) |
 | orchestration, reports | `index.js`, `lib/runner.js`, `lib/report/*` | parent | all of it | `facts.ndjson`, `findings.json`, `report.md`, `snapshot.json` |
 
 G2 modules never import `taxonomy.json` or any `checks/*` file; the runner passes `taxonomy` and `checks` as arguments. Every module is pure where it can be and takes its I/O (`fetchPage`, `renderPage`, `now`) as injectable arguments so tests run without a network.
@@ -355,9 +355,9 @@ After the delay, every unique URL behind a `fail` whose entry has `statusDerived
 
 ## 16. Health (`lib/health.js`)
 
-`computeHealth({ facts, findings }) → { score: number|null, pages, errorPages, warningPages, formula }`
+`computeHealth({ facts, findings }) → { score: number|null, pages, errorPages, warningPages, sharedDamage, sharedIssues: [{ kind: 'sitewide'|'target'|'snippet', taxonomyId, fingerprint, pages, weight, penalty }], formula }`
 
-`P` = fact records with `fetchState: 'ok'`. A page's class is the highest `scoreWeight` among its `fail` findings that are not transient (by `urlKey`; link-unit findings count on the linking page; site-level findings on the root): 1.0 error page, 0.5 warning page, 0 healthy. `score = round(100 × (1 − (E + 0.5 × W) / P))`, clipped to 0..100; `null` when `P` is 0. Collapsing never changes these numbers.
+`P` = fact records with `fetchState: 'ok'`. Final fails that are not transient and not fixed-after-load are split by `collapseFindings` into shared issues (a site-wide pattern, or a target or snippet group on two or more pages) and singles. A page's class is the highest `scoreWeight` among its single-page fails (link-unit findings count on the linking page; site-level findings on the root): 1.0 error page, 0.5 warning page, 0 healthy. Each shared issue adds `weight × (1 + log2 n)` to `S`, `n` being the fetched pages it reaches. `score = round(100 × (1 − (E + 0.5 × W + S) / P))`, clipped to 0..100; `null` when `P` is 0. Counts, the snapshot diff and parity always use the uncollapsed findings.
 
 ## 17. Snapshot and diff (`lib/snapshot.js`)
 
@@ -375,13 +375,13 @@ Diff { fixed: [entry], stillOpen: [entry], new: [entry],
        byType: { [taxonomyId]: { fixed, stillOpen, new } } }   // entries keyed by finding id
 ```
 
-## 18. Collapse (`lib/collapse.js`, report only)
+## 18. Collapse (`lib/collapse.js`, report and health score)
 
 `collapseFindings({ findings, facts, threshold = 0.9 }) → { groups, sitewide, singles }`
 
 - `groups`: fails with the same `taxonomyId` and the same `targetKey` (link-unit), or the same `evidence.snippet` (non-empty), across two or more pages: `{ fingerprint, taxonomyId, kind: 'target'|'snippet', count, urlKeys, sample }`.
 - `sitewide`: any taxonomyId failing on more than `threshold` of `fetchState: 'ok'` pages: `{ taxonomyId, pages, ratio }`. Those findings appear once in the report.
-- `singles`: everything else. Counts, health and diff always use the uncollapsed list.
+- `singles`: everything else. Counts, the diff and parity always use the uncollapsed list; the health score takes shared issues from `groups` and `sitewide` (section 16).
 
 ## 19. NDJSON (`lib/ndjson.js`)
 

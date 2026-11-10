@@ -144,8 +144,8 @@ export function generateMarkdownReport(result, { parity = null, generatedAt = ne
 
   lines.push('## Health', '');
   const h = result.health;
-  lines.push(`**${h.score ?? 'n/a'} / 100**: ${h.pages} pages, ${h.errorPages} with errors, ${h.warningPages} with warnings only.`, '');
-  lines.push(`Formula: \`score = round(100 × (1 − (E + 0.5 × W) / P))\`. This is the site-review score, not SEMrush's Site Health figure.[^health]`, '');
+  lines.push(`**${h.score ?? 'n/a'} / 100**: ${h.pages} pages, ${h.errorPages} with single-page errors, ${h.warningPages} with single-page warnings only, ${h.sharedIssues?.length ?? 0} shared issues costing ${h.sharedDamage ?? 0} pages.`, '');
+  lines.push(`Formula: \`score = round(100 × (1 − (E + 0.5 × W + S) / P))\`, S = Σ weight × (1 + log2 pages reached) per shared issue. This is the site-review score, not SEMrush's Site Health figure.[^health]`, '');
 
   const s = result.summary;
   lines.push(...table(['Errors', 'Warnings', 'Notices', 'Fixed after load', 'Transient', 'Unknown'], [[s.error, s.warning, s.notice, s.fixedAfterLoad, s.transient, s.unknown]]));

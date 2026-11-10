@@ -7,10 +7,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { startGoldenServer } from './fixtures/golden/server.js';
 import { main } from '../../tools/site-review/index.js';
+import { collapseFindings } from '../../tools/site-review/lib/collapse.js';
 
 const EXPECTED = JSON.parse(await readFile(new URL('./fixtures/golden/expected-findings.json', import.meta.url), 'utf8'));
-const FORMULA = (pages, errorPages, warningPages) =>
-  Math.min(100, Math.max(0, Math.round(100 * (1 - (errorPages + 0.5 * warningPages) / pages))));
+const FORMULA = (pages, errorPages, warningPages, sharedDamage) =>
+  Math.min(100, Math.max(0, Math.round(100 * (1 - (errorPages + 0.5 * warningPages + sharedDamage) / pages))));
 
 process.env.GOOGLE_PSI_API_KEY = '';
 
@@ -184,13 +185,15 @@ describe('golden: full pipeline', () => {
   });
 
   it('health: score equals the README formula on the golden site', () => {
-    const { score, pages, errorPages, warningPages } = run.report.health;
-    assert.equal(score, FORMULA(pages, errorPages, warningPages));
+    const { score, pages, errorPages, warningPages, sharedDamage, sharedIssues } = run.report.health;
+    assert.equal(score, FORMULA(pages, errorPages, warningPages, sharedDamage));
+    const summed = sharedIssues.reduce((sum, issue) => sum + issue.weight * (1 + Math.log2(issue.pages)), 0);
+    assert.ok(Math.abs(summed - sharedDamage) < 0.01);
     const okPages = run.facts.filter((f) => f.fetchState === 'ok').length;
     assert.equal(pages, okPages);
+    const { singles } = collapseFindings({ findings: run.report.findings, facts: run.facts });
     const weights = new Map();
-    for (const f of run.report.findings) {
-      if (f.state !== 'fail' || f.transient) continue;
+    for (const f of singles) {
       weights.set(f.urlKey, Math.max(weights.get(f.urlKey) ?? 0, f.scoreWeight));
     }
     const okKeys = new Set(run.facts.filter((f) => f.fetchState === 'ok').map((f) => f.urlKey));

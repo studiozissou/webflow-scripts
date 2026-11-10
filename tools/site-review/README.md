@@ -50,7 +50,7 @@ Agents interpret, they never observe. An agent may rank, group, explain and prop
 | Bot wall | 90% or more of at least ten 200-status pages sharing one `htmlHash` aborts the run | an interstitial would otherwise look like site-wide duplicate content; identical 404 pages (Carsa's sold vehicles) never count |
 | Coverage | under 95% of sitemap URLs fetched puts a banner on the report | partial crawls must not read as clean |
 | Suspect counts | over 20 and more than fivefold the previous snapshot is flagged `suspect` | Coconut's counts jumped when subdomains were pulled in; hosts are now explicit in config |
-| Collapse | findings sharing a target or snippet are shown once with a page count; a check firing on over 90% of pages is a site-wide pattern | Carsa's `click here` complaints paragraph on thousands of pages. Collapsing changes the report only, never the counts, score or diff |
+| Collapse | findings sharing a target or snippet are shown once with a page count; a check firing on over 90% of pages is a site-wide pattern | Carsa's `click here` complaints paragraph on thousands of pages. Collapsing changes the report and lets a shared issue count once in the health score; it never changes the counts, diff or parity |
 
 ### Render confirm and the state matrix
 
@@ -68,29 +68,30 @@ A raw fail that a script fixes stays visible because crawlers that do not run Ja
 
 ## Health score
 
-Each page that was fetched and parsed (`fetchState: ok`) is classified by the highest score weight among its final fails. Weights come from the taxonomy: error 1.0, warning 0.5, notice 0, with low text-to-HTML, low word count and unminified assets set to 0. Transient, unknown and fixed-after-load findings carry no weight. Link findings count on the page that holds the link; site-level findings (llms.txt, robots.txt, sitemap) count on the root.
+Weights come from the taxonomy: error 1.0, warning 0.5, notice 0, with low text-to-HTML, low word count and unminified assets set to 0. Transient, unknown and fixed-after-load findings carry no weight. Link findings belong to the page that holds the link; site-level findings (llms.txt, robots.txt, sitemap) belong to the root.
+
+Every fail is either a **single-page** finding or part of a **shared issue**. A shared issue is one problem seen on two or more pages: the same target (one broken menu link), the same snippet (one duplicated paragraph), or a check that fires on more than 90% of pages (missing descriptions everywhere). These are the same groups the report collapses.
 
 ```
-score = round(100 × (1 − (E + 0.5 × W) / P)), clipped to 0..100
+score = round(100 × (1 − (E + 0.5 × W + S) / P)), clipped to 0..100
 P = pages fetched and parsed
-E = pages whose highest weight is 1.0
-W = pages whose highest weight is 0.5
+E = pages whose highest single-page weight is 1.0
+W = pages whose highest single-page weight is 0.5
+S = Σ over shared issues of weight × (1 + log2 n), n = pages the issue reaches
 ```
 
-Site-wide patterns are collapsed in the report only: a real site-wide error, such as every page noindexed, still counts on every page.
+A shared issue counts once, because it has one cause and one fix. It still weighs more than a single-page problem: on 2 pages it costs 2 pages, on 30 pages about 5.9, and each doubling of reach adds one more. So a template-wide error on Carsa's 5,600 vehicle pages costs about 13.5 pages, and the score points at it without sinking to zero. The counts, the diff and the parity table are never collapsed; only the score and the report use the grouping.
 
 ### Worked example: Rolfing Amsterdam, SEMrush crawl of 19 Oct 2026
 
-Illustrative, from the SEMrush audit rather than a site-review run; the first real run replaces it. SEMrush reported 43 pages crawled and Site Health 84%, but its 43 include redirect sources and the 404 target. About 30 are content pages (it lists missing meta descriptions on "30 of 30"), and those are what our `P` counts. Its errors were one 4xx page, duplicate titles on 8 pages and 30 broken internal links, one on each content page (the menu link to the science page without `/en`).
+Illustrative, from the SEMrush audit rather than a site-review run; the first real run replaces it. SEMrush reported 43 pages crawled and Site Health 84%, but its 43 include redirect sources and the 404 target. About 30 are content pages (it lists missing meta descriptions on "30 of 30"), and those are what our `P` counts. The two problems that reach every content page are the menu link to the science page without `/en` (a broken internal link, error) and the missing meta descriptions (warning).
 
-- P = 30 fetched and parsed pages.
-- E = 30: every content page carries the broken menu link.
-- W = 0.
-- score = round(100 × (1 − (30 + 0.5 × 0) / 30)) = **0**.
+- P = 30.
+- E = W = 0: no single-page problems in this simplified example.
+- S = 1.0 × (1 + log2 30) + 0.5 × (1 + log2 30) = 5.91 + 2.95 = 8.86.
+- score = round(100 × (1 − 8.86 / 30)) = **70**.
 
-Fixing that one link leaves the missing descriptions on all 30 pages, so E = 0, W = 30 and the score becomes round(100 × (1 − 15 / 30)) = 50; writing the descriptions takes it to 100 if nothing else remains.
-
-The gap with SEMrush's 84% is a difference of question, not of data: SEMrush scores the share of checks passed, ours asks how many pages are free of problems, and one shared template link moves every page. That makes the number volatile on small sites and easy to misread in a client report. During the parallel run it is shown beside SEMrush's figure with this footnote; whether clients see it from January, and whether shared-template findings should weigh once per fingerprint or warnings less than 0.5, is the Tier 3 decision with Tomek in the spec.
+Fixing the menu link leaves S = 2.95 and the score at 90; writing the descriptions takes it to 100 if nothing else remains. SEMrush's 84% scores the share of checks passed, so the two figures are not interchangeable: reports show both during the parallel run, with this footnote. Whether clients see ours from January is the Tier 3 decision with Tomek in the spec.
 
 ## Taxonomy
 

@@ -79,6 +79,7 @@ projects/*/.claude
 .claude/skills/content-brief
 .claude/skills/competitor-gap
 .claude/skills/backlink-audit
+.claude/skills/vinted-listing
 .claude/commands/triage.md
 .claude/commands/carsa-build.md
 

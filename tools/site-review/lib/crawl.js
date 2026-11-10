@@ -244,7 +244,8 @@ export async function crawlSite({ site, crawlConfig = {}, fetchPage, log, onFact
   let aborted = null;
   let abortChecked = false;
 
-  const emit = async (record, index) => {
+  const emit = async (built, index) => {
+    const record = JSON.parse(JSON.stringify(built));
     for (const link of record.links) {
       link.href = intern(link.href);
       link.hrefKey = intern(link.hrefKey);

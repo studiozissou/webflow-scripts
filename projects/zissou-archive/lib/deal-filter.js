@@ -49,9 +49,29 @@ function matchCap(item, search) {
   return { reason: `${label}${lang} under ${formatEuro(cap)}`, cap };
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function hasJunkWord(title, words) {
+  const text = normaliseBrand(title);
+  if (!text) return false;
+  return words.some((word) => {
+    const target = normaliseBrand(word);
+    return target && new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(target)}(?:[^a-z0-9]|$)`).test(text);
+  });
+}
+
+function isExcluded(item, search, config) {
+  const brands = [...(config.excludeBrands ?? []), ...(search?.excludeBrands ?? [])];
+  if (brands.some((name) => brandMatches(item.brand, name))) return true;
+  return hasJunkWord(item.title, config.junkTitleWords ?? []);
+}
+
 export function matchTarget(item, search, config = {}) {
   if (!item || item.isPromoted || item.isBusiness) return null;
   if (typeof item.price !== 'number' || !Number.isFinite(item.price)) return null;
+  if (isExcluded(item, search, config)) return null;
   if (search?.flagRule === 'brand') return matchBrand(item, search, config);
   if (search?.flagRule === 'cap') return matchCap(item, search);
   return null;

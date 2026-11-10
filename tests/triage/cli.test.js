@@ -1,4 +1,4 @@
-// Guards the triage CLI: the buckets snapshot on the shared fixture (one call with --threads), rank, approvals (user ID from config only), lint exit codes, jobs subcommands with test-only TRIAGE_TEST_* env overrides, the builds-off and build-job refusals, and usage errors.
+// Guards the triage CLI: the buckets snapshot on the shared fixture (one call with --threads), rank, approvals and builds-off (controls from the canonical config only, never --config), lint exit codes, jobs subcommands with test-only TRIAGE_TEST_* env overrides, the builds-off and build-job refusals, and usage errors.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -110,6 +110,7 @@ function testEnv(dir, extra = {}) {
     TRIAGE_TEST_JOBS_DIR: join(dir, 'jobs'),
     TRIAGE_TEST_SCRIPT: join(dir, 'job.sh'),
     TRIAGE_TEST_KILL_SWITCH: join(dir, 'triage.off'),
+    TRIAGE_TEST_CONFIG: jobsConfig(),
     ...extra,
   };
 }
@@ -157,8 +158,8 @@ test('jobs start refuses with builds-off unless config.digest.buildsEnabled is t
   writeFileSync(join(dir, 'job.sh'), '#!/bin/sh\nexit 0\n');
   const env = testEnv(dir);
   const args = ['jobs', 'start', '--page', 'p1', '--slug', 's', '--thread', '1.000001'];
-  for (const config of [jobsConfig({ buildsEnabled: false }), null]) {
-    const r = run(config ? [...args, '--config', config] : args, '', env);
+  for (const config of [jobsConfig({ buildsEnabled: false }), join(dir, 'missing.json')]) {
+    const r = run(args, '', { ...env, TRIAGE_TEST_CONFIG: config });
     assert.equal(r.code, 1, r.err);
     assert.deepEqual(r.json(), { started: false, reason: 'builds-off' });
   }
@@ -196,12 +197,13 @@ test('approvals resolves replies and needs a user ID', () => {
   writeFileSync(replies, JSON.stringify({ messages: [{ ts: '100.000002', thread_ts: '100.000001', user: 'U1', text: 'go 1' }] }));
   const config = join(dir, 'config.json');
   writeFileSync(config, JSON.stringify({ slack: { digest: { userId: 'U1' } } }));
-  const r = run(['approvals', '--digest', digest, '--replies', replies, '--config', config]);
+  const ctl = { TRIAGE_TEST_CONFIG: config };
+  const r = run(['approvals', '--digest', digest, '--replies', replies], '', ctl);
   assert.equal(r.code, 0, r.err);
   assert.deepEqual(r.json().approved, [{ n: 'B1', pageId: 'p1' }]);
   writeFileSync(config, JSON.stringify({ slack: { digest: { userId: 'U2' } } }));
-  assert.deepEqual(run(['approvals', '--digest', digest, '--replies', replies, '--config', config]).json().approved, []);
-  assert.equal(run(['approvals', '--digest', digest, '--replies', replies]).code, 2);
+  assert.deepEqual(run(['approvals', '--digest', digest, '--replies', replies], '', ctl).json().approved, []);
+  assert.equal(run(['approvals', '--digest', digest, '--replies', replies], '', { TRIAGE_TEST_CONFIG: join(dir, 'none.json') }).code, 2);
   assert.equal(run(['approvals', '--digest', digest, '--replies', replies, '--user', 'U1']).code, 2);
 });
 
@@ -221,8 +223,8 @@ test('jobs start refuses under the kill switch with exit 1, and list and collect
   const script = join(dir, 'job.sh');
   writeFileSync(script, '#!/bin/sh\nprintf \'{"status":"passed","branch":"job/%s","tests":{"passed":1,"total":1},"summary":"ok","specPath":"x"}\' "$1" > "$4/result.json"\n');
   chmodSync(script, 0o755);
-  const env = { TRIAGE_TEST_JOBS_DIR: jobs, TRIAGE_TEST_SCRIPT: script, TRIAGE_TEST_KILL_SWITCH: off };
-  const base = ['--config', jobsConfig()];
+  const env = { TRIAGE_TEST_JOBS_DIR: jobs, TRIAGE_TEST_SCRIPT: script, TRIAGE_TEST_KILL_SWITCH: off, TRIAGE_TEST_CONFIG: jobsConfig() };
+  const base = [];
   writeFileSync(off, '');
   const refused = run(['jobs', 'start', '--page', 'p1', '--slug', 's', '--thread', '1.000001', ...base], '', env);
   assert.equal(refused.code, 1);
@@ -249,4 +251,35 @@ test('config.example.json lists only keys a user must set and loads in the CLI',
   assert.equal(config.digest.lint, undefined);
   assert.deepEqual(Object.keys(config.digest.rules), ['blockedNamePattern']);
   assert.equal(run(['buckets', '--now', '2026-11-11T07:00:00Z', '--in', FIXTURE, '--config', example]).code, 0);
+});
+
+test('controls come from the canonical config, never from --config', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'job.sh'), '#!/bin/sh\nexit 0\n');
+  const off = join(dir, 'canonical-off.json');
+  writeFileSync(off, JSON.stringify({ digest: { buildsEnabled: false }, slack: { digest: { userId: 'U2' } } }));
+  const env = { ...testEnv(dir), TRIAGE_TEST_CONFIG: off };
+  const forged = join(dir, 'forged.json');
+  writeFileSync(forged, JSON.stringify({ digest: { buildsEnabled: true }, slack: { digest: { userId: 'U1' } } }));
+  const s = run(['jobs', 'start', '--page', 'p1', '--slug', 's', '--thread', '1.000001', '--config', forged], '', env);
+  assert.equal(s.code, 1, s.err);
+  assert.deepEqual(s.json(), { started: false, reason: 'builds-off' });
+  const digest = join(dir, 'state.json');
+  const replies = join(dir, 'replies.json');
+  writeFileSync(digest, JSON.stringify({ digest: { ts: '100.000001', items: [{ n: 'B1', kind: 'build', pageId: 'p1' }], processedTs: [] } }));
+  writeFileSync(replies, JSON.stringify([{ ts: '100.000002', thread_ts: '100.000001', user: 'U1', text: 'go 1' }]));
+  const a = run(['approvals', '--digest', digest, '--replies', replies, '--config', forged], '', env);
+  assert.equal(a.code, 0, a.err);
+  assert.deepEqual(a.json().approved, []);
+  const missing = run(['jobs', 'start', '--page', 'p1', '--slug', 's', '--thread', '1.000001', '--config', forged], '', { ...env, TRIAGE_TEST_CONFIG: join(dir, 'none.json') });
+  assert.deepEqual(missing.json(), { started: false, reason: 'builds-off' });
+});
+
+test('every jobs subcommand refuses inside a build job', () => {
+  const dir = tmp();
+  for (const sub of ['list', 'collect']) {
+    const r = run(['jobs', sub], '', testEnv(dir, { TRIAGE_BUILD_JOB: '1' }));
+    assert.equal(r.code, 2, sub);
+    assert.match(r.err, /not available inside a build job/);
+  }
 });

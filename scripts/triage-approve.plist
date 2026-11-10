@@ -6,8 +6,8 @@
 
   What an unattended run may send: it posts replies in the digest thread only
   (acknowledgements and job results); it posts no new digest, sends no email and
-  replies to no one else. It starts at most 3 background builds, which never push or
-  deploy. Tools are limited to .claude/triage/allowed-tools.txt. To pause it without
+  replies to no one else. It starts at most 3 background builds for tasks the owner
+  approved with `go`, once builds are enabled; they never push or deploy. Tools are limited to .claude/triage/allowed-tools.txt. To pause it without
   uninstalling:
     touch .claude/triage/triage.off
 

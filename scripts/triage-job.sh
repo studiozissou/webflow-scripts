@@ -165,7 +165,7 @@ SPEC_PATH=".claude/specs/$SLUG.md"
 
 STAGE=build
 stop_if_off /build
-"$CLAUDE_BIN" -p "/build --auto $SLUG" --allowedTools "${ALLOWED[@]}" --disallowedTools "${DISALLOWED[@]}" || fail "/build --auto exited non-zero"
+"$CLAUDE_BIN" -p "/build --auto $SLUG (unattended build job: no browser MCP or local server is available, so follow the \"No browser MCP\" fallback and skip the verify loop)" --allowedTools "${ALLOWED[@]}" --disallowedTools "${DISALLOWED[@]}" || fail "/build --auto exited non-zero"
 commits=$(git rev-list --count "origin/main..HEAD")
 [ "$commits" -gt 0 ] || fail "/build left no commits on $BRANCH"
 

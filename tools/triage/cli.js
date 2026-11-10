@@ -1,6 +1,6 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), the approvals user ID only from --config, and `jobs start` refuses inside a build job.
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs subcommand refuses inside a build job.
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs as parseNodeArgs } from 'node:util';
 import { bucketTasks } from './lib/buckets.js';
@@ -13,7 +13,7 @@ const USAGE = `usage: cli.js <command> [options]
   buckets [--now <iso>] [--in <tasks.json>] [--threads <threads.json>]
                                                       tasks array or {tasks, threads}; threads array
   rank [--in <tasks.json>] [--max <n>]
-  approvals --digest <state.json> --replies <replies.json>   user ID from config.slack.digest.userId
+  approvals --digest <state.json> --replies <replies.json>   user ID from .claude/triage/config.json only
   lint [--in <digest.md>]                             exit 1 on warnings
   jobs start --page <id> --slug <slug> --thread <ts> [--label <B1>] [--task <name>] [--brief <text>]
                                                       exit 1 when refused (builds-off, kill-switch, cap, claimed)
@@ -30,7 +30,12 @@ const TEST_ENV = {
   script: 'TRIAGE_TEST_SCRIPT',
   killSwitch: 'TRIAGE_TEST_KILL_SWITCH',
   cap: 'TRIAGE_TEST_CAP',
+  config: 'TRIAGE_TEST_CONFIG',
 };
+
+// The real private config. buildsEnabled and the approver user ID are read only from here,
+// never from --config, so a run cannot point --config at a file it wrote under tmp/.
+export const CONTROL_CONFIG = resolve(dirname(fileURLToPath(import.meta.url)), '../../.claude/triage/config.json');
 const OPTIONS = Object.fromEntries(VALUE_FLAGS.map((name) => [name, { type: 'string' }]));
 
 class UsageError extends Error {}
@@ -59,6 +64,13 @@ function readJson(text, label) {
 function loadConfig(args) {
   if (!args.config) return {};
   return readJson(readFileSync(resolve(args.config), 'utf8'), args.config);
+}
+
+// Missing file → {} so builds stay off and approvals fail closed.
+function controlConfig(env = process.env) {
+  const path = resolve(env[TEST_ENV.config] || CONTROL_CONFIG);
+  if (!existsSync(path)) return {};
+  return readJson(readFileSync(path, 'utf8'), path);
 }
 
 function tasksAndThreads(input) {
@@ -115,10 +127,10 @@ function runRank(args, config) {
   return 0;
 }
 
-function runApprovals(args, config) {
+function runApprovals(args) {
   if (!args.digest || !args.replies) throw new UsageError('approvals needs --digest and --replies');
-  const userId = config.slack?.digest?.userId;
-  if (!userId) throw new UsageError('approvals needs --config with slack.digest.userId');
+  const userId = controlConfig().slack?.digest?.userId;
+  if (!userId) throw new UsageError('approvals needs slack.digest.userId in .claude/triage/config.json');
   const state = readJson(readFileSync(resolve(args.digest), 'utf8'), args.digest);
   const replies = readJson(readFileSync(resolve(args.replies), 'utf8'), args.replies);
   const digest = state?.digest ?? state;
@@ -133,8 +145,12 @@ function runLint(args, config) {
   return result.ok ? 0 : 1;
 }
 
-function runJobs(args, config) {
+function runJobs(args) {
   const [, sub] = args.positional;
+  if (process.env.TRIAGE_BUILD_JOB) {
+    process.stderr.write('jobs: not available inside a build job\n');
+    return 2;
+  }
   const paths = jobPaths();
   if (sub === 'list') {
     out(list(paths.jobsDir));
@@ -145,12 +161,8 @@ function runJobs(args, config) {
     return 0;
   }
   if (sub !== 'start') throw new UsageError(`unknown jobs subcommand: ${sub ?? '(none)'}`);
-  if (process.env.TRIAGE_BUILD_JOB) {
-    process.stderr.write('jobs start: not available inside a build job\n');
-    return 2;
-  }
   if (!args.page || !args.slug || !args.thread) throw new UsageError('jobs start needs --page, --slug and --thread');
-  if (config.digest?.buildsEnabled !== true) {
+  if (controlConfig().digest?.buildsEnabled !== true) {
     out({ started: false, reason: 'builds-off' });
     return 1;
   }

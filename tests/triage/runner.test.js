@@ -357,7 +357,7 @@ test('job script plans, builds and tests on job/<slug> without pushing', () => {
   assert.equal(plan.args[0], '-p');
   assert.match(plan.args[1], /^\/plan --auto Add FAQ schema to test page — Use the FAQ block on \/test/);
   assert.match(plan.args[1], /faq-schema/);
-  assert.deepEqual(build.args.slice(0, 2), ['-p', '/build --auto faq-schema']);
+  assert.deepEqual(build.args.slice(0, 2), ['-p', '/build --auto faq-schema (unattended build job: no browser MCP or local server is available, so follow the "No browser MCP" fallback and skip the verify loop)']);
   for (const c of calls) {
     assert.deepEqual(c.args.slice(2), ['--allowedTools', 'Read', 'Edit', 'Bash(git commit*)', 'Bash(npm *)', '--disallowedTools', 'Bash(git push*)', 'mcp__Webflow__*', 'mcp__slack__*']);
     assert.equal(c.jobDir, fx.jobDir);

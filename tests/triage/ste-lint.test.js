@@ -85,3 +85,46 @@ test('rules override the defaults', () => {
   assert.equal(lint('Just reply.', { bannedWords: ['reply'] }).warnings[0].message.includes('reply'), true);
   assert.equal(lint('She asked three days ago.', { checkNumbers: false }).ok, true);
 });
+
+const TEN = [
+  '*NOW (2)*',
+  '1. Reply to Dana. She asked for the quote.',
+  '2. Fix the menu link. Due today.',
+  '*TODAY (1)*',
+  '3. Send the invoice. Then file it. Check the total.',
+  'Draft ready. Report saved.',
+  'Just ship it.',
+].join('\n');
+
+test('ratio is passing sentences over total: 1 failing sentence in 10 is 0.90', () => {
+  const r = lint(TEN);
+  assert.equal(r.ratio, 0.9);
+  assert.deepEqual(rulesOf(r), ['banned-word']);
+});
+
+test('ratio counts each per-sentence rule against the sentence that breaks it', () => {
+  const long = Array.from({ length: 21 }, (_, i) => `w${i}`).join(' ');
+  const text = `Reply now. Wait — then go.\nShip it 🚀. She asked three days ago.\n${long}. Done.`;
+  const r = lint(text);
+  assert.equal(r.ratio, 2 / 6);
+});
+
+test('headers and document-level rules do not change the ratio', () => {
+  assert.equal(lint('*NOW (3)*\n1. Reply to Dana.').ratio, 1);
+  assert.equal(lint('*Just — a header 🚀*\nReply to Dana.').ratio, 1);
+  const s = Array.from({ length: 18 }, (_, i) => `w${i}`).join(' ');
+  const avg = lint(`${s}.\n${s}.`);
+  assert.deepEqual(rulesOf(avg), ['average-length']);
+  assert.equal(avg.ratio, 1);
+  assert.equal(lint(Array.from({ length: 41 }, (_, i) => `Line ${i}.`).join('\n')).ratio, 1);
+});
+
+test('text with no sentences has ratio 0 (passing / max(1, total)) and the spec digest example has ratio 1', () => {
+  assert.equal(lint('').ratio, 0);
+  assert.equal(lint('*NOW (0)*').ratio, 0);
+  assert.equal(lint(GOOD).ratio, 1);
+});
+
+test('a fragment with no words still fails when it breaks a rule', () => {
+  assert.equal(lint('Reply now.\n🚀').ratio, 0.5);
+});

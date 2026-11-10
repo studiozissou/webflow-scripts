@@ -2,7 +2,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -282,4 +282,112 @@ test('every jobs subcommand refuses inside a build job', () => {
     assert.equal(r.code, 2, sub);
     assert.match(r.err, /not available inside a build job/);
   }
+});
+
+test('lint --ratio prints the ratio and exits 1 only below 0.80', () => {
+  const nine = Array.from({ length: 9 }, (_, i) => `Reply to client ${i + 1}.`);
+  const pass = run(['lint', '--ratio'], [...nine, 'Just ship it.'].join('\n'));
+  assert.equal(pass.code, 0, pass.err);
+  assert.equal(pass.json().ratio, 0.9);
+  assert.equal(pass.json().ok, false);
+  const fail = run(['lint', '--ratio'], 'Reply now.\nJust ship it.\nReally go.\n');
+  assert.equal(fail.code, 1);
+  assert.equal(fail.json().ratio, 1 / 3);
+  assert.equal(run(['lint', '--ratio=x']).code, 2);
+});
+
+// snapshot: a fake home (fixture copy with one fresh transcript), a fake gh that fails, and a temp world dir.
+function snapshotEnv() {
+  const dir = tmp();
+  const home = join(dir, 'home');
+  cpSync(join(ROOT, 'tests/triage/fixtures/home'), home, { recursive: true });
+  const project = join(home, '.claude/projects/-home-test-repo');
+  mkdirSync(project, { recursive: true });
+  const transcript = join(project, '11111111-0000-4000-8000-000000000011.jsonl');
+  writeFileSync(transcript, `${JSON.stringify({ type: 'ai-title', aiTitle: 'Fresh session' })}\n`);
+  const fresh = new Date(Date.now() - 10 * 60_000);
+  utimesSync(transcript, fresh, fresh);
+  const bin = join(dir, 'bin');
+  mkdirSync(bin);
+  writeFileSync(join(bin, 'gh'), '#!/bin/sh\nexit 1\n');
+  chmodSync(join(bin, 'gh'), 0o755);
+  const world = join(dir, 'world');
+  const env = { TRIAGE_TEST_WORLD_DIR: world, TRIAGE_TEST_HOME: home, TRIAGE_TEST_JOBS_DIR: join(ROOT, 'tests/triage/fixtures/triage-jobs'), PATH: `${bin}:${process.env.PATH}` };
+  return { dir, world, env };
+}
+
+test('snapshot collect writes world/<date>.json and prints path, sources and counts; failing sources do not stop it', () => {
+  const { dir, world, env } = snapshotEnv();
+  const tasks = join(dir, 'tasks.json');
+  writeFileSync(tasks, JSON.stringify({ tasks: [{ id: 'page-built', name: 'Add alt text to Contoso images' }] }));
+  const r = run(['snapshot', 'collect', '--tasks', tasks], '', env);
+  assert.equal(r.code, 0, r.err);
+  const { path, sources, counts } = r.json();
+  assert.match(path, /world\/\d{4}-\d{2}-\d{2}\.json$/);
+  assert.ok(path.startsWith(world));
+  assert.equal(sources.jobs, 'ok');
+  assert.equal(sources.transcripts, 'ok');
+  assert.equal(sources.desktop, 'ok');
+  assert.equal(sources.specs, 'ok');
+  assert.equal(sources.prs, 'error');
+  assert.equal(sources.remote, 'unavailable');
+  assert.equal(typeof counts.waiting, 'number');
+  const snap = JSON.parse(readFileSync(path, 'utf8'));
+  assert.deepEqual(snap.tasks.map((t) => t.id), ['page-built']);
+  assert.ok(snap.sessions.some((s) => s.title === 'Fresh session'));
+  assert.ok(snap.sessions.some((s) => s.needsUser && s.kind === 'job'));
+});
+
+test('snapshot add-remote merges remote sessions, --unavailable records the fallback, and bad input exits 2', () => {
+  const { env } = snapshotEnv();
+  assert.equal(run(['snapshot', 'add-remote', '--in', 'tests/triage/fixtures/remote.json'], '', env).code, 2, 'no snapshot yet');
+  assert.equal(run(['snapshot', 'collect'], '', env).code, 0);
+  const r = run(['snapshot', 'add-remote', '--in', 'tests/triage/fixtures/remote.json'], '', env);
+  assert.equal(r.code, 0, r.err);
+  assert.equal(r.json().sources.remote, 'ok');
+  assert.equal(r.json().added, 4);
+  const piped = run(['snapshot', 'add-remote'], JSON.stringify([{ id: 'cse_z', name: 'Z', status: 'Waiting on a human' }]), env);
+  assert.equal(piped.code, 0, piped.err);
+  const rolled = run(['snapshot', 'rollup'], '', env).json();
+  assert.match(rolled.thread, /Z\. Remote session waits on you\./);
+  assert.doesNotMatch(rolled.thread, /Cloud sessions: not available/);
+  const off = run(['snapshot', 'add-remote', '--unavailable'], '', env);
+  assert.equal(off.json().sources.remote, 'unavailable');
+  assert.match(run(['snapshot', 'rollup'], '', env).json().thread, /Cloud sessions: not available in scheduled run/);
+  assert.equal(run(['snapshot', 'add-remote'], '{nope', env).code, 2);
+  assert.equal(run(['snapshot', 'add-remote'], '{"a":1}', env).code, 2);
+});
+
+test('snapshot rollup prints counts, headline and a thread that passes lint --ratio; --in reads a given file', () => {
+  const { env } = snapshotEnv();
+  assert.equal(run(['snapshot', 'rollup'], '', env).code, 2, 'no snapshot yet');
+  const collected = run(['snapshot', 'collect'], '', env).json();
+  const r = run(['snapshot', 'rollup', '--in', collected.path, '--now', new Date().toISOString()], '', env);
+  assert.equal(r.code, 0, r.err);
+  const { counts, headline, thread } = r.json();
+  assert.match(headline, /^Waiting on you: \d+\nIn flight: \d+ · Built: \d+ · Plans to approve: \d+$/);
+  assert.ok(counts.waiting >= 2);
+  assert.match(thread, /^\*Where is everything\*/);
+  const lint = run(['lint', '--ratio'], thread, env);
+  assert.equal(lint.code, 0, lint.out);
+  assert.ok(lint.json().ratio >= 0.8);
+  assert.deepEqual(run(['snapshot', 'rollup'], '', env).json().counts, counts);
+});
+
+test('snapshot rejects an unknown subcommand and a bad --now, and has no flag that moves the write path', () => {
+  const { env } = snapshotEnv();
+  assert.equal(run(['snapshot'], '', env).code, 2);
+  assert.equal(run(['snapshot', 'nope'], '', env).code, 2);
+  assert.equal(run(['snapshot', 'collect', '--now', 'yesterday'], '', env).code, 2);
+  for (const flag of ['--world-dir', '--out', '--dir']) assert.equal(run(['snapshot', 'collect', flag, '/tmp/x'], '', env).code, 2, flag);
+});
+
+test('every snapshot subcommand refuses inside a build job', () => {
+  const { env } = snapshotEnv();
+  for (const sub of ['collect', 'add-remote', 'rollup']) {
+    const r = run(['snapshot', sub], '[]', { ...env, TRIAGE_BUILD_JOB: '1' });
+    assert.equal(r.code, 2, sub);
+    assert.match(r.err, /not available inside a build job/);
+  }
+  assert.equal(existsSync(env.TRIAGE_TEST_WORLD_DIR), false);
 });

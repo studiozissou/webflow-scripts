@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Approval pickup. Runs scripts/triage-approve.sh at 13:00 and 17:00 local time,
-  Monday to Thursday. If the Mac is asleep at that moment, launchd runs the job on
-  wake. The 08:30 morning run also picks up approvals, so this covers the rest of the day.
+  Monday to Friday. If the Mac is asleep at that moment, launchd runs the job on
+  wake. The 08:00 morning run also picks up approvals, so this covers the rest of the day.
 
   What an unattended run may send: it posts replies in the digest thread only
   (acknowledgements and job results); it posts no new digest, sends no email and
@@ -111,6 +111,22 @@
         <dict>
             <key>Weekday</key>
             <integer>4</integer>
+            <key>Hour</key>
+            <integer>17</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>5</integer>
+            <key>Hour</key>
+            <integer>13</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>5</integer>
             <key>Hour</key>
             <integer>17</integer>
             <key>Minute</key>

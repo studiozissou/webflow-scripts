@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Morning triage. Runs scripts/triage-morning.sh at 08:30 local time, Monday to
-  Thursday. If the Mac is asleep at that moment, launchd runs the job on wake.
+  Morning triage. Runs scripts/triage-morning.sh at 08:00 local time, Monday to
+  Friday. If the Mac is asleep at that moment, launchd runs the job on wake.
+  The script first writes the session snapshot (.claude/triage/world/{date}.json,
+  plain Node, no model), then runs /triage.
 
   What an unattended run may send: it posts one digest to the digest Slack channel,
   posts replies in that digest thread (acknowledgements and job results), and creates
@@ -66,7 +68,7 @@
             <key>Hour</key>
             <integer>8</integer>
             <key>Minute</key>
-            <integer>30</integer>
+            <integer>0</integer>
         </dict>
         <dict>
             <key>Weekday</key>
@@ -74,7 +76,7 @@
             <key>Hour</key>
             <integer>8</integer>
             <key>Minute</key>
-            <integer>30</integer>
+            <integer>0</integer>
         </dict>
         <dict>
             <key>Weekday</key>
@@ -82,7 +84,7 @@
             <key>Hour</key>
             <integer>8</integer>
             <key>Minute</key>
-            <integer>30</integer>
+            <integer>0</integer>
         </dict>
         <dict>
             <key>Weekday</key>
@@ -90,7 +92,15 @@
             <key>Hour</key>
             <integer>8</integer>
             <key>Minute</key>
-            <integer>30</integer>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>5</integer>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>0</integer>
         </dict>
     </array>
 

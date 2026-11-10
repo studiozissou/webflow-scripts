@@ -221,23 +221,70 @@ test('job script never runs git push, /deploy or a Webflow publish', () => {
   assert.ok(!lines.some((l) => /\/deploy|publish/i.test(l)));
 });
 
-test('approve plist runs triage-approve.sh Mon-Thu at 13:00 and 17:00 with the morning env block', () => {
-  const plist = (f) => JSON.parse(execFileSync('plutil', ['-convert', 'json', '-o', '-', join(SCRIPTS, f)], { encoding: 'utf8' }));
+const plist = (f) => JSON.parse(execFileSync('plutil', ['-convert', 'json', '-o', '-', join(SCRIPTS, f)], { encoding: 'utf8' }));
+const slotsOf = (p) => p.StartCalendarInterval.map((s) => `${s.Weekday}-${s.Hour}:${s.Minute}`).sort();
+const MON_FRI = [1, 2, 3, 4, 5];
+
+test('approve plist runs triage-approve.sh Mon-Fri at 13:00 and 17:00 with the morning env block (D16)', () => {
   const approve = plist('triage-approve.plist');
   const morning = plist('triage-morning.plist');
   assert.equal(approve.Label, 'io.teamzissou.triage-approve');
   assert.match(approve.ProgramArguments.at(-1), /scripts\/triage-approve\.sh$/);
   assert.deepEqual(Object.keys(approve.EnvironmentVariables).sort(), Object.keys(morning.EnvironmentVariables).sort());
-  const slots = approve.StartCalendarInterval.map((s) => `${s.Weekday}-${s.Hour}:${s.Minute}`).sort();
-  assert.deepEqual(slots, ['1-13:0', '1-17:0', '2-13:0', '2-17:0', '3-13:0', '3-17:0', '4-13:0', '4-17:0']);
+  assert.deepEqual(slotsOf(approve), MON_FRI.flatMap((d) => [`${d}-13:0`, `${d}-17:0`]).sort());
   assert.match(approve.StandardOutPath, /triage-approve\.log$/);
   assert.equal(approve.RunAtLoad, false);
+  assert.match(read(join(SCRIPTS, 'triage-approve.plist')), /Monday to Friday/);
 });
 
-test('morning plist changes only in its header comment', () => {
-  const strip = (s) => s.replace(/<!--[\s\S]*?-->/, '');
-  const before = execFileSync('git', ['show', 'HEAD:scripts/triage-morning.plist'], { cwd: ROOT, encoding: 'utf8' });
-  assert.equal(strip(read(join(SCRIPTS, 'triage-morning.plist'))), strip(before));
+test('morning plist runs triage-morning.sh Mon-Fri at 08:00 (D16) and its header says so', () => {
+  const morning = plist('triage-morning.plist');
+  assert.equal(morning.Label, 'io.teamzissou.triage-morning');
+  assert.match(morning.ProgramArguments.at(-1), /scripts\/triage-morning\.sh$/);
+  assert.deepEqual(slotsOf(morning), MON_FRI.map((d) => `${d}-8:0`));
+  assert.equal(morning.RunAtLoad, false);
+  assert.match(read(join(SCRIPTS, 'triage-morning.plist')), /at 08:00 local time, Monday to\s+Friday/);
+  for (const f of ['triage-morning.plist', 'triage-approve.plist', 'triage-morning.sh']) {
+    assert.doesNotMatch(read(join(SCRIPTS, f)), /08:30|Thursday/, f);
+  }
+});
+
+const FAKE_SNAPSHOT_CLI = (code) => `require('fs').appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ snapshot: process.argv.slice(2), cwd: process.cwd() }) + '\\n');\nprocess.exit(${code});\n`;
+
+function withSnapshotCli(repo, code) {
+  mkdirSync(join(repo, 'tools', 'triage'), { recursive: true });
+  writeFileSync(join(repo, 'tools', 'triage', 'cli.js'), FAKE_SNAPSHOT_CLI(code));
+}
+
+test('morning runner runs snapshot collect in the repo before claude', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 0);
+  const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal }) });
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  const [first, second] = fake.calls();
+  assert.deepEqual(first.snapshot, ['snapshot', 'collect']);
+  assert.equal(realpathSync(first.cwd), realpathSync(repo));
+  assert.equal(second.args[0], '-p');
+});
+
+test('morning runner treats a failed snapshot collect as a warning and still runs claude', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 1);
+  const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal }) });
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.match(r.stderr, /WARNING: snapshot collect failed/);
+  assert.equal(fake.calls().filter((c) => c.args).length, 1);
+});
+
+test('morning runner skips snapshot collect under triage.off', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo({ off: true });
+  withSnapshotCli(repo, 0);
+  const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal }) });
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(fake.calls(), []);
 });
 
 for (const [name, script] of [['morning', MORNING], ['approve', APPROVE]]) {

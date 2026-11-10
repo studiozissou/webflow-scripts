@@ -1,4 +1,4 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs subcommand refuses inside a build job.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs and snapshot subcommand refuses inside a build job.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,22 +6,28 @@ import { parseArgs as parseNodeArgs } from 'node:util';
 import { bucketTasks } from './lib/buckets.js';
 import { rankAutomatable, DEFAULT_MAX_BUILD_ITEMS } from './lib/rank.js';
 import { parseReplies } from './lib/approvals.js';
-import { lint } from './lib/ste-lint.js';
+import { lint, MIN_RATIO } from './lib/ste-lint.js';
 import { start, collect, list, DEFAULT_JOBS_DIR, DEFAULT_KILL_SWITCH, DEFAULT_SCRIPT, DEFAULT_CAP } from './lib/jobs.js';
+import { run as runSnapshot } from './lib/snapshot-cli.js';
+import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './lib/cli-io.js';
 
 const USAGE = `usage: cli.js <command> [options]
   buckets [--now <iso>] [--in <tasks.json>] [--threads <threads.json>]
                                                       tasks array or {tasks, threads}; threads array
   rank [--in <tasks.json>] [--max <n>]
   approvals --digest <state.json> --replies <replies.json>   user ID from .claude/triage/config.json only
-  lint [--in <digest.md>]                             exit 1 on warnings
+  lint [--in <digest.md>] [--ratio]                   exit 1 on warnings; with --ratio, prints the
+                                                      pass ratio and exits 1 only when it is below 0.80
   jobs start --page <id> --slug <slug> --thread <ts> [--label <B1>] [--task <name>] [--brief <text>]
                                                       exit 1 when refused (builds-off, kill-switch, cap, claimed)
   jobs collect | jobs list
+  snapshot collect [--tasks <tasks.json>] [--now <iso>]   writes .claude/triage/world/<date>.json
+  snapshot add-remote [--in <remote.json>] | --unavailable   [{ id?, name, status, kind? }] from the session list
+  snapshot rollup [--in <snapshot.json>] [--now <iso>]    counts, headline and thread reply 1
 common: --config <config.json>
 `;
 
-const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief'];
+const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks'];
 
 // Test-only overrides. The unattended allowlist rule Bash(node tools/triage/cli.js *) cannot
 // match a command with a leading env assignment, so a scheduled run cannot set these.
@@ -36,9 +42,11 @@ const TEST_ENV = {
 // The real private config. buildsEnabled and the approver user ID are read only from here,
 // never from --config, so a run cannot point --config at a file it wrote under tmp/.
 export const CONTROL_CONFIG = resolve(dirname(fileURLToPath(import.meta.url)), '../../.claude/triage/config.json');
-const OPTIONS = Object.fromEntries(VALUE_FLAGS.map((name) => [name, { type: 'string' }]));
-
-class UsageError extends Error {}
+const BOOLEAN_FLAGS = ['ratio', 'unavailable'];
+const OPTIONS = Object.fromEntries([
+  ...VALUE_FLAGS.map((name) => [name, { type: 'string' }]),
+  ...BOOLEAN_FLAGS.map((name) => [name, { type: 'boolean' }]),
+]);
 
 export function parseArgs(argv) {
   try {
@@ -46,18 +54,6 @@ export function parseArgs(argv) {
     return { positional: positionals, ...values };
   } catch (err) {
     throw new UsageError(err.message);
-  }
-}
-
-function readInput(args) {
-  return readFileSync(args.in ? resolve(args.in) : 0, 'utf8');
-}
-
-function readJson(text, label) {
-  try {
-    return JSON.parse(text);
-  } catch (err) {
-    throw new UsageError(`${label} is not valid JSON: ${err.message}`);
   }
 }
 
@@ -85,10 +81,6 @@ function intFlag(value, name, fallback) {
   return n;
 }
 
-function out(value) {
-  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
-}
-
 function jobPaths(env = process.env) {
   return {
     jobsDir: resolve(env[TEST_ENV.jobsDir] || DEFAULT_JOBS_DIR),
@@ -112,8 +104,7 @@ function readThreads(path) {
 }
 
 function runBuckets(args, config) {
-  const now = args.now ?? new Date().toISOString();
-  if (Number.isNaN(Date.parse(now))) throw new UsageError(`--now is not a valid date: ${now}`);
+  const now = parseNow(args);
   const { tasks, threads } = tasksAndThreads(readJson(readInput(args), 'input'));
   out(bucketTasks(tasks, [...threads, ...readThreads(args.threads)], now, config.digest?.rules ?? {}));
   return 0;
@@ -140,17 +131,18 @@ function runApprovals(args) {
 }
 
 function runLint(args, config) {
-  const result = lint(readInput(args), config.digest?.lint ?? {});
-  out(result);
-  return result.ok ? 0 : 1;
+  const { ok, warnings, ratio } = lint(readInput(args), config.digest?.lint ?? {});
+  if (!args.ratio) {
+    out({ ok, warnings });
+    return ok ? 0 : 1;
+  }
+  out({ ok, ratio, warnings });
+  return ratio >= MIN_RATIO ? 0 : 1;
 }
 
 function runJobs(args) {
   const [, sub] = args.positional;
-  if (process.env.TRIAGE_BUILD_JOB) {
-    process.stderr.write('jobs: not available inside a build job\n');
-    return 2;
-  }
+  if (refuseInBuildJob('jobs')) return 2;
   const paths = jobPaths();
   if (sub === 'list') {
     out(list(paths.jobsDir));
@@ -179,7 +171,7 @@ function runJobs(args) {
   return result.started ? 0 : 1;
 }
 
-const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs };
+const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot };
 
 export function main(argv) {
   try {

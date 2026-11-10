@@ -23,8 +23,8 @@ broken-internal-link|broken-links|error|link|8|true
 broken-external-link|broken-links|warning|link|12|true
 broken-external-image|broken-links|warning|link|14|true
 redirect-chain|redirects|error|link|33|true
-temporary-redirect|redirects|warning|link|null|true
-permanent-redirect|redirects|notice|link|null|true
+temporary-redirect|redirects|warning|link|109|true
+permanent-redirect|redirects|notice|link|214|true
 title-missing|titles|error|page|3|false
 title-duplicate|titles|error|page|6|false
 title-too-long|titles|warning|page|102|false
@@ -38,31 +38,31 @@ duplicate-content|content|error|page|7|false
 jsonld-parse-error|structured-data|error|page|45|false
 sitemap-incorrect-page|sitemap-hygiene|error|page|18|true
 sitemap-noindex|sitemap-hygiene|error|page|null|false
-sitemap-missing|sitemap-hygiene|error|page|null|false
-sitemap-invalid|sitemap-hygiene|error|page|null|false
+sitemap-missing|sitemap-hygiene|error|page|125|false
+sitemap-invalid|sitemap-hygiene|error|page|17|false
 sitemap-orphan|internal-links|notice|page|207|false
 canonical-missing|canonical|warning|page|null|false
 canonical-not-absolute|canonical|warning|page|null|false
-canonical-multiple|canonical|warning|page|null|false
-canonical-to-non-200|canonical|error|link|null|true
+canonical-multiple|canonical|warning|page|39|false
+canonical-to-non-200|canonical|error|link|38|true
 hreflang-no-return|hreflang|error|link|null|false
 hreflang-non-200|hreflang|error|link|null|true
 links-to-http|internal-links|warning|link|31|false
-nofollow-internal-link|internal-links|warning|link|null|false
+nofollow-internal-link|internal-links|warning|link|123|false
 link-no-accessible-name|internal-links|notice|link|216|false
-image-missing-alt|image-alt|warning|link|null|false
+image-missing-alt|image-alt|warning|link|110|false
 low-text-to-html|content|warning|page|112|false
-low-word-count|content|warning|page|null|false
-llms-txt-missing|llms-txt|notice|page|null|false
-robots-txt-missing|indexability|warning|page|null|false
-robots-txt-invalid|indexability|warning|page|null|false
-mixed-content|mixed-content|warning|page|null|false
-viewport-missing|document|warning|page|null|false
-doctype-missing|document|warning|page|null|false
-charset-missing|document|warning|page|null|false
-html-too-large|page-weight|warning|page|null|false
-too-many-links|page-weight|warning|page|null|false
-uncompressed-page|page-weight|warning|page|null|false
+low-word-count|content|warning|page|117|false
+llms-txt-missing|llms-txt|notice|page|137|false
+robots-txt-missing|indexability|warning|page|203|false
+robots-txt-invalid|indexability|warning|page|16|false
+mixed-content|mixed-content|warning|page|30|false
+viewport-missing|document|warning|page|20|false
+doctype-missing|document|warning|page|116|false
+charset-missing|document|warning|page|115|false
+html-too-large|page-weight|warning|page|21|false
+too-many-links|page-weight|warning|page|108|false
+uncompressed-page|page-weight|warning|page|129|false
 page-fetch|null|notice|page|null|false
 `.trim().split('\n').map((line) => line.split('|'));
 
@@ -130,6 +130,10 @@ describe('taxonomy.json', () => {
     }
     assert.equal(byId.get('page-speed').semrushId, 111);
     assert.equal(byId.get('unminified-assets').scoreWeight, 0);
+  });
+
+  it('sets semrushLabel exactly when semrushId is set', () => {
+    for (const entry of taxonomy) assert.equal(entry.semrushLabel === null, entry.semrushId === null, entry.id);
   });
 
   it('never maps two entries to one SEMrush ID', () => {

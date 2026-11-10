@@ -269,8 +269,8 @@ Finding {
 | broken-external-link | broken-links | warning | link | 12 | yes | `<a>` to an external target with final status at least 400 (not 403, 429, 999), or `errorCode: 'ENOTFOUND'` |
 | broken-external-image | broken-links | warning | link | 14 | yes | `<img>` to an external target, same rule |
 | redirect-chain | redirects | error | link | 33 | yes | an `<a>` to an internal target whose chain has at least `redirectChainMin` hops or loops (row on the linking page); also a sitemap fact record with such a chain (row on itself, no target) |
-| temporary-redirect | redirects | warning | link | null | yes | an internal link whose target's first hop is 302, 303 or 307; plus one `siteLevel` row on the root when the root itself redirects temporarily |
-| permanent-redirect | redirects | notice | link | null | yes | an internal link whose target's first hop is 301 or 308 |
+| temporary-redirect | redirects | warning | link | 109 | yes | an internal link whose target's first hop is 302, 303 or 307; plus one `siteLevel` row on the root when the root itself redirects temporarily |
+| permanent-redirect | redirects | notice | link | 214 | yes | an internal link whose target's first hop is 301 or 308 |
 | title-missing | titles | error | page | 3 | no | `title` null or '' |
 | title-duplicate | titles | error | page | 6 | no | two or more 200 pages with the same non-empty `title`; one row per page, `related` lists the others |
 | title-too-long | titles | warning | page | 102 | no | length above `titleMax` |
@@ -284,34 +284,34 @@ Finding {
 | jsonld-parse-error | structured-data | error | page | 45 | no | one row per parse error, value = parser message |
 | sitemap-incorrect-page | sitemap-hygiene | error | page | 18 | yes | a sitemap fact record (`ok` or `non_html`) whose status is not 200 or whose chain is not empty |
 | sitemap-noindex | sitemap-hygiene | error | page | null | no | a sitemap page whose `robotsMeta` contains `noindex` |
-| sitemap-missing | sitemap-hygiene | error | page | null | no | `siteLevel`: no sitemap fetched with status 200 |
-| sitemap-invalid | sitemap-hygiene | error | page | null | no | `siteLevel`: a sitemap fetched but `valid: false` |
+| sitemap-missing | sitemap-hygiene | error | page | 125 | no | `siteLevel`: no sitemap fetched with status 200 |
+| sitemap-invalid | sitemap-hygiene | error | page | 17 | no | `siteLevel`: a sitemap fetched but `valid: false` |
 | sitemap-orphan | internal-links | notice | page | 207 | no | a sitemap fact record with `fetchState: 'ok'` and status 200 that no other fact record links to (self-links do not count) |
 | canonical-missing | canonical | warning | page | null | no | a 200 HTML page with no canonical |
 | canonical-not-absolute | canonical | warning | page | null | no | canonical `href` not absolute |
-| canonical-multiple | canonical | warning | page | null | no | more than one canonical with different keys |
-| canonical-to-non-200 | canonical | error | link | null | yes | the canonical target's first status is not 200 (redirect or 4xx); value = that status |
+| canonical-multiple | canonical | warning | page | 39 | no | more than one canonical with different keys |
+| canonical-to-non-200 | canonical | error | link | 38 | yes | the canonical target's first status is not 200 (redirect or 4xx); value = that status |
 | hreflang-no-return | hreflang | error | link | null | no | page B is listed in A's hreflang, B is a fact record, and B does not list A; row on B, target A |
 | hreflang-non-200 | hreflang | error | link | null | yes | an hreflang target whose final status is not 200 or which redirects |
 | links-to-http | internal-links | warning | link | 31 | no | an `https` page with an internal `<a>` whose href scheme is `http:` |
-| nofollow-internal-link | internal-links | warning | link | null | no | internal `<a>` with `rel` containing `nofollow` |
+| nofollow-internal-link | internal-links | warning | link | 123 | no | internal `<a>` with `rel` containing `nofollow` |
 | link-no-accessible-name | internal-links | notice | link | 216 | no | `accessibleName` is '' |
-| image-missing-alt | image-alt | warning | link | null | no | an image with `alt` null (empty alt is decorative and passes) |
+| image-missing-alt | image-alt | warning | link | 110 | no | an image with `alt` null (empty alt is decorative and passes) |
 | low-text-to-html | content | warning, weight 0 | page | 112 | no | `textToHtmlRatio` below `textToHtmlMin` |
-| low-word-count | content | warning, weight 0 | page | null | no | `wordCount` below `wordCountMin` |
-| llms-txt-missing | llms-txt | notice | page | null | no | `siteLevel`: `site.llms.status` is not 200 |
-| robots-txt-missing | indexability | warning | page | null | no | `siteLevel`: robots.txt status is not 200 |
-| robots-txt-invalid | indexability | warning | page | null | no | `siteLevel`: `parseRobots(...).errors` not empty |
-| mixed-content | mixed-content | warning | page | null | no | an `https` page with any `http:` resource; one row per page, value = count, snippet = first resource |
-| viewport-missing | document | warning | page | null | no | `viewport` null |
-| doctype-missing | document | warning | page | null | no | `doctype` null |
-| charset-missing | document | warning | page | null | no | `charset` null |
-| html-too-large | page-weight | warning | page | null | no | `bytes` above `htmlBytesMax` |
-| too-many-links | page-weight | warning | page | null | no | `links.length` above `linksMax` |
-| uncompressed-page | page-weight | warning | page | null | no | a 200 HTML page with `contentEncoding` null |
+| low-word-count | content | warning, weight 0 | page | 117 | no | `wordCount` below `wordCountMin` |
+| llms-txt-missing | llms-txt | notice | page | 137 | no | `siteLevel`: `site.llms.status` is not 200 |
+| robots-txt-missing | indexability | warning | page | 203 | no | `siteLevel`: robots.txt status is not 200 |
+| robots-txt-invalid | indexability | warning | page | 16 | no | `siteLevel`: `parseRobots(...).errors` not empty |
+| mixed-content | mixed-content | warning | page | 30 | no | an `https` page with any `http:` resource; one row per page, value = count, snippet = first resource |
+| viewport-missing | document | warning | page | 20 | no | `viewport` null |
+| doctype-missing | document | warning | page | 116 | no | `doctype` null |
+| charset-missing | document | warning | page | 115 | no | `charset` null |
+| html-too-large | page-weight | warning | page | 21 | no | `bytes` above `htmlBytesMax` |
+| too-many-links | page-weight | warning | page | 108 | no | `links.length` above `linksMax` |
+| uncompressed-page | page-weight | warning | page | 129 | no | a 200 HTML page with `contentEncoding` null |
 | page-fetch | (runner) | notice, weight 0 | page | null | no | unknown rows only (section 11) |
 
-The `semrushId` values are provisional until T0 confirms them against the SEMrush issue list. Existing modules keep their own priority 2 IDs (`security-headers`: `hsts-missing`, `csp-missing`, ...; `psi`: `psi-lcp`, `psi-cls`, `psi-inp`; `code-review`: `code-review`), all `notice` unless a reason is written. Not-covered entries (out-of-scope list in the spec) are present with `check: null`.
+The `semrushId` and `semrushLabel` values were confirmed on 2026-11-10 against the SEMrush `meta_issues` list (98 issue types, saved in webflow-internal at `.claude/reference/semrush-issue-ids.json`); `semrushLabel` is the SEMrush title verbatim, and both are null where SEMrush has no issue with the same definition (`sitemap-noindex`, the canonical-missing and not-absolute rules, both hreflang rules, `amp-issues`). Existing modules keep their own priority 2 IDs (`security-headers`: `hsts-missing`, `csp-missing`, ...; `psi`: `psi-lcp`, `psi-cls`, `psi-inp`; `code-review`: `code-review`), all `notice` unless a reason is written. Not-covered entries (out-of-scope list in the spec) are present with `check: null`.
 
 ## 13. Render confirm (`lib/render-confirm.js`)
 

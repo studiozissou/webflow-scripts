@@ -9,7 +9,7 @@
       "status"
     ],
     "semrushId": 2,
-    "semrushLabel": "4XX errors",
+    "semrushLabel": "4xx errors",
     "unit": "page",
     "priority": 1,
     "statusDerived": true
@@ -24,7 +24,7 @@
       "status"
     ],
     "semrushId": 1,
-    "semrushLabel": "5XX errors",
+    "semrushLabel": "5xx errors",
     "unit": "page",
     "priority": 1,
     "statusDerived": true
@@ -102,7 +102,7 @@
       "links",
       "redirectChain"
     ],
-    "semrushId": null,
+    "semrushId": 109,
     "semrushLabel": "Temporary redirects",
     "unit": "link",
     "priority": 1,
@@ -117,7 +117,7 @@
     "facts": [
       "links"
     ],
-    "semrushId": null,
+    "semrushId": 214,
     "semrushLabel": "Permanent redirects",
     "unit": "link",
     "priority": 1,
@@ -133,7 +133,7 @@
       "title"
     ],
     "semrushId": 3,
-    "semrushLabel": "Missing title tags",
+    "semrushLabel": "Title tag is missing or empty",
     "unit": "page",
     "priority": 1,
     "statusDerived": false
@@ -148,7 +148,7 @@
       "title"
     ],
     "semrushId": 6,
-    "semrushLabel": "Duplicate title tags",
+    "semrushLabel": "Duplicate title tag",
     "unit": "page",
     "priority": 1,
     "statusDerived": false
@@ -285,7 +285,7 @@
       "jsonLd"
     ],
     "semrushId": 45,
-    "semrushLabel": "Structured data items are invalid",
+    "semrushLabel": "Structured data that contains markup errors",
     "unit": "page",
     "priority": 1,
     "statusDerived": false
@@ -318,7 +318,7 @@
       "robotsMeta"
     ],
     "semrushId": null,
-    "semrushLabel": "Noindex pages in sitemap.xml",
+    "semrushLabel": null,
     "unit": "page",
     "priority": 1,
     "statusDerived": false
@@ -330,7 +330,7 @@
     "severity": "error",
     "check": "sitemap-hygiene",
     "facts": [],
-    "semrushId": null,
+    "semrushId": 125,
     "semrushLabel": "Sitemap.xml not found",
     "unit": "page",
     "priority": 1,
@@ -344,8 +344,8 @@
     "severity": "error",
     "check": "sitemap-hygiene",
     "facts": [],
-    "semrushId": null,
-    "semrushLabel": "Format errors in sitemap.xml",
+    "semrushId": 17,
+    "semrushLabel": "Invalid sitemap.xml format",
     "unit": "page",
     "priority": 1,
     "statusDerived": false,
@@ -406,7 +406,7 @@
     "facts": [
       "canonicals"
     ],
-    "semrushId": null,
+    "semrushId": 39,
     "semrushLabel": "Multiple canonical URLs",
     "unit": "page",
     "priority": 1,
@@ -421,7 +421,7 @@
     "facts": [
       "canonicals"
     ],
-    "semrushId": null,
+    "semrushId": 38,
     "semrushLabel": "Broken canonical URLs",
     "unit": "link",
     "priority": 1,
@@ -468,7 +468,7 @@
       "finalUrl"
     ],
     "semrushId": 31,
-    "semrushLabel": "Links to HTTP pages",
+    "semrushLabel": "Links lead to HTTP pages for HTTPS site",
     "unit": "link",
     "priority": 1,
     "statusDerived": false
@@ -482,8 +482,8 @@
     "facts": [
       "links"
     ],
-    "semrushId": null,
-    "semrushLabel": "Nofollow attributes in outgoing internal links",
+    "semrushId": 123,
+    "semrushLabel": "Nofollow attributes in internal links",
     "unit": "link",
     "priority": 1,
     "statusDerived": false
@@ -512,8 +512,8 @@
     "facts": [
       "images"
     ],
-    "semrushId": null,
-    "semrushLabel": "Missing alt attributes",
+    "semrushId": 110,
+    "semrushLabel": "Missing ALT attributes",
     "unit": "link",
     "priority": 1,
     "statusDerived": false
@@ -544,7 +544,7 @@
     "facts": [
       "wordCount"
     ],
-    "semrushId": null,
+    "semrushId": 117,
     "semrushLabel": "Low word count",
     "unit": "page",
     "priority": 1,
@@ -557,8 +557,8 @@
     "severity": "notice",
     "check": "llms-txt",
     "facts": [],
-    "semrushId": null,
-    "semrushLabel": "llms.txt not found",
+    "semrushId": 137,
+    "semrushLabel": "Llms.txt not found",
     "unit": "page",
     "priority": 1,
     "statusDerived": false,
@@ -571,7 +571,7 @@
     "severity": "warning",
     "check": "indexability",
     "facts": [],
-    "semrushId": null,
+    "semrushId": 203,
     "semrushLabel": "Robots.txt not found",
     "unit": "page",
     "priority": 1,
@@ -585,8 +585,8 @@
     "severity": "warning",
     "check": "indexability",
     "facts": [],
-    "semrushId": null,
-    "semrushLabel": "Format errors in robots.txt",
+    "semrushId": 16,
+    "semrushLabel": "Invalid robots.txt format",
     "unit": "page",
     "priority": 1,
     "statusDerived": false,
@@ -602,8 +602,8 @@
       "resources",
       "finalUrl"
     ],
-    "semrushId": null,
-    "semrushLabel": "Mixed content",
+    "semrushId": 30,
+    "semrushLabel": "Issues with mixed content",
     "unit": "page",
     "priority": 1,
     "statusDerived": false
@@ -617,8 +617,8 @@
     "facts": [
       "viewport"
     ],
-    "semrushId": null,
-    "semrushLabel": "Missing viewport tag",
+    "semrushId": 20,
+    "semrushLabel": "Viewport not configured",
     "unit": "page",
     "priority": 1,
     "statusDerived": false
@@ -632,7 +632,7 @@
     "facts": [
       "doctype"
     ],
-    "semrushId": null,
+    "semrushId": 116,
     "semrushLabel": "Doctype not declared",
     "unit": "page",
     "priority": 1,
@@ -647,7 +647,7 @@
     "facts": [
       "charset"
     ],
-    "semrushId": null,
+    "semrushId": 115,
     "semrushLabel": "Encoding not declared",
     "unit": "page",
     "priority": 1,
@@ -662,7 +662,7 @@
     "facts": [
       "bytes"
     ],
-    "semrushId": null,
+    "semrushId": 21,
     "semrushLabel": "Large HTML page size",
     "unit": "page",
     "priority": 1,
@@ -677,7 +677,7 @@
     "facts": [
       "links"
     ],
-    "semrushId": null,
+    "semrushId": 108,
     "semrushLabel": "Too many on-page links",
     "unit": "page",
     "priority": 1,
@@ -692,7 +692,7 @@
     "facts": [
       "headers"
     ],
-    "semrushId": null,
+    "semrushId": 129,
     "semrushLabel": "Uncompressed pages",
     "unit": "page",
     "priority": 1,
@@ -723,7 +723,7 @@
     "facts": [
       "images"
     ],
-    "semrushId": null,
+    "semrushId": 13,
     "semrushLabel": "Broken internal images",
     "unit": "link",
     "priority": 2,
@@ -738,7 +738,7 @@
     "facts": [
       "headers"
     ],
-    "semrushId": null,
+    "semrushId": 205,
     "semrushLabel": "No HSTS support",
     "unit": "page",
     "priority": 2,
@@ -885,7 +885,7 @@
     "scoreWeight": 0,
     "check": null,
     "facts": [],
-    "semrushId": null,
+    "semrushId": 135,
     "semrushLabel": "Unminified JavaScript and CSS files",
     "unit": "page",
     "priority": 2,
@@ -911,8 +911,8 @@
     "severity": "notice",
     "check": null,
     "facts": [],
-    "semrushId": null,
-    "semrushLabel": "Pages need more than 3 clicks to be reached",
+    "semrushId": 212,
+    "semrushLabel": "Page crawl depth",
     "unit": "page",
     "priority": 2,
     "statusDerived": false
@@ -924,7 +924,7 @@
     "severity": "warning",
     "check": null,
     "facts": [],
-    "semrushId": null,
+    "semrushId": 113,
     "semrushLabel": "Too many URL parameters",
     "unit": "page",
     "priority": 2,
@@ -938,7 +938,7 @@
     "check": null,
     "facts": [],
     "semrushId": 111,
-    "semrushLabel": "Slow page (HTML) load speed",
+    "semrushLabel": "Slow page load speed",
     "unit": "page",
     "priority": 2,
     "statusDerived": false
@@ -950,8 +950,8 @@
     "severity": "error",
     "check": null,
     "facts": [],
-    "semrushId": null,
-    "semrushLabel": "Issues with blocked internal resources in robots.txt",
+    "semrushId": 130,
+    "semrushLabel": "Disallowed internal resources",
     "unit": "page",
     "priority": 2,
     "statusDerived": false
@@ -964,7 +964,7 @@
     "check": null,
     "facts": [],
     "semrushId": null,
-    "semrushLabel": "AMP pages with HTML issues",
+    "semrushLabel": null,
     "unit": "page",
     "priority": 2,
     "statusDerived": false
@@ -976,7 +976,7 @@
     "severity": "notice",
     "check": null,
     "facts": [],
-    "semrushId": null,
+    "semrushId": 121,
     "semrushLabel": "Frames used",
     "unit": "page",
     "priority": 2,
@@ -989,7 +989,7 @@
     "severity": "warning",
     "check": null,
     "facts": [],
-    "semrushId": null,
+    "semrushId": 204,
     "semrushLabel": "Hreflang language mismatch issues",
     "unit": "page",
     "priority": 2,

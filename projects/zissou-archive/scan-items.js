@@ -8,12 +8,13 @@
  * Requires: NOTION_TOKEN, ANTHROPIC_API_KEY in env
  */
 
-import { NOTION_INVENTORY_DB, SCAN_MODEL } from './config.js'; // loads .env
+import { NOTION_INVENTORY_DB, SCAN_MODEL, CRITIC_MODEL, CRITIC_MAX_ROUNDS, CRITIC_STEP_EUR } from './config.js'; // loads .env
 import { readFileSync } from 'node:fs';
 import Anthropic from '@anthropic-ai/sdk';
 import notion from './lib/notion.js';
 import { buildScanMessage, parseScanResponse, mapToNotionProperties } from './lib/scanner.js';
 import { humanize } from './lib/humanizer.js';
+import { applyPriceCritique } from './lib/price-critic.js';
 
 const DEBUG = process.env.DEBUG === '1';
 
@@ -70,6 +71,14 @@ async function main() {
       const humanized = await humanize(anthropic, data.title, data.full_text);
       data.title = humanized.title;
       data.full_text = humanized.full_text;
+
+      if (process.env.PRICE_CRITIC !== '0') {
+        await applyPriceCritique(anthropic, data, photos, {
+          model: CRITIC_MODEL,
+          maxRounds: CRITIC_MAX_ROUNDS,
+          step: CRITIC_STEP_EUR,
+        });
+      }
 
       const properties = mapToNotionProperties(data);
 

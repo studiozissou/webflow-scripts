@@ -20,3 +20,7 @@ export const DROP_DAY = 5; // Friday
 export const DROP_HOUR = 8; // 8am UTC
 
 export const SCAN_MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
+
+export const CRITIC_MODEL = process.env.CRITIC_MODEL ?? SCAN_MODEL;
+export const CRITIC_MAX_ROUNDS = 4;
+export const CRITIC_STEP_EUR = 5;

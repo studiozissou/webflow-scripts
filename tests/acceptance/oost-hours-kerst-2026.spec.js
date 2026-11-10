@@ -1,4 +1,4 @@
-// Acceptance tests for oost-hours-kerst-2026: the 17:00–21:00 hours everywhere, the lunch copy and lunch catering gone, the Christmas pre-order block on /afhalen with home and footer pointers, closed 24–26 Dec in the schema, and the llms.txt lines; removal checks run when OOST_KERST_REMOVED=1.
+// Acceptance tests for oost-hours-kerst-2026: the 17:00–21:00 hours everywhere, lunch catering restored, the Kerstdeal and oud en nieuw pre-order block on /afhalen with home and footer pointers, closed 24–26 and 31 Dec and 1 Jan in the schema, and the llms.txt lines; removal checks run when OOST_KERST_REMOVED=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -7,7 +7,7 @@ dotenv.config({ path: '.env.test' });
 const BASE = process.env.OOST_URL || 'https://www.oosteten.nl';
 const MAIN = ['/', '/afhalen', '/catering', '/en', '/en/afhalen', '/en/catering'];
 const NOT_FOUND = '/deze-pagina-bestaat-niet';
-const CLOSED_DATES = ['2026-12-24', '2026-12-25', '2026-12-26'];
+const CLOSED_DATES = ['2026-12-24', '2026-12-25', '2026-12-26', '2026-12-31', '2027-01-01'];
 const OPEN_DAYS = ['Monday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const OLD_HOURS = /\b12-22\b|\b17-22\b|12:00\s*[–-]\s*22:00|17:00\s*[–-]\s*22:00|tot 22|to 22:00|\b10 PM\b|\b12 PM\b/i;
 
@@ -21,15 +21,18 @@ const LOCALES = {
     closedDay: /^dinsdag$/i,
     closed: /^gesloten$/i,
     heading: /kerst/i,
-    deadline: /vóór 20 december/i,
+    deadline: /uiterlijk 20 december/i,
     pickup: /23 of 24 december/i,
+    nyeDeadline: /uiterlijk 27 december/i,
+    nyePickup: /31 december/i,
     window: /15:00 en 17:00/,
     closedDates: /24, 25 en 26 december/,
-    dishes: [/rijsttafel oost/i, /vegetarische rijsttafel/i, /nasi tjampoer speciaal met vlees/i, /nasi tjampoer speciaal vegetarisch/i],
-    bases: [/bami goreng/i, /nasi goreng/i, /witte rijst/i, /gele rijst/i],
-    wine: /wijn/i,
+    newYearClosed: /1 januari zijn we dicht/i,
+    deal: [/soto/i, /rijsttafel/i, /spekkoek/i, /€\s?34,50/, /één persoon/i],
+    vega: /vegetarisch/i,
     sunday: /17:00 tot 21:00/,
     lunchIntro: /^lunch met collega/im,
+    cateringLunch: [/lunchbox/i, /11:30/, /bedrijfslunches/i],
   },
   en: {
     home: '/en',
@@ -40,17 +43,23 @@ const LOCALES = {
     closedDay: /^tuesday$/i,
     closed: /^closed$/i,
     heading: /christmas/i,
-    deadline: /before 20 december/i,
+    deadline: /by 20 december/i,
     pickup: /23 or 24 december/i,
+    nyeDeadline: /by 27 december/i,
+    nyePickup: /31 december/i,
     window: /15:00 and 17:00/,
     closedDates: /24, 25 and 26 december/i,
-    dishes: [/rijsttafel oost/i, /vegetarian rijsttafel/i, /nasi tjampoer speciaal with meat/i, /nasi tjampoer speciaal, vegetarian/i],
-    bases: [/bami goreng/i, /nasi goreng/i, /white rice/i, /yellow rice/i],
-    wine: /wine/i,
+    newYearClosed: /closed that evening and on 1 january/i,
+    deal: [/soto/i, /rijsttafel/i, /spekkoek/i, /€34\.50/, /for one/i],
+    vega: /vegetarian/i,
     sunday: /17:00 to 21:00/,
     lunchIntro: /^lunch with colleagues/im,
+    cateringLunch: [/lunch box/i, /11:30/, /business lunches/i],
   },
 };
+
+const REMOVED = !!process.env.OOST_KERST_REMOVED;
+const kerst = REMOVED ? test.skip : test;
 
 const localeOf = (path) => (path.startsWith('/en') ? LOCALES.en : LOCALES.nl);
 
@@ -115,7 +124,7 @@ test.describe('oost-hours-kerst-2026', () => {
       });
 
       if (path !== NOT_FOUND) {
-        test('footer links to the Christmas block in its own locale', async ({ page }) => {
+        kerst('footer links to the Christmas block in its own locale', async ({ page }) => {
           const links = await anchorLinks(page, '.footer_component', localeOf(path).anchor);
           expect(links.length).toBeGreaterThan(0);
         });
@@ -133,29 +142,31 @@ test.describe('oost-hours-kerst-2026', () => {
         await goto(page, L.afhalen);
       });
 
-      test('takeaway page shows the Christmas block with its heading', async ({ page }) => {
+      kerst('takeaway page shows the Christmas block with its heading', async ({ page }) => {
         const block = page.locator('.section_afhalen-tijden #feestdagen');
         await expect(block).toBeVisible();
         await expect(block.locator('h3')).toHaveText(L.heading);
-        await expect(block.locator('.hours_row')).toHaveCount(4);
+        await expect(block.locator('.hours_row')).toHaveCount(6);
       });
 
-      test('Christmas block gives the closed days, order deadline and pickup window', async ({ page }) => {
+      kerst('Christmas block gives the closed days, order deadlines and pickup windows', async ({ page }) => {
         const text = await page.locator('#feestdagen').innerText();
         expect(text).toMatch(L.closedDates);
         expect(text).toMatch(L.deadline);
         expect(text).toMatch(L.pickup);
+        expect(text).toMatch(L.nyeDeadline);
+        expect(text).toMatch(L.nyePickup);
         expect(text).toMatch(L.window);
+        expect(text).toMatch(L.newYearClosed);
       });
 
-      test('Christmas block lists the four dishes and four bases and mentions wine', async ({ page }) => {
+      kerst('Christmas block offers the Kerstdeal for one and a vegetarian version', async ({ page }) => {
         const text = await page.locator('#feestdagen').innerText();
-        for (const dish of L.dishes) expect(text).toMatch(dish);
-        for (const base of L.bases) expect(text).toMatch(base);
-        expect(text).toMatch(L.wine);
+        for (const part of L.deal) expect(text).toMatch(part);
+        expect(text).toMatch(L.vega);
       });
 
-      test('Christmas block gives the phone number to order', async ({ page }) => {
+      kerst('Christmas block gives the phone number to order', async ({ page }) => {
         expect(await page.locator('#feestdagen').innerText()).toContain('023 785 1562');
         await expect(page.locator('#feestdagen a[href="tel:+31237851562"]')).toHaveCount(1);
       });
@@ -164,7 +175,7 @@ test.describe('oost-hours-kerst-2026', () => {
         expect(await page.locator('.faq_list').first().innerText()).toMatch(L.sunday);
       });
 
-      test('takeaway page no longer offers lunch', async ({ page }) => {
+      test('takeaway intro does not offer a lunch pickup', async ({ page }) => {
         expect(await page.locator('body').innerText()).not.toMatch(L.lunchIntro);
       });
     });
@@ -174,7 +185,7 @@ test.describe('oost-hours-kerst-2026', () => {
         await goto(page, L.home);
       });
 
-      test('home links to the Christmas block in its own locale', async ({ page }) => {
+      kerst('home links to the Christmas block in its own locale', async ({ page }) => {
         const links = await anchorLinks(page, '.section_home-vanavond', L.anchor);
         expect(links.length).toBeGreaterThan(0);
       });
@@ -183,11 +194,11 @@ test.describe('oost-hours-kerst-2026', () => {
         expect(await page.locator('.faq_list').first().innerText()).toMatch(L.sunday);
       });
 
-      test('home JSON-LD has the new regular hours and closed 24 to 26 December', async ({ page }) => {
+      kerst('home JSON-LD has the new regular hours and the five closed holiday dates', async ({ page }) => {
         const hours = await restaurantHours(page);
         const regular = hours.filter((h) => !h.validFrom);
         const special = hours.filter((h) => h.validFrom);
-        expect(hours).toHaveLength(4);
+        expect(hours).toHaveLength(6);
         expect(regular).toHaveLength(1);
         expect([...regular[0].dayOfWeek].sort()).toEqual([...OPEN_DAYS].sort());
         expect(regular[0].opens).toBe('17:00');
@@ -206,35 +217,39 @@ test.describe('oost-hours-kerst-2026', () => {
       });
     });
 
-    test(`${lang} catering page no longer offers lunch`, async ({ page }) => {
+    test(`${lang} catering page offers lunch again`, async ({ page }) => {
       await goto(page, L.catering);
       const text = await page.locator('body').innerText();
-      expect(text).not.toMatch(/lunch/i);
-      expect(text).not.toContain('11:30');
+      for (const part of L.cateringLunch) expect(text).toMatch(part);
+      expect(text).not.toMatch(/\b11:30 ?[AP]M\b/);
     });
   }
 
-  test('English Christmas block uses 24-hour times and no Dutch', async ({ page }) => {
+  kerst('English Christmas block uses 24-hour times and no Dutch', async ({ page }) => {
     await goto(page, '/en/afhalen');
     const text = await page.locator('#feestdagen').innerText();
     expect(text).not.toMatch(/\b[0-9]{1,2}(:[0-9]{2})? ?[AP]M\b/);
     expect(text).not.toMatch(/afhalen|gesloten|bestel|kerstdag|witte|gele/i);
   });
 
-  test('llms.txt carries the new hours and the Christmas line and no lunch', async ({ request }) => {
+  test('llms.txt carries the new hours, the Christmas line and the lunch lines', async ({ request }) => {
     const res = await request.get(`${BASE}/llms.txt`);
     expect(res.status()).toBe(200);
     const text = await res.text();
     expect(text).toMatch(/Hours: 17:00–21:00 every day except Tuesday/);
-    expect(text).toMatch(/Christmas 2026: closed 24, 25 and 26 Dec/);
+    if (!REMOVED) {
+      expect(text).toMatch(/Christmas and New Year 2026: .*€34\.50 per person/);
+      expect(text).toMatch(/closed 24, 25 and 26 Dec, 31 Dec and 1 Jan/);
+    } else {
+      expect(text).not.toMatch(/Christmas and New Year 2026/);
+    }
     expect(text).not.toMatch(/12:00–22:00|17:00–22:00/);
-    expect(text).not.toMatch(/lunch/i);
-    expect(text).not.toContain('11:30');
+    expect(text).toMatch(/Lunchbox: .*available from 11:30/);
   });
 });
 
 test.describe('oost-hours-kerst-2026 removal', () => {
-  test.skip(!process.env.OOST_KERST_REMOVED, 'Set OOST_KERST_REMOVED=1 after the 27 Dec removal is published');
+  test.skip(!process.env.OOST_KERST_REMOVED, 'Set OOST_KERST_REMOVED=1 after the 2 Jan 2027 removal is published');
 
   for (const path of MAIN) {
     test(`after removal: no Christmas block or pointers (${path})`, async ({ page }) => {

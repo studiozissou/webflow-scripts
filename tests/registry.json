@@ -781,7 +781,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-10-26",
-      "description": "Oost hours 17:00-21:00 daily (Tue closed) on every hours list NL+EN incl. 404, no old 12-22/17-22 text, lunch copy gone, Christmas pre-order block #feestdagen on /afhalen (closed 24-26 Dec, order before 20 Dec, pickup 23/24 Dec 15-17, dishes, bases, wine), home and footer pointers, JSON-LD one regular entry plus closed 24-26 Dec, llms.txt lines; removal checks on OOST_KERST_REMOVED=1. Expected to fail until the Designer change ships."
+      "description": "Oost hours 17:00-21:00 daily (Tue closed) on every hours list NL+EN incl. 404, no old 12-22/17-22 text, lunch catering restored on /catering, Kerstdeal block #feestdagen on /afhalen (soto, rijsttafel, spekkoek EUR 34,50 pp, for one, vega; order by 20 Dec, pickup 23/24 Dec 15-17; order by 27 Dec, pickup 31 Dec 15-17; closed 24-26 Dec and 1 Jan), home and footer pointers, JSON-LD one regular entry plus closed 24-26, 31 Dec and 1 Jan, llms.txt lines; removal checks on OOST_KERST_REMOVED=1 from 2 Jan 2027. Expected to fail until the Designer change ships."
     },
     {
       "slug": "nem-validation-round-2",

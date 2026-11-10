@@ -145,7 +145,7 @@ test.describe('oost-hours-kerst-2026', () => {
       kerst('takeaway page shows the Christmas block with its heading', async ({ page }) => {
         const block = page.locator('.section_afhalen-tijden #feestdagen');
         await expect(block).toBeVisible();
-        await expect(block.locator('h3')).toHaveText(L.heading);
+        await expect(block.locator('h2')).toHaveText(L.heading);
         await expect(block.locator('.hours_row')).toHaveCount(6);
       });
 

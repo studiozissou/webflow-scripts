@@ -240,7 +240,7 @@ Finding {
 
 - One per fact record whose `fetchState` is not `ok`: `taxonomyId: 'page-fetch'`, `reason` = the fetch state (`blocked` for robots-disallowed pages).
 - One per taxonomy ID of a check that threw or was skipped: `url` = root, `reason: 'not_run'`.
-- External link targets that are `blocked`, `timeout`, or have status 403, 429 or 999 produce `unknown` rows from `broken-links` itself, reason `blocked`, `timeout` or `cap_exceeded`.
+- External link targets that are `blocked`, `timeout`, have status 401, 403, 429 or 999, or answer at least 400 on a final URL whose path is a login wall (`/login`, `/signin`, `/accounts/login`, `/checkpoint`, `/authwall`; Facebook sends crawlers to `/login/` with 400) produce `unknown` rows from `broken-links` itself, reason `blocked`, `timeout` or `cap_exceeded`.
 - Unknown rows are never issues and never reach the score, the counts or the diff.
 
 ## 12. Taxonomy entry (`taxonomy.json`)
@@ -266,7 +266,7 @@ Finding {
 | http-4xx | status | error | page | 2 | yes | a fact record or internal link target with final status 400 to 499 |
 | http-5xx | status | error | page | 1 | yes | as above, 500 to 599 |
 | broken-internal-link | broken-links | error | link | 8 | yes | `<a>` to an internal target with final status at least 400; a target that is `fetch_failed` or `timeout` gives an `unknown` row instead |
-| broken-external-link | broken-links | warning | link | 12 | yes | `<a>` to an external target with final status at least 400 (not 403, 429, 999), or `errorCode: 'ENOTFOUND'` |
+| broken-external-link | broken-links | warning | link | 12 | yes | `<a>` to an external target with final status at least 400 (not 401, 403, 429, 999), or `errorCode: 'ENOTFOUND'` |
 | broken-external-image | broken-links | warning | link | 14 | yes | `<img>` to an external target, same rule |
 | redirect-chain | redirects | error | link | 33 | yes | an `<a>` to an internal target whose chain has at least `redirectChainMin` hops or loops (row on the linking page); also a sitemap fact record with such a chain (row on itself, no target) |
 | temporary-redirect | redirects | warning | link | 109 | yes | an internal link whose target's first hop is 302, 303 or 307; plus one `siteLevel` row on the root when the root itself redirects temporarily |
@@ -380,7 +380,7 @@ Diff { fixed: [entry], stillOpen: [entry], new: [entry],
 `collapseFindings({ findings, facts, threshold = 0.9 }) → { groups, sitewide, singles }`
 
 - `groups`: fails with the same `taxonomyId` and the same `targetKey` (link-unit), or the same `evidence.snippet` (non-empty), across two or more pages: `{ fingerprint, taxonomyId, kind: 'target'|'snippet', count, urlKeys, sample }`.
-- `sitewide`: any taxonomyId failing on more than `threshold` of `fetchState: 'ok'` pages: `{ taxonomyId, pages, ratio }`. Those findings appear once in the report.
+- `sitewide`: any taxonomyId whose findings without a `targetKey` fail on more than `threshold` of `fetchState: 'ok'` pages: `{ taxonomyId, pages, ratio }`. Those findings appear once in the report. Findings with a target never join a site-wide pattern: they group by target, so one link on every page is one target group and unrelated broken links stay separate issues.
 - `singles`: everything else. Counts, the diff and parity always use the uncollapsed list; the health score takes shared issues from `groups` and `sitewide` (section 16).
 
 ## 19. NDJSON (`lib/ndjson.js`)

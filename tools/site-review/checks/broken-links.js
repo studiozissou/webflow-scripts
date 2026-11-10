@@ -13,6 +13,16 @@ export const meta = {
   audit: true,
 };
 
+const LOGIN_WALL = /^\/(login|signin|sign-in|accounts\/login|checkpoint|authwall|uas\/login)(\/|$|\.)/i;
+
+function pathOf(url) {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return '';
+  }
+}
+
 function judge(target, internal, blockedStatuses) {
   const reason = unknownReason(target);
   if (!internal && target?.fetchState === 'fetch_failed' && target.errorCode === 'ENOTFOUND') {
@@ -20,6 +30,7 @@ function judge(target, internal, blockedStatuses) {
   }
   if (reason) return { state: 'unknown', reason, value: target?.errorCode ?? null };
   if (!internal && blockedStatuses.includes(target.status)) return { state: 'unknown', reason: 'blocked', value: target.status };
+  if (!internal && target.status >= 400 && LOGIN_WALL.test(pathOf(target.finalUrl))) return { state: 'unknown', reason: 'blocked', value: target.status };
   if (target.status >= 400) return { state: 'fail', value: target.status };
   return null;
 }

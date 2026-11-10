@@ -46,7 +46,7 @@ Agents interpret, they never observe. An agent may rank, group, explain and prop
 | Evidence | every fail carries URL, final URL, status, value, source, selector or attribute, a snippet of at most 200 characters and the fetch time; the validator rejects a fail without it and the report lists it as a tool bug | a finding that cannot be checked is not a finding |
 | Head-scoped parsing | title, description, canonical, hreflang and robots meta are read inside `<head>`; attributes by their own quote; all entities decoded; H1s outside script, template, noscript and comments | `entity-audit/lib/extract.js` truncated `Janco's`, took SVG titles, dropped empty H1s and left `&#8211;` undecoded |
 | URL key | one normalisation rule folds case, trailing slash, fragment, tracking parameters, index files and www or apex | Carsa's "homepage, both URL forms" and Coconut's four home variants |
-| External politeness | 403, 429 and LinkedIn's 999 are `unknown blocked`; DNS `ENOTFOUND` is a fail | `wa.me` 429s produced 5,506 "broken external link" rows on Carsa |
+| External politeness | 401, 403, 429, LinkedIn's 999 and a 4xx on a login page are `unknown blocked`; DNS `ENOTFOUND` is a fail | `wa.me` 429s produced 5,506 "broken external link" rows on Carsa; Facebook's footer link answers 400 from `/login/` on every Rolfing page |
 | Render confirm | state matrix below | Webflow and client scripts change head tags after load |
 | Re-verify | status fails refetched once; non-reproducing ones are transient | one-off 503s and rate limits |
 | Bot wall | 90% or more of at least ten 200-status pages sharing one `htmlHash` aborts the run | an interstitial would otherwise look like site-wide duplicate content; identical 404 pages (Carsa's sold vehicles) never count |
@@ -72,7 +72,7 @@ A raw fail that a script fixes stays visible because crawlers that do not run Ja
 
 Weights come from the taxonomy: error 1.0, warning 0.5, notice 0, with low text-to-HTML, low word count and unminified assets set to 0. Transient, unknown and fixed-after-load findings carry no weight. Link findings belong to the page that holds the link; site-level findings (llms.txt, robots.txt, sitemap) belong to the root.
 
-Every fail is either a **single-page** finding or part of a **shared issue**. A shared issue is one problem seen on two or more pages: the same target (one broken menu link), the same snippet (one duplicated paragraph), or a check that fires on more than 90% of pages (missing descriptions everywhere). These are the same groups the report collapses.
+Every fail is either a **single-page** finding or part of a **shared issue**. A shared issue is one problem seen on two or more pages: the same target (one broken menu link), the same snippet (one duplicated paragraph), or a page-level check that fires on more than 90% of pages (missing descriptions everywhere). Link findings group by target only, so one broken footer link on every page is one shared issue and the unrelated dead links on a single page are not swept in with it. These are the same groups the report collapses.
 
 ```
 score = round(100 × (1 − (E + 0.5 × W + S) / P)), clipped to 0..100

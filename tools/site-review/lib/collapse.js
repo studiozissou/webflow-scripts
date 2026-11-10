@@ -1,4 +1,4 @@
-// Groups fails for the report by shared target or snippet and lifts checks that fire on nearly every page into site-wide patterns, without touching the counts.
+// Groups fails for the report by shared target or snippet and lifts target-less checks that fire on nearly every page into site-wide patterns, without touching the counts.
 
 import { sha256 } from './finding.js';
 
@@ -26,7 +26,7 @@ export function collapseFindings({ findings, facts, threshold = 0.9 }) {
   const sitewide = [];
   const sitewideIds = new Set();
   if (okPages.size > 0) {
-    for (const [taxonomyId, list] of groupBy(fails, (finding) => finding.taxonomyId)) {
+    for (const [taxonomyId, list] of groupBy(fails.filter((finding) => !finding.targetKey), (finding) => finding.taxonomyId)) {
       const pages = new Set(list.map((finding) => finding.urlKey).filter((key) => okPages.has(key))).size;
       const ratio = pages / okPages.size;
       if (pages >= 2 && ratio > threshold) {
@@ -37,10 +37,11 @@ export function collapseFindings({ findings, facts, threshold = 0.9 }) {
   }
   sitewide.sort((a, b) => a.taxonomyId.localeCompare(b.taxonomyId));
 
+  const inSitewide = (finding) => !finding.targetKey && sitewideIds.has(finding.taxonomyId);
   const groups = [];
   const consumed = new Set();
   const addGroups = (kind, keyOf) => {
-    const pool = fails.filter((finding) => !sitewideIds.has(finding.taxonomyId) && !consumed.has(finding));
+    const pool = fails.filter((finding) => !inSitewide(finding) && !consumed.has(finding));
     for (const [key, list] of groupBy(pool, keyOf)) {
       const urlKeys = [...new Set(list.map((finding) => finding.urlKey))].sort();
       if (urlKeys.length < 2) continue;
@@ -55,6 +56,6 @@ export function collapseFindings({ findings, facts, threshold = 0.9 }) {
   );
   groups.sort((a, b) => b.count - a.count || a.taxonomyId.localeCompare(b.taxonomyId) || a.fingerprint.localeCompare(b.fingerprint));
 
-  const singles = fails.filter((finding) => !sitewideIds.has(finding.taxonomyId) && !consumed.has(finding));
+  const singles = fails.filter((finding) => !inSitewide(finding) && !consumed.has(finding));
   return { groups, sitewide, singles };
 }

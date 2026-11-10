@@ -53,7 +53,7 @@ function findingsSection(result) {
   const live = liveFails(result.findings);
 
   for (const severity of SEVERITY_ORDER) {
-    const ofSeverity = live.filter((f) => f.severity === severity && !sitewideIds.has(f.taxonomyId));
+    const ofSeverity = live.filter((f) => f.severity === severity && !(sitewideIds.has(f.taxonomyId) && !f.targetKey));
     if (ofSeverity.length === 0) continue;
     lines.push(`## ${HEADINGS[severity]}`, '');
     const byType = new Map();

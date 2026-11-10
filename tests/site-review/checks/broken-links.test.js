@@ -48,6 +48,19 @@ describe('broken-links check', () => {
     assert.ok(rows.every((r) => r.taxonomyId === 'broken-external-link'));
   });
 
+  it('treats an external 401, or a 4xx that ends on a login wall, as blocked, not broken', async () => {
+    const urls = ['/fb', '/gone', '/auth'].map((p) => `${EXT}${p}`);
+    const facts = [page('/links', { links: urls.map((u) => link(u)) })];
+    const linkTargets = targets(
+      target(urls[0], { status: 400, finalUrl: `${EXT}/login/?next=%2Ffb` }),
+      target(urls[1], { status: 404, finalUrl: `${EXT}/loginhelp` }),
+      target(urls[2], { status: 401 }),
+    );
+    const rows = assertValidRows(await check({ facts, linkTargets, config: config() }));
+    const byTarget = Object.fromEntries(rows.map((r) => [r.targetKey.replace(EXT, ''), r.state === 'fail' ? 'fail' : r.reason]));
+    assert.deepEqual(byTarget, { '/fb': 'blocked', '/gone': 'fail', '/auth': 'blocked' });
+  });
+
   it('checks external and internal images and ignores pages that are not 200 HTML', async () => {
     const facts = [
       page('/links', {

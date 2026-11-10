@@ -58,6 +58,22 @@ describe('collapse', () => {
     assert.deepEqual(out.groups, []);
   });
 
+  it('keeps link findings with distinct targets apart even when one target is on every page', () => {
+    const facts = Array.from({ length: 10 }, (_, i) => fact(i));
+    const findings = [
+      ...facts.map((_, i) => fail('broken-external-link', i, { targetKey: 'https://facebook.com/x' })),
+      ...[0, 1].map((i) => fail('broken-external-link', i, { targetKey: 'https://gone.org/a' })),
+      fail('broken-external-link', 3, { targetKey: 'https://gone.org/b' }),
+    ];
+    const out = collapseFindings({ findings, facts });
+    assert.deepEqual(out.sitewide, []);
+    assert.deepEqual(out.groups.map((g) => [g.targetKey ?? g.sample.targetKey, g.count]), [['https://facebook.com/x', 10], ['https://gone.org/a', 2]]);
+    assert.deepEqual(out.singles.map((f) => f.targetKey), ['https://gone.org/b']);
+    const health = computeHealth({ facts, findings });
+    assert.equal(health.sharedIssues.length, 2);
+    assert.equal(health.warningPages, 1);
+  });
+
   it('does not call a check site-wide at or under the threshold', () => {
     const facts = Array.from({ length: 10 }, (_, i) => fact(i));
     const findings = Array.from({ length: 9 }, (_, i) => fail('description-missing', i));

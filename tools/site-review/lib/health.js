@@ -30,7 +30,7 @@ export function computeHealth({ facts, findings }) {
   const sharedIssues = [];
   for (const pattern of sitewide) {
     const weight = Math.max(0, ...(findings ?? [])
-      .filter((f) => f.taxonomyId === pattern.taxonomyId && f.state === 'fail' && !f.transient && pageKeys.has(f.urlKey))
+      .filter((f) => f.taxonomyId === pattern.taxonomyId && !f.targetKey && f.state === 'fail' && !f.transient && pageKeys.has(f.urlKey))
       .map(weightOf));
     sharedIssues.push({ kind: 'sitewide', taxonomyId: pattern.taxonomyId, fingerprint: null, pages: pattern.pages, weight });
   }

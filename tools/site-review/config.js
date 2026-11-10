@@ -50,7 +50,7 @@ const AUDIT_THRESHOLDS = Object.freeze({
   htmlBytesMax: 2_000_000,
   linksMax: 3000,
   redirectChainMin: 2,
-  externalBlockedStatuses: Object.freeze([403, 429, 999]),
+  externalBlockedStatuses: Object.freeze([401, 403, 429, 999]),
 });
 
 const DEFAULT_CRAWL_CONFIG = Object.freeze({

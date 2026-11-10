@@ -112,7 +112,21 @@ test('page routes add their own module after the shared modules', () => {
 });
 
 test('routes are anchored: near neighbours load the shared modules only', () => {
-  for (const pathname of ['/', '/used-cars', '/used-cars/deals', '/used-cars/near', '/car-finance', '/car-finance-calculator/x', '/get-started/x', '/faq/x', '/blog/some-post', '/stores', '/stores/leeds', '/used-cars/fuel', '/used-cars/promotions', '/x/car-redirect', '/x/faq', '/sell-car/value-car']) {
+  for (const pathname of ['/', '/used-cars', '/used-cars/deals', '/used-cars/near', '/car-finance', '/car-finance-calculator/x', '/get-started/x', '/faq/x', '/stores', '/stores/leeds', '/used-cars/fuel', '/used-cars/promotions', '/x/car-redirect', '/x/faq', '/sell-car/value-car']) {
+    assert.deepEqual(srcs(run({ pathname }).appended), [...BASE_LIST, ...SHARED], pathname);
+  }
+});
+
+test('v1.2.6 routes: /reserve loads reserve.js and a blog post loads blog-post.js, after the shared modules', () => {
+  for (const [pathname, file] of [['/reserve', 'reserve.js'], ['/reserve/', 'reserve.js'], ['/blog/some-post', 'blog-post.js'], ['/blog/some-post/', 'blog-post.js']]) {
+    assert.deepEqual(srcs(run({ pathname }).appended), [...BASE_LIST, ...SHARED, CDN + file], pathname);
+  }
+});
+
+test('v1.2.6 routes: /blog keeps blog.js only, and near neighbours of the new routes get the shared modules only', () => {
+  assert.deepEqual(srcs(run({ pathname: '/blog' }).appended), [...BASE_LIST, ...SHARED, CDN + 'blog.js']);
+  assert.deepEqual(srcs(run({ pathname: '/blog/' }).appended), [...BASE_LIST, ...SHARED, CDN + 'blog.js']);
+  for (const pathname of ['/reserve/x', '/x/reserve', '/reserved', '/blog/a/b', '/blogs/a']) {
     assert.deepEqual(srcs(run({ pathname }).appended), [...BASE_LIST, ...SHARED], pathname);
   }
 });

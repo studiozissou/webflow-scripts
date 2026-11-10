@@ -185,6 +185,7 @@ test('gates: the 404 page (any path with #404-message) draws shapes only', () =>
   const r = run('/vehicles/used/zz99zzz', { nodes: { '#404-message': [{}] } });
   assert.equal(r.shapeRan, true);
   assert.equal(r.lineRan, false);
+  assert.doesNotThrow(() => r.timers.forEach((fn) => fn()));
 });
 
 test('gates: a marked page outside both lists gets nothing', () => {
@@ -193,6 +194,7 @@ test('gates: a marked page outside both lists gets nothing', () => {
   assert.equal(r.lineRan, false);
   assert.equal(r.shapeRan, false);
   assert.equal(r.calls.timeline, 0);
+  assert.doesNotThrow(() => r.timers.forEach((fn) => fn()));
 });
 
 test('without gsap both blocks return quietly', () => {

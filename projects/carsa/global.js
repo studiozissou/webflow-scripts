@@ -1,4 +1,4 @@
-// Carsa site-wide behaviour moved out of the Webflow site footer: menu scroll lock, promo links, store list order, attribution storage, eligibility link UTMs, external link rel, copyright year, the n8n chat widget and, on marked pages, the missing-VDP 404 redirect.
+// Carsa site-wide behaviour moved out of the Webflow site footer: menu scroll lock, promo links, store list order, attribution storage, eligibility link UTMs, external link rel, copyright year, the nav WhatsApp prefill, the n8n chat widget and, on marked pages, the missing-VDP 404 redirect.
 (function ($) {
   var H = window.__CARSA;
   if (!H) {
@@ -160,6 +160,15 @@
   H.block(() => {
     const year = document.getElementById('year');
     if (year) year.innerText = new Date().getFullYear();
+  });
+
+  H.onReady(() => {
+    const wa = document.getElementById('nav_open-whatsapp');
+    if (!wa) return;
+    const m = location.pathname.match(/\/vehicles\/used\/([a-z0-9]+)/i);
+    const vrm = m ? m[1].toUpperCase() : '';
+    const msg = vrm ? 'Hi, please tell me more about ' + vrm : 'Hi, I have a question about a car on your website';
+    wa.href = 'https://wa.me/442046322989?text=' + encodeURIComponent(msg);
   });
 
   H.onReady(() => {

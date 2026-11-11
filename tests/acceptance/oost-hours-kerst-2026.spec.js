@@ -90,7 +90,7 @@ async function anchorLinks(page, scope, anchor) {
 }
 
 async function regularRows(page) {
-  return page.$$eval('.hours_list:not(#feestdagen .hours_list) .hours_row', (rows) =>
+  return page.$$eval('.hours_list:not(#feestdagen .hours_list):not(.section_home-feestdagen .hours_list) .hours_row', (rows) =>
     rows.map((r) => ({
       day: r.querySelector('.hours_day')?.textContent.trim() || '',
       time: r.querySelector('.hours_time')?.textContent.trim() || '',
@@ -145,7 +145,7 @@ test.describe('oost-hours-kerst-2026', () => {
       kerst('takeaway page shows the Christmas block with its heading', async ({ page }) => {
         const block = page.locator('.section_afhalen-tijden #feestdagen');
         await expect(block).toBeVisible();
-        await expect(block.locator('h3')).toHaveText(L.heading);
+        await expect(block.locator('h2')).toHaveText(L.heading);
         await expect(block.locator('.hours_row')).toHaveCount(6);
       });
 
@@ -185,8 +185,8 @@ test.describe('oost-hours-kerst-2026', () => {
         await goto(page, L.home);
       });
 
-      kerst('home links to the Christmas block in its own locale', async ({ page }) => {
-        const links = await anchorLinks(page, '.section_home-vanavond', L.anchor);
+      kerst('home Christmas section links to the Christmas block in its own locale', async ({ page }) => {
+        const links = await anchorLinks(page, '.section_home-feestdagen', L.anchor);
         expect(links.length).toBeGreaterThan(0);
       });
 
@@ -255,6 +255,7 @@ test.describe('oost-hours-kerst-2026 removal', () => {
     test(`after removal: no Christmas block or pointers (${path})`, async ({ page }) => {
       await goto(page, path);
       await expect(page.locator('#feestdagen .hours_row')).toHaveCount(0);
+      await expect(page.locator('.section_home-feestdagen')).toHaveCount(0);
       const links = await page.$$eval('a[href]', (els) =>
         els.map((a) => a.getAttribute('href')).filter((h) => h.endsWith('#feestdagen')),
       );

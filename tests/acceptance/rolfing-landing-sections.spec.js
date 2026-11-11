@@ -122,6 +122,26 @@ test.describe('rolfing-landing-sections', () => {
         expect(ratio).toBeGreaterThan(0.6);
       });
 
+      test('block 3 without a photo: no border, heading and text side by side, bottoms aligned', async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        const section = page.locator('.section_rolfing-can-help-with');
+        const m = await section.evaluate((el) => {
+          const c = el.querySelector('.rolfing-can-help-with_content');
+          const h = c.querySelector('h2').getBoundingClientRect();
+          const t = c.querySelector('.text-rich-text').getBoundingClientRect();
+          return {
+            border: getComputedStyle(c).borderTopWidth,
+            sideBySide: h.right <= t.left,
+            bottomGap: Math.abs(h.bottom - t.bottom),
+          };
+        });
+        expect(m.border).toBe('0px');
+        expect(m.sideBySide).toBe(true);
+        expect(m.bottomGap).toBeLessThan(4);
+      });
+
       test('adjacent sections never share a background colour', async ({ page }) => {
         const clashes = await page.$$eval('main > section, main > div', (els) => {
           const shown = els.filter(

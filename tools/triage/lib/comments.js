@@ -3,6 +3,7 @@ import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './jobs.js';
 import { amsterdamDate, toMs } from './workdays.js';
+import { bareId } from '../../notion/client.js';
 
 const DEBUG = false;
 
@@ -45,10 +46,10 @@ const dayOf = (at) => (Number.isFinite(toMs(at)) ? amsterdamDate(at) : null);
 
 export function allowComment({ taskId, sourceId } = {}, snapshot, ledgerDir, now = new Date()) {
   if (!Array.isArray(snapshot?.tasks)) return { ok: false, reason: 'no-snapshot' };
-  if (typeof taskId !== 'string' || !snapshot.tasks.some((t) => t?.id === taskId)) return { ok: false, reason: 'task-not-in-snapshot' };
+  if (typeof taskId !== 'string' || !snapshot.tasks.some((t) => typeof t?.id === 'string' && bareId(t.id) === bareId(taskId))) return { ok: false, reason: 'task-not-in-snapshot' };
   if (typeof sourceId !== 'string' || !sourceIds(snapshot).has(sourceId)) return { ok: false, reason: 'source-not-in-snapshot' };
   const today = amsterdamDate(now);
-  const rows = readLedger(ledgerDir).filter((r) => r.taskId === taskId);
+  const rows = readLedger(ledgerDir).filter((r) => bareId(r.taskId) === bareId(taskId));
   if (rows.some((r) => dayOf(r.at) === today)) return { ok: false, reason: 'already-commented-today' };
   if (rows.some((r) => r.sourceId === sourceId)) return { ok: false, reason: 'already-commented-for-source' };
   return { ok: true };

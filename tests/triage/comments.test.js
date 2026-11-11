@@ -41,6 +41,11 @@ test('allowComment accepts a snapshot task with a collector source and an empty 
   assert.deepEqual(allowComment({ taskId: TASK, sourceId: 'pr:webflow-scripts#12' }, snapshot, tmp(), NOW), { ok: true });
 });
 
+test('allowComment matches a dashed task id against a dashless one', () => {
+  const dashed = `${TASK.slice(0, 8)}-${TASK.slice(8, 12)}-${TASK.slice(12, 16)}-${TASK.slice(16, 20)}-${TASK.slice(20)}`;
+  assert.deepEqual(allowComment({ taskId: dashed, sourceId: 'job-1' }, snapshot, tmp(), NOW), { ok: true });
+});
+
 test('allowComment refuses a task id that is not in the snapshot', () => {
   assert.deepEqual(allowComment({ taskId: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', sourceId: 'job-1' }, snapshot, tmp(), NOW), { ok: false, reason: 'task-not-in-snapshot' });
 });

@@ -910,7 +910,17 @@
       "type": "acceptance",
       "source": "plan",
       "critical": false,
-      "description": "Coconut /pricing November 2026 copy: approved H1/H2/H3s, meta, 9 FAQs matching FAQPage schema, prices, links, no old copy; Landlords H1 as regression control",
+      "description": "Coconut /pricing November 2026 copy: approved H1/H2/H3s, meta, 9 FAQs matching FAQPage schema, prices, links, no old copy; Landlords H1 as regression control; also runs on /pricing-cf (PRICING_PATH, FAQ_TITLE, FAQ_ANSWER env)",
+      "created": "2026-11-11"
+    },
+    {
+      "slug": "coconut-pricing-cf-v3",
+      "url": "https://getcoconut.webflow.io/pricing-cf",
+      "spec": "tests/acceptance/coconut-pricing-cf-v3.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut /pricing Client First V3 rebuild on pricing-cf: V3 shell and sections, no legacy layout classes, details FAQ with microdata, subgrid price table, script hooks (menu, UTM), element target; live /pricing control",
       "created": "2026-11-11"
     }
   ]

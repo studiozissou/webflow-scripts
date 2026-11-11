@@ -88,6 +88,7 @@ const SECTION_COPY = [
 const RETIRED_PLANS = ['Essentials', '+MTD', '+Self Assessment', 'Full'];
 
 const FAQ_TITLE = process.env.FAQ_TITLE || '._25-collapse-title';
+const FAQ_ANSWER = process.env.FAQ_ANSWER || '._25-collapse-text-content';
 const THIRD_PARTY_NOISE = /OptinMonster|omappapi\.com|intercom|facebook|connect\.facebook\.net|trustpilot/i;
 
 const texts = (page, selector) =>
@@ -96,6 +97,23 @@ const texts = (page, selector) =>
 const jsonLd = async (page) => {
   const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
   return blocks.map((block) => JSON.parse(block)).flatMap((data) => data['@graph'] || (Array.isArray(data) ? data : [data]));
+};
+
+const squash = (text) => text.replace(/\s+/g, ' ').trim();
+
+const faqPages = async (page) => {
+  const fromJson = (await jsonLd(page))
+    .filter((item) => item['@type'] === 'FAQPage')
+    .map((faq) => faq.mainEntity.map((q) => ({ name: squash(q.name), text: squash(q.acceptedAnswer.text) })));
+  const fromMicrodata = await page.locator('[itemtype*="schema.org/FAQPage"]').evaluateAll((roots) =>
+    roots.map((root) =>
+      [...root.querySelectorAll('[itemprop="mainEntity"]')].map((q) => ({
+        name: q.querySelector('[itemprop="name"]')?.textContent.replace(/\s+/g, ' ').trim(),
+        text: q.querySelector('[itemprop="acceptedAnswer"] [itemprop="text"]')?.textContent.replace(/\s+/g, ' ').trim(),
+      })),
+    ),
+  );
+  return [...fromJson, ...fromMicrodata];
 };
 
 test.describe('coconut-pricing-copy-nov-2026', () => {
@@ -150,17 +168,16 @@ test.describe('coconut-pricing-copy-nov-2026', () => {
   });
 
   test('FAQPage schema matches the visible FAQ', async ({ page }) => {
-    const faq = (await jsonLd(page)).filter((item) => item['@type'] === 'FAQPage');
-    expect(faq).toHaveLength(1);
-    expect(faq[0].mainEntity.map((q) => q.name)).toEqual(await texts(page, FAQ_TITLE));
-    expect(faq[0].mainEntity.map((q) => q.name)).toEqual(FAQS);
+    const faqs = await faqPages(page);
+    expect(faqs).toHaveLength(1);
+    expect(faqs[0].map((q) => q.name)).toEqual(await texts(page, FAQ_TITLE));
+    expect(faqs[0].map((q) => q.name)).toEqual(FAQS);
   });
 
   test('FAQPage answers match the visible answers', async ({ page }) => {
-    const squash = (text) => text.replace(/\s+/g, ' ').trim();
-    const faq = (await jsonLd(page)).find((item) => item['@type'] === 'FAQPage');
-    const visible = await texts(page, '._25-collapse-text-content');
-    expect(faq.mainEntity.map((q) => squash(q.acceptedAnswer.text))).toEqual(visible.map(squash));
+    const [faq] = await faqPages(page);
+    const visible = await texts(page, FAQ_ANSWER);
+    expect(faq.map((q) => q.text)).toEqual(visible.map(squash));
   });
 
   test('social descriptions match the meta description', async ({ page }) => {

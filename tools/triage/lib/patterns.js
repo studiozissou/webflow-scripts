@@ -90,7 +90,7 @@ export function spot(input = {}, { now = new Date(), max = MAX_PROPOSALS } = {})
       key,
       count: g.members.size,
       proposal,
-      line: `${n}. "${key}" came up ${g.members.size} times in ${WINDOW_DAYS} days. Make ${proposal} for it. Reply go ${n} to plan it.`,
+      line: `${n}. "${key}" came up ${g.members.size} times in ${WINDOW_DAYS} days. Make ${proposal} for it.`,
     });
   }
   return out;

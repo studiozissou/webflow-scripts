@@ -74,7 +74,7 @@ export function unlinked(tasks = [], goals = [], { now = new Date(), state = { k
 }
 
 function reviewSentence(days) {
-  if (days == null) return 'No review yet.';
+  if (days == null) return '';
   if (days === 0) return 'Review today.';
   return `Review ${plural(days, 'day')} ago.`;
 }
@@ -82,7 +82,8 @@ function reviewSentence(days) {
 function goalLine(goal) {
   const tasks = goal.noOpenTask ? 'no open task.' : `${plural(goal.openTasks, 'open task')}.`;
   const overdue = goal.overdue ? ` Overdue since ${goal.targetDate}.` : '';
-  return `${plain(goal.name, NAME_WORDS)}: ${tasks}${overdue} ${reviewSentence(goal.daysSinceReview)}`;
+  const review = reviewSentence(goal.daysSinceReview);
+  return `${plain(goal.name, NAME_WORDS)}: ${tasks}${overdue}${review ? ` ${review}` : ''}`;
 }
 
 const flagged = (goal) => goal.noOpenTask || goal.overdue || (goal.daysSinceReview ?? 0) >= REVIEW_FLAG_DAYS;

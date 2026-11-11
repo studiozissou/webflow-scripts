@@ -41,7 +41,6 @@ function reasons(item, cls, nowMs) {
     if (item.kind === 'plan') out.push('Plan waits for your go');
     else if (failedBuild(item) && !item.needsUser) out.push(buildLine(item.result), 'Check it');
     else if (item.pr?.reviewRequested && !item.needsUser) out.push(`PR ${item.pr.number} needs your review`);
-    else out.push(`${kind} waits on you`);
     const detail = plain(item.detail, DETAIL_WORDS);
     if (detail) out.push(`Asks: ${detail}`);
   } else if (cls === 'inFlight') {

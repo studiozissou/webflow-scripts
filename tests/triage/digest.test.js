@@ -8,7 +8,7 @@ const main = {
   text: ['*Daybook Wed 11 Nov*', 'Waiting on you: 3', '*NOW (2)*', '1. Reply to Anna.', '2. Fix nav.', '*BUILD (1)*', 'B1. Add alt text. Reply go B1.', '*GOAL FIT (1)*', 'Q1. "Remove scripts" has no goal. Reply link Q1, keep Q1, or drop Q1.'].join('\n'),
   items: [{ n: '1', kind: 'thread' }, { n: '2', kind: 'task' }, { n: 'B1', kind: 'build', pageId: 'p1' }, { n: 'Q1', kind: 'goal-fit', taskId: 't1' }],
 };
-const rollup = { name: 'rollup', text: '*Where is everything*\n*Waiting on you (1)*\nS1. carsa specs. Job waits on you.\nCloud sessions: not available in scheduled run', items: [{ n: 'S1', kind: 'session' }] };
+const rollup = { name: 'rollup', text: '*Where is everything*\n*Waiting on you (1)*\nS1. carsa specs.\nCloud sessions: not available in scheduled run', items: [{ n: 'S1', kind: 'session' }] };
 const advisors = { name: 'advisors', text: 'V1. 3 of 3 job slots are free.\nV2. Quota use is 86% of the 5-hour limit.', items: [{ n: 'V1', kind: 'advisor' }, { n: 'V2', kind: 'advisor' }] };
 
 test('numberParts numbers every item line 1..N across parts in order', () => {
@@ -18,7 +18,7 @@ test('numberParts numbers every item line 1..N across parts in order', () => {
   assert.match(d.text, /^1\. Reply to Anna\.$/m);
   assert.match(d.text, /^3\. Add alt text\. Reply go 3\.$/m);
   assert.match(d.text, /^4\. "Remove scripts" has no goal\. Reply link 4, keep 4, or drop 4\.$/m);
-  assert.match(s.text, /^5\. carsa specs\. Job waits on you\.$/m);
+  assert.match(s.text, /^5\. carsa specs\.$/m);
   assert.deepEqual(v.text.split('\n'), ['6. 3 of 3 job slots are free.', '7. Quota use is 86% of the 5-hour limit.']);
 });
 

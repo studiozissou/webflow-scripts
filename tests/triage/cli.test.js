@@ -367,7 +367,7 @@ test('snapshot add-remote merges remote sessions, --unavailable records the fall
   const piped = run(['snapshot', 'add-remote'], JSON.stringify([{ id: 'cse_z', name: 'Z', status: 'Waiting on a human' }]), env);
   assert.equal(piped.code, 0, piped.err);
   const rolled = run(['snapshot', 'rollup'], '', env).json();
-  assert.match(rolled.thread, /Z\. Remote session waits on you\./);
+  assert.match(rolled.thread, /\. Z\.$/m);
   assert.doesNotMatch(rolled.thread, /Cloud sessions: not available/);
   const off = run(['snapshot', 'add-remote', '--unavailable'], '', env);
   assert.equal(off.json().sources.remote, 'unavailable');

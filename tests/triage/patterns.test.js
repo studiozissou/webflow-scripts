@@ -69,4 +69,5 @@ test('proposal lines pass ste-lint', () => {
   const { ok, warnings } = lint(p.line);
   assert.ok(ok, JSON.stringify(warnings));
   assert.match(p.line, /^A1\. /);
+  assert.doesNotMatch(p.line, /Reply/);
 });

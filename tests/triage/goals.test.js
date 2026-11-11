@@ -102,7 +102,7 @@ test('unlinked counts working days: on a Friday, the next Tuesday is still near-
 test('goalsBlock writes one short line per flagged goal only, and passes STE lint', () => {
   const lines = goalsBlock(health(GOALS, TASKS, { now: NOW }));
   assert.deepEqual(lines, [
-    'Launch the Globex shop: no open task. Overdue since 2026-11-01. No review yet.',
+    'Launch the Globex shop: no open task. Overdue since 2026-11-01.',
     'Write 2 case studies: no open task. Review today.',
   ]);
   const { ok, ratio, warnings } = lint(lines.join('\n'));
@@ -117,7 +117,7 @@ test('goalsBlock caps at 8 lines, uses singular forms, cleans untrusted names an
   assert.equal(lines.length, 8);
   assert.equal(lines[0], 'Goal 0: 1 open task. Review 20 days ago.');
   const dirty = goalsBlock({ goals: [{ name: 'Ship *it* — now 🚀 <@U1>', openTasks: 0, noOpenTask: true, overdue: false, daysSinceReview: null }] });
-  assert.equal(dirty[0], 'Ship it - now @U1: no open task. No review yet.');
+  assert.equal(dirty[0], 'Ship it - now @U1: no open task.');
   assert.ok(lint(dirty.join('\n')).ok);
   assert.deepEqual(goalsBlock({ goals: [] }), ['No active goals. Set one with /strategy.']);
   const fine = [1, 2].map((i) => ({ name: `Goal ${i}`, openTasks: 2, noOpenTask: false, overdue: false, daysSinceReview: i === 1 ? null : 13 }));

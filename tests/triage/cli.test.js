@@ -493,3 +493,16 @@ test('drafts targets uses the control config user id and refuses without one', (
   assert.deepEqual(r.json().map((t) => t.id), ['t1']);
   assert.equal(run(['drafts', 'targets'], threads, { TRIAGE_TEST_CONFIG: join(dir, 'none.json') }).code, 2);
 });
+
+test('patterns --in prints A items for 3 similar Done tasks and none for 2', () => {
+  const dir = tmp();
+  const task = (name, doneAt) => ({ name, status: 'Done', doneAt });
+  const three = join(dir, 'three.json');
+  writeFileSync(three, JSON.stringify({ tasks: [task('Send invoice A', '2026-11-01'), task('Send invoice B', '2026-11-03'), task('Send invoice C', '2026-11-05')] }));
+  const r = run(['patterns', '--in', three, '--now', '2026-11-10T08:00:00Z']);
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(r.json().map((p) => [p.n, p.slug]), [['A1', 'auto-send-invoice']]);
+  const two = join(dir, 'two.json');
+  writeFileSync(two, JSON.stringify({ tasks: [task('Send invoice A', '2026-11-01'), task('Send invoice B', '2026-11-03')] }));
+  assert.deepEqual(run(['patterns', '--in', two, '--now', '2026-11-10T08:00:00Z']).json(), []);
+});

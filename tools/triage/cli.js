@@ -1,4 +1,4 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js, plan due|list from lib/plan-cli.js, drafts targets from lib/doer-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled (which also gates plan jobs) and the approvals and drafts user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings, goals, plan and drafts subcommand refuses inside a build job.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js, plan due|list from lib/plan-cli.js, patterns over lib/patterns.js, drafts targets from lib/doer-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled (which also gates plan jobs) and the approvals and drafts user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings, goals, plan and drafts subcommand refuses inside a build job.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,7 +13,8 @@ import { run as runLearnings } from './lib/learnings-cli.js';
 import { run as runGoals } from './lib/goals-cli.js';
 import { run as runPlan } from './lib/plan-cli.js';
 import { run as runDoer } from './lib/doer-cli.js';
-import { DEFAULT_WORLD_DIR } from './lib/snapshot.js';
+import { DEFAULT_WORLD_DIR, readSnapshot } from './lib/snapshot.js';
+import { spot } from './lib/patterns.js';
 import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './lib/cli-io.js';
 
 const USAGE = `usage: cli.js <command> [options]
@@ -42,6 +43,8 @@ const USAGE = `usage: cli.js <command> [options]
   plan due --thread <ts> [--goals <json>] [--tasks <json>] [--specs-dir <path>]
                                                       plan jobs for goals with no next step; 2 a day, shared cap
   plan list [--specs-dir <path>]                      P items from finished plan jobs; Goal fit: none hidden
+  patterns [--in <{tasks, sessions, learnings}.json>]  up to 3 COULD AUTOMATE A items (3+ in 30 days);
+                                                      default: today's snapshot tasks and sessions
   drafts targets [--in <threads.json>]                Slack DMs and threads whose last message is not Will's
 common: --config <config.json>; learnings, goals and plan take no --now (clock only)
 `;
@@ -200,11 +203,19 @@ function runPlanCommand(args) {
   });
 }
 
+function runPatterns(args) {
+  const now = parseNow(args);
+  const input = args.in ? readJson(readInput(args), args.in) : readSnapshot(resolve(process.env.TRIAGE_TEST_WORLD_DIR || DEFAULT_WORLD_DIR), now);
+  if (!input) throw new UsageError('patterns needs --in or a snapshot for today');
+  out(spot({ tasks: input.tasks ?? [], sessions: input.sessions ?? [], learnings: input.learnings ?? [] }, { now }));
+  return 0;
+}
+
 function runDrafts(args) {
   return runDoer(args, { userId: controlConfig().slack?.digest?.userId });
 }
 
-const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals, plan: runPlanCommand, drafts: runDrafts };
+const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals, plan: runPlanCommand, patterns: runPatterns, drafts: runDrafts };
 
 function fail(err) {
   if (err instanceof UsageError) process.stderr.write(`${err.message}\n${USAGE}`);

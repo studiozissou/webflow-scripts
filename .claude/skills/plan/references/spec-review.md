@@ -14,3 +14,11 @@ Used by `/plan` step 7.5 for Small and Medium. One built-in `Plan` agent (read-o
 > Score each issue 0–100 for how confident you are that it is real and matters. Report only issues at 80 or above.
 >
 > Reply in at most 15 lines. First line: PASS, WARN or FAIL. Then one line per issue: `spec section — issue — confidence — fix`. FAIL means at least one issue at 95 or above; WARN means issues at 80 or above, none at 95; PASS means none at 80 or above. No preamble, no praise, no restating the spec.
+>
+> End with these two lines, always, whatever the verdict:
+>
+> `Riskiest assumption: <the one assumption that breaks the plan if it is wrong> — test first: <the cheapest way to check it>`
+>
+> `Goal fit: <the Active goal this plan moves, by its exact name from the goals list in the newest .claude/triage/world/<date>.json>` or `Goal fit: none`. With no snapshot or no Active goal, write `Goal fit: none (no goals yet)`.
+
+Copy both lines into the spec's `## Review` section as they are. The triage planner reads `Goal fit:` from the spec and never offers a plan whose line says `none`.

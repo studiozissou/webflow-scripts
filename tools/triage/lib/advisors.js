@@ -1,40 +1,33 @@
-// Read-only Node advisors for the triage P7 trial: logistics (open tasks due by Sunday of this Amsterdam week, free triage job slots under the shared cap, 5-hour quota from the usage-5h text), relationship (people with no contact for 14+ days from snapshot.contacts or a given list), auditor (denied tools, failed jobs and overridden approvals, only on the first working day of the month); numberLines() labels at most 3 lines per advisor V1…; readScores()/appendScores() keep advisors/scores.jsonl deduped by advisor, line and date; verdict() after 10 working days keeps an advisor with at least 50% thumbs up, drops it below that, and says no data under 4 rated lines.
+// Read-only Node advisors for the triage P7 trial, each silent unless something is notable: logistics (open tasks due within 2 working days, a line only when no triage job slot is free, and the 5-hour quota only at 75% or more), relationship (people with no contact for 14+ days from snapshot.contacts or a given list), auditor (denied tools, failed jobs and overridden approvals, only on the first working day of the month); numberLines() labels at most 3 lines per advisor V1…; readScores()/appendScores() keep advisors/scores.jsonl deduped by advisor, line and date; verdict() after 10 working days keeps an advisor with at least 50% thumbs up, drops it below that, and says no data under 4 rated lines.
 import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CLOSED_STATUSES } from './goals.js';
 import { plain, plural } from './rollup.js';
-import { amsterdamDate, calendarDaysBetween, isWorkingDay, workingDaysBetween } from './workdays.js';
+import { addWorkingDays, amsterdamDate, calendarDaysBetween, isWorkingDay, workingDaysBetween } from './workdays.js';
 
 export const MAX_LINES = 3;
 export const NO_CONTACT_DAYS = 14;
 export const TRIAL_WORKING_DAYS = 10;
 export const MIN_RATED = 4;
+export const DUE_WORKING_DAYS = 2;
+export const QUOTA_FLAG = 75;
 export const KEEP_RATIO = 0.5;
 const DEFAULT_CAP = 3;
 const NAME_WORDS = 6;
 const REACTIONS = new Set(['+1', '-1']);
 
-function weekEnd(today) {
-  const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
-  const ms = Date.parse(`${today}T00:00:00Z`) + ((7 - weekday) % 7) * 86_400_000;
-  return new Date(ms).toISOString().slice(0, 10);
-}
-
 export function logistics(snapshot = {}, { now = new Date(), usage5h = '', cap = DEFAULT_CAP } = {}) {
   const today = amsterdamDate(now);
-  const end = weekEnd(today);
+  const end = addWorkingDays(today, DUE_WORKING_DAYS);
   const due = (snapshot.tasks ?? [])
     .filter((t) => !CLOSED_STATUSES.has(t?.status) && t.due && amsterdamDate(t.due) >= today && amsterdamDate(t.due) <= end)
     .sort((a, b) => amsterdamDate(a.due).localeCompare(amsterdamDate(b.due)));
-  const lines = [
-    due.length === 0
-      ? 'No tasks are due this week.'
-      : `${plural(due.length, 'task')} ${due.length === 1 ? 'is' : 'are'} due this week. First: ${plain(due[0].name, NAME_WORDS)} on ${amsterdamDate(due[0].due)}.`,
-  ];
+  const lines = [];
+  if (due.length > 0) lines.push(`${plural(due.length, 'task')} ${due.length === 1 ? 'is' : 'are'} due in 2 working days. First: ${plain(due[0].name, NAME_WORDS)} on ${amsterdamDate(due[0].due)}.`);
   const live = (snapshot.sessions ?? []).filter((s) => s?.source === 'triage-jobs' && s.state === 'working').length;
-  lines.push(`${Math.max(0, cap - live)} of ${cap} job slots are free.`);
+  if (live >= cap) lines.push(`All ${cap} job slots are in use. New builds wait.`);
   const quota = Number.parseInt(String(usage5h).trim().split(/\s+/)[0], 10);
-  if (Number.isFinite(quota) && quota >= 0 && quota <= 100) lines.push(`Quota use is ${quota}% of the 5-hour limit.`);
+  if (Number.isFinite(quota) && quota >= QUOTA_FLAG && quota <= 100) lines.push(`Quota use is ${quota}% of the 5-hour limit.`);
   return lines.slice(0, MAX_LINES);
 }
 

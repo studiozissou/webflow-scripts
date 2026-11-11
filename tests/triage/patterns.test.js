@@ -50,13 +50,15 @@ test('session titles and learnings count, and a tag shared by 3 tasks is a patte
   assert.match(fromTags[0].key, /admin/i);
 });
 
-test('at most 3 proposals, largest first, and one group per set of items', () => {
+test('at most 3 proposals when asked, largest first, one group per set of items; 1 by default', () => {
   const tasks = [];
   for (const word of ['invoice', 'newsletter', 'backup', 'timesheet']) {
     for (let i = 0; i < 3 + (word === 'backup' ? 2 : 0); i++) tasks.push(done(`Monthly ${word} report ${'abcde'[i]}x`, `2026-11-0${i + 1}`));
   }
-  const r = spot({ tasks }, { now: NOW });
-  assert.equal(r.length, MAX_PROPOSALS);
+  assert.equal(MAX_PROPOSALS, 1);
+  assert.deepEqual(spot({ tasks }, { now: NOW }).map((p) => p.key), ['backup report']);
+  const r = spot({ tasks }, { now: NOW, max: 3 });
+  assert.equal(r.length, 3);
   assert.match(r[0].key, /backup/);
   assert.deepEqual(r.map((p) => p.n), ['A1', 'A2', 'A3']);
 });

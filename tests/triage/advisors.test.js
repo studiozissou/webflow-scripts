@@ -33,13 +33,16 @@ const snapshot = {
   ],
 };
 
-test('logistics lists open deadlines this week, free job slots and quota', () => {
-  const lines = logistics(snapshot, { now: NOW, usage5h: '66 1794413400', cap: 3 });
-  assert.equal(lines.length, 3);
-  assert.match(lines[0], /^2 tasks are due this week\. First: Send Carsa invoice on 2026-11-12\.$/);
-  assert.equal(lines[1], '2 of 3 job slots are free.');
-  assert.equal(lines[2], 'Quota use is 66% of the 5-hour limit.');
-  assert.deepEqual(logistics({ tasks: [] }, { now: NOW, usage5h: 'garbage' }), ['No tasks are due this week.', '3 of 3 job slots are free.']);
+test('logistics speaks only about tasks due in 2 working days, a full job cap and quota at 75% or more', () => {
+  assert.deepEqual(logistics(snapshot, { now: NOW, usage5h: '86 1794413400', cap: 3 }), [
+    '2 tasks are due in 2 working days. First: Send Carsa invoice on 2026-11-12.',
+    'Quota use is 86% of the 5-hour limit.',
+  ]);
+  assert.deepEqual(logistics(snapshot, { now: NOW, usage5h: '66 1', cap: 1 }), [
+    '2 tasks are due in 2 working days. First: Send Carsa invoice on 2026-11-12.',
+    'All 1 job slots are in use. New builds wait.',
+  ]);
+  assert.deepEqual(logistics({ tasks: [] }, { now: NOW, usage5h: 'garbage' }), []);
 });
 
 test('relationship names people with no contact for 14 days or more, oldest first, max 3', () => {
@@ -63,7 +66,7 @@ test('numberLines gives V labels, max 3 per advisor, and every line passes lint'
   assert.deepEqual(v.map((l) => l.n), ['V1', 'V2', 'V3', 'V4']);
   assert.equal(v[3].advisor, 'relationship');
   assert.equal(v[3].line, 'V4. No contact with Cleo for 41 days.');
-  const real = numberLines({ logistics: logistics(snapshot, { now: NOW, usage5h: '66 1' }), relationship: relationship(snapshot, { now: NOW }) });
+  const real = numberLines({ logistics: logistics(snapshot, { now: NOW, usage5h: '86 1', cap: 2 }), relationship: relationship(snapshot, { now: NOW }) });
   const { ok, warnings } = lint(real.map((l) => l.line).join('\n'));
   assert.ok(ok, JSON.stringify(warnings));
 });

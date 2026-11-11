@@ -1,4 +1,4 @@
-// Goal rules for triage, pure: health() per Active goal (open task count from either side of the Goal/Tasks relation, no open task, target date before today in Amsterdam, days since last review) plus the top 5 open tasks with no goal; unlinked() picks the D18 goal-fit questions (open, no goal, not due within 2 working days, not Blocked or Waiting, not kept, priority then age, max 3, none without an Active goal); goalsBlock() writes the Monday GOALS lines in short STE sentences.
+// Goal rules for triage, pure: health() per Active goal (open task count from either side of the Goal/Tasks relation, no open task, target date before today in Amsterdam, days since last review) plus the top 5 open tasks with no goal; unlinked() picks the D18 goal-fit questions (open, no goal, not due within 2 working days, not Blocked or Waiting, not kept, priority then age, max 3, none without an Active goal); goalsBlock() writes the Monday GOALS lines in short STE sentences for flagged goals only (no open task, overdue, or last review 14+ days ago; never reviewed is not a flag), or one all-on-track line.
 import { bareId } from '../../notion/client.js';
 import { compareNullable, priorityRank } from './compare.js';
 import { plain, plural } from './rollup.js';
@@ -11,6 +11,7 @@ export const NEAR_DUE_WORKING_DAYS = 2;
 export const MAX_QUESTIONS = 3;
 export const MAX_NO_GOAL = 5;
 export const MAX_BLOCK_LINES = 8;
+export const REVIEW_FLAG_DAYS = 14;
 const NAME_WORDS = 8;
 
 const isOpen = (task) => !CLOSED_STATUSES.has(task?.status);
@@ -84,12 +85,11 @@ function goalLine(goal) {
   return `${plain(goal.name, NAME_WORDS)}: ${tasks}${overdue} ${reviewSentence(goal.daysSinceReview)}`;
 }
 
-const flagged = (goal) => goal.noOpenTask || goal.overdue;
+const flagged = (goal) => goal.noOpenTask || goal.overdue || (goal.daysSinceReview ?? 0) >= REVIEW_FLAG_DAYS;
 
 export function goalsBlock({ goals = [] } = {}) {
   if (goals.length === 0) return ['No active goals. Set one with /strategy.'];
-  return [...goals]
-    .sort((a, b) => Number(flagged(b)) - Number(flagged(a)))
-    .slice(0, MAX_BLOCK_LINES)
-    .map(goalLine);
+  const shown = goals.filter(flagged);
+  if (shown.length === 0) return [`All ${plural(goals.length, 'goal')} are on track.`];
+  return shown.slice(0, MAX_BLOCK_LINES).map(goalLine);
 }

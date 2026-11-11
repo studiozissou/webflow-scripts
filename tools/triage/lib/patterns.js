@@ -1,10 +1,10 @@
-// Automation spotting for triage P6, pure: spot() counts recurring work in the last 30 days from Done tasks (pairs of consecutive name words and Tags, with Source sender when given), session titles and learnings lines, keeps every word pair, tag or sender shared by at least 3 items (pairs with the same items merge into one key; single words are too common to count), drops a group whose items a larger chosen group already covers, and returns at most 3 A items for the Monday COULD AUTOMATE block, each with a one-line STE proposal (template for one sender, skill for session or learnings work, scheduled routine otherwise).
+// Automation spotting for triage P6, pure: spot() counts recurring work in the last 30 days from Done tasks (pairs of consecutive name words and Tags, with Source sender when given), session titles and learnings lines, keeps every word pair, tag or sender shared by at least 3 items (pairs with the same items merge into one key; single words are too common to count), drops a group whose items a larger chosen group already covers, and returns the strongest A item (MAX_PROPOSALS, 1) for the Monday COULD AUTOMATE block, each with a one-line STE proposal (template for one sender, skill for session or learnings work, scheduled routine otherwise).
 import { sanitize } from './sessions.js';
 import { DAY_MS, toMs } from './workdays.js';
 
 export const THRESHOLD = 3;
 export const WINDOW_DAYS = 30;
-export const MAX_PROPOSALS = 3;
+export const MAX_PROPOSALS = 1;
 const MIN_WORD = 4;
 const STOPWORDS = new Set([
   'the', 'and', 'for', 'with', 'from', 'into', 'onto', 'this', 'that', 'then', 'than', 'have', 'need', 'make', 'some',

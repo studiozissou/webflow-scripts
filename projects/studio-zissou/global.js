@@ -1,4 +1,4 @@
-// Studio Zissou site-wide behaviour: secures new-tab links, fills [data-sz="year"], and keeps session-only visit attribution in sessionStorage for hidden form fields.
+// Team Zissou site-wide behaviour: secures new-tab links, fills [data-sz="year"], and keeps session-only visit attribution in sessionStorage for hidden form fields.
 (() => {
   'use strict';
 
@@ -8,7 +8,7 @@
 
   const STORE_KEY = 'sz_attribution';
   const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
-  const INTERNAL_DOMAINS = ['studiozissou.com', 'studiozissou.io', 'webflow.io'];
+  const INTERNAL_DOMAINS = ['teamzissou.io', 'studiozissou.com', 'studiozissou.io', 'webflow.io'];
   const FALLBACK = 'direct';
 
   const stripWww = (host) => host.replace(/^www\./, '');

@@ -84,8 +84,9 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
   `w-inline-block` / `w-richtext` — Webflow adds those itself.
 - `update_page_settings` accepts `jsonLdSchema` (typed as a **string**, not an
   object), returns a normal success-shaped page object, and **writes nothing**.
-  `lastUpdated` does not move. `bulk_update_pages_schema_markup` at least fails
-  honestly with `403 insufficient_permissions`.
+  `lastUpdated` does not move. Use `bulk_update_pages_schema_markup` instead: it
+  wrote and read back a full Organization/WebSite/FAQPage graph on Team Zissou
+  (11 Nov 2026), though it returned `403 insufficient_permissions` on an earlier site.
 - **Always re-read after a write.** `query_pages_schema_markup` /
   `list_collection_items` are the only proof. Never trust the return value.
 
@@ -103,6 +104,8 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
 - Passing CSS for a class that already exists creates a duplicate `<name>-1` class. Send classes by name only; style existing classes separately.
 - `var()` inside a gradient is frozen to its current value. Set gradients that use variables in the Designer.
 - An empty boolean `open` attribute is dropped. Write `open="open"`.
+- `<b>` and `<i>` come in as custom `DOM` elements; `<strong>` and `<em>` come in as native Strong and Emphasized. Use the latter.
+- Links come in with both a link setting and a raw `href` attribute. Remove the attribute after checking the setting.
 - Tags with no native Webflow element (`<details>`, `<summary>`, anything that comes in
   as type `DOM`) get **every** HTML attribute copied into Settings › Attributes,
   `class` included, on top of the real class (Rolfing FAQ `faq_item`/`faq_summary`,

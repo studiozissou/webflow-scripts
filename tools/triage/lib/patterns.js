@@ -1,4 +1,4 @@
-// Automation spotting for triage P6, pure: spot() counts recurring work in the last 30 days from Done tasks (name tokens and Tags, with Source sender when given), session titles and learnings lines, keeps every token, tag or sender shared by at least 3 items (tokens with the same items merge into one key), drops a group whose items a larger chosen group already covers, and returns at most 3 A items for the Monday COULD AUTOMATE block, each with a one-line STE proposal (template for one sender, skill for session or learnings work, scheduled routine otherwise).
+// Automation spotting for triage P6, pure: spot() counts recurring work in the last 30 days from Done tasks (pairs of consecutive name words and Tags, with Source sender when given), session titles and learnings lines, keeps every word pair, tag or sender shared by at least 3 items (pairs with the same items merge into one key; single words are too common to count), drops a group whose items a larger chosen group already covers, and returns at most 3 A items for the Monday COULD AUTOMATE block, each with a one-line STE proposal (template for one sender, skill for session or learnings work, scheduled routine otherwise).
 import { sanitize } from './sessions.js';
 import { DAY_MS, toMs } from './workdays.js';
 
@@ -17,6 +17,11 @@ export function tokens(text) {
   return [...new Set(words.filter((w) => w.length >= MIN_WORD && !STOPWORDS.has(w)))];
 }
 
+function pairs(text) {
+  const t = tokens(text);
+  return [...new Set(t.slice(1).map((w, i) => `${t[i]} ${w}`))];
+}
+
 function within(at, nowMs) {
   const ms = toMs(at);
   return Number.isFinite(ms) && ms <= nowMs && nowMs - ms <= WINDOW_DAYS * DAY_MS;
@@ -26,10 +31,10 @@ function itemsOf({ tasks = [], sessions = [], learnings = [] }, nowMs) {
   const items = [];
   for (const t of tasks) {
     if (t?.status !== 'Done' || !within(t.doneAt ?? t.lastEdited, nowMs)) continue;
-    items.push({ source: 'task', words: tokens(t.name), tags: (t.tags ?? []).map(String), sender: t.sender ? String(t.sender).toLowerCase() : null });
+    items.push({ source: 'task', words: pairs(t.name), tags: (t.tags ?? []).map(String), sender: t.sender ? String(t.sender).toLowerCase() : null });
   }
-  for (const s of sessions) if (within(s?.lastActivity, nowMs)) items.push({ source: 'session', words: tokens(s.title), tags: [], sender: null });
-  for (const l of learnings) if (within(l?.date, nowMs)) items.push({ source: 'learning', words: tokens(l.text), tags: [], sender: null });
+  for (const s of sessions) if (within(s?.lastActivity, nowMs)) items.push({ source: 'session', words: pairs(s.title), tags: [], sender: null });
+  for (const l of learnings) if (within(l?.date, nowMs)) items.push({ source: 'learning', words: pairs(l.text), tags: [], sender: null });
   return items;
 }
 

@@ -1,4 +1,4 @@
-// Guards P6 automation spotting (patterns.js): 3 similar items in 30 days make one proposal, 2 make none, old items and stopwords do not count, at most 3 A items, and proposal lines pass ste-lint. Fixtures are fake.
+// Guards P6 automation spotting (patterns.js): 3 items sharing a word pair in 30 days make one proposal, 2 make none, old items and stopwords do not count, at most 3 A items, and proposal lines pass ste-lint. Fixtures are fake.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spot, tokens, MAX_PROPOSALS, THRESHOLD } from '../../tools/triage/lib/patterns.js';
@@ -25,6 +25,11 @@ test('3 similar Done tasks in 30 days produce one proposal; 2 produce none', () 
   assert.equal(THRESHOLD, 3);
 });
 
+test('one shared word alone is not a pattern', () => {
+  const sessions = ['Client deck review', 'Fix client nav', 'Client invoice chase'].map((title, i) => ({ title, lastActivity: `2026-11-0${i + 2}T10:00:00Z` }));
+  assert.deepEqual(spot({ sessions }, { now: NOW }), []);
+});
+
 test('open tasks and items older than 30 days do not count', () => {
   const tasks = [done('Send invoice A', '2026-10-01'), done('Send invoice B', '2026-11-05'), { name: 'Send invoice C', status: 'In progress', doneAt: '2026-11-10' }, done('Send invoice D', '2026-11-12')];
   assert.deepEqual(spot({ tasks }, { now: NOW }), []);
@@ -48,7 +53,7 @@ test('session titles and learnings count, and a tag shared by 3 tasks is a patte
 test('at most 3 proposals, largest first, and one group per set of items', () => {
   const tasks = [];
   for (const word of ['invoice', 'newsletter', 'backup', 'timesheet']) {
-    for (let i = 0; i < 3 + (word === 'backup' ? 2 : 0); i++) tasks.push(done(`Monthly ${word} run ${'abcde'[i]}x`, `2026-11-0${i + 1}`));
+    for (let i = 0; i < 3 + (word === 'backup' ? 2 : 0); i++) tasks.push(done(`Monthly ${word} report ${'abcde'[i]}x`, `2026-11-0${i + 1}`));
   }
   const r = spot({ tasks }, { now: NOW });
   assert.equal(r.length, MAX_PROPOSALS);

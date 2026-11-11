@@ -14,6 +14,7 @@ export const QUOTA_FLAG = 75;
 export const KEEP_RATIO = 0.5;
 const DEFAULT_CAP = 3;
 const NAME_WORDS = 6;
+const dayLabel = (date) => new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).replace(',', '');
 const REACTIONS = new Set(['+1', '-1']);
 
 export function logistics(snapshot = {}, { now = new Date(), usage5h = '', cap = DEFAULT_CAP } = {}) {
@@ -23,7 +24,12 @@ export function logistics(snapshot = {}, { now = new Date(), usage5h = '', cap =
     .filter((t) => !CLOSED_STATUSES.has(t?.status) && t.due && amsterdamDate(t.due) >= today && amsterdamDate(t.due) <= end)
     .sort((a, b) => amsterdamDate(a.due).localeCompare(amsterdamDate(b.due)));
   const lines = [];
-  if (due.length > 0) lines.push(`${plural(due.length, 'task')} ${due.length === 1 ? 'is' : 'are'} due in 2 working days. First: ${plain(due[0].name, NAME_WORDS)} on ${amsterdamDate(due[0].due)}.`);
+  if (due.length > 0) {
+    const first = amsterdamDate(due[0].due);
+    const when = first === today ? 'today' : dayLabel(first);
+    const name = plain(due[0].name, NAME_WORDS);
+    lines.push(due.length === 1 ? `${name} is due ${when}.` : `${due.length} tasks are due by ${dayLabel(end)}. First: ${name}, due ${when}.`);
+  }
   const live = (snapshot.sessions ?? []).filter((s) => s?.source === 'triage-jobs' && s.state === 'working').length;
   if (live >= cap) lines.push(`All ${cap} job slots are in use. New builds wait.`);
   const quota = Number.parseInt(String(usage5h).trim().split(/\s+/)[0], 10);

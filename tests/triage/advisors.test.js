@@ -35,11 +35,12 @@ const snapshot = {
 
 test('logistics speaks only about tasks due in 2 working days, a full job cap and quota at 75% or more', () => {
   assert.deepEqual(logistics(snapshot, { now: NOW, usage5h: '86 1794413400', cap: 3 }), [
-    '2 tasks are due in 2 working days. First: Send Carsa invoice on 2026-11-12.',
+    '2 tasks are due by Fri 13 Nov. First: Send Carsa invoice, due Thu 12 Nov.',
     'Quota use is 86% of the 5-hour limit.',
   ]);
+  assert.deepEqual(logistics({ tasks: [{ name: 'Send card for Emma', status: 'To do', due: '2026-11-11' }] }, { now: NOW }), ['Send card for Emma is due today.']);
   assert.deepEqual(logistics(snapshot, { now: NOW, usage5h: '66 1', cap: 1 }), [
-    '2 tasks are due in 2 working days. First: Send Carsa invoice on 2026-11-12.',
+    '2 tasks are due by Fri 13 Nov. First: Send Carsa invoice, due Thu 12 Nov.',
     'All 1 job slots are in use. New builds wait.',
   ]);
   assert.deepEqual(logistics({ tasks: [] }, { now: NOW, usage5h: 'garbage' }), []);

@@ -1,4 +1,4 @@
-// Acceptance tests for rolfing-content-pages: the eight /rolfing/ landing pages (U4 and U12 folded into U14 and U1) on staging in EN and NL, keyword conformance, page-own FAQs and related cards, wording rules, and no FAQ leak onto other pages; skipped until ROLFING_CONTENT=1.
+// Acceptance tests for rolfing-content-pages: the nine landing pages (U4 and U12 folded into U14 and U1, U17 back pain added 11 Nov) on staging in EN and NL, keyword conformance, page-own FAQs and related cards, wording rules, Janco's 11 Nov corrections, and no FAQ leak onto other pages; skipped until ROLFING_CONTENT=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -6,6 +6,7 @@ dotenv.config({ path: '.env.test' });
 
 const BASE = process.env.ROLFING_URL || 'https://rolfing-amsterdam.webflow.io';
 const ONLY = process.env.ROLFING_PAGES ? process.env.ROLFING_PAGES.split(',') : null;
+const FOLDER = process.env.ROLFING_FOLDER || 'rolfing';
 
 const ALL_PAGES = [
   {
@@ -14,9 +15,18 @@ const ALL_PAGES = [
     nl: 'knie-heup-enkelklachten',
     head: /knie/i,
     terms: [/kniepijn/i, /heuppijn/i, /enkelpijn/i, /gewrichtspijn/i],
-    links: ['U5'],
+    links: ['U5', 'U17'],
+    noCourses: true,
   },
-  { id: 'U1', en: 'neck-pain', nl: 'nekklachten', head: /nek/i, terms: [/nekpijn/i] },
+  {
+    id: 'U1',
+    en: 'neck-pain',
+    nl: 'nekklachten',
+    head: /nek/i,
+    terms: [/nekpijn/i],
+    links: ['U14', 'U17'],
+    noCourses: true,
+  },
   {
     id: 'U16',
     en: 'holistic-approach',
@@ -29,7 +39,12 @@ const ALL_PAGES = [
     en: 'complementary-care',
     nl: 'complementaire-zorg',
     head: /complementair/i,
-    terms: [/complementaire zorg/i, /alternatieve geneeswijzen/i, /vergoed/i],
+    terms: [/complementaire zorg/i, /alternatieve geneeswijze/i],
+    noCourses: true,
+    checks: {
+      en: { not: [/reimburs/i, /independer/i] },
+      nl: { not: [/vergoed/i, /independer/i] },
+    },
   },
   {
     id: 'U2',
@@ -37,6 +52,7 @@ const ALL_PAGES = [
     nl: 'burn-out-stress',
     head: /burn-?out/i,
     terms: [/burn-?out herstel|herstel(len)? (na|van) (een )?burn-?out/i, /stress/i],
+    noCourses: true,
   },
   {
     id: 'U5',
@@ -52,6 +68,11 @@ const ALL_PAGES = [
     nl: 'herstel-na-trauma',
     head: /trauma/i,
     terms: [/lichaamsgerichte traumatherapie/i],
+    noCourses: true,
+    checks: {
+      en: { has: [/what you need/i], not: [/do not treat trauma/i, /don't treat trauma/i] },
+      nl: { has: [/wat je nodig hebt/i], not: [/behandel geen trauma/i] },
+    },
   },
   {
     id: 'U6',
@@ -59,6 +80,20 @@ const ALL_PAGES = [
     nl: 'rolfing-en-fascia',
     head: /fascia/i,
     terms: [/fasciatherapie/i, /fascia release/i, /massage/i],
+    noCourses: true,
+    checks: {
+      en: { has: [/connects and separates/i, /sensory organ/i] },
+      nl: { has: [/verbindt en van elkaar scheidt/i, /zintuigorgaan/i] },
+    },
+  },
+  {
+    id: 'U17',
+    en: 'back-pain',
+    nl: 'rugklachten',
+    head: /rug/i,
+    terms: [/rugpijn door stress/i, /stijve rug/i],
+    links: ['U1', 'U14'],
+    noCourses: true,
   },
 ];
 
@@ -90,6 +125,8 @@ const BANNED = {
     /lichaamstherapie/i,
   ],
 };
+const COURSES =
+  /workshop|congress|congres|Böckler|Hodges|Burch|Förg|RBCZ|Con Amore/i;
 const TREATMENT_HEAD = { en: /\b(treatment|therapy)\b/i, nl: /behandeling|therapie/i };
 const GENERIC_FAQS = [
   'How many sessions are recommended?',
@@ -104,7 +141,7 @@ test.skip(
   'Set ROLFING_CONTENT=1 once pages are on staging; ROLFING_PAGES=U14 limits the run to the pattern page',
 );
 
-const urlFor = (p, lang) => `/${lang}/rolfing/${p[lang]}`;
+const urlFor = (p, lang) => `/${lang}/${FOLDER}/${p[lang]}`;
 const mainText = (page) => page.locator('main, body').first().innerText();
 
 test.describe('rolfing-content-pages', () => {
@@ -188,7 +225,7 @@ test.describe('rolfing-content-pages', () => {
           );
           expect(hrefs.length).toBeGreaterThanOrEqual(2);
           expect(hrefs.length).toBeLessThanOrEqual(3);
-          for (const href of hrefs) expect(href).toMatch(new RegExp(`^/${lang}/rolfing/`));
+          for (const href of hrefs) expect(href).toMatch(new RegExp(`^/${lang}/${FOLDER}/`));
           expect(hrefs).not.toContain(urlFor(p, lang));
           for (const id of p.links ?? []) {
             const sibling = ALL_PAGES.find((s) => s.id === id);
@@ -207,6 +244,35 @@ test.describe('rolfing-content-pages', () => {
           await page.waitForTimeout(1000);
           expect(errors).toEqual([]);
         });
+
+        if (p.noCourses) {
+          test('names no course and links to the education history on About Janco', async ({
+            page,
+          }) => {
+            const text = await page.locator('main').innerText();
+            expect(text).not.toMatch(COURSES);
+            const blocks = ['.section_experience', '.section_discover', '.section_rolfing-can-help-with'];
+            const link = blocks.map((b) => `${b} a[href$="/${lang}/about-janco"]`).join(', ');
+            await expect(page.locator(link).first()).toBeAttached();
+          });
+        }
+
+        if (p.noCourses) {
+          test('shows an updated date on or after 11 Nov 2026', async ({ page }) => {
+            const shown = await page.locator('.section_hero-secondary .content_updated').innerText();
+            const date = new Date(shown.match(/[A-Z][a-z]+ \d{1,2}, \d{4}/)?.[0] ?? '');
+            expect(Number.isNaN(date.getTime())).toBe(false);
+            expect(date >= new Date('2026-11-11')).toBe(true);
+          });
+        }
+
+        if (p.checks?.[lang]) {
+          test("carries Janco's 11 Nov corrections", async ({ page }) => {
+            const text = await mainText(page);
+            for (const rule of p.checks[lang].has ?? []) expect(text).toMatch(rule);
+            for (const rule of p.checks[lang].not ?? []) expect(text).not.toMatch(rule);
+          });
+        }
 
         if (lang === 'nl') {
           test('Dutch page conforms to its keyword map', async ({ page }) => {
@@ -231,7 +297,7 @@ test.describe('rolfing-content-pages', () => {
     }
 
     test('explainers stay out of the landing layout', async ({ page }) => {
-      await page.goto(`${BASE}/en/rolfing/procedure`, { waitUntil: 'networkidle', timeout: 45000 });
+      await page.goto(`${BASE}/en/${FOLDER}/procedure`, { waitUntil: 'networkidle', timeout: 45000 });
       await expect(page.locator('.hero-secondary_intro')).toHaveCount(0);
       await expect(page.locator('.section_usp')).toBeHidden();
     });

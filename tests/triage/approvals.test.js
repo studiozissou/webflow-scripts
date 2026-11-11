@@ -323,3 +323,74 @@ test('only a saved drop can be approved: a pending entry with another verb never
   const state = { ...Q_DIGEST, goalFitState: { Q1: { ...pendingQ1.Q1, verb: 'keep' } } };
   assert.deepEqual(parse([reply('1762844900.000001', 'ok changes')], state).approvedDrops, []);
 });
+
+const PA_DIGEST = {
+  ...DIGEST,
+  items: [
+    ...DIGEST.items,
+    { n: 'P1', kind: 'plan', pageId: 'g-1', slug: 'goal-ship' },
+    { n: 'P2', kind: 'plan', pageId: 'g-2', slug: 'goal-grow' },
+    { n: 'A1', kind: 'automation', pageId: 'auto-invoice-chase', slug: 'auto-invoice-chase' },
+    { n: 'G1', kind: 'goal-link', taskId: 't-1', goalId: 'g-1' },
+    { n: 'S1', kind: 'session' },
+    { n: 'V1', kind: 'advisor' },
+  ],
+};
+const parsePa = (replies, digest = PA_DIGEST, userId = USER) => parseReplies(digest, replies, { userId });
+
+test('go P1 approves a plan for a build and skip P2 skips one; plans never land in approved builds', () => {
+  const r = parsePa([reply('1762844500.000001', 'go P1'), reply('1762844500.000002', 'skip P2')]);
+  assert.deepEqual(r.approvedPlans, [{ n: 'P1', pageId: 'g-1', slug: 'goal-ship' }]);
+  assert.deepEqual(r.skippedPlans, [{ n: 'P2', pageId: 'g-2', slug: 'goal-grow' }]);
+  assert.deepEqual(r.approved, []);
+  assert.deepEqual(r.unknown, []);
+});
+
+test('go all approves every B item but no plan or automation', () => {
+  const r = parsePa([reply('1762844500.000001', 'go all')]);
+  assert.deepEqual(r.approved.map((a) => a.n), ['B1', 'B2', 'B3']);
+  assert.deepEqual(r.approvedPlans, []);
+  assert.deepEqual(r.approvedAutomations, []);
+});
+
+test('go A1 approves an automation proposal for a plan job', () => {
+  const r = parsePa([reply('1762844500.000001', 'go A1 B2')]);
+  assert.deepEqual(r.approvedAutomations, [{ n: 'A1', pageId: 'auto-invoice-chase', slug: 'auto-invoice-chase' }]);
+  assert.deepEqual(r.approved, [{ n: 'B2', pageId: 'p-b2' }]);
+});
+
+test('go P1 from another user is ignored', () => {
+  const r = parsePa([reply('1762844500.000001', 'go P1', { user: 'U0OTHER' })]);
+  assert.deepEqual(r.approvedPlans, []);
+  assert.deepEqual(r.processedTs, []);
+});
+
+test('go S1, go V1 and go G1 are not build items and reject the whole reply', () => {
+  for (const text of ['go S1', 'go V1', 'go G1', 'go P1 S1']) {
+    const r = parsePa([reply('1762844500.000001', text)]);
+    assert.deepEqual(r.approvedPlans, [], text);
+    assert.ok(r.unknown.some((u) => u.reason === 'not a build item'), text);
+  }
+});
+
+test('G goal-link proposals apply only with ok changes', () => {
+  assert.deepEqual(parsePa([]).goalLinks, []);
+  const r = parsePa([reply('1762844500.000001', 'ok changes')]);
+  assert.equal(r.applyProposals, true);
+  assert.deepEqual(r.goalLinks, [{ label: 'G1', taskId: 't-1', goalId: 'g-1' }]);
+});
+
+test('ok advisors applies the verdict only when the digest carries one, and takes no arguments', () => {
+  const none = parsePa([reply('1762844500.000001', 'ok advisors')]);
+  assert.equal(none.applyAdvisors, false);
+  assert.ok(none.unknown.some((u) => u.reason === 'no advisor verdict in this digest'));
+  const verdicts = [{ advisor: 'logistics', verdict: 'keep' }];
+  const digest = { ...PA_DIGEST, items: [...PA_DIGEST.items, { n: 'ADV', kind: 'advisor-verdict', verdicts }] };
+  const ok = parsePa([reply('1762844500.000001', 'OK advisors')], digest);
+  assert.equal(ok.applyAdvisors, true);
+  assert.deepEqual(ok.advisorVerdict, verdicts);
+  assert.equal(ok.applyProposals, false);
+  const extra = parsePa([reply('1762844500.000001', 'ok advisors now')], digest);
+  assert.equal(extra.applyAdvisors, false);
+  assert.ok(extra.unknown.some((u) => u.reason === 'ok advisors takes no arguments'));
+});

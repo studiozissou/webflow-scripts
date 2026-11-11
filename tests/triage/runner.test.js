@@ -475,6 +475,34 @@ test('job script plans, builds and tests on job/<slug> without pushing', () => {
   assert.match(log, /FAKE CLAUDE OUTPUT/);
 });
 
+test('a plan job runs /plan only on job/<slug>-plan, never builds, and finishes planned', () => {
+  const fake = fakeClaude();
+  const fx = jobRepo();
+  writeMeta(fx.jobDir, { kind: 'plan' });
+  const r = runJob(fx, fake);
+  assert.equal(r.status, 0, read(join(fx.jobDir, 'job.log')));
+  const calls = fake.calls();
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].args[1], /^\/plan --auto /);
+  assert.match(calls[0].cwd, /\.claude\/worktrees\/job-faq-schema-plan$/);
+  const res = result(fx.jobDir);
+  assert.equal(res.status, 'planned');
+  assert.equal(res.branch, 'job/faq-schema-plan');
+  assert.equal(res.specPath, '.claude/specs/faq-schema.md');
+  assert.equal(existsSync(join(fx.repo, 'built.txt')), false);
+  assert.equal(git(fx.repo, 'rev-list', '--count', 'origin/main..job/faq-schema-plan').trim(), '0');
+});
+
+test('job script rejects an unknown kind in meta.json before any claude call', () => {
+  const fake = fakeClaude();
+  const fx = jobRepo();
+  writeMeta(fx.jobDir, { kind: 'deploy' });
+  const r = runJob(fx, fake);
+  assert.notEqual(r.status, 0);
+  assert.deepEqual(fake.calls(), []);
+  assert.match(result(fx.jobDir).summary, /kind/);
+});
+
 test('job script reports failed with counts when the area tests fail', () => {
   const fake = fakeClaude();
   const fx = jobRepo({ scripts: { 'test:acme': "node -e \"console.log('# tests 2');console.log('# pass 1');process.exit(1)\"" } });

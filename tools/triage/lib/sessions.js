@@ -1,4 +1,4 @@
-// Read-only session rollup for triage: one collector per source (local jobs + triage build jobs, transcript tails, Desktop Code sessions, git worktrees, gh PRs, spec frontmatter, and remote/cloud sessions handed in by the model), each returning { status: ok|unavailable|error, items, error? } and never throwing on unknown or missing fields; sanitize() for untrusted text; merge() that joins records by session id, short id, branch and spec slug and links Notion tasks; and classify() into the five rollup classes with precedence waiting > inFlight > built > planned > stale (a failed build job from the last 7 days waits on the user; only a passed one counts as built). Branch and slug matches are scoped by repo; a spec joins the most recent matching group.
+// Read-only session rollup for triage: one collector per source (local jobs + triage build jobs, transcript tails, Desktop Code sessions, git worktrees, gh PRs, spec frontmatter, and remote/cloud sessions handed in by the model), each returning { status: ok|unavailable|error, items, error? } and never throwing on unknown or missing fields; sanitize() for untrusted text; merge() that joins records by session id, short id, branch and spec slug and links Notion tasks; and classify() into the five rollup classes with precedence waiting > inFlight > built > planned > stale (a failed build job from the last 7 days waits on the user; only a passed one counts as built; a finished plan job is a plan that waits on the user). Branch and slug matches are scoped by repo; a spec joins the most recent matching group.
 import { execFileSync } from 'node:child_process';
 import { closeSync, existsSync, fstatSync, lstatSync, openSync, readdirSync, readSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -166,10 +166,11 @@ function triageJob(job, repos) {
     // Not finished, or finished without a result file.
   }
   const result = job.finished ? { status: str(job.result?.status) ?? 'failed', at } : null;
-  const state = job.alive ? 'working' : result ? (result.status === 'passed' ? 'done' : 'failed') : 'queued';
+  const planned = result?.status === 'planned';
+  const state = job.alive ? 'working' : result ? (result.status === 'passed' || planned ? 'done' : 'failed') : 'queued';
   return {
     id: `triage-job:${job.pageId}`,
-    kind: 'job',
+    kind: planned ? 'plan' : 'job',
     source: 'triage-jobs',
     title: sanitize(str(meta.task) ?? str(meta.slug) ?? job.pageId),
     cwd: null,
@@ -177,7 +178,7 @@ function triageJob(job, repos) {
     repo: repoOf(REPO_ROOT.replace(/\/+$/, ''), repos),
     state,
     lastActivity: latest(at, meta.startedAt),
-    needsUser: false,
+    needsUser: planned,
     taskPageId: job.pageId,
     specSlug: str(meta.slug),
     result,
@@ -599,7 +600,7 @@ function recentResult(item, nowMs) {
   return Boolean(item.result) && nowMs - at < BUILT_RESULT_DAYS * DAY_MS;
 }
 
-export const failedBuild = (item) => Boolean(item.result) && item.result.status !== 'passed';
+export const failedBuild = (item) => Boolean(item.result) && item.result.status !== 'passed' && item.result.status !== 'planned';
 
 function classOf(item, nowMs) {
   const ageMs = item.lastActivity ? nowMs - Date.parse(item.lastActivity) : Infinity;

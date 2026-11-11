@@ -1,8 +1,13 @@
-// Turns Slack thread replies into approved and skipped build items and goal-fit decisions, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes on B items and link/keep/drop on goal-fit Q items, never a reply ts twice (processedTs comes back de-duplicated); a reply with any unknown token is rejected whole and reported, never guessed. link/keep/drop count as commands only when a Q label follows the verb; otherwise the reply is chatter and ignored. Each Q item is decided once; drop only proposes Status Cancelled and is approved by a later ok changes. goalFitState ({ [label]: { verb, taskId, ts, status: done|pending|approved } }) carries both across runs.
+// Turns Slack thread replies into approved and skipped build (B), plan (P) and automation (A) items, goal-fit decisions and the advisor verdict, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip on B, P and A items (a bare number means B; go all means every B item only), ok changes (which also applies the G goal-link proposals), ok advisors (only when the digest carries an advisor verdict) and link/keep/drop on goal-fit Q items; S session and V advisor lines are display only, never a reply ts twice (processedTs comes back de-duplicated); a reply with any unknown token is rejected whole and reported, never guessed. link/keep/drop count as commands only when a Q label follows the verb; otherwise the reply is chatter and ignored. Each Q item is decided once; drop only proposes Status Cancelled and is approved by a later ok changes. goalFitState ({ [label]: { verb, taskId, ts, status: done|pending|approved } }) carries both across runs.
 
-const COMMAND = /^(go|skip|link|keep|drop|ok\s+changes)\b(.*)$/is;
+const COMMAND = /^(go|skip|link|keep|drop|ok\s+changes|ok\s+advisors)\b(.*)$/is;
 const OK_CHANGES_TAIL = /^\s*[.!]?$/;
 export const GOAL_FIT_KIND = 'goal-fit';
+export const PLAN_KIND = 'plan';
+export const AUTOMATION_KIND = 'automation';
+export const GOAL_LINK_KIND = 'goal-link';
+export const ADVISOR_VERDICT_KIND = 'advisor-verdict';
+const GO_KINDS = new Set(['build', PLAN_KIND, AUTOMATION_KIND]);
 const GOAL_FIT_VERBS = new Set(['link', 'keep', 'drop']);
 const Q_LABEL_FIRST = /^\s*Q\d+\b/i;
 
@@ -18,22 +23,24 @@ export function compareTs(a, b) {
 
 const isTs = (v) => typeof v === 'string' && /^\d+(\.\d+)?$/.test(v);
 
-function resolve(token, builds) {
-  const exact = builds.find((item) => item.label === token);
+function resolve(token, builds, targetsOf) {
+  const exact = targetsOf.find((item) => item.label === token);
   if (exact) return exact;
   if (/^\d+$/.test(token)) return builds.find((item) => item.label === `B${token}`) ?? null;
   return null;
 }
 
-// Build targets for go/skip, or the problems that reject the reply.
+// Build, plan and automation targets for go/skip, or the problems that reject the reply.
 function buildTargets(ts, tokens, items, builds) {
   const targets = [];
   const problems = [];
+  const goable = items.filter((i) => GO_KINDS.has(i.kind));
   for (const token of tokens) {
-    const item = resolve(token, builds);
+    const item = resolve(token, builds, goable);
+    const other = items.some((i) => i.label === token);
     if (item) targets.push(item);
     else if (token === 'ALL') problems.push({ ts, token, reason: 'all must be the only item' });
-    else if (items.some((i) => i.label === token)) problems.push({ ts, token, reason: 'not a build item' });
+    else if (other) problems.push({ ts, token, reason: 'not a build item' });
     else problems.push({ ts, token, reason: 'no such item' });
   }
   return { targets, problems };
@@ -88,6 +95,8 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
   const goalFitState = savedGoalFitState(digestState, goalFits);
   const goalFit = { link: [], keep: [], drop: [] };
   const approvedDrops = [];
+  const verdictItem = items.find((item) => item.kind === ADVISOR_VERDICT_KIND) ?? null;
+  let applyAdvisors = false;
 
   const accepted = replies
     .filter(
@@ -108,6 +117,12 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
     if (GOAL_FIT_VERBS.has(verb) && !Q_LABEL_FIRST.test(match[2])) continue;
     processed.push(reply.ts);
     seen.add(reply.ts);
+    if (verb === 'ok advisors') {
+      if (!OK_CHANGES_TAIL.test(match[2])) unknown.push({ ts: reply.ts, token: match[2].trim(), reason: 'ok advisors takes no arguments' });
+      else if (!verdictItem) unknown.push({ ts: reply.ts, token: '', reason: 'no advisor verdict in this digest' });
+      else applyAdvisors = true;
+      continue;
+    }
     if (verb === 'ok changes') {
       if (!OK_CHANGES_TAIL.test(match[2])) {
         unknown.push({ ts: reply.ts, token: match[2].trim(), reason: 'ok changes takes no arguments' });
@@ -150,15 +165,25 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
     for (const item of targets) decisions.set(item.label, { verb, item });
   }
 
-  const pick = (verb) =>
-    builds
-      .filter((item) => decisions.get(item.label)?.verb === verb)
-      .map((item) => ({ n: item.label, pageId: item.pageId }));
+  const pick = (verb, kind = 'build') =>
+    items
+      .filter((item) => item.kind === kind && decisions.get(item.label)?.verb === verb)
+      .map((item) => (kind === 'build' ? { n: item.label, pageId: item.pageId } : { n: item.label, pageId: item.pageId, slug: item.slug ?? null }));
+  const goalLinks = applyProposals
+    ? items.filter((item) => item.kind === GOAL_LINK_KIND && item.taskId && item.goalId).map((item) => ({ label: item.label, taskId: item.taskId, goalId: item.goalId }))
+    : [];
 
   return {
     approved: pick('go'),
     skipped: pick('skip'),
+    approvedPlans: pick('go', PLAN_KIND),
+    skippedPlans: pick('skip', PLAN_KIND),
+    approvedAutomations: pick('go', AUTOMATION_KIND),
+    skippedAutomations: pick('skip', AUTOMATION_KIND),
     applyProposals,
+    goalLinks,
+    applyAdvisors,
+    advisorVerdict: applyAdvisors ? (verdictItem.verdicts ?? []) : [],
     unknown,
     processedTs: [...new Set([...(digestState.processedTs ?? []), ...processed])],
     goalFit,

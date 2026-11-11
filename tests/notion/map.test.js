@@ -172,8 +172,8 @@ test('parseArgs reads commands and flags', () => {
   assert.deepEqual(parseArgs(['set-priority', '--page', 'p', '--value', 'P1']), {
     command: 'set-priority', page: 'p', value: 'P1',
   });
-  assert.deepEqual(parseArgs(['comment', '--page', 'p', '--text', 'hello there']), {
-    command: 'comment', page: 'p', text: 'hello there',
+  assert.deepEqual(parseArgs(['comment', '--page', 'p', '--text', 'hello there', '--source', 'job-1']), {
+    command: 'comment', page: 'p', text: 'hello there', source: 'job-1',
   });
 });
 

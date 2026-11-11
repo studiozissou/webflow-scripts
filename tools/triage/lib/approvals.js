@@ -1,10 +1,10 @@
-// Turns Slack thread replies into approved and skipped build items and goal-fit decisions, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes on B items and link/keep/drop on goal-fit Q items, never a reply ts twice (processedTs comes back de-duplicated); a reply with any unknown token is rejected whole and reported, never guessed. link/keep/drop count as commands only when a Q label follows the verb; otherwise the reply is chatter and ignored. Each Q item is decided once; drop only proposes Status Cancelled and is approved by a later ok changes. goalFitState ({ [label]: { verb, taskId, ts, status: done|pending|approved } }) carries both across runs.
+// Turns Slack thread replies into approved and skipped build items and goal-fit decisions, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes on B items and link/keep/drop on goal-fit Q items, never a reply ts twice (processedTs comes back de-duplicated); a reply with any unknown token is rejected whole and reported, never guessed. link/keep/drop count as commands only when an item number (or legacy Q label) follows the verb; otherwise the reply is chatter and ignored. Each Q item is decided once; drop only proposes Status Cancelled and is approved by a later ok changes. goalFitState ({ [label]: { verb, taskId, ts, status: done|pending|approved } }) carries both across runs.
 
 export const COMMAND = /^(go|skip|link|keep|drop|ok\s+changes)\b(.*)$/is;
 const OK_CHANGES_TAIL = /^\s*[.!]?$/;
 export const GOAL_FIT_KIND = 'goal-fit';
 const GOAL_FIT_VERBS = new Set(['link', 'keep', 'drop']);
-const Q_LABEL_FIRST = /^\s*Q\d+\b/i;
+const Q_LABEL_FIRST = /^\s*Q?\d+\b/i;
 
 // { verb, rest } when the text is an approval command, null when it is chatter (also used by the chat router).
 export function commandOf(text) {

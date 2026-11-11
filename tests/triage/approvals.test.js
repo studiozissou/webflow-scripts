@@ -207,7 +207,7 @@ test('a digest with no Q items returns empty goal-fit results', () => {
 });
 
 test('link, keep and drop not followed by a Q label are chatter: ignored and not recorded', () => {
-  for (const text of ['keep going', 'drop me a note', 'link to the doc?', 'keep', 'drop 1', 'keep all', 'Link: Q1']) {
+  for (const text of ['keep going', 'drop me a note', 'link to the doc?', 'keep', 'keep all', 'Link: Q1']) {
     const r = parse([reply('1762844500.000001', text)]);
     assert.deepEqual(r.goalFit, NO_FIT, text);
     assert.deepEqual(r.unknown, [], text);
@@ -322,4 +322,25 @@ test('ok changes with trailing text approves no drop', () => {
 test('only a saved drop can be approved: a pending entry with another verb never is', () => {
   const state = { ...Q_DIGEST, goalFitState: { Q1: { ...pendingQ1.Q1, verb: 'keep' } } };
   assert.deepEqual(parse([reply('1762844900.000001', 'ok changes')], state).approvedDrops, []);
+});
+
+test('one sequential list: bare numbers resolve builds, goal-fit items and reject everything else by kind', () => {
+  const digest = {
+    ...DIGEST,
+    items: [
+      { n: '1', kind: 'task', pageId: 'p-1' },
+      { n: '2', kind: 'email', threadId: 'th-2' },
+      { n: '3', kind: 'build', pageId: 'p-b' },
+      { n: '4', kind: 'proposal', pageId: 'p-c' },
+      { n: '5', kind: 'goal-fit', taskId: 't-5', goalId: 'g-5' },
+      { n: '6', kind: 'goal-fit', taskId: 't-6' },
+    ],
+  };
+  const r = parseReplies(digest, [reply('1762844500.000001', 'go 3'), reply('1762844500.000002', 'link 5'), reply('1762844500.000003', 'keep 6')], { userId: USER });
+  assert.deepEqual(r.approved, [{ n: '3', pageId: 'p-b' }]);
+  assert.deepEqual(r.goalFit.link, [{ label: '5', taskId: 't-5', goalId: 'g-5' }]);
+  assert.deepEqual(r.goalFit.keep, [{ label: '6', taskId: 't-6' }]);
+  assert.deepEqual(r.unknown, []);
+  const bad = parseReplies(digest, [reply('1762844500.000004', 'go 1'), reply('1762844500.000005', 'drop 1')], { userId: USER });
+  assert.deepEqual(bad.unknown.map((u) => [u.token, u.reason]), [['1', 'not a build item'], ['1', 'not a goal-fit item']]);
 });

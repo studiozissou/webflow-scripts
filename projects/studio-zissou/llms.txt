@@ -1,0 +1,28 @@
+# Team Zissou
+
+> Websites, Google profiles and online bookings for independent businesses in the Netherlands and UK, built and looked after every month by Will Morley in Den Haag.
+
+Team Zissou is a one-person studio run by Will Morley. It builds websites (mostly on Webflow, also Shopify and WordPress/WooCommerce) and then looks after them on a monthly plan: uptime, speed, Google search and Maps visibility, and visibility in AI answers. The site is in English.
+
+## Key pages
+
+- [Home](https://teamzissou.io/): what Team Zissou does, a client case study, prices, who it is for, FAQ and the contact form
+- [Pricing](https://teamzissou.io/#pricing): a new website is €1,495 one-off; monthly care plans start at €95; the Launch plan is a €500 add-on; prices exclude VAT and Webflow hosting is billed at cost
+- [FAQ](https://teamzissou.io/#faq): cost, time needed, webshops, taking over an existing site, AI search, ownership and stopping the plan
+- [Contact](https://teamzissou.io/#contact): enquiry form
+- [Terms and conditions](https://teamzissou.io/terms): standard terms for every proposal, governed by Dutch law
+- [Privacy policy](https://teamzissou.io/privacy): what the form and cookieless analytics collect
+
+## Services
+
+- New website, €1,495 one-off: designed, built and launched
+- Monthly care plan, from €95 a month: updates, monitoring, Google profile and search visibility
+- Launch plan, €500 add-on: launch planning for a new business
+- Taking over an existing website on a monthly plan
+
+## Contact
+
+- Name: Will Morley, trading as Team Zissou, Den Haag, the Netherlands
+- KvK: 42017258
+- Email: will@teamzissou.io
+- Website: https://teamzissou.io

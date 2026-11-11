@@ -1,4 +1,4 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js, plan due|list from lib/plan-cli.js, patterns over lib/patterns.js, advisors lines|scores|verdict over lib/advisors.js, drafts targets from lib/doer-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled (which also gates plan jobs) and the approvals and drafts user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings, goals, plan and drafts subcommand refuses inside a build job.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js, plan due|list from lib/plan-cli.js, patterns over lib/patterns.js, advisors lines|scores|verdict over lib/advisors.js, digest number over lib/digest.js, drafts targets from lib/doer-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled (which also gates plan jobs) and the approvals and drafts user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings, goals, plan and drafts subcommand refuses inside a build job.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +15,7 @@ import { run as runPlan } from './lib/plan-cli.js';
 import { run as runDoer } from './lib/doer-cli.js';
 import { DEFAULT_WORLD_DIR, readSnapshot } from './lib/snapshot.js';
 import { spot } from './lib/patterns.js';
+import { numberParts } from './lib/digest.js';
 import { auditor, appendScores, logistics, numberLines, readScores, relationship, verdict } from './lib/advisors.js';
 import { homedir } from 'node:os';
 import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './lib/cli-io.js';
@@ -51,6 +52,8 @@ const USAGE = `usage: cli.js <command> [options]
                                                       V lines from the Node advisors, max 3 each
   advisors scores --in <reactions.json>               append [{advisor, line, reaction: +1|-1, date}]
   advisors verdict --start <yyyy-mm-dd>               keep/drop/no data after 10 working days
+  digest number [--in <parts.json>]                   [{name, text, items}] in posting order -> one running
+                                                      number 1..N across the digest and its thread replies
   drafts targets [--in <threads.json>]                Slack DMs and threads whose last message is not Will's
 common: --config <config.json>; learnings, goals and plan take no --now (clock only)
 `;
@@ -253,11 +256,21 @@ function runAdvisors(args) {
   throw new UsageError(`unknown advisors subcommand: ${sub ?? '(none)'}`);
 }
 
+function runDigest(args) {
+  const [, sub] = args.positional;
+  if (sub !== 'number') throw new UsageError(`unknown digest subcommand: ${sub ?? '(none)'}`);
+  const parts = readJson(readInput(args), 'input');
+  if (!Array.isArray(parts)) throw new UsageError('digest number needs a JSON array of { name, text, items }');
+  const result = numberParts(parts);
+  out(result);
+  return result.missing.length ? 1 : 0;
+}
+
 function runDrafts(args) {
   return runDoer(args, { userId: controlConfig().slack?.digest?.userId });
 }
 
-const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals, plan: runPlanCommand, patterns: runPatterns, advisors: runAdvisors, drafts: runDrafts };
+const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals, plan: runPlanCommand, patterns: runPatterns, advisors: runAdvisors, digest: runDigest, drafts: runDrafts };
 
 function fail(err) {
   if (err instanceof UsageError) process.stderr.write(`${err.message}\n${USAGE}`);

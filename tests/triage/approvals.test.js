@@ -394,3 +394,79 @@ test('ok advisors applies the verdict only when the digest carries one, and take
   assert.equal(extra.applyAdvisors, false);
   assert.ok(extra.unknown.some((u) => u.reason === 'ok advisors takes no arguments'));
 });
+
+const NUM_DIGEST = {
+  ts: '1762844400.000100',
+  items: [
+    { n: '1', kind: 'thread', threadId: 'th-1' },
+    { n: '2', kind: 'task', pageId: 'p-task' },
+    { n: '3', kind: 'build', pageId: 'p-b1' },
+    { n: '4', kind: 'build', pageId: 'p-b2' },
+    { n: '5', kind: 'proposal', pageId: 'p-c1' },
+    { n: '6', kind: 'goal-fit', taskId: 't-6', goalId: 'g-6' },
+    { n: '7', kind: 'goal-fit', taskId: 't-7', goalId: 'g-7' },
+    { n: '8', kind: 'session' },
+    { n: '9', kind: 'plan', pageId: 'g-9', slug: 'goal-nine' },
+    { n: '10', kind: 'automation', pageId: 'auto-x', slug: 'auto-x' },
+  ],
+  processedTs: [],
+};
+const parseNum = (replies) => parseReplies(NUM_DIGEST, replies, { userId: USER });
+
+test('running numbers: go and skip pick build, plan and automation items by their number', () => {
+  const r = parseNum([reply('1762844500.000001', 'go 3 9 10'), reply('1762844500.000002', 'skip 4')]);
+  assert.deepEqual(r.approved, [{ n: '3', pageId: 'p-b1' }]);
+  assert.deepEqual(r.skipped, [{ n: '4', pageId: 'p-b2' }]);
+  assert.deepEqual(r.approvedPlans.map((p) => p.n), ['9']);
+  assert.deepEqual(r.approvedAutomations.map((p) => p.n), ['10']);
+  assert.deepEqual(r.unknown, []);
+});
+
+test('running numbers: go on a task, session or goal-fit number is not a build item', () => {
+  for (const text of ['go 1', 'go 8', 'go 6']) {
+    const r = parseNum([reply('1762844500.000001', text)]);
+    assert.deepEqual(r.approved, [], text);
+    assert.ok(r.unknown.some((u) => u.reason === 'not a build item'), text);
+  }
+});
+
+test('running numbers: link, keep and drop take a goal-fit number; other numbers stay chatter', () => {
+  const r = parseNum([reply('1762844500.000001', 'link 6'), reply('1762844500.000002', 'drop 7')]);
+  assert.deepEqual(r.goalFit.link, [{ label: '6', taskId: 't-6', goalId: 'g-6' }]);
+  assert.deepEqual(r.goalFit.drop, [{ label: '7', taskId: 't-7' }]);
+  const chat = parseNum([reply('1762844500.000003', 'drop 2 of those, I will do it')]);
+  assert.deepEqual(chat.processedTs, []);
+});
+
+test('a numbered list reply applies one command per line', () => {
+  const r = parseNum([reply('1762844500.000001', '3. go\n4) skip\n6. link\n7: keep\n9 go')]);
+  assert.deepEqual(r.approved.map((a) => a.n), ['3']);
+  assert.deepEqual(r.skipped.map((a) => a.n), ['4']);
+  assert.deepEqual(r.goalFit.link.map((x) => x.label), ['6']);
+  assert.deepEqual(r.goalFit.keep.map((x) => x.label), ['7']);
+  assert.deepEqual(r.approvedPlans.map((p) => p.n), ['9']);
+  assert.deepEqual(r.unknown, []);
+});
+
+test('a multi-line reply mixes list lines with go lines and ok changes', () => {
+  const r = parseNum([reply('1762844500.000001', 'go 3 4\n6. link\nok changes')]);
+  assert.deepEqual(r.approved.map((a) => a.n), ['3', '4']);
+  assert.deepEqual(r.goalFit.link.map((x) => x.label), ['6']);
+  assert.equal(r.applyProposals, true);
+});
+
+test('one bad line rejects the whole list reply and nothing is applied', () => {
+  const bad = parseNum([reply('1762844500.000001', '3. go\n8. go')]);
+  assert.deepEqual(bad.approved, []);
+  assert.ok(bad.unknown.some((u) => u.token === '8' && u.reason === 'not a build item'));
+  const mixed = parseNum([reply('1762844500.000002', '3. go\nthanks, and maybe 4 later')]);
+  assert.deepEqual(mixed.approved, []);
+  assert.ok(mixed.unknown.some((u) => u.reason === 'line not understood'));
+  assert.deepEqual(mixed.processedTs.includes('1762844500.000002'), true);
+});
+
+test('a list reply from another user is ignored', () => {
+  const r = parseReplies(NUM_DIGEST, [reply('1762844500.000001', '3. go', { user: 'U0OTHER' })], { userId: USER });
+  assert.deepEqual(r.approved, []);
+  assert.deepEqual(r.processedTs, []);
+});

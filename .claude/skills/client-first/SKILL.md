@@ -192,6 +192,8 @@ The page template ships with `Global / Styles` (on every page; holds the `global
 
 The component name and its wrapper class are separate: `Card / Blog Post` can wrap `blog-card_component`.
 
+Navigation: always use Webflow's native Navbar element, pasted from Relume (Navbar 1 unless the design says otherwise) and restyled with the site's classes. Never hand-build a nav from divs; it ships without a mobile menu.
+
 </reference_guides>
 
 <success_criteria>

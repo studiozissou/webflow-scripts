@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: new-build-navbar
+expected_outcome: |
+  The reply plans the site nav on Webflow's native Navbar element (Nav Brand, Nav Menu, Menu Button, collapse at Tablet), taken from Relume Navbar 1 and restyled with the site's own classes, and does not hand-build the nav from div blocks.

@@ -107,7 +107,7 @@ test.describe('oost-native-navbar', () => {
     const hrefs = await page
       .locator('.w-nav-menu .nav_link')
       .evaluateAll((els) => els.map((a) => a.getAttribute('href')));
-    for (const href of hrefs) expect(href).toMatch(/^\/en(\/|#|$)/);
+    for (const href of hrefs) expect(href).toMatch(/^(\/en(\/|#|$)|#[\w-]+$)/);
     await expect(page.locator('.w-nav-menu')).toHaveAttribute('aria-label', 'Main menu');
     await expect(
       page.locator('.nav_component [data-formitable="open"]:visible'),

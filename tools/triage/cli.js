@@ -74,7 +74,7 @@ function loadConfig(args) {
 }
 
 // Missing file → {} so builds stay off and approvals fail closed.
-function controlConfig(env = process.env) {
+export function controlConfig(env = process.env) {
   const path = resolve(env[TEST_ENV.config] || CONTROL_CONFIG);
   if (!existsSync(path)) return {};
   return readJson(readFileSync(path, 'utf8'), path);

@@ -1,10 +1,19 @@
 // Turns Slack thread replies into approved and skipped build items and goal-fit decisions, fail-closed: only the digest thread, only after the digest ts, only the configured user, only go/skip/ok changes on B items and link/keep/drop on goal-fit Q items, never a reply ts twice (processedTs comes back de-duplicated); a reply with any unknown token is rejected whole and reported, never guessed. link/keep/drop count as commands only when a Q label follows the verb; otherwise the reply is chatter and ignored. Each Q item is decided once; drop only proposes Status Cancelled and is approved by a later ok changes. goalFitState ({ [label]: { verb, taskId, ts, status: done|pending|approved } }) carries both across runs.
 
-const COMMAND = /^(go|skip|link|keep|drop|ok\s+changes)\b(.*)$/is;
+export const COMMAND = /^(go|skip|link|keep|drop|ok\s+changes)\b(.*)$/is;
 const OK_CHANGES_TAIL = /^\s*[.!]?$/;
 export const GOAL_FIT_KIND = 'goal-fit';
 const GOAL_FIT_VERBS = new Set(['link', 'keep', 'drop']);
 const Q_LABEL_FIRST = /^\s*Q\d+\b/i;
+
+// { verb, rest } when the text is an approval command, null when it is chatter (also used by the chat router).
+export function commandOf(text) {
+  const match = COMMAND.exec(String(text ?? '').trim());
+  if (!match) return null;
+  const verb = match[1].toLowerCase().replace(/\s+/g, ' ');
+  if (GOAL_FIT_VERBS.has(verb) && !Q_LABEL_FIRST.test(match[2])) return null;
+  return { verb, rest: match[2] };
+}
 
 export function compareTs(a, b) {
   const [as, af = ''] = String(a).split('.');
@@ -102,15 +111,14 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
     .sort((a, b) => compareTs(a.ts, b.ts));
 
   for (const reply of accepted) {
-    const match = COMMAND.exec(String(reply.text ?? '').trim());
-    if (!match) continue;
-    const verb = match[1].toLowerCase().replace(/\s+/g, ' ');
-    if (GOAL_FIT_VERBS.has(verb) && !Q_LABEL_FIRST.test(match[2])) continue;
+    const command = commandOf(reply.text);
+    if (!command) continue;
+    const { verb, rest } = command;
     processed.push(reply.ts);
     seen.add(reply.ts);
     if (verb === 'ok changes') {
-      if (!OK_CHANGES_TAIL.test(match[2])) {
-        unknown.push({ ts: reply.ts, token: match[2].trim(), reason: 'ok changes takes no arguments' });
+      if (!OK_CHANGES_TAIL.test(rest)) {
+        unknown.push({ ts: reply.ts, token: rest.trim(), reason: 'ok changes takes no arguments' });
         continue;
       }
       applyProposals = true;
@@ -121,7 +129,7 @@ export function parseReplies(digestState, replies = [], { userId } = {}) {
       }
       continue;
     }
-    const tokens = match[2].split(/[\s,]+/).filter(Boolean).map((t) => t.toUpperCase());
+    const tokens = rest.split(/[\s,]+/).filter(Boolean).map((t) => t.toUpperCase());
     if (tokens.length === 0) {
       unknown.push({ ts: reply.ts, token: '', reason: 'no items given' });
       continue;

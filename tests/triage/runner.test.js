@@ -1,8 +1,8 @@
 // Guards the unattended triage runners: allowlisted permissions, the triage.off kill switch, the launchd schedules, and a job script that builds on a branch without ever pushing or deploying.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync, copyFileSync, chmodSync, readdirSync, realpathSync } from 'node:fs';
+import { execFileSync, spawnSync, spawn } from 'node:child_process';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync, copyFileSync, chmodSync, readdirSync, realpathSync, utimesSync } from 'node:fs';
 import { tmpdir, devNull } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +14,7 @@ const APPROVE = join(SCRIPTS, 'triage-approve.sh');
 const JOB = join(SCRIPTS, 'triage-job.sh');
 const CONSOLIDATE = join(SCRIPTS, 'triage-consolidate.sh');
 const COMMON = join(SCRIPTS, 'lib', 'triage-common.sh');
+const CHAT = join(SCRIPTS, 'triage-chat.sh');
 const ALL = [MORNING, APPROVE, JOB, CONSOLIDATE];
 
 const dirs = [];
@@ -74,7 +75,7 @@ function fakeClaude() {
 }
 
 function runnerEnv(fake, extra = {}) {
-  return { ...GIT_ENV, PATH: `${fake.bin}:${process.env.PATH}`, CLAUDE_BIN: fake.path, FAKE_MARKER: fake.marker, NOTION_TOKEN: 'test-token', ...extra };
+  return { ...GIT_ENV, PATH: `${fake.bin}:${process.env.PATH}`, CLAUDE_BIN: fake.path, FAKE_MARKER: fake.marker, NOTION_TOKEN: 'test-token', SLACK_BOT_TOKEN: 'test-bot-token', SLACK_APP_TOKEN: 'test-app-token', ...extra };
 }
 
 function triageRepo({ off = false, allowlist = true } = {}) {
@@ -172,8 +173,8 @@ test('triage-common.sh load_allowlist fills the array and exits 1 on a missing o
 
 test('triage-common.sh owns the claude lookup and the Notion token export; runners do not repeat them', () => {
   const code = codeLines(COMMON).join('\n');
-  for (const fn of ['load_allowlist', 'triage_claude_bin', 'triage_notion_token']) assert.match(code, new RegExp(`^${fn}\\(\\)`, 'm'));
-  for (const f of [MORNING, APPROVE, CONSOLIDATE]) {
+  for (const fn of ['load_allowlist', 'triage_claude_bin', 'triage_notion_token', 'triage_slack_token']) assert.match(code, new RegExp(`^${fn}\\(\\)`, 'm'));
+  for (const f of [MORNING, APPROVE, CONSOLIDATE, CHAT]) {
     const body = codeLines(f).join('\n');
     assert.doesNotMatch(body, /security find-generic-password/);
     assert.doesNotMatch(body, /type -P claude/);
@@ -639,4 +640,192 @@ test('consolidate plist runs triage-consolidate.sh Mon-Fri at 18:00 with the mor
   assert.match(p.StandardOutPath, /triage-consolidate\.log$/);
   assert.equal(p.RunAtLoad, false);
   assert.match(read(join(SCRIPTS, 'triage-consolidate.plist')), /at 18:00 local time, Monday to\s+Friday/);
+});
+
+// ---------- Triage chat: the launcher, its plist, the Slack token export and the approve lock ----------
+
+test('triage-chat.sh parses with bash -n, never skips permissions and sources triage-common.sh', () => {
+  const r = spawnSync('bash', ['-n', CHAT], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.doesNotMatch(read(CHAT), /dangerously-skip-permissions/);
+  assert.ok(codeLines(CHAT).some((l) => /^\s*(source|\.)\s+"\$SCRIPT_DIR\/lib\/triage-common\.sh"/.test(l)));
+});
+
+function fakeSecurity(script) {
+  const bin = tmp('triage-sec-');
+  writeFileSync(join(bin, 'security'), `#!/bin/sh\n${script}\n`);
+  chmodSync(join(bin, 'security'), 0o755);
+  return bin;
+}
+
+const KC_BOTH = 'case "$*" in *slack-bot*) echo kc-bot-token;; *slack-app*) echo kc-app-token;; *) exit 44;; esac';
+const KC_BOT_ONLY = 'case "$*" in *slack-bot*) echo kc-bot-token;; *) exit 44;; esac';
+
+test('triage_slack_token exports the bot token, and the app token when asked, keeping values already set', () => {
+  const sh = (bin, args, env = {}) => spawnSync('bash', ['-c', `source "${COMMON}"; triage_slack_token ${args}; echo "rc=$?"; printf '%s|%s' "\${SLACK_BOT_TOKEN:-}" "\${SLACK_APP_TOKEN:-}"`], { encoding: 'utf8', env: { PATH: `${bin}:/usr/bin:/bin`, ...env } });
+  const both = fakeSecurity(KC_BOTH);
+  assert.equal(sh(both, '').stdout, 'rc=0\nkc-bot-token|');
+  assert.equal(sh(both, 'app').stdout, 'rc=0\nkc-bot-token|kc-app-token');
+  assert.equal(sh(both, 'app', { SLACK_BOT_TOKEN: 'env-bot', SLACK_APP_TOKEN: 'env-app' }).stdout, 'rc=0\nenv-bot|env-app');
+  const r = sh(fakeSecurity(KC_BOT_ONLY), 'app');
+  assert.equal(r.stdout, 'rc=1\nkc-bot-token|');
+  assert.match(r.stderr, /WARNING: Keychain item mcp\/slack-app not found/);
+  assert.doesNotMatch(r.stderr, /kc-bot-token/);
+});
+
+for (const [name, script] of [['morning', MORNING], ['approve', APPROVE]]) {
+  test(`${name} runner exports the Slack bot token, and a missing one is only a warning`, () => {
+    const fake = fakeClaude();
+    const { repo, internal } = triageRepo();
+    const env = runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal, HOME: tmp('triage-home-'), PATH: `${fakeSecurity('exit 44')}:${fake.bin}:${dirname(process.execPath)}:/usr/bin:/bin` });
+    delete env.SLACK_BOT_TOKEN;
+    delete env.SLACK_APP_TOKEN;
+    const r = spawnSync('bash', [script], { encoding: 'utf8', env });
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    assert.match(r.stderr, /WARNING: Keychain item mcp\/slack-bot not found/);
+    assert.equal(fake.calls().filter((c) => c.args).length, 1);
+    assert.match(codeLines(script).join('\n'), /^\s*triage_slack_token\b/m);
+  });
+}
+
+function chatRepo({ allowlist = true } = {}) {
+  const { repo, internal } = triageRepo();
+  if (allowlist) writeFileSync(join(internal, 'chat-allowed-tools.txt'), '# chat tools\nRead\n');
+  for (const d of ['specs', 'plans']) mkdirSync(join(repo, '.claude', d), { recursive: true });
+  mkdirSync(join(repo, 'tools', 'triage'), { recursive: true });
+  writeFileSync(join(repo, 'tools', 'triage', 'chat-daemon.js'), `const e = process.env;\nrequire('fs').appendFileSync(e.FAKE_MARKER, JSON.stringify({ daemon: true, cwd: process.cwd(), claude: e.CLAUDE_BIN, triage: e.TRIAGE_REAL_DIR, specs: e.SPECS_REAL_DIR, plans: e.PLANS_REAL_DIR, bot: e.SLACK_BOT_TOKEN, app: e.SLACK_APP_TOKEN }) + '\\n');\n`);
+  return { repo, internal };
+}
+
+function runChat(fx, fake, security) {
+  const env = runnerEnv(fake, { TRIAGE_REPO: fx.repo, INTERNAL_TRIAGE: fx.internal, HOME: tmp('triage-home-'), PATH: `${fakeSecurity(security)}:${fake.bin}:${dirname(process.execPath)}:/usr/bin:/bin` });
+  delete env.SLACK_BOT_TOKEN;
+  delete env.SLACK_APP_TOKEN;
+  return spawnSync('bash', [CHAT], { encoding: 'utf8', env });
+}
+
+for (const [label, security] of [['the app token', KC_BOT_ONLY], ['both tokens', 'exit 44']]) {
+  test(`chat launcher exits 1 with a FATAL line when ${label} is missing, and starts nothing`, () => {
+    const fake = fakeClaude();
+    const fx = chatRepo();
+    const r = runChat(fx, fake, security);
+    assert.equal(r.status, 1, r.stderr + r.stdout);
+    assert.match(r.stderr, /FATAL: .*mcp\/slack-bot.*mcp\/slack-app/);
+    assert.deepEqual(fake.calls(), []);
+    assert.doesNotMatch(r.stdout + r.stderr, /kc-bot-token/);
+  });
+}
+
+test('chat launcher fails closed without chat-allowed-tools.txt', () => {
+  const fake = fakeClaude();
+  const fx = chatRepo({ allowlist: false });
+  const r = runChat(fx, fake, KC_BOTH);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /chat-allowed-tools\.txt/);
+  assert.deepEqual(fake.calls(), []);
+});
+
+test('chat launcher runs the daemon from the repo with CLAUDE_BIN, both tokens and the three real dirs', () => {
+  const fake = fakeClaude();
+  const fx = chatRepo();
+  const r = runChat(fx, fake, KC_BOTH);
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  const [call] = fake.calls();
+  assert.equal(call.daemon, true);
+  assert.equal(realpathSync(call.cwd), realpathSync(fx.repo));
+  assert.equal(call.claude, fake.path);
+  assert.equal(call.triage, realpathSync(fx.internal));
+  assert.equal(call.specs, realpathSync(join(fx.repo, '.claude', 'specs')));
+  assert.equal(call.plans, realpathSync(join(fx.repo, '.claude', 'plans')));
+  assert.equal(call.bot, 'kc-bot-token');
+  assert.equal(call.app, 'kc-app-token');
+  assert.match(codeLines(CHAT).join('\n'), /^\s*exec node tools\/triage\/chat-daemon\.js/m);
+  assert.doesNotMatch(r.stdout + r.stderr, /kc-(bot|app)-token/);
+});
+
+test('chat plist keeps the daemon alive from login with a 30 s throttle and its own log', () => {
+  const lintOut = spawnSync('plutil', ['-lint', join(SCRIPTS, 'triage-chat.plist')], { encoding: 'utf8' });
+  assert.equal(lintOut.status, 0, lintOut.stdout);
+  const p = plist('triage-chat.plist');
+  assert.equal(p.Label, 'io.teamzissou.triage-chat');
+  assert.match(p.ProgramArguments.at(-1), /scripts\/triage-chat\.sh$/);
+  assert.equal(p.KeepAlive, true);
+  assert.equal(p.RunAtLoad, true);
+  assert.equal(p.ThrottleInterval, 30);
+  assert.equal(p.StartCalendarInterval, undefined);
+  assert.match(p.StandardOutPath, /Library\/Logs\/triage-chat\.log$/);
+  assert.equal(p.StandardErrorPath, p.StandardOutPath);
+  assert.equal(p.EnvironmentVariables.TRIAGE_REPO, plist('triage-morning.plist').EnvironmentVariables.TRIAGE_REPO);
+  const text = read(join(SCRIPTS, 'triage-chat.plist'));
+  assert.match(text, /launchctl load ~\/Library\/LaunchAgents\/io\.teamzissou\.triage-chat\.plist/);
+  assert.match(text, /launchctl unload ~\/Library\/LaunchAgents\/io\.teamzissou\.triage-chat\.plist/);
+  assert.doesNotMatch(text, /dangerously-skip-permissions/);
+});
+
+const SLOW_CLAUDE = '#!/bin/sh\necho "$$" >> "$FAKE_MARKER"\nsleep ${FAKE_SLEEP:-0}\necho SLOW OUTPUT\nexit ${FAKE_EXIT:-0}\n';
+
+function slowClaude() {
+  const fake = fakeClaude();
+  writeFileSync(fake.path, SLOW_CLAUDE);
+  return { ...fake, runs: () => (existsSync(fake.marker) ? read(fake.marker).trim().split('\n').length : 0) };
+}
+
+const lockOf = (internal) => join(internal, 'tmp', 'approve.lock');
+
+function approveAsync(env) {
+  return new Promise((done) => {
+    const child = spawn('bash', [APPROVE], { env });
+    let out = '';
+    child.stdout.on('data', (c) => (out += c));
+    child.stderr.on('data', (c) => (out += c));
+    child.on('close', (code) => done({ code, out }));
+  });
+}
+
+test('a second approve run waits for the lock, then exits 0 with locked and never runs claude', async () => {
+  const fake = slowClaude();
+  const { repo, internal } = triageRepo();
+  const env = runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal, FAKE_SLEEP: '4', TRIAGE_APPROVE_LOCK_WAIT: '1' });
+  const first = approveAsync(env);
+  for (let i = 0; i < 100 && !existsSync(lockOf(internal)); i++) await new Promise((r) => setTimeout(r, 50));
+  assert.equal(existsSync(lockOf(internal)), true, 'first run holds the lock');
+  const started = Date.now();
+  const second = spawnSync('bash', [APPROVE], { encoding: 'utf8', env });
+  assert.ok(Date.now() - started >= 1000, 'it waited');
+  assert.equal(second.status, 0, second.stderr + second.stdout);
+  assert.match(second.stderr + second.stdout, /locked/);
+  assert.equal(existsSync(lockOf(internal)), true, 'the loser leaves the holder lock alone');
+  const r = await first;
+  assert.equal(r.code, 0, r.out);
+  assert.equal(fake.runs(), 1);
+  assert.equal(existsSync(lockOf(internal)), false, 'released on exit');
+});
+
+test('approve removes a stale lock and runs, and releases the lock when claude fails', () => {
+  const fake = slowClaude();
+  const { repo, internal } = triageRepo();
+  mkdirSync(lockOf(internal), { recursive: true });
+  const old = new Date(Date.now() - 20 * 60000);
+  utimesSync(lockOf(internal), old, old);
+  const r = spawnSync('bash', [APPROVE], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal, FAKE_EXIT: '3', TRIAGE_APPROVE_LOCK_WAIT: '1' }) });
+  assert.equal(r.status, 3, r.stderr + r.stdout);
+  assert.match(r.stderr + r.stdout, /stale/);
+  assert.equal(fake.runs(), 1);
+  assert.equal(existsSync(lockOf(internal)), false);
+});
+
+test('approve takes no lock under triage.off', () => {
+  const fake = slowClaude();
+  const { repo, internal } = triageRepo({ off: true });
+  const r = spawnSync('bash', [APPROVE], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal }) });
+  assert.equal(r.status, 0);
+  assert.equal(existsSync(join(internal, 'tmp')), false);
+});
+
+test('approve takes the lock after the triage.off check and before claude, and releases it on exit', () => {
+  const code = codeLines(APPROVE).join('\n');
+  assert.ok(code.indexOf('triage_off') < code.indexOf('approve.lock'));
+  assert.match(code, /mkdir "\$LOCK"/);
+  assert.match(code, /trap [^\n]*EXIT/);
+  assert.ok(code.indexOf('approve.lock') < code.indexOf('"$CLAUDE_BIN"'));
 });

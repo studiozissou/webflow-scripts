@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Triage chat. Keeps scripts/triage-chat.sh running from login: a Slack Socket Mode
+  daemon that answers the owner's messages in the digest channel as the Daybook bot.
+  This is the first KeepAlive job in the repo. launchd restarts it whenever it exits,
+  at most once every 30 seconds (ThrottleInterval), so a missing token cannot spin.
+  If the Mac sleeps, the socket drops; the daemon reconnects on wake and catches up.
+
+  What it may send: replies and reactions in the digest channel only. Grammar replies
+  in the digest thread run scripts/triage-approve.sh; every other message runs a chat
+  session limited to .claude/triage/chat-allowed-tools.txt, which has no Slack send,
+  no email send and no git push. To pause it without uninstalling:
+    touch .claude/triage/triage.off
+
+  NOT INSTALLED BY DEFAULT. Install only after the Slack app exists, both Keychain
+  items (mcp/slack-bot, mcp/slack-app) are stored and a manual run connects:
+    bash scripts/triage-chat.sh
+
+  Install:
+    cp scripts/triage-chat.plist ~/Library/LaunchAgents/io.teamzissou.triage-chat.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.triage-chat.plist
+
+  Restart it, right now:
+    launchctl kickstart -k gui/$(id -u)/io.teamzissou.triage-chat
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.triage-chat.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.triage-chat.plist
+
+  Output and errors are appended to ~/Library/Logs/triage-chat.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.triage-chat</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/triage-chat.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>TRIAGE_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+    </dict>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-chat.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/triage-chat.log</string>
+</dict>
+</plist>

@@ -1,4 +1,4 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled and the approvals user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings and goals subcommand refuses inside a build job.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js, plan due|list from lib/plan-cli.js, drafts targets from lib/doer-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled (which also gates plan jobs) and the approvals and drafts user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings, goals, plan and drafts subcommand refuses inside a build job.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,9 @@ import { start, collect, list, DEFAULT_JOBS_DIR, DEFAULT_KILL_SWITCH, DEFAULT_SC
 import { run as runSnapshot } from './lib/snapshot-cli.js';
 import { run as runLearnings } from './lib/learnings-cli.js';
 import { run as runGoals } from './lib/goals-cli.js';
+import { run as runPlan } from './lib/plan-cli.js';
+import { run as runDoer } from './lib/doer-cli.js';
+import { DEFAULT_WORLD_DIR } from './lib/snapshot.js';
 import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './lib/cli-io.js';
 
 const USAGE = `usage: cli.js <command> [options]
@@ -20,8 +23,9 @@ const USAGE = `usage: cli.js <command> [options]
   approvals --digest <state.json> --replies <replies.json>   user ID from .claude/triage/config.json only
   lint [--in <digest.md>] [--ratio]                   exit 1 on warnings; with --ratio, prints the
                                                       pass ratio and exits 1 only when it is below 0.80
-  jobs start --page <id> --slug <slug> --thread <ts> [--label <B1>] [--task <name>] [--brief <text>]
-                                                      exit 1 when refused (builds-off, kill-switch, cap, claimed)
+  jobs start --page <id> --slug <slug> --thread <ts> [--kind build|plan] [--label <B1>] [--task <name>] [--brief <text>]
+                                                      exit 1 when refused (builds-off, kill-switch, cap, claimed);
+                                                      kind plan runs /plan only (default build)
   jobs collect | jobs list
   snapshot collect [--tasks <tasks.json>] [--goals <goals.json>] [--now <iso>]
                                                       writes .claude/triage/world/<date>.json
@@ -35,10 +39,14 @@ const USAGE = `usage: cli.js <command> [options]
   goals health [--in <snapshot.json>]                 goal health, tasks with no goal, Monday GOALS block
   goals questions [--in <snapshot.json>]              up to 3 goal-fit Q items (D18); keeps from goals-state.json
   goals keep --task <pageId>                          30-day keep; only a goal-fit item in today's digest
-common: --config <config.json>; learnings and goals take no --now (clock only)
+  plan due --thread <ts> [--goals <json>] [--tasks <json>] [--specs-dir <path>]
+                                                      plan jobs for goals with no next step; 2 a day, shared cap
+  plan list [--specs-dir <path>]                      P items from finished plan jobs; Goal fit: none hidden
+  drafts targets [--in <threads.json>]                Slack DMs and threads whose last message is not Will's
+common: --config <config.json>; learnings, goals and plan take no --now (clock only)
 `;
 
-const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks', 'goals', 'skill', 'text', 'text-file'];
+const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks', 'goals', 'skill', 'text', 'text-file', 'kind', 'specs-dir'];
 
 // Test-only overrides. The unattended allowlist rule Bash(node tools/triage/cli.js *) cannot
 // match a command with a leading env assignment, so a scheduled run cannot set these.
@@ -165,6 +173,7 @@ function runJobs(args) {
   }
   if (sub !== 'start') throw new UsageError(`unknown jobs subcommand: ${sub ?? '(none)'}`);
   if (!args.page || !args.slug || !args.thread) throw new UsageError('jobs start needs --page, --slug and --thread');
+  if (args.kind !== undefined && args.kind !== 'build' && args.kind !== 'plan') throw new UsageError('--kind must be build or plan');
   if (controlConfig().digest?.buildsEnabled !== true) {
     out({ started: false, reason: 'builds-off' });
     return 1;
@@ -175,6 +184,7 @@ function runJobs(args) {
     slug: args.slug,
     threadTs: args.thread,
     label: args.label ?? null,
+    kind: args.kind ?? 'build',
     task: args.task ?? '',
     brief: args.brief ?? '',
   });
@@ -182,7 +192,19 @@ function runJobs(args) {
   return result.started ? 0 : 1;
 }
 
-const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals };
+function runPlanCommand(args) {
+  return runPlan(args, {
+    buildsEnabled: controlConfig().digest?.buildsEnabled === true,
+    paths: jobPaths(),
+    worldDir: resolve(process.env.TRIAGE_TEST_WORLD_DIR || DEFAULT_WORLD_DIR),
+  });
+}
+
+function runDrafts(args) {
+  return runDoer(args, { userId: controlConfig().slack?.digest?.userId });
+}
+
+const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals, plan: runPlanCommand, drafts: runDrafts };
 
 function fail(err) {
   if (err instanceof UsageError) process.stderr.write(`${err.message}\n${USAGE}`);

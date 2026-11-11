@@ -409,3 +409,87 @@ test('every snapshot subcommand refuses inside a build job', () => {
   }
   assert.equal(existsSync(env.TRIAGE_TEST_WORLD_DIR), false);
 });
+
+const PLAN_GOALS = [
+  { id: '22222222222222222222222222222222', name: 'Ship the studio site', status: 'Active', targetDate: '2026-11-20' },
+  { id: '33333333333333333333333333333333', name: 'Grow newsletter', status: 'Active' },
+  { id: '44444444444444444444444444444444', name: 'Learn Rust', status: 'Active' },
+];
+
+function planFixture(dir) {
+  writeFileSync(join(dir, 'job.sh'), '#!/bin/sh\nsleep 2\n');
+  const goals = join(dir, 'goals.json');
+  writeFileSync(goals, JSON.stringify(PLAN_GOALS));
+  const tasks = join(dir, 'tasks.json');
+  writeFileSync(tasks, JSON.stringify([]));
+  mkdirSync(join(dir, 'specs'));
+  return { goals, tasks, specs: join(dir, 'specs') };
+}
+
+test('jobs start --kind plan stores the kind; an unknown kind exits 2', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'job.sh'), '#!/bin/sh\nsleep 2\n');
+  const env = testEnv(dir);
+  const r = run(['jobs', 'start', '--kind', 'plan', '--page', 'auto-x', '--slug', 'auto-x', '--thread', '1.000001', '--label', 'A1', '--task', 'Automate x'], '', env);
+  assert.equal(r.code, 0, r.err);
+  pids.push(r.json().pid);
+  assert.equal(JSON.parse(readFileSync(join(dir, 'jobs', 'auto-x', 'meta.json'), 'utf8')).kind, 'plan');
+  assert.equal(run(['jobs', 'start', '--kind', 'deploy', '--page', 'p9', '--slug', 's9', '--thread', '1.000001'], '', env).code, 2);
+});
+
+test('plan due starts at most 2 plan jobs a day and prints what it started', () => {
+  const dir = tmp();
+  const f = planFixture(dir);
+  const env = testEnv(dir);
+  const r = run(['plan', 'due', '--goals', f.goals, '--tasks', f.tasks, '--specs-dir', f.specs, '--thread', '1.000001'], '', env);
+  assert.equal(r.code, 0, r.err);
+  const res = r.json();
+  for (const s of res.started) pids.push(s.pid);
+  assert.deepEqual(res.started.map((s) => s.pageId), ['22222222222222222222222222222222', '33333333333333333333333333333333']);
+  for (const s of res.started) assert.equal(JSON.parse(readFileSync(join(dir, 'jobs', s.pageId, 'meta.json'), 'utf8')).kind, 'plan');
+  const again = run(['plan', 'due', '--goals', f.goals, '--tasks', f.tasks, '--specs-dir', f.specs, '--thread', '1.000001'], '', env);
+  assert.deepEqual(again.json().started, []);
+});
+
+test('plan due refuses with builds off and inside a build job', () => {
+  const dir = tmp();
+  const f = planFixture(dir);
+  const off = join(dir, 'off.json');
+  writeFileSync(off, JSON.stringify({ digest: { buildsEnabled: false } }));
+  const args = ['plan', 'due', '--goals', f.goals, '--tasks', f.tasks, '--specs-dir', f.specs, '--thread', '1.000001'];
+  const r = run(args, '', { ...testEnv(dir), TRIAGE_TEST_CONFIG: off });
+  assert.equal(r.code, 1);
+  assert.deepEqual(r.json(), { started: [], reason: 'builds-off' });
+  assert.equal(run(args, '', { ...testEnv(dir), TRIAGE_BUILD_JOB: '1' }).code, 2);
+});
+
+test('plan list offers finished planned jobs as P items and hides Goal fit: none', () => {
+  const dir = tmp();
+  const f = planFixture(dir);
+  const job = (id, slug) => {
+    mkdirSync(join(dir, 'jobs', id), { recursive: true });
+    writeFileSync(join(dir, 'jobs', id, 'meta.json'), JSON.stringify({ pageId: id, kind: 'plan', slug, task: `Plan ${slug}`, pid: null }));
+    writeFileSync(join(dir, 'jobs', id, 'result.json'), JSON.stringify({ status: 'planned' }));
+  };
+  job('g-a', 'goal-a');
+  job('g-b', 'goal-b');
+  writeFileSync(join(f.specs, 'goal-a.md'), '# A\nGoal fit: Ship the studio site\n');
+  writeFileSync(join(f.specs, 'goal-b.md'), '# B\nGoal fit: none\n');
+  const r = run(['plan', 'list', '--specs-dir', f.specs], '', testEnv(dir));
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(r.json().map((i) => [i.n, i.pageId, i.goalFit]), [['P1', 'g-a', 'Ship the studio site']]);
+});
+
+test('drafts targets uses the control config user id and refuses without one', () => {
+  const dir = tmp();
+  const config = join(dir, 'c.json');
+  writeFileSync(config, JSON.stringify({ slack: { digest: { userId: 'UWILL' } } }));
+  const threads = JSON.stringify([
+    { id: 't1', kind: 'dm', messages: [{ user: 'UANNA', ts: '2.0' }] },
+    { id: 't2', kind: 'dm', messages: [{ user: 'UWILL', ts: '3.0' }] },
+  ]);
+  const r = run(['drafts', 'targets'], threads, { TRIAGE_TEST_CONFIG: config });
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(r.json().map((t) => t.id), ['t1']);
+  assert.equal(run(['drafts', 'targets'], threads, { TRIAGE_TEST_CONFIG: join(dir, 'none.json') }).code, 2);
+});

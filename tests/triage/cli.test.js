@@ -506,3 +506,17 @@ test('patterns --in prints A items for 3 similar Done tasks and none for 2', () 
   writeFileSync(two, JSON.stringify({ tasks: [task('Send invoice A', '2026-11-01'), task('Send invoice B', '2026-11-03')] }));
   assert.deepEqual(run(['patterns', '--in', two, '--now', '2026-11-10T08:00:00Z']).json(), []);
 });
+
+test('advisors scores appends deduped rows and verdict reads them; lines refuse inside a build job', () => {
+  const dir = tmp();
+  const env = { TRIAGE_TEST_ADVISORS_DIR: dir };
+  const rows = join(dir, 'r.json');
+  const row = (line, reaction) => ({ advisor: 'logistics', line, reaction, date: '2026-11-03' });
+  writeFileSync(rows, JSON.stringify([row('a', '+1'), row('b', '+1'), row('c', '+1'), row('d', '-1'), row('e', '-1')]));
+  assert.deepEqual(run(['advisors', 'scores', '--in', rows], '', env).json(), { added: 5 });
+  assert.deepEqual(run(['advisors', 'scores', '--in', rows], '', env).json(), { added: 0 });
+  const v = run(['advisors', 'verdict', '--start', '2026-11-02', '--now', '2026-11-16T08:00:00Z'], '', env).json();
+  assert.deepEqual(v.verdicts, [{ advisor: 'logistics', up: 3, rated: 5, verdict: 'keep' }]);
+  assert.equal(run(['advisors', 'lines', '--in', join(ROOT, FIXTURE)], '', { TRIAGE_BUILD_JOB: '1' }).code, 2);
+  assert.equal(run(['advisors', 'verdict'], '', env).code, 2);
+});

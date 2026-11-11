@@ -1,13 +1,13 @@
-// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js, plan due|list from lib/plan-cli.js, patterns over lib/patterns.js, drafts targets from lib/doer-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled (which also gates plan jobs) and the approvals and drafts user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings, goals, plan and drafts subcommand refuses inside a build job.
+// Triage CLI over the tested rule modules (buckets, rank, approvals, lint, jobs start|collect|list, snapshot collect|add-remote|rollup from lib/snapshot-cli.js, learnings extract|add|comment|digest from lib/learnings-cli.js, goals health|questions|keep from lib/goals-cli.js, plan due|list from lib/plan-cli.js, patterns over lib/patterns.js, advisors lines|scores|verdict over lib/advisors.js, drafts targets from lib/doer-cli.js): reads JSON from --in or stdin, writes JSON to stdout, exits 0 on success, 1 on lint warnings or a refused job, 2 on usage or input errors. It takes no flag that weakens a control: job paths and the cap come from code defaults (tests override them with TRIAGE_TEST_* env vars, which the unattended allowlist cannot set), buildsEnabled (which also gates plan jobs) and the approvals and drafts user ID come only from the real .claude/triage/config.json (TRIAGE_TEST_CONFIG in tests), never --config, and every jobs, snapshot, learnings, goals, plan and drafts subcommand refuses inside a build job.
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs as parseNodeArgs } from 'node:util';
 import { bucketTasks } from './lib/buckets.js';
 import { rankAutomatable, DEFAULT_MAX_BUILD_ITEMS } from './lib/rank.js';
 import { parseReplies } from './lib/approvals.js';
 import { lint, MIN_RATIO } from './lib/ste-lint.js';
-import { start, collect, list, DEFAULT_JOBS_DIR, DEFAULT_KILL_SWITCH, DEFAULT_SCRIPT, DEFAULT_CAP } from './lib/jobs.js';
+import { start, collect, list, REPO_ROOT, DEFAULT_JOBS_DIR, DEFAULT_KILL_SWITCH, DEFAULT_SCRIPT, DEFAULT_CAP } from './lib/jobs.js';
 import { run as runSnapshot } from './lib/snapshot-cli.js';
 import { run as runLearnings } from './lib/learnings-cli.js';
 import { run as runGoals } from './lib/goals-cli.js';
@@ -15,6 +15,8 @@ import { run as runPlan } from './lib/plan-cli.js';
 import { run as runDoer } from './lib/doer-cli.js';
 import { DEFAULT_WORLD_DIR, readSnapshot } from './lib/snapshot.js';
 import { spot } from './lib/patterns.js';
+import { auditor, appendScores, logistics, numberLines, readScores, relationship, verdict } from './lib/advisors.js';
+import { homedir } from 'node:os';
 import { UsageError, out, parseNow, readInput, readJson, refuseInBuildJob } from './lib/cli-io.js';
 
 const USAGE = `usage: cli.js <command> [options]
@@ -45,11 +47,15 @@ const USAGE = `usage: cli.js <command> [options]
   plan list [--specs-dir <path>]                      P items from finished plan jobs; Goal fit: none hidden
   patterns [--in <{tasks, sessions, learnings}.json>]  up to 3 COULD AUTOMATE A items (3+ in 30 days);
                                                       default: today's snapshot tasks and sessions
+  advisors lines [--in <snapshot.json>] [--logs <audit.json>]
+                                                      V lines from the Node advisors, max 3 each
+  advisors scores --in <reactions.json>               append [{advisor, line, reaction: +1|-1, date}]
+  advisors verdict --start <yyyy-mm-dd>               keep/drop/no data after 10 working days
   drafts targets [--in <threads.json>]                Slack DMs and threads whose last message is not Will's
 common: --config <config.json>; learnings, goals and plan take no --now (clock only)
 `;
 
-const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks', 'goals', 'skill', 'text', 'text-file', 'kind', 'specs-dir'];
+const VALUE_FLAGS = ['now', 'in', 'threads', 'config', 'digest', 'replies', 'max', 'page', 'slug', 'thread', 'label', 'task', 'brief', 'tasks', 'goals', 'skill', 'text', 'text-file', 'kind', 'specs-dir', 'logs', 'start'];
 
 // Test-only overrides. The unattended allowlist rule Bash(node tools/triage/cli.js *) cannot
 // match a command with a leading env assignment, so a scheduled run cannot set these.
@@ -211,11 +217,47 @@ function runPatterns(args) {
   return 0;
 }
 
+const ADVISORS_DIR = () => resolve(process.env.TRIAGE_TEST_ADVISORS_DIR || join(REPO_ROOT, '.claude/triage'));
+
+function readUsage() {
+  try {
+    return readFileSync(join(process.env.TRIAGE_TEST_HOME || homedir(), '.claude/usage-5h'), 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+function runAdvisors(args) {
+  if (refuseInBuildJob('advisors')) return 2;
+  const [, sub] = args.positional;
+  const now = parseNow(args);
+  if (sub === 'lines') {
+    const snapshot = args.in ? readJson(readInput(args), args.in) : readSnapshot(resolve(process.env.TRIAGE_TEST_WORLD_DIR || DEFAULT_WORLD_DIR), now);
+    if (!snapshot) throw new UsageError('advisors lines needs --in or a snapshot for today');
+    const logs = args.logs ? readJson(readFileSync(resolve(args.logs), 'utf8'), args.logs) : {};
+    out(numberLines({ logistics: logistics(snapshot, { now, usage5h: readUsage() }), relationship: relationship(snapshot, { now }), auditor: auditor(logs, { now }) }));
+    return 0;
+  }
+  if (sub === 'scores') {
+    if (!args.in) throw new UsageError('advisors scores needs --in <reactions.json>');
+    const rows = readJson(readInput(args), args.in);
+    if (!Array.isArray(rows)) throw new UsageError('--in must be a JSON array of scores');
+    out({ added: appendScores(ADVISORS_DIR(), rows) });
+    return 0;
+  }
+  if (sub === 'verdict') {
+    if (!args.start || Number.isNaN(Date.parse(args.start))) throw new UsageError('advisors verdict needs --start <yyyy-mm-dd>');
+    out(verdict(readScores(ADVISORS_DIR()), { now, startDate: args.start }));
+    return 0;
+  }
+  throw new UsageError(`unknown advisors subcommand: ${sub ?? '(none)'}`);
+}
+
 function runDrafts(args) {
   return runDoer(args, { userId: controlConfig().slack?.digest?.userId });
 }
 
-const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals, plan: runPlanCommand, patterns: runPatterns, drafts: runDrafts };
+const COMMANDS = { buckets: runBuckets, rank: runRank, approvals: runApprovals, lint: runLint, jobs: runJobs, snapshot: runSnapshot, learnings: runLearnings, goals: runGoals, plan: runPlanCommand, patterns: runPatterns, advisors: runAdvisors, drafts: runDrafts };
 
 function fail(err) {
   if (err instanceof UsageError) process.stderr.write(`${err.message}\n${USAGE}`);

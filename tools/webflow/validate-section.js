@@ -1,4 +1,4 @@
-// Validates Client First section files against the site CSS in the v2 or v3 section structure, with colour schemes from the client's launch config or the CSS (or no scheme check); runnable as a CLI.
+// Validates Client First section files (v3 also accepts footer, header or nav roots) against one or more site stylesheets in the v2 or v3 section structure, with colour schemes from the client's launch config or the CSS (or no scheme check); runnable as a CLI.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,8 +7,9 @@ const DEBUG = false;
 
 const PROJECTS_DIR = fileURLToPath(new URL('../../projects/', import.meta.url));
 const USAGE =
-  'usage: validate-section.js [--client <name> | --config <path>] [--structure v2|v3] [--no-scheme] <client-first.css> <section.html|dir …>\n';
+  'usage: validate-section.js [--client <name> | --config <path>] [--structure v2|v3] [--no-scheme] (--css <path> … | <client-first.css>) <section.html|dir …>\n';
 const STRUCTURES = ['v2', 'v3'];
+const V3_ROOT_TAGS = ['section', 'footer', 'header', 'nav'];
 const CONTAINER_STEP = {
   label: 'container-small|medium|large',
   test: (c) => /^container-(small|medium|large)$/.test(c),
@@ -178,11 +179,15 @@ function classNamesIn(fragment) {
   );
 }
 
-function addRule(map, selectorList, declarations, media) {
+const allClassNamesIn = (selector) =>
+  [...selector.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]);
+
+function addRule(map, selectorList, declarations, media, structure) {
+  const known = structure === 'v3' ? allClassNamesIn : classNamesIn;
   for (const raw of splitTopLevel(selectorList, ',')) {
     const selector = raw.trim();
     if (!selector) continue;
-    for (const name of classNamesIn(selector)) {
+    for (const name of known(selector)) {
       if (!map.has(name)) map.set(name, []);
     }
     const subject = subjectCompound(selector);
@@ -193,21 +198,21 @@ function addRule(map, selectorList, declarations, media) {
   }
 }
 
-function collectRules(css, map, media) {
+function collectRules(css, map, media, structure) {
   for (const block of readBlocks(css)) {
     if (block.prelude.startsWith('@')) {
       if (/^@(media|supports|layer|container)\b/i.test(block.prelude)) {
-        collectRules(block.body, map, block.prelude);
+        collectRules(block.body, map, block.prelude, structure);
       }
       continue;
     }
-    addRule(map, block.prelude, parseDeclarations(block.body), media);
+    addRule(map, block.prelude, parseDeclarations(block.body), media, structure);
   }
 }
 
-export function parseCssClasses(css) {
+export function parseCssClasses(css, structure = 'v2') {
   const map = new Map();
-  collectRules(stripCssComments(css), map, null);
+  collectRules(stripCssComments(css), map, null, structure);
   return map;
 }
 
@@ -331,7 +336,7 @@ function walk(node, visit) {
   }
 }
 
-function checkRoot(tree, errors) {
+function checkRoot(tree, errors, structure) {
   const top = tree.children;
   const roots = top.filter((c) => c.type === 'element');
   if (top.some((c) => c.type === 'text' && c.value.trim())) {
@@ -342,7 +347,9 @@ function checkRoot(tree, errors) {
     return roots[0] ?? null;
   }
   const root = roots[0];
-  if (root.tag !== 'section')
+  if (structure === 'v3' && !V3_ROOT_TAGS.includes(root.tag))
+    errors.push(`rule 1: root must be <section>, <footer>, <header> or <nav>, found <${root.tag}>`);
+  if (structure !== 'v3' && root.tag !== 'section')
     errors.push(`rule 1: root must be <section>, found <${root.tag}>`);
   const first = classesOf(root)[0] ?? '';
   if (!/^section_[a-z0-9][\w-]*$/.test(first)) {
@@ -400,11 +407,19 @@ function checkChain(root, errors, structure) {
   }
 }
 
+const NOT_SPACING = /^(0[a-z%]*|auto|inherit|initial|unset|revert|!important|-.*|calc\(\s*-.*)$/i;
+const isSpacingMargin = (value) =>
+  splitTopLevel(value.trim(), ' ')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .some((part) => !NOT_SPACING.test(part));
+
 function checkElements(root, cssMap, errors, structure) {
   const v3 = structure === 'v3';
   const marginOk = (name) =>
     name.startsWith('container-') || (v3 && (name.startsWith('margin-') || name === 'align-center'));
   const paddingOk = (name) => PADDING_OK.test(name) || (v3 && name.startsWith('section_'));
+  const marginDecl = (d) => d.property.startsWith('margin') && (!v3 || isSpacingMargin(d.value));
   const used = new Set();
   const visit = (node) => {
     if (node.type !== 'element') return;
@@ -412,7 +427,7 @@ function checkElements(root, cssMap, errors, structure) {
       errors.push(`rule 4: style= attribute on ${describeNode(node)}`);
     const cls = classesOf(node);
     cls.forEach((c) => used.add(c));
-    if (/^h[1-6]$/.test(node.tag) && !cls.some((c) => c.startsWith('heading-style-'))) {
+    if (!v3 && /^h[1-6]$/.test(node.tag) && !cls.some((c) => c.startsWith('heading-style-'))) {
       errors.push(`rule 9: ${describeNode(node)} needs a heading-style- class`);
     }
     const spacer = cls.find((c) => c.startsWith('spacer-'));
@@ -435,14 +450,12 @@ function checkElements(root, cssMap, errors, structure) {
       continue;
     }
     const decls = cssMap.get(name);
-    const hardcoded = (prefix) =>
-      decls.some(
-        (d) => d.property.startsWith(prefix) && !(v3 && name.includes('_') && /^var\(--[\w-]+/.test(d.value)),
-      );
-    if (!marginOk(name) && hardcoded('margin')) {
+    const varBound = (d) => v3 && name.includes('_') && /^var\(--[\w-]+/.test(d.value);
+    const hardcoded = (isDecl) => decls.some((d) => isDecl(d) && !varBound(d));
+    if (!marginOk(name) && hardcoded(marginDecl)) {
       errors.push(`rule 7: class "${name}" has a margin declaration`);
     }
-    if (!paddingOk(name) && hardcoded('padding')) {
+    if (!paddingOk(name) && hardcoded((d) => d.property.startsWith('padding'))) {
       errors.push(`rule 7: class "${name}" has a padding declaration`);
     }
   }
@@ -482,11 +495,11 @@ export function validateSection(html, css, options = {}) {
   if (!STRUCTURES.includes(structure)) {
     throw new Error(`unknown structure "${structure}" (allowed: ${STRUCTURES.join(', ')})`);
   }
-  const cssMap = typeof css === 'string' ? parseCssClasses(css) : css;
+  const cssMap = typeof css === 'string' ? parseCssClasses(css, structure) : css;
   const knownSchemes = options.schemes ?? schemesFromCss(cssMap);
   const { root: tree, errors: parseErrors } = parseHtml(html);
   const errors = [...parseErrors];
-  const root = checkRoot(tree, errors);
+  const root = checkRoot(tree, errors, structure);
   if (root) {
     if (options.scheme !== false) checkScheme(root, knownSchemes, errors);
     checkChain(root, errors, structure);
@@ -497,8 +510,12 @@ export function validateSection(html, css, options = {}) {
   return { ok: errors.length === 0, errors };
 }
 
+export function readCss(cssPaths) {
+  return [cssPaths].flat().map((path) => readFileSync(path, 'utf8')).join('\n');
+}
+
 export function validateFiles(cssPath, files, options = {}) {
-  const cssMap = parseCssClasses(readFileSync(cssPath, 'utf8'));
+  const cssMap = parseCssClasses(readCss(cssPath), options.structure ?? 'v2');
   return files.map((file) => ({
     file,
     ...validateSection(readFileSync(file, 'utf8'), cssMap, options),
@@ -518,21 +535,30 @@ export function configPathFor(client) {
 }
 
 function parseArgs(argv) {
-  const args = { client: null, config: null, structure: 'v2', scheme: true, positional: [] };
+  const args = {
+    client: null,
+    config: null,
+    structure: 'v2',
+    scheme: true,
+    css: [],
+    positional: [],
+  };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--client') args.client = argv[++i] ?? null;
     else if (argv[i] === '--config') args.config = argv[++i] ?? null;
     else if (argv[i] === '--structure') args.structure = argv[++i] ?? null;
     else if (argv[i] === '--no-scheme') args.scheme = false;
+    else if (argv[i] === '--css') args.css.push(argv[++i] ?? null);
     else args.positional.push(argv[i]);
   }
   return args;
 }
 
 export function main(argv, defaults = {}) {
-  const { client, config, structure, scheme, positional } = parseArgs(argv);
-  const [cssPath, ...targets] = positional;
-  if (!cssPath || targets.length === 0 || !STRUCTURES.includes(structure)) {
+  const { client, config, structure, scheme, css, positional } = parseArgs(argv);
+  const [cssPath, ...targets] = css.length ? [css, ...positional] : positional;
+  const missingCss = css.includes(null) || !cssPath;
+  if (missingCss || targets.length === 0 || !STRUCTURES.includes(structure)) {
     process.stderr.write(defaults.usage ?? USAGE);
     return 2;
   }

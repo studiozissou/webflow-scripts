@@ -223,6 +223,9 @@ test('internal referrers never count as a referrer', () => {
     'https://www.studiozissou.com/',
     'https://studiozissou.io/',
     'https://www.studiozissou.io/about',
+    'https://teamzissou.io/',
+    'https://www.teamzissou.io/#contact',
+    'https://teamzissou.webflow.io/',
     'https://wdmorley.webflow.io/',
     'https://staging.example.test/x',
   ];

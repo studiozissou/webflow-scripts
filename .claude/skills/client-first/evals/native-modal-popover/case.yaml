@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: native-modal-popover
+expected_outcome: |
+  build-plan.md builds the Services menu with Webflow's native Popover element and the booking form with the native Modal element, both opened by Button elements wired in Link settings, a close Button with Hide and an aria-label on the modal, Client-First [group]_[element] classes, the modal as a direct child of main-wrapper and the popover inside the nav, Popover open / Backdrop states linked to variables with no z-index, components named Modal / … and Component / …, and no JavaScript for opening, closing or positioning.

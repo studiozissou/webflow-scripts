@@ -1,7 +1,7 @@
 #!/bin/bash
 # Shared setup for the triage runners (triage-morning.sh, triage-approve.sh, triage-job.sh,
-# triage-consolidate.sh) and the learnings-pointer.sh SessionEnd hook: the allowlist loader,
-# the launchd environment, the claude lookup, the Notion token export, the triage.off kill
+# triage-consolidate.sh, triage-chat.sh) and the learnings-pointer.sh SessionEnd hook: the allowlist loader,
+# the launchd environment, the claude lookup, the Notion and Slack token exports, the triage.off kill
 # switch and the learnings inbox append. Sourced, never run; each runner resolves it from its own
 # directory. A helper that cannot continue sets TRIAGE_ERROR, prints it and exits 1.
 
@@ -67,6 +67,29 @@ triage_notion_token() {
   else
     echo "WARNING: Keychain item mcp/notion-triage not found; Notion task reads and writes will fail" >&2
   fi
+}
+
+# Export SLACK_BOT_TOKEN from the Keychain item mcp/slack-bot for tools/slack/cli.js and, with
+# the argument app, SLACK_APP_TOKEN from mcp/slack-app for the chat daemon's socket, keeping
+# values already set. Never printed. Returns 1 after a warning when one is missing; the caller
+# decides whether that is fatal. Build jobs never call this.
+triage_slack_token() {
+  local kind var token rc=0
+  for kind in bot "$@"; do
+    case "$kind" in
+      bot) var=SLACK_BOT_TOKEN ;;
+      app) var=SLACK_APP_TOKEN ;;
+      *) echo "triage_slack_token: unknown token $kind" >&2; return 1 ;;
+    esac
+    [ -z "${!var:-}" ] || continue
+    if token=$(security find-generic-password -s mcp -a "slack-$kind" -w 2>/dev/null) && [ -n "$token" ]; then
+      export "$var=$token"
+    else
+      echo "WARNING: Keychain item mcp/slack-$kind not found; Slack calls that need $var will fail" >&2
+      rc=1
+    fi
+  done
+  return $rc
 }
 
 # Set TRIAGE_REAL_DIR to $INTERNAL_TRIAGE with symlinks resolved. .claude/triage is a symlink

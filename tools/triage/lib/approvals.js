@@ -1,6 +1,6 @@
 // Turns Slack thread replies into approved and skipped build (B), plan (P) and automation (A) items, goal-fit decisions and the advisor verdict, fail-closed: only the digest thread, only after the digest ts, only the configured user, labels are the digest's running numbers (1..N, from digest.js numberParts) or, in older digests, B/P/A/Q prefixes with a bare number meaning B; each line of a reply is one command ("go 3 5", "link 12", or a list line "12. link"), and a reply with one bad line is rejected whole; only go/skip on build, plan and automation items (go all means every build item only), ok changes (which also applies the G goal-link proposals), ok advisors (only when the digest carries an advisor verdict) and link/keep/drop on goal-fit Q items; S session and V advisor lines are display only, never a reply ts twice (processedTs comes back de-duplicated); a reply with any unknown token is rejected whole and reported, never guessed. link/keep/drop count as commands only when a Q label follows the verb; otherwise the reply is chatter and ignored. Each Q item is decided once; drop only proposes Status Cancelled and is approved by a later ok changes. goalFitState ({ [label]: { verb, taskId, ts, status: done|pending|approved } }) carries both across runs.
 
-const COMMAND = /^(go|skip|link|keep|drop|ok\s+changes|ok\s+advisors)\b(.*)$/is;
+export const COMMAND = /^(go|skip|link|keep|drop|ok\s+changes|ok\s+advisors)\b(.*)$/is;
 const OK_CHANGES_TAIL = /^\s*[.!]?$/;
 export const GOAL_FIT_KIND = 'goal-fit';
 export const PLAN_KIND = 'plan';
@@ -29,6 +29,20 @@ function commandsOf(text, goalFitLabels = new Set()) {
   if (!parsed.some(Boolean)) return null;
   const bad = lines.find((_, i) => !parsed[i]);
   return bad === undefined ? parsed : { problem: bad.slice(0, 40) };
+}
+
+// { verb, rest } for the first command line of a reply, null when it is chatter; the chat router uses it to send approvals to /triage approve.
+export function commandOf(text) {
+  for (const line of String(text ?? '').split('\n')) {
+    const list = LIST_LINE.exec(line);
+    if (list) return { verb: list[2].toLowerCase(), rest: ` ${list[1]}` };
+    const match = COMMAND.exec(line.trim());
+    if (!match) continue;
+    const verb = match[1].toLowerCase().replace(/\s+/g, ' ');
+    if (GOAL_FIT_VERBS.has(verb) && !/^\s*Q?\d+\b/i.test(match[2])) continue;
+    return { verb, rest: match[2] };
+  }
+  return null;
 }
 
 function cloneState(st) {

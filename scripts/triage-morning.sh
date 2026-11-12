@@ -67,6 +67,8 @@ triage_env
 triage_claude_bin
 # tools/notion/cli.js reads and writes tasks over REST with this token.
 triage_notion_token
+# tools/slack/cli.js posts the digest and its thread replies as the bot with this token.
+triage_slack_token || true
 
 mkdir -p "$REPORT_DIR"
 

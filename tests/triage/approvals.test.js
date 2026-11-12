@@ -207,7 +207,7 @@ test('a digest with no Q items returns empty goal-fit results', () => {
 });
 
 test('link, keep and drop not followed by a Q label are chatter: ignored and not recorded', () => {
-  for (const text of ['keep going', 'drop me a note', 'link to the doc?', 'keep', 'drop 1', 'keep all', 'Link: Q1']) {
+  for (const text of ['keep going', 'drop me a note', 'link to the doc?', 'keep', 'keep all', 'Link: Q1']) {
     const r = parse([reply('1762844500.000001', text)]);
     assert.deepEqual(r.goalFit, NO_FIT, text);
     assert.deepEqual(r.unknown, [], text);

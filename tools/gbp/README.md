@@ -82,12 +82,12 @@ Do not add `gbp_apply`, `mcp__gbp` or `mcp__gbp__*` to any allowlist.
 
 These came from reading Google's docs and have only been tested against mocks. Check them with live reads and `validateOnly` before the first real write, then fix and add tests for any difference.
 
-- Mask paths `regularHours`, `specialHours`, `websiteUri`, `phoneNumbers`, `profile.description`, `categories`
+- Mask paths `websiteUri`, `phoneNumbers`, `profile.description`, `categories` (`regularHours` and `specialHours` confirmed live, 12 Nov 2026)
 - Whether `business.manage` covers reviews and posts
 - The quota for v4 reviews and posts
 - `DailyMetric` names beyond `WEBSITE_CLICKS` and `CALL_CLICKS`
-- Which edits Google holds for review, and whether `metadata.hasPendingEdits` is the right path (`PENDING_EDITS_PATH` in `client.js`)
-- Whether Google rewrites values on save, such as phone formats, trailing slashes or the order of hours periods; any of these would show as `mismatch`
+- Which edits Google holds for review. Hours edits are held for about an hour; during that time `metadata.hasPendingEdits` stayed false and `getGoogleUpdated` returned `pendingMask`, so the status check reads both
+- Whether Google rewrites values on save, such as phone formats, trailing slashes or the order of hours periods; any of these would show as `mismatch`. Known rewrite: Google adds an `endDate` equal to `startDate` to each special-hours period, which the comparison now ignores
 
 Review reply and post applies stay mock-tested until their first real use. Do not post test content on a client listing; watch the first real one.
 

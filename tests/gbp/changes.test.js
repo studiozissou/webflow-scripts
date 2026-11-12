@@ -173,6 +173,50 @@ describe('changes', () => {
     });
   });
 
+  it('treats a special-hours endDate equal to startDate as omitted', () => {
+    const day = { year: 2026, month: 12, day: 24 };
+    const requested = { specialHourPeriods: [{ startDate: day, closed: true }] };
+    const returned = {
+      specialHourPeriods: [{ startDate: day, endDate: { ...day }, closed: true }],
+    };
+    assert.equal(sameFieldValue('specialHours', requested, returned), true);
+    assert.equal(
+      sameFieldValue('specialHours', requested, {
+        specialHourPeriods: [
+          { startDate: day, endDate: { ...day, day: 26 }, closed: true },
+        ],
+      }),
+      false,
+    );
+  });
+
+  describe('locationStatus pendingMask', () => {
+    it('is pending when Google lists an edited field in pendingMask', () => {
+      assert.equal(
+        locationStatus({
+          fields: ['regularHours'],
+          requested: { regularHours: { periods: [1] } },
+          merchant: { regularHours: { periods: [1] } },
+          live: { regularHours: { periods: [1] } },
+          pendingMask: 'regularHours,specialHours',
+        }),
+        'pending',
+      );
+    });
+    it('ignores pendingMask entries for fields that were not edited', () => {
+      assert.equal(
+        locationStatus({
+          fields: ['websiteUri'],
+          requested: { websiteUri: 'new' },
+          merchant: { websiteUri: 'new' },
+          live: { websiteUri: 'new' },
+          pendingMask: 'regularHours',
+        }),
+        'live',
+      );
+    });
+  });
+
   describe('locationStatus', () => {
     const fields = ['websiteUri'];
     const requested = { websiteUri: 'new' };

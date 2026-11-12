@@ -81,7 +81,22 @@ function canonical(value) {
   return entries.length === 0 ? undefined : Object.fromEntries(entries);
 }
 
+function sameDate(a, b) {
+  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+}
+
 function comparable(field, value) {
+  if (field === 'specialHours') {
+    return {
+      ...value,
+      specialHourPeriods: (value?.specialHourPeriods ?? []).map(
+        ({ endDate, ...period }) =>
+          endDate && !sameDate(endDate, period.startDate)
+            ? { ...period, endDate }
+            : period,
+      ),
+    };
+  }
   if (field !== 'categories') return value;
   return {
     primary: value?.primaryCategory?.name,
@@ -97,12 +112,14 @@ export function sameFieldValue(field, a, b) {
   return left === right;
 }
 
-export function locationStatus({ fields, requested, merchant, live }) {
+export function locationStatus({ fields, requested, merchant, live, pendingMask }) {
   const asRequested = fields.every((field) =>
     sameFieldValue(field, fieldValue(merchant, field), requested[field]),
   );
   if (!asRequested) return 'mismatch';
   if (hasPendingEdits(merchant)) return 'pending';
+  const pending = (pendingMask ?? '').split(',').map((path) => path.trim());
+  if (fields.some((field) => pending.includes(field))) return 'pending';
   const sameAsLive = fields.every((field) =>
     sameFieldValue(field, fieldValue(merchant, field), fieldValue(live, field)),
   );
@@ -187,6 +204,7 @@ export function createChanges({
           requested: preview.after,
           merchant,
           live: updated.location ?? {},
+          pendingMask: updated.pendingMask,
         });
         return status === 'mismatch'
           ? { status, readBack: pickFields(merchant, preview.fields) }

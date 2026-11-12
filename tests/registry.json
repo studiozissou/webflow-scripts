@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-11",
+  "lastUpdated": "2026-11-12",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -932,6 +932,16 @@
       "critical": false,
       "description": "Coconut /pricing Client First V3 rebuild on pricing-cf: V3 shell and sections, no legacy layout classes, details FAQ with microdata, subgrid price table, script hooks (menu, UTM), element target; live /pricing control",
       "created": "2026-11-11"
+    },
+    {
+      "slug": "oost-kerst-layout-fixes",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/oost-kerst-layout-fixes.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-12",
+      "description": "Oost special-times lists (home section_home-feestdagen, /afhalen #feestdagen, NL+EN) use hours_list is-medium (18px/500, max 28rem) and fit one line per row at 992 and 1280px; footer_bottom has no spacer and sits on one row at 1280px; footer carries no Kerstdeal pointer. Expected to fail until the Designer change ships."
     }
   ]
 }

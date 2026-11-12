@@ -48,7 +48,7 @@ const FAKE_CLAUDE = `#!/usr/bin/env node
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const args = process.argv.slice(2);
-fs.appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ args, cwd: process.cwd(), jobDir: process.env.CLAUDE_JOB_DIR || null, notion: process.env.NOTION_TOKEN || null, buildJob: process.env.TRIAGE_BUILD_JOB || null }) + '\\n');
+fs.appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ args, cwd: process.cwd(), jobDir: process.env.CLAUDE_JOB_DIR || null, notion: process.env.NOTION_TOKEN || null, buildJob: process.env.TRIAGE_BUILD_JOB || null, scheduled: process.env.TRIAGE_SCHEDULED || null }) + '\\n');
 const prompt = args[1] || '';
 const slug = process.env.FAKE_SLUG;
 if (process.env.FAKE_OFF_ON && prompt.startsWith('/' + process.env.FAKE_OFF_ON)) fs.writeFileSync(process.env.FAKE_OFF_FILE, '');
@@ -269,6 +269,35 @@ test('morning runner runs snapshot collect in the repo before claude', () => {
   assert.equal(second.args[0], '-p');
 });
 
+test('morning runner tells claude it is the scheduled run, holds a lock while it runs and frees it after', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 0);
+  const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal }) });
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.equal(fake.calls().find((c) => c.args)?.scheduled, '1');
+  assert.equal(existsSync(join(internal, 'morning.lock')), false);
+});
+
+test('morning runner exits 0 without claude while a live run holds the lock, and clears a dead run lock', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 0);
+  const lock = join(internal, 'morning.lock');
+  mkdirSync(lock, { recursive: true });
+  writeFileSync(join(lock, 'pid'), String(process.pid));
+  const env = runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal });
+  const held = spawnSync('bash', [MORNING], { encoding: 'utf8', env });
+  assert.equal(held.status, 0, held.stderr + held.stdout);
+  assert.match(held.stderr, /already running/);
+  assert.equal(fake.calls().length, 0);
+  writeFileSync(join(lock, 'pid'), '999999');
+  const freed = spawnSync('bash', [MORNING], { encoding: 'utf8', env });
+  assert.equal(freed.status, 0, freed.stderr + freed.stdout);
+  assert.ok(fake.calls().some((c) => c.args?.[0] === '-p'));
+  assert.equal(existsSync(lock), false);
+});
+
 const FAKE_NOTION_CLI = `const args = process.argv.slice(2);
 require('fs').appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ notion: args, token: process.env.NOTION_TOKEN || null }) + '\\n');
 if (process.env.FAKE_NOTION_FAIL === args[0]) { process.stdout.write('[{"partial":'); process.exit(2); }
@@ -473,6 +502,34 @@ test('job script plans, builds and tests on job/<slug> without pushing', () => {
   assert.match(result(fx.jobDir).summary, /test:acme/);
   assert.equal(git(fx.remote, 'branch', '--list', 'job/*').trim(), '');
   assert.match(log, /FAKE CLAUDE OUTPUT/);
+});
+
+test('a plan job runs /plan only on job/<slug>-plan, never builds, and finishes planned', () => {
+  const fake = fakeClaude();
+  const fx = jobRepo();
+  writeMeta(fx.jobDir, { kind: 'plan' });
+  const r = runJob(fx, fake);
+  assert.equal(r.status, 0, read(join(fx.jobDir, 'job.log')));
+  const calls = fake.calls();
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].args[1], /^\/plan --auto /);
+  assert.match(calls[0].cwd, /\.claude\/worktrees\/job-faq-schema-plan$/);
+  const res = result(fx.jobDir);
+  assert.equal(res.status, 'planned');
+  assert.equal(res.branch, 'job/faq-schema-plan');
+  assert.equal(res.specPath, '.claude/specs/faq-schema.md');
+  assert.equal(existsSync(join(fx.repo, 'built.txt')), false);
+  assert.equal(git(fx.repo, 'rev-list', '--count', 'origin/main..job/faq-schema-plan').trim(), '0');
+});
+
+test('job script rejects an unknown kind in meta.json before any claude call', () => {
+  const fake = fakeClaude();
+  const fx = jobRepo();
+  writeMeta(fx.jobDir, { kind: 'deploy' });
+  const r = runJob(fx, fake);
+  assert.notEqual(r.status, 0);
+  assert.deepEqual(fake.calls(), []);
+  assert.match(result(fx.jobDir).summary, /kind/);
 });
 
 test('job script reports failed with counts when the area tests fail', () => {

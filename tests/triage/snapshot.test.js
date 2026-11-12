@@ -167,8 +167,8 @@ test('rollup counts, headline and thread: unique S numbers across classes, top 5
   assert.ok(lines.includes('*In flight (5 of 8)*'));
   assert.ok(lines.includes('*Planned (5 of 8)*'));
   assert.ok(lines.includes('*Stale (1)*'), 'Monday lists Stale');
-  assert.match(r.thread, /S1\. Acme invoice check\. Job waits on you\. Asks: keep the old footer - or drop it\?/);
-  assert.match(r.thread, /S2\. Hooli landing copy\. Remote session waits on you\./);
+  assert.match(r.thread, /^S1\. Acme invoice check\. Asks: keep the old footer - or drop it\?$/m);
+  assert.match(r.thread, /^S2\. Hooli landing copy\.$/m);
   assert.ok(lines.includes('Cloud sessions: not available in scheduled run'));
   const shown = r.items.map((i) => i.id);
   assert.equal(shown.length, new Set(shown).size, 'no item listed twice');
@@ -192,12 +192,19 @@ test('rollup lists Stale only on Mondays and drops the cloud line once remote is
 test('rollup never shows Slack markup or links from untrusted titles', () => {
   const r = rollup(busySnapshot({ sessions: [{ id: 'x', kind: 'job', title: '*bold* <!channel> `code` ~x~', state: 'blocked', needsUser: true }] }), { now: MONDAY });
   const line = r.thread.split('\n').find((l) => l.startsWith('S1.'));
-  assert.equal(line, 'S1. bold !channel code x. Job waits on you.');
+  assert.equal(line, 'S1. bold !channel code x.');
 });
 
 test('rollup shows only the first clause of a free-text spec status', () => {
   const r = rollup(busySnapshot({ specs: [{ id: 'spec:x', slug: 'x', title: 'X', bucket: 'buildable', status: 'Planned 2026-10-13, ready to execute in a separate window' }] }), { now: MONDAY });
-  assert.match(r.thread, /S\d+\. X\. Spec is planned 2026-10-13\. No build branch yet\./);
+  assert.match(r.thread, /S\d+\. X\. Spec is planned\. No build branch yet\./);
+});
+
+test('a long ask is cut at its last full sentence within 20 words, or at 12 words with an ellipsis', () => {
+  const ask = (detail) => rollup(busySnapshot({ sessions: [{ id: 'q', kind: 'job', title: 'Q', detail, state: 'blocked', needsUser: true }] }), { now: MONDAY }).thread.split('\n').find((l) => l.startsWith('S1.'));
+  assert.equal(ask('Is the copy final? Then I can publish it to the live site this evening after the review call with Anna.'), 'S1. Q. Asks: Is the copy final?');
+  assert.equal(ask('confirm: (1) was the 7th hour real work to add back? (2) should I send it today or wait'), 'S1. Q. Asks: confirm: (1) was the 7th hour real work to add back? (2) should I send it today or wait.');
+  assert.equal(ask('one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty more'), 'S1. Q. Asks: one two three four five six seven eight nine ten eleven twelve…');
 });
 
 test('rollup marks an outdated snapshot', () => {

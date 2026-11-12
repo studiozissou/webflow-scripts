@@ -99,12 +99,11 @@ test('unlinked counts working days: on a Friday, the next Tuesday is still near-
   assert.deepEqual(unlinked(tasks, GOALS, { now: friday }).map((t) => t.id), ['t-wed']);
 });
 
-test('goalsBlock writes one short line per active goal, flagged goals first, and passes STE lint', () => {
+test('goalsBlock writes one short line per flagged goal only, and passes STE lint', () => {
   const lines = goalsBlock(health(GOALS, TASKS, { now: NOW }));
   assert.deepEqual(lines, [
-    'Launch the Globex shop: no open task. Overdue since 2026-11-01. No review yet.',
+    'Launch the Globex shop: no open task. Overdue since 2026-11-01.',
     'Write 2 case studies: no open task. Review today.',
-    'Acme retainer health: 2 open tasks. Review 12 days ago.',
   ]);
   const { ok, ratio, warnings } = lint(lines.join('\n'));
   assert.ok(ok, JSON.stringify(warnings));
@@ -112,15 +111,17 @@ test('goalsBlock writes one short line per active goal, flagged goals first, and
 });
 
 test('goalsBlock caps at 8 lines, uses singular forms, cleans untrusted names and handles no goals', () => {
-  const many = Array.from({ length: 10 }, (_, i) => ({ id: `g${i}`, name: `Goal ${i}`, openTasks: 1, noOpenTask: false, overdue: false, targetDate: null, daysSinceReview: 1 }));
+  const many = Array.from({ length: 10 }, (_, i) => ({ id: `g${i}`, name: `Goal ${i}`, openTasks: 1, noOpenTask: false, overdue: false, targetDate: null, daysSinceReview: 20 }));
   const lines = goalsBlock({ goals: many });
   assert.equal(MAX_BLOCK_LINES, 8);
   assert.equal(lines.length, 8);
-  assert.equal(lines[0], 'Goal 0: 1 open task. Review 1 day ago.');
-  const dirty = goalsBlock({ goals: [{ name: 'Ship *it* — now 🚀 <@U1>', openTasks: 3, noOpenTask: false, overdue: false, daysSinceReview: null }] });
-  assert.equal(dirty[0], 'Ship it - now @U1: 3 open tasks. No review yet.');
+  assert.equal(lines[0], 'Goal 0: 1 open task. Review 20 days ago.');
+  const dirty = goalsBlock({ goals: [{ name: 'Ship *it* — now 🚀 <@U1>', openTasks: 0, noOpenTask: true, overdue: false, daysSinceReview: null }] });
+  assert.equal(dirty[0], 'Ship it - now @U1: no open task.');
   assert.ok(lint(dirty.join('\n')).ok);
   assert.deepEqual(goalsBlock({ goals: [] }), ['No active goals. Set one with /strategy.']);
+  const fine = [1, 2].map((i) => ({ name: `Goal ${i}`, openTasks: 2, noOpenTask: false, overdue: false, daysSinceReview: i === 1 ? null : 13 }));
+  assert.deepEqual(goalsBlock({ goals: fine }), ['All 2 goals are on track.']);
   assert.ok(lint(goalsBlock({ goals: [] }).join('\n')).ok);
 });
 

@@ -11,6 +11,9 @@
 # .claude/triage/allowed-tools.txt (private), and touching .claude/triage/triage.off stops
 # every run.
 #
+# Only one run at a time: it holds .claude/triage/morning.lock (with its pid) and exits 0 while a
+# live run holds it. Claude gets TRIAGE_SCHEDULED=1, so it knows any `claude -p /triage` process is itself.
+#
 # Before /triage it reads the open Notion tasks and the goals into .claude/triage/world/
 # (tasks-<date>.json, goals-<date>.json) with tools/notion/cli.js, then writes the session
 # snapshot (.claude/triage/world/<date>.json) with `node tools/triage/cli.js snapshot collect`:
@@ -38,6 +41,20 @@ if triage_off; then
   echo "triage-morning: $INTERNAL_TRIAGE/triage.off exists; not running" >&2
   exit 0
 fi
+
+LOCK="$INTERNAL_TRIAGE/morning.lock"
+mkdir -p "$INTERNAL_TRIAGE"
+if ! mkdir "$LOCK" 2>/dev/null; then
+  holder=$(cat "$LOCK/pid" 2>/dev/null)
+  if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
+    echo "triage-morning: already running (pid $holder); not running" >&2
+    exit 0
+  fi
+  rm -rf "$LOCK"
+  mkdir "$LOCK" || { echo "FATAL: cannot take $LOCK" >&2; exit 1; }
+fi
+echo $$ > "$LOCK/pid"
+trap 'rm -rf "$LOCK"' EXIT
 
 load_allowlist ALLOWED "$INTERNAL_TRIAGE/allowed-tools.txt"
 triage_real_dir
@@ -84,7 +101,7 @@ fi
 # stderr goes to the launchd log, not into the report. The report is something the user
 # actually reads over coffee, and a stray warning spliced into the middle of a table is
 # enough to make it look broken.
-"$CLAUDE_BIN" -p "/triage${ARGS:+ $ARGS}" \
+TRIAGE_SCHEDULED=1 "$CLAUDE_BIN" -p "/triage${ARGS:+ $ARGS}" \
   --add-dir "$TRIAGE_REAL_DIR" \
   --allowedTools "${ALLOWED[@]}" \
   > "$REPORT"

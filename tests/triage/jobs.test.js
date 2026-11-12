@@ -158,7 +158,8 @@ test('start spawns the script with slug, pageId, threadTs, jobDir and records me
   assert.equal(r.pageId, 'page-1');
   assert.equal(typeof r.pid, 'number');
   const meta = JSON.parse(readFileSync(join(r.jobDir, 'meta.json'), 'utf8'));
-  assert.deepEqual(Object.keys(meta).sort(), ['brief', 'label', 'pageId', 'pid', 'pidStart', 'slug', 'startedAt', 'task', 'threadTs']);
+  assert.deepEqual(Object.keys(meta).sort(), ['brief', 'kind', 'label', 'pageId', 'pid', 'pidStart', 'slug', 'startedAt', 'task', 'threadTs']);
+  assert.equal(meta.kind, 'build');
   assert.equal(meta.pid, r.pid);
   assert.equal(meta.label, 'B1');
   assert.equal(meta.task, 'Add FAQ schema');
@@ -325,4 +326,39 @@ test('start validates the label and defaults it to null', () => {
   const r = start(opts(root, { label: undefined }));
   assert.equal(r.started, true);
   assert.equal(JSON.parse(readFileSync(join(r.jobDir, 'meta.json'), 'utf8')).label, null);
+});
+
+test('start stores kind plan in meta and rejects an unknown kind', async () => {
+  const root = tmp();
+  const r = start(opts(root, { kind: 'plan', label: 'P1' }));
+  assert.equal(r.started, true);
+  const meta = JSON.parse(readFileSync(join(r.jobDir, 'meta.json'), 'utf8'));
+  assert.equal(meta.kind, 'plan');
+  assert.throws(() => start(opts(tmp(), { kind: 'deploy' })), /kind/);
+  assert.ok(await waitFor(() => existsSync(join(r.jobDir, 'result.json'))));
+});
+
+test('the cap of 3 counts plan and build jobs together', () => {
+  const root = tmp();
+  const o = opts(root, { kind: 'plan' });
+  fakeJob(o.jobsDir, 'a', { pid: process.pid, kind: 'plan' });
+  fakeJob(o.jobsDir, 'b', { pid: process.pid, kind: 'build' });
+  fakeJob(o.jobsDir, 'c', { pid: process.pid });
+  assert.deepEqual(start(o), { started: false, reason: 'cap' });
+  assert.deepEqual(start({ ...o, kind: 'build', pageId: 'page-2' }), { started: false, reason: 'cap' });
+});
+
+test('a build hands over the page of a finished, reported plan job but not of a running one', async () => {
+  const root = tmp();
+  const o = opts(root);
+  fakeJob(o.jobsDir, 'page-1', { kind: 'plan', pid: deadPid() }, { 'result.json': '{"status":"planned"}', reported: 'x' });
+  const r = start(o);
+  assert.equal(r.started, true);
+  assert.ok(await waitFor(() => existsSync(join(r.jobDir, 'result.json'))));
+  const o2 = opts(tmp());
+  fakeJob(o2.jobsDir, 'page-1', { kind: 'plan', pid: process.pid });
+  assert.deepEqual(start(o2), { started: false, reason: 'claimed' });
+  const o3 = opts(tmp(), { kind: 'plan' });
+  fakeJob(o3.jobsDir, 'page-1', { kind: 'plan', pid: deadPid() }, { 'result.json': '{"status":"planned"}', reported: 'x' });
+  assert.deepEqual(start(o3), { started: false, reason: 'claimed' });
 });

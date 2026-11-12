@@ -1,15 +1,16 @@
 #!/bin/bash
-# Build one approved Claude task with /plan --auto then /build --auto on its own job/<slug> branch and worktree, run its tests, and write result.json; it never pushes, deploys or publishes.
+# Build one approved Claude task with /plan --auto then /build --auto on its own job/<slug> branch and worktree, run its tests, and write result.json, or, for a plan job (meta.json kind "plan"), only run /plan --auto on job/<slug>-plan and finish "planned"; it never pushes, deploys or publishes.
 #
 # Started detached by tools/triage/lib/jobs.js:
 #   scripts/triage-job.sh <slug> <pageId> <threadTs> <jobDir>
 # <jobDir> holds meta.json {pageId, slug, threadTs, label, task, brief, startedAt, pid}.
 # Every exit writes <jobDir>/result.json {status, branch, tests: {passed, total}, summary,
-# specPath, browserChecks}. browserChecks is always "not run": an unattended job does not
+# specPath, browserChecks}; status is passed, planned or failed. A build job whose spec already
+# exists (written by an earlier plan job into the private specs folder) skips /plan. browserChecks is always "not run": an unattended job does not
 # run the /build browser verify loop, so that check is left to whoever reviews the branch.
 # It exports TRIAGE_BUILD_JOB=1, so tools/notion/cli.js and `jobs start` refuse inside the
 # job (defence in depth, not a boundary; see ADR-002). The exit code is 0 only when status
-# is "passed". Output goes to
+# is "passed" or "planned". Output goes to
 # <jobDir>/job.log. Tools are limited to .claude/triage/job-allowed-tools.txt and
 # .claude/triage/job-disallowed-tools.txt (private); the run refuses without both, or
 # when the disallowed list does not block git push. .claude/triage/triage.off stops it.
@@ -79,14 +80,14 @@ learnings_pointer() {
 finish() {
   local rc=$?
   set +e
-  if [ "$rc" -ne 0 ] || [ "$STATUS" != passed ]; then
+  if [ "$rc" -ne 0 ] || { [ "$STATUS" != passed ] && [ "$STATUS" != planned ]; }; then
     STATUS=failed
     [ -n "$SUMMARY" ] || SUMMARY="${TRIAGE_ERROR:-Failed during $STAGE (exit $rc); see job.log}"
   fi
   write_result
   learnings_pointer || true
   echo "=== triage-job $SLUG $STATUS $(date '+%Y-%m-%d %H:%M:%S'): $SUMMARY ==="
-  [ "$STATUS" = passed ] && exit 0
+  [ "$STATUS" = passed ] || [ "$STATUS" = planned ] && exit 0
   exit 1
 }
 
@@ -144,12 +145,17 @@ meta_field() {
 TASK=$(meta_field task)
 BRIEF=$(meta_field brief)
 [ -n "$TASK" ] || fail "meta.json has no task"
+KIND=$(meta_field kind)
+KIND="${KIND:-build}"
+[ "$KIND" = build ] || [ "$KIND" = plan ] || fail "meta.json kind must be build or plan"
+JOB_NAME="$SLUG"
+[ "$KIND" = plan ] && JOB_NAME="$SLUG-plan"
 
 triage_claude_bin
 
 STAGE=worktree
 cd "$REPO_ROOT"
-WT="$REPO_ROOT/.claude/worktrees/job-$SLUG"
+WT="$REPO_ROOT/.claude/worktrees/job-$JOB_NAME"
 [ ! -e "$WT" ] || fail "worktree $WT already exists"
 fetched=0
 for attempt in 1 2 3; do
@@ -157,8 +163,8 @@ for attempt in 1 2 3; do
   sleep $((attempt * 5))
 done
 [ "$fetched" = 1 ] || fail "git fetch origin main failed"
-git worktree add --no-track "$WT" -b "job/$SLUG" origin/main || fail "git worktree add failed (does branch job/$SLUG already exist?)"
-BRANCH="job/$SLUG"
+git worktree add --no-track "$WT" -b "job/$JOB_NAME" origin/main || fail "git worktree add failed (does branch job/$JOB_NAME already exist?)"
+BRANCH="job/$JOB_NAME"
 
 if [ ! -e "$WT/.claude/triage" ] && [ -x "$WT/scripts/link-internal.sh" ]; then
   (cd "$WT" && scripts/link-internal.sh) || echo "triage-job: link-internal.sh reported a problem; continuing"
@@ -173,10 +179,18 @@ export CLAUDE_JOB_DIR="$JOB_DIR"
 PLAN_PROMPT="/plan --auto $TASK${BRIEF:+ — $BRIEF} (write the spec as .claude/specs/$SLUG.md; spec slug: $SLUG)"
 
 STAGE=plan
-stop_if_off /plan
-"$CLAUDE_BIN" -p "$PLAN_PROMPT" --allowedTools "${ALLOWED[@]}" --disallowedTools "${DISALLOWED[@]}" || fail "/plan --auto exited non-zero"
+if [ "$KIND" = plan ] || [ ! -f "$WT/.claude/specs/$SLUG.md" ]; then
+  stop_if_off /plan
+  "$CLAUDE_BIN" -p "$PLAN_PROMPT" --allowedTools "${ALLOWED[@]}" --disallowedTools "${DISALLOWED[@]}" || fail "/plan --auto exited non-zero"
+fi
 [ -f "$WT/.claude/specs/$SLUG.md" ] || fail "/plan wrote no spec at .claude/specs/$SLUG.md"
 SPEC_PATH=".claude/specs/$SLUG.md"
+
+if [ "$KIND" = plan ]; then
+  STATUS=planned
+  SUMMARY="Planned $SLUG: spec at $SPEC_PATH; not built. Reply go to build it."
+  exit 0
+fi
 
 STAGE=build
 stop_if_off /build

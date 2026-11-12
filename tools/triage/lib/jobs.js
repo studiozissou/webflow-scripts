@@ -1,4 +1,4 @@
-// File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, slug, threadTs, label, task, brief, startedAt, pid, pidStart}, result.json written by the job script, a reported marker, a live cap checked with process.kill(pid, 0) plus the process start time (a dead or reused pid without result.json counts as finished-failed), a kill switch, and a detached /bin/bash spawn of the job script with args [slug, pageId, threadTs, jobDir] with no tokens and TRIAGE_BUILD_JOB=1 in its env.
+// File-based registry for unattended triage build jobs: <jobsDir>/<pageId>/ claimed by atomic mkdir, meta.json {pageId, kind: build|plan, slug, threadTs, label, task, brief, startedAt, pid, pidStart} (the job script reads kind from it; a build may take over the page of a finished, reported plan job), result.json written by the job script, a reported marker, a live cap shared by plan and build jobs, checked with process.kill(pid, 0) plus the process start time (a dead or reused pid without result.json counts as finished-failed), a kill switch, and a detached /bin/bash spawn of the job script with args [slug, pageId, threadTs, jobDir] with no tokens and TRIAGE_BUILD_JOB=1 in its env.
 import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -17,6 +17,7 @@ export const PAGE_ID = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const THREAD_TS = /^\d+\.\d+$/;
 const LABEL = /^[A-Z]?\d{1,3}$/;
+export const KINDS = new Set(['build', 'plan']);
 
 function check(value, re, name) {
   if (typeof value !== 'string' || !re.test(value)) throw new Error(`invalid ${name}: ${value}`);
@@ -147,6 +148,12 @@ export function collect(dir) {
   return out;
 }
 
+function releaseFinishedPlan(dir, pageId) {
+  if (!existsSync(join(dir, pageId))) return;
+  const state = stateOf(dir, pageId);
+  if (state.meta.kind === 'plan' && state.finished && state.reported) release(dir, pageId);
+}
+
 function childEnv(jobDir) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !SECRET_ENV(name)));
   return { ...env, CLAUDE_JOB_DIR: jobDir, TRIAGE_BUILD_JOB: '1' };
@@ -160,6 +167,7 @@ export function start({
   task = '',
   brief = '',
   label = null,
+  kind = 'build',
   script = DEFAULT_SCRIPT,
   killSwitch = DEFAULT_KILL_SWITCH,
   cap = DEFAULT_CAP,
@@ -168,9 +176,11 @@ export function start({
   check(slug, SLUG, 'slug');
   check(threadTs, THREAD_TS, 'threadTs');
   if (label != null) check(label, LABEL, 'label');
+  if (!KINDS.has(kind)) throw new Error(`invalid kind: ${kind}`);
   if (killSwitch && existsSync(killSwitch)) return { started: false, reason: 'kill-switch' };
   if (liveCount(jobsDir) >= cap) return { started: false, reason: 'cap' };
-  const claimed = claim(jobsDir, pageId, { slug, threadTs, label, task, brief, startedAt: new Date().toISOString() });
+  if (kind === 'build') releaseFinishedPlan(jobsDir, pageId);
+  const claimed = claim(jobsDir, pageId, { kind, slug, threadTs, label, task, brief, startedAt: new Date().toISOString() });
   if (!claimed.ok) return { started: false, reason: claimed.reason };
   const { jobDir } = claimed;
   if (occupiedCount(jobsDir) > cap) {

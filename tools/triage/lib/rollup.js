@@ -8,6 +8,7 @@ export const MAX_LINES = 40;
 export const CLOUD_FALLBACK = 'Cloud sessions: not available in scheduled run';
 const TITLE_WORDS = 8;
 const DETAIL_WORDS = 12;
+const ASK_WORDS = 20;
 
 const LABELS = { waiting: 'Waiting on you', inFlight: 'In flight', built: 'Built, not merged', planned: 'Planned', stale: 'Stale' };
 const KIND = { job: 'Job', desktop: 'Desktop session', cli: 'Session', cloud: 'Cloud session', remote: 'Remote session', worktree: 'Branch', pr: 'PR', spec: 'Spec', plan: 'Plan' };
@@ -22,6 +23,13 @@ export function plain(text, maxWords) {
     .split(/\s+/)
     .filter(Boolean);
   return words.slice(0, maxWords).join(' ').replace(/[\s,;:-]+$/, '');
+}
+
+function ask(text) {
+  const words = plain(text).split(' ').filter(Boolean);
+  if (words.length <= ASK_WORDS) return words.join(' ');
+  const end = words.slice(0, ASK_WORDS).findLastIndex((w) => /[.?!]$/.test(w));
+  return end >= 0 ? words.slice(0, end + 1).join(' ') : `${plain(text, DETAIL_WORDS)}…`;
 }
 
 export const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -41,8 +49,7 @@ function reasons(item, cls, nowMs) {
     if (item.kind === 'plan') out.push('Plan waits for your go');
     else if (failedBuild(item) && !item.needsUser) out.push(buildLine(item.result), 'Check it');
     else if (item.pr?.reviewRequested && !item.needsUser) out.push(`PR ${item.pr.number} needs your review`);
-    else out.push(`${kind} waits on you`);
-    const detail = plain(item.detail, DETAIL_WORDS);
+    const detail = ask(item.detail);
     if (detail) out.push(`Asks: ${detail}`);
   } else if (cls === 'inFlight') {
     out.push(item.state === 'working' || !item.lastActivity ? `${kind} is working` : `Active ${ago(item.lastActivity, nowMs)} ago`);
@@ -55,7 +62,7 @@ function reasons(item, cls, nowMs) {
       out.push(item.lastActivity ? `No activity for ${workingDaysBetween(item.lastActivity, new Date(nowMs))} working days` : 'No activity found');
     }
   } else if (cls === 'planned') {
-    const status = plain(String(item.spec?.status ?? '').split(/[,;(]|\s[-‒–—―]\s/)[0], 4).toLowerCase();
+    const status = plain(String(item.spec?.status ?? '').replace(/\s*\d{4}-\d{2}-\d{2}/g, '').split(/[,;(]|\s[-‒–—―]\s/)[0], 4).toLowerCase();
     out.push(status ? `Spec is ${status}` : 'Spec is ready', 'No build branch yet');
   }
   return out;
@@ -63,7 +70,7 @@ function reasons(item, cls, nowMs) {
 
 function itemLine(n, item, cls, nowMs) {
   const title = plain(item.title, TITLE_WORDS) || `Untitled ${(KIND[item.kind] ?? 'session').toLowerCase()}`;
-  const sentences = [title, ...reasons(item, cls, nowMs)].map((s) => (/[.!?]$/.test(s) ? s : `${s}.`));
+  const sentences = [title, ...reasons(item, cls, nowMs)].map((s) => (/[.!?…]$/.test(s) ? s : `${s}.`));
   return `S${n}. ${sentences.join(' ')}`;
 }
 

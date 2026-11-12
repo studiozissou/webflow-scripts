@@ -18,6 +18,7 @@ import {
   collectAll,
   merge,
   classify,
+  failedBuild,
   branchSlug,
 } from '../../tools/triage/lib/sessions.js';
 
@@ -209,6 +210,9 @@ test('collectJobs reads state.json and timeline tolerantly and marks blocked job
   const failed = r.items.find((i) => i.id === 'triage-job:page-failed');
   assert.equal(failed.state, 'failed');
   assert.equal(failed.result.status, 'failed');
+  const planned = r.items.find((i) => i.id === 'triage-job:page-planned');
+  assert.deepEqual([planned.kind, planned.state, planned.needsUser], ['plan', 'done', true]);
+  assert.equal(failedBuild(planned), false);
 });
 
 test('collectJobs is unavailable when neither jobs dir exists', () => {

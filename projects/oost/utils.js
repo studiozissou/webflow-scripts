@@ -1,4 +1,4 @@
-// Site-wide helpers moved out of the Webflow footer: rel="noreferrer noopener" on new-tab links, the current year in #year, and hidden Conversion Page and utm_ fields on every form.
+// Site-wide helpers: rel="noreferrer noopener" on new-tab links, the current year in #year, hidden Conversion Page and utm_ fields on every form, and closing the open nav menu when one of its links is tapped.
 (function () {
   'use strict';
 
@@ -44,11 +44,20 @@
     }
   }
 
+  function closeNavOnLinkTap(event) {
+    var target = event.target;
+    if (!target || !target.closest || !target.closest('.w-nav-menu a')) return;
+    var button = document.querySelector('.w-nav-button.w--open');
+    if (button) button.click();
+  }
+
   function run() {
     secureNewTabLinks();
     writeYear();
     tagForms();
   }
+
+  document.addEventListener('click', closeNavOnLinkTap);
 
   if (document.readyState === 'loading')
     document.addEventListener('DOMContentLoaded', run);

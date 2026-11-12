@@ -36,11 +36,13 @@ function run({
   year = true,
   forms = [],
   readyState = 'complete',
+  openButton = null,
 } = {}) {
   const listeners = {};
   const yearEl = year ? makeElement('span') : null;
   const document = {
     readyState,
+    querySelector: (sel) => (sel === '.w-nav-button.w--open' ? openButton : null),
     getElementById: (id) => (id === 'year' ? yearEl : null),
     querySelectorAll: (sel) => {
       if (sel === 'a[target="_blank"]') return links;
@@ -119,4 +121,36 @@ test('waits for DOMContentLoaded while the document is still loading', () => {
   assert.equal(links[0].getAttribute('rel'), null);
   listeners.DOMContentLoaded();
   assert.equal(links[0].getAttribute('rel'), 'noreferrer noopener');
+});
+
+function navButton() {
+  const button = { clicks: 0 };
+  button.click = () => {
+    button.clicks += 1;
+  };
+  return button;
+}
+
+function clickOn({ inMenu }) {
+  const link = makeElement('a');
+  return { target: { closest: (sel) => (sel === '.w-nav-menu a' && inMenu ? link : null) } };
+}
+
+test('a link tapped in the open nav menu closes the menu', () => {
+  const button = navButton();
+  const { listeners } = run({ openButton: button });
+  listeners.click(clickOn({ inMenu: true }));
+  assert.equal(button.clicks, 1);
+});
+
+test('a link tapped while the nav menu is closed leaves the menu alone', () => {
+  const { listeners } = run({ openButton: null });
+  assert.doesNotThrow(() => listeners.click(clickOn({ inMenu: true })));
+});
+
+test('a click outside the nav menu does not toggle it', () => {
+  const button = navButton();
+  const { listeners } = run({ openButton: button });
+  listeners.click(clickOn({ inMenu: false }));
+  assert.equal(button.clicks, 0);
 });

@@ -1,17 +1,22 @@
-// FAQ accordion: keeps only the first native <details> open in each .faq_list and animates open and close with the Web Animations API, leaving reduced-motion visitors and browser-driven toggles such as find-in-page to the native behaviour.
+// FAQ accordion: keeps only the first native <details> open in each .faq_list and tweens open and close with GSAP (height, answer fade, icon turn), leaving reduced-motion visitors, pages without GSAP and browser-driven toggles such as find-in-page to the native behaviour.
 (function () {
   'use strict';
 
   if (window.ROLFING && window.ROLFING.faq) return;
 
   var document = window.document;
-  var EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
-  var OPEN_MS = 400;
-  var CLOSE_MS = 300;
+  var OPEN = { duration: 0.45, ease: 'power3.out' };
+  var CLOSE = { duration: 0.35, ease: 'power2.inOut' };
+  var TURNED = 45;
   var BOUND = 'data-faq-bound';
   var CLOSING = 'is-closing';
 
   var items = [];
+
+  function gsap() {
+    var g = window.gsap;
+    return g && typeof g.fromTo === 'function' ? g : null;
+  }
 
   function prefersReducedMotion() {
     return !!(
@@ -35,47 +40,54 @@
   }
 
   function stop(item) {
-    for (var i = 0; i < item.animations.length; i++) {
-      item.animations[i].onfinish = null;
-      item.animations[i].cancel();
-    }
-    item.animations = [];
+    var g = gsap();
+    for (var i = 0; i < item.tweens.length; i++) item.tweens[i].kill();
+    item.tweens = [];
     item.details.classList.remove(CLOSING);
     item.details.style.overflow = '';
     item.details.style.boxSizing = '';
+    if (!g) return;
+    g.set(item.details, { clearProps: 'height' });
+    if (item.wrap) g.set(item.wrap, { clearProps: 'opacity' });
+    if (item.icon) g.set(item.icon, { clearProps: 'transform' });
+  }
+
+  function tween(item, target, prop, from, to, timing, onComplete) {
+    var fromVars = {};
+    var toVars = { duration: timing.duration, ease: timing.ease };
+    fromVars[prop] = from;
+    toVars[prop] = to;
+    if (onComplete) toVars.onComplete = onComplete;
+    item.tweens.push(gsap().fromTo(target, fromVars, toVars));
   }
 
   function animate(item, opening) {
+    var g = gsap();
     var details = item.details;
-    var wrap = item.wrap;
+    var busy = item.tweens.length > 0;
     var fromHeight = details.offsetHeight;
     var fromOpacity = opening ? 0 : 1;
-    if (wrap && item.animations.length)
-      fromOpacity = px(window.getComputedStyle(wrap).opacity);
+    var fromRotation = opening ? 0 : TURNED;
+    if (busy && item.wrap) fromOpacity = px(g.getProperty(item.wrap, 'opacity'));
+    if (busy && item.icon) fromRotation = px(g.getProperty(item.icon, 'rotation'));
 
     stop(item);
     if (opening) details.setAttribute('open', '');
     else details.classList.add(CLOSING);
     var toHeight = opening ? details.offsetHeight : closedHeight(item);
-    var timing = { duration: opening ? OPEN_MS : CLOSE_MS, easing: EASING };
+    var timing = opening ? OPEN : CLOSE;
 
     details.style.overflow = 'hidden';
     details.style.boxSizing = 'border-box';
-    var height = details.animate(
-      [{ height: fromHeight + 'px' }, { height: toHeight + 'px' }],
-      timing,
-    );
-    item.animations = [height];
-    if (wrap)
-      item.animations.push(
-        wrap.animate([{ opacity: fromOpacity }, { opacity: opening ? 1 : 0 }], timing),
-      );
-    item.opening = opening;
-
-    height.onfinish = function () {
+    tween(item, details, 'height', fromHeight, toHeight, timing, function () {
       if (!opening) details.removeAttribute('open');
       stop(item);
-    };
+    });
+    if (item.wrap)
+      tween(item, item.wrap, 'opacity', fromOpacity, opening ? 1 : 0, timing);
+    if (item.icon)
+      tween(item, item.icon, 'rotation', fromRotation, opening ? TURNED : 0, timing);
+    item.opening = opening;
   }
 
   function bind(details) {
@@ -86,21 +98,20 @@
       details: details,
       summary: summary,
       wrap: details.querySelector('.faq_answer-wrap'),
-      animations: [],
+      icon: details.querySelector('.faq-icon'),
+      tweens: [],
       opening: false,
     };
 
     item.onClick = function (event) {
-      if (prefersReducedMotion() || typeof details.animate !== 'function') return;
+      if (prefersReducedMotion() || !gsap()) return;
       event.preventDefault();
-      var opening = item.animations.length
-        ? !item.opening
-        : !details.hasAttribute('open');
+      var opening = item.tweens.length ? !item.opening : !details.hasAttribute('open');
       animate(item, opening);
     };
 
     item.onToggle = function () {
-      if (item.animations.length && !details.hasAttribute('open')) stop(item);
+      if (item.tweens.length && !details.hasAttribute('open')) stop(item);
     };
 
     summary.addEventListener('click', item.onClick);

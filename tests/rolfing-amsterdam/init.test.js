@@ -14,8 +14,9 @@ const SOURCE = readFileSync(
 );
 const CDN =
   'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@rolfing-amsterdam-v0.1.0/projects/rolfing-amsterdam/';
+const GSAP = 'https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js';
 const MODULES = ['faq-accordion.js'];
-const EXPECTED = MODULES.map((m) => CDN + m);
+const EXPECTED = [GSAP, ...MODULES.map((m) => CDN + m)];
 
 function makeStorage(seed = {}) {
   const data = { ...seed };
@@ -70,7 +71,7 @@ function run({
 const urls = (appended) => appended.map((el) => el.src || el.href);
 const scripts = (appended) => appended.filter((el) => el.tagName === 'SCRIPT');
 
-test('takeover: loads only faq-accordion.js from the same folder as init.js, with no Lenis and neither shared utility', () => {
+test('loads GSAP 3.14.2 from the Webflow CDN, then faq-accordion.js from the same folder as init.js, with no Lenis and neither shared utility', () => {
   const { appended } = run();
   assert.deepEqual(urls(appended), EXPECTED);
 });
@@ -117,20 +118,20 @@ test('runs once even if the tag is pasted twice', () => {
 });
 
 test('skips a dependency or module whose exact URL is already on the page', () => {
-  const { appended } = run({ preloaded: [CDN + 'faq-accordion.js'] });
+  const { appended } = run({ preloaded: [GSAP, CDN + 'faq-accordion.js'] });
   assert.deepEqual(urls(appended), []);
 });
 
 test('?rolfing-amsterdam=local is ignored unless the tag carries data-allow-local', () => {
   const { appended, sessionStorage } = run({ search: '?rolfing-amsterdam=local' });
-  assert.equal(urls(appended)[0], CDN + 'faq-accordion.js');
+  assert.equal(urls(appended).at(-1), CDN + 'faq-accordion.js');
   assert.deepEqual(sessionStorage.data, {});
 });
 
 test('with data-allow-local, ?rolfing-amsterdam=local loads modules from the local server for the session', () => {
   const { appended, sessionStorage } = run({ search: '?rolfing-amsterdam=local', allowLocal: true });
   assert.equal(
-    urls(appended)[0],
+    urls(appended).at(-1),
     'https://localhost:8080/projects/rolfing-amsterdam/faq-accordion.js',
   );
   assert.equal(sessionStorage.data['rolfing-amsterdam-source'], 'local');
@@ -138,11 +139,11 @@ test('with data-allow-local, ?rolfing-amsterdam=local loads modules from the loc
 
 test('?rolfing-amsterdam-port only accepts a 4-5 digit port', () => {
   assert.equal(
-    urls(run({ search: '?rolfing-amsterdam=local&rolfing-amsterdam-port=8081', allowLocal: true }).appended)[0],
+    urls(run({ search: '?rolfing-amsterdam=local&rolfing-amsterdam-port=8081', allowLocal: true }).appended).at(-1),
     'https://localhost:8081/projects/rolfing-amsterdam/faq-accordion.js',
   );
   assert.equal(
-    urls(run({ search: '?rolfing-amsterdam=local&rolfing-amsterdam-port=evil.com', allowLocal: true }).appended)[0],
+    urls(run({ search: '?rolfing-amsterdam=local&rolfing-amsterdam-port=evil.com', allowLocal: true }).appended).at(-1),
     'https://localhost:8080/projects/rolfing-amsterdam/faq-accordion.js',
   );
 });
@@ -153,7 +154,7 @@ test('?rolfing-amsterdam=cdn clears the local switch', () => {
     storage: { 'rolfing-amsterdam-source': 'local', 'rolfing-amsterdam-port': '8083' },
     allowLocal: true,
   });
-  assert.equal(urls(appended)[0], CDN + 'faq-accordion.js');
+  assert.equal(urls(appended).at(-1), CDN + 'faq-accordion.js');
   assert.equal(sessionStorage.data['rolfing-amsterdam-source'], undefined);
 });
 
@@ -175,7 +176,7 @@ test('blocked storage falls back to the CDN instead of throwing', () => {
     SOURCE,
     vm.createContext({ window, document, location: window.location, URLSearchParams }),
   );
-  assert.equal(urls(appended)[0], CDN + 'faq-accordion.js');
+  assert.equal(urls(appended).at(-1), CDN + 'faq-accordion.js');
 });
 
 test('no currentScript (e.g. injected by a tag manager) does nothing rather than guess a host', () => {

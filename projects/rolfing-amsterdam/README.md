@@ -9,7 +9,7 @@ Nothing here is on the live site yet. The site runs no custom code of ours; the 
 - **Existing custom code:** none of ours. The site uses Finsweet Cookie Consent (opt-in) gating GA4, and a Webflow contact form with reCAPTCHA on Book Session. Check the site-wide custom code panel before adding the loader.
 - **`smooth-scroll.js`:** kept and tested, not loaded. The site scrolls natively and has Webflow interactions on the home page; Lenis could clash with those, so it stays out until there is a reason.
 - **`site-utilities.js`:** kept and tested, not loaded. Would add `noopener` to new-tab links and UTM fields to the contact form. Worth adding if form attribution becomes a goal.
-- **`faq-accordion.js`:** in the loader, but the live FAQ is a CMS list, not `details.faq_item` markup, so it does nothing until the FAQ is rebuilt to match.
+- **`faq-accordion.js`:** in the loader. It drives the native `details.faq_item` FAQs on the Rolfing Pages template; the FAQ page itself is still a CMS list it leaves alone.
 - **Booking:** no booking widget. Bookings come through the form, phone and email, so `booking-widget.js` was removed.
 
 ## How it loads
@@ -21,13 +21,13 @@ Webflow has one script tag, in the site footer:
 <script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@rolfing-amsterdam-v0.1.0/projects/rolfing-amsterdam/init.js" defer></script>
 ```
 
-`init.js` reads its own URL, so every module comes from the same pinned tag. It appends the `GLOBAL_MODULES`, then any `ROUTES` modules whose `match` fits the path, in insertion order. `DEPS` is empty on this site.
+`init.js` reads its own URL, so every module comes from the same pinned tag. It appends the `GLOBAL_MODULES`, then any `ROUTES` modules whose `match` fits the path, in insertion order. `DEPS` holds GSAP 3.14.2 from Webflow's CDN, loaded before the modules.
 
 ## Modules
 
 | File                | Does                                                                                                                        | Loaded |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `faq-accordion.js`  | Native `details.faq_item` inside `.faq_list`: first open, animated open/close, native under reduced motion.                 | Yes    |
+| `faq-accordion.js`  | Native `details.faq_item` inside `.faq_list`: first open, GSAP open/close (height, fade, icon turn), native under reduced motion or without GSAP. | Yes    |
 | `smooth-scroll.js`  | Lenis with anchor handling. Copy of `shared/smooth-scroll.js`.                                                              | No     |
 | `site-utilities.js` | `noopener` on new-tab links, year in `#year`, hidden `Conversion Page` + `utm_*` fields once per form. Copy of `shared/`.   | No     |
 

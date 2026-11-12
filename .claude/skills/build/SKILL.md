@@ -1,7 +1,7 @@
 ---
 name: build
 description: Build a planned feature end-to-end from its spec — agents scaled to the spec's size (none for Mini; for larger work a fresh-context code-writer, or one per file group in its own git worktree when the spec names two or more groups, then a refactor pass, one Opus code reviewer carrying three lenses and the spec's routed specialist review wave), QA, then a browser-MCP verify loop against the spec's pass/fail criteria. Use whenever the user asks to build, implement, execute or ship a spec or feature slug, even if they only name the slug.
-argument-hint: <feature-slug> [--size mini|small|medium|large] [--auto]
+argument-hint: <feature-slug> [--size mini|small|medium|large] [--interactive]
 effort: medium
 ---
 
@@ -11,9 +11,9 @@ Worktree: !`git rev-parse --git-dir 2>/dev/null || true`
 
 ## Modes
 
-**Interactive** (default, always, unless `--auto` is passed): ask at the decision points marked below.
+**Auto** (default, always, unless `--interactive` is passed; `--auto` is accepted and changes nothing): take the recommended option, record it in the build summary, keep going. Auto mode has two hard stops: the 20-iteration cap in the verify loop, and a patch that fails `git apply --check` in step 4b.
 
-**Auto** (only when `--auto` is passed; a background job without it stays interactive): take the recommended option, record it in the build summary, keep going. Auto mode has two hard stops: the 20-iteration cap in the verify loop, and a patch that fails `git apply --check` in step 4b.
+**Interactive** (only when `--interactive` is passed): ask at the decision points marked below.
 
 ## 1. Find the spec and gate it
 

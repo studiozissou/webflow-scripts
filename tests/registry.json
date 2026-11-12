@@ -831,7 +831,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-11-02",
-      "description": "Eight Rolfing landing pages (U4, U12 folded in, D8) on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_PAGES=U14 limits it to the pattern page, expected to fail until the build ships."
+      "description": "Nine Rolfing landing pages (U4, U12 folded in, D8; U17 back pain added 11 Nov) on staging in EN and NL: SEO basics, Dutch keyword map, no treatment wording in title or h1, banned claims, page-own FAQs, related cards, landing blocks, Janco's 11 Nov corrections (no named courses plus an About Janco link, trauma and fascia wording, no reimbursement on U15), and no FAQ leak onto other pages; gated on ROLFING_CONTENT=1, ROLFING_FOLDER=what-is-rolfing until the rename, ROLFING_PAGES limits the run, expected to fail until rolfing-janco-feedback ships."
     },
     {
       "slug": "rolfing-landing-sections",

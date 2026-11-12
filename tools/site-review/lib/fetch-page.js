@@ -27,23 +27,20 @@ async function fetchPage(url, cache, opts = {}) {
   let currentUrl = url;
 
   for (let i = 0; i <= MAX_REDIRECTS; i++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const signal = AbortSignal.timeout(timeoutMs);
 
     let response;
     try {
       response = await fetch(currentUrl, {
         redirect: 'manual',
-        signal: controller.signal,
+        signal,
         headers: {
           'user-agent': 'webflow-site-review/1.0',
         },
       });
     } catch (err) {
-      clearTimeout(timer);
       throw new Error(`Fetch failed for ${currentUrl}: ${err.message}`, { cause: err });
     }
-    clearTimeout(timer);
 
     // Handle redirects (3xx with location header)
     const location = response.headers.get('location');
@@ -54,7 +51,12 @@ async function fetchPage(url, cache, opts = {}) {
     }
 
     // Final response — read body and build result
-    const html = await response.text();
+    let html;
+    try {
+      html = await response.text();
+    } catch (err) {
+      throw new Error(`Fetch failed for ${currentUrl}: ${err.message}`, { cause: err });
+    }
     const headers = {};
     response.headers.forEach((value, key) => {
       headers[key] = value;

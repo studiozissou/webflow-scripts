@@ -1,0 +1,47 @@
+{
+  "version": "0.1.20260101",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.002,
+  "tasks": [
+    {
+      "id": "11121314-0000-0000-0000-000000000003",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "path": ["v3", "serp", "google", "maps", "live", "advanced"],
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "maps",
+        "keyword": "italiaans restaurant den haag",
+        "location_name": "The Hague,South Holland,Netherlands",
+        "language_code": "nl",
+        "device": "desktop",
+        "os": "windows"
+      },
+      "result": [
+        {
+          "keyword": "italiaans restaurant den haag",
+          "type": "maps",
+          "se_domain": "google.nl",
+          "location_code": 1010543,
+          "language_code": "nl",
+          "check_url": "https://www.google.nl/maps/search/italiaans+restaurant+den+haag",
+          "datetime": "2026-11-12 06:01:00 +00:00",
+          "item_types": ["maps_search"],
+          "se_results_count": 0,
+          "items_count": 6,
+          "items": [
+            { "type": "maps_search", "rank_group": 1, "rank_absolute": 1, "domain": "pasta-immaginaria.test", "title": "Pasta Immaginaria", "url": "https://pasta-immaginaria.test/", "rating": { "rating_type": "Max5", "value": 4.7, "votes_count": 500, "rating_max": null }, "category": "Italian restaurant", "additional_categories": ["Pasta shop"], "cid": "2000000000000000001", "address": "Nepweg 1, 2511 AA Den Haag", "phone": "+31 70 555 0201", "is_claimed": true, "total_photos": 120 },
+            { "type": "maps_search", "rank_group": 2, "rank_absolute": 2, "domain": "www.osteria-finta.test", "title": "Osteria Finta", "url": "https://www.osteria-finta.test/", "rating": { "rating_type": "Max5", "value": 4.5, "votes_count": 300, "rating_max": null }, "category": "Italian restaurant", "additional_categories": null, "cid": "2000000000000000002", "address": "Nepweg 2, 2511 AA Den Haag", "phone": "+31 70 555 0202", "is_claimed": true, "total_photos": 64 },
+            { "type": "maps_search", "rank_group": 3, "rank_absolute": 3, "domain": null, "title": "Pizzeria Senza Sito", "url": null, "rating": { "rating_type": "Max5", "value": 4.4, "votes_count": 150, "rating_max": null }, "category": "Pizza restaurant", "additional_categories": null, "cid": "2000000000000000003", "address": "Nepweg 3, 2511 AA Den Haag", "phone": null, "is_claimed": false, "total_photos": 12 },
+            { "type": "maps_search", "rank_group": 4, "rank_absolute": 4, "domain": "ristorante-irreale.test", "title": "Ristorante Irreale", "url": "https://ristorante-irreale.test/", "rating": { "rating_type": "Max5", "value": 4.2, "votes_count": 90, "rating_max": null }, "category": "Italian restaurant", "additional_categories": null, "cid": "2000000000000000004", "address": "Nepweg 4, 2511 AA Den Haag", "phone": "+31 70 555 0204", "is_claimed": true, "total_photos": 30 },
+            { "type": "maps_search", "rank_group": 5, "rank_absolute": 5, "domain": "www.trattoria-fittizia.test", "title": "Trattoria Fittizia", "url": "https://www.trattoria-fittizia.test/", "rating": { "rating_type": "Max5", "value": 4.6, "votes_count": 212, "rating_max": null }, "category": "Italian restaurant", "additional_categories": ["Pizza restaurant", "Wine bar"], "cid": "1234567890123456789", "address": "Verzinstraat 12, 2599 ZZ Den Haag", "phone": "+31 70 555 0123", "is_claimed": true, "total_photos": 48 },
+            { "type": "maps_search", "rank_group": 6, "rank_absolute": 6, "domain": "trattoria-fittizia.test", "title": "Trattoria Fittizia Scheveningen", "url": "https://trattoria-fittizia.test/scheveningen", "rating": { "rating_type": "Max5", "value": 4.3, "votes_count": 61, "rating_max": null }, "category": "Italian restaurant", "additional_categories": null, "cid": "1234567890123456790", "address": "Strandverzinsel 3, 2586 ZZ Den Haag", "phone": "+31 70 555 0124", "is_claimed": true, "total_photos": 22 }
+          ]
+        }
+      ]
+    }
+  ]
+}

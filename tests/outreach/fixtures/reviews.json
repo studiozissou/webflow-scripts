@@ -1,0 +1,39 @@
+{
+  "version": "0.1.20260101",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "tasks": [
+    {
+      "id": "11121314-0000-0000-0000-000000000002",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "path": ["v3", "business_data", "google", "reviews", "task_get", "11121314-0000-0000-0000-000000000002"],
+      "result": [
+        {
+          "keyword": "cid:1234567890123456789",
+          "type": "reviews",
+          "se_domain": "google.nl",
+          "location_code": 1010543,
+          "language_code": "nl",
+          "title": "Trattoria Fittizia",
+          "cid": "1234567890123456789",
+          "rating": { "rating_type": "Max5", "value": 4.6, "votes_count": 212, "rating_max": null },
+          "reviews_count": 212,
+          "items_count": 10,
+          "items": [
+            { "type": "google_reviews_search", "rank_group": 1, "rank_absolute": 1, "position": "right", "review_text": "Beste pasta van de stad, de tiramisu is een aanrader.", "rating": { "rating_type": "Max5", "value": 5 }, "timestamp": "2026-11-02 19:10:00 +00:00", "time_ago": "1 week ago", "profile_name": "Fictieve Gast A", "owner_answer": "Grazie! Tot snel.", "owner_timestamp": "2026-11-03 10:00:00 +00:00" },
+            { "type": "google_reviews_search", "rank_group": 2, "rank_absolute": 2, "position": "right", "review_text": "Gezellig terras, vriendelijke bediening.", "rating": { "rating_type": "Max5", "value": 5 }, "timestamp": "2026-10-20 20:00:00 +00:00", "time_ago": "3 weeks ago", "profile_name": "Fictieve Gast B", "owner_answer": "Dank je wel!", "owner_timestamp": "2026-10-21 09:00:00 +00:00" },
+            { "type": "google_reviews_search", "rank_group": 3, "rank_absolute": 3, "position": "right", "review_text": "Pizza was goed, wel lang wachten.", "rating": { "rating_type": "Max5", "value": 4 }, "timestamp": "2026-10-01 21:00:00 +00:00", "time_ago": "a month ago", "profile_name": "Fictieve Gast C", "owner_answer": null, "owner_timestamp": null },
+            { "type": "google_reviews_search", "rank_group": 4, "rank_absolute": 4, "position": "right", "review_text": "Heerlijke pasta.", "rating": { "rating_type": "Max5", "value": 5 }, "timestamp": "2026-09-15 19:00:00 +00:00", "time_ago": "2 months ago", "profile_name": "Fictieve Gast D", "owner_answer": "Grazie mille!", "owner_timestamp": "2026-09-16 09:00:00 +00:00" },
+            { "type": "google_reviews_search", "rank_group": 5, "rank_absolute": 5, "position": "right", "review_text": "Fijne avond gehad.", "rating": { "rating_type": "Max5", "value": 4 }, "timestamp": "2026-09-01 19:00:00 +00:00", "time_ago": "2 months ago", "profile_name": "Fictieve Gast E", "owner_answer": null, "owner_timestamp": null },
+            { "type": "google_reviews_search", "rank_group": 6, "rank_absolute": 6, "position": "right", "review_text": "Tiramisu!", "rating": { "rating_type": "Max5", "value": 5 }, "timestamp": "2026-08-20 19:00:00 +00:00", "time_ago": "3 months ago", "profile_name": "Fictieve Gast F", "owner_answer": "Grazie!", "owner_timestamp": "2026-08-21 09:00:00 +00:00" },
+            { "type": "google_reviews_search", "rank_group": 7, "rank_absolute": 7, "position": "right", "review_text": "Prima.", "rating": { "rating_type": "Max5", "value": 4 }, "timestamp": "2026-08-01 19:00:00 +00:00", "time_ago": "3 months ago", "profile_name": "Fictieve Gast G", "owner_answer": null, "owner_timestamp": null },
+            { "type": "google_reviews_search", "rank_group": 8, "rank_absolute": 8, "position": "right", "review_text": "Lekker gegeten.", "rating": { "rating_type": "Max5", "value": 5 }, "timestamp": "2026-07-10 19:00:00 +00:00", "time_ago": "4 months ago", "profile_name": "Fictieve Gast H", "owner_answer": "Dank!", "owner_timestamp": "2026-07-11 09:00:00 +00:00" },
+            { "type": "google_reviews_search", "rank_group": 9, "rank_absolute": 9, "position": "right", "review_text": "Goede wijnkaart.", "rating": { "rating_type": "Max5", "value": 5 }, "timestamp": "2026-06-30 19:00:00 +00:00", "time_ago": "4 months ago", "profile_name": "Fictieve Gast I", "owner_answer": null, "owner_timestamp": null },
+            { "type": "google_reviews_search", "rank_group": 10, "rank_absolute": 10, "position": "right", "review_text": "Aanrader.", "rating": { "rating_type": "Max5", "value": 5 }, "timestamp": "2026-06-01 19:00:00 +00:00", "time_ago": "5 months ago", "profile_name": "Fictieve Gast J", "owner_answer": null, "owner_timestamp": null }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -39,6 +39,8 @@
     "test:internal": "node --test 'tests/internal/*.test.js'",
     "test:tsc": "node --test 'tests/tsc/*.test.js'",
     "test:gbp": "node --test 'tests/gbp/*.test.js'",
+    "test:outreach": "node --test 'tests/outreach/*.test.js'",
+    "outreach": "node tools/outreach/cli.js",
     "build:nem": "node tools/nem/build-conclusion-texts.js && node tools/nem/build-component.js && npm run typecheck:nem",
     "test:za": "node --test 'tests/zissou-archive/*.test.js'",
     "test:za:int": "node --test 'tests/zissou-archive/notion-integration.test.js'",

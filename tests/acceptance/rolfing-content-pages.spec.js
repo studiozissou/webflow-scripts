@@ -1,4 +1,4 @@
-// Acceptance tests for rolfing-content-pages: the nine landing pages (U4 and U12 folded into U14 and U1, U17 back pain added 11 Nov) on staging in EN and NL, keyword conformance, page-own FAQs and related cards, wording rules, Janco's 11 Nov corrections, and no FAQ leak onto other pages; skipped until ROLFING_CONTENT=1.
+// Acceptance tests for rolfing-content-pages: the nine landing pages (U4 and U12 folded into U14 and U1, U17 back pain added 11 Nov) on staging in EN and NL, keyword conformance, page-own FAQs and related cards, wording rules, Janco's 11 Nov corrections, the 12 Nov pregnancy line and yearly policy note, and no FAQ leak onto other pages; skipped until ROLFING_CONTENT=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -293,6 +293,38 @@ test.describe('rolfing-content-pages', () => {
         const text = await mainText(page);
         await expect(page.locator('.faq_accordion')).toHaveCount(GENERIC_FAQS.length);
         for (const question of GENERIC_FAQS) expect(text).toContain(question);
+      });
+    }
+
+    for (const [lang, slug, has, not] of [
+      ['en', 'who-is-rolfing-for', /from the fifth month/i, /only after the fifth month/i],
+      ['nl', 'voor-wie-is-rolfing-bedoeld', /vanaf de vijfde maand/i, /pas na de vijfde maand/i],
+    ]) {
+      test(`${lang} Who is Rolfing for says from the fifth month`, async ({ page }) => {
+        await page.goto(`${BASE}/${lang}/${FOLDER}/${slug}`, { waitUntil: 'networkidle', timeout: 45000 });
+        const text = await mainText(page);
+        expect(text).toMatch(has);
+        expect(text).not.toMatch(not);
+      });
+    }
+
+    for (const [lang, question, codes, policies] of [
+      ['en', 'Is a Rolfing session reimbursed?', /codes on my invoices/i, /Policies change every year/i],
+      ['nl', 'Wordt een Rolfing-sessie vergoed?', /prestatiecodes op mijn facturen/i, /Polissen veranderen elk jaar/i],
+    ]) {
+      test(`${lang} FAQ page carries the yearly policy check`, async ({ page }) => {
+        await page.goto(`${BASE}/${lang}/faq`, { waitUntil: 'networkidle', timeout: 45000 });
+        const text = await mainText(page);
+        expect(text).toContain(question);
+        expect(text).toMatch(codes);
+        expect(text).not.toMatch(/independer/i);
+      });
+
+      test(`${lang} Book Session carries the yearly policy line`, async ({ page }) => {
+        await page.goto(`${BASE}/${lang}/book-session`, { waitUntil: 'networkidle', timeout: 45000 });
+        const text = await mainText(page);
+        expect(text).toMatch(policies);
+        expect(text).toMatch(codes);
       });
     }
 

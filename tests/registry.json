@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-05",
+  "lastUpdated": "2026-11-12",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -822,8 +822,8 @@
       "critical": false,
       "created": "2026-10-28",
       "description": "Rolfing Pages template rebuild (track 2a): explainers keep the icon hero with no empty or landing-only blocks; the template-test fixture shows photo hero (right on desktop, stacked on mobile), intro, symptoms, last updated, session + About Janco, bound testimonial instead of slider, native details FAQ with Question/Answer microdata, related cards; gated on ROLFING_TEMPLATE=1, ROLFING_FOLDER=rolfing after the rename."
-      },
-      {
+    },
+    {
       "slug": "rolfing-content-pages",
       "url": "https://rolfing-amsterdam.webflow.io/en/rolfing/knee-hip-ankle-pain",
       "spec": "tests/acceptance/rolfing-content-pages.spec.js",
@@ -882,8 +882,8 @@
       "critical": false,
       "created": "2026-11-02",
       "description": "Coconut noindex landing page for the 2-years-free Revolut and Zempler offer: copy, bank cards, three steps, normal banner below the steps, terms links, no trial leftovers, no mobile overflow. Apply URL checks skip until REVOLUT_APPLY_URL and ZEMPLER_APPLY_URL are set; sitemap check runs on production only."
-      },
-      {
+    },
+    {
       "slug": "coconut-mtd-freelancers-page",
       "url": "https://getcoconut.webflow.io/mtd-software/freelancers",
       "spec": "tests/acceptance/coconut-mtd-freelancers-page.spec.js",
@@ -892,8 +892,8 @@
       "critical": false,
       "description": "Coconut MTD for Freelancers page, duplicated from Landlords: approved copy verbatim, meta, tables, links, FAQ schema, no Landlords residue; Landlords H1 as regression control",
       "created": "2026-11-02"
-      },
-      {
+    },
+    {
       "slug": "cf-page-skill",
       "url": "https://getcoconut.webflow.io/mtd-software-cf",
       "spec": "tests/acceptance/cf-page-skill.spec.js",
@@ -902,6 +902,16 @@
       "critical": false,
       "created": "2026-11-04",
       "description": "A /cf-page staging duplicate is Client First V3: noindex, page-wrapper > main.main-wrapper, every section has section_* with a container-* first child, no _25-/_26-/max-width-1248 classes outside kept components, elements <= 70% of ORIGINAL_ELEMENTS, one h1, no console errors. Skipped unless CF_PAGE_PATH is set; first pilot is Coconut /mtd-software after C2."
+    },
+    {
+      "slug": "sz-comment-fixes",
+      "url": "https://teamzissou.webflow.io/",
+      "spec": "tests/acceptance/sz-comment-fixes.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-12",
+      "description": "Team Zissou Designer comment fixes: no spacer divs on four pages, body copy 24px/20px, small print smaller, nav links hidden, ticker centred, ticks in Your part dots, Who column span 992-1439, SVG portrait, no console errors, custom domains still 404."
     }
   ]
 }

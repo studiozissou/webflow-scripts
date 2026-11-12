@@ -81,6 +81,11 @@ function worldFetch(world) {
     }),
     on('GET', '/reviews/r1', () => {
       if (world.reviewReadFails) return json({}, 500);
+      if (world.dropReplyReads > 0) {
+        world.dropReplyReads -= 1;
+        const { reviewReply, ...rest } = world.review;
+        return json(rest);
+      }
       return json(world.review);
     }),
     on('PUT', '/reviews/r1/reply', (call) => {
@@ -169,6 +174,50 @@ describe('changes', () => {
           primaryCategory: { name: 'categories/gcid:cafe' },
         }),
         false,
+      );
+    });
+  });
+
+  it('treats a special-hours endDate equal to startDate as omitted', () => {
+    const day = { year: 2026, month: 12, day: 24 };
+    const requested = { specialHourPeriods: [{ startDate: day, closed: true }] };
+    const returned = {
+      specialHourPeriods: [{ startDate: day, endDate: { ...day }, closed: true }],
+    };
+    assert.equal(sameFieldValue('specialHours', requested, returned), true);
+    assert.equal(
+      sameFieldValue('specialHours', requested, {
+        specialHourPeriods: [
+          { startDate: day, endDate: { ...day, day: 26 }, closed: true },
+        ],
+      }),
+      false,
+    );
+  });
+
+  describe('locationStatus pendingMask', () => {
+    it('is pending when Google lists an edited field in pendingMask', () => {
+      assert.equal(
+        locationStatus({
+          fields: ['regularHours'],
+          requested: { regularHours: { periods: [1] } },
+          merchant: { regularHours: { periods: [1] } },
+          live: { regularHours: { periods: [1] } },
+          pendingMask: 'regularHours,specialHours',
+        }),
+        'pending',
+      );
+    });
+    it('ignores pendingMask entries for fields that were not edited', () => {
+      assert.equal(
+        locationStatus({
+          fields: ['websiteUri'],
+          requested: { websiteUri: 'new' },
+          merchant: { websiteUri: 'new' },
+          live: { websiteUri: 'new' },
+          pendingMask: 'regularHours',
+        }),
+        'live',
       );
     });
   });
@@ -651,6 +700,31 @@ describe('changes', () => {
       assert.equal(result.status, 'mismatch');
     });
 
+    it('re-reads when Google briefly returns no reply, so an edit is not refused', async () => {
+      world.review.reviewReply = { comment: 'Old reply' };
+      const preview = await previewReply();
+      world.dropReplyReads = 1;
+      const result = await changes.apply({
+        previewId: preview.previewId,
+        confirmText: preview.confirmText,
+      });
+      assert.equal(result.status, 'live');
+    });
+
+    it('re-reads when the new reply is missing right after sending', async () => {
+      const preview = await previewReply();
+      world.replyHandler = (call) => {
+        world.review = { ...world.review, reviewReply: call.body };
+        world.dropReplyReads = 1;
+        return json(call.body);
+      };
+      const result = await changes.apply({
+        previewId: preview.previewId,
+        confirmText: preview.confirmText,
+      });
+      assert.equal(result.status, 'live');
+    });
+
     it('refuses as stale when another reply arrived', async () => {
       const preview = await previewReply();
       world.review.reviewReply = { comment: 'Someone else replied' };
@@ -752,6 +826,33 @@ describe('changes', () => {
         /actionType/,
       );
       assert.equal(idCounter, 0);
+    });
+
+    it('rejects phone numbers and links in the post text', async () => {
+      for (const summary of [
+        'Bestel nu: bel 020 123 4567.',
+        'Bel 020-123 4567',
+        'Call +31 20 123 4567 today',
+        'Bel 06 1234 5678',
+        'Kijk op https://example.com/kerst',
+        'Kijk op www.example.com',
+      ]) {
+        await assert.rejects(
+          changes.previewPost({ ...postArgs, summary }),
+          /phone number or link/i,
+          summary,
+        );
+      }
+      assert.equal(idCounter, 0);
+    });
+
+    it('allows prices, times, dates and years in the post text', async () => {
+      const preview = await changes.previewPost({
+        ...postArgs,
+        summary:
+          'Menu voor € 34,50 p.p. Bestel uiterlijk 20 december en haal op 23 of 24 december op, tussen 15:00 en 17:00. Tot 2027!',
+      });
+      assert.ok(preview.previewId);
     });
 
     for (const [state, status] of [

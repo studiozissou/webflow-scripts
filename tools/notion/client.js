@@ -101,6 +101,7 @@ export function mapTaskPage(page) {
     clients: relationIds(clients),
     goalIds: relationIds(properties[PROPS.goal]),
     createdTime: page?.created_time ?? null,
+    lastEdited: page?.last_edited_time ?? null,
     url: page?.url ?? null,
   };
 }

@@ -57,6 +57,7 @@ test('mapTaskPage returns goalIds from the Goal relation and the created time', 
   assert.equal(mapTaskPage(linked).createdTime, '2026-11-03T08:30:00.000Z');
   assert.deepEqual(mapTaskPage(page).goalIds, []);
   assert.equal(mapTaskPage({ id: 'x' }).createdTime, null);
+  assert.equal(mapTaskPage({ id: 'x' }).lastEdited, null);
 });
 
 function fakeClient({ pages = [], task, relationPages = [] } = {}) {

@@ -48,7 +48,7 @@ const FAKE_CLAUDE = `#!/usr/bin/env node
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const args = process.argv.slice(2);
-fs.appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ args, cwd: process.cwd(), jobDir: process.env.CLAUDE_JOB_DIR || null, notion: process.env.NOTION_TOKEN || null, buildJob: process.env.TRIAGE_BUILD_JOB || null }) + '\\n');
+fs.appendFileSync(process.env.FAKE_MARKER, JSON.stringify({ args, cwd: process.cwd(), jobDir: process.env.CLAUDE_JOB_DIR || null, notion: process.env.NOTION_TOKEN || null, buildJob: process.env.TRIAGE_BUILD_JOB || null, scheduled: process.env.TRIAGE_SCHEDULED || null }) + '\\n');
 const prompt = args[1] || '';
 const slug = process.env.FAKE_SLUG;
 if (process.env.FAKE_OFF_ON && prompt.startsWith('/' + process.env.FAKE_OFF_ON)) fs.writeFileSync(process.env.FAKE_OFF_FILE, '');
@@ -267,6 +267,35 @@ test('morning runner runs snapshot collect in the repo before claude', () => {
   assert.deepEqual(first.snapshot, ['snapshot', 'collect']);
   assert.equal(realpathSync(first.cwd), realpathSync(repo));
   assert.equal(second.args[0], '-p');
+});
+
+test('morning runner tells claude it is the scheduled run, holds a lock while it runs and frees it after', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 0);
+  const r = spawnSync('bash', [MORNING], { encoding: 'utf8', env: runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal }) });
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.equal(fake.calls().find((c) => c.args)?.scheduled, '1');
+  assert.equal(existsSync(join(internal, 'morning.lock')), false);
+});
+
+test('morning runner exits 0 without claude while a live run holds the lock, and clears a dead run lock', () => {
+  const fake = fakeClaude();
+  const { repo, internal } = triageRepo();
+  withSnapshotCli(repo, 0);
+  const lock = join(internal, 'morning.lock');
+  mkdirSync(lock, { recursive: true });
+  writeFileSync(join(lock, 'pid'), String(process.pid));
+  const env = runnerEnv(fake, { TRIAGE_REPO: repo, INTERNAL_TRIAGE: internal });
+  const held = spawnSync('bash', [MORNING], { encoding: 'utf8', env });
+  assert.equal(held.status, 0, held.stderr + held.stdout);
+  assert.match(held.stderr, /already running/);
+  assert.equal(fake.calls().length, 0);
+  writeFileSync(join(lock, 'pid'), '999999');
+  const freed = spawnSync('bash', [MORNING], { encoding: 'utf8', env });
+  assert.equal(freed.status, 0, freed.stderr + freed.stdout);
+  assert.ok(fake.calls().some((c) => c.args?.[0] === '-p'));
+  assert.equal(existsSync(lock), false);
 });
 
 const FAKE_NOTION_CLI = `const args = process.argv.slice(2);

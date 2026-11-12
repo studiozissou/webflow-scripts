@@ -106,17 +106,27 @@ test.describe('oost-kerst-layout-fixes', () => {
       expect(s).toEqual({ fontSize: '18px', fontWeight: '500', maxWidth: '448px' });
   });
 
-  test('footer bottom has no spacer and sits on one row at 1280 px', async ({ page }) => {
-    await goto(page, '/', 1280);
-    await expect(page.locator('.footer_bottom .spacer-xxsmall')).toHaveCount(0);
-    const tops = await page.$$eval('.footer_bottom > p', (ps) =>
-      ps.map((p) => p.getBoundingClientRect().top),
-    );
-    expect(tops.length).toBe(2);
-    expect(Math.abs(tops[0] - tops[1])).toBeLessThanOrEqual(8);
-  });
+  for (const path of Object.keys(SPECIAL)) {
+    test(`footer bottom on ${path} has no spacer and sits on one row at 1280 px`, async ({
+      page,
+    }) => {
+      await goto(page, path, 1280);
+      await expect(page.locator('.footer_bottom .spacer-xxsmall')).toHaveCount(0);
+      const tops = await page.$$eval('.footer_bottom > p', (ps) =>
+        ps.map((p) => p.getBoundingClientRect().top),
+      );
+      expect(tops.length).toBe(2);
+      expect(Math.abs(tops[0] - tops[1])).toBeLessThanOrEqual(8);
+    });
+  }
 
   test('regular hours lists keep their classes', async ({ page }) => {
+    await goto(page, '/', 1280);
+    const homeRegular = page.locator(
+      '.hours_list:not(.section_home-feestdagen .hours_list):not(.footer_component .hours_list)',
+    );
+    await expect(homeRegular).toHaveCount(1);
+    await expect(homeRegular).toHaveClass(/\bis-large\b/);
     await goto(page, '/afhalen', 1280);
     await expect(
       page

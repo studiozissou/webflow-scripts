@@ -1,7 +1,7 @@
 ---
 name: plan
 description: Plan a feature before writing any code — parallel codebase research, a size gate, the PM questions that matter, a spec with a verify loop and routed review agents, and acceptance tests. Use whenever the user asks to plan, spec, scope or think through a feature or fix before building it, and before any multi-file change, even if they only say "how should we do X".
-argument-hint: <feature description> [--size mini|small|medium|large] [--auto]
+argument-hint: <feature description> [--size mini|small|medium|large] [--interactive]
 effort: high
 ---
 
@@ -11,9 +11,9 @@ Branch: !`git branch --show-current 2>/dev/null || true`
 
 ## Modes
 
-**Interactive** (default, always, unless `--auto` is passed): ask two sets of questions up front, brief then setup, and otherwise only at the decision points below.
+**Auto** (default, always, unless `--interactive` is passed; `--auto` is accepted and changes nothing): never block on a question. Take the recommended option at each decision point and record every choice under a `## Assumptions` heading in the spec so the user can veto at review. A plan that stalls on a question nobody can answer is worth less than a plan with stated assumptions.
 
-**Auto** (only when `--auto` is passed; a background job without it stays interactive): never block on a question. Take the recommended option at each decision point and record every choice under a `## Assumptions` heading in the spec so the user can veto at review. A plan that stalls on a question nobody can answer is worth less than a plan with stated assumptions.
+**Interactive** (only when `--interactive` is passed): ask two sets of questions up front, brief then setup, and otherwise only at the decision points below.
 
 ## 0. Size gate
 
@@ -21,10 +21,12 @@ Size sets the agent budget for both `/plan` and `/build`. Most work here is smal
 
 | Size | Signals | `/plan` agents | `/build` agents |
 |------|---------|----------------|-----------------|
-| Mini | One file, a few lines, no new DOM or behaviour | None: Grep and Read inline | None: code and self-review in the parent |
+| Mini | One file, a few lines, no new DOM or behaviour | Spec reviewer only; research by Grep and Read inline | None: code and self-review in the parent |
 | Small | `fix-*`, one or two files, no new module | Agent 1, spec reviewer | code-writer, one reviewer |
 | Medium | New module or 3–5 files | Agents 1–2, plus 3–4 when DOM is touched; spec reviewer | Full wave 1, wave 2 from `agents:` |
-| Large | New page, cross-project change, new dependency, ADR | All of step 1, approach explorers, architect | Full |
+| Large | New page, cross-project change, new dependency, ADR | All of step 1, approach explorers, architect, spec reviewer | Full |
+
+The spec reviewer (step 7.5) runs at every size and is never optional.
 
 Read just enough (Grep, Read, no agents) to understand the request. Then ask two `AskUserQuestion` calls, brief first, because its answers can change the size:
 
@@ -33,11 +35,11 @@ Read just enough (Grep, Read, no agents) to understand the request. Then ask two
 **Setup** (one call): recommend a size, and check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask the two setup questions in the same call:
 
 1. **Size** (single select): all four sizes, the recommended one first with "(Recommended)" and a one-line reason drawn from the signals. Skip this question if `--size` was passed.
-2. **Agents** (multiSelect): every agent this `/plan` run could spawn (research agents 1–4, approach explorers, architect, spec reviewer; group to fit four options). Mark those the recommended size allows "(Recommended)" and give each a one-line reason, e.g. "Explore: codebase patterns — 3+ modules to scan, saves reading them here". Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session. Anything left unticked is done inline with Grep and Read.
+2. **Agents** (multiSelect): every optional agent this `/plan` run could spawn (research agents 1–4, approach explorers, architect; group to fit four options). Leave the spec reviewer out of the options and say in the question that it always runs. Mark those the recommended size allows "(Recommended)" and give each a one-line reason, e.g. "Explore: codebase patterns — 3+ modules to scan, saves reading them here". Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session. Anything left unticked is done inline with Grep and Read.
 
-Spawn only the ticked agents, whatever the size table says. Auto: take the recommendations. Record the size in the spec frontmatter, since `/build` reads its budget from there.
+Spawn only the ticked agents plus the spec reviewer, whatever the size table says. Auto: take the recommendations. Record the size in the spec frontmatter, since `/build` reads its budget from there.
 
-Outside the approved list, spawn nothing. Search directly instead.
+Outside the approved list and the spec reviewer, spawn nothing. Search directly instead.
 
 When the agent cap (`.claude/scripts/agent-cap.mjs`) refuses an agent, do that step inline with Grep and Read and write "<step> skipped: usage cap" in the output. A refused spec review is never reported as PASS.
 
@@ -97,9 +99,9 @@ Check for test infrastructure: `tests/acceptance/` at the repo or project root, 
 
 Re-read the spec's `## Verify Loop`. If it does not answer "how does `/build` know this feature is working?" with observable pass/fail criteria, reproduction steps, tier mapping and regression scope, rewrite it. `/build` halts on a spec without one. It must also name at least one check Claude can run alone (see the verify loop rules in `references/spec-format.md`), or say "manual verify" with a Tier 3 checklist. Size stays as set in step 0.
 
-## 7.5 Spec review (Small and Medium only)
+## 7.5 Spec review (every size, always)
 
-Spawn one built-in `Plan` agent (read-only) with `model: "opus"` on the Agent call and the prompt in `references/spec-review.md`, filled with the spec path. It reads the draft spec and the files it names; it is not `code-reviewer`, which diffs the working tree and runs a Barba checklist. On FAIL, fix the spec once for the issues it raised and continue to approval without re-running it. WARN items go into the approval message. Mini skips this step. Large skips it too: the architect step in step 3 reviews its structure. Unticked in the Agents question: skip it and say so in the final message.
+Spawn one built-in `Plan` agent (read-only) with `model: "opus"` on the Agent call and the prompt in `references/spec-review.md`, filled with the spec path. It reads the draft spec and the files it names; it is not `code-reviewer`, which diffs the working tree and runs a Barba checklist. On FAIL, fix the spec once for the issues it raised and continue to approval without re-running it. WARN items go into the approval message. This step runs at every size, including Mini and Large (where it follows the architect), and is never skipped. If the usage cap refuses it, review the spec inline against `references/spec-review.md` and write "spec review done inline: usage cap" in the final message.
 
 ## 8. Approval
 

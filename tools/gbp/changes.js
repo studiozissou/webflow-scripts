@@ -53,6 +53,10 @@ const STATUS_MESSAGES = {
     'The write was sent but could not be read back. Check the result with a read.',
 };
 
+const REVIEW_READS = 3;
+const REVIEW_REREAD_MS = 1000;
+const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const defaultLogPath = () => join(homedir(), '.config', 'gbp', 'changes.jsonl');
 const defaultDiagnostics = (text) => process.stderr.write(`${text}\n`);
 
@@ -81,7 +85,22 @@ function canonical(value) {
   return entries.length === 0 ? undefined : Object.fromEntries(entries);
 }
 
+function sameDate(a, b) {
+  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+}
+
 function comparable(field, value) {
+  if (field === 'specialHours') {
+    return {
+      ...value,
+      specialHourPeriods: (value?.specialHourPeriods ?? []).map(
+        ({ endDate, ...period }) =>
+          endDate && !sameDate(endDate, period.startDate)
+            ? { ...period, endDate }
+            : period,
+      ),
+    };
+  }
   if (field !== 'categories') return value;
   return {
     primary: value?.primaryCategory?.name,
@@ -97,12 +116,14 @@ export function sameFieldValue(field, a, b) {
   return left === right;
 }
 
-export function locationStatus({ fields, requested, merchant, live }) {
+export function locationStatus({ fields, requested, merchant, live, pendingMask }) {
   const asRequested = fields.every((field) =>
     sameFieldValue(field, fieldValue(merchant, field), requested[field]),
   );
   if (!asRequested) return 'mismatch';
   if (hasPendingEdits(merchant)) return 'pending';
+  const pending = (pendingMask ?? '').split(',').map((path) => path.trim());
+  if (fields.some((field) => pending.includes(field))) return 'pending';
   const sameAsLive = fields.every((field) =>
     sameFieldValue(field, fieldValue(merchant, field), fieldValue(live, field)),
   );
@@ -125,6 +146,17 @@ function pickFields(source, fields) {
   );
 }
 
+const LINK_PATTERN = /\bhttps?:\/\/|\bwww\.[a-z0-9-]+\./i;
+const PHONE_CANDIDATE = /\+?\d[\d\s().-]{6,}\d/g;
+const PHONE_MIN_DIGITS = 9;
+
+function hasPhoneOrLink(text) {
+  if (LINK_PATTERN.test(text)) return true;
+  return (text.match(PHONE_CANDIDATE) ?? []).some(
+    (candidate) => candidate.replace(/\D/g, '').length >= PHONE_MIN_DIGITS,
+  );
+}
+
 function buildPost({ summary, languageCode, button, imageUrl }) {
   if (
     typeof summary !== 'string' ||
@@ -132,6 +164,11 @@ function buildPost({ summary, languageCode, button, imageUrl }) {
     summary.length > POST_SUMMARY_MAX
   ) {
     throw new Error(`Post summary must be 1 to ${POST_SUMMARY_MAX} characters`);
+  }
+  if (hasPhoneOrLink(summary)) {
+    throw new Error(
+      'Post summary must not contain a phone number or link; Google removes such posts. Use the post button instead.',
+    );
   }
   if (typeof languageCode !== 'string' || !languageCode) {
     throw new Error('Post needs a languageCode');
@@ -164,6 +201,14 @@ export function createChanges({
 }) {
   const previews = new Map();
 
+  async function readReview(v4Name, reviewId) {
+    for (let attempt = 1; ; attempt += 1) {
+      const review = await getReview(ctx, v4Name, reviewId);
+      if (review.reviewReply || attempt === REVIEW_READS) return review;
+      await (ctx.sleep ?? defaultSleep)(REVIEW_REREAD_MS);
+    }
+  }
+
   const handlers = {
     location: {
       async isStale(preview) {
@@ -187,6 +232,7 @@ export function createChanges({
           requested: preview.after,
           merchant,
           live: updated.location ?? {},
+          pendingMask: updated.pendingMask,
         });
         return status === 'mismatch'
           ? { status, readBack: pickFields(merchant, preview.fields) }
@@ -195,17 +241,13 @@ export function createChanges({
     },
     review: {
       async isStale(preview) {
-        const review = await getReview(
-          ctx,
-          preview.request.v4Name,
-          preview.request.reviewId,
-        );
+        const review = await readReview(preview.request.v4Name, preview.request.reviewId);
         return (review.reviewReply?.comment ?? null) !== preview.before[REVIEW_FIELD];
       },
       send: ({ request }) =>
         updateReviewReply(ctx, request.v4Name, request.reviewId, request.comment),
       async readBack({ request }) {
-        const review = await getReview(ctx, request.v4Name, request.reviewId);
+        const review = await readReview(request.v4Name, request.reviewId);
         const comment = review.reviewReply?.comment ?? null;
         return comment === request.comment
           ? { status: 'live' }
@@ -337,7 +379,7 @@ export function createChanges({
       throw new Error('Review reply comment must not be empty');
     }
     const resolved = await resolveLocation(ctx, location);
-    const review = await getReview(ctx, resolved.v4Name, reviewId);
+    const review = await readReview(resolved.v4Name, reviewId);
     const preview = store({
       kind: 'review',
       location: resolved.name,

@@ -1,6 +1,7 @@
 .DS_Store
 .cursor/
 .claude/logs/
+.claude/session-mode
 .claude/settings.local.json
 .claude/worktrees/
 .superpowers/

@@ -84,11 +84,11 @@ Skip this step for a single executor.
 As its last action, each isolated executor runs these two commands from its own worktree:
 
 ```bash
-git add -A -- . ':!.claude/session-mode'
+git add -A
 git diff --cached --binary > <patch path>
 ```
 
-The executor exports its own patch because a parent running as a background job is itself worktree-isolated, and that guard refuses any `git -C <other worktree>` command. `.claude/session-mode` is excluded because it is tracked and changes every session. `.claude/logs` needs no exclusion: it is gitignored, and naming an ignored path makes `git add` exit 1.
+The executor exports its own patch because a parent running as a background job is itself worktree-isolated, and that guard refuses any `git -C <other worktree>` command. `.claude/session-mode` and `.claude/logs` need no exclusion: both are gitignored, and naming an ignored path makes `git add` exit 1.
 
 After every executor has returned, integrate each one in spec order. An executor that reports no files and whose worktree was removed automatically changed nothing: skip it and note that in the build summary. Take `WT` and `BR` from the completion notification's `worktreePath` and `worktreeBranch`, falling back to the `EXECUTOR_PATH` and `EXECUTOR_BRANCH` lines of its report. `P` is its patch path.
 

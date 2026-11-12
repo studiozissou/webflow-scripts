@@ -53,6 +53,10 @@ const STATUS_MESSAGES = {
     'The write was sent but could not be read back. Check the result with a read.',
 };
 
+const REVIEW_READS = 3;
+const REVIEW_REREAD_MS = 1000;
+const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const defaultLogPath = () => join(homedir(), '.config', 'gbp', 'changes.jsonl');
 const defaultDiagnostics = (text) => process.stderr.write(`${text}\n`);
 
@@ -197,6 +201,14 @@ export function createChanges({
 }) {
   const previews = new Map();
 
+  async function readReview(v4Name, reviewId) {
+    for (let attempt = 1; ; attempt += 1) {
+      const review = await getReview(ctx, v4Name, reviewId);
+      if (review.reviewReply || attempt === REVIEW_READS) return review;
+      await (ctx.sleep ?? defaultSleep)(REVIEW_REREAD_MS);
+    }
+  }
+
   const handlers = {
     location: {
       async isStale(preview) {
@@ -229,17 +241,13 @@ export function createChanges({
     },
     review: {
       async isStale(preview) {
-        const review = await getReview(
-          ctx,
-          preview.request.v4Name,
-          preview.request.reviewId,
-        );
+        const review = await readReview(preview.request.v4Name, preview.request.reviewId);
         return (review.reviewReply?.comment ?? null) !== preview.before[REVIEW_FIELD];
       },
       send: ({ request }) =>
         updateReviewReply(ctx, request.v4Name, request.reviewId, request.comment),
       async readBack({ request }) {
-        const review = await getReview(ctx, request.v4Name, request.reviewId);
+        const review = await readReview(request.v4Name, request.reviewId);
         const comment = review.reviewReply?.comment ?? null;
         return comment === request.comment
           ? { status: 'live' }
@@ -371,7 +379,7 @@ export function createChanges({
       throw new Error('Review reply comment must not be empty');
     }
     const resolved = await resolveLocation(ctx, location);
-    const review = await getReview(ctx, resolved.v4Name, reviewId);
+    const review = await readReview(resolved.v4Name, reviewId);
     const preview = store({
       kind: 'review',
       location: resolved.name,

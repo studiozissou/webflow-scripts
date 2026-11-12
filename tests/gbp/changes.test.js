@@ -81,6 +81,11 @@ function worldFetch(world) {
     }),
     on('GET', '/reviews/r1', () => {
       if (world.reviewReadFails) return json({}, 500);
+      if (world.dropReplyReads > 0) {
+        world.dropReplyReads -= 1;
+        const { reviewReply, ...rest } = world.review;
+        return json(rest);
+      }
       return json(world.review);
     }),
     on('PUT', '/reviews/r1/reply', (call) => {
@@ -693,6 +698,31 @@ describe('changes', () => {
         confirmText: preview.confirmText,
       });
       assert.equal(result.status, 'mismatch');
+    });
+
+    it('re-reads when Google briefly returns no reply, so an edit is not refused', async () => {
+      world.review.reviewReply = { comment: 'Old reply' };
+      const preview = await previewReply();
+      world.dropReplyReads = 1;
+      const result = await changes.apply({
+        previewId: preview.previewId,
+        confirmText: preview.confirmText,
+      });
+      assert.equal(result.status, 'live');
+    });
+
+    it('re-reads when the new reply is missing right after sending', async () => {
+      const preview = await previewReply();
+      world.replyHandler = (call) => {
+        world.review = { ...world.review, reviewReply: call.body };
+        world.dropReplyReads = 1;
+        return json(call.body);
+      };
+      const result = await changes.apply({
+        previewId: preview.previewId,
+        confirmText: preview.confirmText,
+      });
+      assert.equal(result.status, 'live');
     });
 
     it('refuses as stale when another reply arrived', async () => {

@@ -912,6 +912,26 @@
       "critical": false,
       "created": "2026-11-11",
       "description": "Oost nav is a native Webflow Navbar (w-nav, data-collapse=medium) with nav_* classes: desktop bar shows 4 links + NL/EN + Reserveer; at tablet and phone the menu button opens a panel with the 4 links and Reserveer, aria-expanded flips, anchor links close it; EN labels + /en hrefs; desktop order links → NL/EN → Reserveer; 11 NL+EN paths have no navbar1_ leftovers, no console errors. Fails on live until oost-native-navbar ships; set OOST_URL=https://oosteten.webflow.io to check staging."
+    },
+    {
+      "slug": "coconut-pricing-copy-nov-2026",
+      "url": "https://getcoconut.webflow.io/pricing",
+      "spec": "tests/acceptance/coconut-pricing-copy-nov-2026.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut /pricing November 2026 copy: approved H1/H2/H3s, meta, 9 FAQs matching FAQPage schema, prices, links, no old copy; Landlords H1 as regression control; also runs on /pricing-cf (PRICING_PATH, FAQ_TITLE, FAQ_ANSWER env)",
+      "created": "2026-11-11"
+    },
+    {
+      "slug": "coconut-pricing-cf-v3",
+      "url": "https://getcoconut.webflow.io/pricing-cf",
+      "spec": "tests/acceptance/coconut-pricing-cf-v3.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "description": "Coconut /pricing Client First V3 rebuild on pricing-cf: V3 shell and sections, no legacy layout classes, details FAQ with microdata, subgrid price table, script hooks (menu, UTM), element target; live /pricing control",
+      "created": "2026-11-11"
     }
   ]
 }

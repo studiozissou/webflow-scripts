@@ -1,16 +1,21 @@
 ---
-description: "Inspect all active git worktrees, prioritise by oldest commit, merge each into the current branch one by one with smoke tests between merges, and clean up after each successful merge."
+description: "Inspect all active git worktrees, prioritise by oldest commit, merge each into the current branch one by one with smoke tests between merges, and clean up after each successful merge, then push and run /tidy."
 model: sonnet
 ---
 
-Inspect all active git worktrees, prioritise by oldest commit, merge each into the current branch one by one with smoke tests between merges, and clean up after each successful merge.
+Inspect all active git worktrees, prioritise by oldest commit, merge each into the current branch one by one with smoke tests between merges, and clean up after each successful merge. Then push and run `/tidy`.
+
+Every gate stays: the order question, conflicts, failed checks, locked worktrees and the background-job push block. A gate stops or skips; it never forces.
 
 ## Step 1 — Inventory
 
-1. Run `git worktree list` to get all active worktrees.
-2. Filter out the main worktree (the one that IS the repo root) — only process secondary worktrees.
-3. If zero secondary worktrees exist, report "No worktrees to merge" and stop.
-4. For each worktree, gather:
+1. Sync first: run `git fetch origin`. If the current branch is behind `origin/main`, run `git pull --ff-only`. If it has diverged, stop and report. Do not merge or rebase it.
+2. Run `git worktree list` to get all active worktrees.
+3. Filter out the main worktree (the one that IS the repo root) — only process secondary worktrees.
+4. Skip locked worktrees. A lock means a session may still run in it. List each one as "kept: locked". Never unlock one.
+5. Skip worktrees with 0 commits ahead of main. `/tidy` in Step 5 removes them.
+6. If no worktrees are left to merge, report "No worktrees to merge" and go to Step 5.
+7. For each remaining worktree, gather:
    - Branch name
    - Path on disk
    - First divergence commit date (`git log main..BRANCH --reverse --format='%ai' | head -1`)
@@ -34,6 +39,8 @@ Worktree merge plan (oldest first):
 
 Tests between merges: Yes (smoke)
 Cleanup: Auto after each merge
+Push: Yes, after the last merge (blocked in background jobs)
+Tidy: Yes, at the end
 ```
 
 If any branches share modified files, flag the conflict risk. If high overlap exists, suggest reordering (merge the dependency first) and explain why.
@@ -121,7 +128,21 @@ If branch deletion fails (not fully merged warning), use `-D` only after confirm
 
 Log: `Merged and cleaned up: BRANCH`
 
-## Step 4 — Summary
+## Step 4 — Push
+
+Skip this step if the user chose "Stop here", or if nothing was merged.
+
+1. **Background-job gate:** if `CLAUDE_JOB_DIR` is set, do not push. Report "Push blocked in a background job. Run `git push`." Go to Step 5.
+2. Run `git fetch origin`.
+3. Run `git merge-base --is-ancestor origin/main HEAD`. If it fails, `origin/main` has new commits. Stop and report. Do not pull, rebase or force-push.
+4. Run `git push origin HEAD`. Never use `--force`.
+5. Verify: `git rev-list --count origin/main..HEAD` returns `0`.
+
+## Step 5 — Tidy
+
+Invoke `/tidy` with the Skill tool. It removes the worktrees and branches that are already in `origin/main`, and it keeps all unmerged work. If Step 4 did not push, `/tidy` keeps the new merges, because they are not in `origin/main` yet.
+
+## Step 6 — Summary
 
 After all worktrees are processed, present a summary:
 
@@ -130,6 +151,10 @@ Merge summary:
   Merged:  feat-a, feat-b (2)
   Skipped: feat-c (conflict — user aborted) (1)
   Failed:  none
+  Kept:    feat-d (locked)
+
+Pushed:  yes (or: no — background job, run `git push`)
+Tidy:    3 worktrees removed, 1 kept
 
 Current branch: main
 Total new commits: 6

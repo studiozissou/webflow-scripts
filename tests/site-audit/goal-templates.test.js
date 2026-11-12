@@ -63,6 +63,14 @@ test('the plan template defines goals by phase and tasks with blocks and impact'
   assert.match(t, /realistic/i);
 });
 
+test('the plan template sizes work in T-shirt sizes, never hours', () => {
+  const t = read(PLAN);
+  assert.match(t, /\| Size \|/, 'the work table needs a Size column');
+  assert.match(t, /S, M, L or XL/);
+  for (const size of ['**S**', '**M**', '**L**', '**XL**']) assert.ok(t.includes(size), `missing the ${size} definition`);
+  assert.doesNotMatch(t, /\bhours?\b/i, 'sizes replace hours');
+});
+
 test('neither template names a client', () => {
   for (const p of [REPORT, PLAN]) assert.doesNotMatch(read(p), CLIENTS, `${p} names a client`);
 });

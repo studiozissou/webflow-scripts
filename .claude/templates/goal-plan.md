@@ -20,7 +20,8 @@ One bold sentence with the realistic goal, then two to four sentences:
 
 - What is realistic and what is not, and why (who holds the top spots, and how far ahead they are).
 - Rough timings for each part of the goal, marked as estimates.
-- The build size and the monthly size once built, and any access that makes the work cheap.
+- The build as a count of tasks by size (for example "12 small, 8 medium, 3 large"), the recurring
+  work once built, and any access that makes the work cheap.
 - What must be agreed first, such as the monthly budget.
 
 ## Where [client] stands
@@ -60,20 +61,25 @@ bookings, sales), not a ranking. Rankings support it.
 
 ## The work, with sizes
 
-| ID | Work | Phase | Goals | Blocks | Impact | Will's hours | Client input | Automated? |
+| ID | Work | Phase | Goals | Blocks | Impact | Size | Client input | Automated? |
 |---|---|---|---|---|---|---|---|---|
-| F1 | [task] | 0 | [goal #s] | [task IDs that wait on this] | high, medium or low | [n] | [input, or –] | [Yes, Drafts or No] |
+| F1 | [task] | 0 | [goal #s] | [task IDs that wait on this] | high, medium or low | S, M, L or XL | [input, or –] | [Yes, Drafts or No] |
 
 - IDs carry the phase letter (F = foundation, then one letter per phase).
 - **blocks** lists the task IDs that cannot start until this one is done. The report picks next
   month's tasks from this list first, then by **impact**.
-- Hours live in the plan only, for pricing. The client report shows no time estimates.
-- A totals table by phase.
+- **Size** is a T-shirt size for effort and difficulty, not a time estimate. Never convert it to
+  time, in the plan or in the report.
+  - **S**: one sitting, one person, no input from anyone else.
+  - **M**: several steps, or one client input or approval.
+  - **L**: several pages or systems, several inputs, or a release that must be measured.
+  - **XL**: a project of its own. Split it into smaller tasks before it starts.
+- A totals table by phase: the count of tasks of each size.
 
 ## What runs itself and what needs a person
 
-A table: task · how often · automated? · who · time a month. Then the monthly hours for us and for
-the client, what an agency alternative would cost (marked as a typical range, not a quote), and
+A table: task · how often · automated? · who · size. Then one sentence on the recurring work for us
+and for the client as a count by size, what an agency alternative would cost (marked as a typical range, not a quote), and
 any rule that stays manual on purpose.
 
 ## What to expect and when

@@ -13,7 +13,7 @@ const SOURCE = readFileSync(
   'utf8',
 );
 const CDN =
-  'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@rolfing-amsterdam-v0.1.0/projects/rolfing-amsterdam/';
+  'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@rolfing-amsterdam-v0.2.0-rc.1/projects/rolfing-amsterdam/';
 const GSAP = 'https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js';
 const MODULES = ['faq-accordion.js'];
 const EXPECTED = [GSAP, ...MODULES.map((m) => CDN + m)];
@@ -92,7 +92,7 @@ test('every page gets the same global modules', () => {
 test('exposes the base, version and module list for debugging', () => {
   const { window } = run();
   assert.equal(window.ROLFING.base, CDN);
-  assert.equal(window.ROLFING.version, '0.1.0');
+  assert.equal(window.ROLFING.version, '0.2.0');
   assert.deepEqual([...window.ROLFING.modules], MODULES);
 });
 

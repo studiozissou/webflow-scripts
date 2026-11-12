@@ -25,6 +25,16 @@ test('D4 matrix on the shared fixture', () => {
   assert.deepEqual(ids(r.week), ['t-weekend', 't-p3-week', 't-p1-nodue']);
 });
 
+test('Awaiting feedback stays off the digest and out of proposals until untouched for 14 days', () => {
+  const task = (id, lastEdited) => ({ id, name: id, status: 'Awaiting feedback', priority: 'P1', due: '2026-11-04', lastEdited });
+  const r = bucketTasks([task('fresh', '2026-11-11T08:00:00Z'), task('recent', '2026-10-29T08:00:00Z'), task('stuck', '2026-10-28T08:00:00Z'), task('unknown', null)], [], NOW);
+  const shown = [...r.now, ...r.today, ...r.week].map((i) => i.id);
+  assert.deepEqual(shown, ['stuck']);
+  assert.deepEqual(r.proposals.map((p) => p.id ?? p.pageId), ['stuck']);
+  assert.equal(DEFAULT_RULES.parkedDays, 14);
+  assert.deepEqual(DEFAULT_RULES.parkedStatuses, ['Awaiting feedback']);
+});
+
 test('due today and due tomorrow land in TODAY', () => {
   const r = bucketTasks(fixture.tasks, [], NOW, RULES);
   assert.equal(reasonOf(r.today, 't-due-today'), 'due-today');

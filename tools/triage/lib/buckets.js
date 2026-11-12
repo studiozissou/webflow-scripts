@@ -1,4 +1,4 @@
-// Sorts open tasks and unanswered human threads into NOW, TODAY and THIS WEEK per spec D4 and derives Priority-only proposals, with thresholds overridable from config.digest.rules.
+// Sorts open tasks and unanswered human threads into NOW, TODAY and THIS WEEK per spec D4 and derives Priority-only proposals, skipping parked tasks (Awaiting feedback) until nobody has edited them for 14 days, with thresholds overridable from config.digest.rules.
 import { amsterdamDate, calendarDaysBetween, workingDaysBetween } from './workdays.js';
 import { compareNullable, priorityRank } from './compare.js';
 
@@ -12,7 +12,11 @@ export const DEFAULT_RULES = {
   blockedNamePattern: '\\bYourName\\b',
   blockedDoers: ['User', 'User + Claude'],
   excludeStatuses: ['Done', 'Cancelled'],
+  parkedStatuses: ['Awaiting feedback'],
+  parkedDays: 14,
 };
+
+const parked = (task, today, r) => r.parkedStatuses.includes(task.status) && (!task.lastEdited || calendarDaysBetween(task.lastEdited, today) < r.parkedDays);
 
 const NOW_ORDER = ['new-business', 'blocked-on-owner', 'overdue', 'reply-age'];
 const TODAY_ORDER = ['due-today', 'due-tomorrow', 'p0'];
@@ -110,7 +114,7 @@ export function bucketTasks(tasks = [], threads = [], now = new Date(), rules = 
   const today = amsterdamDate(now);
   const out = { now: [], today: [], week: [], proposals: [] };
   for (const task of tasks) {
-    if (r.excludeStatuses.includes(task.status)) continue;
+    if (r.excludeStatuses.includes(task.status) || parked(task, today, r)) continue;
     const [bucket, reason] = classifyTask(task, today, r);
     if (bucket) out[bucket].push(taskItem(task, reason));
     const proposal = proposalFor(task, today, r);

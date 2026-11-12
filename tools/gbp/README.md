@@ -39,7 +39,7 @@ Review replies compare the reply text. Posts map the returned state: `LIVE` to `
 
 **Stale check.** Apply re-reads the edited fields only, and refuses if they differ from the preview. The comparison ignores key order and treats values Google omits (such as `minutes: 0`) as equal to their defaults. Array order counts.
 
-**Payload rules.** Phone edits merge with the current values, because primary and additional must be sent together. Category edits merge the same way. Special hours edits include the current regular hours in the body and the mask, because Google won't take special hours without them.
+**Payload rules.** Post previews refuse phone numbers and links in the text: Google's automated moderation removed a post with a phone number within a minute and turned off posting for the whole profile. Use the post button for calls and links. Phone edits merge with the current values, because primary and additional must be sent together. Category edits merge the same way. Special hours edits include the current regular hours in the body and the mask, because Google won't take special hours without them.
 
 **Change log.** Every apply attempt, including refusals, adds one JSON line to `~/.config/gbp/changes.jsonl` (folder 700, file 600). Fields: `time`, `location`, `fields`, `before`, `after`, `status`, `previewId`, `sent`, plus `reason`, `outcome`, `error` or `readBack` when they apply. It holds no reviewer names or review text, only reply text. Reply text can still name the reviewer if the reply does.
 

@@ -798,6 +798,33 @@ describe('changes', () => {
       assert.equal(idCounter, 0);
     });
 
+    it('rejects phone numbers and links in the post text', async () => {
+      for (const summary of [
+        'Bestel nu: bel 020 123 4567.',
+        'Bel 020-123 4567',
+        'Call +31 20 123 4567 today',
+        'Bel 06 1234 5678',
+        'Kijk op https://example.com/kerst',
+        'Kijk op www.example.com',
+      ]) {
+        await assert.rejects(
+          changes.previewPost({ ...postArgs, summary }),
+          /phone number or link/i,
+          summary,
+        );
+      }
+      assert.equal(idCounter, 0);
+    });
+
+    it('allows prices, times, dates and years in the post text', async () => {
+      const preview = await changes.previewPost({
+        ...postArgs,
+        summary:
+          'Menu voor € 34,50 p.p. Bestel uiterlijk 20 december en haal op 23 of 24 december op, tussen 15:00 en 17:00. Tot 2027!',
+      });
+      assert.ok(preview.previewId);
+    });
+
     for (const [state, status] of [
       ['LIVE', 'live'],
       ['PROCESSING', 'pending'],

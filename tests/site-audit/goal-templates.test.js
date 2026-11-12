@@ -48,6 +48,7 @@ test('the report template states the task, health and tone rules', () => {
   assert.match(t, /chasing/i);
   assert.match(t, /proposed/i);
   assert.match(t, /same month last year/i);
+  assert.match(t, /Always, once the report is written[\s\S]*reviewer pass/, 'every report gets a reviewer pass');
   assert.doesNotMatch(t, /\bstep 0\b|\bstep 1\b/i, 'use "phase", never "step"');
 });
 

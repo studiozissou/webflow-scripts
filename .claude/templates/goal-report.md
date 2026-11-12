@@ -150,7 +150,12 @@ Sample figures never go into the client's monthly figures files.
 
 ## Checks before sending
 
+Always, once the report is written:
+
 - Word count with accordions collapsed, and sentence lengths.
 - Re-read the page from Notion: every chart image present, no accordion title empty.
-- A copy review (design-critic, copy lens) for wording, numbers that disagree, and one word per
-  thing.
+- A reviewer pass: one Opus reviewer reads the whole report (charts included) against the hard
+  rules above, and checks numbers that disagree between sections and charts, statuses against
+  phase dates, goal-to-phase fit, and one word per thing. Apply its fixes, then re-check the
+  word count.
+- A copy review (design-critic, copy lens) for wording.

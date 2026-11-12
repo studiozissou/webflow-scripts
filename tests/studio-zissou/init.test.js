@@ -11,8 +11,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT = join(__dirname, '..', '..', 'projects', 'studio-zissou');
 const SOURCE = readFileSync(join(PROJECT, 'init.js'), 'utf8');
 const CDN =
-  'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@studio-zissou-v1.0.0/projects/studio-zissou/';
-const MODULES = ['global.js'];
+  'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@studio-zissou-v1.1.0/projects/studio-zissou/';
+const MODULES = ['global.js', 'contact-steps.js'];
 const EXPECTED = MODULES.map((m) => CDN + m);
 
 function makeStorage(seed = {}) {
@@ -66,7 +66,7 @@ function run({
 
 const urls = (appended) => appended.map((el) => el.src || el.href);
 
-test('loads only global.js, from the same versioned folder as init.js, with no third-party dependency', () => {
+test('loads the global modules in order, from the same versioned folder as init.js, with no third-party dependency', () => {
   assert.deepEqual(urls(run().appended), EXPECTED);
 });
 
@@ -84,7 +84,7 @@ test('every page gets the same global modules', () => {
 test('exposes the base, version and module list on window.SZ', () => {
   const { window } = run();
   assert.equal(window.SZ.base, CDN);
-  assert.equal(window.SZ.version, '1.0.0');
+  assert.equal(window.SZ.version, '1.1.0');
   assert.deepEqual([...window.SZ.modules], MODULES);
 });
 
@@ -99,7 +99,7 @@ test('runs once even if the tag is pasted twice', () => {
 });
 
 test('skips a module whose exact URL is already on the page', () => {
-  assert.deepEqual(urls(run({ preloaded: [CDN + 'global.js'] }).appended), []);
+  assert.deepEqual(urls(run({ preloaded: [CDN + 'global.js'] }).appended), [CDN + 'contact-steps.js']);
 });
 
 test('?sz=local is ignored unless the tag carries data-allow-local', () => {
@@ -110,18 +110,21 @@ test('?sz=local is ignored unless the tag carries data-allow-local', () => {
 
 test('with data-allow-local, ?sz=local loads from the local server for the session', () => {
   const { appended, sessionStorage } = run({ search: '?sz=local', allowLocal: true });
-  assert.deepEqual(urls(appended), ['https://localhost:8080/projects/studio-zissou/global.js']);
+  assert.deepEqual(
+    urls(appended),
+    MODULES.map((m) => 'https://localhost:8080/projects/studio-zissou/' + m),
+  );
   assert.equal(sessionStorage.data['sz-source'], 'local');
 });
 
 test('?sz-port only accepts a 4-5 digit port', () => {
   assert.deepEqual(
     urls(run({ search: '?sz=local&sz-port=8081', allowLocal: true }).appended),
-    ['https://localhost:8081/projects/studio-zissou/global.js'],
+    MODULES.map((m) => 'https://localhost:8081/projects/studio-zissou/' + m),
   );
   assert.deepEqual(
     urls(run({ search: '?sz=local&sz-port=evil.com', allowLocal: true }).appended),
-    ['https://localhost:8080/projects/studio-zissou/global.js'],
+    MODULES.map((m) => 'https://localhost:8080/projects/studio-zissou/' + m),
   );
 });
 
@@ -155,7 +158,7 @@ test('no currentScript (e.g. injected by a tag manager) does nothing rather than
 
 test('VERSION is X.Y.Z semver and every listed module exists, so release preflight can cut a tag', () => {
   const parsed = parseInit(SOURCE);
-  assert.equal(parsed.version, '1.0.0');
+  assert.equal(parsed.version, '1.1.0');
   assert.deepEqual(parsed.modules, MODULES);
   for (const m of MODULES) assert.ok(existsSync(join(PROJECT, m)), m);
 });

@@ -4,9 +4,9 @@
 
   if (window.SZ && window.SZ.base) return;
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
   var DEPS = [];
-  var GLOBAL_MODULES = ['global.js'];
+  var GLOBAL_MODULES = ['global.js', 'contact-steps.js'];
   var ROUTES = [];
 
   var script = document.currentScript;

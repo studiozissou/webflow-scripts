@@ -133,6 +133,23 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
 
 **Links**
 - Use native link settings (Link → Page, anchors Page → Section). Never a custom `href` attribute or a URL-typed `/path`: only Page links are localized, so URL links on a secondary locale point back at the primary.
+- `data_whtml_builder` stores `href="#id"` as a raw attribute with no link setting. Set every anchor link afterwards.
+- Inside a component, a Page → Section link can't target an element outside it: `transform_element_to_component` resets it to `linkType: none`. Use a URL link `#id` there (scope the call with `scope_component_id`).
+
+**Components (`transform_element_to_component`, Team Zissou T5, 11 Nov 2026)**
+- Converting an element drops custom attributes (`data-*`, `aria-*`, label `for`) inside it and the DOM id on its root; inner DOM ids survive. Convert first, then set attributes and root ids inside the definition with `scope_component_id`; the root element's id equals the component id.
+
+**Styles via `data_style_tool` (Team Zissou T5)**
+- `gap`, `row-gap` and `column-gap` reject `variable_as_value`. Pass `property_value: "var(--<css-name>)"`; it is stored as a real variable link.
+- A `calc()` containing a variable silently collapses to the bare variable. Keep those rules in the site head CSS, or use a variable-free `calc()`.
+- Combo classes need every parent in the chain to exist first; `parent_style_names` builds `.a.b.c`.
+
+**Forms via `data_whtml_builder` (Team Zissou T5)**
+- `<form>` becomes a native form, but the class lands on the wrapper, method is GET, the form is named "Html Form" and the default success/error text stays. Move the class to `FormForm`, set `name`/`method` with `set_settings`, and `set_text` the message Strings.
+- The first input's name can come in as `field`. Setting `name` then renames its DOM id to match, so reset the id.
+- `<label><input type=checkbox>Text</label>` nests a native checkbox label inside your label, adds a visible label carrying the field name, and gives every box `id="checkbox"`. Restyle the native `FormCheckboxWrapper` as the chip, delete the outer label, and set unique ids.
+- `placeholder` can't be set by MCP (no setting key, and the attribute is reserved), but whtml keeps the placeholders it was given.
+- Webflow's `.w-checkbox::after` clearfix sets `display: table`, which collapses an absolutely positioned `::after` overlay to 0×0. Add `display: block`.
 
 **Binding limits**
 - A `<span>` can't bind to a CMS field. Bind a text element (paragraph, heading, text block) instead.

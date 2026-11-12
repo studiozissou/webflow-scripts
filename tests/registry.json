@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-11",
+  "lastUpdated": "2026-11-12",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-10-20",
@@ -932,6 +932,16 @@
       "critical": false,
       "description": "Coconut /pricing Client First V3 rebuild on pricing-cf: V3 shell and sections, no legacy layout classes, details FAQ with microdata, subgrid price table, script hooks (menu, UTM), element target; live /pricing control",
       "created": "2026-11-11"
+    },
+    {
+      "slug": "sz-contact-steps",
+      "url": "https://teamzissou.webflow.io/",
+      "spec": "tests/acceptance/sz-contact-steps.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-12",
+      "description": "Team Zissou homepage contact form, one step at a time: progress N of 6, Next/Enter with per-step validation, step 5 needs a chip, Back keeps values, submit only on step 6, mocked done/fail focus, unique chip names, attribution fields, axe, reduced motion, no-JS stacked fallback. Expected to fail until sz-contact-steps T2 and T4 ship (SZ_LOCAL_MODULE=1 injects the local module before then)."
     }
   ]
 }

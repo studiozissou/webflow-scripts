@@ -1,6 +1,6 @@
 ---
 name: client-first
-description: Applies Finsweet Client First V3 (23 Oct 2026) to Webflow builds and reviews. Covers the flat V3 page structure (page-wrapper > main-wrapper > section_ > container-), the five variable collections (Base, Theme, Typography, Layout, Sizes) with breakpoint modes, rem on a 16px base, typography, spacing, grid, gap and display utilities, custom class + utility class strategy, and Webflow component naming. Use this skill whenever you build, review or audit a Webflow site that follows Client First, name or rename classes, structure a section or page, choose a text-size, heading-style or text-style utility, set up or link variables, decide on margin, padding, gap or section spacing, or name a Webflow component, write HTML to push through the Webflow MCP, plan a Variables panel setup from brand guidelines, or convert spacer divs or `padding-global` layers, even if the user only says "Finsweet", "CF", "the class naming system", "build a section", "set up the variables" or "clean up the classes" and never names the skill.
+description: Applies Finsweet Client First V3 (23 Oct 2026) to Webflow builds and reviews. Covers the flat V3 page structure (page-wrapper > main-wrapper > section_ > container-), the five variable collections (Base, Theme, Typography, Layout, Sizes) with breakpoint modes, rem on a 16px base, typography, spacing, grid, gap and display utilities, custom class + utility class strategy, native Modal and Popover elements, and Webflow component naming. Use this skill whenever you build, review or audit a Webflow site that follows Client First, name or rename classes, structure a section or page, choose a text-size, heading-style or text-style utility, set up or link variables, decide on margin, padding, gap or section spacing, build a modal, popover, dropdown menu, flyout or dialog, name a Webflow component, push HTML through the Webflow MCP, plan variables from brand guidelines, or convert spacer divs or `padding-global` layers, even if the user only says "Finsweet", "CF" or "build a section" and never names the skill.
 ---
 
 <objective>
@@ -184,9 +184,26 @@ Custom class naming is `[group]_[element]`. The underscore makes a virtual folde
 
 Never edit a utility class to fix one element; it changes every instance site-wide.
 
+## Modals and popovers
+
+Webflow's native Modal and Popover elements (Add panel > Advanced) replace the Dropdown element, custom open/close JS and third-party modal scripts on new builds and rebuilds. On an existing site keep what is there unless the job is the migration, and say so in the reply.
+
+- Which one: Modal when the visitor must deal with it before moving on (sign-up, confirmation, booking form). Popover when the page stays usable (dropdown menu, flyout, click tooltip). The Modal is a native `<dialog>`: page inert, focus trapped, Escape closes, backdrop click does not close. The Popover uses the native Popover API. IDs can't be changed.
+- Each is a single element with no default children, classes or close button. A Box can become either through right-click > Convert to.
+- Triggers are Button elements, never Link blocks or text links. Set the action in Settings > Link settings: popover Toggle, Show or Hide; modal Show or Hide (no Toggle). Put the `button` utility (and `is-` variants) on the Button element.
+- Modal naming: the Modal carries `[name]-modal_component` (`signup-modal_component`), children `signup-modal_content`, `signup-modal_close-button`. Popover naming: wrap button and popover in `[name]_component` (`nav-menu_component`), children `nav-menu_button`, `nav-menu_popover`, `nav-menu_link`.
+- Placement: the Modal is a direct child of `main-wrapper`, after the sections, never inside one `section_` (triggers can sit anywhere). A nav popover lives inside `Global / Nav` within its `[name]_component`, which is its own nested component (`Component / Services Menu`); give a menu popover the `nav` tag. Add no spacer or extra wrapper inside; space content with gap on the modal, popover or its content wrapper.
+- Every modal gets a close Button (Hide action) and an `aria-label` custom attribute as its accessible name. Turn on Lock scrolling while open instead of writing body-overflow JS; turn on Close modal after submit for forms.
+- Popover mode (Popover settings): Auto for menus (light dismiss, Escape, one open at a time), Manual only when the popover must stay open. Position with Style panel > Position > Anchor Auto (next to the button; Area sets side and alignment), with Anchor visibility where needed, never `position-*` hacks.
+- Styling: set the open look and the backdrop through the Popover open and Backdrop element states on the custom class. Link backdrop colour to Theme variables and widths and padding to Sizes or Layout variables. Add no z-index, because both render in the top layer.
+- Motion: use Modal settings > Animate open/close, or an Interactions trigger on Modal toggle or Popover toggle. Write no GSAP or JS for open, close or position. Animated ones add a Webflow site module; unanimated ones add none. Confirm on first use that the animation respects `prefers-reduced-motion`; if not, leave the modal unanimated or add a reduced-motion condition in Interactions. Hover-open needs an IX3 hover trigger.
+- Mobile nav: inside a collapsed mobile nav, set the popover's Anchor to None at the mobile breakpoint so it flows full-width (confirm on first use).
+- MCP: the HTML builder is not documented to create these elements (confirm on first use). Build the content as a Box and use Convert to, or add the element in the Designer.
+- Duplicating a button and its popover or modal leaves the copy pointing at the original; re-pick the target in Link settings.
+
 ## Component naming
 
-Webflow Components use `Group Name / Component Identifier`, each word capitalised: `Card / Blog Post`, `Form / Newsletter`, `Global / Nav`, `Modal / Video`. Groups: Global, Template, Card, Form, Section, Component, Modal. The slash does not create a group, so create the group in the Components panel and move the component into it.
+Webflow Components use `Group Name / Component Identifier`, each word capitalised: `Card / Blog Post`, `Form / Newsletter`, `Global / Nav`, `Modal / Video`. Groups: Global, Template, Card, Form, Section, Component, Modal. Modals go in `Modal / X`, popovers in `Component / X`. The slash does not create a group, so create the group in the Components panel and move the component into it.
 
 The page template ships with `Global / Styles` (on every page; holds the `global-styles_default` embed, which you do not edit, and `global-styles_custom` for project CSS), `Template / Section` and `Template / Core Structure`. Unlink template components to use them; never edit them to build content.
 
@@ -207,4 +224,5 @@ Navigation: always use Webflow's native Navbar element, pasted from Relume (Navb
 - Every utility used is in `references/v3-utilities.md` or already in the project.
 - Custom classes have an underscore, utilities do not, and no element carries more than four classes.
 - Components follow `Group Name / Component Identifier` and sit in the matching group.
+- Modals and popovers use the native elements with Button triggers set in Link settings, a close Button (Hide) and `aria-label` on every modal, open and backdrop styling through element states with no z-index, and no JS for open, close or position.
 </success_criteria>

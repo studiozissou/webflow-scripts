@@ -7,6 +7,5 @@
   "listItemClasses": [],
   "fallbackPaths": ["/", "/privacy", "/terms"],
   "stagingUrl": "https://teamzissou.webflow.io",
-  "redirects": [],
-  "apexDefault": true
+  "redirects": []
 }

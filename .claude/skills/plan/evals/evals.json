@@ -60,6 +60,12 @@
       "prompt": "/plan fix the footer year not updating on RHP --auto",
       "expected_output": "Mini or Small. No question is asked and no agent with model \"fable\" is spawned, because auto takes the recommendation and that is inline for Mini and Small. Spec frontmatter has planner: inline. The spec reviewer still runs.",
       "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "/plan add a multi-step booking form with validation and CMS-driven slots to the RHP contact page (setup: ~/.claude/usage-5h reads 20, ~/.claude/usage-7d reads 80)",
+      "expected_output": "Auto mode, size Medium. The skill reads both ~/.claude/usage-5h and ~/.claude/usage-7d. Because weekly usage is at or above 70%, the recommendation is inline, so no agent with model \"fable\" is spawned, and the spec's Assumptions say Fable was skipped for weekly usage at 80%. Spec frontmatter has planner: inline. With usage-7d at 30 and usage-5h at 20 the same request spawns the Fable planner.",
+      "files": []
     }
   ]
 }

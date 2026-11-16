@@ -190,9 +190,8 @@ test.describe('sz-contact-steps', () => {
 });
 
 test.describe('sz-contact-steps reduced motion', () => {
-  test.use({ reducedMotion: 'reduce' });
-
   test('reduced motion turns off the step fade', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await open(page);
     await page.fill('#contact-name', 'Acceptance Test');
     await page.click(NEXT);

@@ -1,4 +1,4 @@
-// Acceptance tests for rolfing-ia-nav: JSON-LD URLs and /rolfing/ redirects, grouped nav, footer audience column, locale-safe Pricing link, hub and in-body inbound links; skipped until ROLFING_IA=1, ROLFING_IA_PHASE=jsonld runs only the URL checks.
+// Acceptance tests for rolfing-ia-nav: JSON-LD URLs and /rolfing/ redirects, Rolfing and Who it helps nav dropdowns, three-column footer, approved labels, locale-safe Pricing link, hub and in-body inbound links; skipped until ROLFING_IA=1, ROLFING_IA_PHASE=jsonld runs only the URL checks.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -37,11 +37,69 @@ const fetchHtml = async (request, url) => {
   return res.text();
 };
 const hrefs = (html) => [...html.matchAll(/href="([^"#?]*)/g)].map((m) => m[1].replace(/^https?:\/\/[^/]+/, ''));
+const NAV_METHOD = {
+  en: ['procedure', 'rolfing-and-fascia', 'holistic-approach', 'complementary-care', 'science-and-development'],
+  nl: [
+    'procedure',
+    'rolfing-en-fascia',
+    'holistische-benadering',
+    'complementaire-zorg',
+    'de-wetenschap-en-ontwikkeling-van-rolfing',
+  ],
+};
+const LABELS = {
+  en: {
+    toggles: ['Rolfing', 'Who it helps'],
+    rolfing: [
+      'What is Rolfing?',
+      'How a session works',
+      'Rolfing and fascia',
+      'A holistic approach',
+      'Alongside medical care',
+      'Science and history',
+      'Recommended books',
+    ],
+    hub2: 'Who is Rolfing for?',
+    footer: ['Rolfing', 'Who it helps', 'Practice'],
+    footerRolfing: ['What is Rolfing?', 'How a session works', 'Science and history', 'Recommended books'],
+  },
+  nl: {
+    toggles: ['Rolfing', 'Voor wie'],
+    rolfing: [
+      'Wat is Rolfing?',
+      'Zo verloopt een sessie',
+      'Rolfing en fascia',
+      'Een holistische benadering',
+      'Naast reguliere zorg',
+      'Wetenschap en geschiedenis',
+      'Aanbevolen boeken',
+    ],
+    hub2: 'Voor wie is Rolfing bedoeld?',
+    footer: ['Rolfing', 'Voor wie', 'Praktijk'],
+    footerRolfing: ['Wat is Rolfing?', 'Zo verloopt een sessie', 'Wetenschap en geschiedenis', 'Aanbevolen boeken'],
+  },
+};
+const header = (html) => html.slice(0, html.indexOf('<main'));
+const footerOf = (html) => html.slice(html.search(/class="footer/));
+const clean = (s) => s.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+const classLinks = (html, classes) =>
+  [...html.matchAll(/(<a [^>]*>)([\s\S]*?)<\/a>/g)]
+    .filter((m) => !m[1].includes('w-locales-item'))
+    .filter((m) => classes.some((c) => new RegExp(`class="(?:[^"]*\\s)?${c}(?:\\s[^"]*)?"`).test(m[1])))
+    .map((m) => ({ href: ((m[1].match(/href="([^"]*)"/) || [])[1] || '').replace(/^https?:\/\/[^/]+/, ''), text: clean(m[2]) }))
+    .filter((l) => l.href);
+const classHrefs = (html, classes) => classLinks(html, classes).map((l) => l.href);
+const classTexts = (html, cls) =>
+  [...html.matchAll(new RegExp(`class="(?:[^"]*\\s)?${cls}(?:\\s[^"]*)?"[^>]*>([\\s\\S]*?)</`, 'g'))].map((m) => clean(m[1]));
 const visibleBodyHrefs = async (page, url) => {
   await page.goto(`${BASE}${url}`, { waitUntil: 'networkidle', timeout: 45000 });
   return page.$$eval('a[href]', (as) =>
     as
-      .filter((a) => !a.closest('nav, footer, .footer, .w-condition-invisible') && a.getClientRects().length > 0)
+      .filter(
+        (a) =>
+          !a.closest('nav, footer, .footer, .footer_component, .navbar_component, .w-condition-invisible') &&
+          a.getClientRects().length > 0,
+      )
       .filter((a) => getComputedStyle(a).visibility !== 'hidden')
       .map((a) => new URL(a.href).pathname),
   );
@@ -84,35 +142,63 @@ test.describe('rolfing-ia-nav', () => {
     test.describe(`structure ${lang}`, () => {
       test.skip(PHASE === 'jsonld', 'T3-T6 not built yet');
 
-      test('nav dropdown shows the method group then the audience group in IA order, no duplicates', async ({
+      test('nav has the Rolfing group, the Who it helps group, Pricing and About in IA order, no duplicates', async ({
         request,
       }) => {
         const html = await fetchHtml(request, `/${lang}`);
-        const list = html.match(/class="navbar_dropdown-list[\s\S]*?<\/nav>/)[0];
-        const got = hrefs(list).filter((h) => h.startsWith(`/${lang}/${DIR}`));
+        const got = classHrefs(header(html), ['navbar_link', 'navbar_dropdown-link']);
         const want = [
           path(lang, SLUGS[lang].hub1),
-          ...SLUGS[lang].method.map((s) => path(lang, s)),
+          ...NAV_METHOD[lang].map((s) => path(lang, s)),
+          `/${lang}/resources`,
           path(lang, SLUGS[lang].hub2),
           ...SLUGS[lang].audience.map((s) => path(lang, s)),
+          `/${lang}#pricing`,
+          `/${lang}/about-janco`,
+          `/${lang}/testimonials`,
+          `/${lang}/faq`,
+          `/${lang}/contact`,
         ];
         expect(got).toEqual(want);
         expect(new Set(got).size).toBe(got.length);
       });
 
-      test('footer lists the six audience pages in order', async ({ request }) => {
+      test('footer has Rolfing, Who it helps and Practice columns in IA order', async ({ request }) => {
         const html = await fetchHtml(request, path(lang, SLUGS[lang].audience[1]));
-        const footer = html.slice(html.search(/<footer|class="footer/));
-        const want = SLUGS[lang].audience.map((s) => path(lang, s));
-        expect(hrefs(footer).filter((h) => want.includes(h))).toEqual(want);
+        const want = [
+          path(lang, SLUGS[lang].hub1),
+          path(lang, 'procedure'),
+          path(lang, SLUGS[lang].method[1]),
+          `/${lang}/resources`,
+          `/${lang}/faq`,
+          path(lang, SLUGS[lang].hub2),
+          ...SLUGS[lang].audience.map((s) => path(lang, s)),
+          `/${lang}/about-janco`,
+          `/${lang}/testimonials`,
+          `/${lang}#pricing`,
+          `/${lang}/book-session`,
+          `/${lang}/contact`,
+        ];
+        expect(classHrefs(footerOf(html), ['footer_menu-link'])).toEqual(want);
+      });
+
+      test('nav and footer use the approved labels in order', async ({ request }) => {
+        const html = await fetchHtml(request, `/${lang}`);
+        const L = LABELS[lang];
+        const toggles = [...header(html).matchAll(/class="navbar_dropdwn-toggle[^"]*"[^>]*>\s*<div[^>]*>([^<]*)</g)].map((m) => clean(m[1]));
+        expect(toggles.slice(0, 2), 'nav toggles').toEqual(L.toggles);
+        const items = classLinks(header(html), ['navbar_dropdown-link']).map((l) => l.text);
+        expect(items.slice(0, 8), 'Rolfing dropdown and Who it helps overview').toEqual([...L.rolfing, L.hub2]);
+        expect(classTexts(footerOf(html), 'footer_menu-heading'), 'footer headings').toEqual(L.footer);
+        const footerItems = classLinks(footerOf(html), ['footer_menu-link']).map((l) => l.text);
+        expect(footerItems.slice(0, 4), 'footer Rolfing column').toEqual(L.footerRolfing);
       });
 
       test('nav pricing link stays in the current locale', async ({ request }) => {
         const html = await fetchHtml(request, `/${lang}`);
-        const nav = html.match(/<nav[\s\S]*?<\/nav>/)[0];
-        const pricing = [...nav.matchAll(/href="([^"]*#pricing)"/g)].map((m) => m[1]);
+        const pricing = classHrefs(header(html), ['navbar_link']).filter((h) => h.includes('#pricing'));
         expect(pricing.length).toBeGreaterThan(0);
-        for (const h of pricing) expect(h).toMatch(new RegExp(`^(https?://[^/]+)?/${lang}/?#pricing$`));
+        for (const h of pricing) expect(h).toMatch(new RegExp(`^/${lang}/?#pricing$`));
       });
 
       test('Who is Rolfing for links to all six audience pages in its body', async ({ page }) => {
@@ -152,14 +238,6 @@ test.describe('rolfing-ia-nav', () => {
       });
     });
   }
-
-  test.describe('nl only', () => {
-    test.skip(PHASE === 'jsonld', 'T3 not built yet');
-    test('nav label reads Hulpbronnen', async ({ request }) => {
-      const nav = (await fetchHtml(request, '/nl')).match(/<nav[\s\S]*?<\/nav>/)[0];
-      expect(nav).toMatch(/>\s*Hulpbronnen\s*</);
-    });
-  });
 
   test.describe('regression', () => {
     test.skip(PHASE === 'jsonld', 'checked with the structure phase');

@@ -1,86 +1,27 @@
-/**
- * mixed-content.js — Detect HTTP resources on HTTPS pages
- *
- * Scans HTML for http:// URLs in src, href (non-anchor), and action
- * attributes. Only runs when the root URL is HTTPS.
- */
+// Reports https pages that load any resource over http, one row per page with the count as the value.
 
-import { createFinding } from '../lib/finding.js';
+import { contentPages, pageRow } from './_shared.js';
 
-const meta = {
-  name: 'mixed-content',
-  label: 'Mixed Content',
-  category: 'security',
-  tier: 1,
-  parallel: true,
+export const meta = { name: 'mixed-content', taxonomyIds: ['mixed-content'], tier: 1, crossPage: false, audit: true };
+
+const TAGS = {
+  script: ['script[src]', (url) => `<script src="${url}">`],
+  stylesheet: ['link[rel=stylesheet]', (url) => `<link rel="stylesheet" href="${url}">`],
+  iframe: ['iframe[src]', (url) => `<iframe src="${url}">`],
+  img: ['img[src]', (url) => `<img src="${url}">`],
+  srcset: ['[srcset]', (url) => `<img srcset="${url}">`],
+  media: ['source[src]', (url) => `<source src="${url}">`],
+  link: ['link[href]', (url) => `<link href="${url}">`],
 };
 
-/**
- * Find all mixed-content resources in HTML.
- * Skips <a> tags — linking to HTTP pages is acceptable.
- * Checks: <img src>, <script src>, <link href>, <video src>,
- *         <audio src>, <source src>, <iframe src>, <form action>
- *
- * @param {string} html
- * @returns {{ tag: string, attr: string, url: string }[]}
- */
-function findMixedResources(html) {
-  const results = [];
-
-  // Match tags with src attribute (not <a>)
-  const srcRegex = /<(?!a\b)(img|script|video|audio|source|iframe)\b[^>]+src=["'](http:\/\/[^"']+)["']/gi;
-  let match;
-  while ((match = srcRegex.exec(html)) !== null) {
-    results.push({ tag: match[1].toLowerCase(), attr: 'src', url: match[2] });
+export async function check({ facts = [] } = {}) {
+  const rows = [];
+  for (const fact of contentPages(facts)) {
+    if (!String(fact.finalUrl ?? fact.url).startsWith('https:')) continue;
+    const insecure = (fact.resources ?? []).filter((resource) => /^http:/i.test(resource.url ?? ''));
+    if (insecure.length === 0) continue;
+    const [selector, render] = TAGS[insecure[0].kind] ?? TAGS.link;
+    rows.push(pageRow(fact, 'mixed-content', { value: insecure.length, selector, snippet: render(insecure[0].url) }));
   }
-
-  // Match <link href="http://...">
-  const linkRegex = /<link\b[^>]+href=["'](http:\/\/[^"']+)["']/gi;
-  while ((match = linkRegex.exec(html)) !== null) {
-    results.push({ tag: 'link', attr: 'href', url: match[1] });
-  }
-
-  // Match <form action="http://...">
-  const formRegex = /<form\b[^>]+action=["'](http:\/\/[^"']+)["']/gi;
-  while ((match = formRegex.exec(html)) !== null) {
-    results.push({ tag: 'form', attr: 'action', url: match[1] });
-  }
-
-  return results;
+  return rows;
 }
-
-async function check({ url, pages, config, log, fetchPage }) {
-  // Only relevant for HTTPS sites
-  if (!url.startsWith('https://')) {
-    log.log('mixed-content: skipping — site is not HTTPS');
-    return [];
-  }
-
-  const findings = [];
-
-  for (const pageUrl of pages) {
-    log.log(`mixed-content: checking ${pageUrl}`);
-
-    const { html } = await fetchPage(pageUrl);
-    const mixed = findMixedResources(html);
-
-    for (const { tag, attr, url: resourceUrl } of mixed) {
-      findings.push(createFinding({
-        check: 'mixed-content',
-        severity: 'warning',
-        category: 'security',
-        title: `Mixed content: <${tag} ${attr}="${resourceUrl}">`,
-        description: `The HTTPS page at ${pageUrl} loads an HTTP resource: ${resourceUrl}`,
-        url: pageUrl,
-        element: `<${tag} ${attr}="${resourceUrl}">`,
-        actual: resourceUrl,
-        expected: resourceUrl.replace('http://', 'https://'),
-        recommendation: 'Change the resource URL to use HTTPS, or use a protocol-relative URL.',
-      }));
-    }
-  }
-
-  return findings;
-}
-
-export { check, meta };

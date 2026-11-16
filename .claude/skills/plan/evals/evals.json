@@ -48,6 +48,18 @@
       "prompt": "/plan add a hover state to the nav links on RHP --interactive",
       "expected_output": "Interactive: Brief and Setup questions asked. The Agents multiSelect does not offer the spec reviewer as an option, because it always runs; the question says so. Spec review runs before the approval question.",
       "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "/plan add a filterable case-study grid with CMS-driven tags to the Carsa work page --interactive",
+      "expected_output": "The Setup AskUserQuestion call carries a third single-select Planner question with 'Fable 5.2 planner' and 'Plan inline', Fable marked (Recommended) because the size is Medium; the question says Fable costs more than planning inline. After Fable is picked, one read-only Plan agent with model \"fable\" gets the research summary and references/spec-format.md and returns the approach comparison and full spec draft; the parent writes it to .claude/specs/<slug>.md. Spec frontmatter has planner: fable. The Opus spec reviewer still runs afterwards.",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "/plan fix the footer year not updating on RHP --auto",
+      "expected_output": "Mini or Small. No question is asked and no agent with model \"fable\" is spawned, because auto takes the recommendation and that is inline for Mini and Small. Spec frontmatter has planner: inline. The spec reviewer still runs.",
+      "files": []
     }
   ]
 }

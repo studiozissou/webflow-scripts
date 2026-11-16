@@ -1,7 +1,7 @@
 ---
 name: plan
 description: Plan a feature before writing any code — parallel codebase research, a size gate, the PM questions that matter, a spec with a verify loop and routed review agents, and acceptance tests. Use whenever the user asks to plan, spec, scope or think through a feature or fix before building it, and before any multi-file change, even if they only say "how should we do X".
-argument-hint: <feature description> [--size mini|small|medium|large] [--interactive]
+argument-hint: <feature description> [--size mini|small|medium|large] [--planner fable|inline] [--interactive]
 effort: high
 ---
 
@@ -32,14 +32,15 @@ Read just enough (Grep, Read, no agents) to understand the request. Then ask two
 
 **Brief** (one call, up to four questions): from the `pm-questioning` skill's five questions, ask only those the request and the inline read leave open, preferring the ones that change scope or size. Skip the call when nothing is open. Auto: write the answers as assumptions.
 
-**Setup** (one call): recommend a size, and check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask the two setup questions in the same call:
+**Setup** (one call): recommend a size, and check `~/.claude/usage-5h` (first field is the 5-hour usage percent): from 50% recommend one size smaller, from 75% recommend Mini. Then ask the three setup questions in the same call:
 
 1. **Size** (single select): all four sizes, the recommended one first with "(Recommended)" and a one-line reason drawn from the signals. Skip this question if `--size` was passed.
 2. **Agents** (multiSelect): every optional agent this `/plan` run could spawn (research agents 1–4, approach explorers, architect; group to fit four options). Leave the spec reviewer out of the options and say in the question that it always runs. Mark those the recommended size allows "(Recommended)" and give each a one-line reason, e.g. "Explore: codebase patterns — 3+ modules to scan, saves reading them here". Say in the question that every agent re-reads files from scratch, so each one costs about as much as a fresh session. Anything left unticked is done inline with Grep and Read.
+3. **Planner** (single select): "Fable 5.2 planner" (a `Plan` agent on `model: "fable"` drafts the approach and the spec, see step 2.5) or "Plan inline" (this session writes them). Recommend Fable for Medium and Large, inline for Mini and Small, and inline from 50% 5-hour usage whatever the size. Say in the question that Fable costs more than planning inline. Skip this question if `--planner fable|inline` was passed.
 
-Spawn only the ticked agents plus the spec reviewer, whatever the size table says. Auto: take the recommendations. Record the size in the spec frontmatter, since `/build` reads its budget from there.
+Spawn only the ticked agents, the Fable planner when picked, and the spec reviewer, whatever the size table says. Auto: take the recommendations. Record the size and `planner:` in the spec frontmatter, since `/build` reads its budget from there.
 
-Outside the approved list and the spec reviewer, spawn nothing. Search directly instead.
+Outside the approved list, the Fable planner and the spec reviewer, spawn nothing. Search directly instead.
 
 When the agent cap (`.claude/scripts/agent-cap.mjs`) refuses an agent, do that step inline with Grep and Read and write "<step> skipped: usage cap" in the output. A refused spec review is never reported as PASS.
 
@@ -61,6 +62,8 @@ Only when the research raised something the brief did not settle: one `AskUserQu
 ## 2.5 Approach exploration (Medium and Large only)
 
 Formulate three genuinely different approaches and fill the comparison table in `references/approach-exploration.md`. Medium: compare them inline from the research summary. Large: spawn one `Explore` agent per approach in parallel using the template there. Interactive: `AskUserQuestion` with the three approaches plus "Hybrid". Auto: take the highest-confidence approach.
+
+**Fable planner** (when picked in step 0, any size): after research and follow-ups, spawn one built-in `Plan` agent (read-only) with `model: "fable"`. Its prompt holds the request, the brief answers, the research summary, any explorer results, and the paths of `references/approach-exploration.md` and `references/spec-format.md`. It returns the filled approach table with a recommendation, then the full spec draft in that format, with Assumptions and a Verify Loop. Pick the approach from its table as above, then write its draft to the spec file in step 3 and fix only what conflicts with the research. When the agent cap refuses it, plan inline and write "Fable planner skipped: usage cap" in the output.
 
 ## 3. Spec
 

@@ -9,6 +9,7 @@ client: <client>
 date: <YYYY-MM-DD>
 status: Draft | Review | Approved
 size: Mini | Small | Medium | Large
+planner: fable | inline
 agents: [design-critic:visual, seo]
 ---
 

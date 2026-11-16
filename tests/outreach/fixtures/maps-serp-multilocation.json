@@ -1,0 +1,26 @@
+{
+  "version": "0.1.20260101",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "tasks": [
+    {
+      "id": "11121314-0000-0000-0000-000000000004",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "path": ["v3", "serp", "google", "maps", "live", "advanced"],
+      "data": { "api": "serp", "function": "live", "se": "google", "se_type": "maps", "keyword": "Gelateria Inventata's den haag", "language_code": "nl" },
+      "result": [
+        {
+          "keyword": "Gelateria Inventata's den haag",
+          "type": "maps",
+          "items_count": 3,
+          "items": [
+            { "type": "maps_search", "rank_group": 1, "rank_absolute": 1, "domain": "www.gelateria-inventata.test", "title": "Gelateria Inventata&#x27;s Centrum", "url": "https://www.gelateria-inventata.test/centrum", "cid": "3000000000000000001", "address": "Fantasieplein 4, 2511 ZZ Den Haag", "address_info": { "zip": "2511 ZZ", "city": "Den Haag" }, "phone": "+31 70 555 0301", "rating": { "rating_type": "Max5", "value": 4.5, "votes_count": 140 }, "category": "Ice cream shop", "is_claimed": true, "total_photos": 33 },
+            { "type": "maps_search", "rank_group": 2, "rank_absolute": 2, "domain": "gelateria-inventata.test", "title": "Gelateria Inventata&#x27;s Duinoord", "url": "https://gelateria-inventata.test/duinoord", "cid": "3000000000000000002", "address": "Bedachtstraat 9, 2518 ZZ Den Haag", "address_info": { "zip": "2518 ZZ", "city": "Den Haag" }, "phone": "+31 70 555 0302", "rating": { "rating_type": "Max5", "value": 4.4, "votes_count": 80 }, "category": "Ice cream shop", "is_claimed": true, "total_photos": 21 },
+            { "type": "maps_search", "rank_group": 3, "rank_absolute": 3, "domain": "ijs-elders.test", "title": "IJs Elders", "url": "https://ijs-elders.test/", "cid": "3000000000000000003", "address": "Ergensweg 1, 2512 ZZ Den Haag", "address_info": { "zip": "2512 ZZ", "city": "Den Haag" }, "phone": "+31 70 555 0303", "rating": { "rating_type": "Max5", "value": 4.1, "votes_count": 40 }, "category": "Ice cream shop", "is_claimed": false, "total_photos": 5 }
+          ]
+        }
+      ]
+    }
+  ]
+}

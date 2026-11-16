@@ -6,7 +6,7 @@
  */
 
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const SEVERITIES = Object.freeze(['critical', 'warning', 'info']);
 

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Weekly Den Haag outreach run. Runs scripts/outreach-weekly.sh every Monday at
+  07:00 local time; if the Mac is asleep then, launchd runs it on wake.
+  It drafts emails into the Notion Prospects DB and sends nothing.
+  To pause it without uninstalling:
+    touch ~/webflow-internal/outreach/outreach.off
+
+  NOT INSTALLED BY DEFAULT. Install:
+    cp scripts/outreach-weekly.plist ~/Library/LaunchAgents/io.teamzissou.outreach-weekly.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.outreach-weekly.plist
+
+  Run it once now:
+    launchctl start io.teamzissou.outreach-weekly
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.outreach-weekly.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.outreach-weekly.plist
+
+  Output and errors go to ~/Library/Logs/outreach-weekly.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.outreach-weekly</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/outreach-weekly.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>OUTREACH_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/outreach-weekly.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/outreach-weekly.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

@@ -44,6 +44,9 @@ describe('fetchPage', () => {
       } else if (req.url === '/server-error') {
         res.writeHead(500, { 'content-type': 'text/html' });
         res.end('<html><body>Internal Server Error</body></html>');
+      } else if (req.url === '/stall-body') {
+        res.writeHead(200, { 'content-type': 'text/html' });
+        res.write('<html><body>Half');
       } else if (req.url === '/hang') {
         // Never respond — used for timeout test
       } else {
@@ -124,6 +127,15 @@ describe('fetchPage', () => {
         return true;
       },
     );
+  });
+
+  it('throws when the body stalls after the headers arrive', async () => {
+    const started = Date.now();
+    await assert.rejects(
+      () => fetchPage(`${baseUrl}/stall-body`, new Map(), { timeoutMs: 300 }),
+      (err) => /abort|timeout/i.test(`${err.name} ${err.message}`),
+    );
+    assert.ok(Date.now() - started < 5000);
   });
 
   it('headers are a plain object, not a Headers instance', async () => {

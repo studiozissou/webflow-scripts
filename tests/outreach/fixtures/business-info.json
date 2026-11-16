@@ -1,0 +1,114 @@
+{
+  "version": "0.1.20260101",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "cost": 0.0054,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "11121314-0000-0000-0000-000000000001",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "cost": 0.0054,
+      "result_count": 1,
+      "path": ["v3", "business_data", "google", "my_business_info", "live"],
+      "data": {
+        "api": "business_data",
+        "function": "my_business_info",
+        "se": "google",
+        "keyword": "cid:1234567890123456789",
+        "location_name": "The Hague,South Holland,Netherlands",
+        "language_code": "nl"
+      },
+      "result": [
+        {
+          "keyword": "cid:1234567890123456789",
+          "se_domain": "google.nl",
+          "location_code": 1010543,
+          "language_code": "nl",
+          "check_url": "https://www.google.com/maps?cid=1234567890123456789",
+          "datetime": "2026-11-12 06:00:00 +00:00",
+          "items_count": 1,
+          "items": [
+            {
+              "type": "google_business_info",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "position": "left",
+              "title": "Trattoria Fittizia",
+              "original_title": null,
+              "description": "Verse pasta en pizza uit de houtoven, in een verzonnen trattoria.",
+              "category": "Italian restaurant",
+              "category_ids": ["italian_restaurant"],
+              "additional_categories": ["Pizza restaurant", "Wine bar"],
+              "cid": "1234567890123456789",
+              "feature_id": "0x0:0x112210f47de98115",
+              "address": "Verzinstraat 12, 2599 ZZ Den Haag",
+              "address_info": {
+                "borough": "Centrum",
+                "address": "Verzinstraat 12",
+                "city": "Den Haag",
+                "zip": "2599 ZZ",
+                "region": "Zuid-Holland",
+                "country_code": "NL"
+              },
+              "place_id": "ChIJfictional000000000001",
+              "phone": "+31 70 555 0123",
+              "url": "https://www.trattoria-fittizia.test/",
+              "domain": "www.trattoria-fittizia.test",
+              "logo": null,
+              "main_image": null,
+              "total_photos": 48,
+              "snippet": "Verzinstraat 12, 2599 ZZ Den Haag",
+              "latitude": 52.0,
+              "longitude": 4.3,
+              "is_claimed": true,
+              "attributes": {
+                "available_attributes": {
+                  "dining_options": ["serves_dinner"],
+                  "service_options": ["has_seating", "has_takeout"]
+                },
+                "unavailable_attributes": null
+              },
+              "place_topics": {
+                "pasta": 41,
+                "tiramisu": 17,
+                "terras": 9
+              },
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.6,
+                "votes_count": 212,
+                "rating_max": null
+              },
+              "rating_distribution": { "1": 4, "2": 3, "3": 9, "4": 40, "5": 156 },
+              "hotel_rating": null,
+              "price_level": "$$",
+              "work_time": {
+                "work_hours": {
+                  "timetable": {
+                    "sunday": [{ "open": { "hour": 17, "minute": 0 }, "close": { "hour": 22, "minute": 0 } }],
+                    "monday": null,
+                    "tuesday": [{ "open": { "hour": 17, "minute": 0 }, "close": { "hour": 22, "minute": 0 } }],
+                    "wednesday": [{ "open": { "hour": 17, "minute": 0 }, "close": { "hour": 22, "minute": 0 } }],
+                    "thursday": [{ "open": { "hour": 17, "minute": 0 }, "close": { "hour": 22, "minute": 0 } }],
+                    "friday": [{ "open": { "hour": 17, "minute": 0 }, "close": { "hour": 23, "minute": 0 } }],
+                    "saturday": [{ "open": { "hour": 17, "minute": 0 }, "close": { "hour": 23, "minute": 0 } }]
+                  },
+                  "current_status": "close"
+                }
+              },
+              "popular_times": null,
+              "local_business_links": null,
+              "contact_info": [{ "type": "telephone", "value": "+31705550123", "source": "google" }],
+              "check_url": "https://www.google.com/maps?cid=1234567890123456789",
+              "last_updated_time": "2026-11-11 22:00:00 +00:00",
+              "first_seen": "2019-04-01 00:00:00 +00:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

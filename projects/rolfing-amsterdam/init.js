@@ -4,8 +4,8 @@
 
   if (window.ROLFING && window.ROLFING.base) return;
 
-  var VERSION = '0.1.0';
-  var DEPS = [];
+  var VERSION = '0.2.0';
+  var DEPS = ['https://cdn.prod.website-files.com/gsap/3.14.2/gsap.min.js'];
   var GLOBAL_MODULES = ['faq-accordion.js'];
   var ROUTES = [];
 

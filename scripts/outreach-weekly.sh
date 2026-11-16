@@ -49,6 +49,14 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
   fi
 fi
 
+if [ -z "${GOOGLE_PSI_API_KEY:-}" ]; then
+  if key=$(security find-generic-password -s mcp -a google-psi-api-key -w 2>/dev/null) && [ -n "$key" ]; then
+    export GOOGLE_PSI_API_KEY="$key"
+  else
+    echo "WARNING: Keychain item mcp/google-psi-api-key not found; speed checks will be skipped" >&2
+  fi
+fi
+
 echo "=== outreach-weekly $(date '+%Y-%m-%d %H:%M:%S') ==="
 MAX_SECONDS="${OUTREACH_MAX_SECONDS:-2700}"
 # shellcheck disable=SC2086

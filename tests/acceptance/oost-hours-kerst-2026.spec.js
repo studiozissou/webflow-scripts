@@ -1,4 +1,4 @@
-// Acceptance tests for oost-hours-kerst-2026: the 17:00–21:00 hours everywhere, lunch catering restored, the Kerstdeal and oud en nieuw pre-order block on /afhalen with home and footer pointers, closed 24–26 and 31 Dec and 1 Jan in the schema, and the llms.txt lines; removal checks run when OOST_KERST_REMOVED=1.
+// Acceptance tests for oost-hours-kerst-2026: the 17:00–21:00 hours everywhere, lunch catering restored, the Kerstdeal and oud en nieuw pre-order block on /afhalen with the home pointer (footer pointer dropped by oost-kerst-layout-fixes), closed 24–26 and 31 Dec and 1 Jan in the schema, and the llms.txt lines; removal checks run when OOST_KERST_REMOVED=1.
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -122,13 +122,6 @@ test.describe('oost-hours-kerst-2026', () => {
       test('no old hours anywhere in the visible text', async ({ page }) => {
         expect(await page.locator('body').innerText()).not.toMatch(OLD_HOURS);
       });
-
-      if (path !== NOT_FOUND) {
-        kerst('footer links to the Christmas block in its own locale', async ({ page }) => {
-          const links = await anchorLinks(page, '.footer_component', localeOf(path).anchor);
-          expect(links.length).toBeGreaterThan(0);
-        });
-      }
 
       test('no console errors', async () => {
         expect(errors).toEqual([]);

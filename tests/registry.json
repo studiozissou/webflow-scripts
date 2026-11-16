@@ -942,6 +942,16 @@
       "critical": false,
       "created": "2026-11-12",
       "description": "Team Zissou homepage contact form, one step at a time: progress N of 6, Next/Enter with per-step validation, step 5 needs a chip, Back keeps values, submit only on step 6, mocked done/fail focus, unique chip names, attribution fields, axe, reduced motion, no-JS stacked fallback. Expected to fail until sz-contact-steps T2 and T4 ship (SZ_LOCAL_MODULE=1 injects the local module before then)."
+    },
+    {
+      "slug": "oost-kerst-layout-fixes",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/oost-kerst-layout-fixes.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-12",
+      "description": "Oost special-times lists (home section_home-feestdagen, /afhalen #feestdagen, NL+EN) use hours_list is-medium (18px/500, max 28rem) and fit one line per row at 992 and 1280px; footer_bottom has no spacer and sits on one row at 1280px; footer carries no Kerstdeal pointer. Expected to fail until the Designer change ships."
     }
   ]
 }

@@ -39,10 +39,10 @@ Monorepo of web development projects. Vanilla JS, no build step, CDN-loaded deps
   the file, nothing else. The "why" goes in the project README.
 
 ## Project knowledge (on-demand)
-Past-session knowledge, RHP gotchas, work-dial bug history, patterns, and
-infrastructure notes live in `~/.claude/projects/-Users-willmorley-Library-Mobile-Documents-com-apple-CloudDocs-Projects-Webflow-Scripts-webflow-scripts/memory/MEMORY.md`.
-**Do not preload.** Read it only when you need specific context (e.g. before
-touching RHP's work-dial.js, or when a
-pattern question comes up). Auto-injection is disabled via `autoMemoryEnabled: false`.
+Past-session project facts live in `~/.claude/projects/-Users-willmorley-webflow-scripts/memory/`:
+`MEMORY.md` is a short index pointing at one file per client (`carsa.md`, `rhp.md`, ...).
+**Do not preload.** Read the index, then only the client file you need (e.g. `rhp.md`
+before touching work-dial.js). Replace superseded facts; don't append corrections.
+Auto-injection is disabled via `autoMemoryEnabled: false`.
 
 Webflow MCP has two slots, `webflow` and `webflow-2`; the `webflow-mcp` skill says which to use.

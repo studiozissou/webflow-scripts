@@ -126,6 +126,7 @@ test('checkDraft name check allows possessives, hyphen compounds and Den Haag de
   assert.deepEqual(names("I had a look at Bakkerij Verzonnen's site. A quick no thanks is fine."), []);
   assert.deepEqual(names('Your Google-profiel and Instagram-pagina look good. A quick no thanks is fine.'), []);
   assert.deepEqual(names('Lots of Haagse and Scheveningse people, and Hagenaars and Nederlandse visitors. A quick no thanks is fine.'), []);
+  assert.deepEqual(names("Thanks, and I'm glad. I've seen it, I'll say, I'd add. A quick no thanks is fine."), []);
   assert.deepEqual(names('Your neighbour Bakkerij Echt is ahead. A quick no thanks is fine.'), ['Name "Echt" is not in the inputs']);
 });
 

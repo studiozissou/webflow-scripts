@@ -51,8 +51,8 @@ for (const [name, over, id] of [
   ['no HTTPS', { facts: { https: false } }, 'no-https'],
   ['no mobile viewport', { facts: { viewport: false } }, 'no-viewport'],
   ['WordPress below 6', { site: { platform: { builder: 'wordpress', version: '5.8.3', badge: false, eol: true, builderSubdomain: false, signals: [] } } }, 'builder-eol'],
-  ['lab LCP over 4 s', { site: { lab: { lcpMs: 4500, totalBytes: 1_000_000 } } }, 'slow-lcp'],
-  ['page weight over 6 MB', { site: { lab: { lcpMs: 1200, totalBytes: 6_500_000 } } }, 'heavy-page'],
+  ['two soft reasons: slow + heavy page', { site: { lab: { lcpMs: 4500, totalBytes: 6_500_000 } } }, 'slow-lcp'],
+  ['two soft reasons: slow + PDF-only menu', { site: { lab: { lcpMs: 4500, totalBytes: 1_000_000 } }, facts: { menu: { present: true, pdfOnly: true }, hasBooking: false } }, 'pdf-menu-no-booking'],
   ['two soft reasons: badge + PDF-only menu', { site: { platform: { builder: 'jimdo', version: null, badge: true, eol: false, builderSubdomain: true, signals: [] } }, facts: { menu: { present: true, pdfOnly: true }, hasBooking: false } }, 'builder-badge'],
   ['two soft reasons: stale + badge', { site: { platform: { builder: 'jimdo', version: null, badge: true, eol: false, builderSubdomain: true, signals: [] } }, facts: { copyrightYear: 2024, hasHours: false, menu: { present: false, pdfOnly: false } } }, 'stale-and-no-hours'],
   ['unreachable site', { site: { reachable: false } }, 'unreachable'],
@@ -72,7 +72,16 @@ test('one soft new-site reason alone is not new-site+management', () => {
     { site: BADGE },
     { facts: { copyrightYear: 2024, hasHours: false, menu: { present: false, pdfOnly: false } } },
     { facts: { menu: { present: true, pdfOnly: true }, hasBooking: false } },
+    { site: { lab: { lcpMs: 4500, totalBytes: 1_000_000 } } },
+    { site: { lab: { lcpMs: 1200, totalBytes: 6_500_000 } } },
   ]) assert.notEqual(run(prospect(over)).verdict, 'new-site+management');
+});
+
+test('a slow page plus one management reason is management', () => {
+  const findings = [finding('meta-tags', 'Missing <title> tag')];
+  const r = run(prospect({ site: { lab: { lcpMs: 4500, totalBytes: 1_000_000 }, findings } }));
+  assert.equal(r.verdict, 'management');
+  assert.deepEqual(ids(r), ['missing-title', 'slow-lcp']);
 });
 
 test('one soft reason plus one management reason is management', () => {

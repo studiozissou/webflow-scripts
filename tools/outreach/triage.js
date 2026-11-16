@@ -1,6 +1,6 @@
 // Pure triage rules that turn a scanned prospect into a verdict with evidence-backed reasons.
 
-const HARD = new Set(['unreachable', 'no-https', 'no-viewport', 'builder-eol', 'slow-lcp', 'heavy-page']);
+const HARD = new Set(['unreachable', 'no-https', 'no-viewport', 'builder-eol']);
 
 const reason = (id, url, value, check) => ({ id, evidence: { url: url ?? null, value: value ?? null, check } });
 

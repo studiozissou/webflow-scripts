@@ -66,6 +66,12 @@
       "prompt": "/plan add a multi-step booking form with validation and CMS-driven slots to the RHP contact page (setup: ~/.claude/usage-5h reads 20, ~/.claude/usage-7d reads 80)",
       "expected_output": "Auto mode, size Medium. The skill reads both ~/.claude/usage-5h and ~/.claude/usage-7d. Because weekly usage is at or above 70%, the recommendation is inline, so no agent with model \"fable\" is spawned, and the spec's Assumptions say Fable was skipped for weekly usage at 80%. Spec frontmatter has planner: inline. With usage-7d at 30 and usage-5h at 20 the same request spawns the Fable planner.",
       "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "/plan add a cookie banner that respects reduced motion to the Oost site --planner fable",
+      "expected_output": "The spec prose is in about 80% ASD-STE100 style: short sentences (about 20 words or fewer in steps, 25 in descriptions), one instruction per step, active voice, imperative verbs in tasks and verify steps, no idioms or filler. Code, selectors, file paths, class names, quoted copy and frontmatter keep their exact form. The Fable planner's prompt names this rule through references/spec-format.md. The spec reviewer flags clear breaches as WARN items, never as FAIL.",
+      "files": []
     }
   ]
 }

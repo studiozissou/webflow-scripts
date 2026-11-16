@@ -82,9 +82,9 @@ test('one soft reason plus one management reason is management', () => {
   assert.deepEqual(ids(r), ['builder-badge', 'missing-title']);
 });
 
-test('no-schema is listed but does not count towards management', () => {
+test('no-schema counts towards management when paired with another issue', () => {
   const r = run(prospect({ facts: { hasLocalBusinessSchema: false, schemaTypes: [] }, site: { findings: [finding('broken-links', 'Broken link (404): https://trattoria-fittizia.test/oud')] } }));
-  assert.equal(r.verdict, 'neither');
+  assert.equal(r.verdict, 'management');
   assert.deepEqual(ids(r), ['broken-links', 'no-schema']);
 });
 

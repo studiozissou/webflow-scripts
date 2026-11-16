@@ -1,7 +1,6 @@
 // Pure triage rules that turn a scanned prospect into a verdict with evidence-backed reasons.
 
 const HARD = new Set(['unreachable', 'no-https', 'no-viewport', 'builder-eol', 'slow-lcp', 'heavy-page']);
-const UNCOUNTED = new Set(['no-schema']);
 
 const reason = (id, url, value, check) => ({ id, evidence: { url: url ?? null, value: value ?? null, check } });
 
@@ -78,6 +77,6 @@ export function triage(prospect, { now = new Date() } = {}) {
 
   if (hard || newSite.length >= 2) return { verdict: 'new-site+management', reasons: [...newSite, ...management] };
   const reasons = [...newSite, ...management];
-  if (reasons.filter((r) => !UNCOUNTED.has(r.id)).length >= 2) return { verdict: 'management', reasons };
+  if (reasons.length >= 2) return { verdict: 'management', reasons };
   return { verdict: 'neither', reasons };
 }

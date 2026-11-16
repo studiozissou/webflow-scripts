@@ -2,6 +2,14 @@
 
 Save to `.claude/specs/<feature-slug>.md`. The frontmatter is machine-read by `/build`; keep the field names exact.
 
+**Writing style: about 80% ASD-STE100** (Simplified Technical English). Every spec follows this, whether this session or the Fable planner writes it:
+- Write short sentences: about 20 words or fewer in tasks and verify steps, 25 in descriptions.
+- Give one instruction per step, and start it with an imperative verb ("Add", "Check", "Remove").
+- Use the active voice, and one word for one thing all through the spec.
+- Leave out idioms, filler and hedges ("basically", "it might be worth").
+- Keep code, selectors, file paths, class names, quoted copy and frontmatter exactly as they are.
+- The other 20%: use the precise technical term, or a longer sentence, when plain STE would lose meaning.
+
 ```markdown
 ---
 slug: <feature-slug>

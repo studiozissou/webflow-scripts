@@ -157,6 +157,15 @@ export async function queryGoals(client, databaseId, { excludeStatuses = [] } = 
   return queryAll(client, databaseId, statusFilter(excludeStatuses), mapGoalPage);
 }
 
+export async function createTask(client, databaseId, { title }) {
+  if (!title || !title.trim()) throw new Error('Task title is required');
+  const page = await client.pages.create({
+    parent: { database_id: databaseId },
+    properties: { [PROPS.name]: { title: [{ text: { content: title } }] } },
+  });
+  return { id: page?.id ?? null, url: page?.url ?? null };
+}
+
 export async function updatePriority(client, pageId, value) {
   if (!PRIORITIES.includes(value)) throw new Error(`Priority must be one of ${PRIORITIES.join(', ')}`);
   return client.pages.update({ page_id: pageId, properties: { [PROPS.priority]: { select: { name: value } } } });

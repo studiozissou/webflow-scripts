@@ -37,7 +37,7 @@ describe('buildAuthUrl', () => {
     assert.equal(url.searchParams.get('prompt'), 'consent');
     assert.equal(
       url.searchParams.get('scope'),
-      'https://www.googleapis.com/auth/business.manage',
+      'https://www.googleapis.com/auth/business.manage https://www.googleapis.com/auth/webmasters.readonly',
     );
     assert.equal(url.searchParams.get('response_type'), 'code');
     assert.equal(url.searchParams.get('state'), 'abc');
@@ -46,7 +46,10 @@ describe('buildAuthUrl', () => {
       url.searchParams.get('redirect_uri'),
       'http://127.0.0.1:5555/oauth2callback',
     );
-    assert.equal(SCOPE, 'https://www.googleapis.com/auth/business.manage');
+    assert.deepEqual(SCOPE.split(' '), [
+      'https://www.googleapis.com/auth/business.manage',
+      'https://www.googleapis.com/auth/webmasters.readonly',
+    ]);
   });
 });
 

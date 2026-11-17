@@ -10,7 +10,10 @@ import {
   safeOAuthCode,
 } from './auth.js';
 
-export const SCOPE = 'https://www.googleapis.com/auth/business.manage';
+export const SCOPE = [
+  'https://www.googleapis.com/auth/business.manage',
+  'https://www.googleapis.com/auth/webmasters.readonly',
+].join(' ');
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const SECURITY_BIN = '/usr/bin/security';

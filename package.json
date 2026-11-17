@@ -26,6 +26,7 @@
     "test:cf-page": "node --test 'tests/cf-page/*.test.js'",
     "test:sme-audit": "node --test 'tests/sme-audit/*.test.js'",
     "test:site-audit": "node --test 'tests/site-audit/*.test.js'",
+    "test:site-report": "node --test 'tests/site-report/*.test.js'",
     "test:shared": "node --test 'tests/shared/*.test.js'",
     "test:template": "node --test 'tests/_template/*.test.js'",
     "test:release": "node --test 'tests/release/*.test.js'",

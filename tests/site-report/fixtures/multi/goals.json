@@ -1,0 +1,114 @@
+{
+  "client": "brightwater-furniture",
+  "profile": "multi-location",
+  "agreed": true,
+  "updated": "2026-09-20",
+  "realisticGoal": "Page one in all 4 branch towns for \"sofas\" and more leads from search than last year. Number 1 across the UK for \"sofas\" is not realistic, because national retailers hold it.",
+  "gbp": { "locations": ["locations/2001", "locations/2002", "locations/2003", "locations/2004"] },
+  "phases": [
+    { "id": 0, "name": "Measure", "start": "2026-09" },
+    { "id": 1, "name": "Win branch towns", "start": "2026-09" },
+    { "id": 2, "name": "One national page", "start": "2026-12" },
+    { "id": 3, "name": "Build authority", "start": "2027-02" }
+  ],
+  "goals": [
+    {
+      "id": 1,
+      "name": "Leads from search: enquiries, showroom visits and finance applications",
+      "owner": "shared",
+      "phase": 0,
+      "source": "The client lead system",
+      "metric": "leads.search",
+      "baseline": null,
+      "target": "Higher than last year",
+      "due": "2027-09",
+      "direction": "up",
+      "headline": true,
+      "chart": "line-yoy"
+    },
+    {
+      "id": 2,
+      "name": "Non-branded clicks, per 28 days",
+      "owner": "will",
+      "phase": 0,
+      "source": "Search Console",
+      "metric": "searchConsole.nonBrandedClicks",
+      "baseline": null,
+      "target": "Higher than last year",
+      "due": "2027-09",
+      "direction": "up"
+    },
+    {
+      "id": 3,
+      "name": "Branch towns on page one for \"sofas\"",
+      "owner": "will",
+      "phase": 1,
+      "source": "Semrush position tracking, by town",
+      "metric": "semrush.townsPageOne",
+      "baseline": null,
+      "target": 4,
+      "due": "2027-09",
+      "direction": "up",
+      "chart": "dots",
+      "chartBand": { "low": 1, "high": 10, "label": "Page one" }
+    },
+    {
+      "id": 4,
+      "name": "Calls, website clicks and directions from the branch Google profiles",
+      "owner": "will",
+      "phase": 1,
+      "source": "Google profile",
+      "metric": "gbp.actions",
+      "baseline": 900,
+      "target": 1300,
+      "due": "2027-09",
+      "direction": "up",
+      "chart": "line"
+    },
+    {
+      "id": 5,
+      "name": "Google reviews across the branches, total",
+      "owner": "client",
+      "phase": 1,
+      "source": "Google profile",
+      "metric": "gbp.reviews.total",
+      "baseline": 310,
+      "target": 450,
+      "due": "2027-09",
+      "direction": "up"
+    },
+    {
+      "id": 6,
+      "name": "/sofas position for \"sofas uk\"",
+      "owner": "will",
+      "phase": 2,
+      "source": "Semrush position tracking",
+      "metric": "semrush.sofasPosition",
+      "baseline": 19,
+      "target": 5,
+      "due": "2027-09",
+      "direction": "down"
+    },
+    {
+      "id": 7,
+      "name": "Sites that link to the client",
+      "owner": "shared",
+      "phase": 3,
+      "source": "Semrush backlinks",
+      "metric": "semrush.linkingSites",
+      "baseline": 200,
+      "target": 260,
+      "due": "2027-09",
+      "direction": "up"
+    }
+  ],
+  "tasks": [
+    { "id": "F1", "phase": 0, "goals": [1], "blocks": ["B1"], "impact": "high", "done": true, "name": "Agree what counts as a lead" },
+    { "id": "F2", "phase": 0, "goals": [2], "blocks": [], "impact": "high", "done": false, "name": "Connect Search Console" },
+    { "id": "B1", "phase": 1, "goals": [3, 4], "blocks": ["B2"], "impact": "high", "done": false, "name": "Correct the first branch Google profile" },
+    { "id": "B2", "phase": 1, "goals": [4], "blocks": [], "impact": "medium", "done": false, "name": "Correct the other 3 branch Google profiles" },
+    { "id": "B3", "phase": 1, "goals": [5], "blocks": [], "impact": "medium", "done": false, "name": "Ask each branch to request reviews" },
+    { "id": "N1", "phase": 2, "goals": [6], "blocks": [], "impact": "high", "done": false, "name": "Rewrite the /sofas page for UK searches" },
+    { "id": "A1", "phase": 3, "goals": [7], "blocks": [], "impact": "medium", "done": false, "name": "List sites that could link to the client" }
+  ]
+}

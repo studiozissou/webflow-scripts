@@ -11,6 +11,15 @@
 >
 > **Wording:** about 80% ASD-STE100, as in the report. Sentences of about 15 words, one word for
 > one thing, terms defined once.
+>
+> **Profiles:** the default is a small business: one location or a service area, owner-run, a
+> Webflow site. It has 5 to 8 goals, about 10 to 20 plan tasks, and these default phases: 0
+> Measure, 1 Google profile and reviews, 2 Service pages, 3 Local authority. **Multi-location**
+> is the variant for a client with several branches, its own lead system and national searches.
+> It has up to 15 goals and up to about 35 tasks, and the plan sets its own phases. Write the
+> plan for the small profile first. Add the multi-location parts only when the client needs them.
+> Once the plan is agreed, copy its goals and tasks into the client's `goals.json`, with
+> `profile` set to `small` or `multi-location`.
 
 ---
 
@@ -47,7 +56,10 @@ small batches, measured before the next) and what is rolled back if a batch lose
 ## Goals for the monthly report
 
 Every goal belongs to exactly one phase. The headline goal is the business result (leads,
-bookings, sales), not a ranking. Rankings support it.
+bookings, sales), not a ranking. Rankings support it. For a small business, the headline goal is
+enquiries from Google: form submissions, calls and booking clicks. **Multi-location:** leads from
+search, read from the client's lead system. Keep to 8 goals for a small business and 15 for a
+multi-location client. The report warns above those counts.
 
 | # | Phase | Goal | Owner | Starting figure | 12-month target | Source | Automated? |
 |---|---|---|---|---|---|---|---|
@@ -55,7 +67,9 @@ bookings, sales), not a ranking. Rankings support it.
 
 - **Owner** is "Will", the client, or "Shared". Goals the client owns are marked as theirs.
 - **Source** names the system and how the report reads it. A goal with no source today says what
-  unblocks it.
+  unblocks it. What works today: Webflow form submissions (Webflow MCP), the Google profile
+  (Business Profile API), and Semrush position tracking (Semrush MCP). Search Console needs
+  access first. Until a source exists, the report shows "No data".
 - Then a short "How the report changes" list: goals table after the Summary, same month last year
   comparisons, client goals marked, trends rather than single positions where data is noisy.
 
@@ -100,3 +114,16 @@ A numbered list. The first two unblock the most work. Name the person when one p
 ## Sources
 
 Each source with its date: Semrush database and date, Search Console export, site audit, live site.
+
+## Checks before sharing
+
+Always, once the plan is written. The plan gets the same logged review as the report:
+
+1. One Opus reviewer reads the whole plan. It checks numbers that disagree between sections, goal-to-phase
+   fit, tasks that block each other in a loop, goals with no source, and one word per thing.
+2. Log every recommendation in `review-YYYY-MM.md`, under `## Cycle N`, as
+   `- [applied|rejected] <finding> — <what changed or why not>`. Apply it, or reject it with a
+   one-line reason. Run the reviewer again after the fixes, up to 3 cycles.
+3. Run `node tools/site-report/review-log.js` on the log. Exit 1 means a finding has no status, a
+   rejection has no reason, or the last cycle still has an open finding.
+4. A copy review (design-critic, copy lens), logged the same way under `## Copy review`.

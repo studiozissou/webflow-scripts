@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-12",
+  "lastUpdated": "2026-11-16",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-11-16",
@@ -962,6 +962,16 @@
       "critical": false,
       "created": "2026-11-12",
       "description": "Team Zissou Designer comment fixes: no spacer divs on four pages, body copy 24px/20px, small print smaller, nav links hidden, ticker centred, ticks in Your part dots, Who column span 992-1439, SVG portrait, no console errors, custom domains still 404."
+    },
+    {
+      "slug": "rolfing-ia-nav",
+      "url": "https://rolfing-amsterdam.webflow.io/en",
+      "spec": "tests/acceptance/rolfing-ia-nav.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-16",
+      "description": "Rolfing IA: JSON-LD WebPage/breadcrumb URLs use /what-is-rolfing/ (no 404 /rolfing/ paths) and /rolfing/ 301s, grouped nav dropdown (method then audience, CMS nav-group/nav-order), footer audience column, locale-safe Pricing link, hub and in-body inbound links, NL Hulpbronnen, FAQ counts unchanged; gated on ROLFING_IA=1, ROLFING_IA_PHASE=jsonld runs only T1 checks, ROLFING_URL picks staging or live."
     }
   ]
 }

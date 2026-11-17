@@ -21,6 +21,16 @@ Rolfing Pages template (`/{en,nl}/what-is-rolfing/{slug}`), confirmed via Webflo
 | `.faq_list details.faq_item` > `summary.faq_summary` | Native FAQ with Question / Answer microdata; `faq-accordion.js` targets it |
 | `.section_related .related_item a` | Related cards |
 
+Site-wide nav and footer (`C - Navigation`, `C - Footer`), confirmed via Webflow MCP on 17 Nov 2026:
+
+| Selector | What it is |
+|---|---|
+| `.navbar_menu-split` | Wraps a top-level word (`.navbar_link`) and its chevron-only dropdown; Rolfing, Who it helps, About |
+| `.navbar_menu-split .navbar_dropdwn-toggle[aria-label]` | Chevron button; layout CSS lives in the `nav-radius-code` embed |
+| `.navbar_dropdown-link` | Dropdown items; the Who it helps items come from the `dropdown_list-wrapper` CMS list |
+| `.footer_menu-heading` | Footer column heading (Rolfing, Who it helps, Practice) |
+| `.footer_menu-link` | Footer column links |
+
 ## Template gotchas
 
 - Rolfing Pages is at Webflow's 30-custom-field cap (5 Nov 2026). New slots need an old field retired first; `block-3-photo` has no alt field, so its alt falls back to the block 3 heading.

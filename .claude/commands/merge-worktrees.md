@@ -5,7 +5,7 @@ model: sonnet
 
 Inspect all active git worktrees, prioritise by oldest commit, merge each into the current branch one by one with smoke tests between merges, and clean up after each successful merge. Then push and run `/tidy`.
 
-Every gate stays: the order question, conflicts, failed checks, locked worktrees and the background-job push block. A gate stops or skips; it never forces.
+Every gate stays: the order question, conflicts, failed checks, locked worktrees and the background-job push prompt. A gate stops or skips; it never forces.
 
 ## Step 1 — Inventory
 
@@ -39,7 +39,7 @@ Worktree merge plan (oldest first):
 
 Tests between merges: Yes (smoke)
 Cleanup: Auto after each merge
-Push: Yes, after the last merge (blocked in background jobs)
+Push: Yes, after the last merge (background jobs: you run `! git push`)
 Tidy: Yes, at the end
 ```
 
@@ -132,10 +132,10 @@ Log: `Merged and cleaned up: BRANCH`
 
 Skip this step if the user chose "Stop here", or if nothing was merged.
 
-1. **Background-job gate:** if `CLAUDE_JOB_DIR` is set, do not push. Report "Push blocked in a background job. Run `git push`." Go to Step 5.
-2. Run `git fetch origin`.
-3. Run `git merge-base --is-ancestor origin/main HEAD`. If it fails, `origin/main` has new commits. Stop and report. Do not pull, rebase or force-push.
-4. Run `git push origin HEAD`. Never use `--force`.
+1. Run `git fetch origin`.
+2. Run `git merge-base --is-ancestor origin/main HEAD`. If it fails, `origin/main` has new commits. Stop and report. Do not pull, rebase or force-push.
+3. **Background-job gate:** if `CLAUDE_JOB_DIR` is set, do not push yourself. Ask via `AskUserQuestion`: "N merge commits are ready and safe to push (fast-forward). Push now?" with **"I'll push now" (Recommended)** — tell the user to type `! git push origin HEAD` in the prompt, wait, then run step 5 — and **"Later"** — report "Not pushed. Run `git push`." and go to Step 5.
+4. Otherwise run `git push origin HEAD` without asking. Never use `--force`.
 5. Verify: `git rev-list --count origin/main..HEAD` returns `0`.
 
 ## Step 5 — Tidy
@@ -153,7 +153,7 @@ Merge summary:
   Failed:  none
   Kept:    feat-d (locked)
 
-Pushed:  yes (or: no — background job, run `git push`)
+Pushed:  yes (or: no — user chose Later, run `git push`)
 Tidy:    3 worktrees removed, 1 kept
 
 Current branch: main

@@ -992,6 +992,16 @@
       "critical": false,
       "created": "2026-11-17",
       "description": "Team Zissou sticky nav (top 0 on 4 pages, Contact button to #contact below the nav, panel takes the scheme of the section below) and the 15-item Problem task list (3 visible, steps down every 2.5 s, middle unmuted, pauses on hover/off-screen, static with reduced motion or no module). Expected to fail until sz-fixed-nav-task-list T4-T7 ship (SZ_LOCAL_MODULE=1 injects the local modules before release)."
+    },
+    {
+      "slug": "sz-consent-branding",
+      "url": "https://teamzissou.webflow.io/",
+      "spec": "tests/acceptance/sz-consent-branding.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou ConsentPro banner, preferences modal and floating button use 2026 brand tokens inside the shadow root (cream/brunello, sz-button primary/secondary, brunello-400/600 toggle, Pangaia heading), no Finsweet default colours, 0 consent colour-contrast violations, fits 390px, new copy, buttons still work. Staging only (production ConsentPro plan not bought). Expected to fail until sz-consent-branding T1-T5 ship."
     }
   ]
 }

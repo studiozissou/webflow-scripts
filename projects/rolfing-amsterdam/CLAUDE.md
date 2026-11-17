@@ -38,3 +38,4 @@ Site-wide nav and footer (`C - Navigation`, `C - Footer`), confirmed via Webflow
 
 - Landing-only blocks are hidden by the style embed at the top of `section_hero-secondary` and shown with `:has(.hero-secondary_intro)`. MCP could bind visibility on the intro paragraph only; block-level CMS visibility bindings were rejected (`[Conflict] … component map`). Replace with native conditional visibility in the Designer when convenient.
 - Visibility bound to a field removes the element from the published DOM (no `w-condition-invisible`).
+- NL locale overrides of element attributes and of URL links are Designer-only (17 Nov 2026). The NL `.faq_list` carries its own `itemscope`/`itemtype` that MCP cannot read, and `update_component_content` on the C - Navigation Pricing `navbar_link` returns no error but leaves NL on `/en#pricing`. Switch the Designer to NL and edit the element there.

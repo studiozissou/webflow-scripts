@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-16",
+  "lastUpdated": "2026-11-17",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-11-16",
@@ -972,6 +972,16 @@
       "critical": false,
       "created": "2026-11-16",
       "description": "Rolfing IA: JSON-LD WebPage/breadcrumb URLs use /what-is-rolfing/ (no 404 /rolfing/ paths) and /rolfing/ 301s, grouped nav dropdown (method then audience, CMS nav-group/nav-order), footer audience column, locale-safe Pricing link, hub and in-body inbound links, NL Hulpbronnen, FAQ counts unchanged; gated on ROLFING_IA=1, ROLFING_IA_PHASE=jsonld runs only T1 checks, ROLFING_URL picks staging or live."
+    },
+    {
+"slug": "rolfing-semrush-fixes-2026-11",
+      "url": "https://www.rolfingamsterdam.nl/nl/what-is-rolfing/rugklachten",
+      "spec": "tests/acceptance/rolfing-semrush-fixes-2026-11.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Rolfing 16 Nov 2026 Semrush crawl fixes: at most one FAQPage scope on all 24 Rolfing Pages, with questions when FAQs exist (NL had an empty outer scope), no / or /# links (navbar Pricing keeps locale), footer credit off dead wdmorley.com, loader is init.min.js with the FAQ accordion still working, Science page references named and none dead or blocked, /en/resources text-HTML ratio >= 0.11, English EN and Dutch NL privacy policy, spam policy English or 301 to privacy, no console errors; gated on ROLFING_SEMRUSH=1, expected to fail until the spec ships."
     }
   ]
 }

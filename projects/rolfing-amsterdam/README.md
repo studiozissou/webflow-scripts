@@ -2,8 +2,6 @@
 
 Hosted scripts for rolfingamsterdam.nl, a Webflow site (English primary, Dutch secondary) taken over in October 2026. Copied from `projects/_template/` by the `client-onboarding` skill. Vanilla JS, no build step, served from this repo through jsDelivr.
 
-Nothing here is on the live site yet. The site runs no custom code of ours; the loader tag goes into the Webflow footer only when a module is needed and Will decides to ship it.
-
 ## Takeover notes
 
 - **Existing custom code:** none of ours. The site uses Finsweet Cookie Consent (opt-in) gating GA4, and a Webflow contact form with reCAPTCHA on Book Session. Check the site-wide custom code panel before adding the loader.
@@ -18,10 +16,10 @@ Webflow has one script tag, in the site footer:
 
 <!-- prettier-ignore -->
 ```html
-<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@rolfing-amsterdam-v0.1.0/projects/rolfing-amsterdam/init.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@rolfing-amsterdam-v0.2.0-rc.1/projects/rolfing-amsterdam/init.min.js" defer></script>
 ```
 
-`init.js` reads its own URL, so every module comes from the same pinned tag. It appends the `GLOBAL_MODULES`, then any `ROUTES` modules whose `match` fits the path, in insertion order. `DEPS` holds GSAP 3.14.2 from Webflow's CDN, loaded before the modules.
+The tag loads `init.min.js`, the copy jsDelivr minifies from `init.js` at the same git tag (Semrush flags unminified files). `init.js` reads its own URL, so every module comes from the same pinned tag. It appends the `GLOBAL_MODULES`, then any `ROUTES` modules whose `match` fits the path, in insertion order. `DEPS` holds GSAP 3.14.2 from Webflow's CDN, loaded before the modules.
 
 ## Modules
 

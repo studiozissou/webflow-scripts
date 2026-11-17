@@ -63,3 +63,16 @@ test('each Semrush skill has Studio rules, UPSTREAM, LICENSE and NOTICE', { skip
     assert.match(readFileSync(join(dir, 'UPSTREAM'), 'utf8'), /semrush\/skills[\s\S]*019ab369403c0e816707edae6194fa3bb47dfcd0/);
   }
 });
+
+test('site-review is the evidence source and SEMRush is no longer the tie-breaker', () => {
+  const siteAudit = read('.claude/commands/site-audit.md');
+  assert.ok(!/SEMRush data has priority over agent scanning/.test(siteAudit), 'site-audit still gives SEMRush priority');
+  assert.match(siteAudit, /\*\*Evidence rule: page facts come from site-review/);
+  assert.match(siteAudit, /SEMRush is not a tie-breaker/);
+  assert.match(phase5(), /Layer A: SEMRush organic intelligence\*\* \(search demand and rankings only/);
+  assert.match(read('.claude/agents/seo.md'), /^## Evidence rule\n[\s\S]*facts\.ndjson[\s\S]*not collected/m);
+  const sme = read('.claude/skills/sme-audit/SKILL.md');
+  assert.match(sme, /npm run site-review -- --url <url> --client <client>/);
+  assert.ok(!/start a new crawl only if none exists/.test(sme), 'sme-audit still starts SEMRush crawls');
+  assert.match(read('.claude/templates/site-audit-monthly-report.md'), /1\. \*\*Site-audit metrics \(from site-review\):\*\*/);
+});

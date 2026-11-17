@@ -5,7 +5,7 @@
  * meta tags across all pages. Detects duplicates cross-page.
  */
 
-import { createFinding } from '../lib/finding.js';
+import { createFinding } from './finding.js';
 
 const meta = {
   name: 'meta-tags',

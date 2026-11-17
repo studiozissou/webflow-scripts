@@ -1,10 +1,10 @@
 // Scans one homepage: extracts site facts, detects parked domains and the builder, reads PSI lab metrics and runs the reused site-review checks through an adapter.
 import { fetchPage as realFetchPage } from '../site-review/lib/fetch-page.js';
 import { loadConfig } from '../site-review/config.js';
-import { check as metaTags } from '../site-review/checks/meta-tags.js';
-import { check as brokenLinks } from '../site-review/checks/broken-links.js';
-import { check as mixedContent } from '../site-review/checks/mixed-content.js';
-import { check as psiCheck } from '../site-review/checks/psi.js';
+import { check as metaTags } from './checks/meta-tags.js';
+import { check as brokenLinks } from './checks/broken-links.js';
+import { check as mixedContent } from './checks/mixed-content.js';
+import { check as psiCheck } from './checks/psi.js';
 import { detectPlatform } from './platform.js';
 import { decodeEntities, extractPostcode, normalisePhone, normalisePostcode, pageText, siteName } from './text.js';
 

@@ -311,12 +311,17 @@ export function checkBareSocial(html, pageUrl, hosts = DEFAULT_SOCIAL_HOSTS) {
 }
 
 export function findAlternateHref(html, lang) {
-  const link = findTags(html, 'link').find(
-    ({ attrs }) =>
-      (attrs.rel ?? '').toLowerCase().split(/\s+/).includes('alternate') &&
-      (attrs.hreflang ?? '').toLowerCase() === String(lang).toLowerCase() &&
-      attrs.href,
+  const wanted = String(lang).trim().toLowerCase();
+  const codeOf = ({ attrs }) => (attrs.hreflang ?? '').trim().toLowerCase();
+  const alternates = findTags(html, 'link').filter(
+    (tag) =>
+      (tag.attrs.rel ?? '').toLowerCase().split(/\s+/).includes('alternate') &&
+      tag.attrs.href &&
+      codeOf(tag) !== 'x-default',
   );
+  const link =
+    alternates.find((tag) => codeOf(tag) === wanted) ??
+    alternates.find((tag) => codeOf(tag) && primarySubtag(codeOf(tag)) === primarySubtag(wanted));
   return link ? link.attrs.href : null;
 }
 

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-12",
+  "lastUpdated": "2026-11-17",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-11-16",
@@ -952,6 +952,16 @@
       "critical": false,
       "created": "2026-11-12",
       "description": "Oost special-times lists (home section_home-feestdagen, /afhalen #feestdagen, NL+EN) use hours_list is-medium (18px/500, max 28rem) and fit one line per row at 992 and 1280px; footer_bottom has no spacer and sits on one row at 1280px; footer carries no Kerstdeal pointer. Expected to fail until the Designer change ships."
+    },
+    {
+      "slug": "sz-nl-translation",
+      "url": "https://teamzissou.webflow.io/nl",
+      "spec": "tests/acceptance/sz-nl-translation.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou Dutch locale: /nl, /nl/privacy and /nl/terms declare nl, carry Dutch titles, descriptions, form text and JSON-LD, link only to /nl pages, keep hreflang, and the English pages and JSON-LD are unchanged. Expected to fail until sz-nl-translation ships (SZ_LIVE=1 targets www)."
     }
   ]
 }

@@ -160,6 +160,7 @@ Learned the hard way on client builds, Aug–Oct 2026 (MCP v2.0.1). Several of t
 - Get every link right before translating. Translation stores a per-locale link override, and MCP can't reset it; that's a Designer job (switch locale → select link → reset).
 - Links inside translated rich text never inherit the primary link. Give them the locale path directly (`/en/page`).
 - Re-fetch the live secondary-locale pages after every publish, not just the primary.
+- `update_component_content` keeps the text of a standalone link node but drops a changed `href` (returns `errors: []`, reads back the primary href; tested 2026-11-17, Team Zissou). Set secondary-locale URL-typed link targets in the Designer.
 
 **Budget a Designer slot** — MCP can't do these: reset locale link overrides, translate CMS option names (Site settings › Localization), set favicon/webclip.
 

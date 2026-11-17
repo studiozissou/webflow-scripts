@@ -41,6 +41,9 @@
     const fail = root.querySelector('.w-form-fail');
     const doneHeading = root.querySelector('[data-sz="contact-done"]');
     const failHeading = root.querySelector('[data-sz="contact-fail"]');
+    const lang = (document.documentElement && document.documentElement.lang) || '';
+    const isDutch = /^nl/i.test(lang);
+    const of = isDutch ? ' van ' : ' of ';
     let current = 1;
 
     const controls = (step) =>
@@ -65,7 +68,7 @@
     };
 
     const progress = (n) => {
-      if (count) count.textContent = n + ' of ' + total;
+      if (count) count.textContent = n + of + total;
       segments.forEach((s, i) => s.classList.toggle('is-active', i < n));
     };
 
@@ -97,7 +100,10 @@
       show(current - 1, { focus: true });
     };
 
-    root.querySelectorAll('[data-sz="contact-next"]').forEach((el) => onActivate(el, next));
+    root.querySelectorAll('[data-sz="contact-next"]').forEach((el) => {
+      if (isDutch) el.setAttribute('aria-label', 'Volgende');
+      onActivate(el, next);
+    });
     if (back) onActivate(back, previous);
 
     form.addEventListener('keydown', (e) => {

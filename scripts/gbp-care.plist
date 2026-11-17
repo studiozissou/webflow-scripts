@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Weekly Google Business Profile care run. Runs scripts/gbp-care.sh at 07:30 local
+  time on Mondays. If the Mac is asleep at that moment, launchd runs the job on wake;
+  the pack date is the run date and approve refuses packs older than 7 days.
+
+  What a scheduled run may do: read each configured client's profile (reads and
+  validateOnly checks only), draft text with a tool-less claude -p, write
+  projects/<slug>/.claude/care/gbp-<date>.{md,json}, and post one counts-only
+  message to the digest Slack channel. It cannot apply anything: applying is
+  `npm run gbp:approve -- <slug> <n…|all>`, run by hand.
+
+  NOT INSTALLED BY DEFAULT. Installing is the deliberate step that turns the
+  automation on; until then this file is inert and nothing is scheduled.
+
+  Install:
+    cp scripts/gbp-care.plist ~/Library/LaunchAgents/io.teamzissou.gbp-care.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.gbp-care.plist
+
+  Run it once, right now:
+    launchctl start io.teamzissou.gbp-care
+
+  Pause without uninstalling (every client, or one):
+    touch .claude/care/gbp.off
+    touch projects/<slug>/.claude/care/gbp.off
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.gbp-care.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.gbp-care.plist
+
+  Run output and errors are appended to ~/Library/Logs/gbp-care.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.gbp-care</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/gbp-care.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>GBP_CARE_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/gbp-care.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/gbp-care.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

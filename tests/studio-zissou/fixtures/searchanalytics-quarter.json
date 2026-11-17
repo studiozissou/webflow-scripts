@@ -1,0 +1,7 @@
+{
+  "rows": [
+    { "keys": ["https://studiozissou.io/"], "clicks": 400, "impressions": 900, "ctr": 0.4444, "position": 1.4 },
+    { "keys": ["https://studiozissou.io/services/webflow-development"], "clicks": 20, "impressions": 2400, "ctr": 0.0083, "position": 8.1 },
+    { "keys": ["https://studiozissou.io/work"], "clicks": 36, "impressions": 1000, "ctr": 0.036, "position": 5.2 }
+  ]
+}

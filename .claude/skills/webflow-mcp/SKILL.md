@@ -49,7 +49,7 @@ slot sees the site.
 <workflow>
 Rules:
 1. Read before write. Always read current state before proposing changes.
-2. Never auto-publish. Always requires explicit human approval. Publishing ships **everything** pending, including other sessions' Designer edits: compare `lastUpdated` with `lastPublished` (`get_site`) first and say what else will go out.
+2. Never auto-publish. Always requires explicit human approval. (Exception: Studio Zissou `/growth-review` AUTO tier, amended by ADR-003 in the private repo.) Publishing ships **everything** pending, including other sessions' Designer edits: compare `lastUpdated` with `lastPublished` (`get_site`) first and say what else will go out.
 3. Designer tools need the companion app. If a Designer API call fails, tell the developer to open the MCP Bridge App before retrying.
 4. Data API tools work without the companion app.
 5. Read CLAUDE.md first. Contains site ID, staging URL, and known gotchas.

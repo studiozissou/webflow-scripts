@@ -952,6 +952,16 @@
       "critical": false,
       "created": "2026-11-12",
       "description": "Oost special-times lists (home section_home-feestdagen, /afhalen #feestdagen, NL+EN) use hours_list is-medium (18px/500, max 28rem) and fit one line per row at 992 and 1280px; footer_bottom has no spacer and sits on one row at 1280px; footer carries no Kerstdeal pointer. Expected to fail until the Designer change ships."
+    },
+    {
+      "slug": "sz-comment-fixes",
+      "url": "https://teamzissou.webflow.io/",
+      "spec": "tests/acceptance/sz-comment-fixes.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-12",
+      "description": "Team Zissou Designer comment fixes: no spacer divs on four pages, body copy 24px/20px, small print smaller, nav links hidden, ticker centred, ticks in Your part dots, Who column span 992-1439, SVG portrait, no console errors, custom domains still 404."
     }
   ]
 }

@@ -71,6 +71,48 @@ test('the plan template sizes work in T-shirt sizes, never hours', () => {
   assert.doesNotMatch(t, /\bhours?\b/i, 'sizes replace hours');
 });
 
+test('the report template makes the small business the default and multi-location the variant', () => {
+  const t = read(REPORT);
+  assert.match(t, /default is a small business/i);
+  assert.match(t, /\*\*Multi-location\*\*/);
+  assert.match(t, /enquiries from Google/i);
+  assert.match(t, /core searches against page one/i);
+  assert.ok(t.indexOf('default is a small business') < t.indexOf('**Multi-location:**'), 'the default comes first');
+});
+
+test('the report template spells out the logged review cycle', () => {
+  const t = read(REPORT);
+  assert.match(t, /review-YYYY-MM\.md/);
+  assert.match(t, /\[applied\|rejected\] <finding> — <what changed or why not>/);
+  assert.match(t, /up to 3 cycles/i);
+  assert.match(t, /80 or above/);
+  assert.match(t, /review-log\.js/);
+  assert.match(t, /wordcount\.js/);
+  assert.match(t, /copy review[\s\S]*design-critic/i);
+  const gate = t.indexOf('review-log.js');
+  assert.ok(t.indexOf('wordcount.js') < t.indexOf('reviewer pass'), 'the word gate comes before the reviewer');
+  assert.ok(t.indexOf('reviewer pass') < gate && gate < t.indexOf('copy review (design-critic', gate), 'reviewer, log gate, then copy review');
+});
+
+test('the report template keeps sample figures out of the metrics files', () => {
+  const t = read(REPORT);
+  assert.match(t, /sample-YYYY-MM\.json/);
+  assert.match(t, /never writes a\s+`metrics-YYYY-MM\.json`/);
+  assert.match(t, /"No data" never carries a †/);
+});
+
+test('the plan template names the profiles and the review cycle', () => {
+  const t = read(PLAN);
+  assert.match(t, /default is a small business/i);
+  assert.match(t, /\*\*Multi-location\*\*/);
+  assert.match(t, /5 to 8 goals/);
+  assert.match(t, /up to 15 goals/);
+  assert.match(t, /`profile`/);
+  assert.match(t, /## Checks before sharing/);
+  assert.match(t, /\[applied\|rejected\]/);
+  assert.match(t, /review-log\.js/);
+});
+
 test('neither template names a client', () => {
   for (const p of [REPORT, PLAN]) assert.doesNotMatch(read(p), CLIENTS, `${p} names a client`);
 });

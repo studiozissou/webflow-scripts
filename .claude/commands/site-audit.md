@@ -11,10 +11,28 @@ full-engagement version — same Phase 1-2 logic, deeper Phase 3+.
 
 ---
 
+## Flags
+
+- `--report-only`: skip Phases 1-6 and go straight to Phase 7 Path A for a goal client. It reads the
+  figures and audit files that already exist. It needs `projects/{client}/.claude/reports/goals.json`;
+  without that file, stop and say so.
+- `--sample`: sample mode for a goal client. Figures come from `sample-YYYY-MM.json` and carry a †.
+  The report opens with the sample callout. The collect step does not run and no `metrics-*.json`
+  file is written. The review cycle still runs in full.
+- `--unattended`: for the scheduled monthly run (`scripts/site-report-monthly.sh`), used with
+  `--report-only`. It asks nothing: no A/B/C gate, no "iterate until approved", no "Push to Notion?".
+  It pushes a private draft page, not a page in the client's Notes database, and writes
+  `projects/{client}/.claude/reports/report-YYYY-MM.done` after a successful push. Any gate that
+  fails stops the run with the cause printed and writes no `.done` file. It never sends anything to
+  the client.
+
+---
+
 ## Re-entry check
 
 Before starting, check the project's existing state:
 
+0. With `--report-only`, skip Phases 1-6 and go to Phase 7 Path A (goal clients).
 1. If `reports/intake-report-*.md` exists AND effort columns are filled in → skip to Phase 7.
 2. If `reports/intake-report-*.md` exists but effort columns still show `TBD` → remind user
    to fill in estimates, then stop. User can re-invoke when ready.
@@ -551,6 +569,9 @@ Whichever path runs, write the executive summary and the owner tasks 80% of the 
 ASD-STE100 (Simplified Technical English): sentences of about 15 words, active voice, one
 instruction per sentence, one word for one thing.
 
+With `--report-only`, skip the gate: run Path A for a goal client. With `--unattended`, ask nothing
+at any point in this phase (see the end of **Path A: goal clients**).
+
 After internal report + narrative are written, present the report-type gate:
 
 > "Internal report and narrative generated. Which client report do you want?"
@@ -568,6 +589,79 @@ After internal report + narrative are written, present the report-type gate:
 
 ### Path A — Monthly retainer report
 
+**Template choice.** Check for `projects/{client}/.claude/reports/goals.json`.
+
+- It exists: this is a goal client. Use `.claude/templates/goal-report.md` and follow
+  **Path A: goal clients** below.
+- It does not exist: use `.claude/templates/site-audit-monthly-report.md` and follow
+  **Path A: clients with no goal plan** (the numbered steps after the goal-client pipeline, unchanged).
+
+#### Path A: goal clients
+
+Run these steps in order. Do not skip a step and do not reorder them. The tools are in
+`tools/site-report/` (read its README for the data files). `{tmp}` is
+`projects/{client}/.claude/reports/tmp-YYYY-MM/`, so the scheduled run's allowlist can scope every write. Charts need the venv: `python3 -m venv
+~/.venvs/site-report && ~/.venvs/site-report/bin/pip install -r tools/site-report/requirements.txt`.
+
+1. **Load goals.json.** `node tools/site-report/report-data.js` validates it with `schema.js`. On
+   errors, stop and show them. Show any warnings, such as too many goals for the profile.
+2. **Collect** (real mode only; skip it with `--sample`). Pull the figures that only MCP can reach:
+   Webflow form submissions for the month (spam excluded) and Semrush position tracking, backlinks
+   and rankings. Write them to a staging file `{tmp}/mcp-YYYY-MM.json` as
+   `{ "pulledAt": "<iso>", "figures": { "<metric key>": { "value": 0, "source": "<name>", "items": [] } } }`.
+   Then run `node tools/site-report/collect.js --client {client} --month YYYY-MM --mcp {tmp}/mcp-YYYY-MM.json`.
+   It adds the Google profile and Search Console figures where connected, writes
+   `projects/{client}/.claude/reports/metrics-YYYY-MM.json`, and prints a run-log line for every
+   figure with no source. Those figures are `null` and the report shows "No data". Never fill a gap
+   with a guess.
+3. **Statuses and the next-month pick.** Run
+   `node tools/site-report/report-data.js --client {client} --month YYYY-MM [--sample] --out {tmp}`.
+   It writes `report-data.json` (goal statuses, progress bars, phase rows, the next-month tasks and
+   ready-made tables) and `charts-spec.json`.
+4. **Charts.** Run
+   `~/.venvs/site-report/bin/python tools/site-report/charts.py {tmp}/charts-spec.json {tmp}/charts`.
+   Line charts with fewer than 2 months of data are skipped; leave a skipped chart out of the report.
+5. **Upload** each PNG with `notion-create-file-upload`, then POST the file as multipart field
+   `file`. Keep the POST response (`markdown_source`): there is no GET for it. Place each chart with
+   `<image source="file-upload://…">`. A placed image cannot be edited: to change a chart, replace the
+   page content.
+6. **Write** `comms/site-report-YYYY-MM.md` from `goal-report.md`, using the tables and task toggles in
+   `report-data.json`. Numbered toggle titles are escaped (`1\.`). Goals show "(proposed)" until
+   `agreed` is true. With `--sample`, open with the sample callout and mark made-up figures with †.
+7. **Word gate.** Run `node tools/site-report/wordcount.js comms/site-report-YYYY-MM.md`. Exit 1
+   means a breach (over 800 visible words, a long sentence, or `{toggle="true"}` markup). Fix and
+   run it again.
+8. **Opus review cycle.** One Opus reviewer reads the whole report, charts included, against
+   `goal-report.md`. It checks numbers that disagree between sections and charts, statuses against
+   phase dates, goal-to-phase fit, one word per thing, and the hard rules. Action every
+   recommendation: apply it, or reject it with a one-line reason. Log each one in
+   `projects/{client}/.claude/reports/review-YYYY-MM.md`, under `## Cycle N`, as
+   `- [applied|rejected] <finding> — <what changed or why not>`. After the fixes, run the word gate
+   and the reviewer again. Run up to 3 cycles. The report does not go to Notion until the latest
+   review has no open finding at 80 or above. A clear cycle holds the line `No findings.`
+9. **Review-log gate.** Run `node tools/site-report/review-log.js projects/{client}/.claude/reports/review-YYYY-MM.md`.
+   Exit 1 blocks the push: a finding with no status, a rejection with no reason, or an open finding.
+10. **Copy review.** Run the `design-critic` agent with the copy lens. Log its findings in the same
+    file under `## Copy review`, in the same format. Then run the review-log gate again with
+    `--require-copy`.
+11. **Humanizer.** Load the `humanizer` skill. It may change how a claim reads, never what it
+    asserts, and it may not push the report past the word cap. Run the word gate once more.
+12. **Push** as a private draft: Notion push with `creation_mode: "draft"`, after steps 7, 9, 10 and
+    11 all pass. Then fetch the page and check it: one image for each rendered chart, and no
+    `<toggle>` whose first child is `<p />`.
+
+With `--unattended`: there is no A/B/C gate, no "iterate until approved" and no "Push to Notion?".
+Run steps 1 to 12 once. Where a step says to stop, print the cause and exit without a `.done` file.
+Push a private draft page (`creation_mode: "draft"`), not a page in the client's Notes database.
+Only after the push is fetched and checked, write the empty file
+`projects/{client}/.claude/reports/report-YYYY-MM.done` for the report month. The scheduled runner
+skips a client that has that file, so a re-run makes no second draft.
+
+Source files: `projects/{client}/.claude/reports/goals.json`, `metrics-*.json` (or
+`sample-YYYY-MM.json` with `--sample`), `audits/*.md`, `client.md`, the previous report.
+
+#### Path A: clients with no goal plan
+
 1. Read and follow the template at `.claude/templates/site-audit-monthly-report.md`.
 2. Read the previous month's report (`comms/site-report-YYYY-MM.md`) for month-over-month
    deltas. If no previous report exists, use "—" for last-month columns.
@@ -580,7 +674,7 @@ After internal report + narrative are written, present the report-type gate:
 6. Present to user for review. Iterate until approved.
 7. After approval, proceed to **Step: Notion push** (below).
 
-Source files: `reports/intake-report-YYYY-MM-DD.md`, `audits/*.md`, `client.md`,
+Source files (no goal plan): `reports/intake-report-YYYY-MM-DD.md`, `audits/*.md`, `client.md`,
 previous `comms/site-report-*.md`, SEMRush keyword data (if available).
 
 ---
@@ -633,6 +727,10 @@ Ask: "Generate a full proposal with scope tables?" — if yes, bridge to `/propo
 
 ### Step: Notion push (optional, any path)
 
+For a goal client, Path A step 12 already defines the push: a private draft, after the word gate,
+the review-log gate, the copy review and the humanizer pass. The steps below apply to the other paths.
+With `--unattended`, never ask "Push to Notion Notes database?" and never write to the Notes database.
+
 After the client report is approved, ask:
 
 > "Push to Notion Notes database?"
@@ -674,7 +772,7 @@ If yes:
 12. Automation Summary section present in report
 13. Phase 6c narrative follows three-beat structure with key phrases and pillar mapping
 14. Phase 7 presents report-type gate with three options: A (monthly), B (one-off), C (both)
-15. Path A produces `comms/site-report-YYYY-MM.md` matching `site-audit-monthly-report.md` template
+15. Path A, for a client with no goals.json, produces `comms/site-report-YYYY-MM.md` matching `site-audit-monthly-report.md` template
 16. Path A includes Blog topic suggestions section when SEMRush keyword data is available
 17. Path B correctly reads user-filled estimates and calculates pricing
 18. Path B produces `comms/site-report-YYYY-MM-DD.md` matching `site-audit-client-report.md` Template 1
@@ -695,3 +793,10 @@ If yes:
 33. Stream B wrote `research/crosslink-opportunities-YYYY-MM-DD.csv` after a 20-row spot-check, and each page-type group of crosslink opportunities is a P-band task
 34. Streams A and B ran from the launch checklist with launch-guard; unreached rows are listed as **Not run**, never as a pass, and `H` rows are maintainability findings
 35. SEMRush evidence came from the CSV or, when none was supplied, the MCP; missing evidence is recorded as **Not run**
+36. Path A uses `goal-report.md` when `projects/{client}/.claude/reports/goals.json` exists, and `site-audit-monthly-report.md` when it does not
+37. A goal client's Path A ran collect, statuses, charts, upload, write, word gate, Opus review cycle, review-log gate, copy review and humanizer in that order, then pushed a private draft
+38. `node tools/site-report/wordcount.js` exited 0 on the written report, and again after the humanizer pass
+39. `review-YYYY-MM.md` logs every Opus and copy finding as applied or rejected with a reason, ran at most 3 cycles, and `node tools/site-report/review-log.js` exited 0 before the push
+40. `--report-only` skipped Phases 1-6; `--sample` read `sample-YYYY-MM.json`, marked made-up figures with †, and wrote no `metrics-*.json` file
+41. A figure with no source shows "No data" with no †, and its gap is in the collect run log
+42. The Notion page has one image for each rendered chart and no `<toggle>` whose first child is `<p />`

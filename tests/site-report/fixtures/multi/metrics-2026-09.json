@@ -1,0 +1,12 @@
+{
+  "month": "2026-09",
+  "figures": {
+    "leads.search": { "value": 310, "source": "The client lead system (export)", "pulledAt": "2026-10-02T09:00:00Z" },
+    "searchConsole.nonBrandedClicks": null,
+    "semrush.townsPageOne": null,
+    "gbp.actions": { "value": 905, "source": "Google Business Profile API", "pulledAt": "2026-10-02T09:00:00Z" },
+    "gbp.reviews.total": { "value": 312, "source": "Google Business Profile API", "pulledAt": "2026-10-02T09:00:00Z" },
+    "semrush.sofasPosition": { "value": 19, "source": "Semrush position tracking (Semrush MCP)", "pulledAt": "2026-10-02T09:00:00Z" },
+    "semrush.linkingSites": { "value": 200, "source": "Semrush backlinks (Semrush MCP)", "pulledAt": "2026-10-02T09:00:00Z" }
+  }
+}

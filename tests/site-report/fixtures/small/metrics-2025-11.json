@@ -1,0 +1,8 @@
+{
+  "month": "2025-11",
+  "figures": {
+    "forms.submissions": { "value": 21, "source": "Webflow form submissions (Webflow MCP)", "pulledAt": "2025-12-01T09:00:00Z" },
+    "gbp.calls": { "value": 11, "source": "Google Business Profile API", "pulledAt": "2025-12-01T09:00:00Z" },
+    "gbp.websiteClicks": { "value": 4, "source": "Google Business Profile API", "pulledAt": "2025-12-01T09:00:00Z" }
+  }
+}

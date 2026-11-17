@@ -1,4 +1,4 @@
-// CLI over the Notion Tasks Tracker and Goals clients: list open tasks or non-Dropped goals as JSON, set Priority or Status on one page, post a comment only when the triage write gate (tools/triage/lib/comments.js allowComment against today's snapshot and the comments.jsonl ledger) allows its --page and --source, checked before any token lookup, and append one goal to a task's Goal relation (link-goal, Notion ids only); token from NOTION_TOKEN or the Keychain; refuses with exit 2 inside a build job (TRIAGE_BUILD_JOB set) before any token lookup.
+// CLI over the Notion Tasks Tracker and Goals clients: list open tasks or non-Dropped goals as JSON, set Priority or Status on one page, post a comment only when the triage write gate (tools/triage/lib/comments.js allowComment against today's snapshot and the comments.jsonl ledger) allows its --page and --source, checked before any token lookup, and append one goal to a task's Goal relation (link-goal, Notion ids only), create one task with a title and nothing else (create-task); token from NOTION_TOKEN or the Keychain; refuses with exit 2 inside a build job (TRIAGE_BUILD_JOB set) before any token lookup.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +7,7 @@ import {
   notionClientFromEnv,
   queryOpenTasks,
   queryGoals,
+  createTask,
   linkGoal,
   updatePriority,
   updateStatus,
@@ -34,6 +35,7 @@ const USAGE = [
   '  set-status --page <id> --value <status>',
   '  comment --page <id> --text <text> --source <id>   only through the triage comment gate',
   '  goals [--db <id>] [--config <path>]          goals that are not Dropped',
+  '  create-task --title <text> [--db <id>] [--config <path>]   one new task, title only',
   '  link-goal --page <taskId> --goal <goalId>    appends to the task Goal relation',
 ].join('\n');
 
@@ -47,6 +49,7 @@ const COMMANDS = {
   comment: { required: ['page', 'text', 'source'], allowed: [] },
   goals: { required: [], allowed: ['db', 'config'] },
   'link-goal': { required: ['page', 'goal'], allowed: [], ids: ['page', 'goal'] },
+  'create-task': { required: ['title'], allowed: ['db', 'config'] },
 };
 const OPTIONS = {
   open: { type: 'boolean' },
@@ -56,6 +59,7 @@ const OPTIONS = {
   value: { type: 'string' },
   text: { type: 'string' },
   goal: { type: 'string' },
+  title: { type: 'string' },
   source: { type: 'string' },
 };
 
@@ -104,7 +108,7 @@ export function resolveGoalsDatabaseId(args, read = readText) {
   return configDatabaseId(args, read, 'goals');
 }
 
-const DATABASE_ID = { tasks: resolveDatabaseId, goals: resolveGoalsDatabaseId };
+const DATABASE_ID = { tasks: resolveDatabaseId, goals: resolveGoalsDatabaseId, 'create-task': resolveDatabaseId };
 
 function gatePaths(env) {
   return {
@@ -132,6 +136,10 @@ async function run(args, client) {
       return queryOpenTasks(client, databaseId);
     case 'goals':
       return queryGoals(client, databaseId, { excludeStatuses: ['Dropped'] });
+    case 'create-task': {
+      const { id, url } = await createTask(client, databaseId, { title: args.title });
+      return { ok: true, id, url };
+    }
     case 'link-goal': {
       const { linked } = await linkGoal(client, args.page, args.goal);
       return { ok: true, page: args.page, goal: args.goal, linked };

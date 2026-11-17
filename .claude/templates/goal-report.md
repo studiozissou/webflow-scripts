@@ -4,8 +4,13 @@
 > It answers one question: how close are we to the goal, what happens next, and what do we need
 > from you? A client with no goal plan yet uses `site-audit-monthly-report.md`.
 >
-> **Inputs:** the client's goal plan, this month's site audit, last month's report, and the
-> figures for each goal. A figure with no source shows "No data". Never invent one in a real report.
+> **Inputs:** the client's goal plan (`goals.json`), this month's site audit, last month's report, and
+> the figures for each goal (`metrics-YYYY-MM.json`). A figure with no source shows "No data".
+> Never invent one in a real report.
+>
+> **Profiles:** the default is a small business: one location or a service area, owner-run, 5 to 8
+> goals. A multi-location client runs the same report with a longer goals file. Where the two
+> differ, this template says **Multi-location**. Everything else is the same.
 
 ---
 
@@ -55,7 +60,9 @@ for example "Your question: why did X fall? We do not know yet."
 
 ### 3. `## Progress to [the goal]`
 
-One table. A highlighted headline-goal row, then one row per phase:
+One table. A highlighted headline-goal row, then one row per phase. The headline goal for a small
+business is enquiries from Google: form submissions, calls and booking clicks. **Multi-location:**
+leads from search, read from the client's lead system.
 
 | Phase | Status | Plan tasks done | Goals on track |
 |---|---|---|---|
@@ -73,11 +80,13 @@ phase, then # · Goal · 12-month target · this month · status.
 
 ### 4. Charts
 
-Up to 3 charts, one goal each, as PNG images under the progress table. Typical set: the headline
-traffic goal against the same month last year (line), local positions by town (dot plot with a
-page-one band), and a goal against its target band (line).
+Up to 3 charts, one goal each, as PNG images under the progress table. The default set for a small
+business: enquiries against the same month last year (line), Google profile actions (line), and
+core searches against page one (dot plot). **Multi-location:** the set comes from each goal's
+chart choice, and the dot plot lists the towns.
 
-- matplotlib, one axis, the dataviz reference palette, light background.
+- `tools/site-report/charts.py`: matplotlib, one axis, the dataviz reference palette, light
+  background. Labels, series and targets come from `goals.json` and the metrics files only.
 - Title names the measure. Subtitle names the goal and this month's figure. Footer names the
   source, written for the client, never a note to ourselves.
 - Skip a line chart with fewer than 2 months of data. Skip a town chart with no town figures.
@@ -88,7 +97,8 @@ page-one band), and a goal against its target band (line).
 ### 5. `## What we did this month`
 
 One accordion per phase that had work done. Its title gives the phase and "N of M plan tasks
-done". The body lists only completed work. Phases with nothing done are left out.
+done". The body lists only completed work, in the past tense: plan task names are commands ("Set up…"), so
+rewrite each one as done ("Set up…" becomes "We set up…"). Phases with nothing done are left out.
 
 ### 6. `## Next month: 5 tasks`
 
@@ -146,16 +156,26 @@ collect" (each made-up figure with its real source).
 ## Sample mode
 
 A sample report marks every made-up figure with † and opens with a gray callout that says so.
-Sample figures never go into the client's monthly figures files.
+Sample figures live only in `sample-YYYY-MM.json`. A sample run never writes a
+`metrics-YYYY-MM.json` file, and "No data" never carries a †.
 
 ## Checks before sending
 
-Always, once the report is written:
+Always, once the report is written, sample or real. Do them in this order:
 
-- Word count with accordions collapsed, and sentence lengths.
-- Re-read the page from Notion: every chart image present, no accordion title empty.
-- A reviewer pass: one Opus reviewer reads the whole report (charts included) against the hard
-  rules above, and checks numbers that disagree between sections and charts, statuses against
-  phase dates, goal-to-phase fit, and one word per thing. Apply its fixes, then re-check the
-  word count.
-- A copy review (design-critic, copy lens) for wording.
+1. Word gate: `node tools/site-report/wordcount.js`. It checks the word count with accordions
+   collapsed, and the sentence lengths. Exit 1 means fix and run it again.
+2. A reviewer pass: one Opus reviewer reads the whole report (charts included) against the hard
+   rules above, and checks numbers that disagree between sections and charts, statuses against
+   phase dates, goal-to-phase fit, and one word per thing.
+3. Log every recommendation in `review-YYYY-MM.md`, under `## Cycle N`, as
+   `- [applied|rejected] <finding> — <what changed or why not>`. Apply it, or reject it with a
+   one-line reason. Re-check the word count, then run the reviewer again. Run up to 3 cycles. The
+   report is not pushed until the latest review has no open finding at 80 or above.
+4. Review-log gate: `node tools/site-report/review-log.js`. Exit 1 means a finding has no status,
+   a rejection has no reason, or the last cycle still has an open finding.
+5. A copy review (design-critic, copy lens) for wording, logged the same way under
+   `## Copy review`.
+6. Humanizer pass, then the word gate once more. The pass may not push the report past the cap.
+7. Push as a private draft, then re-read the page from Notion: every chart image present, no
+   accordion title empty.

@@ -212,7 +212,15 @@ test.describe('sz-fixed-nav-task-list nav', () => {
     }
   });
 
-  test('nav panel takes the scheme of the section below it', async ({ page }) => {
+  test('Webflow anchor scroll handler is removed after load', async ({ page }) => {
+    await open(page);
+    const namespaces = await page.evaluate(() =>
+      ((window.jQuery && window.jQuery._data(document, 'events')?.click) || []).map((h) => h.namespace),
+    );
+    expect(namespaces).not.toContain('wf-scroll');
+  });
+
+  test('nav takes the scheme of the section below it and covers the gutters', async ({ page }) => {
     await open(page);
     const sections = await page.$$eval('main > section, footer[data-sz="footer"]', (els) =>
       els.map((el) => ({
@@ -232,21 +240,25 @@ test.describe('sz-fixed-nav-task-list nav', () => {
       await page.waitForTimeout(400);
       const max = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
       if ((await page.evaluate(() => scrollY)) >= max - 1) continue;
-      await expect(page.locator(PANEL), sel).toHaveClass(new RegExp(scheme));
-      const [panelBg, sectionBg] = await page.evaluate(
-        ({ panel, sel }) => [
-          getComputedStyle(document.querySelector(panel)).backgroundColor,
-          getComputedStyle(document.querySelector(sel)).backgroundColor,
-        ],
-        { panel: PANEL, sel },
+      await expect(page.locator(NAV), sel).toHaveClass(new RegExp(scheme));
+      const [navBg, panelBg, sectionBg] = await page.evaluate(
+        ({ nav, panel, sel }) =>
+          [nav, panel, sel].map((s) =>
+            getComputedStyle(document.querySelector(s)).getPropertyValue('--_color-schemes---scheme--background').trim(),
+          ),
+        { nav: NAV, panel: PANEL, sel },
       );
+      expect(navBg, sel).toBe(sectionBg);
       expect(panelBg, sel).toBe(sectionBg);
-      const centre = await page.$eval(PANEL, (el) => {
+      const hits = await page.$eval(NAV, (el) => {
         const r = el.getBoundingClientRect();
-        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        return Boolean(hit && hit.closest('[data-sz="nav"]'));
+        const y = r.top + r.height / 2;
+        return [r.left + r.width / 2, 8].map((x) => {
+          const hit = document.elementFromPoint(x, y);
+          return Boolean(hit && hit.closest('[data-sz="nav"]'));
+        });
       });
-      expect(centre, `${sel} covers the nav`).toBe(true);
+      expect(hits, `${sel} covers the nav centre and gutter`).toEqual([true, true]);
     }
   });
 

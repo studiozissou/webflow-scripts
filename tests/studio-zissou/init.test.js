@@ -12,7 +12,7 @@ const PROJECT = join(__dirname, '..', '..', 'projects', 'studio-zissou');
 const SOURCE = readFileSync(join(PROJECT, 'init.js'), 'utf8');
 const CDN =
   'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@studio-zissou-v1.1.0/projects/studio-zissou/';
-const MODULES = ['global.js', 'contact-steps.js'];
+const MODULES = ['../../shared/experiments.js', 'global.js', 'contact-steps.js', 'tracking.js'];
 const EXPECTED = MODULES.map((m) => CDN + m);
 
 function makeStorage(seed = {}) {
@@ -99,7 +99,7 @@ test('runs once even if the tag is pasted twice', () => {
 });
 
 test('skips a module whose exact URL is already on the page', () => {
-  assert.deepEqual(urls(run({ preloaded: [CDN + 'global.js'] }).appended), [CDN + 'contact-steps.js']);
+  assert.deepEqual(urls(run({ preloaded: [CDN + 'global.js'] }).appended), EXPECTED.filter((u) => u !== CDN + 'global.js'));
 });
 
 test('?sz=local is ignored unless the tag carries data-allow-local', () => {

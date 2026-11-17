@@ -82,7 +82,7 @@ function namesIn(text) {
   for (const m of text.matchAll(/\p{Lu}[\p{L}'&-]*/gu)) {
     const before = text.slice(0, m.index);
     if (/(^|[.!?]["')]?\s+|\n\s*)$/u.test(before)) continue;
-    for (const part of m[0].replace(/['’]s$/, '').split('-')) {
+    for (const part of m[0].replace(/['’](?:s|m|ve|ll|d|re)$/, '').split('-')) {
       const name = part.replace(/['&]+$/, '');
       if (name && /^\p{Lu}/u.test(name) && !DEMONYM.test(name)) names.add(name);
     }

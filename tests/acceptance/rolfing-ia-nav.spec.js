@@ -49,9 +49,8 @@ const NAV_METHOD = {
 };
 const LABELS = {
   en: {
-    toggles: ['Rolfing', 'Who it helps'],
+    top: ['Rolfing', 'Who it helps'],
     rolfing: [
-      'What is Rolfing?',
       'How a session works',
       'Rolfing and fascia',
       'A holistic approach',
@@ -59,14 +58,12 @@ const LABELS = {
       'Science and history',
       'Recommended books',
     ],
-    hub2: 'Who is Rolfing for?',
     footer: ['Rolfing', 'Who it helps', 'Practice'],
     footerRolfing: ['What is Rolfing?', 'How a session works', 'Science and history', 'Recommended books'],
   },
   nl: {
-    toggles: ['Rolfing', 'Voor wie'],
+    top: ['Rolfing', 'Voor wie'],
     rolfing: [
-      'Wat is Rolfing?',
       'Zo verloopt een sessie',
       'Rolfing en fascia',
       'Een holistische benadering',
@@ -74,7 +71,6 @@ const LABELS = {
       'Wetenschap en geschiedenis',
       'Aanbevolen boeken',
     ],
-    hub2: 'Voor wie is Rolfing bedoeld?',
     footer: ['Rolfing', 'Voor wie', 'Praktijk'],
     footerRolfing: ['Wat is Rolfing?', 'Zo verloopt een sessie', 'Wetenschap en geschiedenis', 'Aanbevolen boeken'],
   },
@@ -142,7 +138,7 @@ test.describe('rolfing-ia-nav', () => {
     test.describe(`structure ${lang}`, () => {
       test.skip(PHASE === 'jsonld', 'T3-T6 not built yet');
 
-      test('nav has the Rolfing group, the Who it helps group, Pricing and About in IA order, no duplicates', async ({
+      test('top-level Rolfing, Who it helps and About link to their pages; dropdown and Pricing hrefs in IA order, no duplicates', async ({
         request,
       }) => {
         const html = await fetchHtml(request, `/${lang}`);
@@ -185,10 +181,12 @@ test.describe('rolfing-ia-nav', () => {
       test('nav and footer use the approved labels in order', async ({ request }) => {
         const html = await fetchHtml(request, `/${lang}`);
         const L = LABELS[lang];
-        const toggles = [...header(html).matchAll(/class="navbar_dropdwn-toggle[^"]*"[^>]*>\s*<div[^>]*>([^<]*)</g)].map((m) => clean(m[1]));
-        expect(toggles.slice(0, 2), 'nav toggles').toEqual(L.toggles);
+        const top = classLinks(header(html), ['navbar_link']).map((l) => l.text);
+        expect(top.slice(0, 2), 'top-level links').toEqual(L.top);
+        const toggles = [...header(html).matchAll(/<div [^>]*class="navbar_dropdwn-toggle[^"]*"[^>]*>/g)].map((m) => m[0]);
+        for (const t of toggles.slice(0, 3)) expect(t, 'chevron toggle needs an aria-label').toMatch(/aria-label="[^"]+"/);
         const items = classLinks(header(html), ['navbar_dropdown-link']).map((l) => l.text);
-        expect(items.slice(0, 8), 'Rolfing dropdown and Who it helps overview').toEqual([...L.rolfing, L.hub2]);
+        expect(items.slice(0, 6), 'Rolfing dropdown').toEqual(L.rolfing);
         expect(classTexts(footerOf(html), 'footer_menu-heading'), 'footer headings').toEqual(L.footer);
         const footerItems = classLinks(footerOf(html), ['footer_menu-link']).map((l) => l.text);
         expect(footerItems.slice(0, 4), 'footer Rolfing column').toEqual(L.footerRolfing);

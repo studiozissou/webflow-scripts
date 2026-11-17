@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-12",
+  "lastUpdated": "2026-11-17",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-11-16",
@@ -952,6 +952,16 @@
       "critical": false,
       "created": "2026-11-12",
       "description": "Oost special-times lists (home section_home-feestdagen, /afhalen #feestdagen, NL+EN) use hours_list is-medium (18px/500, max 28rem) and fit one line per row at 992 and 1280px; footer_bottom has no spacer and sits on one row at 1280px; footer carries no Kerstdeal pointer. Expected to fail until the Designer change ships."
+    },
+    {
+      "slug": "sz-fixed-nav-task-list",
+      "url": "https://teamzissou.webflow.io/",
+      "spec": "tests/acceptance/sz-fixed-nav-task-list.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou sticky nav (top 0 on 4 pages, Contact button to #contact below the nav, panel takes the scheme of the section below) and the 15-item Problem task list (3 visible, steps down every 2.5 s, middle unmuted, pauses on hover/off-screen, static with reduced motion or no module). Expected to fail until sz-fixed-nav-task-list T4-T7 ship (SZ_LOCAL_MODULE=1 injects the local modules before release)."
     }
   ]
 }

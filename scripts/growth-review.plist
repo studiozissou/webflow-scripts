@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Studio Zissou weekly growth review. Runs scripts/growth-review.sh at 08:00 local
+  time every Monday. If the Mac is asleep at that moment, launchd runs the job on wake.
+  See ADR-003 (private) for what an unattended run may publish.
+
+  Defaults are safe: GROWTH_ARGS is "dry-run" and SZ_GROWTH_LIVE is 0, so nothing is
+  written or published live. ADR-003 asks for two weeks of dry runs first. At go-live
+  (spec T8) clear GROWTH_ARGS and set SZ_GROWTH_LIVE to 1.
+
+  To pause it without uninstalling:
+    touch projects/studio-zissou/.claude/experiments/autopilot.off
+
+  NOT INSTALLED BY DEFAULT.
+
+  Install:
+    cp scripts/growth-review.plist ~/Library/LaunchAgents/io.teamzissou.growth-review.plist
+    launchctl load ~/Library/LaunchAgents/io.teamzissou.growth-review.plist
+
+  Run it once, right now:
+    launchctl start io.teamzissou.growth-review
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/io.teamzissou.growth-review.plist
+    rm ~/Library/LaunchAgents/io.teamzissou.growth-review.plist
+
+  Run output lands in projects/studio-zissou/.claude/reports/run-{date}.md.
+  Errors are appended to ~/Library/Logs/growth-review.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.teamzissou.growth-review</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/willmorley/webflow-scripts/scripts/growth-review.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+        <key>GROWTH_REPO</key>
+        <string>/Users/willmorley/webflow-scripts</string>
+        <key>GROWTH_ARGS</key>
+        <string>--dry-run</string>
+        <key>SZ_GROWTH_LIVE</key>
+        <string>0</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Weekday</key>
+            <integer>1</integer>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/willmorley/Library/Logs/growth-review.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/willmorley/Library/Logs/growth-review.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

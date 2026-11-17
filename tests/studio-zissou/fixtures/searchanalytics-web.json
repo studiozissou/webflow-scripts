@@ -1,0 +1,13 @@
+{
+  "rows": [
+    { "keys": ["https://studiozissou.io/", "studio zissou"], "clicks": 40, "impressions": 60, "ctr": 0.6667, "position": 1.2 },
+    { "keys": ["https://studiozissou.io/", "zissou"], "clicks": 15, "impressions": 30, "ctr": 0.5, "position": 1.5 },
+    { "keys": ["https://studiozissou.io/nl/", "studio zissou"], "clicks": 10, "impressions": 15, "ctr": 0.6667, "position": 1.1 },
+    { "keys": ["https://studiozissou.io/services/webflow-development", "webflow developer amsterdam"], "clicks": 1, "impressions": 200, "ctr": 0.005, "position": 7.4 },
+    { "keys": ["https://studiozissou.io/pricing", "webflow developer amsterdam"], "clicks": 0, "impressions": 40, "ctr": 0, "position": 18 },
+    { "keys": ["https://studiozissou.io/services/webflow-development", "how much does a webflow website cost"], "clicks": 0, "impressions": 35, "ctr": 0, "position": 22 },
+    { "keys": ["https://studiozissou.io/nl/prijzen", "wat kost een webflow website"], "clicks": 1, "impressions": 25, "ctr": 0.04, "position": 12 },
+    { "keys": ["https://studiozissou.io/nl/diensten/webflow-ontwikkeling", "webflow bureau"], "clicks": 2, "impressions": 120, "ctr": 0.0167, "position": 13.5 },
+    { "keys": ["https://studiozissou.io/work", "webflow portfolio"], "clicks": 3, "impressions": 80, "ctr": 0.0375, "position": 5 }
+  ]
+}

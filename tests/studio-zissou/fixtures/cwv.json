@@ -1,0 +1,23 @@
+{
+  "source": "fixture",
+  "groups": [
+    {
+      "formFactor": "PHONE",
+      "origin": "https://studiozissou.io",
+      "metrics": {
+        "LCP": { "p75": 3100, "status": "NEEDS_IMPROVEMENT" },
+        "INP": { "p75": 150, "status": "GOOD" },
+        "CLS": { "p75": 0.02, "status": "GOOD" }
+      }
+    },
+    {
+      "formFactor": "DESKTOP",
+      "origin": "https://studiozissou.io",
+      "metrics": {
+        "LCP": { "p75": 1800, "status": "GOOD" },
+        "INP": { "p75": 90, "status": "GOOD" },
+        "CLS": { "p75": 0.01, "status": "GOOD" }
+      }
+    }
+  ]
+}

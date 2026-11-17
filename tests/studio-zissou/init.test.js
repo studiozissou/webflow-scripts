@@ -11,8 +11,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT = join(__dirname, '..', '..', 'projects', 'studio-zissou');
 const SOURCE = readFileSync(join(PROJECT, 'init.js'), 'utf8');
 const CDN =
-  'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@studio-zissou-v1.1.0/projects/studio-zissou/';
-const MODULES = ['../../shared/experiments.js', 'global.js', 'contact-steps.js', 'tracking.js'];
+  'https://cdn.jsdelivr.net/gh/studiozissou/webflow-scripts@studio-zissou-v1.2.0/projects/studio-zissou/';
+const MODULES = ['../../shared/experiments.js', 'global.js', 'contact-steps.js', 'nav.js', 'task-list.js', 'tracking.js'];
 const EXPECTED = MODULES.map((m) => CDN + m);
 
 function makeStorage(seed = {}) {
@@ -84,7 +84,7 @@ test('every page gets the same global modules', () => {
 test('exposes the base, version and module list on window.SZ', () => {
   const { window } = run();
   assert.equal(window.SZ.base, CDN);
-  assert.equal(window.SZ.version, '1.1.0');
+  assert.equal(window.SZ.version, '1.2.0');
   assert.deepEqual([...window.SZ.modules], MODULES);
 });
 
@@ -158,7 +158,7 @@ test('no currentScript (e.g. injected by a tag manager) does nothing rather than
 
 test('VERSION is X.Y.Z semver and every listed module exists, so release preflight can cut a tag', () => {
   const parsed = parseInit(SOURCE);
-  assert.equal(parsed.version, '1.1.0');
+  assert.equal(parsed.version, '1.2.0');
   assert.deepEqual(parsed.modules, MODULES);
   for (const m of MODULES) assert.ok(existsSync(join(PROJECT, m)), m);
 });

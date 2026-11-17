@@ -14,3 +14,8 @@ Confirmed on Home with the Webflow MCP, 2026-11-12 (Contact component, used by `
 - `[data-sz="contact-next"]` on 5 × `div.sz-sentence_arrow[role=button][tabindex=0]` (Webflow turns an inserted `<button>` into a Link, so these stay divs)
 - `[data-sz="contact-back"]`, `contact-count`, 6 × `contact-segment`, `contact-need-error`, `contact-done`, `contact-fail`
 - Inputs `#contact-name`, `#contact-business`, `#contact-email`, `#contact-website`, `#contact-message`; chips `#need-google|website|bookings|care|unsure` (names match ids)
+
+Confirmed from published Home HTML, 2026-11-17 (`nav.js`, `task-list.js`; Designer snapshot still pending T0):
+- `nav[data-sz="nav"].section_nav.u-scheme-brunello-dark > .padding-global > .container-large > .sz-nav_panel` (holds `ul.sz-nav_list` + `a.sz-nav_wordmark` + `ul.sz-nav_list`)
+- `section[data-sz="problem"] .sz-problem_group > ul.sz-dot-list` gets `data-sz="task-list"` (T4); items `li.sz-dot-list_item.is-small`
+- Every section has `data-sz` and one `u-scheme-*` class; `nav.js` reads these

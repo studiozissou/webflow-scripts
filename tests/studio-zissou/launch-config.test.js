@@ -13,7 +13,7 @@ test('launch.config.json targets teamzissou.io with its staging URL, legal fallb
   assert.equal(config.domain, 'teamzissou.io');
   assert.deepEqual(config.locales.map((l) => l.code), ['en']);
   assert.equal(config.stagingUrl, 'https://teamzissou.webflow.io');
-  assert.equal(config.apexDefault, true);
+  assert.equal(config.apexDefault, false);
   assert.deepEqual(config.fallbackPaths, ['/', '/privacy', '/terms']);
   for (const marker of ['[copy]', '[photo', '[badge']) assert.ok(config.placeholders.includes(marker), marker);
 });

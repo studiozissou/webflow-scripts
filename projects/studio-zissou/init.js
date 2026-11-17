@@ -6,7 +6,7 @@
 
   var VERSION = '1.1.0';
   var DEPS = [];
-  var GLOBAL_MODULES = ['global.js', 'contact-steps.js'];
+  var GLOBAL_MODULES = ['../../shared/experiments.js', 'global.js', 'contact-steps.js', 'tracking.js'];
   var ROUTES = [];
 
   var script = document.currentScript;

@@ -1002,6 +1002,16 @@
       "critical": false,
       "created": "2026-11-17",
       "description": "Client footers (Oost NL+EN, Rolfing EN+NL, plus TZ_CREDIT_EXTRA URLs) carry at least one 'Team Zissou' link to https://www.teamzissou.io/ with target _blank, rel noopener after load (set by site utils), the locale lead-in text, and no wdmorley.com, 'Studio Zissou' or 'Will Morley' credit. Expected to fail until tz-footer-credit T2-T3 publish."
+    },
+    {
+      "slug": "sz-nl-translation",
+      "url": "https://teamzissou.webflow.io/nl",
+      "spec": "tests/acceptance/sz-nl-translation.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou Dutch locale: /nl, /nl/privacy and /nl/terms declare nl, carry Dutch titles, descriptions, form text and JSON-LD, link only to /nl pages, keep hreflang, and the English pages and JSON-LD are unchanged. Expected to fail until sz-nl-translation ships (SZ_LIVE=1 targets www)."
     }
   ]
 }

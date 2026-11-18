@@ -1,6 +1,6 @@
 // Acceptance tests for moving fortitudoetluxpublishing.com and philipwoodcbe.com to the Webflow Basic plan.
 // Spec: projects/philip-wood/.claude/specs/philip-wood-non-cms-hosting.md (webflow-internal).
-// Parity tests pass before and after the migration. The own-asset test fails until T2 and the no-CMS tests until T3.
+// Parity tests pass before and after the migration. The own-asset and no-CMS tests fail until T3 ships.
 // Screenshot baselines: run once with --update-snapshots BEFORE any Designer change (spec T0).
 
 import { test, expect } from '@playwright/test';
@@ -100,10 +100,18 @@ test.describe('philip-wood-non-cms-hosting', () => {
       await expect(list.locator('> [role="listitem"]')).toHaveCount(WORKS.length);
     });
 
-    test('loads images only from this site’s own asset library (fails until T2 ships)', async ({ page }) => {
-      const html = await page.content();
-      expect(html).not.toContain(FOREIGN_ASSET_SITE_ID);
-      expect(html).toContain(FEL_SITE_ID);
+    test('loads images only from this site’s own asset library (fails until T3 ships)', async ({ page }) => {
+      const urls = await page
+        .locator('.works_image-wrapper img')
+        .filter({ visible: true })
+        .evaluateAll((imgs) =>
+          imgs.flatMap((img) => [img.src, ...(img.srcset || '').split(',').map((s) => s.trim().split(' ')[0])]).filter(Boolean),
+        );
+      expect(urls.length).toBeGreaterThan(0);
+      for (const url of urls) {
+        expect(url).toContain(`website-files.com/${FEL_SITE_ID}/`);
+      }
+      expect(await page.content()).not.toContain(FOREIGN_ASSET_SITE_ID);
     });
 
     test('has no console errors', async ({ page }) => {
@@ -122,8 +130,9 @@ test.describe('philip-wood-non-cms-hosting', () => {
         await page.setViewportSize({ width: vp.width, height: vp.height });
         await page.reload({ waitUntil: 'networkidle' });
         await page.addStyleTag({ content: HIDE_CONSENT });
-        for (const img of await page.locator('img').all()) {
-          await img.scrollIntoViewIfNeeded().catch(() => {});
+        for (const img of await page.locator('img').filter({ visible: true }).all()) {
+          await img.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+          await expect.poll(() => img.evaluate((el) => el.complete)).toBe(true);
         }
         await page.evaluate(() => window.scrollTo(0, 0));
         await expect(page).toHaveScreenshot(`other-works-${vp.name}.png`, {

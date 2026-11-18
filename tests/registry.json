@@ -1041,7 +1041,7 @@
       "source": "plan",
       "critical": false,
       "created": "2026-11-18",
-      "description": "Fortitudo et Lux and Philip Wood CBE move to the Webflow Basic plan: all 15 pages return 200, fortitudoetlux.com still forwards, /other-works keeps the 3 works (titles, subtitle, copy, images, alt, legends, list roles, screenshots), no collection list on any page, no images from the foreign asset site. Own-asset and no-CMS tests fail until T2 and T3 ship; screenshot baselines need --update-snapshots before T1."
+      "description": "Fortitudo et Lux and Philip Wood CBE move to the Webflow Basic plan: all 15 pages return 200, fortitudoetlux.com still forwards, /other-works keeps the 3 works (titles, subtitle, copy, images, alt, legends, list roles, screenshots), no collection list on any page, no images from the foreign asset site. Own-asset and no-CMS tests fail until T3 ships; screenshot baselines need --update-snapshots in T0, on the same machine as later runs."
     }
   ]
 }

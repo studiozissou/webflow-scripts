@@ -98,6 +98,7 @@ test.describe('sz-consent-branding', () => {
       'border-top-color',
       'min-height',
       'font-family',
+      'font-size',
     ];
     const accept = await styles(
       page,
@@ -106,7 +107,8 @@ test.describe('sz-consent-branding', () => {
     );
     expect(accept['background-color']).toBe(BRUNELLO_600);
     expect(accept.color).toBe(CREAM);
-    expect(accept['min-height']).toBe('48px');
+    expect(accept['min-height']).toBe('44px');
+    expect(accept['font-size']).toBe('18px');
     expect(accept['font-family']).toContain('PP Rader');
     const reject = await styles(
       page,
@@ -172,19 +174,18 @@ test.describe('sz-consent-branding', () => {
     expect(knob['background-color']).toBe(CREAM);
   });
 
-  test('floating preferences button appears after reject and uses brand colours', async ({
+  test('footer link reopens preferences after reject and no floating button shows', async ({
     page,
   }) => {
     await clickInShadow(page, '.consent_opt-in_banner [fs-consent-element="deny"]');
     await page.waitForTimeout(800);
-    const wrapper = await styles(page, '.consent_opt-in_open-prefs', ['display']);
-    expect(wrapper.display).not.toBe('none');
-    const button = await styles(page, '.consent_prefs_open-button', [
-      'background-color',
-      'color',
-    ]);
-    expect(button['background-color']).toBe(BRUNELLO_600);
-    expect(button.color).toBe(CREAM);
+    expect(await styles(page, '.consent_opt-in_open-prefs', ['display'])).toBeNull();
+    const link = page.locator('footer [fs-consent-element="open-preferences"]');
+    await expect(link).toHaveText('Cookie preferences');
+    await link.click();
+    await page.waitForTimeout(800);
+    const prefs = await styles(page, '.consent_opt-in_prefs', ['display']);
+    expect(prefs.display).not.toBe('none');
   });
 
   test('buttons change on hover without opacity', async ({ page }) => {
@@ -258,6 +259,12 @@ test.describe('sz-consent-branding', () => {
   test('banner fits a 390px viewport', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await open(page);
+    const prefs = await styles(page, '.consent_button_prefs', [
+      'border-bottom-width',
+      'text-decoration-line',
+    ]);
+    expect(prefs['border-bottom-width']).toBe('0px');
+    expect(prefs['text-decoration-line']).toBe('underline');
     const box = await page.evaluate(() => {
       const sr = document.querySelector('[fs-consent-element="root"]').shadowRoot;
       const r = sr.querySelector('.consent_banner').getBoundingClientRect();
@@ -281,7 +288,7 @@ test.describe('sz-consent-branding', () => {
         .trim();
     });
     expect(text).toBe(
-      'We only set cookies if you say yes. They tell us which pages help. Read the privacy policy.',
+      'We only set optional cookies if you say yes. They show us which pages are useful. Read the privacy policy.',
     );
     const href = await page.evaluate(() =>
       document

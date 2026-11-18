@@ -76,7 +76,7 @@ Regression gate:
 No `tests/registry.json`: run `npm test` (smoke + a11y) and skip the gate.
 
 - **Full regression:** `npm run test:registry`
-- **Since last deploy:** filter entries where `created > lastDeployed` or `critical: true`, then `npx playwright test [files] --config=tests/playwright.config.js --reporter=list`
+- **Since last deploy:** filter entries where `created > lastDeployed` or `critical: true`, then `npx playwright test [files] --config=tests/acceptance/playwright.config.js --reporter=list`
 
 Report pass/fail per suite and the total spec count. On failures, Will decides: fix and re-deploy, or accept.
 

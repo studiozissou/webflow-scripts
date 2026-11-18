@@ -1001,7 +1001,7 @@
       "source": "plan",
       "critical": true,
       "created": "2026-11-18",
-      "description": "Cloudflare Pages CDN replaces jsDelivr: tagged files served with CORS + immutable cache, 404 for unknown paths, RHP and Studio Zissou load from the CDN, no live page requests cdn.jsdelivr.net/gh/studiozissou. Skipped until CDN_HOST is set."
+      "description": "Cloudflare Pages CDN replaces jsDelivr: tagged files served with CORS + immutable cache, 404 for unknown paths, Oost, Rolfing and Studio Zissou load from the CDN, no live page requests cdn.jsdelivr.net/gh/studiozissou. Skipped until CDN_HOST is set."
     }
   ]
 }

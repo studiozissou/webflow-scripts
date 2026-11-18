@@ -102,3 +102,15 @@ Tagged paths are immutable, so a tag must never move. The repo already pins to t
 
 Riskiest assumption: the inventory finds every live page that loads from jsDelivr, so the flip breaks no forgotten site — test first: pull last month's per-version hit stats for gh/studiozissou/webflow-scripts from data.jsdelivr.com and match every tag that has traffic to a footer on the swap list
 Goal fit: Recurring client and admin work runs itself
+
+## Amendment (2026-11-18): partial move
+
+Will chose a partial move. This amendment replaces the repo option and the cutover order above.
+
+- Oost, Rolfing Amsterdam and Studio Zissou move to the Cloudflare Pages CDN.
+- RHP, The Signalling Company, NEM Life and Jay Shetty stay on jsDelivr. Their sites do not change.
+- `webflow-scripts` stays public. Its `main` is cut down to the hosted code of the clients that stay. All tags stay.
+- The private repo is `webflow-internal`, with the public `main` history merged into it. The local folder `~/webflow-scripts` becomes the private clone, and the public clone moves to `~/webflow-public`.
+- The CDN publishes only tags of the clients in an allowlist in `tools/release/cdn-config.json`. The file types are `.js`, `.css` and `.woff2`. The folders `archive`, `tests` and dot-folders are blocked.
+- A publish runs by `workflow_dispatch` on `main`, not on a tag push.
+- No repo changes visibility, so the rollback for each site is its old jsDelivr URL.

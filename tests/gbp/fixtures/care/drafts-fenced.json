@@ -1,0 +1,7 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "result": "Here are the drafts:\n```json\n{\n  \"replies\": [\n    {\n      \"reviewId\": \"r1\",\n      \"text\": \"Dank je wel voor je mooie woorden, tot snel bij Example Bakery!\",\n      \"lang\": \"nl\"\n    },\n    {\n      \"reviewId\": \"r2\",\n      \"text\": \"Thank you for the kind words.\",\n      \"lang\": \"en\"\n    },\n    {\n      \"reviewId\": \"r3\",\n      \"text\": \"Dank je wel!\",\n      \"lang\": \"nl\"\n    }\n  ],\n  \"post\": {\n    \"text\": \"Deze week bakken we ons winterbrood met spelt en walnoot. Kom proeven in de winkel.\",\n    \"lang\": \"nl\",\n    \"theme\": \"seasonal bread\",\n    \"button\": {\n      \"actionType\": \"LEARN_MORE\",\n      \"url\": \"https://example.com/menu\"\n    }\n  }\n}\n```\n",
+  "session_id": "fixture-session"
+}

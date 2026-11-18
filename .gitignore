@@ -34,6 +34,9 @@ projects/nem-life/.claude/research/phase-b-page-full.png
 # Uncommitted diffs rescued by /tidy before removing a merged worktree — local only
 .claude/worktrees-backup/
 
+# GBP care packs and kill switch hold review text — keep them local
+.claude/care/
+
 # Triage reports contain email subjects and senders — keep them local
 .claude/triage/reports/
 

@@ -413,6 +413,11 @@ const isSpacingMargin = (value) =>
     .map((part) => part.trim())
     .filter(Boolean)
     .some((part) => !NOT_SPACING.test(part));
+const isTokenPadding = (value) =>
+  splitTopLevel(value.trim(), ' ')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .every((part) => /^(0[a-z%]*|var\(--[\w-]+.*\))$/i.test(part));
 
 function checkElements(root, cssMap, errors, structure) {
   const v3 = structure === 'v3';
@@ -452,10 +457,12 @@ function checkElements(root, cssMap, errors, structure) {
     const decls = cssMap.get(name);
     const varBound = (d) => v3 && name.includes('_') && /^var\(--[\w-]+/.test(d.value);
     const hardcoded = (isDecl) => decls.some((d) => isDecl(d) && !varBound(d));
+    const literalPadding = (d) =>
+      d.property.startsWith('padding') && (!v3 || !isTokenPadding(d.value));
     if (!marginOk(name) && hardcoded(marginDecl)) {
       errors.push(`rule 7: class "${name}" has a margin declaration`);
     }
-    if (!paddingOk(name) && hardcoded((d) => d.property.startsWith('padding'))) {
+    if (!paddingOk(name) && decls.some(literalPadding)) {
       errors.push(`rule 7: class "${name}" has a padding declaration`);
     }
   }

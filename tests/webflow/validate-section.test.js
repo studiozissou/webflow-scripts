@@ -256,6 +256,29 @@ describe('section structure', () => {
     assert.ok(v2.errors.includes('rule 7: class "hero_content" has a padding declaration'));
   });
 
+  test('v3 allows zero or variable-backed padding on any custom class, still rejects literal padding', () => {
+    const css = `${V3_CSS}
+.sz-button { padding: 0 var(--_layout---spacing--medium); }
+.is-badge { padding: var(--_layout---spacing--xxsmall) var(--_layout---spacing--small); }
+.hero_row { padding: 0; }
+.hero_input { padding: 0 0 var(--_layout---spacing--xsmall); }
+.hero_text { padding: 1rem var(--_layout---spacing--small); }
+.sz-chip { padding: 0 1rem; }`;
+    const html = v3Section(
+      '<a class="sz-button is-badge">a</a><div class="hero_row"></div><div class="hero_input"></div><div class="hero_text"></div><span class="sz-chip">c</span>',
+    );
+    const v3 = validateSection(html, css, { ...NO_SCHEME, structure: 'v3' });
+    assert.deepEqual(
+      v3.errors.filter((e) => /rule 7/.test(e)).sort(),
+      [
+        'rule 7: class "hero_text" has a padding declaration',
+        'rule 7: class "sz-chip" has a padding declaration',
+      ],
+    );
+    const v2 = validateSection(html, css, NO_SCHEME);
+    assert.ok(v2.errors.includes('rule 7: class "sz-button" has a padding declaration'));
+  });
+
   test('v3 rejects a spacer-* div as rule 3', () => {
     const css = `${V3_CSS} .spacer-medium { padding-top: 2rem; }`;
     const html = v3Section('<p class="text-size-regular">x</p><div class="spacer-medium"></div>');

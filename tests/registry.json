@@ -992,6 +992,16 @@
       "critical": false,
       "created": "2026-11-17",
       "description": "Team Zissou sticky nav (top 0 on 4 pages, Contact button to #contact below the nav, panel takes the scheme of the section below) and the 15-item Problem task list (3 visible, steps down every 2.5 s, middle unmuted, pauses on hover/off-screen, static with reduced motion or no module). Expected to fail until sz-fixed-nav-task-list T4-T7 ship (SZ_LOCAL_MODULE=1 injects the local modules before release)."
+    },
+    {
+      "slug": "tz-footer-credit",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/tz-footer-credit.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Client footers (Oost NL+EN, Rolfing EN+NL, plus TZ_CREDIT_EXTRA URLs) carry at least one 'Team Zissou' link to https://www.teamzissou.io/ with target _blank, rel noopener after load (set by site utils), the locale lead-in text, and no wdmorley.com, 'Studio Zissou' or 'Will Morley' credit. Expected to fail until tz-footer-credit T2-T3 publish."
     }
   ]
 }

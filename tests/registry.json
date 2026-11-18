@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-17",
+  "lastUpdated": "2026-11-18",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-11-16",
@@ -1032,6 +1032,16 @@
       "critical": false,
       "created": "2026-11-17",
       "description": "Team Zissou ConsentPro banner, preferences modal and floating button use 2026 brand tokens inside the shadow root (cream/brunello, sz-button primary/secondary, brunello-400/600 toggle, Pangaia heading), no Finsweet default colours, 0 consent colour-contrast violations, fits 390px, new copy, buttons still work. Staging only (production ConsentPro plan not bought). Expected to fail until sz-consent-branding T1-T5 ship."
+    },
+    {
+      "slug": "philip-wood-non-cms-hosting",
+      "url": "https://www.fortitudoetluxpublishing.com/other-works",
+      "spec": "tests/acceptance/philip-wood-non-cms-hosting.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-18",
+      "description": "Fortitudo et Lux and Philip Wood CBE move to the Webflow Basic plan: all 15 pages return 200, fortitudoetlux.com still forwards, /other-works keeps the 3 works (titles, subtitle, copy, images, alt, legends, list roles, screenshots), no collection list on any page, no images from the foreign asset site. Own-asset and no-CMS tests fail until T2 and T3 ship; screenshot baselines need --update-snapshots before T1."
     }
   ]
 }

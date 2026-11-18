@@ -172,19 +172,18 @@ test.describe('sz-consent-branding', () => {
     expect(knob['background-color']).toBe(CREAM);
   });
 
-  test('floating preferences button appears after reject and uses brand colours', async ({
+  test('footer link reopens preferences after reject and no floating button shows', async ({
     page,
   }) => {
     await clickInShadow(page, '.consent_opt-in_banner [fs-consent-element="deny"]');
     await page.waitForTimeout(800);
-    const wrapper = await styles(page, '.consent_opt-in_open-prefs', ['display']);
-    expect(wrapper.display).not.toBe('none');
-    const button = await styles(page, '.consent_prefs_open-button', [
-      'background-color',
-      'color',
-    ]);
-    expect(button['background-color']).toBe(BRUNELLO_600);
-    expect(button.color).toBe(CREAM);
+    expect(await styles(page, '.consent_opt-in_open-prefs', ['display'])).toBeNull();
+    const link = page.locator('footer [fs-consent-element="open-preferences"]');
+    await expect(link).toHaveText('Cookie preferences');
+    await link.click();
+    await page.waitForTimeout(800);
+    const prefs = await styles(page, '.consent_opt-in_prefs', ['display']);
+    expect(prefs.display).not.toBe('none');
   });
 
   test('buttons change on hover without opacity', async ({ page }) => {

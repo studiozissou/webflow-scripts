@@ -75,8 +75,10 @@ Regression gate:
 
 No `tests/registry.json`: run `npm test` (smoke + a11y) and skip the gate.
 
-- **Full regression:** `npm run test:registry`
-- **Since last deploy:** filter entries where `created > lastDeployed` or `critical: true`, then `npx playwright test [files] --config=tests/acceptance/playwright.config.js --reporter=list`
+- **Full regression:** `npm run test:registry && npm test`
+- **Since last deploy:** `npm run test:registry:since` (entries where `created > lastDeployed` or `critical: true`)
+
+Both registry scripts list the entries they skip (missing file, outside `tests/acceptance/`, not a `.spec.js`). Report those too.
 
 Report pass/fail per suite and the total spec count. On failures, Will decides: fix and re-deploy, or accept.
 

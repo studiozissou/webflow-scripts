@@ -5,6 +5,9 @@
   "type": "module",
   "description": "Monorepo of custom JS/CSS for Webflow production sites",
   "scripts": {
+    "test": "npm run test:sz:smoke && npm run test:sz:a11y",
+    "test:registry": "node tools/release/registry-specs.js",
+    "test:registry:since": "node tools/release/registry-specs.js --since",
     "test:wf": "node --test 'tests/webflow/*.test.js'",
     "test:sr": "node --test 'tests/site-review/**/*.test.js'",
     "test:site-archive": "node --test 'tests/site-archive/*.test.js'",

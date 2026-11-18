@@ -725,13 +725,13 @@
     },
     {
       "slug": "sz-launch-2026",
-      "url": "https://wdmorley.webflow.io/",
+      "url": "https://teamzissou.webflow.io/",
       "spec": "tests/acceptance/sz-launch-2026.spec.js",
       "type": "acceptance",
       "source": "plan",
       "critical": true,
       "created": "2026-11-04",
-      "description": "Studio Zissou launch: rebuilt homepage SEO meta, canonical to studiozissou.com, JSON-LD, no placeholders or old markup, no console errors or overflow, axe, fonts, links, labelled form with attribution fields, pinned init.js, privacy/terms/404; SZ_LIVE=1 adds the wdmorley.com redirect map, defensive domains, sitemap/robots and proposal 404s."
+      "description": "Team Zissou launch: rebuilt homepage SEO meta, canonical to www.teamzissou.io, JSON-LD, no placeholders or old markup, no console errors or overflow, axe, fonts, links, labelled form with attribution fields, pinned init.js, privacy/terms/404; SZ_LIVE=1 adds the wdmorley.com redirect map, defensive domains, sitemap/robots and proposal 404s."
     },
     {
       "slug": "sz-crosslinking",

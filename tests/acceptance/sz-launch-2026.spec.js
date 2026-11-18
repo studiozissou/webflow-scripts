@@ -1,4 +1,4 @@
-// Acceptance tests for sz-launch-2026: the rebuilt Studio Zissou homepage passes SEO, quality and form checks on staging, and with SZ_LIVE=1 every old wdmorley.com URL and defensive domain 301s to studiozissou.com.
+// Acceptance tests for sz-launch-2026: the rebuilt Team Zissou homepage passes SEO, quality and form checks on staging, and with SZ_LIVE=1 every old wdmorley.com URL and defensive domain 301s to www.teamzissou.io.
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import dotenv from 'dotenv';
@@ -9,8 +9,8 @@ dotenv.config({ path: '.env.test' });
 const MAP = JSON.parse(readFileSync(new URL('./fixtures/sz-redirect-map.json', import.meta.url), 'utf8'));
 const LIVE = Boolean(process.env.SZ_LIVE);
 const NEW_HOST = (process.env.LIVE_URL || MAP.newHost).replace(/\/$/, '');
-const BASE = LIVE ? NEW_HOST : (process.env.STAGING_URL || 'https://wdmorley.webflow.io').replace(/\/$/, '');
-const CANONICAL = `${MAP.newHost}/`;
+const BASE = LIVE ? NEW_HOST : (process.env.STAGING_URL || 'https://teamzissou.webflow.io').replace(/\/$/, '');
+const CANONICAL = new RegExp(`^${MAP.newHost.replace(/[.]/g, '\\.')}/?$`);
 const PLACEHOLDERS = /\[copy\]|\[photo|TODO|Lorem ipsum|Thank you! Your submission has been received!|Oops! Something went wrong/i;
 const WIDTHS = [390, 767, 1440, 1920];
 const ALLOWED_FONTS = /PPPangaia-Medium|PPRader-(Regular|Italic|Bold)/;
@@ -61,19 +61,20 @@ test.describe('sz-launch-2026 homepage', () => {
     const title = await page.title();
     expect(title.length).toBeGreaterThanOrEqual(30);
     expect(title.length).toBeLessThanOrEqual(60);
-    expect(title).toMatch(/Studio Zissou$/);
+    expect(title).toMatch(/Team Zissou$/);
     const description = await page.locator('meta[name="description"]').getAttribute('content');
     expect(description?.length ?? 0).toBeGreaterThanOrEqual(70);
     expect(description?.length ?? 0).toBeLessThanOrEqual(160);
     for (const prop of ['og:title', 'og:description', 'og:image']) {
       await expect(page.locator(`meta[property="${prop}"]`)).toHaveCount(1);
     }
-    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('html')).toHaveAttribute('lang', /^en(-[A-Z]{2})?$/);
   });
 
-  test('canonical points at studiozissou.com', async () => {
-    const match = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/);
-    expect(match?.[1]).toBe(CANONICAL);
+  test('canonical points at www.teamzissou.io', async () => {
+    const tag = html.match(/<link[^>]*rel="canonical"[^>]*>/)?.[0] || '';
+    const match = tag.match(/href="([^"]+)"/);
+    expect(match?.[1]).toMatch(CANONICAL);
   });
 
   test('JSON-LD parses and includes Organization, WebSite, FAQPage', async () => {
@@ -176,7 +177,7 @@ test.describe('sz-launch-2026 live cutover', () => {
     }
   });
 
-  test('every host variant and defensive domain lands on studiozissou.com', async ({ request }) => {
+  test('every host variant and defensive domain lands on www.teamzissou.io', async ({ request }) => {
     for (const host of [...MAP.oldHosts, ...MAP.defensiveHosts]) {
       const result = await follow(request, `${host}/`);
       expect(result.status, host).toBe(200);

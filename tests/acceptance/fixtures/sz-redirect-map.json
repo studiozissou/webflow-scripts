@@ -1,13 +1,14 @@
 {
-  "newHost": "https://studiozissou.com",
+  "newHost": "https://www.teamzissou.io",
   "oldHosts": ["https://www.wdmorley.com", "https://wdmorley.com", "http://wdmorley.com", "http://www.wdmorley.com"],
   "defensiveHosts": [
+    "https://teamzissou.io",
+    "http://teamzissou.io",
+    "https://studiozissou.com",
     "https://www.studiozissou.com",
-    "http://studiozissou.com",
     "https://studiozissou.nl",
     "https://studiozissou.co.uk",
-    "https://zissou.studio",
-    "https://teamzissou.io"
+    "https://zissou.studio"
   ],
   "paths": [
     { "from": "/", "to": "/" },

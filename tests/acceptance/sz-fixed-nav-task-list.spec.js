@@ -289,11 +289,11 @@ test.describe('sz-fixed-nav-task-list nav', () => {
 });
 
 test.describe('sz-fixed-nav-task-list release', () => {
-  test('loader pins v1.2.0 and loads four modules', async ({ page }) => {
+  test('loader pins v1.2.1 and loads six modules', async ({ page }) => {
     test.skip(LOCAL, 'checks the released loader only');
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
-    expect(await page.evaluate(() => window.SZ && window.SZ.version)).toBe('1.2.0');
-    expect(await page.evaluate(() => window.SZ.modules)).toEqual(['global.js', 'contact-steps.js', 'nav.js', 'task-list.js']);
+    expect(await page.evaluate(() => window.SZ && window.SZ.version)).toBe('1.2.1');
+    expect(await page.evaluate(() => window.SZ.modules)).toEqual(['../../shared/experiments.js', 'global.js', 'contact-steps.js', 'nav.js', 'task-list.js', 'tracking.js']);
   });
 
   for (const path of PAGES) {

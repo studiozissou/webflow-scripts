@@ -4,7 +4,7 @@
 
   if (window.SZ && window.SZ.base) return;
 
-  var VERSION = '1.2.0';
+  var VERSION = '1.2.1';
   var DEPS = [];
   var GLOBAL_MODULES = ['../../shared/experiments.js', 'global.js', 'contact-steps.js', 'nav.js', 'task-list.js', 'tracking.js'];
   var ROUTES = [];

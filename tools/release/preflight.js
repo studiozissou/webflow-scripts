@@ -53,7 +53,7 @@ export function clientTags(tags, client) {
     .sort((x, y) => compareVersions(x.version, y.version));
 }
 
-function gitIn(repoRoot) {
+export function gitIn(repoRoot) {
   return (...args) =>
     execFileSync('git', ['--no-optional-locks', ...args], {
       cwd: repoRoot,

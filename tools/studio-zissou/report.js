@@ -125,6 +125,7 @@ export function indexIssueOf(coverageState = '') {
   if (/noindex/i.test(coverageState)) return 'noindex';
   if (/soft 404|crawled.*not indexed/i.test(coverageState)) return 'thin';
   if (/duplicate/i.test(coverageState)) return 'duplicate';
+  if (/alternate page with proper canonical/i.test(coverageState)) return null;
   if (/canonical/i.test(coverageState)) return 'canonical';
   if (/discovered.*not indexed|submitted.*not indexed|sitemap/i.test(coverageState)) return 'sitemap-not-indexed';
   return 'other';
@@ -314,7 +315,7 @@ export function buildFindings(gsc) {
   }
 
   for (const i of gsc.index ?? []) {
-    if (i.verdict && i.verdict !== 'PASS') {
+    if (i.verdict && i.verdict !== 'PASS' && indexIssueOf(i.coverageState) !== null) {
       findings.push({
         type: 'index-issue',
         page: i.url,
@@ -342,9 +343,10 @@ export function buildFindings(gsc) {
   }
 
   const prior = new Map((gsc.priorQuarter?.pages ?? []).map((p) => [p.page, p]));
-  for (const p of gsc.quarter?.pages ?? []) {
-    const before = prior.get(p.page);
-    if (!before || before.clicks < MIN_DECAY_CLICKS) continue;
+  const current = new Map((gsc.quarter?.pages ?? []).map((p) => [p.page, p]));
+  for (const before of prior.values()) {
+    if (before.clicks < MIN_DECAY_CLICKS) continue;
+    const p = current.get(before.page) ?? { page: before.page, locale: before.locale ?? localeOf(before.page), clicks: 0 };
     const drop = (before.clicks - p.clicks) / before.clicks;
     if (drop >= DECAY_DROP) {
       findings.push({

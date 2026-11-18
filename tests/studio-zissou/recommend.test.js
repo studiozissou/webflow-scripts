@@ -169,11 +169,13 @@ describe('fromFindings signal table', () => {
     ['high-bounce', {}, ['hero-copy:review']],
     ['conversion-gap', {}, ['price:review', 'cta-label:review']],
     ['rotation-due', {}, ['story-rotation:review']],
-    ['jsonld-missing', {}, ['jsonld:auto']],
+    ['jsonld-missing', {}, ['jsonld:review']],
     ['alt-missing', {}, ['alt:auto']],
     ['metric-fell', {}, ['revert:auto']],
     ['index-issue', { issue: 'sitemap-not-indexed' }, ['sitemap:auto']],
-    ['index-issue', { issue: 'thin' }, ['noindex:auto', 'copy:review']],
+    ['index-issue', { issue: 'thin' }, ['copy:review']],
+    ['index-issue', { issue: 'duplicate' }, ['canonical:review', 'copy:review']],
+    ['index-issue', { issue: 'noindex' }, ['noindex:auto']],
     ['index-issue', { issue: 'canonical' }, ['canonical:review']],
     ['index-issue', { issue: 'soft-404' }, ['copy:review']],
     ['striking-distance', {}, ['meta-title:auto', 'internal-link:auto', 'h1:review', 'first-paragraph:review']],
@@ -445,17 +447,26 @@ describe('integration with report.js and the log', () => {
     assert.equal(asked.find((r) => r.type === 'faq').tier, 'auto');
   });
 
-  test('index findings from report.js reach the auto sitemap and noindex paths', async () => {
+  test('jsonld stays auto in the ADR table but each item is downgraded until content-edit can build and revert it', () => {
+    assert.equal(tierFor('jsonld'), 'auto');
+    const [item] = fromFindings({ findings: [{ type: 'jsonld-missing', page: '/pricing', impressions: 900 }], today: TODAY });
+    assert.equal(item.tier, 'review');
+    assert.equal(item.downgraded, 'jsonld-no-builder');
+  });
+
+  test('index findings from report.js reach the auto sitemap and noindex paths, and a thin page never gets an auto noindex', async () => {
     const { buildFindings } = await import('../../tools/studio-zissou/report.js');
     const findings = buildFindings({
       index: [
         { url: 'https://studiozissou.io/work', verdict: 'NEUTRAL', coverageState: 'Discovered - currently not indexed' },
         { url: 'https://studiozissou.io/about', verdict: 'NEUTRAL', coverageState: 'Crawled - currently not indexed' },
+        { url: 'https://studiozissou.io/care', verdict: 'NEUTRAL', coverageState: "Excluded by 'noindex' tag" },
       ],
     });
     const types = fromFindings({ findings, today: TODAY }).filter((r) => r.tier === 'auto').map((r) => `${r.page}:${r.type}`);
     assert.ok(types.includes('/work:sitemap'));
-    assert.ok(types.includes('/about:noindex'));
+    assert.ok(types.includes('/care:noindex'));
+    assert.ok(!types.some((t) => t.startsWith('/about:')));
   });
 
   test('--log excludes pages changed in the last 28 days; --active excludes experiment pages', () => {

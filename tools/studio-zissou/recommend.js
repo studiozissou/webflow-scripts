@@ -37,7 +37,9 @@ const FORM_STEPS = new Set(['form-start', 'form_start', 'lead_submitted']);
 
 const indexIssue = (s) => {
   if (s.issue === 'sitemap-not-indexed') return ['sitemap'];
-  if (['thin', 'duplicate', 'noindex'].includes(s.issue)) return ['noindex', 'copy'];
+  if (s.issue === 'noindex') return ['noindex'];
+  if (s.issue === 'thin') return ['copy'];
+  if (s.issue === 'duplicate') return ['canonical', 'copy'];
   if (s.issue === 'canonical') return ['canonical'];
   return ['copy'];
 };
@@ -201,6 +203,7 @@ export function fromFindings({ findings = [], semrush, posthog, today = new Date
       };
       if (tier === 'auto' && isNl(signal) && !LOCALE_FIELDS.has(type)) item = downgrade(item, 'nl-nonlocale');
       if (type === 'faq' && !signal.query) item = downgrade(item, 'faq-needs-query');
+      if (type === 'jsonld') item = downgrade(item, 'jsonld-no-builder');
       out.push(item);
     }
   }

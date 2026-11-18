@@ -234,9 +234,26 @@ describe('buildFindings', () => {
     assert.equal(issueOf('Crawled - currently not indexed'), 'thin');
     assert.equal(issueOf('Soft 404'), 'thin');
     assert.equal(issueOf('Duplicate without user-selected canonical'), 'duplicate');
-    assert.equal(issueOf('Alternate page with proper canonical tag'), 'canonical');
+    assert.equal(issueOf('Duplicate, Google chose different canonical than user'), 'duplicate');
+    assert.equal(issueOf('Canonical points elsewhere'), 'canonical');
     assert.equal(issueOf('Discovered - currently not indexed'), 'sitemap-not-indexed');
     assert.equal(issueOf('Something new'), 'other');
+  });
+
+  test('alternate page with proper canonical tag is healthy and raises no index finding', () => {
+    const findings = buildFindings({ index: [{ url: 'https://studiozissou.io/nl/werk', verdict: 'NEUTRAL', coverageState: 'Alternate page with proper canonical tag' }] });
+    assert.ok(!findings.some((f) => f.type === 'index-issue'));
+  });
+
+  test('content decay flags a page that lost every click this quarter', () => {
+    const decay = buildFindings({
+      quarter: { pages: [] },
+      priorQuarter: { pages: [{ page: 'https://studiozissou.io/nl/werk', clicks: 40 }] },
+    }).find((f) => f.type === 'content-decay');
+    assert.ok(decay);
+    assert.equal(decay.clicks, 0);
+    assert.equal(decay.drop, 1);
+    assert.equal(decay.locale, 'nl');
   });
 
   test('content decay needs 30 prior clicks', () => {

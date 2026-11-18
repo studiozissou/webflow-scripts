@@ -23,4 +23,5 @@ Confirmed from published Home HTML, 2026-11-17 (`nav.js`, `task-list.js`; Design
 Set with the Webflow MCP and published live, 2026-11-17 (`tracking.js`; all in component definitions, so every page with Nav/Footer gets them):
 - `[data-sz-cta]`: `nav-contact` (Nav), `split-tell-me` (Split), `price-care`, `price-refresh` (Price list), `cta-band-agencies` (CTA band), `footer-send`, `footer-email`, `footer-contact` (Footer)
 - `[data-sz="frame-start"]` on `.sz-split_wrapper` inside `section_split[data-sz="split"]`
+- `[data-sz-story="d"]` on `section_hero` (Hero component root, 1 instance; set 2026-11-18). Static key for the live story D until the `Homepage stories` CMS list exists; change the value when the story rotates.
 - Every homepage section is a component instance; edit attributes with `scope_component_id`. No `/contact` page exists (it serves the 404 page).

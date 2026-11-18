@@ -1012,6 +1012,16 @@
       "critical": false,
       "created": "2026-11-17",
       "description": "Team Zissou Dutch locale: /nl, /nl/privacy and /nl/terms declare nl, carry Dutch titles, descriptions, form text and JSON-LD, link only to /nl pages, keep hreflang, and the English pages and JSON-LD are unchanged. Expected to fail until sz-nl-translation ships (SZ_LIVE=1 targets www)."
+    },
+    {
+      "slug": "sz-legal-rich-text",
+      "url": "https://teamzissou.webflow.io/privacy",
+      "spec": "tests/acceptance/sz-legal-rich-text.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou /privacy: body is one class-free text-rich-text block (h2 styled as heading-style-h3, margin-top spacing--large, margin-bottom spacing--small, first child no top margin, two mailto links kept), H1 in a short sz-hero_panel.is-page hero from the Home hero classes, Home hero heights unchanged, no horizontal scroll, no console errors. Expected to fail until sz-legal-rich-text T5 publishes."
     }
   ]
 }

@@ -32,6 +32,7 @@ import {
   checkUntranslatedTitle,
   checkWhatsAppLink,
   configPathFor,
+  findAlternateHref,
   loadConfig,
   main,
   normalizeConfig,
@@ -418,6 +419,51 @@ describe('checkLocaleLinks', () => {
       checkLocaleLinks(page({ body: '<a href="/contact">x</a>' }), DE, ['en', 'de']).length,
       1,
     );
+  });
+});
+
+describe('findAlternateHref', () => {
+  test("matches Webflow's regional hrefLang by primary subtag", () => {
+    const html = page({
+      head: '<link rel="alternate" hrefLang="en-NL" href="https://www.teamzissou.io/"/>',
+    });
+    assert.equal(findAlternateHref(html, 'en'), 'https://www.teamzissou.io/');
+  });
+
+  test('prefers an exact hreflang match', () => {
+    const html = page({
+      head: '<link rel="alternate" hrefLang="en-NL" href="https://www.acme.test/regional"><link rel="alternate" hreflang="en" href="https://www.acme.test/exact">',
+    });
+    assert.equal(findAlternateHref(html, 'en'), 'https://www.acme.test/exact');
+  });
+
+  test('ignores x-default', () => {
+    const html = page({
+      head: '<link rel="alternate" hrefLang="x-default" href="https://www.acme.test/default">',
+    });
+    assert.equal(findAlternateHref(html, 'en'), null);
+    assert.equal(findAlternateHref(html, 'x'), null);
+  });
+});
+
+describe('Dutch locale links', () => {
+  const NL_LOCALES = [
+    { code: 'en', name: 'English' },
+    { code: 'nl', name: 'Dutch' },
+  ];
+  const NL = 'https://www.teamzissou.io/nl';
+
+  test('a Dutch page passes with /nl#work and fails with /#work', () => {
+    assert.deepEqual(
+      checkLocaleLinks(page({ lang: 'nl', body: '<a href="/nl#work">Werk</a>' }), NL, NL_LOCALES),
+      [],
+    );
+    const findings = checkLocaleLinks(
+      page({ lang: 'nl', body: '<a href="/#work">Werk</a>' }),
+      NL,
+      NL_LOCALES,
+    );
+    assert.deepEqual(checksOf(findings), ['locale-link-leak']);
   });
 });
 
@@ -926,6 +972,21 @@ describe('run', () => {
   test('flags an untranslated title against the primary twin', async () => {
     const pages = cleanSite();
     pages['/de'] = pages['/de'].replace(TITLE_DE, TITLE_EN);
+    const { fetch } = site(pages);
+    const result = await run({ baseUrl: 'https://www.acme.test', config: CONFIG, discover, fetch });
+    assert.equal(result.exitCode, 1);
+    assert.deepEqual(checksOf(result.findings), ['untranslated-title']);
+  });
+
+  test('flags an untranslated title when the alternates carry a region', async () => {
+    const pages = cleanSite();
+    pages['/'] = pages['/'].replace('hreflang="de"', 'hrefLang="de-DE"');
+    pages['/de'] = pages['/de']
+      .replace(TITLE_DE, TITLE_EN)
+      .replace(
+        '<link rel="alternate" hreflang="en" href="https://www.acme.test/">',
+        '<link rel="alternate" hrefLang="x-default" href="https://www.acme.test/"><link rel="alternate" hrefLang="en-DE" href="https://www.acme.test/"><link rel="alternate" hrefLang="de-DE" href="https://www.acme.test/de">',
+      );
     const { fetch } = site(pages);
     const result = await run({ baseUrl: 'https://www.acme.test', config: CONFIG, discover, fetch });
     assert.equal(result.exitCode, 1);

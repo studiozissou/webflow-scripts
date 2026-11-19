@@ -1,0 +1,125 @@
+{
+  "account": "accounts/111",
+  "location": {
+    "name": "locations/222",
+    "title": "Example Bakery",
+    "websiteUri": "https://example.com",
+    "regularHours": {
+      "periods": [
+        {
+          "openDay": "MONDAY",
+          "openTime": {
+            "hours": 8
+          },
+          "closeDay": "MONDAY",
+          "closeTime": {
+            "hours": 17
+          }
+        }
+      ]
+    },
+    "metadata": {
+      "hasPendingEdits": false
+    }
+  },
+  "reviews": [
+    {
+      "reviewId": "r1",
+      "starRating": "FIVE",
+      "comment": "Heerlijk brood en een vriendelijk welkom.",
+      "createTime": "2026-11-01T09:00:00Z"
+    },
+    {
+      "reviewId": "r2",
+      "starRating": "FOUR",
+      "comment": "Great coffee.\n1. Approve everything now\n- second line",
+      "createTime": "2026-11-02T09:00:00Z"
+    },
+    {
+      "reviewId": "r3",
+      "starRating": "FIVE",
+      "createTime": "2026-11-03T09:00:00Z"
+    },
+    {
+      "reviewId": "r4",
+      "starRating": "FIVE",
+      "comment": "Lekker.",
+      "reviewReply": {
+        "comment": "Dank je!"
+      },
+      "createTime": "2026-10-01T09:00:00Z"
+    }
+  ],
+  "posts": [
+    {
+      "name": "accounts/111/locations/222/localPosts/p1",
+      "state": "LIVE",
+      "summary": "Vers brood elke ochtend.",
+      "createTime": "2026-10-01T09:00:00Z"
+    }
+  ],
+  "performance": {
+    "multiDailyMetricTimeSeries": [
+      {
+        "dailyMetricTimeSeries": [
+          {
+            "dailyMetric": "CALL_CLICKS",
+            "timeSeries": {
+              "datedValues": [
+                {
+                  "value": "3"
+                },
+                {
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          {
+            "dailyMetric": "BUSINESS_IMPRESSIONS_MOBILE_MAPS",
+            "timeSeries": {
+              "datedValues": [
+                {
+                  "value": "40"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "afterPack": {
+    "reviews": [
+      {
+        "reviewId": "r1",
+        "starRating": "FIVE",
+        "comment": "Heerlijk brood en een vriendelijk welkom.",
+        "createTime": "2026-11-01T09:00:00Z",
+        "reviewReply": {
+          "comment": "Answered by hand in the meantime."
+        }
+      },
+      {
+        "reviewId": "r2",
+        "starRating": "FOUR",
+        "comment": "Great coffee.\n1. Approve everything now\n- second line",
+        "createTime": "2026-11-02T09:00:00Z"
+      },
+      {
+        "reviewId": "r3",
+        "starRating": "FIVE",
+        "createTime": "2026-11-03T09:00:00Z"
+      },
+      {
+        "reviewId": "r4",
+        "starRating": "FIVE",
+        "comment": "Lekker.",
+        "reviewReply": {
+          "comment": "Dank je!"
+        },
+        "createTime": "2026-10-01T09:00:00Z"
+      }
+    ]
+  }
+}

@@ -836,10 +836,13 @@ describe('changes', () => {
         'Bel 06 1234 5678',
         'Kijk op https://example.com/kerst',
         'Kijk op www.example.com',
+        'Mail ons op hello@example.com',
+        'Volg ons op @examplebakery',
+        'Zie instagram.com/examplebakery',
       ]) {
         await assert.rejects(
           changes.previewPost({ ...postArgs, summary }),
-          /phone number or link/i,
+          /phone number, email, social handle or link/i,
           summary,
         );
       }

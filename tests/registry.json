@@ -1002,6 +1002,46 @@
       "critical": true,
       "created": "2026-11-18",
       "description": "Cloudflare Pages CDN replaces jsDelivr: tagged files served with CORS + immutable cache, 404 for unknown paths, Oost, Rolfing and Studio Zissou load from the CDN, no live page requests cdn.jsdelivr.net/gh/studiozissou. Skipped until CDN_HOST is set."
+    },
+    {
+      "slug": "tz-footer-credit",
+      "url": "https://www.oosteten.nl/",
+      "spec": "tests/acceptance/tz-footer-credit.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Client footers (Oost NL+EN, Rolfing EN+NL, plus TZ_CREDIT_EXTRA URLs) carry at least one 'Team Zissou' link to https://www.teamzissou.io/ with target _blank, rel noopener after load (set by site utils), the locale lead-in text, and no wdmorley.com, 'Studio Zissou' or 'Will Morley' credit. Expected to fail until tz-footer-credit T2-T3 publish."
+    },
+    {
+      "slug": "sz-nl-translation",
+      "url": "https://teamzissou.webflow.io/nl",
+      "spec": "tests/acceptance/sz-nl-translation.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou Dutch locale: /nl, /nl/privacy and /nl/terms declare nl, carry Dutch titles, descriptions, form text and JSON-LD, link only to /nl pages, keep hreflang, and the English pages and JSON-LD are unchanged. Expected to fail until sz-nl-translation ships (SZ_LIVE=1 targets www)."
+    },
+    {
+      "slug": "sz-legal-rich-text",
+      "url": "https://teamzissou.webflow.io/privacy",
+      "spec": "tests/acceptance/sz-legal-rich-text.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou /privacy: body is one class-free text-rich-text block (h2 styled as heading-style-h3, margin-top spacing--large, margin-bottom spacing--small, first child no top margin, two mailto links kept), H1 in a short sz-hero_panel.is-page hero from the Home hero classes, Home hero heights unchanged, no horizontal scroll, no console errors. Expected to fail until sz-legal-rich-text T5 publishes."
+    },
+    {
+      "slug": "sz-consent-branding",
+      "url": "https://teamzissou.webflow.io/",
+      "spec": "tests/acceptance/sz-consent-branding.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": false,
+      "created": "2026-11-17",
+      "description": "Team Zissou ConsentPro banner, preferences modal and floating button use 2026 brand tokens inside the shadow root (cream/brunello, sz-button primary/secondary, brunello-400/600 toggle, Pangaia heading), no Finsweet default colours, 0 consent colour-contrast violations, fits 390px, new copy, buttons still work. Staging only (production ConsentPro plan not bought). Expected to fail until sz-consent-branding T1-T5 ship."
     }
   ]
 }

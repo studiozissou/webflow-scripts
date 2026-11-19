@@ -1,0 +1,22 @@
+{
+  "location": "locations/222",
+  "languages": ["nl", "en"],
+  "sector": "bakery",
+  "bannedTerms": ["goedkoop"],
+  "ctaUrls": ["https://example.com/menu"],
+  "postThemes": ["winter bread", "coffee"],
+  "hours": {
+    "regular": [],
+    "special": [
+      { "date": "2099-12-24", "closed": true },
+      { "date": "2099-12-31", "closed": true, "confirm": false }
+    ]
+  },
+  "posting": "on",
+  "standing": [],
+  "consent": {
+    "by": "Example Owner",
+    "date": "2026-11-16",
+    "scope": ["replies", "posts", "hours"]
+  }
+}

@@ -211,7 +211,7 @@ function buildForm(world, { nextTag = 'div' } = {}) {
   return { page, root, form, steps, segments, count, back, submit, chips, done, fail, failInner, doneHeading, byId };
 }
 
-function run({ withRoot = true, nextTag, readyState = 'complete' } = {}) {
+function run({ withRoot = true, nextTag, readyState = 'complete', lang } = {}) {
   const world = makeWorld();
   const ui = withRoot ? buildForm(world, { nextTag }) : { page: world.el('body') };
   const docListeners = [];
@@ -224,6 +224,7 @@ function run({ withRoot = true, nextTag, readyState = 'complete' } = {}) {
     querySelector: (sel) => ui.page.querySelector(sel),
     addEventListener: (type, fn) => docListeners.push({ type, fn }),
   };
+  if (lang !== undefined) document.documentElement = { lang };
   class MutationObserver {
     constructor(fn) {
       this.fn = fn;
@@ -450,4 +451,32 @@ test('fail visible: inner alert role, scrolled to centre, focus on the fail head
   assert.equal(document.activeElement, heading);
   click(ui.back);
   assert.equal(ui.fail.style.display, 'none');
+});
+
+test('Dutch page: progress reads "1 van 6"', () => {
+  const { ui } = run({ lang: 'nl' });
+  assert.equal(ui.count.textContent, '1 van 6');
+});
+
+test('Dutch page: done state reads "6 van 6"', () => {
+  const { ui, world, toStep } = run({ lang: 'NL-nl' });
+  toStep(6);
+  world.setDisplay(ui.form, 'none');
+  world.setDisplay(ui.done, 'block');
+  assert.equal(ui.count.textContent, '6 van 6');
+});
+
+test('Dutch page: each Next control gets aria-label "Volgende"', () => {
+  const { ui } = run({ lang: 'nl' });
+  const nexts = ui.root.querySelectorAll('[data-sz="contact-next"]');
+  assert.equal(nexts.length, 5);
+  for (const n of nexts) assert.equal(n.getAttribute('aria-label'), 'Volgende');
+});
+
+test('English or missing lang: progress and aria-label do not change', () => {
+  for (const lang of ['en', '', undefined]) {
+    const { ui } = run({ lang });
+    assert.equal(ui.count.textContent, '1 of 6', String(lang));
+    for (const n of ui.root.querySelectorAll('[data-sz="contact-next"]')) assert.equal(n.getAttribute('aria-label'), 'Next');
+  }
 });

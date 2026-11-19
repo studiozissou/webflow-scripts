@@ -8,13 +8,13 @@ import { normalizeConfig } from '../../tools/webflow/launch-guard.js';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'projects', 'studio-zissou');
 
-test('launch.config.json targets teamzissou.io with its staging URL, legal fallbacks and launch placeholders', () => {
+test('launch.config.json targets teamzissou.io, lists en and nl, the 6 fallback paths and no apexDefault', () => {
   const config = normalizeConfig(JSON.parse(readFileSync(join(DIR, 'launch.config.json'), 'utf8')));
   assert.equal(config.domain, 'teamzissou.io');
-  assert.deepEqual(config.locales.map((l) => l.code), ['en']);
+  assert.deepEqual(config.locales.map((l) => l.code), ['en', 'nl']);
   assert.equal(config.stagingUrl, 'https://teamzissou.webflow.io');
   assert.equal(config.apexDefault, false);
-  assert.deepEqual(config.fallbackPaths, ['/', '/privacy', '/terms']);
+  assert.deepEqual(config.fallbackPaths, ['/', '/privacy', '/terms', '/nl', '/nl/privacy', '/nl/terms']);
   for (const marker of ['[copy]', '[photo', '[badge']) assert.ok(config.placeholders.includes(marker), marker);
 });
 
@@ -25,4 +25,11 @@ test('llms.txt is filled in for Team Zissou and links only to teamzissou.io', ()
   const links = [...text.matchAll(/\]\((https?:\/\/[^)]+)\)/g)].map((m) => new URL(m[1]).hostname);
   assert.ok(links.length >= 3);
   for (const host of links) assert.equal(host, 'teamzissou.io');
+});
+
+test('llms.txt names both languages and has no cookieless analytics', () => {
+  const text = readFileSync(join(DIR, 'llms.txt'), 'utf8');
+  assert.match(text, /English/);
+  assert.match(text, /Dutch/);
+  assert.doesNotMatch(text, /cookieless analytics/i);
 });

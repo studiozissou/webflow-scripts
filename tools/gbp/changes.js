@@ -19,6 +19,7 @@ import {
   updateReviewReply,
   validateLocationEdit,
 } from './client.js';
+import { hasContactDetails } from './text-rules.js';
 
 export const PREVIEW_TTL_MS = 30 * 60 * 1000;
 
@@ -146,17 +147,6 @@ function pickFields(source, fields) {
   );
 }
 
-const LINK_PATTERN = /\bhttps?:\/\/|\bwww\.[a-z0-9-]+\./i;
-const PHONE_CANDIDATE = /\+?\d[\d\s().-]{6,}\d/g;
-const PHONE_MIN_DIGITS = 9;
-
-function hasPhoneOrLink(text) {
-  if (LINK_PATTERN.test(text)) return true;
-  return (text.match(PHONE_CANDIDATE) ?? []).some(
-    (candidate) => candidate.replace(/\D/g, '').length >= PHONE_MIN_DIGITS,
-  );
-}
-
 function buildPost({ summary, languageCode, button, imageUrl }) {
   if (
     typeof summary !== 'string' ||
@@ -165,9 +155,9 @@ function buildPost({ summary, languageCode, button, imageUrl }) {
   ) {
     throw new Error(`Post summary must be 1 to ${POST_SUMMARY_MAX} characters`);
   }
-  if (hasPhoneOrLink(summary)) {
+  if (hasContactDetails(summary)) {
     throw new Error(
-      'Post summary must not contain a phone number or link; Google removes such posts. Use the post button instead.',
+      'Post summary must not contain a phone number, email, social handle or link; Google removes such posts. Use the post button instead.',
     );
   }
   if (typeof languageCode !== 'string' || !languageCode) {

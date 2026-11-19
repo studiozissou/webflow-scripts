@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-17",
+  "lastUpdated": "2026-11-18",
   "note": "nem-quiz-transition-guard planned 2026-08-19 — expected to fail until Part A of nem-quiz-transition-guard-and-intro-line-plumbing ships",
   "version": 1,
   "lastDeployed": "2026-11-16",
@@ -992,6 +992,16 @@
       "critical": false,
       "created": "2026-11-17",
       "description": "Team Zissou sticky nav (top 0 on 4 pages, Contact button to #contact below the nav, panel takes the scheme of the section below) and the 15-item Problem task list (3 visible, steps down every 2.5 s, middle unmuted, pauses on hover/off-screen, static with reduced motion or no module). Expected to fail until sz-fixed-nav-task-list T4-T7 ship (SZ_LOCAL_MODULE=1 injects the local modules before release)."
+    },
+    {
+      "slug": "private-monorepo-migration",
+      "url": "https://zissou-cdn.pages.dev",
+      "spec": "tests/acceptance/private-monorepo-migration.spec.js",
+      "type": "acceptance",
+      "source": "plan",
+      "critical": true,
+      "created": "2026-11-18",
+      "description": "Cloudflare Pages CDN replaces jsDelivr: tagged files served with CORS + immutable cache, 404 for unknown paths, Oost, Rolfing and Studio Zissou load from the CDN, no live page requests cdn.jsdelivr.net/gh/studiozissou. Skipped until CDN_HOST is set."
     },
     {
       "slug": "tz-footer-credit",

@@ -1,7 +1,0 @@
-{
-  "type": "result",
-  "subtype": "success",
-  "is_error": false,
-  "result": "{\"replies\":[{\"reviewId\":\"r1\",\"text\":\"Dank je wel voor je mooie woorden, tot snel bij Example Bakery!\",\"lang\":\"nl\"},{\"reviewId\":\"r2\",\"text\":\"Thank you for the kind words.\",\"lang\":\"en\"},{\"reviewId\":\"r3\",\"text\":\"Dank je wel!\",\"lang\":\"nl\"}],\"post\":{\"text\":\"Deze week bakken we ons winterbrood met spelt en walnoot. Kom proeven in de winkel.\",\"lang\":\"nl\",\"theme\":\"seasonal bread\",\"button\":{\"actionType\":\"LEARN_MORE\",\"url\":\"https://example.com/menu\"}}}",
-  "session_id": "fixture-session"
-}

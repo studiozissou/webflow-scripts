@@ -1,7 +1,0 @@
-{
-  "host": "zissou-cdn.pages.dev",
-  "clients": ["oost", "rolfing-amsterdam", "studio-zissou"],
-  "roots": ["projects/{client}", "shared", "styles"],
-  "extensions": [".js", ".css", ".woff2"],
-  "deniedSegments": ["archive", "tests", "test", "reference", "tools", "scripts", "node_modules", "dist", "schema", "n8n"]
-}
